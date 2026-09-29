@@ -2,18 +2,20 @@
 
 Laporan ini adalah snapshot **baca saja** pada 29 September 2026 pukul 17:16 UTC (30 September 00:16 WIB). Sumbernya adalah metadata proyek, katalog PostgreSQL, hasil query `count(*)`, riwayat migrasi, advisor, dan agregat log melalui konektor Supabase. Tidak ada password, token, connection string, isi baris pengguna, atau perubahan konfigurasi database dalam laporan ini. Kondisi operasional dapat berubah sesudah waktu snapshot.
 
+**Lampiran yang diminta reviewer PR #10:** [12 entri Drizzle lengkap dan struktur tujuh tabel Drill](SUPABASE_STAGING_DRILL_AUDIT_2026-09-30.md), termasuk kolom, constraint/FK, indeks, jumlah baris, dan catatan tentang dua akun Supabase Auth.
+
 ## Status dan struktur
 
-| Pemeriksaan | Hasil |
-| --- | --- |
-| Proyek | `Numora-Staging` (`pkamenfnwmoeisccnrnk`), `ACTIVE_HEALTHY`, paket organisasi Free |
-| Tabel aplikasi di `public` | 46; daftar dan tujuan tabel ada di [acuan database](DATABASE_NUMORA_V05_ACUAN_TIM.md) |
-| RLS | Aktif pada 46/46 tabel |
+| Pemeriksaan                                                                        | Hasil                                                                                           |
+| ---------------------------------------------------------------------------------- | ----------------------------------------------------------------------------------------------- |
+| Proyek                                                                             | `Numora-Staging` (`pkamenfnwmoeisccnrnk`), `ACTIVE_HEALTHY`, paket organisasi Free              |
+| Tabel aplikasi di `public`                                                         | 46; daftar dan tujuan tabel ada di [acuan database](DATABASE_NUMORA_V05_ACUAN_TIM.md)           |
+| RLS                                                                                | Aktif pada 46/46 tabel                                                                          |
 | Hak `SELECT`/`INSERT` tabel `public` untuk `anon`, `authenticated`, `service_role` | 0/46 untuk ketiga role tersebut; data domain memakai Backend/worker melalui koneksi server-side |
-| Jumlah data | `count(*)` pada masing-masing 46 tabel = 0; total 0 baris |
-| Koneksi PostgreSQL saat diperiksa | 13 dari `max_connections=60`, 1 aktif dan 5 idle; ini hanya snapshot sesaat |
+| Jumlah data                                                                        | `count(*)` pada masing-masing 46 tabel = 0; total 0 baris                                       |
+| Koneksi PostgreSQL saat diperiksa                                                  | 13 dari `max_connections=60`, 1 aktif dan 5 idle; ini hanya snapshot sesaat                     |
 
-Struktur terperinci ada di [dokumen skema](DATABASE_NUMORA_V05_ACUAN_TIM.md), sedangkan SQL dan snapshot Drizzle ada di [`packages/database/drizzle`](../../packages/database/drizzle/). Database ini belum berisi seed demo.
+Struktur terperinci ada di [dokumen skema](DATABASE_NUMORA_V05_ACUAN_TIM.md), sedangkan SQL dan snapshot Drizzle ada di [`packages/database/drizzle`](../../packages/database/drizzle/). Belum ada seed demo pada tabel aplikasi. Pemeriksaan lanjutan menemukan **dua akun di `auth.users`**; jenisnya (demo atau nyata) belum diverifikasi dan harus dipertahankan dalam setiap langkah korektif.
 
 ## Riwayat migrasi
 
