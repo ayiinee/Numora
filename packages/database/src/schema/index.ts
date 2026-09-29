@@ -2,3 +2,8 @@ export * from './identity.js';
 export * from './classes.js';
 export * from './operations.js';
 export * from './learning.js';
+export * from './content.js';
+export * from './assessments.js';
+export * from './engagement.js';
+export * from './intelligence.js';
+export * from './support.js';
