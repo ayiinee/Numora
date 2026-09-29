@@ -4,6 +4,8 @@ Laporan ini adalah snapshot **baca saja** pada 29 September 2026 pukul 17:16 UTC
 
 **Lampiran yang diminta reviewer PR #10:** [12 entri Drizzle lengkap dan struktur tujuh tabel Drill](SUPABASE_STAGING_DRILL_AUDIT_2026-09-30.md), termasuk kolom, constraint/FK, indeks, jumlah baris, dan catatan tentang dua akun Supabase Auth.
 
+**Arah rekonsiliasi (klarifikasi Reyhan, 30 September):** skema Numora-Staging yang diaudit adalah acuan model database. Perbedaan dengan migrasi/kode `main` harus diselesaikan dengan menyesuaikan riwayat migrasi dan integrasi aplikasi terhadap acuan Staging; keberadaan kode di `main` tidak menjadikan skemanya pengganti Staging. Ini adalah keputusan arah integrasi setelah snapshot, bukan hasil query database.
+
 ## Status dan struktur
 
 | Pemeriksaan                                                                        | Hasil                                                                                           |
