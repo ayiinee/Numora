@@ -419,7 +419,7 @@ CREATE TABLE "video_subchapter_mappings" (
 );
 --> statement-breakpoint
 ALTER TABLE "video_subchapter_mappings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
--- Composite foreign keys below require these unique indexes first.--> statement-breakpoint
+-- Composite foreign keys below require these unique indexes first.
 CREATE UNIQUE INDEX "competencies_subchapter_code_uq" ON "competencies" USING btree ("subchapter_id","code");--> statement-breakpoint
 CREATE UNIQUE INDEX "assessment_attempts_pretest_once_uq" ON "assessment_attempts" USING btree ("student_id","chapter_id_at_start") WHERE "assessment_attempts"."assessment_type" = 'PRETEST' and "assessment_attempts"."status" in ('SUBMITTED', 'GRADED');--> statement-breakpoint
 CREATE UNIQUE INDEX "assessment_attempts_tryout_once_uq" ON "assessment_attempts" USING btree ("student_id","package_id") WHERE "assessment_attempts"."assessment_type" = 'TRYOUT';--> statement-breakpoint
