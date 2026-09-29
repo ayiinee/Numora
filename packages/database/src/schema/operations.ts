@@ -1,4 +1,4 @@
-import { jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
+import { index, jsonb, pgTable, text, timestamp, uuid } from 'drizzle-orm/pg-core';
 import { users } from './identity.js';
 
 export const analyticsOutbox = pgTable('analytics_outbox', {
@@ -13,7 +13,9 @@ export const analyticsOutbox = pgTable('analytics_outbox', {
   occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
   processedAt: timestamp('processed_at', { withTimezone: true }),
   failedAt: timestamp('failed_at', { withTimezone: true }),
-});
+}, (table) => [
+  index('analytics_outbox_pending_idx').on(table.processedAt, table.occurredAt),
+]);
 
 export const auditLogs = pgTable('audit_logs', {
   id: uuid('id').defaultRandom().primaryKey(),
@@ -23,4 +25,7 @@ export const auditLogs = pgTable('audit_logs', {
   entityId: uuid('entity_id'),
   metadata: jsonb('metadata').notNull().default({}),
   createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
-});
+}, (table) => [
+  index('audit_logs_actor_time_idx').on(table.actorUserId, table.createdAt),
+  index('audit_logs_entity_time_idx').on(table.entityType, table.entityId, table.createdAt),
+]);

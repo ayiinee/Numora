@@ -16,6 +16,8 @@
     "test": "vitest run --passWithNoTests",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "tsx src/migrate.ts",
+    "db:cloud:check": "tsx src/cloud-migrate.ts check",
+    "db:cloud:migrate": "tsx src/cloud-migrate.ts migrate",
     "db:seed": "tsx src/seed.ts",
     "db:studio": "drizzle-kit studio"
   },

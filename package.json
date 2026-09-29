@@ -18,6 +18,8 @@
     "ci": "pnpm contracts:validate && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
     "db:generate": "dotenv -e .env -- pnpm --filter @tka/database db:generate",
     "db:migrate": "dotenv -e .env -- pnpm --filter @tka/database db:migrate",
+    "db:cloud:check": "dotenv -e .env.cloud.local -- pnpm --filter @tka/database db:cloud:check",
+    "db:cloud:migrate": "dotenv -e .env.cloud.local -- pnpm --filter @tka/database db:cloud:migrate",
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "openapi:generate": "dotenv -e .env -- pnpm --filter @tka/database build && dotenv -e .env -- pnpm --filter @tka/api openapi:generate",

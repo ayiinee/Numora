@@ -1,5 +1,5 @@
 import { sql } from 'drizzle-orm';
-import { index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
+import { check, index, pgTable, text, timestamp, uniqueIndex, uuid } from 'drizzle-orm/pg-core';
 import { schools, users } from './identity.js';
 
 export const classes = pgTable(
@@ -22,6 +22,9 @@ export const classes = pgTable(
     uniqueIndex('classes_join_code_uq').on(table.joinCode),
     index('classes_teacher_idx').on(table.teacherUserId),
     index('classes_school_idx').on(table.schoolId),
+    check('classes_name_nonempty_ck', sql`length(trim(${table.name})) > 0`),
+    check('classes_join_code_nonempty_ck', sql`length(trim(${table.joinCode})) > 0`),
+    check('classes_archived_at_ck', sql`${table.archivedAt} is null or ${table.archivedAt} >= ${table.createdAt}`),
   ],
 );
 
@@ -43,5 +46,6 @@ export const classMemberships = pgTable(
       .on(table.studentUserId)
       .where(sql`${table.leftAt} is null`),
     index('class_memberships_class_idx').on(table.classId),
+    check('class_memberships_left_at_ck', sql`${table.leftAt} is null or ${table.leftAt} >= ${table.joinedAt}`),
   ],
 );
