@@ -419,6 +419,58 @@ CREATE TABLE "video_subchapter_mappings" (
 );
 --> statement-breakpoint
 ALTER TABLE "video_subchapter_mappings" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
+-- Composite foreign keys below require these unique indexes first.--> statement-breakpoint
+CREATE UNIQUE INDEX "competencies_subchapter_code_uq" ON "competencies" USING btree ("subchapter_id","code");--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_attempts_pretest_once_uq" ON "assessment_attempts" USING btree ("student_id","chapter_id_at_start") WHERE "assessment_attempts"."assessment_type" = 'PRETEST' and "assessment_attempts"."status" in ('SUBMITTED', 'GRADED');--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_attempts_tryout_once_uq" ON "assessment_attempts" USING btree ("student_id","package_id") WHERE "assessment_attempts"."assessment_type" = 'TRYOUT';--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_attempts_id_package_uq" ON "assessment_attempts" USING btree ("id","package_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_attempts_id_student_uq" ON "assessment_attempts" USING btree ("id","student_id");--> statement-breakpoint
+CREATE INDEX "assessment_attempts_student_time_idx" ON "assessment_attempts" USING btree ("student_id","started_at");--> statement-breakpoint
+CREATE INDEX "assessment_attempts_package_idx" ON "assessment_attempts" USING btree ("package_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_packages_family_version_uq" ON "assessment_packages" USING btree ("family_code","package_version");--> statement-breakpoint
+CREATE UNIQUE INDEX "assessment_packages_id_type_uq" ON "assessment_packages" USING btree ("id","assessment_type");--> statement-breakpoint
+CREATE INDEX "assessment_packages_type_status_idx" ON "assessment_packages" USING btree ("assessment_type","status");--> statement-breakpoint
+CREATE UNIQUE INDEX "attempt_answers_attempt_item_uq" ON "attempt_answers" USING btree ("attempt_item_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "attempt_items_attempt_order_uq" ON "attempt_items" USING btree ("attempt_id","display_order");--> statement-breakpoint
+CREATE UNIQUE INDEX "attempt_items_attempt_package_item_uq" ON "attempt_items" USING btree ("attempt_id","package_item_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "package_items_package_order_uq" ON "package_items" USING btree ("package_id","display_order");--> statement-breakpoint
+CREATE UNIQUE INDEX "package_items_id_package_uq" ON "package_items" USING btree ("id","package_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "package_items_id_question_version_uq" ON "package_items" USING btree ("id","question_version_id");--> statement-breakpoint
+CREATE INDEX "package_items_question_version_idx" ON "package_items" USING btree ("question_version_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "scoring_policy_versions_code_version_uq" ON "scoring_policy_versions" USING btree ("policy_code","version");--> statement-breakpoint
+CREATE UNIQUE INDEX "class_leaderboard_entries_period_class_student_uq" ON "class_leaderboard_entries" USING btree ("period_id","class_id","student_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "leaderboard_periods_starts_at_uq" ON "leaderboard_periods" USING btree ("starts_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_answers_player_question_uq" ON "pvp_answers" USING btree ("player_id","match_question_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_best_records_period_student_difficulty_uq" ON "pvp_best_records" USING btree ("period_id","student_id","difficulty");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_invites_pending_recipient_uq" ON "pvp_invites" USING btree ("match_id","recipient_student_id") WHERE "pvp_invites"."status" = 'PENDING';--> statement-breakpoint
+CREATE INDEX "pvp_invites_recipient_status_idx" ON "pvp_invites" USING btree ("recipient_student_id","status");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_leaderboard_entries_period_student_difficulty_uq" ON "pvp_leaderboard_entries" USING btree ("period_id","student_id","difficulty");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_match_questions_match_order_uq" ON "pvp_match_questions" USING btree ("match_id","display_order");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_match_questions_match_item_uq" ON "pvp_match_questions" USING btree ("match_id","package_item_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_match_questions_id_match_uq" ON "pvp_match_questions" USING btree ("id","match_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_matches_room_code_uq" ON "pvp_matches" USING btree ("room_code");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_matches_id_package_uq" ON "pvp_matches" USING btree ("id","package_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_players_match_student_uq" ON "pvp_players" USING btree ("match_id","student_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_players_match_slot_uq" ON "pvp_players" USING btree ("match_id","player_slot");--> statement-breakpoint
+CREATE UNIQUE INDEX "pvp_players_id_match_uq" ON "pvp_players" USING btree ("id","match_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "xp_ledger_attempt_uq" ON "xp_ledger" USING btree ("attempt_id");--> statement-breakpoint
+CREATE INDEX "xp_ledger_student_time_idx" ON "xp_ledger" USING btree ("student_id","occurred_at");--> statement-breakpoint
+CREATE INDEX "xp_ledger_class_period_idx" ON "xp_ledger" USING btree ("class_id_at_event","period_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "generation_candidates_version_uq" ON "generation_candidates" USING btree ("candidate_question_version_id");--> statement-breakpoint
+CREATE INDEX "generation_candidates_run_idx" ON "generation_candidates" USING btree ("generation_run_id");--> statement-breakpoint
+CREATE INDEX "generation_runs_original_idx" ON "generation_runs" USING btree ("original_question_version_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "generator_configs_template_version_uq" ON "generator_configs" USING btree ("template_or_competency_id","config_version");--> statement-breakpoint
+CREATE INDEX "irt_batches_package_idx" ON "irt_batches" USING btree ("package_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "irt_item_results_batch_version_uq" ON "irt_item_results" USING btree ("batch_id","question_version_id");--> statement-breakpoint
+CREATE INDEX "variant_evaluations_candidate_idx" ON "variant_evaluations" USING btree ("candidate_question_version_id");--> statement-breakpoint
+CREATE INDEX "account_restrictions_user_idx" ON "account_restrictions" USING btree ("user_id");--> statement-breakpoint
+CREATE INDEX "analytics_events_name_time_idx" ON "analytics_events" USING btree ("event_name","occurred_at");--> statement-breakpoint
+CREATE INDEX "feedback_student_time_idx" ON "feedback" USING btree ("student_id","sent_at");--> statement-breakpoint
+CREATE INDEX "feedback_teacher_class_idx" ON "feedback" USING btree ("teacher_id","class_id_at_send");--> statement-breakpoint
+CREATE INDEX "question_reports_status_time_idx" ON "question_reports" USING btree ("status","reported_at");--> statement-breakpoint
+CREATE INDEX "video_reports_status_time_idx" ON "video_reports" USING btree ("status","reported_at");--> statement-breakpoint
+CREATE UNIQUE INDEX "video_subchapter_mappings_pair_uq" ON "video_subchapter_mappings" USING btree ("video_id","subchapter_id");--> statement-breakpoint
+CREATE INDEX "video_subchapter_mappings_subchapter_order_idx" ON "video_subchapter_mappings" USING btree ("subchapter_id","recommendation_order");--> statement-breakpoint
 ALTER TABLE "competencies" ADD CONSTRAINT "competencies_subchapter_id_subchapters_id_fk" FOREIGN KEY ("subchapter_id") REFERENCES "public"."subchapters"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "assessment_attempts" ADD CONSTRAINT "assessment_attempts_student_id_users_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "assessment_attempts" ADD CONSTRAINT "assessment_attempts_package_id_assessment_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."assessment_packages"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -490,57 +542,6 @@ ALTER TABLE "video_reports" ADD CONSTRAINT "video_reports_reporter_student_id_us
 ALTER TABLE "video_reports" ADD CONSTRAINT "video_reports_mapping_id_video_subchapter_mappings_id_fk" FOREIGN KEY ("mapping_id") REFERENCES "public"."video_subchapter_mappings"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "video_subchapter_mappings" ADD CONSTRAINT "video_subchapter_mappings_video_id_learning_videos_id_fk" FOREIGN KEY ("video_id") REFERENCES "public"."learning_videos"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "video_subchapter_mappings" ADD CONSTRAINT "video_subchapter_mappings_subchapter_id_subchapters_id_fk" FOREIGN KEY ("subchapter_id") REFERENCES "public"."subchapters"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
-CREATE UNIQUE INDEX "competencies_subchapter_code_uq" ON "competencies" USING btree ("subchapter_id","code");--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_attempts_pretest_once_uq" ON "assessment_attempts" USING btree ("student_id","chapter_id_at_start") WHERE "assessment_attempts"."assessment_type" = 'PRETEST' and "assessment_attempts"."status" in ('SUBMITTED', 'GRADED');--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_attempts_tryout_once_uq" ON "assessment_attempts" USING btree ("student_id","package_id") WHERE "assessment_attempts"."assessment_type" = 'TRYOUT';--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_attempts_id_package_uq" ON "assessment_attempts" USING btree ("id","package_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_attempts_id_student_uq" ON "assessment_attempts" USING btree ("id","student_id");--> statement-breakpoint
-CREATE INDEX "assessment_attempts_student_time_idx" ON "assessment_attempts" USING btree ("student_id","started_at");--> statement-breakpoint
-CREATE INDEX "assessment_attempts_package_idx" ON "assessment_attempts" USING btree ("package_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_packages_family_version_uq" ON "assessment_packages" USING btree ("family_code","package_version");--> statement-breakpoint
-CREATE UNIQUE INDEX "assessment_packages_id_type_uq" ON "assessment_packages" USING btree ("id","assessment_type");--> statement-breakpoint
-CREATE INDEX "assessment_packages_type_status_idx" ON "assessment_packages" USING btree ("assessment_type","status");--> statement-breakpoint
-CREATE UNIQUE INDEX "attempt_answers_attempt_item_uq" ON "attempt_answers" USING btree ("attempt_item_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "attempt_items_attempt_order_uq" ON "attempt_items" USING btree ("attempt_id","display_order");--> statement-breakpoint
-CREATE UNIQUE INDEX "attempt_items_attempt_package_item_uq" ON "attempt_items" USING btree ("attempt_id","package_item_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "package_items_package_order_uq" ON "package_items" USING btree ("package_id","display_order");--> statement-breakpoint
-CREATE UNIQUE INDEX "package_items_id_package_uq" ON "package_items" USING btree ("id","package_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "package_items_id_question_version_uq" ON "package_items" USING btree ("id","question_version_id");--> statement-breakpoint
-CREATE INDEX "package_items_question_version_idx" ON "package_items" USING btree ("question_version_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "scoring_policy_versions_code_version_uq" ON "scoring_policy_versions" USING btree ("policy_code","version");--> statement-breakpoint
-CREATE UNIQUE INDEX "class_leaderboard_entries_period_class_student_uq" ON "class_leaderboard_entries" USING btree ("period_id","class_id","student_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "leaderboard_periods_starts_at_uq" ON "leaderboard_periods" USING btree ("starts_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_answers_player_question_uq" ON "pvp_answers" USING btree ("player_id","match_question_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_best_records_period_student_difficulty_uq" ON "pvp_best_records" USING btree ("period_id","student_id","difficulty");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_invites_pending_recipient_uq" ON "pvp_invites" USING btree ("match_id","recipient_student_id") WHERE "pvp_invites"."status" = 'PENDING';--> statement-breakpoint
-CREATE INDEX "pvp_invites_recipient_status_idx" ON "pvp_invites" USING btree ("recipient_student_id","status");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_leaderboard_entries_period_student_difficulty_uq" ON "pvp_leaderboard_entries" USING btree ("period_id","student_id","difficulty");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_match_questions_match_order_uq" ON "pvp_match_questions" USING btree ("match_id","display_order");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_match_questions_match_item_uq" ON "pvp_match_questions" USING btree ("match_id","package_item_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_match_questions_id_match_uq" ON "pvp_match_questions" USING btree ("id","match_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_matches_room_code_uq" ON "pvp_matches" USING btree ("room_code");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_matches_id_package_uq" ON "pvp_matches" USING btree ("id","package_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_players_match_student_uq" ON "pvp_players" USING btree ("match_id","student_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_players_match_slot_uq" ON "pvp_players" USING btree ("match_id","player_slot");--> statement-breakpoint
-CREATE UNIQUE INDEX "pvp_players_id_match_uq" ON "pvp_players" USING btree ("id","match_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "xp_ledger_attempt_uq" ON "xp_ledger" USING btree ("attempt_id");--> statement-breakpoint
-CREATE INDEX "xp_ledger_student_time_idx" ON "xp_ledger" USING btree ("student_id","occurred_at");--> statement-breakpoint
-CREATE INDEX "xp_ledger_class_period_idx" ON "xp_ledger" USING btree ("class_id_at_event","period_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "generation_candidates_version_uq" ON "generation_candidates" USING btree ("candidate_question_version_id");--> statement-breakpoint
-CREATE INDEX "generation_candidates_run_idx" ON "generation_candidates" USING btree ("generation_run_id");--> statement-breakpoint
-CREATE INDEX "generation_runs_original_idx" ON "generation_runs" USING btree ("original_question_version_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "generator_configs_template_version_uq" ON "generator_configs" USING btree ("template_or_competency_id","config_version");--> statement-breakpoint
-CREATE INDEX "irt_batches_package_idx" ON "irt_batches" USING btree ("package_id");--> statement-breakpoint
-CREATE UNIQUE INDEX "irt_item_results_batch_version_uq" ON "irt_item_results" USING btree ("batch_id","question_version_id");--> statement-breakpoint
-CREATE INDEX "variant_evaluations_candidate_idx" ON "variant_evaluations" USING btree ("candidate_question_version_id");--> statement-breakpoint
-CREATE INDEX "account_restrictions_user_idx" ON "account_restrictions" USING btree ("user_id");--> statement-breakpoint
-CREATE INDEX "analytics_events_name_time_idx" ON "analytics_events" USING btree ("event_name","occurred_at");--> statement-breakpoint
-CREATE INDEX "feedback_student_time_idx" ON "feedback" USING btree ("student_id","sent_at");--> statement-breakpoint
-CREATE INDEX "feedback_teacher_class_idx" ON "feedback" USING btree ("teacher_id","class_id_at_send");--> statement-breakpoint
-CREATE INDEX "question_reports_status_time_idx" ON "question_reports" USING btree ("status","reported_at");--> statement-breakpoint
-CREATE INDEX "video_reports_status_time_idx" ON "video_reports" USING btree ("status","reported_at");--> statement-breakpoint
-CREATE UNIQUE INDEX "video_subchapter_mappings_pair_uq" ON "video_subchapter_mappings" USING btree ("video_id","subchapter_id");--> statement-breakpoint
-CREATE INDEX "video_subchapter_mappings_subchapter_order_idx" ON "video_subchapter_mappings" USING btree ("subchapter_id","recommendation_order");--> statement-breakpoint
 -- Domain data is served by the API, including the existing Drill tables.
 -- Plain PostgreSQL test databases do not define Supabase roles.
 DO $lockdown$
