@@ -38,7 +38,7 @@ Terdapat 12 entri dengan 12 hash unik. Sembilan entri pertama merekam bootstrap 
 | `auth.users`               |            2 |
 | `storage.objects`          |            0 |
 
-Dua akun Supabase Auth **ada**, meski semua tabel aplikasi kosong. Jenis akun (demo atau nyata) belum diverifikasi; jangan menghapus atau mengubahnya dalam rekonsiliasi skema. `assessment_attempts` dan `attempt_answers` masing-masing 0 baris. Tidak ada hasil Drill historis dalam tabel aplikasi saat snapshot ini, namun perubahan skema tetap harus diuji untuk deployment baru dan data mendatang.
+Dua akun Supabase Auth **ada**, meski semua tabel aplikasi kosong. Setelah snapshot, Reyhan mengonfirmasi bahwa keduanya merupakan entri yang keliru, bukan akun pengguna Numora yang sengaja disiapkan. Klarifikasi ini berasal dari pemilik proyek, bukan dari isi akun. Keduanya belum dihapus; keputusan pembersihan akun terpisah dari rekonsiliasi migrasi. `assessment_attempts` dan `attempt_answers` masing-masing 0 baris. Tidak ada hasil Drill historis dalam tabel aplikasi saat snapshot ini, namun perubahan skema tetap harus diuji untuk deployment baru dan data mendatang.
 
 ## Struktur tujuh tabel Drill
 

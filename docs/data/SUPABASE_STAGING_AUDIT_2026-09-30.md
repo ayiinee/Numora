@@ -15,7 +15,7 @@ Laporan ini adalah snapshot **baca saja** pada 29 September 2026 pukul 17:16 UTC
 | Jumlah data                                                                        | `count(*)` pada masing-masing 46 tabel = 0; total 0 baris                                       |
 | Koneksi PostgreSQL saat diperiksa                                                  | 13 dari `max_connections=60`, 1 aktif dan 5 idle; ini hanya snapshot sesaat                     |
 
-Struktur terperinci ada di [dokumen skema](DATABASE_NUMORA_V05_ACUAN_TIM.md), sedangkan SQL dan snapshot Drizzle ada di [`packages/database/drizzle`](../../packages/database/drizzle/). Belum ada seed demo pada tabel aplikasi. Pemeriksaan lanjutan menemukan **dua akun di `auth.users`**; jenisnya (demo atau nyata) belum diverifikasi dan harus dipertahankan dalam setiap langkah korektif.
+Struktur terperinci ada di [dokumen skema](DATABASE_NUMORA_V05_ACUAN_TIM.md), sedangkan SQL dan snapshot Drizzle ada di [`packages/database/drizzle`](../../packages/database/drizzle/). Belum ada seed demo pada tabel aplikasi. Pemeriksaan menemukan **dua akun di `auth.users`**. Pada 30 September, Reyhan mengonfirmasi keduanya sebagai entri yang keliru, bukan akun pengguna Numora yang sengaja disiapkan. Ini adalah klarifikasi pemilik proyek setelah snapshot, bukan hasil inferensi dari metadata database. Kedua akun masih ada; audit ini tidak menghapusnya atau mengubah Staging.
 
 ## Riwayat migrasi
 
