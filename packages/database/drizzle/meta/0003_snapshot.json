@@ -1,5 +1,5 @@
 {
-  "id": "948555de-0516-4d84-8aec-8872d7db4f5f",
+  "id": "47f8232c-2c1c-4504-af1e-cab4512d6bb5",
   "prevId": "76b62b60-95c9-4718-a1c0-e5963f3aee52",
   "version": "7",
   "dialect": "postgresql",
@@ -1139,6 +1139,27 @@
         }
       },
       "indexes": {
+        "drill_attempts_id_student_uq": {
+          "name": "drill_attempts_id_student_uq",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "student_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "drill_attempts_one_active_uq": {
           "name": "drill_attempts_one_active_uq",
           "columns": [
@@ -4428,7 +4449,13 @@
           "name": "attempt_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "drill_attempt_id": {
+          "name": "drill_attempt_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "xp_amount": {
           "name": "xp_amount",
@@ -4456,6 +4483,21 @@
           "columns": [
             {
               "expression": "attempt_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "xp_ledger_drill_attempt_uq": {
+          "name": "xp_ledger_drill_attempt_uq",
+          "columns": [
+            {
+              "expression": "drill_attempt_id",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -4549,6 +4591,19 @@
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
+        "xp_ledger_drill_attempt_id_drill_attempts_id_fk": {
+          "name": "xp_ledger_drill_attempt_id_drill_attempts_id_fk",
+          "tableFrom": "xp_ledger",
+          "tableTo": "drill_attempts",
+          "columnsFrom": [
+            "drill_attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
         "xp_ledger_period_id_leaderboard_periods_id_fk": {
           "name": "xp_ledger_period_id_leaderboard_periods_id_fk",
           "tableFrom": "xp_ledger",
@@ -4576,12 +4631,31 @@
           ],
           "onDelete": "restrict",
           "onUpdate": "no action"
+        },
+        "xp_ledger_drill_attempt_student_fk": {
+          "name": "xp_ledger_drill_attempt_student_fk",
+          "tableFrom": "xp_ledger",
+          "tableTo": "drill_attempts",
+          "columnsFrom": [
+            "drill_attempt_id",
+            "student_id"
+          ],
+          "columnsTo": [
+            "id",
+            "student_id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "xp_ledger_source_ck": {
+          "name": "xp_ledger_source_ck",
+          "value": "(\"xp_ledger\".\"source_type\" = 'DRILL' and \"xp_ledger\".\"drill_attempt_id\" is not null and \"xp_ledger\".\"attempt_id\" is null) or (\"xp_ledger\".\"source_type\" = 'TRYOUT' and \"xp_ledger\".\"attempt_id\" is not null and \"xp_ledger\".\"drill_attempt_id\" is null)"
+        },
         "xp_ledger_amount_ck": {
           "name": "xp_ledger_amount_ck",
           "value": "\"xp_ledger\".\"xp_amount\" >= 0"
@@ -5784,7 +5858,13 @@
           "name": "attempt_answer_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
+        },
+        "drill_attempt_question_id": {
+          "name": "drill_attempt_question_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         },
         "category": {
           "name": "category",
@@ -5869,12 +5949,30 @@
           ],
           "onDelete": "restrict",
           "onUpdate": "no action"
+        },
+        "question_reports_drill_attempt_question_id_drill_attempt_questions_id_fk": {
+          "name": "question_reports_drill_attempt_question_id_drill_attempt_questions_id_fk",
+          "tableFrom": "question_reports",
+          "tableTo": "drill_attempt_questions",
+          "columnsFrom": [
+            "drill_attempt_question_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "question_reports_source_ck": {
+          "name": "question_reports_source_ck",
+          "value": "(\"question_reports\".\"attempt_answer_id\" is not null) <> (\"question_reports\".\"drill_attempt_question_id\" is not null)"
+        }
+      },
       "isRLSEnabled": true
     },
     "public.video_reports": {

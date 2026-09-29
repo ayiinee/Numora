@@ -157,6 +157,7 @@ export const drillAttempts = pgTable(
     scoringPolicyVersion: text('scoring_policy_version').notNull().default('DRILL_PG_DEMO_V1'),
   },
   (t) => [
+    uniqueIndex('drill_attempts_id_student_uq').on(t.id, t.studentId),
     uniqueIndex('drill_attempts_one_active_uq')
       .on(t.studentId, t.levelId)
       .where(sql`${t.status} = 'IN_PROGRESS'`),

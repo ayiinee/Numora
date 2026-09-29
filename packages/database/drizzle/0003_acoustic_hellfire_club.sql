@@ -236,10 +236,12 @@ CREATE TABLE "xp_ledger" (
 	"student_id" uuid NOT NULL,
 	"class_id_at_event" uuid,
 	"source_type" "xp_source_type" NOT NULL,
-	"attempt_id" uuid NOT NULL,
+	"attempt_id" uuid,
+	"drill_attempt_id" uuid,
 	"xp_amount" integer NOT NULL,
 	"occurred_at" timestamp with time zone DEFAULT now() NOT NULL,
 	"period_id" uuid,
+	CONSTRAINT "xp_ledger_source_ck" CHECK (("xp_ledger"."source_type" = 'DRILL' and "xp_ledger"."drill_attempt_id" is not null and "xp_ledger"."attempt_id" is null) or ("xp_ledger"."source_type" = 'TRYOUT' and "xp_ledger"."attempt_id" is not null and "xp_ledger"."drill_attempt_id" is null)),
 	CONSTRAINT "xp_ledger_amount_ck" CHECK ("xp_ledger"."xp_amount" >= 0)
 );
 --> statement-breakpoint
@@ -388,12 +390,14 @@ ALTER TABLE "learning_videos" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
 CREATE TABLE "question_reports" (
 	"id" uuid PRIMARY KEY DEFAULT gen_random_uuid() NOT NULL,
 	"reporter_student_id" uuid NOT NULL,
-	"attempt_answer_id" uuid NOT NULL,
+	"attempt_answer_id" uuid,
+	"drill_attempt_question_id" uuid,
 	"category" text NOT NULL,
 	"details" text,
 	"status" "report_status" DEFAULT 'OPEN' NOT NULL,
 	"follow_up" text,
-	"reported_at" timestamp with time zone DEFAULT now() NOT NULL
+	"reported_at" timestamp with time zone DEFAULT now() NOT NULL,
+	CONSTRAINT "question_reports_source_ck" CHECK (("question_reports"."attempt_answer_id" is not null) <> ("question_reports"."drill_attempt_question_id" is not null))
 );
 --> statement-breakpoint
 ALTER TABLE "question_reports" ENABLE ROW LEVEL SECURITY;--> statement-breakpoint
@@ -454,6 +458,7 @@ CREATE UNIQUE INDEX "pvp_players_match_student_uq" ON "pvp_players" USING btree 
 CREATE UNIQUE INDEX "pvp_players_match_slot_uq" ON "pvp_players" USING btree ("match_id","player_slot");--> statement-breakpoint
 CREATE UNIQUE INDEX "pvp_players_id_match_uq" ON "pvp_players" USING btree ("id","match_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "xp_ledger_attempt_uq" ON "xp_ledger" USING btree ("attempt_id");--> statement-breakpoint
+CREATE UNIQUE INDEX "xp_ledger_drill_attempt_uq" ON "xp_ledger" USING btree ("drill_attempt_id");--> statement-breakpoint
 CREATE INDEX "xp_ledger_student_time_idx" ON "xp_ledger" USING btree ("student_id","occurred_at");--> statement-breakpoint
 CREATE INDEX "xp_ledger_class_period_idx" ON "xp_ledger" USING btree ("class_id_at_event","period_id");--> statement-breakpoint
 CREATE UNIQUE INDEX "generation_candidates_version_uq" ON "generation_candidates" USING btree ("candidate_question_version_id");--> statement-breakpoint
@@ -471,6 +476,7 @@ CREATE INDEX "question_reports_status_time_idx" ON "question_reports" USING btre
 CREATE INDEX "video_reports_status_time_idx" ON "video_reports" USING btree ("status","reported_at");--> statement-breakpoint
 CREATE UNIQUE INDEX "video_subchapter_mappings_pair_uq" ON "video_subchapter_mappings" USING btree ("video_id","subchapter_id");--> statement-breakpoint
 CREATE INDEX "video_subchapter_mappings_subchapter_order_idx" ON "video_subchapter_mappings" USING btree ("subchapter_id","recommendation_order");--> statement-breakpoint
+CREATE UNIQUE INDEX "drill_attempts_id_student_uq" ON "drill_attempts" USING btree ("id","student_id");--> statement-breakpoint
 ALTER TABLE "competencies" ADD CONSTRAINT "competencies_subchapter_id_subchapters_id_fk" FOREIGN KEY ("subchapter_id") REFERENCES "public"."subchapters"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "assessment_attempts" ADD CONSTRAINT "assessment_attempts_student_id_users_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "assessment_attempts" ADD CONSTRAINT "assessment_attempts_package_id_assessment_packages_id_fk" FOREIGN KEY ("package_id") REFERENCES "public"."assessment_packages"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -517,8 +523,10 @@ ALTER TABLE "pvp_players" ADD CONSTRAINT "pvp_players_student_id_users_id_fk" FO
 ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_student_id_users_id_fk" FOREIGN KEY ("student_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_class_id_at_event_classes_id_fk" FOREIGN KEY ("class_id_at_event") REFERENCES "public"."classes"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_attempt_id_assessment_attempts_id_fk" FOREIGN KEY ("attempt_id") REFERENCES "public"."assessment_attempts"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_drill_attempt_id_drill_attempts_id_fk" FOREIGN KEY ("drill_attempt_id") REFERENCES "public"."drill_attempts"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_period_id_leaderboard_periods_id_fk" FOREIGN KEY ("period_id") REFERENCES "public"."leaderboard_periods"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_attempt_student_fk" FOREIGN KEY ("attempt_id","student_id") REFERENCES "public"."assessment_attempts"("id","student_id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "xp_ledger" ADD CONSTRAINT "xp_ledger_drill_attempt_student_fk" FOREIGN KEY ("drill_attempt_id","student_id") REFERENCES "public"."drill_attempts"("id","student_id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "generation_candidates" ADD CONSTRAINT "generation_candidates_generation_run_id_generation_runs_id_fk" FOREIGN KEY ("generation_run_id") REFERENCES "public"."generation_runs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "generation_candidates" ADD CONSTRAINT "generation_candidates_candidate_question_version_id_question_versions_id_fk" FOREIGN KEY ("candidate_question_version_id") REFERENCES "public"."question_versions"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "generation_runs" ADD CONSTRAINT "generation_runs_config_id_generator_configs_id_fk" FOREIGN KEY ("config_id") REFERENCES "public"."generator_configs"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
@@ -538,6 +546,7 @@ ALTER TABLE "feedback" ADD CONSTRAINT "feedback_student_id_users_id_fk" FOREIGN 
 ALTER TABLE "feedback" ADD CONSTRAINT "feedback_class_id_at_send_classes_id_fk" FOREIGN KEY ("class_id_at_send") REFERENCES "public"."classes"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "question_reports" ADD CONSTRAINT "question_reports_reporter_student_id_users_id_fk" FOREIGN KEY ("reporter_student_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "question_reports" ADD CONSTRAINT "question_reports_attempt_answer_id_attempt_answers_id_fk" FOREIGN KEY ("attempt_answer_id") REFERENCES "public"."attempt_answers"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
+ALTER TABLE "question_reports" ADD CONSTRAINT "question_reports_drill_attempt_question_id_drill_attempt_questions_id_fk" FOREIGN KEY ("drill_attempt_question_id") REFERENCES "public"."drill_attempt_questions"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "video_reports" ADD CONSTRAINT "video_reports_reporter_student_id_users_id_fk" FOREIGN KEY ("reporter_student_id") REFERENCES "public"."users"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "video_reports" ADD CONSTRAINT "video_reports_mapping_id_video_subchapter_mappings_id_fk" FOREIGN KEY ("mapping_id") REFERENCES "public"."video_subchapter_mappings"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint
 ALTER TABLE "video_subchapter_mappings" ADD CONSTRAINT "video_subchapter_mappings_video_id_learning_videos_id_fk" FOREIGN KEY ("video_id") REFERENCES "public"."learning_videos"("id") ON DELETE restrict ON UPDATE no action;--> statement-breakpoint

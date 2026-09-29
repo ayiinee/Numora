@@ -4,6 +4,7 @@ import { attemptAnswers } from './assessments.js';
 import { classes } from './classes.js';
 import { subchapters } from './learning.js';
 import { users } from './identity.js';
+import { drillAttemptQuestions } from './learning.js';
 
 export const reportStatus = pgEnum('report_status', ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED']);
 export const curationStatus = pgEnum('curation_status', ['DRAFT', 'READY', 'ARCHIVED']);
@@ -48,13 +49,17 @@ export const videoSubchapterMappings = pgTable('video_subchapter_mappings', {
 export const questionReports = pgTable('question_reports', {
   id: uuid('id').defaultRandom().primaryKey(),
   reporterStudentId: uuid('reporter_student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
-  attemptAnswerId: uuid('attempt_answer_id').notNull().references(() => attemptAnswers.id, { onDelete: 'restrict' }),
+  attemptAnswerId: uuid('attempt_answer_id').references(() => attemptAnswers.id, { onDelete: 'restrict' }),
+  drillAttemptQuestionId: uuid('drill_attempt_question_id').references(() => drillAttemptQuestions.id, { onDelete: 'restrict' }),
   category: text('category').notNull(),
   details: text('details'),
   status: reportStatus('status').notNull().default('OPEN'),
   followUp: text('follow_up'),
   reportedAt: timestamp('reported_at', { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [index('question_reports_status_time_idx').on(table.status, table.reportedAt)]).enableRLS();
+}, (table) => [
+  index('question_reports_status_time_idx').on(table.status, table.reportedAt),
+  check('question_reports_source_ck', sql`(${table.attemptAnswerId} is not null) <> (${table.drillAttemptQuestionId} is not null)`),
+]).enableRLS();
 
 export const videoReports = pgTable('video_reports', {
   id: uuid('id').defaultRandom().primaryKey(),

@@ -3,6 +3,7 @@ import { boolean, check, foreignKey, index, integer, jsonb, numeric, pgEnum, pgT
 import { assessmentAttempts, assessmentPackages, packageItems } from './assessments.js';
 import { classes } from './classes.js';
 import { users } from './identity.js';
+import { drillAttempts } from './learning.js';
 
 export const pvpMatchStatus = pgEnum('pvp_match_status', ['WAITING', 'READY', 'RUNNING', 'FINISHED', 'CANCELLED']);
 export const pvpConnectionStatus = pgEnum('pvp_connection_status', ['CONNECTED', 'DISCONNECTED', 'FORFEIT']);
@@ -27,12 +28,14 @@ export const xpLedger = pgTable('xp_ledger', {
   studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
   classIdAtEvent: uuid('class_id_at_event').references(() => classes.id, { onDelete: 'restrict' }),
   sourceType: xpSourceType('source_type').notNull(),
-  attemptId: uuid('attempt_id').notNull().references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
+  attemptId: uuid('attempt_id').references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
+  drillAttemptId: uuid('drill_attempt_id').references(() => drillAttempts.id, { onDelete: 'restrict' }),
   xpAmount: integer('xp_amount').notNull(),
   occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
   periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
 }, (table) => [
   uniqueIndex('xp_ledger_attempt_uq').on(table.attemptId),
+  uniqueIndex('xp_ledger_drill_attempt_uq').on(table.drillAttemptId),
   index('xp_ledger_student_time_idx').on(table.studentId, table.occurredAt),
   index('xp_ledger_class_period_idx').on(table.classIdAtEvent, table.periodId),
   foreignKey({
@@ -40,6 +43,12 @@ export const xpLedger = pgTable('xp_ledger', {
     columns: [table.attemptId, table.studentId],
     foreignColumns: [assessmentAttempts.id, assessmentAttempts.studentId],
   }).onDelete('restrict'),
+  foreignKey({
+    name: 'xp_ledger_drill_attempt_student_fk',
+    columns: [table.drillAttemptId, table.studentId],
+    foreignColumns: [drillAttempts.id, drillAttempts.studentId],
+  }).onDelete('restrict'),
+  check('xp_ledger_source_ck', sql`(${table.sourceType} = 'DRILL' and ${table.drillAttemptId} is not null and ${table.attemptId} is null) or (${table.sourceType} = 'TRYOUT' and ${table.attemptId} is not null and ${table.drillAttemptId} is null)`),
   check('xp_ledger_amount_ck', sql`${table.xpAmount} >= 0`),
 ]).enableRLS();
 

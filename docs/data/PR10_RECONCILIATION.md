@@ -1,8 +1,10 @@
 # PR #10 integration against `main`
 
-**ENGINEERING DECISION (integration draft):** Keep the existing Drill tables, columns, and `question_versions → question_variants` relationship from `main`. Migration `0003_dashing_slipstream.sql` adds the nonoverlapping assessment, PvP, leaderboard, analytics, support, and Data/AI tables from PR #10. It does not replace the Drill API's content or progress tables. The resulting schema has 50 application tables because `main` already added Drill specific tables that PR #10 did not contain.
+**ENGINEERING DECISION (integration draft):** Keep the existing Drill tables, columns, and `question_versions → question_variants` relationship from `main`. Migration `0003_acoustic_hellfire_club.sql` adds the nonoverlapping assessment, PvP, leaderboard, analytics, support, and Data/AI tables from PR #10. It does not replace the Drill API's content or progress tables. The resulting schema has 50 application tables because `main` already added Drill specific tables that PR #10 did not contain.
 
 The Pretest unique index covers `SUBMITTED` and `GRADED` attempts. `CANCELLED` attempts do not consume the one completed Pretest per chapter allowance. The migration enables RLS on all new tables, removes client role grants when those roles exist, and prevents overlapping leaderboard periods.
+
+Drill XP ledger rows reference `drill_attempts` directly; Tryout rows reference `assessment_attempts`. Question reports may reference a saved general answer or a Drill attempt question. These references keep the already implemented Drill history usable without copying it into the new assessment tables.
 
 ## Before this branch can merge
 
