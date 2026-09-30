@@ -32,6 +32,20 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   useEffect(() => {
     let active = true;
     let sequence = 0;
+    let lastAccessToken: string | null | undefined;
+    let pendingTimer: ReturnType<typeof setTimeout> | undefined;
+    const clearPending = () => clearTimeout(pendingTimer);
+    const failIfPending = (current: number) => {
+      clearPending();
+      pendingTimer = setTimeout(() => {
+        if (!active || current !== sequence) return;
+        sequence++;
+        setState({
+          status: 'error',
+          message: 'Pemeriksaan sesi terlalu lama. Periksa koneksi lalu coba lagi.',
+        });
+      }, 10_000);
+    };
     let client: ReturnType<typeof getSupabase>;
     try {
       client = getSupabase();
@@ -41,17 +55,25 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     }
 
     const resolve = async (session: Session | null) => {
+      const accessToken = session?.access_token ?? null;
+      if (lastAccessToken === accessToken) return;
+      lastAccessToken = accessToken;
       const current = ++sequence;
+      clearPending();
       if (!session) {
         setState({ status: 'signed_out' });
         return;
       }
       setState({ status: 'loading', session });
+      failIfPending(current);
       try {
         const profile = await getIdentity(session.access_token);
-        if (active && current === sequence) setState({ status: 'ready', session, profile });
+        if (!active || current !== sequence) return;
+        clearPending();
+        setState({ status: 'ready', session, profile });
       } catch (error) {
         if (!active || current !== sequence) return;
+        clearPending();
         if (error instanceof ApiProblem && error.code === 'ACCOUNT_NOT_REGISTERED') {
           setState({ status: 'registration', session });
         } else if (error instanceof ApiProblem && error.code === 'ACCOUNT_DISABLED') {
@@ -76,12 +98,12 @@ export function AuthProvider({ children }: { children: ReactNode }) {
         if (active) void resolve(session);
       });
     });
-    void client.auth.getSession().then(({ data }) => {
-      if (active) void resolve(data.session);
-    });
+    // Supabase emits INITIAL_SESSION for this subscription, including a null session.
+    failIfPending(sequence);
     return () => {
       active = false;
       sequence++;
+      clearPending();
       subscription.unsubscribe();
     };
   }, [revision]);

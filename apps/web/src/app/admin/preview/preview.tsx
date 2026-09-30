@@ -1,5 +1,7 @@
 'use client';
 
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
 import { useState } from 'react';
 import './preview.css';
 
@@ -37,6 +39,7 @@ const navigation = [
 ];
 
 export default function AdminPage() {
+  const router = useRouter();
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [questions, setQuestions] = useState(initialQuestions);
   const [query, setQuery] = useState('');
@@ -106,11 +109,11 @@ export default function AdminPage() {
   return (
     <main className="admin-preview admin-app">
       <aside className="admin-sidebar">
-        <a className="sidebar-brand" href="/admin" aria-label="NUMORA Admin beranda"><span className="brand-mark">n.</span><span>NUMORA <i>ADMIN</i></span></a>
+        <Link className="sidebar-brand" href="/admin" aria-label="NUMORA Admin beranda"><span className="brand-mark">n.</span><span>NUMORA <i>ADMIN</i></span></Link>
         <div className="workspace-label">WORKSPACE</div>
         <nav className="admin-nav" aria-label="Navigasi admin">
           {navigation.map((item) => (
-            <button key={item.label} className={`nav-item ${activeNav === item.label ? 'is-active' : ''}`} onClick={() => { if (item.label === 'Sekolah & kelas') { window.location.assign('/admin/schools'); return; } setActiveNav(item.label); setNotice(item.label === 'Bank soal' ? '' : `${item.label} belum tersedia pada pratinjau ini.`); }}>
+            <button key={item.label} className={`nav-item ${activeNav === item.label ? 'is-active' : ''}`} onClick={() => { if (item.label === 'Sekolah & kelas') { router.push('/admin/schools'); return; } setActiveNav(item.label); setNotice(item.label === 'Bank soal' ? '' : `${item.label} belum tersedia pada pratinjau ini.`); }}>
               <span className="nav-icon" aria-hidden="true">{item.icon}</span>{item.label}
               {item.label === 'Laporan' && <span className="nav-count">4</span>}
             </button>
@@ -144,7 +147,7 @@ export default function AdminPage() {
             </tbody></table></div>
             <div className="table-footer"><span>Menampilkan <b>{visibleQuestions.length}</b> dari <b>{questions.length}</b> soal</span><div><button disabled aria-label="Halaman sebelumnya">←</button><span>1</span><button disabled aria-label="Halaman berikutnya">→</button></div></div>
           </section>
-          <p className="data-caption"><span aria-hidden="true">⌁</span> Semua aksi di halaman ini hanya simulasi desain. Untuk sekolah dan token Guru yang nyata, buka <a href="/admin/schools">panel Admin</a>.</p>
+          <p className="data-caption"><span aria-hidden="true">⌁</span> Semua aksi di halaman ini hanya simulasi desain. Untuk sekolah dan token Guru yang nyata, buka <Link href="/admin/schools">panel Admin</Link>.</p>
         </div>
       </section>
 
