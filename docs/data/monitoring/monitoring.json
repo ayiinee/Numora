@@ -1,0 +1,197 @@
+{
+  "metadata": {
+    "fixtureId": "NUMORA-MONITORING-DEMO-01",
+    "label": "DEMO — synthetic presentation fixture; not production or a curriculum decision",
+    "contract": "docs/api/TEACHER_MONITORING.md",
+    "timestampTimezone": "UTC",
+    "notes": [
+      "This is an analysis/presentation fixture, not a Drizzle seed and not an insert-ready database dump.",
+      "The content hierarchy has two demo levels only; final taxonomy and level count remain OPEN-01.",
+      "Level 2 unlock in the 80-percent example follows the approved Drill baseline; no academic 'Tuntas' status is asserted.",
+      "feedback and reports below are PROPOSED records because their persistence tables and API contracts are not implemented.",
+      "Drill attempt rows are dashboard aggregates; the question snapshot below is included specifically to demonstrate exact report lineage, not as a complete 10-question attempt dump."
+    ]
+  },
+  "schools": [
+    { "id": "10000000-0000-4000-8000-000000000001", "code": "DEMO-SCHOOL", "name": "DEMO School", "status": "ACTIVE" }
+  ],
+  "users": [
+    { "id": "20000000-0000-4000-8000-000000000001", "role": "ADMIN", "displayName": "DEMO Admin", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000002", "role": "TEACHER", "displayName": "DEMO Guru A", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000003", "role": "TEACHER", "displayName": "DEMO Guru B", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000011", "role": "STUDENT", "displayName": "DEMO Siswa 1", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000012", "role": "STUDENT", "displayName": "DEMO Siswa 2", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000013", "role": "STUDENT", "displayName": "DEMO Siswa 3", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000014", "role": "STUDENT", "displayName": "DEMO Siswa 4", "status": "ACTIVE" },
+    { "id": "20000000-0000-4000-8000-000000000021", "role": "STUDENT", "displayName": "DEMO Siswa Luar Kelas", "status": "ACTIVE" }
+  ],
+  "teacherVerificationTokens": [
+    {
+      "id": "30000000-0000-4000-8000-000000000001",
+      "schoolId": "10000000-0000-4000-8000-000000000001",
+      "tokenHash": "0000000000000000000000000000000000000000000000000000000000000000",
+      "createdByUserId": "20000000-0000-4000-8000-000000000001",
+      "expiresAt": "2026-10-02T09:00:00.000Z",
+      "usedAt": "2026-09-29T09:00:00.000Z",
+      "usedByUserId": "20000000-0000-4000-8000-000000000002",
+      "revokedAt": null,
+      "demoOnly": true
+    },
+    {
+      "id": "30000000-0000-4000-8000-000000000002",
+      "schoolId": "10000000-0000-4000-8000-000000000001",
+      "tokenHash": "1111111111111111111111111111111111111111111111111111111111111111",
+      "createdByUserId": "20000000-0000-4000-8000-000000000001",
+      "expiresAt": "2026-10-02T09:00:00.000Z",
+      "usedAt": "2026-09-29T09:00:00.000Z",
+      "usedByUserId": "20000000-0000-4000-8000-000000000003",
+      "revokedAt": null,
+      "demoOnly": true
+    }
+  ],
+  "teacherSchoolMemberships": [
+    { "id": "31000000-0000-4000-8000-000000000001", "teacherUserId": "20000000-0000-4000-8000-000000000002", "schoolId": "10000000-0000-4000-8000-000000000001", "verificationTokenId": "30000000-0000-4000-8000-000000000001", "verifiedAt": "2026-09-29T09:00:00.000Z", "endedAt": null },
+    { "id": "31000000-0000-4000-8000-000000000002", "teacherUserId": "20000000-0000-4000-8000-000000000003", "schoolId": "10000000-0000-4000-8000-000000000001", "verificationTokenId": "30000000-0000-4000-8000-000000000002", "verifiedAt": "2026-09-29T09:00:00.000Z", "endedAt": null }
+  ],
+  "classes": [
+    { "id": "40000000-0000-4000-8000-000000000001", "schoolId": "10000000-0000-4000-8000-000000000001", "teacherUserId": "20000000-0000-4000-8000-000000000002", "name": "DEMO Kelas IX A", "joinCode": "DEMO-IX-A", "archivedAt": null },
+    { "id": "40000000-0000-4000-8000-000000000002", "schoolId": "10000000-0000-4000-8000-000000000001", "teacherUserId": "20000000-0000-4000-8000-000000000003", "name": "DEMO Kelas IX B", "joinCode": "DEMO-IX-B", "archivedAt": null }
+  ],
+  "classMemberships": [
+    { "id": "41000000-0000-4000-8000-000000000011", "classId": "40000000-0000-4000-8000-000000000001", "studentUserId": "20000000-0000-4000-8000-000000000011", "joinedAt": "2026-09-01T00:00:00.000Z", "leftAt": null },
+    { "id": "41000000-0000-4000-8000-000000000012", "classId": "40000000-0000-4000-8000-000000000001", "studentUserId": "20000000-0000-4000-8000-000000000012", "joinedAt": "2026-09-01T00:00:00.000Z", "leftAt": null },
+    { "id": "41000000-0000-4000-8000-000000000013", "classId": "40000000-0000-4000-8000-000000000001", "studentUserId": "20000000-0000-4000-8000-000000000013", "joinedAt": "2026-09-01T00:00:00.000Z", "leftAt": null },
+    { "id": "41000000-0000-4000-8000-000000000014", "classId": "40000000-0000-4000-8000-000000000001", "studentUserId": "20000000-0000-4000-8000-000000000014", "joinedAt": "2026-09-01T00:00:00.000Z", "leftAt": null },
+    { "id": "41000000-0000-4000-8000-000000000021", "classId": "40000000-0000-4000-8000-000000000002", "studentUserId": "20000000-0000-4000-8000-000000000021", "joinedAt": "2026-09-01T00:00:00.000Z", "leftAt": null }
+  ],
+  "content": {
+    "chapters": [
+      { "id": "50000000-0000-4000-8000-000000000001", "title": "DEMO Bab Bilangan", "sortOrder": 1, "publishedAt": "2026-09-01T00:00:00.000Z" }
+    ],
+    "subchapters": [
+      { "id": "51000000-0000-4000-8000-000000000001", "chapterId": "50000000-0000-4000-8000-000000000001", "title": "DEMO Operasi Bilangan", "sortOrder": 1, "publishedAt": "2026-09-01T00:00:00.000Z" }
+    ],
+    "levels": [
+      { "id": "52000000-0000-4000-8000-000000000001", "subchapterId": "51000000-0000-4000-8000-000000000001", "title": "DEMO Level 1", "sortOrder": 1, "publishedAt": "2026-09-01T00:00:00.000Z" },
+      { "id": "52000000-0000-4000-8000-000000000002", "subchapterId": "51000000-0000-4000-8000-000000000001", "title": "DEMO Level 2", "sortOrder": 2, "publishedAt": "2026-09-01T00:00:00.000Z" }
+    ],
+    "questions": [
+      { "id": "53000000-0000-4000-8000-000000000001", "levelId": "52000000-0000-4000-8000-000000000001", "code": "DEMO-MON-Q01" }
+    ],
+    "questionVersions": [
+      { "id": "54000000-0000-4000-8000-000000000001", "questionId": "53000000-0000-4000-8000-000000000001", "version": 1 },
+      { "id": "54000000-0000-4000-8000-000000000002", "questionId": "53000000-0000-4000-8000-000000000001", "version": 2 }
+    ],
+    "questionVariants": [
+      { "id": "55000000-0000-4000-8000-000000000001", "questionVersionId": "54000000-0000-4000-8000-000000000001", "variantNo": 1, "stem": "DEMO: Berapakah hasil 2 + 3?", "options": [{ "id": "A", "text": "4" }, { "id": "B", "text": "5" }, { "id": "C", "text": "6" }, { "id": "D", "text": "7" }], "correctOptionId": "B", "explanation": "DEMO: 2 + 3 = 5.", "isDemo": true },
+      { "id": "55000000-0000-4000-8000-000000000002", "questionVersionId": "54000000-0000-4000-8000-000000000002", "variantNo": 1, "stem": "DEMO V2: Berapakah hasil 3 + 3?", "options": [{ "id": "A", "text": "5" }, { "id": "B", "text": "6" }, { "id": "C", "text": "7" }, { "id": "D", "text": "8" }], "correctOptionId": "B", "explanation": "DEMO: 3 + 3 = 6.", "isDemo": true }
+    ],
+    "drillPackages": [
+      { "id": "56000000-0000-4000-8000-000000000001", "levelId": "52000000-0000-4000-8000-000000000001", "variantSet": 1, "isDemo": true, "publishedAt": "2026-09-01T00:00:00.000Z" },
+      { "id": "56000000-0000-4000-8000-000000000002", "levelId": "52000000-0000-4000-8000-000000000001", "variantSet": 2, "isDemo": true, "publishedAt": "2026-09-01T00:00:00.000Z" }
+    ],
+    "drillPackageQuestions": [
+      { "id": "57000000-0000-4000-8000-000000000001", "packageId": "56000000-0000-4000-8000-000000000001", "questionVariantId": "55000000-0000-4000-8000-000000000001", "sortOrder": 1 },
+      { "id": "57000000-0000-4000-8000-000000000002", "packageId": "56000000-0000-4000-8000-000000000002", "questionVariantId": "55000000-0000-4000-8000-000000000002", "sortOrder": 1 }
+    ]
+  },
+  "drillAttempts": [
+    { "id": "60000000-0000-4000-8000-000000000011", "studentId": "20000000-0000-4000-8000-000000000011", "levelId": "52000000-0000-4000-8000-000000000001", "packageId": "56000000-0000-4000-8000-000000000001", "status": "COMPLETED", "startedAt": "2026-09-10T08:00:00.000Z", "completedAt": "2026-09-10T08:12:00.000Z", "score": 80, "correctCount": 8, "questionCount": 10, "mastered": true, "isDemo": true },
+    { "id": "60000000-0000-4000-8000-000000000021", "studentId": "20000000-0000-4000-8000-000000000012", "levelId": "52000000-0000-4000-8000-000000000001", "packageId": "56000000-0000-4000-8000-000000000001", "status": "COMPLETED", "startedAt": "2026-09-11T08:00:00.000Z", "completedAt": "2026-09-11T08:12:00.000Z", "score": 70, "correctCount": 7, "questionCount": 10, "mastered": false, "isDemo": true },
+    { "id": "60000000-0000-4000-8000-000000000022", "studentId": "20000000-0000-4000-8000-000000000012", "levelId": "52000000-0000-4000-8000-000000000001", "packageId": "56000000-0000-4000-8000-000000000002", "status": "COMPLETED", "startedAt": "2026-09-12T08:00:00.000Z", "completedAt": "2026-09-12T08:12:00.000Z", "score": 60, "correctCount": 6, "questionCount": 10, "mastered": false, "isDemo": true },
+    { "id": "60000000-0000-4000-8000-000000000041", "studentId": "20000000-0000-4000-8000-000000000014", "levelId": "52000000-0000-4000-8000-000000000001", "packageId": "56000000-0000-4000-8000-000000000002", "status": "IN_PROGRESS", "startedAt": "2026-09-13T08:00:00.000Z", "completedAt": null, "score": null, "correctCount": null, "questionCount": 10, "mastered": null, "isDemo": true }
+  ],
+  "levelProgress": [
+    { "id": "61000000-0000-4000-8000-000000000011", "studentId": "20000000-0000-4000-8000-000000000011", "levelId": "52000000-0000-4000-8000-000000000001", "unlockedAt": "2026-09-01T00:00:00.000Z", "completedAt": "2026-09-10T08:12:00.000Z", "latestScore": 80, "bestScore": 80, "latestAttemptId": "60000000-0000-4000-8000-000000000011" },
+    { "id": "61000000-0000-4000-8000-000000000012", "studentId": "20000000-0000-4000-8000-000000000011", "levelId": "52000000-0000-4000-8000-000000000002", "unlockedAt": "2026-09-10T08:12:00.000Z", "completedAt": null, "latestScore": null, "bestScore": null, "latestAttemptId": null },
+    { "id": "61000000-0000-4000-8000-000000000021", "studentId": "20000000-0000-4000-8000-000000000012", "levelId": "52000000-0000-4000-8000-000000000001", "unlockedAt": "2026-09-01T00:00:00.000Z", "completedAt": null, "latestScore": 60, "bestScore": 70, "latestAttemptId": "60000000-0000-4000-8000-000000000022" }
+  ],
+  "reportTraceSnapshots": [
+    {
+      "id": "62000000-0000-4000-8000-000000000001",
+      "attemptId": "60000000-0000-4000-8000-000000000011",
+      "questionVariantId": "55000000-0000-4000-8000-000000000001",
+      "sortOrder": 1,
+      "stem": "DEMO: Berapakah hasil 2 + 3?",
+      "options": [{ "id": "A", "text": "4" }, { "id": "B", "text": "5" }, { "id": "C", "text": "6" }, { "id": "D", "text": "7" }],
+      "correctOptionId": "B",
+      "explanation": "DEMO: 2 + 3 = 5.",
+      "selectedOptionId": "B",
+      "note": "Single traceability snapshot for illustration; other attempt-question rows are intentionally omitted."
+    }
+  ],
+  "expectedMonitoring": [
+    {
+      "classId": "40000000-0000-4000-8000-000000000001",
+      "studentId": "20000000-0000-4000-8000-000000000011",
+      "studentLabel": "DEMO Siswa 1",
+      "latestDrillScore": 80,
+      "levels": [
+        { "levelId": "52000000-0000-4000-8000-000000000001", "accessStatus": "UNLOCKED", "inProgress": false, "latestDrillScore": 80, "bestDrillScore": 80 },
+        { "levelId": "52000000-0000-4000-8000-000000000002", "accessStatus": "UNLOCKED", "inProgress": false, "latestDrillScore": null, "bestDrillScore": null }
+      ],
+      "demoState": "completed-at-80-percent; next level access record exists"
+    },
+    {
+      "classId": "40000000-0000-4000-8000-000000000001",
+      "studentId": "20000000-0000-4000-8000-000000000012",
+      "studentLabel": "DEMO Siswa 2",
+      "latestDrillScore": 60,
+      "levels": [
+        { "levelId": "52000000-0000-4000-8000-000000000001", "accessStatus": "UNLOCKED", "inProgress": false, "latestDrillScore": 60, "bestDrillScore": 70 },
+        { "levelId": "52000000-0000-4000-8000-000000000002", "accessStatus": "LOCKED", "inProgress": false, "latestDrillScore": null, "bestDrillScore": null }
+      ],
+      "demoState": "latest-below-best; next level has no progress record"
+    },
+    {
+      "classId": "40000000-0000-4000-8000-000000000001",
+      "studentId": "20000000-0000-4000-8000-000000000013",
+      "studentLabel": "DEMO Siswa 3",
+      "latestDrillScore": null,
+      "levels": [
+        { "levelId": "52000000-0000-4000-8000-000000000001", "accessStatus": "UNLOCKED", "inProgress": false, "latestDrillScore": null, "bestDrillScore": null },
+        { "levelId": "52000000-0000-4000-8000-000000000002", "accessStatus": "LOCKED", "inProgress": false, "latestDrillScore": null, "bestDrillScore": null }
+      ],
+      "demoState": "no-attempts; first level open by baseline"
+    },
+    {
+      "classId": "40000000-0000-4000-8000-000000000001",
+      "studentId": "20000000-0000-4000-8000-000000000014",
+      "studentLabel": "DEMO Siswa 4",
+      "latestDrillScore": null,
+      "levels": [
+        { "levelId": "52000000-0000-4000-8000-000000000001", "accessStatus": "UNLOCKED", "inProgress": true, "latestDrillScore": null, "bestDrillScore": null },
+        { "levelId": "52000000-0000-4000-8000-000000000002", "accessStatus": "LOCKED", "inProgress": false, "latestDrillScore": null, "bestDrillScore": null }
+      ],
+      "demoState": "active-attempt; no completed score yet"
+    }
+  ],
+  "proposedFeedbackNotPersisted": [
+    { "id": "70000000-0000-4000-8000-000000000001", "teacherUserId": "20000000-0000-4000-8000-000000000002", "studentUserId": "20000000-0000-4000-8000-000000000011", "classId": "40000000-0000-4000-8000-000000000001", "message": "DEMO: Periksa kembali langkah pengerjaan soal pecahan.", "createdAt": "2026-09-14T08:00:00.000Z", "readAt": null, "schemaStatus": "PROPOSED_NOT_IN_CURRENT_SCHEMA" },
+    { "id": "70000000-0000-4000-8000-000000000002", "teacherUserId": "20000000-0000-4000-8000-000000000002", "studentUserId": "20000000-0000-4000-8000-000000000012", "classId": "40000000-0000-4000-8000-000000000001", "message": "DEMO: Bagus, lanjutkan latihan secara konsisten.", "createdAt": "2026-09-14T08:05:00.000Z", "readAt": "2026-09-14T10:00:00.000Z", "schemaStatus": "PROPOSED_NOT_IN_CURRENT_SCHEMA" }
+  ],
+  "proposedReportsNotPersisted": [
+    {
+      "id": "71000000-0000-4000-8000-000000000001",
+      "reporterUserId": "20000000-0000-4000-8000-000000000011",
+      "type": "QUESTION",
+      "questionId": "53000000-0000-4000-8000-000000000001",
+      "questionVersionId": "54000000-0000-4000-8000-000000000001",
+      "questionVariantId": "55000000-0000-4000-8000-000000000001",
+      "attemptId": "60000000-0000-4000-8000-000000000011",
+      "description": "DEMO: opsi jawaban perlu ditinjau.",
+      "createdAt": "2026-09-15T08:00:00.000Z",
+      "schemaStatus": "PROPOSED_NOT_IN_CURRENT_SCHEMA"
+    },
+    {
+      "id": "71000000-0000-4000-8000-000000000002",
+      "reporterUserId": "20000000-0000-4000-8000-000000000012",
+      "type": "VIDEO",
+      "videoId": "DEMO-VIDEO-SUBBAB-BILANGAN-01",
+      "subchapterId": "51000000-0000-4000-8000-000000000001",
+      "description": "DEMO: Tautan video tidak dapat dibuka.",
+      "createdAt": "2026-09-15T08:10:00.000Z",
+      "schemaStatus": "PROPOSED_NOT_IN_CURRENT_SCHEMA; video catalog absent"
+    }
+  ]
+}
