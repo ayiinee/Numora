@@ -135,6 +135,44 @@
 .admin-preview .button-secondary { border-color: #e9e4eb; background: #fff; color: #62596a; }
 .admin-preview .button-secondary:hover { background: #faf8fb; }
 .admin-preview .sr-only { position: absolute; width: 1px; height: 1px; overflow: hidden; clip: rect(0, 0, 0, 0); white-space: nowrap; }
+.admin-preview .heading-actions { display: flex; flex-wrap: wrap; gap: 9px; }
+.admin-preview .preview-shortcuts { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: 1px; background: #eee9ef; }
+.admin-preview .shortcut-row { min-height: 54px; display: flex; align-items: center; justify-content: space-between; border: 0; padding: 0 18px; background: #fff; color: #554b5c; font: inherit; font-size: 12px; font-weight: 800; text-align: left; cursor: pointer; }
+.admin-preview .shortcut-row:hover { color: var(--admin-purple); background: #fcfaff; }
+.admin-preview .preview-table-wrap { width: 100%; overflow-x: auto; }
+.admin-preview .preview-table { width: 100%; border-collapse: collapse; text-align: left; }
+.admin-preview .preview-table th { height: 36px; padding: 0 14px; background: #fcfbfc; color: #a29aa5; font-size: 9px; font-weight: 900; letter-spacing: .08em; white-space: nowrap; }
+.admin-preview .preview-table td { min-height: 58px; padding: 12px 14px; border-top: 1px solid #f1eef1; color: #645b69; font-size: 11px; vertical-align: middle; }
+.admin-preview .preview-table td b, .admin-preview .preview-table td small { display: block; }
+.admin-preview .preview-table td b { color: #403747; font-size: 11px; }
+.admin-preview .preview-table td small { margin-top: 4px; color: #9b939f; font-size: 9px; }
+.admin-preview .preview-row-actions { display: flex; flex-wrap: wrap; gap: 5px; }
+.admin-preview .preview-row-actions button { min-height: 29px; border: 1px solid #e9e4eb; border-radius: 6px; padding: 0 8px; background: #fff; color: #675d70; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.admin-preview .preview-row-actions button:hover:not(:disabled) { border-color: #d8c6e8; color: var(--admin-purple); }
+.admin-preview .preview-row-actions button:disabled { color: #9a929e; cursor: not-allowed; }
+.admin-preview .preview-subsection { margin-top: 18px; }
+.admin-preview .preview-class-list { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)); }
+.admin-preview .preview-class-list > div { min-width: 0; display: grid; gap: 6px; padding: 16px; border-top: 1px solid #f1eef1; }
+.admin-preview .preview-class-list b { color: #554b5c; font-size: 12px; }
+.admin-preview .preview-class-list span { color: #8d8491; font-size: 10px; line-height: 1.5; }
+.admin-preview .preview-inline-form { display: grid; grid-template-columns: 1fr 1fr auto; align-items: end; gap: 12px; margin-bottom: 18px; border: 1px solid #eae6eb; border-radius: 10px; padding: 15px; background: #fff; }
+.admin-preview .preview-inline-form label { display: grid; gap: 6px; color: #574e5e; font-size: 10px; font-weight: 800; }
+.admin-preview .preview-inline-form input { min-width: 0; height: 38px; border: 1px solid #e5e0e8; border-radius: 7px; padding: 0 10px; color: var(--admin-ink); font: inherit; font-size: 11px; }
+.admin-preview .notice-info { margin-bottom: 16px; border-color: #eee7f5; background: #faf7fd; color: #624379; }
+.admin-preview .preview-audit-list { display: grid; gap: 0; margin: 0; padding: 0 18px; list-style: none; }
+.admin-preview .preview-audit-list li { display: flex; align-items: flex-start; gap: 12px; padding: 15px 0; border-top: 1px solid #f1eef1; color: #645b69; font-size: 11px; }
+.admin-preview .audit-mark { color: var(--admin-purple); font-size: 20px; line-height: 12px; }
+.admin-preview .admin-content[hidden] { display: none; }
+.admin-preview .preview-management-toolbar { display: grid; grid-template-columns: minmax(180px, 1fr) minmax(160px, .8fr) minmax(220px, 1.3fr); gap: 10px; margin-bottom: 18px; }
+.admin-preview .preview-filter { min-width: 0; display: grid; gap: 6px; color: #706777; font-size: 10px; font-weight: 800; }
+.admin-preview .preview-filter select, .admin-preview .preview-filter input { width: 100%; min-width: 0; height: 38px; border: 1px solid #e5e0e8; border-radius: 7px; padding: 0 10px; background: #fff; color: #463c4e; font: inherit; font-size: 11px; }
+.admin-preview .preview-restriction-reason { display: block; max-width: 190px; white-space: normal; line-height: 1.45; }
+.admin-preview .preview-inline-action { min-height: 30px; border: 1px solid #e9e4eb; border-radius: 6px; padding: 0 9px; background: #fff; color: #675d70; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.admin-preview .preview-inline-action:hover { border-color: #d8c6e8; color: var(--admin-purple); }
+.admin-preview .preview-ban-form { display: grid; grid-template-columns: minmax(130px, 1fr) auto auto; gap: 5px; min-width: 300px; }
+.admin-preview .preview-ban-form input { min-width: 0; height: 30px; border: 1px solid #e5e0e8; border-radius: 6px; padding: 0 7px; font: inherit; font-size: 10px; }
+.admin-preview .preview-ban-form button { min-height: 30px; border: 1px solid #e9e4eb; border-radius: 6px; padding: 0 7px; background: #fff; color: #675d70; font: inherit; font-size: 10px; font-weight: 700; cursor: pointer; }
+.admin-preview .preview-ban-form button[type="submit"] { border-color: #722cce; background: #722cce; color: #fff; }
 
 .admin-preview.admin-login-shell { --admin-ink: #30253c; --admin-purple: #722cce; position: relative; min-height: 100vh; display: flex; flex-direction: column; align-items: center; justify-content: center; overflow: hidden; padding: 34px 24px 74px; background: #f6efcd; color: var(--admin-ink); font-family: "Nunito Sans", "Segoe UI", sans-serif; }
 .admin-preview.admin-login-shell::before { position: absolute; top: -190px; right: -90px; width: 520px; height: 520px; border: 1px solid rgb(114 44 206 / 12%); border-radius: 50%; content: ""; }
@@ -193,6 +231,12 @@
   .admin-preview .login-panel { padding: 30px 24px 23px; }
   .admin-preview .login-panel h1 { font-size: 33px; }
   .admin-preview .login-footer { right: 18px; bottom: 14px; left: 18px; font-size: 9px; }
+  .admin-preview .preview-shortcuts, .admin-preview .preview-class-list { grid-template-columns: 1fr; }
+  .admin-preview .preview-inline-form { grid-template-columns: 1fr; }
+  .admin-preview .preview-table { min-width: 680px; }
+  .admin-preview .preview-management-toolbar { grid-template-columns: 1fr; }
+  .admin-preview .preview-ban-form { min-width: 300px; }
+  .admin-preview .preview-class-list > div { padding: 12px 16px; }
 }
 @media (max-width: 390px) {
   .admin-preview .page-heading { gap: 8px; }
