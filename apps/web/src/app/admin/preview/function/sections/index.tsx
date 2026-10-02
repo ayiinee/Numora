@@ -31,6 +31,10 @@ type Props = {
   setReports: StateSetter<DemoReport[]>;
 };
 
+/**
+ * Switches between the admin preview sub-sections (overview, schools, users,
+ * packages, videos, reports, IRT, audit) based on the active navigation item.
+ */
 export function AdminPreviewSections({ section, onNavigate, reports, setReports }: Props) {
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
@@ -39,6 +43,9 @@ export function AdminPreviewSections({ section, onNavigate, reports, setReports 
   const [audit, setAudit] = useState(initialAudit);
   const [notice, setNotice] = useState('');
 
+  /**
+   * Shows a transient notice for the given message and appends it to the audit log.
+   */
   const record: PreviewRecord = (message) => {
     setNotice(`${message} Perubahan ini hanya tersimpan di browser.`);
     setAudit((current) => [`Admin demo ${message.toLowerCase()} · 01 Okt 2026`, ...current].slice(0, 8));

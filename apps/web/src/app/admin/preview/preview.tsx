@@ -20,6 +20,10 @@ const navigation: { label: AdminPreviewView; icon: string }[] = [
   { label: 'Audit', icon: '◷' },
 ];
 
+/**
+ * Renders the admin preview shell, toggling between the login screen and the
+ * demo workspace (sidebar, topbar, question bank, and preview sections).
+ */
 export default function AdminPage() {
   const [isSignedIn, setIsSignedIn] = useState(false);
   const [questions, setQuestions] = useState<Question[]>(initialQuestions);

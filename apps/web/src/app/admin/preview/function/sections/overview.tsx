@@ -8,6 +8,10 @@ type Props = {
   onNavigate: (section: AdminPreviewView) => void;
 };
 
+/**
+ * Dashboard overview showing summary metrics and shortcuts to other admin
+ * preview sections.
+ */
 export function OverviewSection({ schools, reports, packages, onNavigate }: Props) {
   const openReports = reports.filter((report) => report.status !== 'Selesai').length;
   const draftPackages = packages.filter((item) => item.status === 'Draf').length;

@@ -6,7 +6,14 @@ type Props = {
   record: PreviewRecord;
 };
 
+/**
+ * Lists demo video metadata mapped to subchapters and lets the user add new
+ * entries or toggle their active/archived status.
+ */
 export function VideosSection({ videos, setVideos, record }: Props) {
+  /**
+   * Adds a new placeholder video metadata entry to local state.
+   */
   function addVideo() {
     const id = Math.max(0, ...videos.map((item) => item.id)) + 1;
     setVideos((current) => [

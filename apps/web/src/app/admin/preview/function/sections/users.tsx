@@ -12,6 +12,10 @@ type Props = {
   record: PreviewRecord;
 };
 
+/**
+ * Manages demo users and classes with filtering by school/affiliation, and
+ * simulated account restriction (ban/unban) actions.
+ */
 export function UsersSection({ schools, users, setUsers, record }: Props) {
   const [schoolFilter, setSchoolFilter] = useState('all');
   const [affiliationFilter, setAffiliationFilter] = useState('all');
@@ -31,6 +35,10 @@ export function UsersSection({ schools, users, setUsers, record }: Props) {
     (item) => schoolFilter === 'all' || item.schoolId === schoolFilter,
   );
 
+  /**
+   * Submits the restriction form, marking the given user as restricted with
+   * the entered reason.
+   */
   function applyRestriction(event: FormEvent<HTMLFormElement>, user: ManagedUser) {
     event.preventDefault();
     const reason = banReason.trim();
@@ -43,6 +51,9 @@ export function UsersSection({ schools, users, setUsers, record }: Props) {
     record(`membatasi akun ${user.name}: ${reason}`);
   }
 
+  /**
+   * Clears a user's restricted status and reason, reactivating the account.
+   */
   function removeRestriction(user: ManagedUser) {
     setUsers((current) => current.map((item) => item.id === user.id
       ? { ...item, status: 'Aktif', restrictionReason: null }

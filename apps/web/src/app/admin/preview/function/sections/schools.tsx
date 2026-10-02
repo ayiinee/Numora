@@ -8,9 +8,17 @@ type Props = {
   record: PreviewRecord;
 };
 
+/**
+ * Manages demo schools and classes, including a form to add a new school and
+ * actions to toggle school/token status.
+ */
 export function SchoolsSection({ schools, setSchools, record }: Props) {
   const [showForm, setShowForm] = useState(false);
 
+  /**
+   * Validates and submits the "add school" form, prepending the new school
+   * to local state.
+   */
   function createSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
