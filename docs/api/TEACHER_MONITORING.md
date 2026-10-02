@@ -28,3 +28,18 @@ Kesalahan memakai `application/problem+json`: 401 untuk sesi tidak berlaku, 403 
 ## Core Learning source update
 
 [Drill v1.2](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) confirms highest valid best score, separate attempt history, independent subchapter progress and irreversible unlock. Teacher remains a consumer of owned-Class progress, not a Drill parameter/content editor. Star thresholds, XP and retention remain DRL-OPEN; monitoring must not derive final formulas or reinterpret TryOut simulation scores. Free all-Student TryOut does not broaden Teacher access to Mandiri or another Teacher's Students.
+
+## Feedback Guru satu arah
+
+**PRD RULE:** Guru dapat mengirim catatan satu arah maksimal 1.000 karakter kepada Student dalam Class yang dikelolanya; Student tidak membalas. Status baca ditampilkan kepada Guru.
+
+**ENGINEERING IMPLEMENTATION:** Semua endpoint berikut memakai Bearer Supabase melalui NestJS; browser tidak membaca tabel `feedback` secara langsung.
+
+| Endpoint | Akses dan hasil |
+|---|---|
+| `POST /api/v1/classes/{classId}/students/{studentId}/feedback` | Teacher aktif dan terverifikasi, pemilik Class aktif; Student harus anggota aktif Class. Body `{ "body": "...", "clientRequestId": "<uuid>" }`; `clientRequestId` opsional, body di-trim dan harus 1–1.000 karakter. Retry dengan ID/payload sama mengembalikan catatan yang sama; ID sama dengan payload/aktor berbeda mendapat `409`. Mengembalikan `{ id, sentAt, readAt: null }` (`201`). |
+| `GET /api/v1/classes/{classId}/students/{studentId}/feedback` | Teacher yang sama; daftar catatan yang ia kirim pada Class/Student itu beserta `readAt`, terbaru lebih dahulu. |
+| `GET /api/v1/students/me/feedback` | Student aktif; hanya catatan milik Student autentikasi, terbaru lebih dahulu. |
+| `PATCH /api/v1/students/me/feedback/{feedbackId}/read` | Hanya penerima Student. Menetapkan `readAt` sekali; pengulangan mengembalikan state yang sama dan tidak membuat event kedua. |
+
+Request lintas Class/Teacher ditolak, Student yang bukan anggota aktif tidak terungkap (`404`), role yang salah/Teacher tidak terverifikasi ditolak (`403`), input body tidak valid mendapat `400`, dan feedback milik Student lain mendapat `404`. Record menyimpan `class_id_at_send` sebagai konteks historis. `feedback_sent`/`feedback_read` ditulis ke analytics outbox dalam transaksi yang sama; payload tidak memuat isi feedback. Pengiriman memakai idempotency key opsional agar retry network tidak membuat catatan ganda. Fitur Feedback bukan bagian sesi uji coba sekolah pertama menurut CLARIFICATION-006.

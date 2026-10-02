@@ -25,6 +25,7 @@
     "db:seed": "tsx src/seed.ts",
     "db:seed:learning": "tsx src/seed.ts --learning-only",
     "db:seed:qa": "tsx src/qa-seed.ts",
+    "db:seed:monitoring": "tsx src/seed-monitoring.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

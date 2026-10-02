@@ -57,6 +57,8 @@ Baseline vocabulary from PRD v0.5 (retained for cross-feature consumers):
 
 Exact payload schemas must be agreed with Data + PO (DRL-OPEN-08). The latest feature vocabulary below supersedes conflicting event meanings; legacy names are not automatic aliases.
 
+**ENGINEERING IMPLEMENTATION for Teacher feedback (payload review pending):** `feedback_sent` and `feedback_read` use `entityType: "feedback"`, `entityId: feedback.id`, and payload `{ "classIdAtSend": "<uuid>" }`. The note body, student/teacher names, emails, and Auth identifiers are deliberately excluded. Both outbox rows are committed atomically with the feedback insert/read transition; repeated sends with the same `clientRequestId` and payload, or repeated reads, do not create duplicate events.
+
 ## Versioning rules
 
 - `eventName` meaning must remain stable.

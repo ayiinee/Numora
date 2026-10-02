@@ -27,6 +27,7 @@
     "db:seed:qa": "dotenv -e .env -- pnpm --filter @tka/database db:seed:qa",
     "qa:accounts": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts",
     "qa:smoke": "dotenv -e .env -- pnpm --filter @tka/api qa:smoke",
+    "db:seed:monitoring": "dotenv -e .env -- pnpm --filter @tka/database db:seed:monitoring",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
     "openapi:generate": "pnpm --filter @tka/database build && pnpm --filter @tka/api openapi:generate",
