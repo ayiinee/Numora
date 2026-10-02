@@ -3075,6 +3075,161 @@
           "leaderboards"
         ]
       }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/feedback": {
+      "get": {
+        "operationId": "TeacherFeedbackController_list",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "teacher-feedback"
+        ]
+      },
+      "post": {
+        "operationId": "TeacherFeedbackController_send",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateFeedbackDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "teacher-feedback"
+        ]
+      }
+    },
+    "/api/v1/students/me/feedback": {
+      "get": {
+        "operationId": "StudentFeedbackController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-feedback"
+        ]
+      }
+    },
+    "/api/v1/students/me/feedback/{feedbackId}/read": {
+      "patch": {
+        "operationId": "StudentFeedbackController_markRead",
+        "parameters": [
+          {
+            "name": "feedbackId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/FeedbackMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "student-feedback"
+        ]
+      }
     }
   },
   "info": {
@@ -6033,6 +6188,86 @@
           "updatedAt",
           "entries",
           "ownEntry"
+        ]
+      },
+      "FeedbackItemDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string",
+            "maxLength": 1000
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "body",
+          "sentAt"
+        ]
+      },
+      "FeedbackListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/FeedbackItemDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateFeedbackDto": {
+        "type": "object",
+        "properties": {
+          "clientRequestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "body": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 1000
+          }
+        },
+        "required": [
+          "body"
+        ]
+      },
+      "FeedbackMutationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "sentAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": "object",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "sentAt"
         ]
       }
     }

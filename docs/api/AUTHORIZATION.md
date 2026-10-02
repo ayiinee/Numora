@@ -36,8 +36,8 @@ Evaluate as needed:
 | View own assessment results | Yes | own students only | authorized operational access |
 | View another Student detail | No | only own class | authorized |
 | Manage question bank | No | No | Existing operational capability; outside new Drill/TryOut feature scope |
-| Send feedback | No | own Student only | not standard user flow |
-| Read feedback | own only | sent/own-class context as needed | operational only |
+| Send feedback | No | own active Student in an owned active Class, verified Teacher only | not standard user flow |
+| Read feedback | own only; may mark own feedback read | sent feedback in owned active Class, including read state | operational only |
 | Start Drill without Class | Yes, Mandiri | n/a | n/a |
 | Start Pretest without Class | Baseline v0.5 No; affiliation reconciliation remains OPEN | n/a | n/a |
 | Start TryOut without Class | Yes, free MVP for Mandiri and School Students; package eligibility still enforced | n/a | n/a |
