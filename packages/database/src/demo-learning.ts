@@ -68,11 +68,7 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
       questionType: 'SINGLE_CHOICE',
       questionCount: 10,
       masteryThreshold: 80,
-      stars: {
-        one: { minExclusive: 0, maxInclusive: 50 },
-        two: { minExclusive: 50, maxInclusive: 90 },
-        three: { minExclusive: 90, maxInclusive: 100 },
-      },
+      stars: { status: 'PENDING_POLICY' },
     },
     effectiveAt: new Date(),
     status: 'PUBLISHED',

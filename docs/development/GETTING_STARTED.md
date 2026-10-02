@@ -81,6 +81,8 @@ For the dedicated six-actor Google QA workflow, use the guarded [QA seed runbook
 
 `pnpm db:seed:monitoring` seeds a complete synthetic Teacher Monitoring fixture for a **localhost PostgreSQL database only**. It also seeds demo learning content, canonical Drill attempts/progress, and two Teacher feedback rows (one unread and one read) in the same transaction. Verification checks latest/best scores, level access, active-attempt state, answer counts, feedback ownership/class lineage, and read states; any mismatch rolls back the transaction. Set `NODE_ENV=development` and `ALLOW_DEMO_SEED=true`; the exported seed function itself rejects non-localhost database hosts because its fixed Auth IDs do not correspond to Google/Supabase users. This fixture is for local API/database walkthroughs, not a cloud login demo. Do not run it against Supabase Development, Staging, or Production.
 
+**Drill v1.2 fixture note:** star thresholds are pending DRL-OPEN-03, so fresh demo attempt/progress rows leave stars null. The seed is idempotent and does not rewrite previously persisted attempt/scoring-policy history; if a disposable local database was seeded with the older v0.5 fixture, recreate that local database to inspect a clean v1.2 demo. Never reset a shared database.
+
 ## Authentication
 
 Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.

@@ -171,7 +171,6 @@ function scoreDrill(correctCount: number, questionCount: number) {
   return {
     score,
     mastered: score >= 80,
-    stars: score === 0 ? null : score <= 50 ? 1 : score <= 90 ? 2 : 3,
   };
 }
 
@@ -501,7 +500,8 @@ async function seedRows(db: DbExecutor) {
         status: completed ? 'GRADED' : 'IN_PROGRESS',
         rawPoints: score ? String(correctCount) : null,
         score0To100: score ? String(score.score) : null,
-        stars: score?.stars ?? null,
+        // Drill v1.2 leaves star thresholds OPEN; synthetic seed results must not invent them.
+        stars: null,
         unlockedLevelId: score?.mastered ? LEVEL_TWO : null,
       })
       .onConflictDoNothing();
@@ -570,7 +570,8 @@ async function seedRows(db: DbExecutor) {
       unlockingAttemptId: null,
       latestScore: scored.score,
       bestScore: Math.max(prior?.bestScore ?? 0, scored.score),
-      bestStars: Math.max(prior?.bestStars ?? 0, scored.stars ?? 0) || null,
+      // Star thresholds are DRL-OPEN-03; keep demo progress pending rather than applying v0.5 ranges.
+      bestStars: null,
     });
     if (scored.mastered && !studentProgress.has(LEVEL_TWO)) {
       studentProgress.set(LEVEL_TWO, {

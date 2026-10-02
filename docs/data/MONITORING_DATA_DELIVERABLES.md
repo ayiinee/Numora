@@ -38,6 +38,7 @@ The implemented student detail currently reads Q2 authorization/roster, Q3 READY
 
 - Canonical Drill results live in `assessment_attempts` (`assessment_type = 'DRILL'`, `status = 'GRADED'`); their pinned package/items/answers live in `assessment_packages`, `package_items`, `attempt_items`, and `attempt_answers`.
 - `level_progress.latest_score` is updated when a Drill is graded; `best_score` is the maximum final score. The schema has no `latest_attempt_id`; completion and unlock lineage use `completion_attempt_id` and `unlocking_attempt_id` where applicable.
+- Drill v1.2 leaves star thresholds TBC (DRL-OPEN-03). The Monitoring fixture leaves `stars`/`best_stars` null and does not infer stars from score. The current canonical Drill scoring service still contains legacy star thresholds; align that Core Learning behavior in its owning workstream before presenting runtime stars as current PRD behavior.
 - Monitoring demo seed creates two feedback rows for Teacher A/Class A: one unread and one read. Both use `class_id_at_send`, and every row must satisfy teacher ownership plus active Student membership in that Class at send time.
 - A `feedback_read` event represents only the first unread→read transition; it is idempotent on retries. Analytics payload contains the feedback ID and class-at-send reference, never the note body or student contact data.
 - `latestScore` is the latest completed score for that level; `bestScore` is the maximum final score for that level. The API’s top-level latest score is selected separately across all levels.
