@@ -1,8 +1,5 @@
 import type { PreviewRecord } from '../types';
 
-/**
- * Shows the dummy admin activity log and lets the user append a test entry.
- */
 export function AuditSection({ entries, record }: { entries: string[]; record: PreviewRecord }) {
   return (
     <section className="content-section">

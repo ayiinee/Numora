@@ -11,10 +11,6 @@ type Props = {
   hidden: boolean;
 };
 
-/**
- * Preview section that lists demo questions with search/status filtering and
- * simulated create, edit, and archive actions (state kept only in the browser).
- */
 export function QuestionBankSection({ questions, setQuestions, hidden }: Props) {
   const [query, setQuery] = useState('');
   const [statusFilter, setStatusFilter] = useState('All');
@@ -28,10 +24,6 @@ export function QuestionBankSection({ questions, setQuestions, hidden }: Props) 
     return matchesQuery && (statusFilter === 'All' || question.status === statusFilter);
   });
 
-  /**
-   * Handles the editor form submission, creating a new question, a new
-   * version of a Ready question, or updating the edited question in place.
-   */
   function saveQuestion(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!editing) return;
@@ -71,9 +63,6 @@ export function QuestionBankSection({ questions, setQuestions, hidden }: Props) 
     setEditing(null);
   }
 
-  /**
-   * Updates the status of a single question in local state and shows a notice.
-   */
   function setQuestionStatus(question: Question, status: QuestionStatus) {
     setQuestions((current) => current.map((item) => item.id === question.id ? { ...item, status } : item));
     setNotice('Simulasi perubahan status di browser. Tidak ada perubahan pada bank soal sebenarnya.');
@@ -122,7 +111,6 @@ export function QuestionBankSection({ questions, setQuestions, hidden }: Props) 
               <option value="All">Semua status</option><option value="Ready">Siap digunakan</option><option value="Draft">Draf</option><option value="Archived">Diarsipkan</option>
             </select>
           </label>
-          <button className="filter-button" aria-label="Filter lainnya" title="Filter lainnya">☷</button>
         </div>
         {notice && <div className="notice" role="status"><span>{notice}</span><button aria-label="Tutup notifikasi" onClick={() => setNotice('')}>×</button></div>}
         <div className="question-table-wrap">

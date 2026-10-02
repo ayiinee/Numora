@@ -1,20 +1,18 @@
 import { Metric, PreviewNote } from '../shared';
-import type { AdminPreviewView, DemoPackage, DemoReport, School } from '../types';
+import type { AdminPreviewView, DemoPackage, DemoReport, Question, School } from '../types';
 
 type Props = {
+  questions: Question[];
   schools: School[];
   reports: DemoReport[];
   packages: DemoPackage[];
   onNavigate: (section: AdminPreviewView) => void;
 };
 
-/**
- * Dashboard overview showing summary metrics and shortcuts to other admin
- * preview sections.
- */
-export function OverviewSection({ schools, reports, packages, onNavigate }: Props) {
+export function OverviewSection({ questions, schools, reports, packages, onNavigate }: Props) {
   const openReports = reports.filter((report) => report.status !== 'Selesai').length;
   const draftPackages = packages.filter((item) => item.status === 'Draf').length;
+  const readyQuestions = questions.filter((question) => question.status === 'Ready').length;
 
   return (
     <>
@@ -24,7 +22,11 @@ export function OverviewSection({ schools, reports, packages, onNavigate }: Prop
           value={String(schools.filter((item) => item.status === 'Aktif').length).padStart(2, '0')}
           detail="Termasuk data demo"
         />
-        <Metric label="Soal siap digunakan" value="12" detail="Versi dummy" />
+        <Metric
+          label="Soal siap digunakan"
+          value={String(readyQuestions).padStart(2, '0')}
+          detail="Versi aktif"
+        />
         <Metric
           label="Laporan terbuka"
           value={String(openReports).padStart(2, '0')}

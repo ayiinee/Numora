@@ -8,10 +8,6 @@ type Props = {
   onNavigate: (section: 'Audit') => void;
 };
 
-/**
- * Lists incoming demo reports with anonymized details and lets the user
- * advance a report's review status.
- */
 export function ReportsSection({ reports, setReports, record, onNavigate }: Props) {
   return (
     <section className="content-section">

@@ -7,14 +7,7 @@ type Props = {
   record: PreviewRecord;
 };
 
-/**
- * Lists draft Tryout packages and allows simulating draft creation and
- * marking packages as reviewed.
- */
 export function PackagesSection({ packages, setPackages, record }: Props) {
-  /**
-   * Adds a new draft package to local state and records the action.
-   */
   function addPackage() {
     const id = Math.max(0, ...packages.map((item) => item.id)) + 1;
     setPackages((current) => [

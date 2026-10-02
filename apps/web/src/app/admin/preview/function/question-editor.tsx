@@ -1,8 +1,5 @@
 import type { Question } from './types';
 
-/**
- * Modal form for creating or editing a demo question's metadata (title, chapter, type, level).
- */
 export function QuestionEditor({
   question,
   onClose,

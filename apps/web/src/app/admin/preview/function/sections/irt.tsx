@@ -1,10 +1,6 @@
 import { Metric, PreviewNote } from '../shared';
 import type { PreviewRecord } from '../types';
 
-/**
- * Preview of IRT analytics: response thresholds and per-question batch
- * readiness, with a button to simulate running an IRT batch.
- */
 export function IrtSection({ record }: { record: PreviewRecord }) {
   return (
     <>

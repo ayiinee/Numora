@@ -2,7 +2,7 @@
 
 import { useEffect, useState } from 'react';
 import { initialAudit, initialManagedUsers, initialPackages, initialSchools, initialVideos } from '../fixtures';
-import type { AdminPreviewView, DemoPackage, DemoReport, DemoVideo, ManagedUser, PreviewRecord, School, StateSetter } from '../types';
+import type { AdminPreviewView, DemoPackage, DemoReport, DemoVideo, ManagedUser, PreviewRecord, Question, School, StateSetter } from '../types';
 import { AuditSection } from './audit';
 import { IrtSection } from './irt';
 import { OverviewSection } from './overview';
@@ -27,15 +27,12 @@ const sectionIntro: Record<AdminPreviewView, string> = {
 type Props = {
   section: AdminPreviewView;
   onNavigate: (section: AdminPreviewView) => void;
+  questions: Question[];
   reports: DemoReport[];
   setReports: StateSetter<DemoReport[]>;
 };
 
-/**
- * Switches between the admin preview sub-sections (overview, schools, users,
- * packages, videos, reports, IRT, audit) based on the active navigation item.
- */
-export function AdminPreviewSections({ section, onNavigate, reports, setReports }: Props) {
+export function AdminPreviewSections({ section, onNavigate, questions, reports, setReports }: Props) {
   const [schools, setSchools] = useState<School[]>(initialSchools);
   const [users, setUsers] = useState<ManagedUser[]>(initialManagedUsers);
   const [packages, setPackages] = useState<DemoPackage[]>(initialPackages);
@@ -43,9 +40,6 @@ export function AdminPreviewSections({ section, onNavigate, reports, setReports 
   const [audit, setAudit] = useState(initialAudit);
   const [notice, setNotice] = useState('');
 
-  /**
-   * Shows a transient notice for the given message and appends it to the audit log.
-   */
   const record: PreviewRecord = (message) => {
     setNotice(`${message} Perubahan ini hanya tersimpan di browser.`);
     setAudit((current) => [`Admin demo ${message.toLowerCase()} · 01 Okt 2026`, ...current].slice(0, 8));
@@ -71,7 +65,7 @@ export function AdminPreviewSections({ section, onNavigate, reports, setReports 
         </div>
       )}
       <div hidden={section !== 'Ringkasan'}>
-        <OverviewSection schools={schools} reports={reports} packages={packages} onNavigate={onNavigate} />
+        <OverviewSection questions={questions} schools={schools} reports={reports} packages={packages} onNavigate={onNavigate} />
       </div>
       <div hidden={section !== 'Sekolah & kelas'}>
         <SchoolsSection schools={schools} setSchools={setSchools} record={record} />

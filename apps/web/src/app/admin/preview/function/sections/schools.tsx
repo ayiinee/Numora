@@ -8,17 +8,9 @@ type Props = {
   record: PreviewRecord;
 };
 
-/**
- * Manages demo schools and classes, including a form to add a new school and
- * actions to toggle school/token status.
- */
 export function SchoolsSection({ schools, setSchools, record }: Props) {
   const [showForm, setShowForm] = useState(false);
 
-  /**
-   * Validates and submits the "add school" form, prepending the new school
-   * to local state.
-   */
   function createSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     const form = new FormData(event.currentTarget);
@@ -111,7 +103,12 @@ export function SchoolsSection({ schools, setSchools, record }: Props) {
                         setSchools((current) => current.map((item) => item.id === school.id
                           ? { ...item, tokenStatus: item.tokenStatus === 'Aktif' ? 'Dicabut' : 'Aktif' }
                           : item));
-                        record(`${school.tokenStatus === 'Aktif' ? 'mencabut' : 'menerbitkan ulang'} token Guru untuk ${school.name}`);
+                        const actionText = school.tokenStatus === 'Aktif'
+                          ? 'mencabut'
+                          : school.tokenStatus === 'Dicabut'
+                            ? 'menerbitkan ulang'
+                            : 'menerbitkan';
+                        record(`${actionText} token Guru untuk ${school.name}`);
                       }}>
                         {school.tokenStatus === 'Aktif' ? 'Cabut token' : school.tokenStatus === 'Dicabut' ? 'Terbitkan ulang' : 'Terbitkan token'}
                       </button>
