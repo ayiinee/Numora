@@ -7,7 +7,16 @@ import {
 } from '@nestjs/common';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
 import { randomUUID } from 'node:crypto';
-import { analyticsOutbox, classMemberships, feedback, getDatabase, users } from '@tka/database';
+import {
+  analyticsOutbox,
+  classMemberships,
+  classes,
+  feedback,
+  getDatabase,
+  schools,
+  teacherSchoolMemberships,
+  users,
+} from '@tka/database';
 import { ClassesService } from '../classes/classes.service';
 import { IdentityService } from '../identity/identity.service';
 
@@ -73,20 +82,33 @@ export class FeedbackService {
 
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
-      const [membership] = await tx
+      const [authorizedTarget] = await tx
         .select({ id: classMemberships.id })
         .from(classMemberships)
         .innerJoin(users, eq(users.id, classMemberships.studentUserId))
+        .innerJoin(classes, eq(classes.id, classMemberships.classId))
+        .innerJoin(schools, eq(schools.id, classes.schoolId))
+        .innerJoin(
+          teacherSchoolMemberships,
+          and(
+            eq(teacherSchoolMemberships.teacherUserId, teacher.id),
+            eq(teacherSchoolMemberships.schoolId, classes.schoolId),
+            isNull(teacherSchoolMemberships.endedAt),
+          ),
+        )
         .where(and(
           eq(classMemberships.classId, target.classId),
           eq(classMemberships.studentUserId, target.studentId),
           isNull(classMemberships.leftAt),
           eq(users.role, 'STUDENT'),
           eq(users.status, 'ACTIVE'),
+          eq(classes.teacherUserId, teacher.id),
+          isNull(classes.archivedAt),
+          eq(schools.status, 'ACTIVE'),
         ))
         .for('share')
         .limit(1);
-      if (!membership) {
+      if (!authorizedTarget) {
         throw new NotFoundException(
           problem('STUDENT_NOT_FOUND', 'Student tidak ditemukan pada Class ini.'),
         );
