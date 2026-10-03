@@ -2,6 +2,7 @@ export * from './identity.js';
 export * from './classes.js';
 export * from './operations.js';
 export * from './content.js';
+export * from './content-media.js';
 export * from './assessments.js';
 export * from './engagement.js';
 export * from './intelligence.js';

@@ -2471,6 +2471,86 @@
         ]
       }
     },
+    "/api/v1/admin/content/media/uploads": {
+      "post": {
+        "operationId": "MediaUploadsController_reserve",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMediaUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadReservationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-media"
+        ]
+      }
+    },
+    "/api/v1/admin/content/media/uploads/{uploadId}/complete": {
+      "post": {
+        "operationId": "MediaUploadsController_complete",
+        "parameters": [
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadReceiptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-media"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -5946,6 +6026,182 @@
           "name",
           "scoringPolicyVersionId",
           "questionVersionIds"
+        ]
+      },
+      "CreateMediaUploadDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "example": "CURR-IND16-L01-Q03"
+          },
+          "assetId": {
+            "type": "string",
+            "example": "bahas-1"
+          },
+          "contentVersion": {
+            "type": "object",
+            "default": 1,
+            "minimum": 1
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          },
+          "byteLength": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5242880
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 hex of the exact file bytes."
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "contentType",
+          "byteLength",
+          "sha256"
+        ]
+      },
+      "MediaUploadReservationDto": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED"
+            ]
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "description": "Durable final key; usable only after VERIFIED."
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "verifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Short-lived signed URL; never persist or log it."
+          },
+          "method": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "PUT"
+            ]
+          },
+          "headers": {
+            "type": "object",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "uploadId",
+          "status",
+          "externalId",
+          "assetId",
+          "bucket",
+          "objectKey",
+          "contentType",
+          "byteLength",
+          "sha256",
+          "verifiedAt",
+          "uploadUrl",
+          "method",
+          "headers",
+          "expiresAt"
+        ]
+      },
+      "MediaUploadReceiptDto": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED"
+            ]
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "description": "Durable final key; usable only after VERIFIED."
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "verifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uploadId",
+          "status",
+          "externalId",
+          "assetId",
+          "bucket",
+          "objectKey",
+          "contentType",
+          "byteLength",
+          "sha256",
+          "verifiedAt"
         ]
       },
       "AdminDashboardDto": {

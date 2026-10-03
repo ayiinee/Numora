@@ -1,0 +1,232 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:question-preview-proposed:sample-2026-10-03",
+  "title": "Proposed mapped sample preview contract; not a deployed import contract",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "externalId",
+    "type",
+    "chapterCode",
+    "subchapterCode",
+    "competencyCode",
+    "difficulty",
+    "stem",
+    "answer",
+    "explanation",
+    "metadata"
+  ],
+  "properties": {
+    "externalId": {
+      "type": "string",
+      "minLength": 1
+    },
+    "type": {
+      "type": "string",
+      "enum": ["SINGLE_CHOICE", "MULTIPLE_CHOICE_MULTIPLE_ANSWER", "CATEGORY"]
+    },
+    "chapterCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "subchapterCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "competencyCode": {
+      "type": "string",
+      "minLength": 1
+    },
+    "levelCode": {
+      "type": ["string", "null"]
+    },
+    "difficulty": {
+      "type": ["string", "null"],
+      "enum": ["EASY", "MEDIUM", "HARD", null]
+    },
+    "stem": {
+      "$ref": "#/$defs/richText"
+    },
+    "options": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "content"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "minLength": 1
+          },
+          "content": {
+            "$ref": "#/$defs/richText"
+          }
+        }
+      }
+    },
+    "answer": {
+      "type": "object"
+    },
+    "explanation": {
+      "$ref": "#/$defs/richText"
+    },
+    "metadata": {
+      "type": "object",
+      "additionalProperties": true,
+      "properties": {
+        "source": {
+          "type": ["string", "null"]
+        },
+        "generationModel": {
+          "type": ["string", "null"]
+        },
+        "generationBatchId": {
+          "type": ["string", "null"]
+        },
+        "sourceLevelNumber": {
+          "type": "integer",
+          "minimum": 1
+        }
+      },
+      "required": ["sourceLevelNumber"]
+    }
+  },
+  "$defs": {
+    "richText": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["text"],
+      "properties": {
+        "text": {
+          "type": "string"
+        },
+        "assetKeys": {
+          "type": "array",
+          "items": {
+            "type": "string"
+          },
+          "default": []
+        }
+      }
+    }
+  },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "SINGLE_CHOICE"
+          }
+        }
+      },
+      "then": {
+        "required": ["options"],
+        "properties": {
+          "answer": {
+            "type": "object",
+            "required": ["optionId"],
+            "additionalProperties": false,
+            "properties": {
+              "optionId": {
+                "type": "string",
+                "minLength": 1
+              }
+            }
+          },
+          "options": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "MULTIPLE_CHOICE_MULTIPLE_ANSWER"
+          }
+        }
+      },
+      "then": {
+        "required": ["options"],
+        "properties": {
+          "answer": {
+            "type": "object",
+            "required": ["optionIds"],
+            "additionalProperties": false,
+            "properties": {
+              "optionIds": {
+                "type": "array",
+                "minItems": 1,
+                "uniqueItems": true,
+                "items": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "options": {
+            "type": "array"
+          }
+        }
+      }
+    },
+    {
+      "if": {
+        "properties": {
+          "type": {
+            "const": "CATEGORY"
+          }
+        }
+      },
+      "then": {
+        "required": ["options"],
+        "properties": {
+          "answer": {
+            "type": "object",
+            "required": ["categoryByStatementId"],
+            "additionalProperties": false,
+            "properties": {
+              "categoryByStatementId": {
+                "type": "object",
+                "minProperties": 1,
+                "additionalProperties": {
+                  "type": "string",
+                  "minLength": 1
+                }
+              }
+            }
+          },
+          "metadata": {
+            "required": ["categories"],
+            "properties": {
+              "categories": {
+                "type": "array",
+                "minItems": 1,
+                "items": {
+                  "type": "object",
+                  "required": ["id", "label"],
+                  "properties": {
+                    "id": {
+                      "type": "string",
+                      "minLength": 1
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1
+                    }
+                  }
+                }
+              }
+            },
+            "type": "object"
+          },
+          "options": {
+            "type": "array"
+          }
+        }
+      }
+    }
+  ]
+}
