@@ -34,6 +34,8 @@
 
 ## OPEN dari PRD fitur terbaru
 
+**USER CLARIFICATION — Reyhan, 3 Oktober 2026:** `competencies` adalah indikator kurikulum. Navigasi dan progres tetap Bab → Subbab → Level; soal Level N diambil dari Level N indikator-indikator dalam subbab itu. Tidak ada progres/unlock terpisah per indikator. Jumlah level, kuota per indikator, definisi tuntas dan distribusi Pretest pada OPEN-01–03 tetap belum ditetapkan. Nama teknis tabel dipertahankan untuk kompatibilitas. Lihat [pemetaan data](../data/CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
+
 ID global OPEN-01–18 di atas tetap stabil untuk referensi lama. `DRL-OPEN-*` menambahkan namespace pada ID sumber Drill; `TRY-TBC-*` adalah alias engineering untuk topik tanpa ID pada TryOut §16.
 
 | ID | Keputusan yang belum final | Owner | Dampak / hubungan global |

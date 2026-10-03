@@ -138,7 +138,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     const [chapter] = await db
       .insert(chapters)
       .values({
-        code: `TRYOUT-${suffix}`,
+        code: `TRYOUT-${suffix}`, slug: (`TRYOUT-${suffix}`).toLowerCase(),
         name: 'Tryout Chapter',
         displayOrder: parseInt(suffix, 16) % 2_000_000_000,
         status: 'READY',
@@ -148,7 +148,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .insert(subchapters)
       .values({
         chapterId: chapter!.id,
-        code: `TRYOUT-${suffix}`,
+        code: `TRYOUT-${suffix}`, slug: (`TRYOUT-${suffix}`).toLowerCase(),
         name: 'Tryout Subchapter',
         displayOrder: 1,
         status: 'READY',

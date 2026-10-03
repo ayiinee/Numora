@@ -24,14 +24,14 @@ const competencyId = uuid(104);
 export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db) {
   await db
     .insert(chapters)
-    .values({ id: chapterId, code: 'DEMO-BILANGAN', name: 'Bab Demo: Bilangan', displayOrder: 1, status: 'READY' })
+    .values({ id: chapterId, code: 'DEMO-BILANGAN', slug: ('DEMO-BILANGAN').toLowerCase(), name: 'Bab Demo: Bilangan', displayOrder: 1, status: 'READY' })
     .onConflictDoNothing();
   await db
     .insert(subchapters)
     .values({
       id: subchapterId,
       chapterId,
-      code: 'DEMO-OPERASI',
+      code: 'DEMO-OPERASI', slug: ('DEMO-OPERASI').toLowerCase(),
       name: 'Subbab Demo: Operasi Bilangan',
       displayOrder: 1,
       status: 'READY',
@@ -90,6 +90,7 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
       .values({
         id: questionId,
         primaryCompetencyId: competencyId,
+        curriculumLevelNumber: 1,
         sourceRef: `DEMO-L1-${String(i).padStart(2, '0')}`,
         status: 'READY',
       })

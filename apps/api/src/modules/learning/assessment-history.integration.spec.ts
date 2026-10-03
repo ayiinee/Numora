@@ -69,7 +69,7 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
       await db
         .insert(chapters)
         .values({
-          code: `H-${suffix}`,
+          code: `H-${suffix}`, slug: (`H-${suffix}`).toLowerCase(),
           name: 'History chapter',
           displayOrder: parseInt(suffix.slice(0, 8), 16) % 2_000_000_000,
           status: 'READY',
@@ -81,7 +81,7 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
         .insert(subchapters)
         .values({
           chapterId,
-          code: `S-${suffix}`,
+          code: `S-${suffix}`, slug: (`S-${suffix}`).toLowerCase(),
           name: 'History subchapter',
           displayOrder: 1,
           status: 'READY',

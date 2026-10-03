@@ -1,0 +1,43 @@
+{
+  "engine": "PGlite 0.3.14 in-memory PostgreSQL",
+  "cloudTouched": false,
+  "passed": 9,
+  "checks": [
+    "upgrade preserves existing question IDs, references and unknown level",
+    "backfill resolves normalized-name collisions within the correct scope",
+    "name edits preserve stable slug",
+    "same subchapter slug allowed in different chapters",
+    "duplicate chapter slug/global and subchapter slug/same parent rejected",
+    "empty, invalid and absent slugs rejected",
+    "Level 1 pool spans indicators and excludes Level 2 or unmapped legacy questions",
+    "non-positive curriculum levels rejected",
+    "complete migration chain succeeds on a fresh database"
+  ],
+  "baseCommit": "3c671a0",
+  "migrationSha256": {
+    "0012_curriculum_slugs.sql": "bb6c3834be89fb97226981323aef48cc4676bffb93acc056f0a60aa763823387",
+    "0013_indicator_question_levels.sql": "563cd6feb2e45b738553cad74b88c908e3288fed0e303ba5f72574bc05691a38"
+  },
+  "verification": {
+    "databaseBuild": "passed",
+    "apiBuild": "passed",
+    "apiTypecheck": "passed",
+    "webTypecheck": "passed",
+    "lint": "passed",
+    "contractValidation": "passed",
+    "generatedTypesFreshness": "passed",
+    "databaseTests": {
+      "passed": 3,
+      "skipped": 5
+    },
+    "apiTests": {
+      "passed": 34,
+      "skipped": 57
+    },
+    "contractTests": {
+      "passed": 3
+    },
+    "fullPostgresHttpIntegration": "not run; TEST_DATABASE_URL not configured",
+    "stagingRestoreRehearsal": "not run"
+  }
+}

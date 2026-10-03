@@ -32,7 +32,7 @@ export class LearningCatalogService {
       .where(eq(chapters.status, 'READY'))
       .orderBy(asc(chapters.displayOrder));
     return {
-      chapters: rows.map((row) => ({ id: row.id, title: row.name, order: row.displayOrder })),
+      chapters: rows.map((row) => ({ id: row.id, slug: row.slug, title: row.name, order: row.displayOrder })),
     };
   }
 
@@ -51,9 +51,10 @@ export class LearningCatalogService {
       .where(and(eq(subchapters.chapterId, chapterId), eq(subchapters.status, 'READY')))
       .orderBy(asc(subchapters.displayOrder));
     return {
-      chapter: { id: chapter.id, title: chapter.name, order: chapter.displayOrder },
+      chapter: { id: chapter.id, slug: chapter.slug, title: chapter.name, order: chapter.displayOrder },
       subchapters: children.map((row) => ({
         id: row.id,
+        slug: row.slug,
         chapterId: row.chapterId,
         title: row.name,
         order: row.displayOrder,
@@ -67,6 +68,7 @@ export class LearningCatalogService {
     const [subchapter] = await db
       .select({
         id: subchapters.id,
+        slug: subchapters.slug,
         chapterId: subchapters.chapterId,
         title: subchapters.name,
         sortOrder: subchapters.displayOrder,
@@ -103,6 +105,7 @@ export class LearningCatalogService {
     return {
       subchapter: {
         id: subchapter.id,
+        slug: subchapter.slug,
         chapterId: subchapter.chapterId,
         title: subchapter.title,
         order: subchapter.sortOrder,
