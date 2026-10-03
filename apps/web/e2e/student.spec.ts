@@ -1110,7 +1110,7 @@ function inboxNote(
 // Teacher notes are read-only for the Student: the inbox answers, never replies.
 async function stubInbox(page: Page, notes: FixtureNote[]) {
   const reads: string[] = [];
-  await page.route('http://localhost:3301/api/v1/students/me/feedback*', async (route) => {
+  await page.route('http://localhost:3301/api/v1/students/me/feedback**', async (route) => {
     const url = new URL(route.request().url());
     if (url.pathname.endsWith('/summary'))
       return route.fulfill({
@@ -1212,7 +1212,7 @@ test('Student inbox keeps earlier notes while paging with the server offset', as
 
 test('Student inbox shows a server refusal instead of an empty inbox', async ({ page }) => {
   await fixtures(page);
-  await page.route('http://localhost:3301/api/v1/students/me/feedback*', (route) => {
+  await page.route('http://localhost:3301/api/v1/students/me/feedback**', (route) => {
     if (new URL(route.request().url()).pathname.endsWith('/summary')) return route.fallback();
     return route.fulfill({
       status: 403,
