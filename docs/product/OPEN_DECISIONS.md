@@ -5,6 +5,8 @@
 
 ## Status legend
 
+**USER CLARIFICATION / engineering handoff, 3 Oktober 2026 (Reyhan, Data):** level bank sampel mengikuti Curriculum per indikator dan tidak otomatis menjadi EASY/MEDIUM/HARD. Mapping kategori PvP tetap OPEN. Arah PGK partial belum menetapkan formula/rounding atau menutup OPEN-04. [Handoff bank soal](../data/QUESTION_BANK_BACKEND_HANDOFF.md) dan [upload media](../api/CONTENT_MEDIA_UPLOADS.md) mendokumentasikan jalur review; upload tidak berarti soal/paket telah disetujui.
+
 - **PRD RULE** — aturan eksplisit sumber terbaru untuk fitur terkait; TBC tetap unresolved.
 - **OPEN** — unresolved policy/academic detail.
 - **PARTLY OPEN** — part of the decision is confirmed; remaining details are listed explicitly.

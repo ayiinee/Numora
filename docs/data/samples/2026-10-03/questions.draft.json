@@ -1,0 +1,1037 @@
+[
+  {
+    "externalId": "CURR-IND20-L01-Q01",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Seorang siswa ingin mengetahui jenis olahraga yang paling disukai siswa kelas IX. Pertanyaan yang paling tepat untuk memperoleh data tersebut adalah ....",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Apakah olahraga penting bagi kesehatan?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Jenis olahraga apa yang paling kamu sukai?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Mengapa olahraga harus dilakukan?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "Apakah kamu suka berolahraga setiap hari?",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Tujuan pengumpulan data adalah mengetahui jenis olahraga yang paling disukai. Oleh karena itu, pertanyaan yang paling sesuai adalah menanyakan secara langsung jenis olahraga yang disukai.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 1",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 1,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Sampel ekstraksi; kunci disalin dari sumber, belum disetujui reviewer. Kode master, level database, dan difficulty belum dipetakan.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q02",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Perhatikan data jumlah buku yang dibaca lima siswa dalam satu bulan berikut.\n\nSiswa — Jumlah Buku\nAndi — 4\nBudi — 6\nCitra — 3\nDeni — 7\nEka — 5\n\nJumlah seluruh buku yang dibaca kelima siswa tersebut adalah ....",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "20 buku",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "23 buku",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "25 buku",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "27 buku",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "C"
+    },
+    "explanation": {
+      "text": "Jumlah seluruh buku:\n4 + 6 + 3 + 7 + 5 = 25 buku.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 2",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 2,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Tabel sumber ditranskripsikan menjadi pasangan baris Siswa — Jumlah Buku untuk input teks; semua nilai dan urutan dipertahankan. Perlu uji tampilan tabel. Kunci belum disetujui; pemetaan master dan difficulty belum ditetapkan.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q03",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Perhatikan data jumlah pengunjung perpustakaan berikut.\n\nHari — Jumlah Pengunjung\nSenin — 20\nSelasa — 25\nRabu — 30\nKamis — 25\nJumat — 40\n\nBerdasarkan data tersebut, hari dengan jumlah pengunjung terbanyak adalah ....",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Senin",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Selasa",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Rabu",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "Jumat",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "D"
+    },
+    "explanation": {
+      "text": "Jumlah pengunjung terbesar adalah 40 orang, yaitu pada hari Jumat.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 3",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 3,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Tabel sumber ditranskripsikan menjadi pasangan baris Hari — Jumlah Pengunjung; semua nilai dan urutan dipertahankan. Perlu uji tampilan tabel. Kunci belum disetujui; pemetaan master dan difficulty belum ditetapkan.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q04",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Nilai ulangan Matematika lima siswa adalah 70, 80, 75, 85, dan 90. Rata-rata nilai tersebut adalah ....",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "75",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "80",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "85",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "90",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Jumlah nilai:\n70 + 80 + 75 + 85 + 90 = 400.\nRata-rata:\n400 ÷ 5 = 80.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 4",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 4,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Sampel ekstraksi; kunci disalin dari sumber, belum disetujui reviewer. Kode master, level database, dan difficulty belum dipetakan.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q05",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Perhatikan data jumlah saudara kandung siswa berikut.\n1, 2, 2, 3, 1, 2, 4, 3, 2, 1\nModus dari data tersebut adalah ....",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "2",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "3",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "4",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "1",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "A"
+    },
+    "explanation": {
+      "text": "Modus adalah nilai yang paling sering muncul. Angka 2 muncul sebanyak empat kali, sehingga modusnya adalah 2.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 5",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 5,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Sampel ekstraksi; kunci disalin dari sumber, belum disetujui reviewer. Kode master, level database, dan difficulty belum dipetakan.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q06",
+    "type": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Seorang guru ingin mengetahui kebiasaan siswa menggunakan internet untuk belajar. Pilihlah semua pertanyaan yang sesuai dengan tujuan tersebut!",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Berapa lama kamu menggunakan internet untuk belajar setiap hari?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Apakah kamu menggunakan internet untuk belajar?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Siapa penemu internet?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "Aplikasi apa yang sering kamu gunakan untuk belajar?",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionIds": ["A", "B", "D"]
+    },
+    "explanation": {
+      "text": "Pernyataan 1, 2, dan 4 secara langsung menghasilkan data mengenai kebiasaan penggunaan internet untuk belajar. Pernyataan 3 tidak berkaitan dengan kebiasaan siswa.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 6",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 6,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Pernyataan sumber 1–4 dipetakan ke itemId A–D sesuai urutan. Kunci sumber 1, 2, 4 → A, B, D. Rubrik skor dan dukungan UI/engine belum ditetapkan. Pemetaan master dan difficulty menunggu.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "PARTIAL_DETAILS_PENDING_CURRICULUM",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q07",
+    "type": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Perhatikan data pilihan ekstrakurikuler 50 siswa berikut.\n\nEkstrakurikuler — Jumlah Siswa\nBasket — 15\nFutsal — 20\nPramuka — 10\nPMR — 5\n\nPilihlah semua pernyataan yang benar!",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Futsal memiliki jumlah peminat terbanyak.",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Jumlah peminat basket dan PMR adalah 20 siswa.",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Peminat Pramuka dua kali peminat PMR.",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "Peminat PMR sama dengan peminat Basket.",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionIds": ["A", "B", "C"]
+    },
+    "explanation": {
+      "text": "Futsal = 20 → terbanyak.\nBasket + PMR = 15 + 5 = 20.\nPramuka = 10, PMR = 5 → dua kali.\nPMR ≠ Basket.\nJadi pernyataan benar adalah 1, 2, dan 3.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 7",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 7,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Tabel sumber disalin sebagai pasangan baris teks. Pernyataan 1–4 → A–D; kunci 1, 2, 3 → A, B, C. Rubrik skor dan dukungan UI/engine belum ditetapkan. Kunci belum disetujui reviewer.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "PARTIAL_DETAILS_PENDING_CURRICULUM",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND20-L01-Q09",
+    "type": "CATEGORY",
+    "chapterCode": "CH-DP",
+    "subchapterCode": "SC-DATA",
+    "competencyCode": "IND-020",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Tentukan kategori data yang diperoleh dari pertanyaan berikut!",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Berapa jam kamu belajar setiap hari?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Apa mata pelajaran yang paling kamu sukai?",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Berapa jumlah saudara kandungmu?",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "categoryByStatementId": {
+        "A": "QUANTITATIVE",
+        "B": "QUALITATIVE",
+        "C": "QUANTITATIVE"
+      }
+    },
+    "explanation": {
+      "text": "A menghasilkan data berupa jumlah waktu → kuantitatif.\n B menghasilkan kategori mata pelajaran → kualitatif.\n C menghasilkan jumlah saudara → kuantitatif.",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 9",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "chapterSource": "Data & Peluang",
+      "subchapterSource": "Data",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 9,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "BELUM_DIREVIEW",
+      "sourceExtractionNotes": "Kategori dan kunci disalin dari sumber. isCorrect dikosongkan; setiap pernyataan memakai correctCategoryId. Rubrik skor dan dukungan UI/engine belum ditetapkan; pemetaan master dan difficulty menunggu.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": [],
+      "importReady": false,
+      "assetManifest": [],
+      "mediaMarkerConvention": null,
+      "scoringRubricStatus": "PARTIAL_DETAILS_PENDING_CURRICULUM",
+      "categories": [
+        {
+          "id": "QUANTITATIVE",
+          "label": "Kuantitatif"
+        },
+        {
+          "id": "QUALITATIVE",
+          "label": "Kualitatif"
+        }
+      ],
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND16-L01-Q03",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-GP",
+    "subchapterCode": "SC-OG",
+    "competencyCode": "IND-016",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Sebuah kubus memiliki jaring-jaring yang terdiri dari 6 buah persegi. Jika panjang sisi persegi pada jaring-jaring tersebut adalah 5 cm, maka luas total jaring-jaring kubus tersebut adalah...",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "25 cm²",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "100 cm²",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "125 cm²",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "150 cm²",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "D"
+    },
+    "explanation": {
+      "text": "Jaring-jaring kubus terdiri dari 6 buah persegi.\nPanjang sisi persegi = 5 cm.\nLuas 1 persegi:\n[[asset:bahas-1]]\nLuas total jaring-jaring kubus:\n[[asset:bahas-2]]",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "16 - Jaring-jaring bangun ruang (prisma, tabung, limas dan kerucut)",
+      "chapterSource": "Geometri & Pengukuran",
+      "subchapterSource": "Objek Geometri",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 3,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "PERLU_PERBAIKAN",
+      "sourceExtractionNotes": "Dua gambar rumus pembahasan belum diekspor atau diperiksa visual. Penanda [[asset:...]] merupakan format ekstraksi, belum sintaks renderer. Kunci sumber D; soal tertahan hingga file aset dan review lengkap. Pemetaan master/difficulty menunggu.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": ["metadata.assetManifest.objectKey"],
+      "importReady": false,
+      "assetManifest": [
+        {
+          "externalId": "CURR-IND16-L01-Q03",
+          "assetId": "bahas-1",
+          "textMarker": "[[asset:bahas-1]]",
+          "placement": "EXPLANATION",
+          "itemId": null,
+          "assetOrder": 1,
+          "fileReference": "images/CURR-IND16-L01-Q03_bahas-1.png",
+          "altText": "Luas satu persegi: 5 dikali 5 sama dengan 25 sentimeter persegi.",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND16-L01-Q03/v1/bahas-1-3a8420d839c65e905eb9a118cbaa82f72b261849309cea809d1c25cc85d685a4.png",
+          "uploadedToR2": false,
+          "sha256": "3a8420d839c65e905eb9a118cbaa82f72b261849309cea809d1c25cc85d685a4",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3 / EXPLANATION / inlineObjectId=kix.ftnf75z6gywr",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1499,
+          "width": 158,
+          "height": 43,
+          "bucket": "numora-bucket"
+        },
+        {
+          "externalId": "CURR-IND16-L01-Q03",
+          "assetId": "bahas-2",
+          "textMarker": "[[asset:bahas-2]]",
+          "placement": "EXPLANATION",
+          "itemId": null,
+          "assetOrder": 2,
+          "fileReference": "images/CURR-IND16-L01-Q03_bahas-2.png",
+          "altText": "Luas total enam persegi: 6 dikali 25 sama dengan 150 sentimeter persegi.",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND16-L01-Q03/v1/bahas-2-7cd665c5849950951225c4c1a0767ee024861ac9da1fa71ee54ed6bb220079fe.png",
+          "uploadedToR2": false,
+          "sha256": "7cd665c5849950951225c4c1a0767ee024861ac9da1fa71ee54ed6bb220079fe",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3 / EXPLANATION / inlineObjectId=kix.1rhw8mf3q9n9",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1722,
+          "width": 185,
+          "height": 43,
+          "bucket": "numora-bucket"
+        }
+      ],
+      "mediaMarkerConvention": "PROPOSED_RICH_TEXT_ASSET_MARKERS_V1",
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING",
+        "R2_UPLOAD_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts.",
+        "R2 final key plan includes SHA-256; confirmed objectKey stays null until a VERIFIED backend receipt."
+      ]
+    }
+  },
+  {
+    "externalId": "CURR-IND17-L01-Q05",
+    "type": "SINGLE_CHOICE",
+    "chapterCode": "CH-GP",
+    "subchapterCode": "SC-TG",
+    "competencyCode": "IND-017",
+    "levelCode": null,
+    "difficulty": null,
+    "stem": {
+      "text": "Titik E(1, 6) dicerminkan terhadap garis [[asset:soal-1]]. Koordinat bayangan titik E adalah...",
+      "assetKeys": []
+    },
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "(1, -6)",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "(6, 1)",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "(-1, -6)",
+          "assetKeys": []
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "(-6, -1)",
+          "assetKeys": []
+        }
+      }
+    ],
+    "answer": {
+      "optionId": "B"
+    },
+    "explanation": {
+      "text": "Refleksi terhadap garis [[asset:bahas-1]]: [[asset:bahas-2]]\n [[asset:bahas-3]].",
+      "assetKeys": []
+    },
+    "metadata": {
+      "source": "CURRICULUM_SHEETS_SAMPLE",
+      "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+      "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+      "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5",
+      "batchId": "SAMPLE-2026-10-03",
+      "indicatorSource": "17 - Transformasi tunggal (refleksi, translasi, rotasi, dan dilatasi) terhadap titik, garis, dan bangun datar pada bidang.",
+      "chapterSource": "Geometri & Pengukuran",
+      "subchapterSource": "Transformasi Geometri",
+      "sourceLevelNumber": 1,
+      "sourceQuestionNumber": 5,
+      "cognitiveLevel": "C3",
+      "variantKind": "ORIGINAL",
+      "contentStatus": "DRAFT",
+      "sourceReviewStatus": "PERLU_PERBAIKAN",
+      "sourceExtractionNotes": "Satu gambar rumus dalam pertanyaan dan tiga gambar rumus dalam pembahasan belum diekspor/diperiksa visual. Kunci B disalin dari sumber; ketepatannya terhadap garis pada gambar belum diverifikasi. Jangan menebak garis pencerminan. Kode master/difficulty menunggu.",
+      "difficultyReview": "BELUM_DISETUJUI",
+      "pendingFields": ["metadata.assetManifest.objectKey"],
+      "importReady": false,
+      "assetManifest": [
+        {
+          "externalId": "CURR-IND17-L01-Q05",
+          "assetId": "bahas-1",
+          "textMarker": "[[asset:bahas-1]]",
+          "placement": "EXPLANATION",
+          "itemId": null,
+          "assetOrder": 1,
+          "fileReference": "images/CURR-IND17-L01-Q05_bahas-1.png",
+          "altText": "Persamaan garis pencerminan y = x.",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-1-39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71.png",
+          "uploadedToR2": false,
+          "sha256": "39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.87zkob7uuqnw",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1124,
+          "width": 59,
+          "height": 42,
+          "bucket": "numora-bucket"
+        },
+        {
+          "externalId": "CURR-IND17-L01-Q05",
+          "assetId": "bahas-2",
+          "textMarker": "[[asset:bahas-2]]",
+          "placement": "EXPLANATION",
+          "itemId": null,
+          "assetOrder": 2,
+          "fileReference": "images/CURR-IND17-L01-Q05_bahas-2.png",
+          "altText": "Refleksi terhadap garis y = x menukar koordinat (x, y) menjadi (y, x).",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-2-9325b4b542077483be863e3631bda4e103806c97c505079217d780b71729aed9.png",
+          "uploadedToR2": false,
+          "sha256": "9325b4b542077483be863e3631bda4e103806c97c505079217d780b71729aed9",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.4iufgzeawox1",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1881,
+          "width": 193,
+          "height": 50,
+          "bucket": "numora-bucket"
+        },
+        {
+          "externalId": "CURR-IND17-L01-Q05",
+          "assetId": "bahas-3",
+          "textMarker": "[[asset:bahas-3]]",
+          "placement": "EXPLANATION",
+          "itemId": null,
+          "assetOrder": 3,
+          "fileReference": "images/CURR-IND17-L01-Q05_bahas-3.png",
+          "altText": "Refleksi terhadap garis y = x mengubah titik (1, 6) menjadi (6, 1).",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-3-7d0b1be3275ece30af6b11e2574182fec04cb751b332beec3eb20a6d4334455c.png",
+          "uploadedToR2": false,
+          "sha256": "7d0b1be3275ece30af6b11e2574182fec04cb751b332beec3eb20a6d4334455c",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.gbbak7f1t87e",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1841,
+          "width": 192,
+          "height": 50,
+          "bucket": "numora-bucket"
+        },
+        {
+          "externalId": "CURR-IND17-L01-Q05",
+          "assetId": "soal-1",
+          "textMarker": "[[asset:soal-1]]",
+          "placement": "STEM",
+          "itemId": null,
+          "assetOrder": 1,
+          "fileReference": "images/CURR-IND17-L01-Q05_soal-1.png",
+          "altText": "Persamaan garis pencerminan y = x.",
+          "assetStatus": "SIAP_DIREVIEW",
+          "objectKey": null,
+          "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/soal-1-39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71.png",
+          "uploadedToR2": false,
+          "sha256": "39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71",
+          "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / STEM / inlineObjectId=kix.feyxrw801b59",
+          "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+          "contentType": "image/png",
+          "byteLength": 1124,
+          "width": 59,
+          "height": 42,
+          "bucket": "numora-bucket"
+        }
+      ],
+      "mediaMarkerConvention": "PROPOSED_RICH_TEXT_ASSET_MARKERS_V1",
+      "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+      "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+      "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+      "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+      "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING",
+        "R2_UPLOAD_PENDING"
+      ],
+      "rendererStatus": "NOT_IMPLEMENTED",
+      "processingNotes": [
+        "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+        "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+        "Source review status and extraction notes preserved; they are not current upload receipts.",
+        "R2 final key plan includes SHA-256; confirmed objectKey stays null until a VERIFIED backend receipt."
+      ]
+    }
+  }
+]
