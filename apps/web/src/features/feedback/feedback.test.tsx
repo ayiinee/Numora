@@ -277,6 +277,29 @@ describe('Teacher feedback', () => {
     );
   });
 
+  it('keeps one identity across trailing whitespace because the server compares trimmed bodies', async () => {
+    vi.mocked(feedbackApi.send)
+      .mockRejectedValueOnce(new LearningApiError('Layanan menolak permintaan.', 400))
+      .mockResolvedValue({ id: 'note-1' });
+    renderPanel();
+    fireEvent.change(await screen.findByLabelText('Catatan untuk siswa'), {
+      target: { value: 'Tetap semangat.' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim catatan' }));
+    await screen.findByRole('button', { name: 'Kirim ulang catatan' });
+
+    fireEvent.change(screen.getByLabelText('Catatan untuk siswa'), {
+      target: { value: 'Tetap semangat.  ' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim catatan' }));
+    await waitFor(() => expect(feedbackApi.send).toHaveBeenCalledTimes(2));
+
+    const first = vi.mocked(feedbackApi.send).mock.calls[0]![3];
+    const second = vi.mocked(feedbackApi.send).mock.calls[1]![3];
+    expect(second.clientRequestId).toBe(first.clientRequestId);
+    expect(second.body).toBe('Tetap semangat.');
+  });
+
   it('uses a new identity once the teacher edits the note', async () => {
     vi.mocked(feedbackApi.send).mockRejectedValue(new LearningApiError('Layanan menolak.', 400));
     renderPanel();

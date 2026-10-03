@@ -72,16 +72,20 @@ function FeedbackSendForm({
 
   async function submit(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    if (sending.current || !body.trim()) return;
+    const payload = body.trim();
+    if (sending.current || !payload) return;
     sending.current = true;
     setState('saving');
     try {
       const current =
-        attempt.current?.payload === body
+        attempt.current?.payload === payload
           ? attempt.current
-          : { payload: body, id: crypto.randomUUID() };
+          : { payload, id: crypto.randomUUID() };
       attempt.current = current;
-      await feedbackApi.send(token, classId, studentId, { clientRequestId: current.id, body });
+      await feedbackApi.send(token, classId, studentId, {
+        clientRequestId: current.id,
+        body: payload,
+      });
       attempt.current = null;
       setBody('');
       setState('success');
