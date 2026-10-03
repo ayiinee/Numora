@@ -51,7 +51,8 @@ describe('R2 media storage (SDK network mocked)', () => {
   it('signs only the pending object, content type and length; no network required', async () => {
     const item = row();
     const url = new URL(await new R2MediaStorage(config()).presign(item));
-    expect(url.hostname.endsWith('.r2.cloudflarestorage.com')).toBe(true);
+    expect(url.hostname).toBe(`${'a'.repeat(32)}.r2.cloudflarestorage.com`);
+    expect(url.pathname).toContain('/numora-bucket/');
     expect(decodeURIComponent(url.pathname)).toContain(item.pendingObjectKey);
     expect(url.searchParams.get('X-Amz-SignedHeaders')).toContain('content-type');
     expect(url.searchParams.get('X-Amz-SignedHeaders')).toContain('content-length');

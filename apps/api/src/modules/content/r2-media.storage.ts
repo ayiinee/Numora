@@ -71,6 +71,9 @@ export class R2MediaStorage {
       });
     return new S3Client({
       region: 'auto',
+      // Keep the bucket in the path so the signed hostname matches the R2
+      // account endpoint accepted by the batch uploader.
+      forcePathStyle: true,
       endpoint: `https://${settings.account}.r2.cloudflarestorage.com`,
       credentials: { accessKeyId: settings.accessKeyId, secretAccessKey: settings.secretAccessKey },
       requestChecksumCalculation: 'WHEN_REQUIRED',
