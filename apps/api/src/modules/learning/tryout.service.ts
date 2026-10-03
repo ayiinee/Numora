@@ -19,11 +19,12 @@ import {
   questionVariants,
   questionVersions,
 } from '@tka/database';
+import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
 import { decodeSingleChoice } from './single-choice.policy';
-import { isJakartaMondayMidnight, normalizedScore } from './tryout.policy';
+import { isJakartaMondayMidnight } from './tryout.policy';
 import { TryoutReleaseService } from './tryout-release.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -44,6 +45,7 @@ export class TryoutService {
 
   private async currentPackage() {
     const { db } = getDatabase();
+    const now = await databaseTime(db);
     const [row] = await db
       .select()
       .from(assessmentPackages)
@@ -51,7 +53,7 @@ export class TryoutService {
         and(
           eq(assessmentPackages.assessmentType, 'TRYOUT'),
           eq(assessmentPackages.status, 'PUBLISHED'),
-          lte(assessmentPackages.releaseAt, new Date()),
+          lte(assessmentPackages.releaseAt, now),
         ),
       )
       .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
@@ -60,7 +62,7 @@ export class TryoutService {
       !row ||
       !row.releaseAt ||
       !isJakartaMondayMidnight(row.releaseAt) ||
-      (row.closeAt && row.closeAt <= new Date())
+      (row.closeAt && row.closeAt <= now)
     )
       return null;
     return row;
@@ -71,7 +73,7 @@ export class TryoutService {
     const current = await this.currentPackage();
     if (!current) return { state: 'unavailable' as const };
     const { db } = getDatabase();
-    const [attempt] = await db
+    let [attempt] = await db
       .select({ id: assessmentAttempts.id, status: assessmentAttempts.status })
       .from(assessmentAttempts)
       .where(
@@ -82,6 +84,10 @@ export class TryoutService {
         ),
       )
       .limit(1);
+    if (attempt?.status === 'IN_PROGRESS') {
+      await this.finalizeForStudent(studentId, attempt.id, 'automatic');
+      attempt = await this.forStudent(studentId, attempt.id);
+    }
     const released =
       attempt?.status === 'GRADED'
         ? (await this.releases.releasedPackageIds([current.id])).has(current.id)
@@ -151,7 +157,11 @@ export class TryoutService {
   }
 
   private async presentAttempt(studentId: string, attemptId: string) {
-    const attempt = await this.forStudent(studentId, attemptId);
+    let attempt = await this.forStudent(studentId, attemptId);
+    if (attempt.status === 'IN_PROGRESS') {
+      await this.finalizeForStudent(studentId, attemptId, 'automatic');
+      attempt = await this.forStudent(studentId, attemptId);
+    }
     const rows = attempt.status === 'IN_PROGRESS' ? await this.questionRows(attemptId) : [];
     return {
       id: attempt.id,
@@ -159,7 +169,7 @@ export class TryoutService {
       packageTitle: attempt.title,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
-      serverTime: new Date().toISOString(),
+      serverTime: (await databaseTime(getDatabase().db)).toISOString(),
       questions: rows.map((row) => {
         const content = decodeSingleChoice(row);
         return {
@@ -233,7 +243,7 @@ export class TryoutService {
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
       items.forEach(decodeSingleChoice);
-      const now = new Date();
+      const now = await databaseTime(tx);
       const [attempt] = await tx
         .insert(assessmentAttempts)
         .values({
@@ -263,7 +273,7 @@ export class TryoutService {
         eventName: 'tryout_started',
         actorUserId: studentId,
         entityType: 'assessmentAttempt',
-        entityId: attempt.id,
+        entityId: attempt.id, correlationId: attempt.id, occurredAt: now,
         payload: { packageId },
       });
       return attempt.id;
@@ -296,7 +306,7 @@ export class TryoutService {
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      if (attempt.deadlineAt && attempt.deadlineAt <= new Date())
+      if (attempt.deadlineAt && attempt.deadlineAt <= await databaseTime(tx))
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       const [item] = await tx
         .select({
@@ -320,96 +330,36 @@ export class TryoutService {
         !decodeSingleChoice(item).options.some((option) => option.id === optionId)
       )
         throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
-      const now = new Date();
-      await tx
-        .insert(attemptAnswers)
-        .values({ attemptItemId: item.id, answer: { optionId }, savedAt: now })
-        .onConflictDoUpdate({
-          target: attemptAnswers.attemptItemId,
-          set: { answer: { optionId }, savedAt: now, awardedPoints: null, gradedAt: null },
-        });
+      const now = await databaseTime(tx);
+      if (attempt.deadlineAt && attempt.deadlineAt <= now)
+        throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
+      try {
+        await saveChoiceWithEvent(tx, { attemptId, questionInstanceId: item.id, optionId, now,
+          deadlineAt: attempt.deadlineAt });
+      } catch (error) {
+        if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
+          throw new ConflictException(problem(error.code, error.message));
+        throw error;
+      }
       return { questionInstanceId, selectedOptionId: optionId };
     });
   }
 
+  private async finalizeForStudent(studentId: string, attemptId: string, kind: 'manual' | 'automatic') {
+    try { return await finalizeTryout({ kind, studentId, attemptId }); }
+    catch (error) {
+      if (error instanceof AssessmentFinalizationError) {
+        const detail = problem(error.code, error.message);
+        if (error.code === 'ATTEMPT_NOT_FOUND') throw new NotFoundException(detail);
+        if (error.code === 'ATTEMPT_NOT_ACTIVE') throw new ConflictException(detail);
+        throw new ServiceUnavailableException(detail);
+      }
+      throw error;
+    }
+  }
+
   async submit(authorization: string | undefined, attemptId: string) {
-    const studentId = await this.student(authorization);
-    const { db } = getDatabase();
-    await db.transaction(async (tx) => {
-      const [attempt] = await tx
-        .select()
-        .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, attemptId))
-        .for('update')
-        .limit(1);
-      if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
-        throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
-      if (attempt.status === 'GRADED') return;
-      if (attempt.status !== 'IN_PROGRESS')
-        throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Tryout tidak aktif.'));
-      const rows = await tx
-        .select({
-          id: attemptItems.id,
-          maxPoints: attemptItems.maxPoints,
-          questionType: questionVersions.questionType,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-          answer: attemptAnswers.answer,
-        })
-        .from(attemptItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
-        .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
-        .where(eq(attemptItems.attemptId, attemptId));
-      if (!rows.length)
-        throw new ServiceUnavailableException(
-          problem('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.'),
-        );
-      const grades = rows.map((row) => ({
-        id: row.id,
-        answer: row.answer ?? { optionId: null },
-        points:
-          selectedOptionId(row.answer) === decodeSingleChoice(row).correctOptionId
-            ? Number(row.maxPoints)
-            : 0,
-        maximum: Number(row.maxPoints),
-      }));
-      const raw = grades.reduce((total, item) => total + item.points, 0);
-      const maximum = grades.reduce((total, item) => total + item.maximum, 0);
-      const score = normalizedScore(raw, maximum);
-      const now = new Date();
-      for (const item of grades)
-        await tx
-          .insert(attemptAnswers)
-          .values({
-            attemptItemId: item.id,
-            answer: item.answer,
-            savedAt: now,
-            awardedPoints: String(item.points),
-            gradedAt: now,
-          })
-          .onConflictDoUpdate({
-            target: attemptAnswers.attemptItemId,
-            set: { awardedPoints: String(item.points), gradedAt: now },
-          });
-      await tx
-        .update(assessmentAttempts)
-        .set({
-          status: 'GRADED',
-          finishedAt: now,
-          rawPoints: String(raw),
-          score0To100: String(score),
-        })
-        .where(eq(assessmentAttempts.id, attemptId));
-      await tx.insert(analyticsOutbox).values({
-        eventName: 'tryout_completed',
-        actorUserId: studentId,
-        entityType: 'assessmentAttempt',
-        entityId: attemptId,
-        payload: { packageId: attempt.packageId },
-      });
-    });
+    await this.finalizeForStudent(await this.student(authorization), attemptId, 'manual');
     return { state: 'waitingIrt' as const };
   }
 

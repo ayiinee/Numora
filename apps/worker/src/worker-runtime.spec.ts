@@ -8,6 +8,8 @@ const mocks = vi.hoisted(() => ({
   checkDatabase: vi.fn(),
   closeDatabase: vi.fn(),
   outbox: vi.fn(),
+  status: vi.fn(),
+  recover: vi.fn(),
   project: vi.fn(),
   workerHandlers: new Map<string, (...args: unknown[]) => void>(),
   redisHandlers: new Map<string, (...args: unknown[]) => void>(),
@@ -28,7 +30,8 @@ vi.mock('@tka/database', () => ({
   checkDatabaseConnection: mocks.checkDatabase,
   closeDatabaseConnection: mocks.closeDatabase,
 }));
-vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox }));
+vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
+vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox, outboxStatus: mocks.status }));
 vi.mock('./class-leaderboard.js', () => ({ projectClassLeaderboard: mocks.project }));
 import { runWorker } from './worker-runtime.js';
 
@@ -51,8 +54,10 @@ describe('worker Redis outage lifecycle', () => {
     mocks.worker.close.mockResolvedValue(undefined);
     mocks.checkDatabase.mockResolvedValue(undefined);
     mocks.closeDatabase.mockResolvedValue(undefined);
+    mocks.status.mockResolvedValue({ pending: 0, failed: 0, retryReady: 0, coolingDown: 0 });
     mocks.outbox.mockResolvedValue({ processed: 0, failed: 0 });
     mocks.project.mockResolvedValue({});
+    mocks.recover.mockResolvedValue({ finalized: 0, failed: 0, backlog: 0 });
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -72,6 +77,7 @@ describe('worker Redis outage lifecycle', () => {
     expect(mocks.workerConstructor).not.toHaveBeenCalled();
     expect(mocks.outbox).not.toHaveBeenCalled();
     expect(mocks.project).not.toHaveBeenCalled();
+    expect(mocks.recover).not.toHaveBeenCalled();
     expect(mocks.redis.disconnect).toHaveBeenCalledOnce();
     expect(console.error).toHaveBeenCalledOnce();
     expect(vi.mocked(console.error).mock.calls.flat().join(' ')).not.toContain('fixture-secret');
@@ -89,6 +95,7 @@ describe('worker Redis outage lifecycle', () => {
     await vi.advanceTimersByTimeAsync(3_600_000);
     expect(mocks.outbox).toHaveBeenCalledOnce();
     expect(mocks.project).toHaveBeenCalledOnce();
+    expect(mocks.recover).toHaveBeenCalledOnce();
     expect(console.error).toHaveBeenCalledOnce();
   });
 

@@ -71,6 +71,7 @@ export const videoReports = pgTable('video_reports', {
 
 export const analyticsEvents = pgTable('analytics_events', {
   eventId: uuid('event_id').primaryKey(),
+  correlationId: uuid('correlation_id'),
   eventName: text('event_name').notNull(),
   eventVersion: text('event_version').notNull(),
   actorUserId: uuid('actor_user_id').references(() => users.id, { onDelete: 'set null' }),

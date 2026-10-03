@@ -1,0 +1,1 @@
+CREATE INDEX "assessment_attempts_tryout_recovery_idx" ON "assessment_attempts" USING btree ("deadline_at","id") WHERE "assessment_attempts"."assessment_type" = 'TRYOUT' and "assessment_attempts"."status" = 'IN_PROGRESS' and "assessment_attempts"."deadline_at" is not null;

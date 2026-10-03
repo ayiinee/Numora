@@ -1,6 +1,6 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { randomUUID } from 'node:crypto';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox,
   assessmentAttempts,
@@ -33,7 +33,7 @@ const testUrl = process.env.TEST_DATABASE_URL;
 const integration = testUrl ? describe : describe.skip;
 
 integration('Drill lifecycle against PostgreSQL', () => {
-  afterAll(async () => closeDatabaseConnection());
+  afterAll(async () => { vi.unstubAllEnvs(); await closeDatabaseConnection(); });
 
   it('keeps submit idempotent, changes package on retry, and protects student results', async () => {
     process.env.DATABASE_URL = testUrl;
@@ -134,6 +134,13 @@ integration('Drill lifecycle against PostgreSQL', () => {
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });
     await db.update(assessmentPackages).set({ isDemo: true }).where(eq(assessmentPackages.id, firstPackage!.id));
+    vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'false');
+    const untracked = await learning.start('stranger', firstLevel!.id);
+    await learning.saveAnswer('stranger', untracked.id, untracked.questions[0]!.questionInstanceId, 'A');
+    expect(await db.select().from(analyticsOutbox).where(eq(analyticsOutbox.entityId, untracked.id))).toHaveLength(0);
+    vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'true');
+    expect((await learning.start('stranger', firstLevel!.id)).id).toBe(untracked.id);
+    expect(await db.select().from(analyticsOutbox).where(eq(analyticsOutbox.entityId, untracked.id))).toHaveLength(0);
     const attempt = await learning.start('student', firstLevel!.id);
     expect(attempt.isDemo).toBe(true);
     expect(attempt.levelTitle).toBe('Level 1');
@@ -156,6 +163,24 @@ integration('Drill lifecycle against PostgreSQL', () => {
     await expect(learning.attempt('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
     await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, 'B');
     expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBe('B');
+    await Promise.all([1, 2].map(() => learning.saveAnswer('student', attempt.id,
+      attempt.questions[0]!.questionInstanceId, 'B')));
+    const beforeFailure = (await db.select().from(attemptAnswers)
+      .where(eq(attemptAnswers.attemptItemId, attempt.questions[0]!.questionInstanceId)))[0];
+    const trigger = `test_answer_${randomUUID().replaceAll('-', '')}`;
+    await db.execute(sql.raw(`create function ${trigger}() returns trigger language plpgsql as $$ begin
+      if NEW.entity_id = '${attempt.id}'::uuid and NEW.event_name = 'question_answered' then
+        raise exception 'TEST ONLY analytics unavailable'; end if; return NEW; end $$`));
+    await db.execute(sql.raw(`create trigger ${trigger} before insert on analytics_outbox
+      for each row execute function ${trigger}()`));
+    try {
+      await expect(learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, null)).rejects.toThrow();
+      expect((await db.select().from(attemptAnswers)
+        .where(eq(attemptAnswers.attemptItemId, attempt.questions[0]!.questionInstanceId)))[0]).toEqual(beforeFailure);
+    } finally {
+      await db.execute(sql.raw(`drop trigger ${trigger} on analytics_outbox`));
+      await db.execute(sql.raw(`drop function ${trigger}()`));
+    }
     await learning.saveAnswer('student', attempt.id, attempt.questions[0]!.questionInstanceId, null);
     expect((await learning.attempt('student', attempt.id)).questions[0]?.selectedOptionId).toBeNull();
     for (const item of attempt.questions.slice(0, 8))
@@ -173,8 +198,21 @@ integration('Drill lifecycle against PostgreSQL', () => {
       attemptId: attempt.id, activity: 'drill', resultState: 'ready', score: 80,
     });
     const events = await db.select({ id: analyticsOutbox.id }).from(analyticsOutbox)
-      .where(eq(analyticsOutbox.entityId, attempt.id));
+      .where(and(eq(analyticsOutbox.entityId, attempt.id), eq(analyticsOutbox.eventName, 'drill_completed')));
     expect(events).toHaveLength(1);
+    const domainEvents = await db.select().from(analyticsOutbox).where(eq(analyticsOutbox.entityId, attempt.id));
+    for (const name of ['drill_started', 'drill_submitted', 'level_unlocked'])
+      expect(domainEvents.filter(event => event.eventName === name)).toHaveLength(1);
+    expect(domainEvents.filter(event => event.eventName === 'question_answered')).toHaveLength(10);
+    for (const event of domainEvents.filter(event => event.eventName !== 'drill_completed')) {
+      expect(event.correlationId).toBe(attempt.id);
+      expect(event.actorUserId).toBe(student!.id);
+      expect(event.payload).toMatchObject({ attemptId: attempt.id, assessmentType: 'DRILL',
+        packageId: firstPackage!.id, packageVersion: 1, scoringPolicyVersionId: policy!.id });
+      for (const forbidden of ['answer', 'answerKey', 'optionId', 'score', 'email', 'displayName'])
+        expect(event.payload).not.toHaveProperty(forbidden);
+    }
+
     await expect(learning.result('stranger', attempt.id)).rejects.toMatchObject({ status: 404 });
     expect((await catalog.subchapter('student', subchapter!.id)).levels.find((level) => level.id === nextLevel!.id)?.status).toBe('open');
 
@@ -226,5 +264,13 @@ integration('Drill lifecycle against PostgreSQL', () => {
     const [nextProgress] = await db.select().from(levelProgress)
       .where(and(eq(levelProgress.studentId, student!.id), eq(levelProgress.levelId, nextLevel!.id)));
     expect(nextProgress?.unlockingAttemptId).toBe(attempt.id);
+    // A later valid completion must not emit an unlock for a level already open.
+    await db.insert(levelProgress).values({ studentId: stranger!.id, levelId: nextLevel!.id,
+      unlockedAt: new Date(), unlockSource: 'PRETEST' });
+    for (const item of untracked.questions)
+      await learning.saveAnswer('stranger', untracked.id, item.questionInstanceId, 'A');
+    await learning.submit('stranger', untracked.id);
+    expect(await db.select().from(analyticsOutbox).where(and(eq(analyticsOutbox.entityId, untracked.id),
+      eq(analyticsOutbox.eventName, 'level_unlocked')))).toHaveLength(0);
   }, 30_000);
 });

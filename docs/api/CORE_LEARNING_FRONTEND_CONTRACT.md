@@ -74,3 +74,11 @@ The shared `ActivityRow` displays taxonomy/level context and pending reward text
 | TryOut historical access  | Already-attempted no reattempt; past never-attempted eligibility TRY-TBC-05; expired unavailable cannot Start                                                                                     |
 
 The existing `sampleSize >= 30` gate is an implementation constraint. The latest feature PRD does not specify it as a universal Student release gate; Data/PO must reconcile low-response handling with the product SLA. Minimum 30 remains the v0.5 Admin item-analysis baseline. Teacher/Class authorization and NestJS authority remain unchanged.
+
+## JOB-09 automatic finalization - 3 October 2026
+
+**ENGINEERING DECISION:** no endpoint or response shape changes. Manual submit, authenticated resume/current recovery, and scheduled recovery use one PostgreSQL transaction and attempt row lock. An expired owned TryOut is finalized on resume; questions disappear and the existing waiting/released states apply. Both concurrent manual and automatic submission return the existing waiting response without duplicating finalization or its legacy outbox event. The existing internal PG score is not the approved IRT-weighted result.
+
+The authoritative expiry check uses PostgreSQL wall time after the row lock. Save after `deadlineAt` returns 409 `TRYOUT_DEADLINE_PASSED` while active, or the existing completed error after finalization. Saved answers and their save timestamps, startedAt, deadlineAt, scoring/content pins and class snapshot remain immutable during finalization. Unanswered items receive blank answers for grading. FinishedAt records actual finalization time; it does not pretend recovery ran at the deadline.
+
+**OPEN:** official duration, package-close/attempt-deadline relationship, PGK rubric and batch/release policy. Recovery only consumes persisted deadlines and never expires Drill. The existing UI countdown uses serverTime/deadlineAt and submits at zero without confirmation; browser availability is not required for scheduled recovery. Result, key and explanation remain behind the existing release gate.

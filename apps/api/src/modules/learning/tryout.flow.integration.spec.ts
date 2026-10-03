@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -374,10 +374,34 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(afterJoin?.classIdAtStart).toBeNull();
+    const [beforeClockSkew] = await db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, a.id));
+    const wallTime = Date.now();
+    vi.useFakeTimers({ toFake: ['Date'] });
+    vi.setSystemTime(new Date('2000-01-01T00:00:00Z'));
+    try {
+      const resumed = await tryout.attempt('student', a.id);
+      expect(Math.abs(new Date(resumed.serverTime).getTime() - wallTime)).toBeLessThan(10_000);
+      expect((await db.select().from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, a.id)))[0]?.startedAt).toEqual(beforeClockSkew!.startedAt);
+      expect(resumed.deadlineAt).toBe(a.deadlineAt);
+      expect(await tryout.current('student')).toMatchObject({ state: 'inProgress' });
+    } finally { vi.useRealTimers(); }
     expect(a.questions).toHaveLength(2);
     expect(a.questions[0]).not.toHaveProperty('correctOptionId');
     await tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'A');
     expect((await tryout.attempt('student', a.id)).questions[0]?.selectedOptionId).toBe('A');
+    // A save queued behind the finalization lock must use time after acquiring it.
+    await db.update(assessmentAttempts).set({ deadlineAt: new Date(Date.now() + 150) })
+      .where(eq(assessmentAttempts.id, a.id));
+    let queuedSave: Promise<unknown> | undefined;
+    await db.transaction(async tx => {
+      await tx.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, a.id)).for('update');
+      queuedSave = tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'B')
+        .catch(error => error);
+      await new Promise(resolve => setTimeout(resolve, 300));
+    });
+    expect(await queuedSave).toMatchObject({ status: 409, response: { code: 'TRYOUT_DEADLINE_PASSED' } });
     await db
       .update(assessmentAttempts)
       .set({ deadlineAt: new Date(Date.now() - 1) })
@@ -385,6 +409,20 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     await expect(
       tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'B'),
     ).rejects.toMatchObject({ status: 409, response: { code: 'TRYOUT_DEADLINE_PASSED' } });
+    const mandiriDeadline = new Date(Date.now() - 1);
+    await db.update(assessmentAttempts).set({ deadlineAt: mandiriDeadline })
+      .where(eq(assessmentAttempts.id, mandiri.id));
+    expect(await tryout.attempt('independent', mandiri.id)).toMatchObject({
+      status: 'submitted', questions: [], deadlineAt: mandiriDeadline.toISOString(),
+    });
+    expect(await tryout.current('independent')).toMatchObject({ state: 'waitingIrt' });
+    await expect(tryout.result('independent', mandiri.id)).rejects.toMatchObject({
+      status: 409, response: { code: 'TRYOUT_RESULT_PENDING' },
+    });
+    const [autoStored] = await db.select().from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, mandiri.id));
+    expect(autoStored).toMatchObject({ classIdAtStart: null, startedAt: mandiriStored!.startedAt,
+      deadlineAt: mandiriDeadline, status: 'GRADED' });
     const [firstSubmit, duplicateSubmit] = await Promise.all([
       tryout.submit('student', a.id),
       tryout.submit('student', a.id),

@@ -13,12 +13,18 @@
     "non-positive curriculum levels rejected",
     "complete migration chain succeeds on a fresh database"
   ],
-  "baseCommit": "3c671a0",
+  "baseCommit": "8680b2f",
   "migrationSha256": {
-    "0012_curriculum_slugs.sql": "bb6c3834be89fb97226981323aef48cc4676bffb93acc056f0a60aa763823387",
-    "0013_indicator_question_levels.sql": "563cd6feb2e45b738553cad74b88c908e3288fed0e303ba5f72574bc05691a38"
+    "0014_curriculum_slugs.sql": "bb6c3834be89fb97226981323aef48cc4676bffb93acc056f0a60aa763823387",
+    "0015_indicator_question_levels.sql": "563cd6feb2e45b738553cad74b88c908e3288fed0e303ba5f72574bc05691a38"
   },
   "verification": {
+    "fullLocalCi": "pnpm run ci passed after integration with upstream 8680b2f; configured integration suites remain skipped",
+    "workspaceBuild": "passed",
+    "workspaceTypecheck": "passed",
+    "repositoryCheckTests": { "passed": 36 },
+    "webTests": { "passed": 80 },
+    "workerTests": { "passed": 6, "skipped": 7 },
     "databaseBuild": "passed",
     "apiBuild": "passed",
     "apiTypecheck": "passed",

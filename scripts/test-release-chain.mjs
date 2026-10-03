@@ -15,6 +15,7 @@ const env = {
 for (const args of [
   ['--filter', '@tka/database', 'db:migrate'],
   ['--filter', '@tka/database', 'build'],
+  ['--filter', '@tka/assessment-engine', 'build'],
   ['--filter', '@tka/api', 'build'],
   ['--filter', '@tka/web', 'build'],
   ['--filter', '@tka/web', 'exec', 'playwright', 'test', '--config=playwright.connected.config.ts'],

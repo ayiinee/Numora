@@ -1,0 +1,501 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/events/domain-learning-event.proposed.schema.json",
+  "title": "PROPOSED domain learning analytics v1 - DRL-OPEN-08",
+  "description": "Reviewable default-off mapping, not an approved Data contract. Normalize stored eventVersion text to integer and actorUserId to actorId for this external envelope. Never enable shared environments until Data approval.",
+  "allOf": [
+    {
+      "$ref": "https://tka.local/contracts/events/analytics-event.schema.json"
+    },
+    {
+      "oneOf": [
+        {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "const": "drill_started"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attemptId",
+                "assessmentType",
+                "packageId",
+                "packageVersion",
+                "scoringPolicyVersionId",
+                "chapterId",
+                "levelId",
+                "classIdAtStart",
+                "startedAt",
+                "deadlineAt",
+                "questionCount"
+              ],
+              "properties": {
+                "attemptId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "assessmentType": {
+                  "const": "DRILL"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "scoringPolicyVersionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "chapterId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "levelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "classIdAtStart": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deadlineAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "questionCount": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": [
+            "eventName",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "const": "question_answered"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attemptId",
+                "assessmentType",
+                "packageId",
+                "packageVersion",
+                "scoringPolicyVersionId",
+                "chapterId",
+                "levelId",
+                "classIdAtStart",
+                "startedAt",
+                "deadlineAt",
+                "questionInstanceId",
+                "questionVersionId",
+                "questionFormat",
+                "answerState"
+              ],
+              "properties": {
+                "attemptId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "assessmentType": {
+                  "type": "string",
+                  "enum": [
+                    "DRILL",
+                    "TRYOUT"
+                  ]
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "scoringPolicyVersionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "chapterId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "levelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "classIdAtStart": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deadlineAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "questionInstanceId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "questionVersionId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "questionFormat": {
+                  "const": "SINGLE_CHOICE"
+                },
+                "answerState": {
+                  "enum": [
+                    "selected",
+                    "cleared"
+                  ]
+                }
+              }
+            }
+          },
+          "required": [
+            "eventName",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "const": "drill_submitted"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attemptId",
+                "assessmentType",
+                "packageId",
+                "packageVersion",
+                "scoringPolicyVersionId",
+                "chapterId",
+                "levelId",
+                "classIdAtStart",
+                "startedAt",
+                "deadlineAt",
+                "submissionType",
+                "questionCount",
+                "answeredCount"
+              ],
+              "properties": {
+                "attemptId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "assessmentType": {
+                  "const": "DRILL"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "scoringPolicyVersionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "chapterId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "levelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "classIdAtStart": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deadlineAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "submissionType": {
+                  "const": "manual"
+                },
+                "questionCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "answeredCount": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": [
+            "eventName",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "const": "tryout_submitted"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attemptId",
+                "assessmentType",
+                "packageId",
+                "packageVersion",
+                "scoringPolicyVersionId",
+                "chapterId",
+                "levelId",
+                "classIdAtStart",
+                "startedAt",
+                "deadlineAt",
+                "submissionType",
+                "questionCount",
+                "answeredCount"
+              ],
+              "properties": {
+                "attemptId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "assessmentType": {
+                  "const": "TRYOUT"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "scoringPolicyVersionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "chapterId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "levelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "classIdAtStart": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deadlineAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "submissionType": {
+                  "enum": [
+                    "manual",
+                    "deadline"
+                  ]
+                },
+                "questionCount": {
+                  "type": "integer",
+                  "minimum": 0
+                },
+                "answeredCount": {
+                  "type": "integer",
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "required": [
+            "eventName",
+            "payload"
+          ]
+        },
+        {
+          "type": "object",
+          "properties": {
+            "eventName": {
+              "const": "level_unlocked"
+            },
+            "payload": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "attemptId",
+                "assessmentType",
+                "packageId",
+                "packageVersion",
+                "scoringPolicyVersionId",
+                "chapterId",
+                "levelId",
+                "classIdAtStart",
+                "startedAt",
+                "deadlineAt",
+                "unlockedLevelId"
+              ],
+              "properties": {
+                "attemptId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "assessmentType": {
+                  "const": "DRILL"
+                },
+                "packageId": {
+                  "type": "string",
+                  "format": "uuid"
+                },
+                "packageVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "scoringPolicyVersionId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "chapterId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "levelId": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "classIdAtStart": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "uuid"
+                },
+                "startedAt": {
+                  "type": "string",
+                  "format": "date-time"
+                },
+                "deadlineAt": {
+                  "type": [
+                    "string",
+                    "null"
+                  ],
+                  "format": "date-time"
+                },
+                "unlockedLevelId": {
+                  "type": "string",
+                  "format": "uuid"
+                }
+              }
+            }
+          },
+          "required": [
+            "eventName",
+            "payload"
+          ]
+        }
+      ]
+    }
+  ]
+}

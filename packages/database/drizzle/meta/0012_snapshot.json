@@ -1,5 +1,5 @@
 {
-  "id": "daa7dd05-62bd-407f-a946-f869789d61e2",
+  "id": "49d8f21a-17d7-4e83-ba87-5ecacff1756e",
   "prevId": "912e091e-def5-4c61-a38e-dfee4540b78a",
   "version": "7",
   "dialect": "postgresql",
@@ -1045,12 +1045,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1094,21 +1088,6 @@
           "method": "btree",
           "with": {}
         },
-        "chapters_slug_uq": {
-          "name": "chapters_slug_uq",
-          "columns": [
-            {
-              "expression": "slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "chapters_order_uq": {
           "name": "chapters_order_uq",
           "columns": [
@@ -1130,10 +1109,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "chapters_slug_ck": {
-          "name": "chapters_slug_ck",
-          "value": "\"chapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
-        },
         "chapters_order_ck": {
           "name": "chapters_order_ck",
           "value": "\"chapters\".\"display_order\" > 0"
@@ -1772,12 +1747,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1817,27 +1786,6 @@
             },
             {
               "expression": "code",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "subchapters_chapter_slug_uq": {
-          "name": "subchapters_chapter_slug_uq",
-          "columns": [
-            {
-              "expression": "chapter_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "slug",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1889,10 +1837,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "subchapters_slug_ck": {
-          "name": "subchapters_slug_ck",
-          "value": "\"subchapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
-        },
         "subchapters_order_ck": {
           "name": "subchapters_order_ck",
           "value": "\"subchapters\".\"display_order\" > 0"
@@ -2147,6 +2091,28 @@
             }
           ],
           "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "assessment_attempts_tryout_recovery_idx": {
+          "name": "assessment_attempts_tryout_recovery_idx",
+          "columns": [
+            {
+              "expression": "deadline_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "where": "\"assessment_attempts\".\"assessment_type\" = 'TRYOUT' and \"assessment_attempts\".\"status\" = 'IN_PROGRESS' and \"assessment_attempts\".\"deadline_at\" is not null",
           "concurrently": false,
           "method": "btree",
           "with": {}

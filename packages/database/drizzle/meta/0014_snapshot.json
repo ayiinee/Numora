@@ -1,6 +1,6 @@
 {
-  "id": "0fc8017a-dc9c-4454-a2cd-c97e26588098",
-  "prevId": "49d8f21a-17d7-4e83-ba87-5ecacff1756e",
+  "id": "5bf6f869-11e3-4924-90c6-24901d5b12df",
+  "prevId": "0fc8017a-dc9c-4454-a2cd-c97e26588098",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -1045,6 +1045,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1088,6 +1094,21 @@
           "method": "btree",
           "with": {}
         },
+        "chapters_slug_uq": {
+          "name": "chapters_slug_uq",
+          "columns": [
+            {
+              "expression": "slug",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "chapters_order_uq": {
           "name": "chapters_order_uq",
           "columns": [
@@ -1109,6 +1130,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "chapters_slug_ck": {
+          "name": "chapters_slug_ck",
+          "value": "\"chapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
+        },
         "chapters_order_ck": {
           "name": "chapters_order_ck",
           "value": "\"chapters\".\"display_order\" > 0"
@@ -1747,6 +1772,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "slug": {
+          "name": "slug",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1786,6 +1817,27 @@
             },
             {
               "expression": "code",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "subchapters_chapter_slug_uq": {
+          "name": "subchapters_chapter_slug_uq",
+          "columns": [
+            {
+              "expression": "chapter_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "slug",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1837,6 +1889,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "subchapters_slug_ck": {
+          "name": "subchapters_slug_ck",
+          "value": "\"subchapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
+        },
         "subchapters_order_ck": {
           "name": "subchapters_order_ck",
           "value": "\"subchapters\".\"display_order\" > 0"

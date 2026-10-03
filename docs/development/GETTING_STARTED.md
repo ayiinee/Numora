@@ -135,9 +135,13 @@ pnpm run ci
 
 Use `pnpm run ci`: pnpm 12 reserves `pnpm ci` for a clean dependency install.
 
-`contracts:validate` compiles the four committed JSON Schema contracts with Ajv draft 2020-12, including references and formats. `test:checks` verifies the environment guard and demonstrates rejection of invalid schemas and payload formats. These checks do not resolve the deliberately open payload/content rules or prove that an unimplemented API exists.
+`contracts:validate` compiles committed JSON Schema contracts with Ajv draft 2020-12, including references and formats. `test:checks` verifies the environment guard and demonstrates rejection of invalid schemas and payload formats. These checks do not resolve the deliberately open payload/content rules or prove that an unimplemented API exists. JOB-20 adds a separately labelled proposed domain-event schema; Data approval is still required.
 
 The PostgreSQL integration test runs when `TEST_DATABASE_URL` points to a **dedicated, migrated test database**. CI starts PostgreSQL, applies migrations, and supplies this URL. Local runs can use `sslmode=disable` only with `NODE_ENV=test` and a localhost URL; non-test connections still require TLS. Do not point the test at a shared development, staging, or production database.
+
+## PostgreSQL background diagnostics - 3 October 2026
+
+After building database and assessment-engine, an operator can supply DATABASE_URL in the process environment and run `pnpm --filter @tka/worker outbox:status` without Redis, or `pnpm --filter @tka/worker tryout:recover --once` for one bounded recovery batch. Neither command loads .env automatically. Follow the [recovery runbook](TRYOUT_RECOVERY_RUNBOOK.md) and [analytics inventory/runbook](JOB20_ANALYTICS_INVENTORY.md); analytics flags stay server-only and default off pending Data approval.
 
 ## Read before coding
 

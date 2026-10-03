@@ -40,3 +40,20 @@ test('PvP contract validates commands, acknowledges errors, and rejects client s
   assert.equal(validate({ ...base, requestId: null }), false);
   assert.equal(validate({ ...base, event: 'command:acknowledged', payload: { ok: false, error: { status: 409, code: 'PVP_POLICY_OPEN', detail: 'PvP belum tersedia.' } } }), true);
 });
+
+test('proposed domain contract pins context and excludes private answer and score fields', async () => {
+  const validators = await loadContractValidators();
+  const validate = validators.get(join('packages/contracts/events', 'domain-learning-event.proposed.schema.json'));
+  const id = '00000000-0000-4000-8000-000000000001';
+  const event = { eventId: id, eventName: 'tryout_submitted', eventVersion: 1,
+    occurredAt: '2026-10-03T08:00:00Z', actorId: id, entityType: 'assessmentAttempt', entityId: id,
+    correlationId: id, payload: { attemptId: id, assessmentType: 'TRYOUT', packageId: id,
+      packageVersion: 1, scoringPolicyVersionId: id, chapterId: null, levelId: null, classIdAtStart: null,
+      startedAt: '2026-10-03T07:00:00Z', deadlineAt: '2026-10-03T08:00:00Z',
+      submissionType: 'deadline', questionCount: 2, answeredCount: 1 } };
+  assert.equal(validate(event), true);
+  for (const field of ['answer', 'optionId', 'answerKey', 'score', 'email'])
+    assert.equal(validate({ ...event, payload: { ...event.payload, [field]: 'private' } }), false);
+  assert.equal(validate({ ...event, payload: { ...event.payload, packageVersion: 0 } }), false);
+  assert.equal(validate({ ...event, eventName: 'drill_submitted' }), false);
+});

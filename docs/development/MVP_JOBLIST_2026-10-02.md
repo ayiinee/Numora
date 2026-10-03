@@ -210,6 +210,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** manual/auto/save semantics, scheduled recovery, idempotent result/outbox dan observability. Tidak menambahkan timeout pada Drill.
 - **Bukti selesai:** browser ditutup/jaringan putus saat expiry tetap final; manual dan auto bersamaan menghasilkan satu submission; save sesudah deadline ditolak; raw saved answers dipertahankan; timer tidak di-reset oleh refresh/re-auth.
 
+- **Status engineering - 3 October 2026:** shared manual/auto finalizer, late-save guard using database time, lazy resume and scheduled PostgreSQL recovery implemented; historical pins/answers preserved, one legacy completion event. Bounded scan/partial index and Redis-independent CLI documented in [runbook](TRYOUT_RECOVERY_RUNBOOK.md). Actual PostgreSQL tests passed; feature PR/clean-SHA CI and independent QA are separate gates. Official duration and package-close relationship remain TBC-06 OPEN; no Drill timeout or official TryOut publication unlocked.
+
 ### JOB-10 — Jalankan IRT dan initial weighted result/release TryOut
 
 - **Owner:** Aini orchestration/worker/release; Ferdi snapshot/output integration; Data model/calibration; Curriculum/PO scale/policy; Avicenna Admin state; Salim QA. **Asal:** LAMA-09,08.
@@ -297,6 +299,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 - **Output:** contracts/producers/worker metrics dan event tests. Star/reward events baru valid sesudah policy/output ada; business mutation/outbox dalam transaksi yang sama.
 - **Bukti selesai:** refresh/repeated request/job retry tidak menggandakan final contribution; event context versi/attempt/time benar; consumer replay aman; queue failures/backlog dapat diketahui. Tidak menghitung consumer existing sebagai belum dibuat.
 - **Batas file:** aliwafa tidak mengubah auth/callback/monitoring existing untuk analytics selama task Farel aktif. Payload/trigger disepakati dengan Data, lalu integrasi di file tersebut dilakukan Farel atau diteruskan melalui handoff setelah merge.
+
+- **Status Aini - 3 October 2026:** domain/worker engineering delivered separately after JOB-09 CI PASS: proposed default-off canonical start/answer/submission/unlock producers, pinned context, correlation preservation and outbox status/rollback/retry/replay tests. [Inventory/runbook](JOB20_ANALYTICS_INVENTORY.md) records existing support producers, auth/join handoff (Farel), views (Ferdi) and Pretest/reward/release dependencies. JOB-20 overall remains PARSIAL; DRL-OPEN-08/Data activation and independent QA remain open.
 
 ### JOB-21 — Acceptance dan operasi release untuk scope yang akan diaktifkan
 
