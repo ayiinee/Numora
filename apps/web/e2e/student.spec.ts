@@ -1087,3 +1087,200 @@ for (const { role, verified, path, destination } of [
     await expect(page).toHaveURL(new RegExp(`${destination}$`));
   });
 }
+
+type FixtureNote = {
+  id: string;
+  classId: string;
+  studentId: string;
+  teacherName: string;
+  body: string;
+  sentAt: string;
+  readAt: string | null;
+};
+
+function inboxNote(
+  id: string,
+  body: string,
+  sentAt: string,
+  readAt: string | null = null,
+): FixtureNote {
+  return { id, classId: chapterId, studentId, teacherName: 'Guru fixture', body, sentAt, readAt };
+}
+
+// Teacher notes are read-only for the Student: the inbox answers, never replies.
+async function stubInbox(page: Page, notes: FixtureNote[]) {
+  const reads: string[] = [];
+  await page.route('http://localhost:3301/api/v1/students/me/feedback*', async (route) => {
+    const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/summary'))
+      return route.fulfill({
+        json: {
+          unreadCount: notes.filter((note) => note.readAt === null).length,
+          latest: notes.slice(0, 3),
+        },
+      });
+    if (url.pathname.endsWith('/read')) {
+      const segments = url.pathname.split('/');
+      const id = segments[segments.length - 2]!;
+      const target = notes.find((note) => note.id === id);
+      if (!target)
+        return route.fulfill({
+          status: 404,
+          contentType: 'application/problem+json',
+          json: { code: 'FEEDBACK_NOT_FOUND', detail: 'Feedback tidak ditemukan.' },
+        });
+      if (target.readAt === null) {
+        target.readAt = '2026-10-02T01:00:00Z';
+        reads.push(id);
+      }
+      return route.fulfill({ status: 201, json: { id, readAt: target.readAt } });
+    }
+    const offset = Number(url.searchParams.get('offset') ?? '0');
+    const limit = Number(url.searchParams.get('limit') ?? '20');
+    return route.fulfill({
+      json: {
+        items: notes.slice(offset, offset + limit),
+        nextOffset: offset + limit < notes.length ? offset + limit : null,
+      },
+    });
+  });
+  return reads;
+}
+
+const inboxReadNote = () =>
+  inboxNote(
+    levelId,
+    'Nilai awal pecahanmu 60; ulangi langkah penyederhanaan.',
+    '2026-09-24T00:00:00Z',
+    '2026-09-25T00:00:00Z',
+  );
+
+test('Student inbox marks one note read and keeps the dashboard preview honest', async ({
+  page,
+}) => {
+  await fixtures(page);
+  const reads = await stubInbox(page, [
+    inboxNote(
+      questionId,
+      'Catatan persisted fixture: lanjutkan latihan persamaan.',
+      '2026-10-01T00:00:00Z',
+    ),
+    inboxReadNote(),
+  ]);
+  await page.goto('/student/feedback');
+  await expect(page.getByText('Guru fixture · Belum dibaca', { exact: true })).toBeVisible();
+  await expect(
+    page.getByText('Catatan persisted fixture: lanjutkan latihan persamaan.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tandai sudah dibaca' })).toHaveCount(1);
+  await expect(page.locator('textarea')).toHaveCount(0);
+  await expect(page.getByRole('textbox')).toHaveCount(0);
+
+  await page.getByRole('button', { name: 'Tandai sudah dibaca' }).click();
+  await expect(page.getByText('Guru fixture · Belum dibaca', { exact: true })).toHaveCount(0);
+  await expect(page.locator('time', { hasText: 'Dibaca' })).toHaveCount(2);
+  await expect(
+    page.getByText('Nilai awal pecahanmu 60; ulangi langkah penyederhanaan.', { exact: true }),
+  ).toBeVisible();
+  expect(reads).toEqual([questionId]);
+
+  await page.goto('/student');
+  await expect(page.getByText('0 catatan belum dibaca.', { exact: true })).toBeVisible();
+});
+
+test('Student inbox keeps earlier notes while paging with the server offset', async ({ page }) => {
+  await fixtures(page);
+  await stubInbox(
+    page,
+    Array.from({ length: 21 }, (_, index) =>
+      inboxNote(
+        `note-${index}`,
+        `Catatan fixture ${index + 1}.`,
+        `2026-09-${String(28 - index).padStart(2, '0')}T00:00:00Z`,
+        '2026-09-28T00:00:00Z',
+      ),
+    ),
+  );
+  await page.goto('/student/feedback');
+  await expect(page.getByText('Catatan fixture 1.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Catatan fixture 21.', { exact: true })).toHaveCount(0);
+  await page.getByRole('button', { name: 'Muat catatan lain' }).click();
+  await expect(page.getByText('Catatan fixture 21.', { exact: true })).toBeVisible();
+  await expect(page.getByText('Catatan fixture 1.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Muat catatan lain' })).toHaveCount(0);
+});
+
+test('Student inbox shows a server refusal instead of an empty inbox', async ({ page }) => {
+  await fixtures(page);
+  await page.route('http://localhost:3301/api/v1/students/me/feedback*', (route) => {
+    if (new URL(route.request().url()).pathname.endsWith('/summary')) return route.fallback();
+    return route.fulfill({
+      status: 403,
+      contentType: 'application/problem+json',
+      json: { code: 'FORBIDDEN', detail: 'Akses akun aktif dan peran yang sesuai diperlukan.' },
+    });
+  });
+  await page.goto('/student/feedback');
+  await expect(page.getByRole('heading', { name: 'Akses ditolak' })).toBeVisible();
+  await expect(
+    page.getByText('Akses akun aktif dan peran yang sesuai diperlukan.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByText('Belum ada catatan', { exact: true })).toHaveCount(0);
+});
+
+test('Student inbox reports a refused read without hiding the note', async ({ page }) => {
+  await fixtures(page);
+  const reads = await stubInbox(page, [
+    inboxNote(
+      questionId,
+      'Catatan persisted fixture: lanjutkan latihan persamaan.',
+      '2026-10-01T00:00:00Z',
+    ),
+  ]);
+  await page.route('http://localhost:3301/api/v1/students/me/feedback/*/read', (route) =>
+    route.fulfill({
+      status: 404,
+      contentType: 'application/problem+json',
+      json: { code: 'FEEDBACK_NOT_FOUND', detail: 'Feedback tidak ditemukan.' },
+    }),
+  );
+  await page.goto('/student/feedback');
+  await page.getByRole('button', { name: 'Tandai sudah dibaca' }).click();
+  await expect(page.getByText('Feedback tidak ditemukan.', { exact: true })).toBeVisible();
+  await expect(page.getByRole('alert').first()).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Tandai sudah dibaca' })).toHaveCount(1);
+  await expect(
+    page.getByText('Catatan persisted fixture: lanjutkan latihan persamaan.', { exact: true }),
+  ).toBeVisible();
+  expect(reads).toEqual([]);
+});
+
+for (const width of [320, 390, 1440])
+  test(`Student inbox at ${width}px keeps the read action reachable by keyboard`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixtures(page);
+    await stubInbox(page, [
+      inboxNote(
+        questionId,
+        'Catatan persisted fixture: lanjutkan latihan persamaan.',
+        '2026-10-01T00:00:00Z',
+      ),
+      inboxReadNote(),
+    ]);
+    await page.goto('/student/feedback');
+    await expect(page.getByRole('heading', { name: 'Catatan dari Guru' })).toBeVisible();
+    const action = page.getByRole('button', { name: 'Tandai sudah dibaca' });
+    await action.focus();
+    await expect(action).toBeVisible();
+    await action.press('Enter');
+    await expect(page.getByText('Guru fixture · Belum dibaca', { exact: true })).toHaveCount(0);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.screenshot({
+      path: testInfo.outputPath(`student-inbox-${width}.png`),
+      fullPage: true,
+    });
+  });
