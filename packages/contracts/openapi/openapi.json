@@ -4115,6 +4115,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "slug": {
+            "type": "string"
+          },
           "title": {
             "type": "string"
           },
@@ -4148,6 +4151,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
           },
           "chapterId": {
             "type": "string",
@@ -5068,6 +5074,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string"
           },
@@ -5113,6 +5123,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
+          },
           "name": {
             "type": "string"
           },
@@ -5155,6 +5169,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
+          },
           "name": {
             "type": "string"
           },
@@ -5180,6 +5198,10 @@
         "properties": {
           "code": {
             "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
           },
           "name": {
             "type": "string"
@@ -5216,6 +5238,10 @@
         "properties": {
           "code": {
             "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
           },
           "name": {
             "type": "string"
@@ -5358,6 +5384,10 @@
           "primaryCompetencyId": {
             "type": "string"
           },
+          "curriculumLevelNumber": {
+            "type": "number",
+            "nullable": true
+          },
           "variantId": {
             "type": "string"
           },
@@ -5486,6 +5516,11 @@
           "primaryCompetencyId": {
             "type": "string",
             "format": "uuid"
+          },
+          "curriculumLevelNumber": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Curriculum level within the indicator; not difficulty."
           },
           "sourceRef": {
             "type": "string"

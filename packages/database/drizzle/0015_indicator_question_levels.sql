@@ -1,0 +1,3 @@
+ALTER TABLE "questions" ADD COLUMN "curriculum_level_number" integer;--> statement-breakpoint
+CREATE INDEX "questions_competency_level_idx" ON "questions" USING btree ("primary_competency_id","curriculum_level_number");--> statement-breakpoint
+ALTER TABLE "questions" ADD CONSTRAINT "questions_curriculum_level_ck" CHECK ("questions"."curriculum_level_number" is null or "questions"."curriculum_level_number" > 0);
