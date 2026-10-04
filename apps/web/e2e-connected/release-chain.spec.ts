@@ -85,6 +85,10 @@ async function login(browser: Browser, alias: string) {
   const page = await context.newPage();
   return page;
 }
+function option(page: Page, id: 'A' | 'B') {
+  // The fixture's canonical option ID is stable across visual label punctuation.
+  return page.getByRole('radio').and(page.locator(`input[value="${id}"]`));
+}
 async function answer(page: Page, count: number) {
   for (let i = 1; i <= 10; i++) {
     await page.getByRole('button', { name: new RegExp(`^Soal ${i},`) }).click();
@@ -92,7 +96,7 @@ async function answer(page: Page, count: number) {
       (r) =>
         r.request().method() === 'PATCH' && r.url().includes('/answers/') && r.status() === 200,
     );
-    await page.getByRole('radio', { name: new RegExp(`^${i <= count ? 'B' : 'A'}\\.`) }).check();
+    await option(page, i <= count ? 'B' : 'A').check();
     await saved;
     await expect(page.getByRole('status').filter({ hasText: /^Tersimpan$/ })).toBeVisible();
   }
@@ -245,9 +249,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     // A real browser network outage must never present an unacknowledged answer as saved.
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeVisible();
+    await expect(option(student, 'B')).toBeVisible();
     await student.context().setOffline(true);
-    await student.getByRole('radio', { name: /^B\./ }).check();
+    await option(student, 'B').check();
     await expect(
       student.getByRole('status').filter({ hasText: /^Belum tersimpan$/ }),
     ).toBeVisible();
@@ -258,11 +262,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
     await student.reload();
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
     const resumed = await login(browser, 'student');
     await resumed.goto(`/student/drill/${attempt.id}`);
-    await expect(resumed.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(resumed, 'B')).toBeChecked();
     // First answer is already persisted: clear then exercise all ten real saves.
     const cleared = resumed.waitForResponse(
       (r) => r.request().method() === 'PATCH' && r.status() === 200,
@@ -486,7 +490,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const attempt = (await (await started).json()) as DrillAttemptDto;
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     await student.reload();
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeVisible();
+    await expect(option(student, 'B')).toBeVisible();
     const resumed = await body<DrillAttemptDto>(
       request,
       'otherStudent',
@@ -626,10 +630,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
       (r) =>
         r.request().method() === 'PATCH' && r.url().includes('/answers/') && r.status() === 200,
     );
-    await mandiri.getByRole('radio', { name: /^B\./ }).check();
+    await option(mandiri, 'B').check();
     await saved;
     await mandiri.reload();
-    await expect(mandiri.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(mandiri, 'B')).toBeChecked();
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
     expect(
       (
