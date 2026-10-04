@@ -1,0 +1,89 @@
+{
+  "externalId": "CURR-IND20-L01-Q02",
+  "type": "SINGLE_CHOICE",
+  "chapterCode": "CH-DP",
+  "subchapterCode": "SC-DATA",
+  "competencyCode": "IND-020",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Perhatikan data jumlah buku yang dibaca lima siswa dalam satu bulan berikut.\n\nSiswa — Jumlah Buku\nAndi — 4\nBudi — 6\nCitra — 3\nDeni — 7\nEka — 5\n\nJumlah seluruh buku yang dibaca kelima siswa tersebut adalah ....",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "20 buku",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "23 buku",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "25 buku",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "27 buku",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionId": "C"
+  },
+  "explanation": {
+    "text": "Jumlah seluruh buku:\n4 + 6 + 3 + 7 + 5 = 25 buku.",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 2",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+    "chapterSource": "Data & Peluang",
+    "subchapterSource": "Data",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 2,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "BELUM_DIREVIEW",
+    "sourceExtractionNotes": "Tabel sumber ditranskripsikan menjadi pasangan baris Siswa — Jumlah Buku untuk input teks; semua nilai dan urutan dipertahankan. Perlu uji tampilan tabel. Kunci belum disetujui; pemetaan master dan difficulty belum ditetapkan.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": [],
+    "importReady": false,
+    "assetManifest": [],
+    "mediaMarkerConvention": null,
+    "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts."
+    ]
+  }
+}

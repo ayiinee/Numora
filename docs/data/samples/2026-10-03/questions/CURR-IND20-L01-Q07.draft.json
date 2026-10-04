@@ -1,0 +1,89 @@
+{
+  "externalId": "CURR-IND20-L01-Q07",
+  "type": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+  "chapterCode": "CH-DP",
+  "subchapterCode": "SC-DATA",
+  "competencyCode": "IND-020",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Perhatikan data pilihan ekstrakurikuler 50 siswa berikut.\n\nEkstrakurikuler — Jumlah Siswa\nBasket — 15\nFutsal — 20\nPramuka — 10\nPMR — 5\n\nPilihlah semua pernyataan yang benar!",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "Futsal memiliki jumlah peminat terbanyak.",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "Jumlah peminat basket dan PMR adalah 20 siswa.",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "Peminat Pramuka dua kali peminat PMR.",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "Peminat PMR sama dengan peminat Basket.",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionIds": ["A", "B", "C"]
+  },
+  "explanation": {
+    "text": "Futsal = 20 → terbanyak.\nBasket + PMR = 15 + 5 = 20.\nPramuka = 10, PMR = 5 → dua kali.\nPMR ≠ Basket.\nJadi pernyataan benar adalah 1, 2, dan 3.",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 7",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+    "chapterSource": "Data & Peluang",
+    "subchapterSource": "Data",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 7,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "BELUM_DIREVIEW",
+    "sourceExtractionNotes": "Tabel sumber disalin sebagai pasangan baris teks. Pernyataan 1–4 → A–D; kunci 1, 2, 3 → A, B, C. Rubrik skor dan dukungan UI/engine belum ditetapkan. Kunci belum disetujui reviewer.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": [],
+    "importReady": false,
+    "assetManifest": [],
+    "mediaMarkerConvention": null,
+    "scoringRubricStatus": "PARTIAL_DETAILS_PENDING_CURRICULUM",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts."
+    ]
+  }
+}

@@ -1,0 +1,79 @@
+{
+  "status": "PROPOSED_FOR_SAMPLE_REVIEW_NOT_SEEDED",
+  "chapters": [
+    {
+      "code": "CH-DP",
+      "name": "Data & Peluang",
+      "slug": "data-peluang"
+    },
+    {
+      "code": "CH-GP",
+      "name": "Geometri & Pengukuran",
+      "slug": "geometri-pengukuran"
+    }
+  ],
+  "subchapters": [
+    {
+      "chapterCode": "CH-DP",
+      "code": "SC-DATA",
+      "name": "Data",
+      "slug": "data"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-OG",
+      "name": "Objek Geometri",
+      "slug": "objek-geometri"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-TG",
+      "name": "Transformasi Geometri",
+      "slug": "transformasi-geometri"
+    }
+  ],
+  "competencies": [
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "code": "IND-020",
+      "sourceIndicatorNumber": 20,
+      "description": "Perumusan pertanyaan untuk mendapatkan data, serta penyajian dan penginterpretasian data"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "code": "IND-016",
+      "sourceIndicatorNumber": 16,
+      "description": "Jaring-jaring bangun ruang: prisma, tabung, limas, dan kerucut"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "code": "IND-017",
+      "sourceIndicatorNumber": 17,
+      "description": "Transformasi tunggal: refleksi, translasi, rotasi, dan dilatasi terhadap titik, garis, dan bangun datar pada bidang"
+    }
+  ],
+  "levels": [
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 1
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 1
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 1
+    }
+  ],
+  "notes": [
+    "No displayOrder/UUID or READY approval has been invented; this is not an executable seeder.",
+    "Only source Level 1 needed by the sample is included; this is not the full Curriculum bank."
+  ]
+}

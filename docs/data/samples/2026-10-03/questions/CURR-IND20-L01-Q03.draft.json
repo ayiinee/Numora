@@ -1,0 +1,89 @@
+{
+  "externalId": "CURR-IND20-L01-Q03",
+  "type": "SINGLE_CHOICE",
+  "chapterCode": "CH-DP",
+  "subchapterCode": "SC-DATA",
+  "competencyCode": "IND-020",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Perhatikan data jumlah pengunjung perpustakaan berikut.\n\nHari — Jumlah Pengunjung\nSenin — 20\nSelasa — 25\nRabu — 30\nKamis — 25\nJumat — 40\n\nBerdasarkan data tersebut, hari dengan jumlah pengunjung terbanyak adalah ....",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "Senin",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "Selasa",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "Rabu",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "Jumat",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionId": "D"
+  },
+  "explanation": {
+    "text": "Jumlah pengunjung terbesar adalah 40 orang, yaitu pada hari Jumat.",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 3",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+    "chapterSource": "Data & Peluang",
+    "subchapterSource": "Data",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 3,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "BELUM_DIREVIEW",
+    "sourceExtractionNotes": "Tabel sumber ditranskripsikan menjadi pasangan baris Hari — Jumlah Pengunjung; semua nilai dan urutan dipertahankan. Perlu uji tampilan tabel. Kunci belum disetujui; pemetaan master dan difficulty belum ditetapkan.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": [],
+    "importReady": false,
+    "assetManifest": [],
+    "mediaMarkerConvention": null,
+    "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts."
+    ]
+  }
+}
