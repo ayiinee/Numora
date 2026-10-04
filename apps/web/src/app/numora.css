@@ -8423,6 +8423,84 @@ a.settings-row:hover {
 .admin-redesign-shell .admin-content textarea:disabled {
   opacity: 0.6;
 }
+.admin-operations-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+.admin-operations-grid > section {
+  min-width: 0;
+}
+.admin-operations-grid > section > p {
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.admin-redesign-shell .admin-operations-filters {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.admin-operations-filters .admin-content-field {
+  display: grid;
+  gap: 6px;
+}
+.admin-operations-filters .admin-content-actions {
+  margin-top: 0;
+}
+.admin-operation-row-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-operation-row-heading > strong,
+.admin-operation-row-heading > h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-operation-detail {
+  display: grid;
+  gap: 16px;
+}
+.admin-operation-detail dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.admin-operation-detail dl > div {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-operation-detail dt {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.admin-operation-detail dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.admin-operation-readonly-note {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.admin-operation-detail-placeholder {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+}
+.admin-redesign-shell .admin-operations-pagination {
+  max-width: none;
+  margin-top: 16px;
+}
 @media (min-width: 700px) {
   .admin-page-header {
     padding: 24px;
@@ -8459,6 +8537,14 @@ a.settings-row:hover {
   }
 }
 @media (min-width: 1200px) {
+  .admin-operations-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    align-items: start;
+  }
+  .admin-operations-grid > section:nth-child(2) {
+    position: sticky;
+    top: 20px;
+  }
   .admin-content-view:has(> .admin-content-form),
   .admin-content-view > section:has(> .admin-content-form) {
     display: grid;

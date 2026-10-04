@@ -25,6 +25,7 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
   admin: [
     { href: '/admin/schools', label: 'Sekolah & token', icon: 'school' },
     { href: '/admin/content', label: 'Konten & operasional', icon: 'book' },
+    { href: '/admin/operations', label: 'Pengguna & kelas', icon: 'users' },
   ],
 };
 
