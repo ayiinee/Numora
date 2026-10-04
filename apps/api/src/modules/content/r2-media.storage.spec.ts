@@ -91,6 +91,16 @@ describe('R2 media storage (SDK network mocked)', () => {
     expect(publish.input.Key).toBe(item.objectKey);
     expect(publish.input.Body).toEqual(png);
   });
+  it('propagates scoped temporary credentials to GET and PUT signatures', async () => {
+    const settings = config();
+    settings.set('R2_SESSION_TOKEN', 'TEST_ONLY_SESSION');
+    const storage = new R2MediaStorage(settings);
+    for (const url of [
+      await storage.presign(row()),
+      (await storage.readLink('numora-bucket', row().objectKey)).url,
+    ])
+      expect(new URL(url).searchParams.get('X-Amz-Security-Token')).toBe('TEST_ONLY_SESSION');
+  });
   it('rejects checksum/type/size mismatch without publishing', async () => {
     for (const change of [
       { sha256: 'b'.repeat(64) },

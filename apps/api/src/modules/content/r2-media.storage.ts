@@ -41,6 +41,7 @@ export class R2MediaStorage {
     const account = this.config.get<string>('R2_ACCOUNT_ID') ?? '';
     const accessKeyId = this.config.get<string>('R2_ACCESS_KEY_ID') ?? '';
     const secretAccessKey = this.config.get<string>('R2_SECRET_ACCESS_KEY') ?? '';
+    const sessionToken = this.config.get<string>('R2_SESSION_TOKEN');
     const bucket = this.config.get<string>('R2_BUCKET') ?? '';
     const prefix = this.config.get<string>('R2_MEDIA_PREFIX') ?? 'question-media';
     const ttl = Number(this.config.get('R2_UPLOAD_TTL_SECONDS') ?? 900);
@@ -59,7 +60,7 @@ export class R2MediaStorage {
         code: 'R2_NOT_CONFIGURED',
         message: 'R2 media uploads are not configured.',
       });
-    return { account, accessKeyId, secretAccessKey, bucket, prefix, ttl };
+    return { account, accessKeyId, secretAccessKey, sessionToken, bucket, prefix, ttl };
   }
 
   private client(bucket: string, forRead = false) {
@@ -83,7 +84,11 @@ export class R2MediaStorage {
       // account endpoint accepted by the batch uploader.
       forcePathStyle: true,
       endpoint: testEndpoint ?? `https://${settings.account}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId: settings.accessKeyId, secretAccessKey: settings.secretAccessKey },
+      credentials: {
+        accessKeyId: settings.accessKeyId,
+        secretAccessKey: settings.secretAccessKey,
+        ...(settings.sessionToken ? { sessionToken: settings.sessionToken } : {}),
+      },
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
       maxAttempts: 2,
