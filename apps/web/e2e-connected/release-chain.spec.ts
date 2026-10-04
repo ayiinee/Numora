@@ -85,6 +85,10 @@ async function login(browser: Browser, alias: string) {
   const page = await context.newPage();
   return page;
 }
+function option(page: Page, id: 'A' | 'B') {
+  // The fixture's canonical option ID is stable across visual label punctuation.
+  return page.getByRole('radio').and(page.locator(`input[value="${id}"]`));
+}
 async function answer(page: Page, count: number) {
   for (let i = 1; i <= 10; i++) {
     await page.getByRole('button', { name: new RegExp(`^Soal ${i},`) }).click();
@@ -92,17 +96,20 @@ async function answer(page: Page, count: number) {
       (r) =>
         r.request().method() === 'PATCH' && r.url().includes('/answers/') && r.status() === 200,
     );
-    await page.getByRole('radio', { name: new RegExp(`^${i <= count ? 'B' : 'A'}\\.`) }).check();
+    await option(page, i <= count ? 'B' : 'A').check();
     await saved;
     await expect(page.getByRole('status').filter({ hasText: /^Tersimpan$/ })).toBeVisible();
   }
 }
 async function submit(page: Page) {
-  page.once('dialog', (dialog) => dialog.accept());
   const sent = page.waitForResponse(
     (r) => r.request().method() === 'POST' && r.url().endsWith('/submit') && r.status() === 201,
   );
   await page.getByRole('button', { name: 'Kirim Drill', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Kumpulkan Latihan Sekarang?', exact: true })
+    .getByRole('button', { name: 'Ya, Kumpulkan Jawaban', exact: true })
+    .click();
   const result = (await (await sent).json()) as DrillResultDto;
   await expect(page).toHaveURL(new RegExp(`/student/drill/${result.attemptId}/result$`));
   return result;
@@ -156,8 +163,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
   }) => {
     const admin = await login(browser, 'admin');
     await admin.goto('/admin/schools');
-    await admin.getByLabel('Kode sekolah', { exact: true }).fill(`JOB06-${Date.now()}`);
-    await admin.getByLabel('Nama sekolah', { exact: true }).fill('JOB06 Test School');
+    await admin
+      .getByRole('textbox', { name: 'Kode sekolah', exact: true })
+      .fill(`JOB06-${Date.now()}`);
+    await admin
+      .getByRole('textbox', { name: 'Nama sekolah', exact: true })
+      .fill('JOB06 Test School');
     const created = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/schools'),
     );
@@ -174,8 +185,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher');
     await expect(teacher).toHaveURL(/verification-required/);
-    await teacher.getByLabel('Sekolah', { exact: true }).selectOption(school.id);
-    await teacher.getByLabel('Token verifikasi', { exact: true }).fill(token.token);
+    await teacher.getByRole('combobox', { name: 'Sekolah', exact: true }).selectOption(school.id);
+    await teacher.getByRole('textbox', { name: 'Token verifikasi', exact: true }).fill(token.token);
     await teacher.getByRole('button', { name: 'Verifikasi dan lanjutkan', exact: true }).click();
     await expect(teacher).toHaveURL(/\/teacher$/);
     await teacher.getByText('Buat kelas baru', { exact: false }).click();
@@ -195,9 +206,19 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto('/student/profile');
     await student.getByLabel(/^Kode kelas/).fill(cls.joinCode);
     await student.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(student.getByText('Terhubung dengan kelas', { exact: false })).toBeVisible();
+    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText(cls.name, { exact: true }),
+    ).toBeVisible();
     await student.reload();
-    await expect(student.getByText('Terhubung dengan kelas', { exact: false })).toBeVisible();
+    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText(cls.name, { exact: true }),
+    ).toBeVisible();
     expect(
       (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).class?.id,
     ).toBe(cls.id);
@@ -213,7 +234,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const started = student.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
     );
-    await student.getByRole('button', { name: 'Mulai latihan', exact: true }).first().click();
+    await student
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     const attempt = (await (await started).json()) as DrillAttemptDto;
     expect(attempt.questions).toHaveLength(10);
     expect(attempt.isDemo).toBe(true);
@@ -228,9 +252,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     // A real browser network outage must never present an unacknowledged answer as saved.
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeVisible();
+    await expect(option(student, 'B')).toBeVisible();
     await student.context().setOffline(true);
-    await student.getByRole('radio', { name: /^B\./ }).check();
+    await option(student, 'B').check();
     await expect(
       student.getByRole('status').filter({ hasText: /^Belum tersimpan$/ }),
     ).toBeVisible();
@@ -241,11 +265,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
     await student.reload();
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
     const resumed = await login(browser, 'student');
     await resumed.goto(`/student/drill/${attempt.id}`);
-    await expect(resumed.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(resumed, 'B')).toBeChecked();
     // First answer is already persisted: clear then exercise all ten real saves.
     const cleared = resumed.waitForResponse(
       (r) => r.request().method() === 'PATCH' && r.status() === 200,
@@ -307,7 +331,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
     await resumed.goto(`/student/learn/${chapter}/${subchapter}`);
-    await resumed.getByRole('button', { name: 'Mulai latihan', exact: true }).click();
+    await resumed
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     await answer(resumed, 0);
     expect((await submit(resumed)).score).toBe(0);
     await teacher.reload();
@@ -465,11 +492,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const started = student.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
     );
-    await student.getByRole('button', { name: 'Mulai latihan', exact: true }).first().click();
+    await student
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     const attempt = (await (await started).json()) as DrillAttemptDto;
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     await student.reload();
-    await expect(student.getByRole('radio', { name: /^B\./ })).toBeVisible();
+    await expect(option(student, 'B')).toBeVisible();
     const resumed = await body<DrillAttemptDto>(
       request,
       'otherStudent',
@@ -609,10 +639,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
       (r) =>
         r.request().method() === 'PATCH' && r.url().includes('/answers/') && r.status() === 200,
     );
-    await mandiri.getByRole('radio', { name: /^B\./ }).check();
+    await option(mandiri, 'B').check();
     await saved;
     await mandiri.reload();
-    await expect(mandiri.getByRole('radio', { name: /^B\./ })).toBeChecked();
+    await expect(option(mandiri, 'B')).toBeChecked();
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
     expect(
       (
@@ -640,8 +670,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
-    mandiri.once('dialog', (dialog) => dialog.accept());
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
+    await mandiri
+      .getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?', exact: true })
+      .getByRole('button', { name: 'Ya, Kumpulkan Jawaban', exact: true })
+      .click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     await expect(
       mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),

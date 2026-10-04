@@ -27,6 +27,7 @@
     "db:seed": "dotenv -e .env -- pnpm --filter @tka/database db:seed",
     "db:seed:learning": "dotenv -e .env -- pnpm --filter @tka/database db:seed:learning",
     "db:seed:qa": "dotenv -e .env -- pnpm --filter @tka/database db:seed:qa",
+    "db:seed:redesign": "dotenv -e .env -- pnpm --filter @tka/database db:seed:redesign",
     "qa:accounts": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts",
     "qa:accounts:rotate": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts:rotate",
     "qa:smoke": "dotenv -e .env -- pnpm --filter @tka/api qa:smoke",

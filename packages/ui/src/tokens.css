@@ -1,4 +1,5 @@
-/* NUMORA Design System Tokens - Engineering Baseline v1.0 */
+/* NUMORA shared tokens — approved screenshot redesign, 3 October 2026.
+ * Geometry remains provisional until the original Figma frames are available. */
 /* Source of truth for all design values - do not hardcode */
 
 :root {
@@ -80,30 +81,48 @@
    * SEMANTIC TOKENS
    * ============================================ */
 
+  /* Phase 5: translucent purple headers and green difficulty surfaces. */
+  --pvp-glass: rgb(255 255 255 / 15%);
+  --pvp-glass-border: rgb(255 255 255 / 25%);
+  --pvp-green-deep: #276d6a;
+
   /* Semantic Aliases */
   --color-primary: var(--numora-purple);
   --color-primary-hover: var(--numora-purple-700);
-  --color-primary-light: var(--numora-purple-50);
+  --color-primary-light: #f7e9ff;
+  --color-primary-strong: #5900b1;
+  --color-selected: #f4e2ff;
 
   --color-secondary: var(--numora-soft);
-  --color-secondary-light: var(--numora-soft-50);
+  --color-secondary-light: #fbf0ff;
 
   --color-accent: var(--numora-peach);
   --color-accent-light: var(--numora-peach-50);
 
   --color-reward: var(--numora-gold);
   --color-reward-light: var(--numora-gold-50);
+  --tryout-hero-gradient: linear-gradient(
+    110deg,
+    var(--color-primary) 0%,
+    #8f37df 50%,
+    var(--numora-peach) 100%
+  );
+  --color-feature-mint: #e1f2ed;
 
   --color-bg: var(--numora-ivory);
   --color-bg-light: var(--numora-ivory-50);
 
-  --color-surface: var(--numora-pearl);
+  --color-surface: #ffffff;
   --color-surface-raised: #ffffff;
+  --color-surface-muted: #f8f7fc; /* Tryout catalog screenshot, 4 October 2026 */
+  --color-surface-profile: #f7f8fc; /* Student profile PNG surface, 4 October 2026 */
+  --color-surface-cool: #f3f6fa; /* Tryout detail screenshot, 4 October 2026 */
 
   /* Text Colors */
   --color-text: #2f213d;
+  --color-text-strong: #231531;
   --color-text-muted: #675b72;
-  --color-text-light: #8b7a96;
+  --color-text-light: #766681;
   --color-text-inverse: #ffffff;
 
   /* Border */
@@ -113,6 +132,7 @@
 
   /* Status Colors */
   --color-success: #2f8f6b;
+  --color-success-text: #21684e;
   --color-success-light: #e8f5f0;
   --color-warning: #a86d00;
   --color-warning-light: #fff8e6;
@@ -125,7 +145,7 @@
    * TYPOGRAPHY
    * ============================================ */
 
-  --font-sans: var(--font-inter), 'Inter', ui-sans-serif, system-ui, sans-serif;
+  --font-sans: var(--font-jakarta, 'Plus Jakarta Sans'), ui-sans-serif, system-ui, sans-serif;
 
   /* Font Sizes */
   --text-xs: 0.75rem; /* 12px */
@@ -151,7 +171,7 @@
   --font-semibold: 600;
   --font-bold: 700;
   --font-extrabold: 800;
-  --font-black: 900;
+  --font-black: 800; /* The approved font's maximum weight. */
 
   /* ============================================
    * SPACING (4px base)
@@ -177,7 +197,7 @@
 
   --radius-sm: 0.625rem; /* 10px */
   --radius-md: 0.875rem; /* 14px */
-  --radius-lg: 1.125rem; /* 18px */
+  --radius-lg: 1.25rem; /* 20px cards */
   --radius-xl: 1.5rem; /* 24px */
   --radius-2xl: 2rem; /* 32px */
   --radius-full: 9999px;
@@ -225,6 +245,13 @@
 
   /* Touch targets */
   --touch-target-min: 44px;
+  --control-height-lg: 52px;
+  --bottom-nav-height: 64px;
+  --icon-size: 24px;
+  --icon-size-sm: 20px;
+  --header-height: 64px;
+  --focus-ring: 3px solid var(--color-primary);
+  --header-gradient: linear-gradient(110deg, var(--color-primary), var(--color-primary-strong));
 }
 
 /* Responsive adjustments */

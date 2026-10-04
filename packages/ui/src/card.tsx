@@ -14,13 +14,13 @@ export type CardPadding = 'none' | 'sm' | 'md' | 'lg';
 const variantStyles: Record<CardVariant, React.CSSProperties> = {
   default: {
     background: 'var(--color-surface-raised)',
-    border: '1px solid var(--color-border)',
-    boxShadow: 'var(--shadow-xs)',
+    border: '1px solid var(--color-border-light)',
+    boxShadow: 'var(--shadow-sm)',
   },
   elevated: {
     background: 'var(--color-surface-raised)',
     border: '1px solid var(--color-border-light)',
-    boxShadow: 'var(--shadow-md)',
+    boxShadow: 'var(--shadow-sm)',
   },
   outlined: {
     background: 'transparent',
@@ -91,6 +91,7 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
       fullWidth = false,
       className = '',
       style,
+      onKeyDown,
       ...props
     },
     ref,
@@ -102,16 +103,30 @@ export const Card = forwardRef<HTMLDivElement, CardProps>(
         ref={ref}
         className={`numora-card numora-card--${variant} ${interactive ? 'numora-card--interactive' : ''} ${fullWidth ? 'numora-card--full' : ''} ${className}`}
         style={{
-          borderRadius: 'var(--radius-lg)',
+          borderRadius: 'var(--card-radius, var(--radius-lg))',
           overflow: 'hidden',
           width: fullWidth ? '100%' : 'auto',
           ...variantStyle,
           background: `var(--card-background, ${variantStyle.background})`,
+          border: `var(--card-border, ${variantStyle.border})`,
+          boxShadow: `var(--card-shadow, ${variantStyle.boxShadow})`,
           padding: `var(--card-padding, ${paddingValues[padding]})`,
           ...style,
         }}
         {...(interactive ? { role: 'button', tabIndex: 0 } : {})}
         {...props}
+        onKeyDown={(event) => {
+          onKeyDown?.(event);
+          if (
+            interactive &&
+            !event.defaultPrevented &&
+            event.target === event.currentTarget &&
+            (event.key === 'Enter' || event.key === ' ')
+          ) {
+            event.preventDefault();
+            event.currentTarget.click();
+          }
+        }}
       >
         {children}
       </div>

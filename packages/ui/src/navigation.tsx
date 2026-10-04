@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode } from 'react';
+import { type ReactNode, type AnchorHTMLAttributes } from 'react';
 
 /* ============================================
  * BOTTOM NAVIGATION COMPONENT
@@ -18,6 +18,8 @@ export interface NavItem {
   activeIcon?: string | ReactNode;
   /** Badge/count indicator */
   badge?: number | string;
+  /** Allows the application to map nested routes to their primary destination. */
+  active?: boolean;
 }
 
 export interface BottomNavProps {
@@ -25,6 +27,12 @@ export interface BottomNavProps {
   items: NavItem[];
   /** Current pathname (for determining active state) */
   pathname?: string;
+  className?: string;
+  /** Routing adapter; the default is a semantic anchor. */
+  renderLink?: (
+    props: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string },
+    item: NavItem,
+  ) => ReactNode;
 }
 
 /**
@@ -34,57 +42,35 @@ export interface BottomNavProps {
  * Note: This component is designed for use with a routing system.
  * See StudentShell for the integrated version with Next.js Link.
  */
-export function BottomNav({ items, pathname: _providedPathname }: BottomNavProps) {
-  // This component receives pathname as a prop from the parent
-  // In the shell component, this will be provided via usePathname
-
-  const navStyle: React.CSSProperties = {
-    position: 'fixed',
-    bottom: 0,
-    left: 0,
-    right: 0,
-    display: 'flex',
-    justifyContent: 'space-around',
-    alignItems: 'center',
-    height: 64,
-    background: 'var(--color-surface-raised)',
-    borderTop: '1px solid var(--color-border)',
-    paddingBottom: 'env(safe-area-inset-bottom, 0px)',
-    zIndex: 300,
-  };
-
+export function BottomNav({ items, pathname, className = '', renderLink }: BottomNavProps) {
+  const matchedHref = items
+    .filter((item) => pathname === item.href || pathname?.startsWith(`${item.href}/`))
+    .sort((a, b) => b.href.length - a.href.length)[0]?.href;
   return (
-    <nav
-      aria-label="Navigasi utama"
-      className="numora-bottom-nav"
-      style={navStyle}
-    >
-      {items.map((item) => (
-        <button
-          key={item.href}
-          style={{
-            display: 'flex',
-            flexDirection: 'column',
-            alignItems: 'center',
-            justifyContent: 'center',
-            gap: 2,
-            padding: '8px 12px',
-            minWidth: 64,
-            color: 'var(--color-text-muted)',
-            background: 'transparent',
-            border: 'none',
-            cursor: 'pointer',
-            transition: 'color 120ms ease',
-          }}
-        >
-          <span style={{ fontSize: 24, lineHeight: 1 }} aria-hidden="true">
-            {item.icon}
-          </span>
-          <span style={{ fontSize: 12, fontWeight: 500, lineHeight: 1 }}>
-            {item.label}
-          </span>
-        </button>
-      ))}
+    <nav aria-label="Navigasi utama" className={`numora-bottom-nav ${className}`}>
+      {items.map((item) => {
+        const active = item.active ?? item.href === matchedHref;
+        const props: AnchorHTMLAttributes<HTMLAnchorElement> & { href: string } = {
+          href: item.href,
+          'aria-current': active ? 'page' : undefined,
+          children: (
+            <>
+              <span className="numora-bottom-nav__icon" aria-hidden="true">
+                {active ? (item.activeIcon ?? item.icon) : item.icon}
+              </span>
+              <span>{item.label}</span>
+              {item.badge !== undefined && (
+                <span className="numora-bottom-nav__badge">{item.badge}</span>
+              )}
+            </>
+          ),
+        };
+        return (
+          <div className="numora-bottom-nav__item" key={item.href}>
+            {renderLink ? renderLink(props, item) : <a {...props} />}
+          </div>
+        );
+      })}
     </nav>
   );
 }
@@ -105,6 +91,8 @@ export interface TopBarProps {
   right?: ReactNode;
   /** Show border bottom */
   border?: boolean;
+  variant?: 'default' | 'identity' | 'context' | 'assessment';
+  className?: string;
 }
 
 /**
@@ -112,36 +100,28 @@ export interface TopBarProps {
  *
  * Header bar for authenticated pages
  */
-export function TopBar({ logo, title, right, border = true }: TopBarProps) {
+export function TopBar({
+  logo,
+  title,
+  right,
+  border = true,
+  variant = 'default',
+  className = '',
+}: TopBarProps) {
   return (
     <header
-      className="numora-top-bar"
-      style={{
-        position: 'sticky',
-        top: 0,
-        display: 'flex',
-        alignItems: 'center',
-        justifyContent: 'space-between',
-        height: 56,
-        padding: '0 16px',
-        background: 'var(--color-bg)',
-        borderBottom: border ? '1px solid var(--color-border-light)' : 'none',
-        zIndex: 200,
-      }}
+      className={`numora-top-bar numora-top-bar--${variant} ${className}`}
+      style={{ borderBottom: border ? undefined : 'none' }}
     >
-      <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
+      <div className="numora-top-bar__leading">
         {logo && <div style={{ display: 'flex', alignItems: 'center' }}>{logo}</div>}
         {title && !logo && (
-          <span style={{ fontSize: '1rem', fontWeight: 700, color: 'var(--color-text)' }}>
+          <span style={{ fontSize: 'var(--text-lg)', fontWeight: 'var(--font-bold)' }}>
             {title}
           </span>
         )}
       </div>
-      {right && (
-        <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>
-          {right}
-        </div>
-      )}
+      {right && <div style={{ display: 'flex', alignItems: 'center', gap: '12px' }}>{right}</div>}
     </header>
   );
 }
@@ -255,7 +235,11 @@ export function GreetingHeader({ name, status, className, classInfo }: GreetingH
   const getStatusBadge = () => {
     const badgeStyles = {
       MANDIRI: { bg: 'var(--color-info-light)', color: 'var(--color-info)', label: 'User Mandiri' },
-      SEKOLAH: { bg: 'var(--color-success-light)', color: 'var(--color-success)', label: 'User Sekolah' },
+      SEKOLAH: {
+        bg: 'var(--color-success-light)',
+        color: 'var(--color-success-text)',
+        label: 'User Sekolah',
+      },
       TEACHER: { bg: 'var(--color-primary-light)', color: 'var(--color-primary)', label: 'Guru' },
     };
     const style = badgeStyles[status || 'MANDIRI'];
@@ -384,7 +368,9 @@ export function FeatureGrid({ items, columns = 2, compact = false }: FeatureGrid
       {items.map((item, index) => {
         const content = (
           <>
-            <span style={iconStyle} aria-hidden="true">{item.icon}</span>
+            <span style={iconStyle} aria-hidden="true">
+              {item.icon}
+            </span>
             <span style={labelStyle}>{item.label}</span>
             {item.badge && (
               <span

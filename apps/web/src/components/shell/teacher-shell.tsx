@@ -4,7 +4,6 @@ import { AppShell } from './app-shell';
 export function TeacherShell({
   title,
   description,
-  teacherName,
   children,
 }: {
   title: string;
@@ -17,7 +16,7 @@ export function TeacherShell({
       area="teacher"
       title={title}
       subtitle={description}
-      actions={<span className="teacher-name">{teacherName}</span>}
+      className="teacher-redesign-shell"
     >
       {children}
     </AppShell>

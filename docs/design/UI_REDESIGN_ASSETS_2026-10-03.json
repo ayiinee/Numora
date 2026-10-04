@@ -1,0 +1,315 @@
+{
+  "capturedOn": "2026-10-03",
+  "timezone": "Asia/Jakarta",
+  "repositoryCommit": "d29c352d6acbc86b92b20edccd298d9f9f5a7159",
+  "source": {
+    "figmaUrl": "https://www.figma.com/design/LaHB1HQdyVumYcaAEB3TXd/UIUX-NUMORA?node-id=0-1",
+    "figmaAccess": "Full-file audit not verified; connector required reauthentication during initial audit.",
+    "screenshotDirectory": "C:/Users/user/Downloads/UIUX NUMORA",
+    "screenshotAvailability": "External user attachments; image binaries are not copied into the repository.",
+    "screenshotPurpose": "Visual reference only; never use a full-screen image as an implementation asset.",
+    "comparisonViewportWidth": 390,
+    "originalFigmaFrameDimensions": "unverified",
+    "cropBounds": "not yet measured; PNG dimensions include exterior margins"
+  },
+  "screenshots": [
+    {
+      "fileName": "Beranda Siswa Numora (Pahamify Style).png",
+      "width": 410,
+      "height": 1381,
+      "bytes": 222726,
+      "sha256": "d064743a4c0882a2fe0a7ec60ac0cb865a57f2f6ae2fcd82538f816a5fdbc0df"
+    },
+    {
+      "fileName": "Buat & Gabung Duel PvP.png",
+      "width": 410,
+      "height": 1352,
+      "bytes": 239812,
+      "sha256": "3af48aec5e307112534d0d284dc782bd511f462a3fa9adf54a204866e6526de7"
+    },
+    {
+      "fileName": "Detail Paket Tryout TKA Numora (Pahamify Style).png",
+      "width": 466,
+      "height": 1094,
+      "bytes": 198451,
+      "sha256": "f12c5ca2ad39500c1af3f1d5b5d1f3c86fd36c3aa7b4085825804c46120e1c7a"
+    },
+    {
+      "fileName": "Feedback Guru.png",
+      "width": 414,
+      "height": 1654,
+      "bytes": 174940,
+      "sha256": "82effa841827f44e7d4759d2027f9eb942e13dafc50c9bb152995cea0e9cc090"
+    },
+    {
+      "fileName": "Hasil Akhir Duel PvP & Leaderboard.png",
+      "width": 400,
+      "height": 1313,
+      "bytes": 182349,
+      "sha256": "a07c054ceea20d75e50f50c477748baab4a045af1ab5d6664a437a11de96d449"
+    },
+    {
+      "fileName": "Hasil Latihan Level & Pembahasan.png",
+      "width": 422,
+      "height": 1941,
+      "bytes": 275436,
+      "sha256": "6fb980408293aa690678106045394daede134a82ce1ca6e4c6382cd0c5559232"
+    },
+    {
+      "fileName": "Katalog Tryout TKA Numora (Pahamify Style).png",
+      "width": 466,
+      "height": 1186,
+      "bytes": 280157,
+      "sha256": "0bfac2e8dde22d550693e8390b37c1050376b317a066277cc8100e0fd6d7c2d3"
+    },
+    {
+      "fileName": "Konfirmasi Kumpul Jawaban Latihan (Modal).png",
+      "width": 434,
+      "height": 1081,
+      "bytes": 251605,
+      "sha256": "2327261995127f7fc6a38901e29616430a649e9f7ae7c101d797c403ee06299f"
+    },
+    {
+      "fileName": "Leaderboard PvP Duel - Tingkat Mudah.png",
+      "width": 422,
+      "height": 1570,
+      "bytes": 256522,
+      "sha256": "75e9c9b561f3cba6de768ee1b9bac518e2a96acb35dd5210134eb191bcf90876"
+    },
+    {
+      "fileName": "Leaderboard PvP Duel - Tingkat Sedang.png",
+      "width": 422,
+      "height": 1248,
+      "bytes": 211683,
+      "sha256": "c0f4e6c4eaf605c953c25ee09537c544e199e83a423709b005603e0f1a0bad69"
+    },
+    {
+      "fileName": "Leaderboard PvP Duel - Tingkat Sulit.png",
+      "width": 422,
+      "height": 1955,
+      "bytes": 282123,
+      "sha256": "7e7e5c9756c85ea09cb6867825c44bbdcd493f0a66078964cac213744b3c2b49"
+    },
+    {
+      "fileName": "Live PvP Battle Room (Duel 1v1) - v2.png",
+      "width": 400,
+      "height": 1148,
+      "bytes": 139475,
+      "sha256": "477de77af4843cd6337fea1c0c6a9bc6d8091389846980e52556b26ffbff6eda"
+    },
+    {
+      "fileName": "Peta Petualangan Level Drill.png",
+      "width": 422,
+      "height": 1847,
+      "bytes": 200210,
+      "sha256": "cba23140b8ba93b32af16570593847d9832bf5dcc76b5b4f04f807897ff31f71"
+    },
+    {
+      "fileName": "Profil Siswa Numora.png",
+      "width": 430,
+      "height": 1387,
+      "bytes": 204389,
+      "sha256": "3b85fb41fb1477936b1dad1eecac3c927945f5c9ae7375590f52602208152f06"
+    },
+    {
+      "fileName": "PvP.png",
+      "width": 410,
+      "height": 1038,
+      "bytes": 152499,
+      "sha256": "f0d47f47fcdde92227ed10f6944305d2f85ac8e4e91c489661a0627c8b7c2105"
+    },
+    {
+      "fileName": "Ruang Tunggu Duel PvP (Waiting Room).png",
+      "width": 400,
+      "height": 1396,
+      "bytes": 154815,
+      "sha256": "048f1fd074efd729018929e70a2472fbe4fe0ef29857831ef229305e2ab8d362"
+    },
+    {
+      "fileName": "Salah).png",
+      "width": 422,
+      "height": 967,
+      "bytes": 110063,
+      "sha256": "4c2c0e1936cfbe92a6626bb184c910df03398413c94809888d5c20813d61b2f8"
+    },
+    {
+      "fileName": "Scan QR.png",
+      "width": 400,
+      "height": 1093,
+      "bytes": 186325,
+      "sha256": "ab0ba51f2add582f0d1138a5628e61c598b141dd340e5e34be5107a2d6bd8ec0"
+    },
+    {
+      "fileName": "Sesi Latihan - PGK MCMA (Multi Jawaban).png",
+      "width": 422,
+      "height": 878,
+      "bytes": 95235,
+      "sha256": "759c40a5419b51e8187696fa8e09ad483212bc09043169dbfd06f5c43d55a8cf"
+    },
+    {
+      "fileName": "Sesi Latihan - Soal Bergambar (Geometri).png",
+      "width": 422,
+      "height": 1132,
+      "bytes": 113055,
+      "sha256": "d0300350b0d02c359c8ef902a62da4793134ace55fe4ce75d05206404393b681"
+    },
+    {
+      "fileName": "Sesi Latihan Drill Matematika.png",
+      "width": 422,
+      "height": 944,
+      "bytes": 95054,
+      "sha256": "6b91a35216d27e5784a7898515a5b8764df9d8386818cd2b16c9ee2cd774385e"
+    }
+  ],
+  "repositoryImages": [
+    {
+      "path": "apps/web/public/figma/fire.png",
+      "fileName": "fire.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 16757,
+      "sha256": "49a19910123803b2e2dc1e7a675d2d06b08068c167ea2846f0fccb0e36c17a99",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/medal-source.png",
+      "fileName": "medal-source.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 29644,
+      "sha256": "2fd7cc453c23c433eeddaa10e53c94f1fab7d2c30cf0365a53abca556f855d64",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/numora-owl-source.png",
+      "fileName": "numora-owl-source.png",
+      "width": 914,
+      "height": 1281,
+      "bytes": 104695,
+      "sha256": "e30827b4dbb5bf85bcb4b481451a3923197a7c5b58b92518de22affbb8e7a590",
+      "currentCallsites": [
+        "apps/web/src/features/onboarding/screens.tsx",
+        "apps/web/src/features/core-learning/dashboard-new.tsx"
+      ],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/pvp-character.png",
+      "fileName": "pvp-character.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 8223,
+      "sha256": "ffdc825a9e05a9312ca4c9eab49310a034ee4047268152ee2c51af8764ff268a",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/pvp-easy.png",
+      "fileName": "pvp-easy.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 15855,
+      "sha256": "5203b305d898cff6a7fd35922966343bd0a6473ce71ccaeea19a23e0b8a76c0b",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/pvp-hard.png",
+      "fileName": "pvp-hard.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 14781,
+      "sha256": "03da63a39c7372f5b1cdb96bcfb876c894707e327db302a4f345921927510d70",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/pvp-medium.png",
+      "fileName": "pvp-medium.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 17052,
+      "sha256": "6ee0e9218e3fd0689c2afa80ead1e00e041ae5b817e0cc8d8ae0ad728b2d8b36",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/pvp-podium.png",
+      "fileName": "pvp-podium.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 5228,
+      "sha256": "fe1a065a928aaa5f54d424d5c8032c548bfbd269bc6d132b07c2b278d68690f3",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/star.png",
+      "fileName": "star.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 12021,
+      "sha256": "86a000c692442b2aaf82000e1c06f3af16fa60b961a55fba4f739dba999263e9",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    },
+    {
+      "path": "apps/web/public/figma/target-source.png",
+      "fileName": "target-source.png",
+      "width": 512,
+      "height": 512,
+      "bytes": 27949,
+      "sha256": "4329ca05c8461d414fe34f642a83b4f7f298a27f5192e7ca7d3dc78955738458",
+      "currentCallsites": [],
+      "referenceSlotMatch": "not verified against the approved screenshot slots",
+      "reuseRule": "Inspect artwork and slot geometry before reuse; preserve aspect ratio."
+    }
+  ],
+  "repositoryFonts": [
+    {
+      "path": "apps/web/src/app/fonts/InterVariable.woff2",
+      "bytes": 352240,
+      "sha256": "693b77d4f32ee9b8bfc995589b5fad5e99adf2832738661f5402f9978429a8e3"
+    },
+    {
+      "path": "apps/web/src/app/fonts/OFL.txt",
+      "bytes": 4380,
+      "sha256": "262481e844521b326f5ecd053e59b98c8b2da78c8ee1bdbb6e8174305e54935a"
+    },
+    {
+      "path": "apps/web/src/app/fonts/PlusJakartaSansVariable.ttf",
+      "bytes": 176288,
+      "sha256": "89b3fb38aa0d275d7a731d0d817a4f1622b316b4d7fbdedcf02ee9099ff68bc8"
+    },
+    {
+      "path": "apps/web/src/app/fonts/PlusJakartaSans-OFL.txt",
+      "bytes": 4402,
+      "sha256": "995c7199cab65954f545996326755daee7b63cc6b42b06c13da1f9502ab08a99"
+    }
+  ],
+  "plannedFont": {
+    "family": "Plus Jakarta Sans",
+    "status": "Installed and active in Phase 1; weight 200–800, root-scoped next/font/local variable.",
+    "loading": "Local asset through next/font/local",
+    "licenseSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/OFL.txt",
+    "preservesMathRenderer": true,
+    "assetSource": "https://raw.githubusercontent.com/google/fonts/main/ofl/plusjakartasans/PlusJakartaSans%5Bwght%5D.ttf"
+  },
+  "missingOriginalAssets": [
+    "Original illustrations and decorative imagery from the 21 screenshot source frames",
+    "Original vector/icon exports for exact matches not present in the current Icon library",
+    "Question diagram as structured API content; screenshot diagram must not be attached to unrelated questions"
+  ],
+  "dynamicImageryRule": "Student imagery comes from authorized data or initials; reference portraits and video screenshots are not production fixtures."
+}

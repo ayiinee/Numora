@@ -20,6 +20,8 @@ export interface ListRowProps extends Omit<HTMLAttributes<HTMLDivElement>, 'titl
   interactive?: boolean;
   /** Divider below row */
   dividers?: boolean;
+  /** Allow long account and list text to reflow instead of truncating. */
+  wrapText?: boolean;
 }
 
 /**
@@ -50,6 +52,7 @@ export function ListRow({
   trailing,
   interactive = false,
   dividers = true,
+  wrapText = false,
   className = '',
   style,
   ...props
@@ -102,24 +105,30 @@ export function ListRow({
           gap: '2px',
         }}
       >
-        <span style={{
-          fontSize: 'var(--text-base)',
-          fontWeight: 'var(--font-semibold)',
-          color: 'var(--color-text)',
-          whiteSpace: 'nowrap',
-          overflow: 'hidden',
-          textOverflow: 'ellipsis',
-        }}>
+        <span
+          style={{
+            fontSize: 'var(--text-base)',
+            fontWeight: 'var(--font-semibold)',
+            color: 'var(--color-text)',
+            whiteSpace: wrapText ? 'normal' : 'nowrap',
+            overflowWrap: wrapText ? 'anywhere' : undefined,
+            overflow: 'hidden',
+            textOverflow: 'ellipsis',
+          }}
+        >
           {title}
         </span>
         {description && (
-          <span style={{
-            fontSize: 'var(--text-sm)',
-            color: 'var(--color-text-muted)',
-            whiteSpace: 'nowrap',
-            overflow: 'hidden',
-            textOverflow: 'ellipsis',
-          }}>
+          <span
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--color-text-muted)',
+              whiteSpace: wrapText ? 'normal' : 'nowrap',
+              overflowWrap: wrapText ? 'anywhere' : undefined,
+              overflow: 'hidden',
+              textOverflow: 'ellipsis',
+            }}
+          >
             {description}
           </span>
         )}
@@ -140,9 +149,7 @@ export function ListRow({
         </div>
       )}
 
-      {interactive && (
-        <ChevronIcon />
-      )}
+      {interactive && <ChevronIcon />}
     </div>
   );
 }
@@ -217,29 +224,29 @@ export function SectionHeader({
       {...props}
     >
       <div>
-        <h2 style={{
-          fontSize: 'var(--text-lg)',
-          fontWeight: 'var(--font-bold)',
-          color: 'var(--color-text)',
-          margin: 0,
-        }}>
+        <h2
+          style={{
+            fontSize: 'var(--text-lg)',
+            fontWeight: 'var(--font-bold)',
+            color: 'var(--color-text)',
+            margin: 0,
+          }}
+        >
           {title}
         </h2>
         {subtitle && (
-          <p style={{
-            fontSize: 'var(--text-sm)',
-            color: 'var(--color-text-muted)',
-            margin: 'var(--space-1) 0 0 0',
-          }}>
+          <p
+            style={{
+              fontSize: 'var(--text-sm)',
+              color: 'var(--color-text-muted)',
+              margin: 'var(--space-1) 0 0 0',
+            }}
+          >
             {subtitle}
           </p>
         )}
       </div>
-      {action && (
-        <div style={{ flexShrink: 0 }}>
-          {action}
-        </div>
-      )}
+      {action && <div style={{ flexShrink: 0 }}>{action}</div>}
     </div>
   );
 }
@@ -297,7 +304,14 @@ export function PageHeader({
   const backButton = (
     <a
       href={backHref || '#'}
-      onClick={onBack ? (e) => { e.preventDefault(); onBack(); } : undefined}
+      onClick={
+        onBack
+          ? (e) => {
+              e.preventDefault();
+              onBack();
+            }
+          : undefined
+      }
       style={{
         display: 'inline-flex',
         alignItems: 'center',
@@ -309,7 +323,17 @@ export function PageHeader({
         marginBottom: 'var(--space-2)',
       }}
     >
-      <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+      <svg
+        width="20"
+        height="20"
+        viewBox="0 0 24 24"
+        fill="none"
+        stroke="currentColor"
+        strokeWidth="2.5"
+        strokeLinecap="round"
+        strokeLinejoin="round"
+        aria-hidden="true"
+      >
         <polyline points="15 18 9 12 15 6" />
       </svg>
       Kembali
@@ -328,19 +352,28 @@ export function PageHeader({
       {(backHref || onBack) && backButton}
 
       {breadcrumbs && breadcrumbs.length > 0 && (
-        <nav aria-label="Breadcrumb" style={{
-          display: 'flex',
-          alignItems: 'center',
-          gap: 'var(--space-2)',
-          fontSize: 'var(--text-sm)',
-          color: 'var(--color-text-muted)',
-          marginBottom: 'var(--space-2)',
-        }}>
+        <nav
+          aria-label="Breadcrumb"
+          style={{
+            display: 'flex',
+            alignItems: 'center',
+            gap: 'var(--space-2)',
+            fontSize: 'var(--text-sm)',
+            color: 'var(--color-text-muted)',
+            marginBottom: 'var(--space-2)',
+          }}
+        >
           {breadcrumbs.map((crumb, index) => (
-            <span key={index} style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}>
+            <span
+              key={index}
+              style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)' }}
+            >
               {index > 0 && <span aria-hidden="true">/</span>}
               {crumb.href ? (
-                <a href={crumb.href} style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}>
+                <a
+                  href={crumb.href}
+                  style={{ color: 'var(--color-text-muted)', textDecoration: 'none' }}
+                >
                   {crumb.label}
                 </a>
               ) : (
@@ -351,34 +384,42 @@ export function PageHeader({
         </nav>
       )}
 
-      <div style={{
-        display: 'flex',
-        justifyContent: 'space-between',
-        alignItems: 'flex-start',
-        gap: 'var(--space-4)',
-      }}>
+      <div
+        style={{
+          display: 'flex',
+          justifyContent: 'space-between',
+          alignItems: 'flex-start',
+          gap: 'var(--space-4)',
+        }}
+      >
         <div>
-          <h1 style={{
-            fontSize: 'var(--text-3xl)',
-            fontWeight: 'var(--font-extrabold)',
-            color: 'var(--color-text)',
-            margin: 0,
-            lineHeight: 'var(--leading-tight)',
-          }}>
+          <h1
+            style={{
+              fontSize: 'var(--text-3xl)',
+              fontWeight: 'var(--font-extrabold)',
+              color: 'var(--color-text)',
+              margin: 0,
+              lineHeight: 'var(--leading-tight)',
+            }}
+          >
             {title}
           </h1>
           {subtitle && (
-            <p style={{
-              fontSize: 'var(--text-base)',
-              color: 'var(--color-text-muted)',
-              margin: 'var(--space-2) 0 0 0',
-            }}>
+            <p
+              style={{
+                fontSize: 'var(--text-base)',
+                color: 'var(--color-text-muted)',
+                margin: 'var(--space-2) 0 0 0',
+              }}
+            >
               {subtitle}
             </p>
           )}
         </div>
         {actions && (
-          <div style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}>
+          <div
+            style={{ display: 'flex', alignItems: 'center', gap: 'var(--space-2)', flexShrink: 0 }}
+          >
             {actions}
           </div>
         )}
@@ -452,29 +493,29 @@ export function EmptyState({
       >
         {typeof icon === 'string' ? icon : icon}
       </div>
-      <h3 style={{
-        fontSize: 'var(--text-xl)',
-        fontWeight: 'var(--font-bold)',
-        color: 'var(--color-text)',
-        margin: '0 0 var(--space-2) 0',
-      }}>
+      <h3
+        style={{
+          fontSize: 'var(--text-xl)',
+          fontWeight: 'var(--font-bold)',
+          color: 'var(--color-text)',
+          margin: '0 0 var(--space-2) 0',
+        }}
+      >
         {title}
       </h3>
       {description && (
-        <p style={{
-          fontSize: 'var(--text-base)',
-          color: 'var(--color-text-muted)',
-          margin: '0 0 var(--space-6) 0',
-          maxWidth: 300,
-        }}>
+        <p
+          style={{
+            fontSize: 'var(--text-base)',
+            color: 'var(--color-text-muted)',
+            margin: '0 0 var(--space-6) 0',
+            maxWidth: 300,
+          }}
+        >
           {description}
         </p>
       )}
-      {action && (
-        <div>
-          {action}
-        </div>
-      )}
+      {action && <div>{action}</div>}
     </div>
   );
 }
@@ -502,12 +543,7 @@ export interface DividerProps extends HTMLAttributes<HTMLHRElement> {
  * <Divider spacing="lg" />
  * ```
  */
-export function Divider({
-  spacing = 'md',
-  className = '',
-  style,
-  ...props
-}: DividerProps) {
+export function Divider({ spacing = 'md', className = '', style, ...props }: DividerProps) {
   const spacingValues = {
     none: '0',
     sm: 'var(--space-4)',

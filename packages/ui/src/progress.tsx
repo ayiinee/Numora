@@ -104,7 +104,7 @@ export function ProgressBar({
         style={{
           width: '100%',
           height: sizeHeights[size],
-          background: 'var(--color-border-light)',
+          background: 'var(--color-primary-light)',
           borderRadius: 'var(--radius-full)',
           overflow: 'hidden',
         }}
@@ -213,7 +213,7 @@ export function ProgressRing({
           cy={size / 2}
           r={radius}
           fill="none"
-          stroke="var(--color-border-light)"
+          stroke="var(--color-primary-light)"
           strokeWidth={strokeWidth}
         />
         {/* Progress ring */}
@@ -369,7 +369,7 @@ export function StatCard({
                 fontWeight: 'var(--font-semibold)',
                 color:
                   trend === 'up'
-                    ? 'var(--color-success)'
+                    ? 'var(--color-success-text)'
                     : trend === 'down'
                       ? 'var(--color-danger)'
                       : 'var(--color-text-muted)',

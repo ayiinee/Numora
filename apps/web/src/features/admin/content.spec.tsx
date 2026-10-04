@@ -445,4 +445,19 @@ describe('Admin content UI', () => {
     await screen.findByText('TEST disabled');
     expect(screen.queryByLabelText('Kompetensi')).toBeNull();
   });
+  it('hides cached forms when a mutation loses Admin access', async () => {
+    vi.mocked(resolveReport).mockRejectedValueOnce(
+      new ApiProblem(401, 'SESSION_EXPIRED', 'TEST session expired'),
+    );
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
+    const report = await screen.findByTestId('report-question-report-test');
+    fireEvent.change(within(report).getByLabelText('Catatan tindak lanjut'), {
+      target: { value: 'Tindak lanjut DEMO' },
+    });
+    fireEvent.submit(report.querySelector('form')!);
+    await screen.findByText('TEST session expired');
+    expect(screen.queryByTestId('report-question-report-test')).toBeNull();
+    expect(screen.getByRole('link', { name: 'Ke halaman masuk' })).toBeTruthy();
+  });
 });

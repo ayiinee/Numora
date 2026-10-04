@@ -5,11 +5,11 @@ import './numora.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 
-const inter = localFont({
-  src: './fonts/InterVariable.woff2',
+const jakarta = localFont({
+  src: './fonts/PlusJakartaSansVariable.ttf',
   display: 'swap',
-  weight: '100 900',
-  variable: '--font-inter',
+  weight: '200 800',
+  variable: '--font-jakarta',
 });
 
 export const metadata: Metadata = {
@@ -19,8 +19,8 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: Readonly<{ children: React.ReactNode }>) {
   return (
-    <html lang="id">
-      <body className={inter.variable}>
+    <html lang="id" className={jakarta.variable}>
+      <body>
         <AuthProvider>{children}</AuthProvider>
       </body>
     </html>

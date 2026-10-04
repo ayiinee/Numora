@@ -6,10 +6,27 @@ import { useEffect, useRef, useState } from 'react';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 import QRCode from 'qrcode';
+import { Avatar, Button, Card, Dialog, Icon, Tabs } from '@tka/ui';
+import { AppShell } from '@/components/shell';
+import { StudentIdentityHeader } from '@/features/core-learning/dashboard-presentation';
+import { LeaderboardPodium } from '@/features/core-learning/leaderboard-podium';
+import { learningApi } from '@/features/core-learning/api';
+import type { LeaderboardDto } from '@/features/core-learning/generated-types';
+import {
+  BattleRoom,
+  DifficultyChoices,
+  JoinRoomForm,
+  MatchOutcome,
+  PvpHeader,
+  PvpHero,
+  PvpRules,
+  WaitingRoom,
+  type Difficulty,
+} from './pvp-presentation';
 import { useAuth } from '@/features/onboarding/auth';
 import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
-import { DataState, LearningFrame, MathText, Panel, Status } from '@/features/core-learning/ui';
+import { DataState, LearningFrame, Status } from '@/features/core-learning/ui';
 import type {
   PvpAvailabilityDto,
   PvpInvitesDto,
@@ -171,187 +188,247 @@ function usePvpSocket(enabled: boolean, matchId?: string) {
   };
 }
 
-function PvpHeading() {
-  return (
-    <div className="student-page-heading">
-      <p className="student-eyebrow">DUEL MATEMATIKA</p>
-      <h1 className="student-page-title">
-        Main PvP <span aria-hidden="true">⚔</span>
-      </h1>
-      <p className="student-subtitle">
-        Dua pemain, sepuluh soal identik. Waktu dan skor ditentukan server.
-      </p>
-    </div>
-  );
-}
 export function PvpScreen() {
   const token = useStudentToken();
+  const { state: auth } = useAuth();
   const availability = useQuery({
     queryKey: ['pvp-availability'],
     queryFn: () => request<PvpAvailabilityDto>(token, '/pvp/availability'),
   });
+  const dashboard = useQuery({
+    queryKey: ['student-dashboard'],
+    queryFn: () => learningApi.dashboard(token),
+  });
   const socket = usePvpSocket(availability.data?.available === true);
-  const [difficulty, setDifficulty] = useState<'easy' | 'medium' | 'hard'>('easy');
+  const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [tab, setTab] = useState('create');
   const [code, setCode] = useState('');
   useEffect(() => {
     const shared = new URLSearchParams(window.location.search).get('room');
-    if (shared) setCode(shared);
+    if (shared) {
+      setCode(shared);
+      setTab('join');
+    }
   }, []);
   const invitations = useQuery({
     queryKey: ['pvp-invitations'],
     queryFn: () => request<PvpInvitesDto>(token, '/pvp/invitations'),
     enabled: availability.data?.available === true,
   });
-  if (availability.isPending || availability.isError)
-    return (
-      <LearningFrame title="PvP">
-        <DataState
-          pending={availability.isPending}
-          error={availability.error}
-          retry={() => void availability.refetch()}
-        />
-      </LearningFrame>
-    );
+  const ranking = useQuery({
+    queryKey: ['student-leaderboard', 'pvp', difficulty],
+    queryFn: () => request<LeaderboardDto>(token, `/leaderboards/pvp?difficulty=${difficulty}`),
+    enabled: availability.data?.available === true,
+  });
+  const avatar = auth.status === 'ready' ? auth.session.user?.user_metadata?.avatar_url : undefined;
+  const header = dashboard.data ? (
+    <StudentIdentityHeader
+      data={dashboard.data}
+      avatarUrl={typeof avatar === 'string' ? avatar : undefined}
+      feedbackHref="/student#catatan-guru"
+    />
+  ) : undefined;
+  const disabled = socket.busy || socket.uncertain || !socket.connected;
   return (
-    <div className="space-y-7">
-      <PvpHeading />
-      {!availability.data.available ? (
-        <Status title="PvP belum tersedia">
-          Pertandingan akan dibuka setelah aturan room dan undangan ditetapkan. Latihanmu tetap
-          tersedia.
-          <p className="mt-4">
-            <Link className="student-button" href="/student/learn">
-              Mulai latihan
-            </Link>
-          </p>
-        </Status>
-      ) : (
-        <>
-          {!socket.connected && (
-            <Status title="Menghubungkan PvP">
-              <button className="student-button" onClick={socket.reconnect}>
-                Sambungkan lagi
-              </button>
-            </Status>
-          )}
-          <div className="student-grid-two">
-            <section className="student-card student-card-pad">
-              <h2 className="student-section-title">Buat room</h2>
-              <p className="student-section-note">
-                Pilih tingkat kesulitan, lalu bagikan room ke teman.
-              </p>
-              <fieldset className="my-6">
-                <legend className="font-bold mb-3">Kesulitan</legend>
-                <div className="student-difficulty-grid">
-                  {(['easy', 'medium', 'hard'] as const).map((d, i) => (
-                    <button
-                      key={d}
-                      className={`student-difficulty-card ${difficulty === d ? 'is-active' : ''}`}
-                      aria-pressed={difficulty === d}
-                      onClick={() => setDifficulty(d)}
-                    >
-                      <strong>{['Mudah', 'Sedang', 'Sulit'][i]}</strong>
-                      <span>Waktu mengikuti paket server</span>
-                    </button>
-                  ))}
-                </div>
-              </fieldset>
-              <button
-                className="student-button"
-                disabled={socket.busy || !socket.connected}
-                onClick={() => void socket.command('room:create', { difficulty })}
-              >
-                Buat room
-              </button>
-            </section>
-            <form
-              className="student-card student-card-pad"
-              onSubmit={(e) => {
-                e.preventDefault();
-                void socket.command('room:join', { roomCode: code.trim().toUpperCase() });
-              }}
-            >
-              <h2 className="student-section-title">Gabung room</h2>
-              <label htmlFor="pvp-room-code" className="mt-6 block font-bold">
-                Kode room
-              </label>
-              <input
-                id="pvp-room-code"
-                className="student-input my-3"
-                value={code}
-                maxLength={12}
-                pattern="[A-Za-z0-9]{12}"
-                required
-                onChange={(e) => setCode(e.target.value)}
-                autoComplete="off"
-              />
-              <button className="student-button" disabled={socket.busy || !socket.connected}>
-                Gabung room
-              </button>
-            </form>
+    <AppShell title="PvP Duel" className="pvp-lobby-shell" mobileHeader={header}>
+      <div className="pvp-lobby-layout">
+        <div className="pvp-lobby-main">
+          <div className="pvp-lobby-meta" aria-label="Informasi duel">
+            <span>
+              <Icon name="users" width={14} height={14} />1 vs 1
+            </span>
+            <span>
+              <Icon name="school" width={14} height={14} />
+              {dashboard.data?.class?.schoolName ?? 'Mandiri & Sekolah'}
+            </span>
+            <span>
+              <Icon name="clock" width={14} height={14} />
+              10 Soal
+            </span>
           </div>
-          <Panel>
-            <h2 className="student-section-title">Undangan teman sekelas</h2>
-            {invitations.isPending || invitations.isError ? (
-              <DataState
-                pending={invitations.isPending}
-                error={invitations.error}
-                retry={() => void invitations.refetch()}
+          <PvpHero />
+          <Link
+            className="pvp-leaderboard-link"
+            href={`/student/leaderboards?difficulty=${difficulty}`}
+          >
+            <Icon name="trophy" />
+            LEADERBOARD PVP
+            <Icon name="chevron" />
+          </Link>
+          {availability.isPending || availability.isError ? (
+            <DataState
+              pending={availability.isPending}
+              error={availability.error}
+              retry={() => void availability.refetch()}
+            />
+          ) : !availability.data.available ? (
+            <Status title="PvP belum tersedia">
+              Pertandingan akan dibuka setelah aturan room dan undangan ditetapkan. Latihanmu tetap
+              tersedia.
+              <p>
+                <Link className="button-link" href="/student/learn">
+                  Mulai latihan
+                </Link>
+              </p>
+            </Status>
+          ) : (
+            <>
+              <Card className="pvp-lobby-podium" aria-label="Podium Global PvP">
+                <h2 className="sr-only">Podium Global PvP</h2>
+                {ranking.isPending || ranking.isError ? (
+                  <DataState
+                    pending={ranking.isPending}
+                    error={ranking.error}
+                    retry={() => void ranking.refetch()}
+                  />
+                ) : ranking.data.policyPending ? (
+                  <p>Peringkat belum tersedia. Rekor menunggu aturan PvP.</p>
+                ) : ranking.data.entries.length ? (
+                  <LeaderboardPodium
+                    entries={ranking.data.entries}
+                    ownEntry={ranking.data.ownEntry}
+                    unit={ranking.data.unit}
+                    label="Podium Global PvP"
+                  />
+                ) : (
+                  <p>Belum ada rekor pada periode ini.</p>
+                )}
+              </Card>
+              {!socket.connected && (
+                <Status title="Menghubungkan PvP">
+                  <Button variant="secondary" onClick={socket.reconnect}>
+                    Sambungkan lagi
+                  </Button>
+                </Status>
+              )}
+              <Tabs
+                label="Buat atau gabung duel"
+                value={tab}
+                onChange={setTab}
+                items={[
+                  {
+                    value: 'create',
+                    label: (
+                      <>
+                        <Icon name="gamepad" width={16} height={16} />
+                        Buat Room Baru
+                      </>
+                    ),
+                    content: (
+                      <div className="pvp-create-panel">
+                        <DifficultyChoices
+                          value={difficulty}
+                          onChange={setDifficulty}
+                          disabled={socket.busy || socket.uncertain}
+                        />
+                        <Button
+                          fullWidth
+                          loading={socket.busy}
+                          disabled={disabled}
+                          onClick={() => void socket.command('room:create', { difficulty })}
+                        >
+                          Buat room
+                        </Button>
+                      </div>
+                    ),
+                  },
+                  {
+                    value: 'join',
+                    label: (
+                      <>
+                        <Icon name="users" width={16} height={16} />
+                        Gabung via Kode / QR
+                      </>
+                    ),
+                    content: (
+                      <JoinRoomForm
+                        code={code}
+                        onChange={setCode}
+                        disabled={disabled}
+                        busy={socket.busy}
+                        onJoin={() =>
+                          void socket.command('room:join', { roomCode: code.trim().toUpperCase() })
+                        }
+                      />
+                    ),
+                  },
+                ]}
               />
-            ) : !invitations.data.invites.length ? (
-              <p className="student-section-note">Belum ada undangan aktif.</p>
-            ) : (
-              <ul>
-                {invitations.data.invites.map((invite) => (
-                  <li className="flex flex-wrap items-center gap-3 py-4" key={invite.id}>
-                    <strong>{invite.senderName}</strong>
-                    <span>{invite.roomCode}</span>
-                    <button
-                      className="student-button"
-                      disabled={socket.busy}
-                      onClick={() =>
-                        void socket.command('invitation:respond', {
-                          inviteId: invite.id,
-                          accept: true,
-                        })
-                      }
-                    >
-                      Terima
-                    </button>
-                    <button
-                      className="student-button student-button-outline"
-                      disabled={socket.busy}
-                      onClick={() =>
-                        void socket.command('invitation:respond', {
-                          inviteId: invite.id,
-                          accept: false,
-                        })
-                      }
-                    >
-                      Tolak
-                    </button>
-                  </li>
-                ))}
-              </ul>
-            )}
-          </Panel>
-        </>
-      )}
+            </>
+          )}
+        </div>
+        <aside className="pvp-lobby-context">
+          <PvpRules />
+          {availability.data?.available === true && (
+            <Card className="pvp-invitations">
+              <h2>Undangan teman sekelas</h2>
+              {invitations.isPending || invitations.isError ? (
+                <DataState
+                  pending={invitations.isPending}
+                  error={invitations.error}
+                  retry={() => void invitations.refetch()}
+                />
+              ) : !invitations.data.invites.length ? (
+                <p>Belum ada undangan aktif.</p>
+              ) : (
+                <ul>
+                  {invitations.data.invites.map((invite) => (
+                    <li key={invite.id}>
+                      <Avatar name={invite.senderName} />
+                      <div>
+                        <strong>{invite.senderName}</strong>
+                        <span>{invite.roomCode}</span>
+                      </div>
+                      <div>
+                        <Button
+                          size="sm"
+                          disabled={disabled}
+                          onClick={() =>
+                            void socket.command('invitation:respond', {
+                              inviteId: invite.id,
+                              accept: true,
+                            })
+                          }
+                        >
+                          Terima
+                        </Button>
+                        <Button
+                          size="sm"
+                          variant="secondary"
+                          disabled={disabled}
+                          onClick={() =>
+                            void socket.command('invitation:respond', {
+                              inviteId: invite.id,
+                              accept: false,
+                            })
+                          }
+                        >
+                          Tolak
+                        </Button>
+                      </div>
+                    </li>
+                  ))}
+                </ul>
+              )}
+            </Card>
+          )}
+        </aside>
+      </div>
       {socket.error && (
-        <p role="alert" className="text-red-700">
+        <p role="alert" className="pvp-command-error">
           {socket.error}
         </p>
       )}
       {socket.uncertain && (
-        <button
-          className="student-button student-button-outline"
+        <Button
+          variant="secondary"
           disabled={socket.busy || !socket.connected}
           onClick={socket.retry}
         >
           Periksa permintaan sebelumnya
-        </button>
+        </Button>
       )}
-    </div>
+    </AppShell>
   );
 }
 
@@ -376,9 +453,11 @@ export function PvpMatchScreen() {
   });
   const [selected, setSelected] = useState<string | null>(null);
   const [qr, setQr] = useState('');
+  const [qrError, setQrError] = useState(false);
   const [link, setLink] = useState('');
   const [notice, setNotice] = useState('');
   const [remaining, setRemaining] = useState(0);
+  const [confirmLeave, setConfirmLeave] = useState(false);
   const [reconnectRemaining, setReconnectRemaining] = useState<Record<string, number>>({});
   useEffect(() => {
     if (!snapshot) return;
@@ -413,12 +492,17 @@ export function PvpMatchScreen() {
     const url = `${window.location.origin}/student/pvp?room=${encodeURIComponent(snapshot.roomCode)}`;
     let active = true;
     setLink(url);
+    setQr('');
+    setQrError(false);
     void QRCode.toDataURL(url, { width: 192, margin: 1 })
       .then((value) => {
         if (active) setQr(value);
       })
       .catch(() => {
-        if (active) setNotice('QR belum dapat ditampilkan. Gunakan kode atau link room.');
+        if (active) {
+          setQrError(true);
+          setNotice('QR belum dapat ditampilkan. Gunakan kode atau link room.');
+        }
       });
     return () => {
       active = false;
@@ -442,12 +526,15 @@ export function PvpMatchScreen() {
   }, [snapshot]);
   if (result.isPending || result.isError)
     return (
-      <LearningFrame title="Pertandingan PvP">
-        <DataState
-          pending={result.isPending}
-          error={result.error}
-          retry={() => void result.refetch()}
-        />
+      <LearningFrame title="Pertandingan PvP" focus className="pvp-match-shell">
+        <PvpHeader title="Pertandingan PvP" />
+        <div className="pvp-match-content">
+          <DataState
+            pending={result.isPending}
+            error={result.error}
+            retry={() => void result.refetch()}
+          />
+        </div>
       </LearningFrame>
     );
   if (!snapshot) return null;
@@ -456,246 +543,204 @@ export function PvpMatchScreen() {
   );
   const closed = snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED';
   const active = availability.data?.available === true;
-  return (
-    <LearningFrame title="Pertandingan PvP">
-      <div className="space-y-6">
-        {snapshot.isDemo && (
-          <Status title="Konten demo">Paket soal ini berlabel demo dari backend.</Status>
+  const disabled = !active || socket.busy || socket.uncertain || !socket.connected;
+  const title = closed
+    ? 'Hasil Duel PvP'
+    : snapshot.status === 'RUNNING'
+      ? 'Duel Berlangsung'
+      : 'Ruang Tunggu Duel';
+  function copy(value: string, label: string) {
+    void navigator.clipboard
+      .writeText(value)
+      .then(() => setNotice(`${label} disalin.`))
+      .catch(() => setNotice(`Salin ${label.toLowerCase()} room secara manual.`));
+  }
+  async function share() {
+    try {
+      if (navigator.share) await navigator.share({ title: 'Duel PvP Numora', url: link });
+      else copy(link, 'Link');
+    } catch (error) {
+      if (!(error instanceof Error && error.name === 'AbortError'))
+        setNotice('Link belum dapat dibagikan. Gunakan Salin link.');
+    }
+  }
+  const peerPanel =
+    snapshot.creatorStudentId === self?.studentId ? (
+      <Card className="pvp-classmates">
+        <h2>
+          <Icon name="users" />
+          Undang teman sekelas
+        </h2>
+        {peers.isPending || peers.isError ? (
+          active && (
+            <DataState
+              pending={peers.isPending}
+              error={peers.error}
+              retry={() => void peers.refetch()}
+            />
+          )
+        ) : !peers.data.classmates.length ? (
+          <p>Belum ada teman sekelas. Kamu tetap dapat membagikan link room.</p>
+        ) : (
+          <ul>
+            {peers.data.classmates.map((player) => (
+              <li key={player.studentId}>
+                <Avatar name={player.displayName} />
+                <strong>{player.displayName}</strong>
+                <Button
+                  size="sm"
+                  disabled={disabled}
+                  onClick={() =>
+                    void socket.command('invitation:send', {
+                      matchId,
+                      recipientStudentId: player.studentId,
+                    })
+                  }
+                >
+                  Undang
+                </Button>
+              </li>
+            ))}
+          </ul>
         )}
-        {!active && !closed && (
+      </Card>
+    ) : undefined;
+  return (
+    <LearningFrame title={title} focus className="pvp-match-shell">
+      <PvpHeader
+        title={title}
+        connected={!closed && active ? socket.connected : undefined}
+        onLeave={!closed ? () => setConfirmLeave(true) : undefined}
+      />
+      <div className="pvp-match-content">
+        {snapshot.isDemo && (
+          <p className="pvp-demo-notice">
+            <Icon name="info" width={16} height={16} />
+            Konten demo • Bukan pengukuran TKA resmi
+          </p>
+        )}
+        {availability.isError && !closed && (
+          <DataState
+            pending={false}
+            error={availability.error}
+            retry={() => void availability.refetch()}
+          />
+        )}
+        {availability.data?.available === false && !closed && (
           <Status title="PvP belum tersedia">Pertandingan akun nyata belum dibuka.</Status>
         )}
-        {active && !socket.connected && (
+        {active && !socket.connected && !closed && (
           <Status title="Koneksi terputus">
             Server memberi kesempatan reconnect selama 20 detik.
-            <button className="student-button ml-3" onClick={socket.reconnect}>
+            <Button variant="secondary" onClick={socket.reconnect}>
               Sambungkan lagi
-            </button>
+            </Button>
           </Status>
         )}
-        <div className="student-grid-two">
-          {snapshot.players.map((p) => (
-            <article className="student-card student-card-pad" key={p.studentId}>
-              <h2 className="student-section-title">
-                {p.displayName}
-                {p.studentId === self?.studentId ? ' (kamu)' : ''}
-              </h2>
-              <p className="student-metric-value">
-                {p.points} <small>poin</small>
-              </p>
-              <p className="student-section-note">
-                {p.result ??
-                  (p.connectionStatus === 'DISCONNECTED'
-                    ? 'Terputus, menunggu reconnect'
-                    : p.ready
-                      ? 'Siap bermain'
-                      : 'Belum siap')}
-              </p>
-              {p.connectionStatus === 'DISCONNECTED' && p.reconnectDeadlineAt && !closed && (
-                <p role="timer" aria-label={`Waktu reconnect ${p.displayName}`}>
-                  {reconnectRemaining[p.studentId] ?? '-'} detik untuk tersambung kembali. Keputusan
-                  akhir mengikuti server.
-                </p>
-              )}
-            </article>
-          ))}
-        </div>
         {closed ? (
-          <Status
-            title={
-              snapshot.status === 'CANCELLED' ? 'Pertandingan dibatalkan' : 'Pertandingan selesai'
-            }
-          >
-            <p>
-              {snapshot.endReason === 'FORFEIT'
-                ? 'Pertandingan berakhir karena pemain menyerah.'
-                : snapshot.status === 'CANCELLED'
-                  ? 'Tidak ada rekor kemenangan dari pertandingan yang dibatalkan.'
-                  : self?.result === 'WIN'
-                    ? 'Kamu memenangkan pertandingan.'
-                    : self?.result === 'DRAW'
-                      ? 'Hasil seri.'
-                      : 'Terima kasih sudah bermain.'}
-            </p>
-            <p>
-              {snapshot.recordEligible
-                ? 'Rekor akan diperbarui oleh proyeksi leaderboard.'
-                : 'Pertandingan ini tidak berkontribusi pada leaderboard.'}
-            </p>
-            <Link className="student-button mt-4" href="/student/pvp">
-              Kembali ke PvP
-            </Link>
-          </Status>
+          <MatchOutcome snapshot={snapshot} selfId={self?.studentId} />
         ) : snapshot.status === 'RUNNING' && snapshot.question ? (
-          <Panel>
-            <div className="flex flex-wrap justify-between gap-3">
-              <strong>Soal {snapshot.question.order} / 10</strong>
-              <span role="timer" aria-label="Sisa waktu">
-                {remaining} detik
-              </span>
-            </div>
-            <h2 className="text-xl my-6">
-              <MathText value={snapshot.question.stem} />
-            </h2>
-            <fieldset
-              disabled={
-                !active ||
-                socket.busy ||
-                socket.uncertain ||
-                snapshot.question.answered ||
-                !socket.connected ||
-                remaining === 0
-              }
-            >
-              <legend className="sr-only">Pilih jawaban</legend>
-              <div className="grid gap-3">
-                {snapshot.question.options.map((option) => (
-                  <label
-                    key={option.id}
-                    className={`student-answer-option ${selected === option.id ? 'is-selected' : ''}`}
-                  >
-                    <input
-                      type="radio"
-                      name="pvp-answer"
-                      value={option.id}
-                      checked={selected === option.id}
-                      onChange={() => setSelected(option.id)}
-                    />
-                    <span>
-                      <MathText value={option.text} />
-                    </span>
-                  </label>
-                ))}
-              </div>
-              <button
-                className="student-button mt-5"
-                disabled={selected === null}
-                onClick={() =>
-                  void socket.command('answer:submit', {
-                    matchId,
-                    questionId: snapshot.question!.id,
-                    optionId: selected,
-                  })
-                }
-              >
-                Kunci jawaban
-              </button>
-            </fieldset>
-            {snapshot.question.answered && (
-              <p role="status" className="mt-4">
-                Jawaban terkunci. Menunggu soal berikutnya dari server.
-              </p>
-            )}
-          </Panel>
+          <BattleRoom
+            snapshot={snapshot}
+            selfId={self?.studentId}
+            remaining={remaining}
+            selected={selected}
+            disabled={disabled || snapshot.question.answered || remaining === 0}
+            onSelect={setSelected}
+            onAnswer={() =>
+              void socket.command('answer:submit', {
+                matchId,
+                questionId: snapshot.question!.id,
+                optionId: selected,
+              })
+            }
+            onLeave={() => setConfirmLeave(true)}
+            reconnectRemaining={reconnectRemaining}
+          />
+        ) : snapshot.status === 'RUNNING' ? (
+          <Status title="Menunggu soal">
+            Soal berikutnya akan tampil setelah snapshot diterima dari server.
+          </Status>
         ) : (
-          <>
-            <Panel>
-              <h2 className="student-section-title">Room {snapshot.roomCode}</h2>
-              <p className="student-section-note">
-                Bagikan kode atau link untuk mengundang pemain kedua.
-              </p>
-              <div className="flex flex-wrap items-center gap-6 mt-5">
-                {qr && <img src={qr} width={192} height={192} alt="QR link gabung room" />}
-                <div className="min-w-0 flex-1">
-                  <p className="break-all text-sm">{link}</p>
-                  <button
-                    className="student-button student-button-outline mt-3"
-                    onClick={() =>
-                      void navigator.clipboard
-                        .writeText(link)
-                        .then(() => setNotice('Link disalin.'))
-                        .catch(() => setNotice('Salin link room secara manual.'))
-                    }
-                  >
-                    Salin link
-                  </button>
-                </div>
-              </div>
-              <button
-                className="student-button mt-5"
-                disabled={!active || !socket.connected || socket.busy || self?.ready}
-                onClick={() => void socket.command('player:ready', { matchId })}
-              >
-                {self?.ready ? 'Menunggu pemain lain' : 'Saya siap'}
-              </button>
-            </Panel>
-            {snapshot.creatorStudentId === self?.studentId && (
-              <Panel>
-                <h2 className="student-section-title">Undang teman sekelas</h2>
-                {peers.isPending || peers.isError ? (
-                  active && (
-                    <DataState
-                      pending={peers.isPending}
-                      error={peers.error}
-                      retry={() => void peers.refetch()}
-                    />
-                  )
-                ) : !peers.data.classmates.length ? (
-                  <p className="student-section-note">
-                    Belum ada teman sekelas. Kamu tetap dapat membagikan link room.
-                  </p>
-                ) : (
-                  <ul>
-                    {peers.data.classmates.map((p) => (
-                      <li
-                        key={p.studentId}
-                        className="flex items-center justify-between gap-3 py-3"
-                      >
-                        <span>{p.displayName}</span>
-                        <button
-                          className="student-button student-button-outline"
-                          disabled={!active || socket.busy || !socket.connected}
-                          onClick={() =>
-                            void socket.command('invitation:send', {
-                              matchId,
-                              recipientStudentId: p.studentId,
-                            })
-                          }
-                        >
-                          Undang
-                        </button>
-                      </li>
-                    ))}
-                  </ul>
-                )}
-              </Panel>
-            )}
-          </>
+          <WaitingRoom
+            snapshot={snapshot}
+            selfId={self?.studentId}
+            qr={qr}
+            qrError={qrError}
+            link={link}
+            disabled={disabled}
+            onReady={() => void socket.command('player:ready', { matchId })}
+            onCopy={copy}
+            onShare={() => void share()}
+            peers={peerPanel}
+            reconnectRemaining={reconnectRemaining}
+          />
         )}
         {!closed && (
-          <button
-            className="student-button student-button-outline"
-            disabled={!active || socket.busy || !socket.connected}
-            onClick={() => {
-              if (
-                window.confirm(
-                  snapshot.status === 'RUNNING'
-                    ? 'Keluar berarti menyerah. Lanjutkan?'
-                    : 'Keluar dan batalkan room?',
-                )
-              )
-                void socket.command('room:leave', { matchId });
-            }}
+          <Button
+            variant="ghost"
+            className="pvp-leave-action"
+            disabled={disabled}
+            onClick={() => setConfirmLeave(true)}
           >
             Keluar pertandingan
-          </button>
+          </Button>
         )}
         {socket.error && (
-          <p role="alert" className="text-red-700">
+          <p role="alert" className="pvp-command-error">
             {socket.error}
           </p>
         )}
         {socket.uncertain && (
-          <button
-            className="student-button student-button-outline"
+          <Button
+            variant="secondary"
             disabled={socket.busy || !socket.connected}
             onClick={socket.retry}
           >
             Periksa permintaan sebelumnya
-          </button>
+          </Button>
         )}
-        {notice && <p role="status">{notice}</p>}
+        {notice && (
+          <p role="status" className="pvp-notice">
+            {notice}
+          </p>
+        )}
       </div>
+      <Dialog
+        open={confirmLeave && !closed}
+        onClose={() => setConfirmLeave(false)}
+        title={snapshot.status === 'RUNNING' ? 'Menyerah dari duel?' : 'Keluar dari room?'}
+        pending={socket.busy}
+        description={
+          snapshot.status === 'RUNNING'
+            ? 'Keluar berarti menyerah. Hasil akhir ditetapkan server.'
+            : 'Kamu akan keluar dari ruang tunggu. Perubahan room mengikuti server.'
+        }
+        actions={
+          <>
+            <Button
+              variant="secondary"
+              disabled={socket.busy}
+              onClick={() => setConfirmLeave(false)}
+            >
+              Tetap di sini
+            </Button>
+            <Button
+              variant="danger"
+              loading={socket.busy}
+              disabled={disabled}
+              onClick={() => {
+                setConfirmLeave(false);
+                void socket.command('room:leave', { matchId });
+              }}
+            >
+              Ya, keluar
+            </Button>
+          </>
+        }
+      >
+        <p>Pastikan sebelum melanjutkan.</p>
+      </Dialog>
     </LearningFrame>
   );
 }

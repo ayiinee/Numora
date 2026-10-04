@@ -1,4 +1,6 @@
 import { expect, test, type Page } from '@playwright/test';
+import { mkdir, writeFile } from 'node:fs/promises';
+import { resolve } from 'node:path';
 
 const browserErrors = new WeakMap<Page, string[]>();
 test.beforeEach(({ page }) => {
@@ -278,7 +280,213 @@ async function fixtures(
     return route.fulfill({ json: data });
   });
 }
-for (const width of [320, 360, 390, 768, 1440])
+// Synthetic handoff-like data. This fixture does not approve OPEN XP policy or enable production features.
+for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
+  test(`home visual composition at ${width}px preserves query and navigation boundaries`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: width < 700 ? 1374 : 1000 });
+    await fixtures(page);
+    const mutations: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().startsWith('http://localhost:3301/api/v1/') && request.method() !== 'GET')
+        mutations.push(request.method());
+    });
+    await page.route('http://localhost:3301/api/v1/identity/me', (route) =>
+      route.fulfill({
+        json: {
+          id: studentId,
+          displayName: 'Kirino S.',
+          role: 'STUDENT',
+          status: 'ACTIVE',
+          email: 'fixture@example.invalid',
+          studentAffiliation: 'SCHOOL',
+          teacherVerified: null,
+        },
+      }),
+    );
+    await page.route('http://localhost:3301/api/v1/students/me/dashboard', (route) =>
+      route.fulfill({
+        json: {
+          displayName: 'Kirino S.',
+          affiliation: 'SCHOOL',
+          class: { id: chapterId, name: 'IX-A', schoolName: 'SMPN 1 Jakarta' },
+          completedLevels: 14,
+          availableLevels: 20,
+          latestDrillScore: 85,
+          bestDrillScore: 90,
+          activeDrill: { attemptId, title: 'Level 3 (Akar Kuadrat)', levelId },
+          activities: [
+            {
+              attemptId: 'completed-fixture',
+              activity: 'drill',
+              title: 'Faktorisasi Aljabar Kuadrat',
+              subchapterTitle: 'Subbab 2.1',
+              submittedAt: '2026-10-03T02:30:00Z',
+              resultState: 'ready',
+              score: 85,
+              isDemo: false,
+              xpState: 'pending',
+              starsState: 'pending',
+            },
+          ],
+          features: {
+            drill: true,
+            tryout: true,
+            pretest: false,
+            pvp: false,
+            classLeaderboard: true,
+            pendingPolicies: [],
+          },
+        },
+      }),
+    );
+    await page.route('http://localhost:3301/api/v1/tryout/packages/current', (route) =>
+      route.fulfill({
+        json: {
+          id: chapterId,
+          title: 'Paket Tryout Mingguan #04 Rilis!',
+          state: 'open',
+          eligible: true,
+          questionCount: 35,
+          durationSeconds: 4800,
+        },
+      }),
+    );
+    await page.route('http://localhost:3301/api/v1/leaderboards/class', (route) =>
+      route.fulfill({
+        json: {
+          policyPending: false,
+          reasonCode: null,
+          className: 'IX-A',
+          unit: 'xp',
+          period: {
+            startsAt: '2026-10-01T00:00:00Z',
+            endsAt: '2026-10-08T00:00:00Z',
+            timezone: 'Asia/Jakarta',
+          },
+          updatedAt: '2026-10-03T02:00:00Z',
+          entries: [
+            { studentId: 'fixture-siti', displayName: 'Siti Rahma', rank: 1, points: 1890 },
+            { studentId: 'fixture-dimas', displayName: 'Dimas A.', rank: 2, points: 1620 },
+            { studentId, displayName: 'Kirino S.', rank: 3, points: 1450 },
+          ],
+          ownEntry: { studentId, displayName: 'Kirino S.', rank: 3, points: 1450 },
+        },
+      }),
+    );
+    await page.route('http://localhost:3301/api/v1/students/me/feedback/summary', (route) =>
+      route.fulfill({
+        json: {
+          unreadCount: 0,
+          latest: [
+            {
+              id: questionId,
+              classId: chapterId,
+              studentId,
+              teacherName: 'Bu Ratna, M.Pd.',
+              body: 'Hebat Kirino! Pemahamanmu di Faktorisasi Kuadrat sudah tuntas 85%. Pertahankan latihan dan tingkatkan kecepatan di Level 3 ya!',
+              sentAt: '2026-10-03T02:30:00Z',
+              readAt: '2026-10-03T03:00:00Z',
+            },
+          ],
+        },
+      }),
+    );
+    await page.goto('/student');
+    await expect(page.getByText('1.890 XP')).toBeVisible();
+    await expect(page.getByText('Bu Ratna, M.Pd.')).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
+    const bounds = await page.evaluate(() => {
+      const selectors = [
+        '.student-identity',
+        '.student-home-hero',
+        '.home-features',
+        '.home-activities',
+        '.home-podium',
+        '.home-feedback',
+        '.student-bottom-nav',
+        '.home-activity-entry',
+        '.home-activity',
+        '.home-activity__meta',
+        '.home-activity h3',
+        '.home-activity__status',
+        '.home-activity__pending',
+        '.home-resume',
+      ];
+      return {
+        width: innerWidth,
+        overflow: document.documentElement.scrollWidth > innerWidth,
+        cards: selectors.flatMap((selector) =>
+          Array.from(document.querySelectorAll(selector))
+            .filter((element) => element.getBoundingClientRect().width > 0)
+            .map((element) => {
+              const box = element.getBoundingClientRect();
+              return {
+                selector,
+                x: box.x,
+                y: box.y,
+                width: box.width,
+                height: box.height,
+                radius: getComputedStyle(element).borderRadius,
+              };
+            }),
+        ),
+      };
+    });
+    expect(bounds.overflow).toBe(false);
+    if (width < 700) {
+      const cards = bounds.cards.filter((card) =>
+        [
+          '.student-home-hero',
+          '.home-features',
+          '.home-activities',
+          '.home-podium',
+          '.home-feedback',
+        ].includes(card.selector),
+      );
+      expect(cards.map((card) => card.selector)).toEqual([
+        '.student-home-hero',
+        '.home-features',
+        '.home-activities',
+        '.home-podium',
+        '.home-feedback',
+      ]);
+      for (let index = 1; index < cards.length; index++)
+        expect(cards[index]!.y).toBeGreaterThanOrEqual(
+          cards[index - 1]!.y + cards[index - 1]!.height,
+        );
+      expect(cards[0]!.x).toBe(16);
+      expect(cards[0]!.width).toBe(width - 32);
+    }
+    await writeFile(
+      testInfo.outputPath(`home-geometry-${width}.json`),
+      JSON.stringify(bounds, null, 2),
+    );
+    await testInfo.attach('home-geometry', {
+      body: JSON.stringify(bounds, null, 2),
+      contentType: 'application/json',
+    });
+    await page.screenshot({
+      path: testInfo.outputPath(`home-reference-${width}.png`),
+      fullPage: true,
+    });
+    expect(mutations).toEqual([]);
+    await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toBeDisabled();
+    await expect(
+      page.getByRole('link', { name: 'Lanjutkan latihan', exact: true }),
+    ).toHaveAttribute('href', `/student/drill/${attemptId}`);
+    await page
+      .getByRole('link', { name: 'Lihat catatan guru', exact: true })
+      .filter({ visible: true })
+      .click();
+    await expect(page).toHaveURL(/#catatan-guru$/);
+    expect(mutations).toEqual([]);
+  });
+}
+
+for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
   test(`student routes at ${width}px use real-data boundaries and accessible navigation`, async ({
     page,
   }, testInfo) => {
@@ -286,17 +494,43 @@ for (const width of [320, 360, 390, 768, 1440])
     await fixtures(page);
     await page.goto('/student');
     await expect(page.getByRole('heading', { name: /Halo, Siswa/ })).toBeVisible();
-    await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-identity:visible').getByText('User Mandiri', { exact: true }),
+    ).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    await expect(page.locator('body')).toHaveCSS('font-family', /jakarta/i);
+    // Hide the development toolbar only in visual evidence; it is absent in production.
+    await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
     await page.screenshot({ path: testInfo.outputPath(`dashboard-${width}.png`), fullPage: true });
     const nav = page.getByRole('navigation', {
       name: width <= 959 ? 'Navigasi utama' : 'Navigasi Ruang belajar',
       exact: true,
     });
-    await nav.getByRole('link', { name: 'Belajar', exact: true }).click();
+    if (width <= 959) {
+      await expect(nav.getByRole('link')).toHaveText([
+        'Belajar',
+        'Materi',
+        'Tryout',
+        'PvP',
+        'Profil',
+      ]);
+      await expect(nav.getByRole('link', { name: 'Belajar', exact: true })).toHaveAttribute(
+        'aria-current',
+        'page',
+      );
+    }
+    await nav.getByRole('link', { name: 'Materi', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Belajar matematika' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Materi', exact: true })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     await page.getByRole('link', { name: /Aljabar fixture/ }).click();
     await page.getByRole('link', { name: /Persamaan fixture/ }).click();
-    await page.getByRole('button', { name: 'Lanjutkan latihan' }).click();
+    await page
+      .locator('.adventure-focus')
+      .getByRole('button', { name: 'Lanjutkan latihan' })
+      .click();
     await page.getByRole('radio').first().check();
     await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
     await page.reload();
@@ -305,27 +539,124 @@ for (const width of [320, 360, 390, 768, 1440])
     await page.getByRole('button', { name: 'Kirim Drill' }).scrollIntoViewIfNeeded();
     await expect(page.getByRole('navigation', { name: 'Navigasi utama' })).toHaveCount(0);
     await expect(page.getByRole('navigation', { name: 'Navigasi Ruang belajar' })).toHaveCount(0);
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Kirim Drill' }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
     await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
+    await page.goto('/student');
     for (const [label, text] of [
       ['Tryout', 'Paket belum tersedia'],
       ['Progres', 'Menunggu hasil'],
       ['PvP', 'PvP belum tersedia'],
       ['Peringkat', 'Peringkat belum tersedia'],
     ] as const) {
-      if (label === 'PvP' || label === 'Peringkat')
-        await page.goto(label === 'PvP' ? '/student/pvp' : '/student/leaderboards');
+      if (label === 'Peringkat' || (label === 'Progres' && width <= 959))
+        await page.goto(label === 'Progres' ? '/student/assessment' : '/student/leaderboards');
       else await nav.getByRole('link', { name: label, exact: true }).click();
       await expect(page.getByText(text!, { exact: true })).toBeVisible();
       expect(
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
       ).toBe(true);
     }
-    await nav.getByRole('link', { name: 'Belajar', exact: true }).focus();
+    await nav.getByRole('link', { name: 'Materi', exact: true }).focus();
     await page.keyboard.press('Tab');
     await expect(nav.getByRole('link', { name: 'Tryout', exact: true })).toBeFocused();
   });
+test('home loading and independent Tryout errors preserve learning and pending class policy', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 390, height: 1000 });
+  await fixtures(page);
+  await page.goto('/student');
+  await expect(page.getByText('Guru fixture', { exact: true })).toBeVisible();
+  await expect(page.getByRole('region', { name: 'Paket Tryout Mingguan' })).toBeVisible();
+  await page.evaluate(() => document.fonts.ready);
+  await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
+  await page.screenshot({ path: testInfo.outputPath('home-mandiri-390.png'), fullPage: true });
+  await page.route('http://localhost:3301/api/v1/identity/me', (route) =>
+    route.fulfill({
+      json: {
+        id: studentId,
+        displayName: 'Siswa fixture',
+        role: 'STUDENT',
+        status: 'ACTIVE',
+        email: 'fixture@example.invalid',
+        studentAffiliation: 'SCHOOL',
+        teacherVerified: null,
+      },
+    }),
+  );
+  await page.route('http://localhost:3301/api/v1/students/me/dashboard', (route) =>
+    route.fulfill({
+      json: {
+        displayName: 'Siswa fixture',
+        affiliation: 'SCHOOL',
+        class: { id: chapterId, name: 'IX fixture', schoolName: 'Sekolah fixture' },
+        completedLevels: 1,
+        availableLevels: 2,
+        latestDrillScore: 80,
+        bestDrillScore: 80,
+        activities: [],
+        activeDrill: null,
+        features: {
+          drill: true,
+          tryout: true,
+          pretest: false,
+          pvp: false,
+          classLeaderboard: false,
+          pendingPolicies: ['OPEN-11'],
+        },
+      },
+    }),
+  );
+  let release!: () => void;
+  const gate = new Promise<void>((resolve) => {
+    release = resolve;
+  });
+  let fail = true;
+  let classRequests = 0;
+  page.on('request', (request) => {
+    if (request.url().endsWith('/leaderboards/class')) classRequests++;
+  });
+  await page.route('http://localhost:3301/api/v1/tryout/packages/current', async (route) => {
+    await gate;
+    await route.fulfill(
+      fail
+        ? { status: 503, json: { detail: 'Fixture offline' } }
+        : {
+            json: {
+              title: 'Paket pulih',
+              state: 'open',
+              eligible: true,
+              questionCount: 35,
+              durationSeconds: 4800,
+            },
+          },
+    );
+  });
+  await page.goto('/student');
+  try {
+    await expect(page.getByRole('status', { name: 'Memuat Tryout' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: /Fitur Belajar/ })).toBeVisible();
+    await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
+    await page.screenshot({ path: testInfo.outputPath('home-loading-390.png'), fullPage: true });
+  } finally {
+    release();
+  }
+  const tryoutError = page.getByLabel('Status Tryout');
+  await expect(tryoutError.getByRole('heading', { name: 'Gagal memuat' })).toBeVisible();
+  await expect(page.getByText('Peringkat belum tersedia', { exact: true })).toBeVisible();
+  await expect(page.getByText('Guru fixture', { exact: true })).toBeVisible();
+  await page.screenshot({
+    path: testInfo.outputPath('home-error-pending-390.png'),
+    fullPage: true,
+  });
+  fail = false;
+  await tryoutError.getByRole('button', { name: 'Coba lagi' }).click();
+  await expect(page.getByRole('region', { name: 'Paket pulih' })).toBeVisible();
+  expect(classRequests).toBe(0);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+});
+
 test('Mandiri Tryout starts and resumes without a class, then waits for released results', async ({
   page,
 }) => {
@@ -490,11 +821,19 @@ test('history keeps zero/context, hides pending links and retries pagination wit
   await expect(
     page.getByRole('link', { name: /History waiting fixture|History Pretest fixture/ }),
   ).toHaveCount(0);
-  expect(
-    await page
-      .getByText('Menunggu hasil', { exact: true })
-      .evaluate((element) => element.scrollWidth <= element.clientWidth),
-  ).toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(
+      await page
+        .getByText('Menunggu hasil', { exact: true })
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Muat hasil lain' }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Halaman berikutnya belum dapat dimuat' }),
@@ -518,13 +857,15 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   }) => {
     await fixtures(page);
     await page.goto('/student');
-    await page.getByRole('link', { name: 'Buka profil' }).click();
+    await page.getByRole('link', { name: 'Buka profil', exact: true }).click();
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(page.getByText('Terhubung dengan kelas', { exact: true })).toBeVisible();
+    await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
     await page.goto('/student');
     await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
-    await expect(page.getByText('Sekolah fixture', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+    ).toBeVisible();
     for (const path of ['/demo/student', '/demo/pvp', '/demo/leaderboards']) {
       const response = await page.goto(path);
       expect(response?.status()).toBe(404);
@@ -560,9 +901,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('Belajar mandiri')).toBeVisible();
+  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
@@ -570,15 +911,15 @@ test('joined class affiliation persists after signing out and back in', async ({
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill(' FIX234 ');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
-  await page.getByRole('button', { name: 'Keluar dari akun' }).click();
+  await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
   await expect(page).toHaveURL('http://localhost:3300/');
   await page.evaluate(() => localStorage.removeItem('test-logged-out'));
   await page.reload();
   await expect(page).toHaveURL(/\/student$/);
   await page.goto('/student/profile');
-  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toHaveCount(0);
   await page.goto('/student/leaderboards?tab=class');
   await expect(
@@ -702,7 +1043,12 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill('FIX234');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('IX fixture', { exact: true }),
+  ).toBeVisible();
 
   await page.goto('/student/join?code=QA_LEGACY-CLASS');
   await expect(
@@ -712,7 +1058,15 @@ test('class join link warns an already affiliated Student and stays server-autho
   ).toBeVisible();
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page).toHaveURL('http://localhost:3300/student');
-  await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+  await expect(
+    page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('IX fixture', { exact: true }),
+  ).toBeVisible();
 });
 
 test('class join link opened while signed out falls back to login and loses the code', async ({
@@ -746,10 +1100,18 @@ for (const width of [320, 390, 1440])
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
-    await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+    ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
+    await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
+    await expect(
+      page
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText('IX fixture', { exact: true }),
+    ).toBeVisible();
   });
 
 for (const width of [390, 1440]) {
@@ -796,7 +1158,7 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await page.getByRole('link', { name: 'Buka profil' }).click();
   await expect(page).toHaveURL(/\/teacher\/profile$/);
   await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
-  await expect(page.getByText('Terverifikasi')).toBeVisible();
+  await expect(page.getByText('Terverifikasi', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: /Kelas saya/ }).last()).toHaveAttribute(
     'href',
     '/teacher',
@@ -1035,7 +1397,7 @@ for (const verificationToken of ['QAAB2345', 'Ab_cd-'.repeat(6)]) {
   }) => {
     await fixtures(page, 'TEACHER', false);
     await page.goto('/teacher/verification-required');
-    await page.getByLabel('Sekolah', { exact: true }).selectOption(chapterId);
+    await page.getByRole('combobox', { name: 'Sekolah', exact: true }).selectOption(chapterId);
     await page.getByLabel('Token verifikasi').fill(` ${verificationToken} `);
     const request = page.waitForRequest((request) =>
       request.url().endsWith('/teacher-verifications'),
@@ -1055,7 +1417,7 @@ test('Teacher stays on verification while refreshed identity is pending', async 
       teacherNavigations.push(frame.url());
   });
   await page.goto('/teacher/verification-required');
-  await page.getByLabel('Sekolah', { exact: true }).selectOption(chapterId);
+  await page.getByRole('combobox', { name: 'Sekolah', exact: true }).selectOption(chapterId);
   await page.getByLabel('Token verifikasi').fill('QAAB2345');
   const refreshedIdentity = page.waitForRequest((request) =>
     request.url().endsWith('/identity/me'),
@@ -1251,5 +1613,444 @@ for (const { role, verified, path, destination } of [
     await fixtures(page, role, verified);
     await page.goto(path);
     await expect(page).toHaveURL(new RegExp(`${destination}$`));
+  });
+}
+
+// Phase 3 visual evidence is deterministic test data, never inserted as user results.
+for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
+  test(`learning visual evidence at ${width}px preserves mastery and saved-answer boundaries`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: width < 700 ? 940 : 1000 });
+    await fixtures(page);
+    const output = resolve(process.cwd(), '../../.tmp/redesign-phase3');
+    await mkdir(output, { recursive: true });
+    await page.route('http://localhost:3301/api/v1/students/me/dashboard', (route) =>
+      route.fulfill({
+        json: {
+          displayName: 'Kirino S.',
+          affiliation: 'SCHOOL',
+          class: { id: chapterId, name: 'IX-A', schoolName: 'SMPN 1 Jakarta' },
+          completedLevels: 2,
+          availableLevels: 5,
+          latestDrillScore: 100,
+          bestDrillScore: 100,
+          activities: [],
+          activeDrill: { attemptId, levelId, title: 'Level 3' },
+          features: {
+            drill: true,
+            tryout: true,
+            pvp: false,
+            pretest: false,
+            classLeaderboard: false,
+            pendingPolicies: [],
+          },
+        },
+      }),
+    );
+    await page.route('http://localhost:3301/api/v1/tryout/packages/current', (route) =>
+      route.fulfill({
+        json: {
+          state: 'open',
+          id: chapterId,
+          title: 'TO TKA Matematika SMP #04',
+          eligible: true,
+          questionCount: 35,
+          durationSeconds: 4800,
+        },
+      }),
+    );
+    const questions = Array.from({ length: 10 }, (_, index) => ({
+      questionInstanceId: `55000000-0000-4555-8555-${String(index + 1).padStart(12, '0')}`,
+      stem: 'Diketahui persamaan kuadrat $x^2 + 6x + c = 0$ dapat diubah secara ekuivalen menjadi bentuk kuadrat sempurna $(x + p)^2 = 0$. Nilai dari konstanta c dan p berturut-turut adalah…',
+      options: [
+        { id: 'A', text: '$c=9$ dan $p=3$' },
+        { id: 'B', text: '$c=6$ dan $p=3$' },
+        { id: 'C', text: '$c=9$ dan $p=6$' },
+        { id: 'D', text: '$c=36$ dan $p=6$' },
+      ],
+      selectedOptionId: index === 5 ? null : 'A',
+    }));
+    const answerKeys = new Map(questions.map((q) => [q.questionInstanceId, q.selectedOptionId]));
+    let submits = 0;
+    await page.route('http://localhost:3301/api/v1/subchapters/**', (route) =>
+      route.fulfill({
+        json: {
+          subchapter: {
+            id: subchapterId,
+            chapterId,
+            title: 'Subbab 2.1: Faktorisasi & Bentuk Kuadrat',
+            order: 1,
+          },
+          levels: Array.from({ length: 5 }, (_, i) => ({
+            id: i === 2 ? levelId : `66000000-0000-4666-8666-${String(i + 1).padStart(12, '0')}`,
+            title: [
+              'Pengenalan Suku & Faktor',
+              'Identitas Aljabar',
+              'Bentuk Kuadrat Sempurna',
+              'Bentuk ax² + bx + c',
+              'Master HOTS Kuadrat',
+            ][i],
+            order: i + 1,
+            status: i < 2 ? 'completed' : i === 2 ? 'inProgress' : 'locked',
+            latestScore: i < 2 ? 100 : null,
+            bestScore: i < 2 ? 100 : null,
+          })),
+        },
+      }),
+    );
+    await page.route(`http://localhost:3301/api/v1/assessment-attempts/${attemptId}**`, (route) => {
+      const path = new URL(route.request().url()).pathname;
+      if (path.endsWith('/result'))
+        return route.fulfill({
+          json: {
+            attemptId,
+            levelId,
+            levelTitle: 'Level 3: Bentuk Kuadrat Sempurna',
+            score: 90,
+            rawPoints: 9,
+            correctCount: 9,
+            questionCount: 10,
+            mastered: true,
+            stars: null,
+            unlockedLevelId: subchapterId,
+            isDemo: false,
+            explanationState: 'available',
+            recommendations: [],
+            questions: questions.map((q, i) => ({
+              ...q,
+              selectedOptionId: i === 2 ? 'C' : 'A',
+              correctOptionId: 'A',
+              explanation:
+                'Kenali bentuk kuadrat sempurna: $(x+p)^2=x^2+2px+p^2$. Samakan koefisien: $2p=6$ sehingga $p=3$. Konstanta $c=p^2=9$. Jadi jawaban yang benar adalah A.',
+            })),
+          },
+        });
+      if (path.endsWith('/submit')) {
+        submits++;
+        return route.fulfill({ json: {} });
+      }
+      if (path.includes('/answers/')) {
+        const id = path.split('/').at(-1)!;
+        const answer = route.request().postDataJSON().optionId as string | null;
+        answerKeys.set(id, answer);
+        return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: answer } });
+      }
+      return route.fulfill({
+        json: {
+          id: attemptId,
+          levelId,
+          levelTitle: 'Level 3: Bentuk Kuadrat Sempurna',
+          status: 'inProgress',
+          startedAt: new Date(Date.now() - 165000).toISOString(),
+          isDemo: false,
+          questions: questions.map((q) => ({
+            ...q,
+            selectedOptionId: answerKeys.get(q.questionInstanceId),
+          })),
+        },
+      });
+    });
+    const capture = async (screen: string) => {
+      if (width === 390)
+        await page.setViewportSize({
+          width,
+          height:
+            screen === 'level-map'
+              ? 1840
+              : screen === 'result'
+                ? 1874
+                : screen === 'submit-dialog'
+                  ? 1064
+                  : 940,
+        });
+      await page.evaluate(() => document.fonts.ready);
+      const geometry = await page.evaluate(() => ({
+        overflow: document.documentElement.scrollWidth > innerWidth,
+        width: innerWidth,
+        cards: Array.from(
+          document.querySelectorAll(
+            '.practice-question,.adventure-summary,.adventure-focus,.drill-review',
+          ),
+        ).map((el) => {
+          const r = el.getBoundingClientRect();
+          return {
+            className: el.className,
+            x: r.x,
+            y: r.y,
+            width: r.width,
+            height: r.height,
+            radius: getComputedStyle(el).borderRadius,
+          };
+        }),
+      }));
+      expect(geometry.overflow, screen).toBe(false);
+      await writeFile(
+        resolve(output, `${screen}-${width}.json`),
+        JSON.stringify(geometry, null, 2),
+      );
+      await page.screenshot({
+        path: resolve(output, `${screen}-${width}.png`),
+        fullPage: true,
+        style: 'nextjs-portal { visibility:hidden; }',
+      });
+    };
+    await page.goto('/student/learn');
+    await expect(page.getByRole('heading', { name: 'Temukan materi belajarmu' })).toBeVisible();
+    await capture('catalog');
+    await page.goto(`/student/learn/${chapterId}`);
+    await expect(page.getByRole('link', { name: /Persamaan fixture/ })).toBeVisible();
+    await capture('chapter');
+    await page.goto(`/student/learn/${chapterId}/${subchapterId}`);
+    await expect(
+      page.locator('.adventure-focus').getByRole('heading', { name: 'Bentuk Kuadrat Sempurna' }),
+    ).toBeVisible();
+    expect(await page.locator('.level-path__step--locked button').count()).toBe(0);
+    await capture('level-map');
+    await page.goto(`/student/drill/${attemptId}`);
+    await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();
+    await expect(page.getByRole('radio').first()).toBeChecked();
+    await capture('drill');
+    await page.getByLabel('Tandai Ragu-ragu').check();
+    await page.getByRole('button', { name: 'Soal 10, terjawab', exact: true }).click();
+    await page.getByRole('button', { name: 'Kirim Drill' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Kumpulkan Latihan Sekarang?' });
+    await expect(dialog).toBeVisible();
+    expect(submits).toBe(0);
+    await capture('submit-dialog');
+    await page.keyboard.press('Escape');
+    await expect(dialog).not.toBeVisible();
+    await expect(page.getByRole('button', { name: 'Kirim Drill' })).toBeFocused();
+    await page.goto(`/student/drill/${attemptId}/result`);
+    await expect(page.getByText('Tuntas', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Pembahasan soal 3, salah' }).click();
+    await expect(page.getByText('Soal #3', { exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Rekomendasi video' })).toHaveCount(0);
+    await capture('result');
+  });
+}
+
+for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
+  test(`Tryout visual evidence at ${width}px keeps package eligibility and released results separate`, async ({
+    page,
+  }) => {
+    await fixtures(page);
+    await page.setViewportSize({ width, height: width < 700 ? 1000 : 1040 });
+    const folder = resolve(process.cwd(), '../../.tmp/redesign-phase4');
+    await mkdir(folder, { recursive: true });
+    async function capture(name: string) {
+      await page.evaluate(() => window.scrollTo(0, 0));
+      await page.evaluate(() => document.fonts.ready);
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+      ).toBe(true);
+      const bounds = await page
+        .locator('.numora-card, .tryout-catalog-hero')
+        .evaluateAll((elements) =>
+          elements.map((element) => {
+            const rect = element.getBoundingClientRect();
+            return {
+              className: element.className,
+              x: rect.x,
+              y: rect.y,
+              width: rect.width,
+              height: rect.height,
+              radius: getComputedStyle(element).borderRadius,
+            };
+          }),
+        );
+      await writeFile(
+        resolve(folder, `${name}-${width}.json`),
+        JSON.stringify({ width, overflow: false, bounds }, null, 2),
+      );
+      await page.screenshot({
+        path: resolve(folder, `${name}-${width}.png`),
+        fullPage: true,
+        style: 'nextjs-portal { display: none !important; }',
+      });
+    }
+    let state: 'open' | 'inProgress' = 'open';
+    let starts = 0;
+    let submits = 0;
+    let released = false;
+    const selected = new Map<string, string | null>();
+    const questions = Array.from({ length: 35 }, (_, index) => ({
+      questionInstanceId: `99999999-9999-4999-8999-${String(index + 1).padStart(12, '0')}`,
+      stem: 'Diketahui $x^2 + 6x + c = (x + 3)^2$. Nilai konstanta $c$ adalah…',
+      options: [
+        { id: 'A', text: '9' },
+        { id: 'B', text: '6' },
+        { id: 'C', text: '3' },
+        { id: 'D', text: '36' },
+      ],
+      selectedOptionId: index === 5 ? null : 'A',
+    }));
+    const serverNow = Date.now();
+    const title = 'Tryout TKA Matematika SMP 2026 #04';
+    const result = {
+      attemptId,
+      packageTitle: title,
+      score: 85,
+      correctCount: 30,
+      questionCount: 35,
+      explanation: questions.map((question, index) => ({
+        questionInstanceId: question.questionInstanceId,
+        stem: question.stem,
+        selectedOptionId: index === 2 ? 'C' : 'A',
+        correctOptionId: 'A',
+        explanation: 'Identitas $(x+p)^2=x^2+2px+p^2$. Untuk $p=3$, konstanta $c=9$.',
+      })),
+    };
+    await page.route('http://localhost:3301/api/v1/tryout/**', async (route) => {
+      const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
+      if (path === '/tryout/packages/current')
+        return route.fulfill({
+          json: {
+            id: chapterId,
+            title,
+            releaseAt: '2026-09-27T17:00:00Z',
+            state,
+            eligible: state === 'open',
+            attemptId: state === 'open' ? null : attemptId,
+            questionCount: 35,
+            durationSeconds: 4800,
+          },
+        });
+      if (path === '/tryout/attempts') {
+        starts++;
+        state = 'inProgress';
+        return route.fulfill({ json: { id: attemptId } });
+      }
+      if (path === `/tryout/attempts/${attemptId}`)
+        return route.fulfill({
+          json: {
+            id: attemptId,
+            packageId: chapterId,
+            packageTitle: title,
+            status: 'inProgress',
+            serverTime: new Date(serverNow).toISOString(),
+            deadlineAt: new Date(serverNow + 4800_000).toISOString(),
+            questions: questions.map((question) => ({
+              ...question,
+              selectedOptionId: selected.has(question.questionInstanceId)
+                ? selected.get(question.questionInstanceId)
+                : question.selectedOptionId,
+            })),
+          },
+        });
+      if (path.includes('/answers/')) {
+        const id = path.split('/').at(-1)!;
+        const { optionId } = route.request().postDataJSON();
+        selected.set(id, optionId);
+        return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: optionId } });
+      }
+      if (path.endsWith('/submit')) {
+        submits++;
+        return route.fulfill({ json: { state: 'waitingIrt' } });
+      }
+      if (path.endsWith('/result'))
+        return released
+          ? route.fulfill({ json: result })
+          : route.fulfill({
+              status: 409,
+              json: { code: 'TRYOUT_RESULT_PENDING', detail: 'Hasil belum dirilis' },
+            });
+      return route.fallback();
+    });
+    await page.route('http://localhost:3301/api/v1/students/me/progress', (route) =>
+      route.fulfill({ json: { completedLevels: 14, totalLevels: 20, latestScore: 90 } }),
+    );
+    await page.route('http://localhost:3301/api/v1/students/me/assessment-results*', (route) =>
+      route.fulfill({
+        json: {
+          records: [
+            {
+              attemptId,
+              activity: 'tryout',
+              title: 'Tryout Mingguan #03',
+              isDemo: false,
+              submittedAt: '2026-09-28T02:30:00Z',
+              resultState: 'ready',
+              score: 85,
+              xpState: 'pending',
+              starsState: 'notApplicable',
+            },
+            {
+              attemptId: levelId,
+              activity: 'tryout',
+              title: 'Tryout Mingguan #04',
+              isDemo: false,
+              submittedAt: '2026-10-04T02:30:00Z',
+              resultState: 'waitingIrt',
+              score: null,
+            },
+            {
+              attemptId: subchapterId,
+              activity: 'drill',
+              title: 'Faktorisasi Aljabar Kuadrat',
+              chapterTitle: 'Persamaan & Fungsi Kuadrat',
+              subchapterTitle: 'Faktorisasi',
+              levelTitle: 'Level 3',
+              isDemo: false,
+              submittedAt: '2026-10-03T02:30:00Z',
+              resultState: 'ready',
+              score: 90,
+              xpState: 'pending',
+              starsState: 'pending',
+            },
+          ],
+          nextCursor: null,
+        },
+      }),
+    );
+    await page.goto('/student/tryout');
+    await expect(page.getByRole('heading', { name: title })).toBeVisible();
+    await capture('catalog');
+    await page.getByRole('tab', { name: 'Tryout Saya', exact: true }).click();
+    await expect(page.getByRole('link', { name: /Tryout Mingguan #03/ })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Tryout Mingguan #04/ })).toHaveCount(0);
+    await expect(page.getByText('Faktorisasi Aljabar Kuadrat', { exact: true })).toHaveCount(0);
+    await capture('tryout-history');
+    await page.getByRole('tab', { name: 'Berlangsung' }).click();
+    await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+    await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toBeDisabled();
+    await expect(page.getByText('35 butir', { exact: true })).toBeVisible();
+    await expect(page.getByText('80 menit', { exact: true })).toBeVisible();
+    await page.getByLabel('Saya memahami aturan pengerjaan.').check();
+    await capture('detail');
+    await page.getByRole('button', { name: 'Kembali ke katalog Tryout' }).click();
+    await expect(page.getByRole('button', { name: 'Detail dan aturan paket' })).toBeFocused();
+    await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+    await expect(page.getByLabel('Saya memahami aturan pengerjaan.')).not.toBeChecked();
+    await page.getByLabel('Saya memahami aturan pengerjaan.').check();
+    await page.getByRole('button', { name: 'Mulai TryOut' }).click();
+    await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
+    expect(starts).toBe(1);
+    const navigator = page.getByRole('navigation', { name: 'Navigasi soal' });
+    await expect(navigator.getByRole('button')).toHaveCount(35);
+    await navigator.getByRole('button', { name: /^Soal 3,/ }).click();
+    await expect(page.getByRole('timer')).toBeVisible();
+    await capture('attempt');
+    await navigator.getByRole('button', { name: /^Soal 35,/ }).click();
+    await page.getByRole('button', { name: 'Kirim TryOut' }).click();
+    const dialog = page.getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
+    await expect(dialog).toBeVisible();
+    expect(submits).toBe(0);
+    await capture('submit-dialog');
+    await dialog.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
+    await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+    expect(submits).toBe(1);
+    await expect(page.getByText('85', { exact: true })).toHaveCount(0);
+    await expect(page.getByText('Jawaban benar:', { exact: false })).toHaveCount(0);
+    await capture('waiting');
+    released = true;
+    await page.getByRole('button', { name: 'Periksa status hasil' }).click();
+    await expect(page.getByText('85', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
+    await capture('result');
+    await page.goto('/student/assessment');
+    await expect(page.getByRole('heading', { name: 'Riwayat aktivitas' })).toBeVisible();
+    await expect(page.getByRole('link', { name: /Faktorisasi Aljabar Kuadrat/ })).toBeVisible();
+    await capture('assessment-history');
   });
 }

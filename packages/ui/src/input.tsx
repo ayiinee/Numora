@@ -27,9 +27,9 @@ export interface InputProps extends Omit<InputHTMLAttributes<HTMLInputElement>, 
 }
 
 const sizeStyles: Record<InputSize, { height: string; padding: string; fontSize: string }> = {
-  sm: { height: '36px', padding: '0 12px', fontSize: 'var(--text-sm)' },
-  md: { height: '44px', padding: '0 14px', fontSize: 'var(--text-base)' },
-  lg: { height: '52px', padding: '0 16px', fontSize: 'var(--text-lg)' },
+  sm: { height: 'var(--touch-target-min)', padding: '0 12px', fontSize: 'var(--text-sm)' },
+  md: { height: 'var(--touch-target-min)', padding: '0 14px', fontSize: 'var(--text-base)' },
+  lg: { height: 'var(--control-height-lg)', padding: '0 16px', fontSize: 'var(--text-lg)' },
 };
 
 /**
@@ -153,7 +153,7 @@ export const Input = forwardRef<HTMLInputElement, InputProps>(
               fontSize: sizes.fontSize,
               fontFamily: 'var(--font-sans)',
               color: 'var(--color-text)',
-              background: 'var(--color-surface-raised)',
+              background: 'var(--color-secondary-light)',
               border: `2px solid ${hasError ? 'var(--color-danger)' : 'var(--color-border)'}`,
               borderRadius: 'var(--radius-md)',
               transition: 'border-color var(--transition-fast), box-shadow var(--transition-fast)',
@@ -298,6 +298,7 @@ export const Textarea = forwardRef<HTMLTextAreaElement, TextareaProps>(
           disabled={disabled}
           aria-describedby={error ? errorId : helper ? helperId : undefined}
           aria-invalid={hasError}
+          className="numora-textarea"
           style={{
             ...textareaStyle,
             opacity: disabled ? 0.62 : 1,
@@ -423,6 +424,7 @@ export const Select = forwardRef<HTMLSelectElement, SelectProps>(
           disabled={disabled}
           aria-describedby={error ? errorId : helper ? helperId : undefined}
           aria-invalid={hasError}
+          className="numora-select"
           style={{
             width: '100%',
             height: sizes.height,

@@ -3,10 +3,11 @@
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 
-import { Button } from '@tka/ui';
+import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { AppShell } from '@/components/shell';
+import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
 import {
+  ApiProblem,
   createSchool,
   issueTeacherToken,
   listAdminSchools,
@@ -38,6 +39,9 @@ function AdminSchoolsScreenContent() {
   const [name, setName] = useState('');
   const [editName, setEditName] = useState('');
   const [error, setError] = useState('');
+  const [schoolError, setSchoolError] = useState('');
+  const [tokenError, setTokenError] = useState('');
+  const [accessError, setAccessError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
@@ -49,12 +53,17 @@ function AdminSchoolsScreenContent() {
   useEffect(() => {
     if (!token) return;
     let active = true;
+    setSchoolError('');
     listAdminSchools(token).then(
       (result) => {
         if (active) setSchools(result.items);
       },
       (cause: unknown) => {
-        if (active) setError(message(cause));
+        if (active) {
+          setSchoolError(message(cause));
+          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
+            setAccessError(true);
+        }
       },
     );
     return () => {
@@ -64,12 +73,17 @@ function AdminSchoolsScreenContent() {
   useEffect(() => {
     if (!token || !selected) return;
     let active = true;
+    setTokenError('');
     listTeacherTokens(token, selected).then(
       (result) => {
         if (active) setTokens(result.items);
       },
       (cause: unknown) => {
-        if (active) setError(message(cause));
+        if (active) {
+          setTokenError(message(cause));
+          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
+            setAccessError(true);
+        }
       },
     );
     return () => {
@@ -78,6 +92,7 @@ function AdminSchoolsScreenContent() {
   }, [token, selected, revision]);
   const current = schools?.find((school) => school.id === selected);
   async function run(action: () => Promise<unknown>) {
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
@@ -85,6 +100,7 @@ function AdminSchoolsScreenContent() {
       setRevision((value) => value + 1);
     } catch (cause) {
       setError(message(cause));
+      if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setAccessError(true);
     } finally {
       setBusy(false);
     }
@@ -95,6 +111,9 @@ function AdminSchoolsScreenContent() {
     await run(async () => {
       const created = await createSchool(token, code.trim(), name.trim());
       setSelected(created.id);
+      setEditName(name.trim());
+      setIssued(null);
+      setTokens(null);
       setCode('');
       setName('');
     });
@@ -104,192 +123,291 @@ function AdminSchoolsScreenContent() {
     if (token && current && editName.trim())
       await run(() => updateSchool(token, current.id, { name: editName.trim() }));
   }
-  if (!token)
+  const retry = () => {
+    setAccessError(false);
+    setError('');
+    setRevision((value) => value + 1);
+  };
+  const frame = {
+    title: 'Sekolah dan token Guru',
+    description: 'Kelola sekolah dan akses verifikasi guru pendamping.',
+    icon: 'school' as const,
+  };
+  if (!token || accessError)
     return (
-      <AppShell area="admin">
-        <p role="status">{state.status === 'error' ? state.message : 'Memeriksa akses Admin…'}</p>
-        <Button onClick={() => void refresh()}>Periksa lagi</Button>
-      </AppShell>
+      <AdminFrame {...frame}>
+        {state.status === 'loading' ? (
+          <AdminLoading message="Memeriksa akses Admin…" />
+        ) : (
+          <AdminMessage
+            error
+            message={
+              accessError
+                ? error || schoolError || tokenError || 'Akses Admin belum tersedia.'
+                : state.status === 'error'
+                  ? (state.message ?? 'Akun belum dapat diperiksa.')
+                  : 'Halaman ini hanya tersedia untuk Admin yang aktif.'
+            }
+            login
+            retry={() => {
+              retry();
+              void refresh();
+            }}
+          />
+        )}
+      </AdminFrame>
     );
   return (
-    <AppShell area="admin">
-      <div className="monitoring-frame">
-        <div className="monitoring-heading">
-          <span className="eyebrow">Operasional sekolah</span>
-          <h1>Sekolah dan token Guru</h1>
-          <p>
-            Kelola sekolah serta token verifikasi yang berlaku 3×24 jam dan hanya dapat dipakai
-            sekali.
-          </p>
-        </div>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        {schools === null ? (
-          <p role="status">Memuat sekolah…</p>
-        ) : (
-          <>
-            <form
-              className="monitoring-notice monitoring-create"
-              onSubmit={(event) => void addSchool(event)}
-            >
+    <AdminFrame {...frame}>
+      {error && <AdminMessage error message={error} />}
+      {schools && (
+        <AdminStats
+          items={[
+            { label: 'Sekolah terdaftar', value: schools.length, icon: 'school' },
+            {
+              label: 'Sekolah aktif',
+              value: schools.filter((s) => s.status === 'ACTIVE').length,
+              icon: 'check',
+            },
+          ]}
+        />
+      )}
+      <div className="admin-schools-layout">
+        <div className="admin-schools-main">
+          <Card className="admin-card admin-create-school">
+            <div className="admin-section-heading">
+              <Icon name="school" />
               <h2>Tambah sekolah</h2>
-              <label htmlFor="school-code">Kode sekolah</label>
-              <input
-                className="text-input"
-                id="school-code"
-                value={code}
-                onChange={(event) => setCode(event.target.value)}
-                minLength={2}
-                maxLength={32}
-                pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
-                required
-              />
-              <label htmlFor="school-name">Nama sekolah</label>
-              <input
-                className="text-input"
-                id="school-name"
-                value={name}
-                onChange={(event) => setName(event.target.value)}
-                maxLength={120}
-                required
-              />
-              <Button className="primary-button" type="submit" disabled={busy}>
-                Simpan sekolah
-              </Button>
+            </div>
+            <p className="admin-helper">Daftarkan sekolah sebelum menerbitkan token guru.</p>
+            <form onSubmit={(event) => void addSchool(event)}>
+              <fieldset disabled={busy} className="admin-form-fields">
+                <Input
+                  label="Kode sekolah"
+                  id="school-code"
+                  value={code}
+                  onChange={(event) => setCode(event.target.value)}
+                  minLength={2}
+                  maxLength={32}
+                  pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+                  required
+                  helper="Huruf/angka dan tanda hubung; kapitalisasi tetap disimpan."
+                />
+                <Input
+                  label="Nama sekolah"
+                  id="school-name"
+                  value={name}
+                  onChange={(event) => setName(event.target.value)}
+                  maxLength={120}
+                  required
+                />
+                <Button type="submit" disabled={busy} fullWidth>
+                  Simpan sekolah
+                </Button>
+              </fieldset>
             </form>
-            {schools.length === 0 && <p className="monitoring-notice">Belum ada sekolah.</p>}
-            <ul className="monitoring-list">
-              {schools.map((school) => (
-                <li key={school.id}>
-                  <button
-                    className="monitoring-row"
-                    type="button"
-                    onClick={() => {
-                      setSelected(school.id);
-                      setEditName(school.name);
-                      setIssued(null);
-                      setTokens(null);
-                    }}
-                  >
-                    <span>
-                      <strong>{school.name}</strong>
-                      <small>
-                        {school.code} · {school.status}
-                      </small>
-                    </span>
-                    <span aria-hidden="true">→</span>
-                  </button>
-                </li>
-              ))}
-            </ul>
-          </>
-        )}
-        {current && (
-          <section className="monitoring-notice monitoring-admin-detail">
-            <h2>{current.name}</h2>
-            <p>Status: {current.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}</p>
-            <form onSubmit={(event) => void saveName(event)}>
-              <label htmlFor="edit-school-name">Ubah nama</label>
-              <input
-                className="text-input"
-                id="edit-school-name"
-                value={editName}
-                onChange={(event) => setEditName(event.target.value)}
-                maxLength={120}
-                required
-              />
-              <Button className="secondary-button" type="submit" disabled={busy}>
-                Simpan nama
-              </Button>
-            </form>
-            <Button
-              className="secondary-button"
-              disabled={busy}
-              onClick={() =>
-                void run(() =>
-                  updateSchool(token, current.id, {
-                    status: current.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                  }),
-                )
-              }
-            >
-              {current.status === 'ACTIVE' ? 'Nonaktifkan sekolah' : 'Aktifkan sekolah'}
-            </Button>
-            <h3>Token Guru</h3>
-            <Button
-              className="primary-button"
-              disabled={busy || current.status !== 'ACTIVE'}
-              onClick={() =>
-                void run(async () => setIssued(await issueTeacherToken(token, current.id)))
-              }
-            >
-              Terbitkan token
-            </Button>
-            {issued && (
-              <p className="monitoring-token" role="status">
-                Token baru (ditampilkan hanya kali ini): <code>{issued.token}</code>. Berlaku sampai{' '}
-                {new Date(issued.expiresAt).toLocaleString('id-ID')}.
-              </p>
-            )}
-            {tokens === null ? (
-              <p role="status">Memuat token…</p>
-            ) : tokens.length === 0 ? (
-              <p>Belum ada token.</p>
+          </Card>
+          <section className="admin-school-list" aria-label="Daftar sekolah">
+            <div className="admin-section-heading">
+              <h2>Sekolah terdaftar</h2>
+              {schools && <Badge variant="default">{schools.length} sekolah</Badge>}
+            </div>
+            {schoolError ? (
+              <AdminMessage error message={schoolError} retry={retry} />
+            ) : schools === null ? (
+              <AdminLoading message="Memuat sekolah…" />
+            ) : !schools.length ? (
+              <Card className="admin-card">
+                <EmptyState
+                  title="Belum ada sekolah."
+                  description="Gunakan formulir di atas untuk mendaftarkan sekolah pertama."
+                />
+              </Card>
             ) : (
-              <ul className="monitoring-list">
-                {tokens.map((item) => (
-                  <li className="monitoring-row" key={item.id}>
-                    <span>
-                      <strong>{item.id}</strong>
-                      <small>
-                        {item.usedAt
-                          ? 'Terpakai'
-                          : item.revokedAt
-                            ? 'Dicabut'
-                            : new Date(item.expiresAt) <= new Date()
-                              ? 'Kedaluwarsa'
-                              : 'Belum dipakai'}
-                      </small>
-                      <small>Kedaluwarsa {new Date(item.expiresAt).toLocaleString('id-ID')}</small>
-                    </span>
-                    {!item.usedAt && !item.revokedAt && (
-                      <span className="monitoring-token-actions">
-                        <Button
-                          className="secondary-button"
-                          disabled={busy}
-                          onClick={() =>
-                            void run(async () =>
-                              setIssued(await reissueTeacherToken(token, current.id, item.id)),
-                            )
-                          }
-                        >
-                          Terbit ulang
-                        </Button>
-                        <Button
-                          className="secondary-button"
-                          disabled={busy}
-                          onClick={() =>
-                            void run(async () => {
-                              await revokeTeacherToken(token, current.id, item.id);
-                              setIssued(null);
-                            })
-                          }
-                        >
-                          Cabut
-                        </Button>
+              <ul className="admin-school-rows">
+                {schools.map((school) => (
+                  <li key={school.id}>
+                    <button
+                      className="admin-school-row"
+                      type="button"
+                      disabled={busy}
+                      aria-pressed={selected === school.id}
+                      onClick={() => {
+                        setSelected(school.id);
+                        setEditName(school.name);
+                        setIssued(null);
+                        setTokens(null);
+                        setTokenError('');
+                      }}
+                    >
+                      <span className="admin-school-icon">
+                        <Icon name="school" />
                       </span>
-                    )}
+                      <span className="admin-school-name">
+                        <strong>{school.name}</strong>
+                        <small>{school.code}</small>
+                        <Badge variant={school.status === 'ACTIVE' ? 'success' : 'default'}>
+                          {school.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}
+                        </Badge>
+                      </span>
+                      <Icon name="chevron" width="20" height="20" />
+                    </button>
                   </li>
                 ))}
               </ul>
             )}
           </section>
-        )}
+        </div>
+        <aside className="admin-school-context" aria-label="Detail sekolah dan token">
+          {current ? (
+            <Card className="admin-card admin-school-detail">
+              <span className="admin-eyebrow">Sekolah dipilih</span>
+              <h2>{current.name}</h2>
+              <p>Status: {current.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}</p>
+              <form onSubmit={(event) => void saveName(event)}>
+                <fieldset disabled={busy} className="admin-form-fields">
+                  <Input
+                    label="Ubah nama"
+                    id="edit-school-name"
+                    value={editName}
+                    onChange={(event) => setEditName(event.target.value)}
+                    maxLength={120}
+                    required
+                  />
+                  <Button variant="secondary" type="submit" disabled={busy} fullWidth>
+                    Simpan nama
+                  </Button>
+                </fieldset>
+              </form>
+              <Button
+                variant={current.status === 'ACTIVE' ? 'danger-outline' : 'secondary'}
+                disabled={busy}
+                fullWidth
+                onClick={() =>
+                  void run(() =>
+                    updateSchool(token, current.id, {
+                      status: current.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
+                    }),
+                  )
+                }
+              >
+                {current.status === 'ACTIVE' ? 'Nonaktifkan sekolah' : 'Aktifkan sekolah'}
+              </Button>
+              <div className="admin-token-section">
+                <div className="admin-section-heading">
+                  <Icon name="lock" />
+                  <h3>Token Guru</h3>
+                </div>
+                <p className="admin-helper">
+                  Single-use · Berlaku 3×24 jam. Token baru ditampilkan sekali.
+                </p>
+                <Button
+                  disabled={busy || current.status !== 'ACTIVE'}
+                  fullWidth
+                  leftIcon={<Icon name="lock" width="18" height="18" />}
+                  onClick={() =>
+                    void run(async () => setIssued(await issueTeacherToken(token, current.id)))
+                  }
+                >
+                  Terbitkan token
+                </Button>
+                {current.status !== 'ACTIVE' && (
+                  <p className="admin-helper">Aktifkan sekolah untuk menerbitkan token baru.</p>
+                )}
+                {issued && (
+                  <div className="admin-issued-token" role="status">
+                    <strong>Token baru (ditampilkan hanya kali ini)</strong>
+                    <code>{issued.token}</code>
+                    <p>
+                      Berlaku sampai{' '}
+                      {new Date(issued.expiresAt).toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                      })}{' '}
+                      WIB.
+                    </p>
+                  </div>
+                )}
+                {tokenError ? (
+                  <AdminMessage error message={tokenError} retry={retry} />
+                ) : tokens === null ? (
+                  <AdminLoading message="Memuat token…" />
+                ) : !tokens.length ? (
+                  <p className="admin-empty-inline">Belum ada token.</p>
+                ) : (
+                  <ul className="admin-token-list">
+                    {tokens.map((item) => (
+                      <li key={item.id} className="admin-token-row">
+                        <div>
+                          <Badge
+                            variant={
+                              item.usedAt ||
+                              item.revokedAt ||
+                              new Date(item.expiresAt) <= new Date()
+                                ? 'default'
+                                : 'success'
+                            }
+                          >
+                            {item.usedAt
+                              ? 'Terpakai'
+                              : item.revokedAt
+                                ? 'Dicabut'
+                                : new Date(item.expiresAt) <= new Date()
+                                  ? 'Kedaluwarsa'
+                                  : 'Belum dipakai'}
+                          </Badge>
+                          <small className="admin-token-id">{item.id}</small>
+                          <small>
+                            Kedaluwarsa{' '}
+                            {new Date(item.expiresAt).toLocaleString('id-ID', {
+                              timeZone: 'Asia/Jakarta',
+                            })}{' '}
+                            WIB
+                          </small>
+                        </div>
+                        {!item.usedAt && !item.revokedAt && (
+                          <div className="admin-content-actions">
+                            <Button
+                              variant="secondary"
+                              disabled={busy}
+                              onClick={() =>
+                                void run(async () =>
+                                  setIssued(await reissueTeacherToken(token, current.id, item.id)),
+                                )
+                              }
+                            >
+                              Terbit ulang
+                            </Button>
+                            <Button
+                              variant="danger-outline"
+                              disabled={busy}
+                              onClick={() =>
+                                void run(async () => {
+                                  await revokeTeacherToken(token, current.id, item.id);
+                                  setIssued(null);
+                                })
+                              }
+                            >
+                              Cabut
+                            </Button>
+                          </div>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                )}
+              </div>
+            </Card>
+          ) : (
+            <Card className="admin-card admin-school-prompt">
+              <EmptyState
+                title="Pilih sekolah"
+                description="Buka salah satu sekolah untuk mengubah nama, status, atau mengelola token guru."
+              />
+            </Card>
+          )}
+        </aside>
       </div>
-    </AppShell>
+    </AdminFrame>
   );
 }
 

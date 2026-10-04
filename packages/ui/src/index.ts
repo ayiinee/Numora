@@ -10,6 +10,10 @@
 // ============================================
 
 export { Button, IconButton, buttonStyles } from './button';
+export { Dialog } from './dialog';
+export type { DialogProps } from './dialog';
+export { Tabs } from './tabs';
+export type { TabsProps, TabItem } from './tabs';
 export type { ButtonProps, ButtonVariant, ButtonSize } from './button';
 export type { IconButtonProps, IconButtonVariant, IconButtonSize } from './button';
 

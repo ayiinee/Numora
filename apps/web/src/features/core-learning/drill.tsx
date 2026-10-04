@@ -1,7 +1,9 @@
 'use client';
 
 import Link from 'next/link';
-import { Icon } from '@tka/ui';
+import { Card, Icon, ProgressBar } from '@tka/ui';
+import { AssessmentHeader } from './assessment-presentation';
+import { DrillReview } from './drill-review';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
@@ -9,21 +11,13 @@ import { useLearningView } from './learning-interactions';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
-import {
-  DataState,
-  LearningFrame,
-  MathText,
-  Panel,
-  PrimaryButton,
-  Status,
-  StudentGate,
-} from './ui';
+import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
 import { QUESTION_REPORT_CATEGORIES, RecommendedVideos, ReportForm } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Drill" focus>
+    <LearningFrame title="Drill" focus className="learning-practice-shell">
       <StudentGate>{(token) => <DrillData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
@@ -79,6 +73,7 @@ function DrillForm({
 }) {
   return (
     <AssessmentSession
+      redesign
       title={attempt.levelTitle}
       questions={attempt.questions}
       headerExtra={<DrillTimer startedAt={attempt.startedAt} />}
@@ -115,7 +110,8 @@ function DrillTimer({ startedAt }: { startedAt: string }) {
   const elapsed = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
   return (
     <span aria-label="Waktu berjalan">
-      Waktu {Math.floor(elapsed / 60)}:{String(elapsed % 60).padStart(2, '0')}
+      <Icon name="clock" width={14} height={14} /> {Math.floor(elapsed / 60)}:
+      {String(elapsed % 60).padStart(2, '0')}
     </span>
   );
 }
@@ -123,13 +119,14 @@ function DrillTimer({ startedAt }: { startedAt: string }) {
 export function ResultScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Hasil Drill">
+    <LearningFrame title="Hasil Drill" focus className="learning-practice-shell">
       <StudentGate>{(token) => <ResultData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
 }
 
 function ResultData({ token, attemptId }: { token: string; attemptId: string }) {
+  const [selected, setSelected] = useState(0);
   const query = useQuery({
     queryKey: ['result', attemptId],
     queryFn: () => learningApi.result(token, attemptId),
@@ -145,66 +142,85 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const result = query.data;
+  const question = result.questions[selected];
   return (
-    <div className="space-y-5">
+    <div className="practice-session drill-result">
+      <AssessmentHeader
+        progressLabel="Latihan selesai"
+        title="Hasil Latihan Level"
+        status={<span>Hasil tersimpan</span>}
+        progress={100}
+      />
       {result.isDemo && (
-        <p className="rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-950">
-          Hasil latihan demo, bukan ukuran kemampuan TKA resmi.
-        </p>
+        <p className="demo-notice">Hasil latihan demo, bukan ukuran kemampuan TKA resmi.</p>
       )}
-      <ResultSummary result={result} />
-      <StartDrill token={token} levelId={result.levelId} retry />
-      {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
-      <RecommendedVideos token={token} attemptId={attemptId} />
-      <h2 className="text-xl font-bold">Pembahasan</h2>
-      {result.explanationState === 'expired' ? (
-        <Status title="Pembahasan tidak tersedia">
-          Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di server.
-          Nilai dan riwayat hasil tetap tersimpan.
-        </Status>
-      ) : (
-        result.questions.map((q, index) => (
-          <Panel key={q.questionInstanceId}>
-            <h3 className="font-bold">
-              Soal {index + 1}: <MathText value={q.stem} />
-            </h3>
-            <p className="mt-3 text-sm">
-              Jawabanmu:{' '}
-              {q.selectedOptionId ? (
-                <>
-                  {q.selectedOptionId}.{' '}
-                  <MathText
-                    value={q.options.find((option) => option.id === q.selectedOptionId)?.text ?? ''}
+      <div className="drill-result__layout">
+        <div className="drill-result__summary">
+          <ResultSummary result={result} />
+          <Card className="drill-rewards">
+            <h2>
+              <Icon name="spark" />
+              Rincian XP & Poin
+            </h2>
+            <div className="drill-rewards__stats">
+              <div>
+                <span>Jawaban benar</span>
+                <strong>
+                  {result.correctCount} / {result.questionCount} Soal
+                </strong>
+              </div>
+              <div>
+                <span>Poin mentah</span>
+                <strong>{result.rawPoints}</strong>
+              </div>
+            </div>
+            <p>
+              XP belum tersedia. Formula reward menunggu persetujuan; nilai akademik tetap
+              tersimpan.
+            </p>
+          </Card>
+        </div>
+        <div className="drill-result__review">
+          {result.explanationState === 'expired' ? (
+            <Status title="Pembahasan tidak tersedia">
+              Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di
+              server. Nilai dan riwayat hasil tetap tersimpan.
+            </Status>
+          ) : (
+            <DrillReview
+              result={result}
+              selected={selected}
+              onSelect={setSelected}
+              report={
+                question && (
+                  <ReportForm
+                    modal
+                    key={question.questionInstanceId}
+                    categories={QUESTION_REPORT_CATEGORIES}
+                    label={`Laporkan soal ${selected + 1}`}
+                    submit={(category, details, clientRequestId) =>
+                      learningApi.reportQuestion(token, {
+                        clientRequestId,
+                        attemptItemId: question.questionInstanceId,
+                        category,
+                        details,
+                      })
+                    }
                   />
-                </>
-              ) : (
-                'Tidak dijawab'
-              )}
-            </p>
-            <p className="mt-1 text-sm">
-              Jawaban benar: {q.correctOptionId}.{' '}
-              <MathText
-                value={q.options.find((option) => option.id === q.correctOptionId)?.text ?? ''}
-              />
-            </p>
-            <p className="mt-3 text-slate-700">
-              <MathText value={q.explanation} />
-            </p>
-            <ReportForm
-              categories={QUESTION_REPORT_CATEGORIES}
-              label={`Laporkan soal ${index + 1}`}
-              submit={(category, details, clientRequestId) =>
-                learningApi.reportQuestion(token, {
-                  clientRequestId,
-                  attemptItemId: q.questionInstanceId,
-                  category,
-                  details,
-                })
+                )
               }
             />
-          </Panel>
-        ))
-      )}
+          )}
+          {!result.mastered && <RecommendedVideos token={token} attemptId={attemptId} />}
+        </div>
+      </div>
+      <div className="drill-result__actions">
+        <StartDrill token={token} levelId={result.levelId} retry />
+        {result.unlockedLevelId && <ContinueDrill token={token} levelId={result.unlockedLevelId} />}
+      </div>
+      <Link className="drill-result__back" href="/student/learn">
+        Kembali ke materi
+      </Link>
     </div>
   );
 }
@@ -242,14 +258,19 @@ function StartDrill({
     }
   }
   return (
-    <Panel>
+    <Panel className="drill-start-action">
       <h2 className="font-bold">{retry ? 'Latih lagi level ini' : 'Lanjutkan level berikutnya'}</h2>
       <p className="my-3 text-sm text-slate-700">
         {retry
           ? 'Attempt baru menyimpan hasil terpisah. Nilai terbaik dan level yang sudah terbuka tetap dipertahankan.'
           : 'Level berikutnya sudah terbuka. Mulai latihan saat paket soal tersedia.'}
       </p>
-      <PrimaryButton disabled={busy} onClick={() => void start()}>
+      <PrimaryButton
+        fullWidth
+        variant={retry ? 'secondary' : 'primary'}
+        disabled={busy}
+        onClick={() => void start()}
+      >
         {busy ? 'Menyiapkan Drill…' : retry ? 'Ulangi level ini' : 'Mulai level berikutnya'}
       </PrimaryButton>
       {error && (
@@ -264,15 +285,12 @@ function StartDrill({
 export function ResultSummary({ result }: { result: DrillResult }) {
   return (
     <Panel className="drill-result-summary">
-      <p className="text-sm font-semibold text-[var(--numora-purple)]">{result.levelTitle}</p>
+      <p className="result-mastery">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
       <div className="result-score">
         {result.score}
-        <small>dari 100</small>
+        <small>/ 100</small>
       </div>
-      <p className="mt-1 text-slate-700">
-        {result.correctCount} dari {result.questionCount} benar · {result.rawPoints} poin mentah
-      </p>
-      <p className="mt-3 font-semibold">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
+      <p className="result-level-title">{result.levelTitle}</p>
       {result.stars !== null && (
         <>
           <div className="result-stars" aria-hidden="true">
@@ -291,14 +309,18 @@ export function ResultSummary({ result }: { result: DrillResult }) {
         <p className="mt-2 font-semibold text-[var(--numora-purple)]">Level berikutnya terbuka.</p>
       )}
       {result.stars === null && (
-        <p className="mt-2">Bintang belum tersedia; kebijakan penilaian menunggu persetujuan.</p>
+        <p className="result-stars-pending">Bintang menunggu kebijakan penilaian.</p>
       )}
-      <p className="mt-2 text-sm text-slate-700">
-        XP belum tersedia. Nilai akademik dan XP dicatat terpisah.
-      </p>
-      <Link className="button-link mt-5" href="/student/learn">
-        Kembali ke materi
-      </Link>
+      <div className="result-threshold">
+        <span>Skor minimal tuntas: 80</span>
+        <strong>Capaian: {result.score}%</strong>
+      </div>
+      <ProgressBar
+        value={result.score}
+        max={100}
+        variant={result.mastered ? 'success' : 'default'}
+        label="Nilai latihan"
+      />
     </Panel>
   );
 }
