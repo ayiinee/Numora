@@ -11,6 +11,7 @@ import { DataState, StudentGate } from './ui';
 import { ChapterCard } from './cards';
 import { LevelPath } from './level-path';
 import { StudentIdentityHeader } from './dashboard-presentation';
+import { PretestCard } from './pretest';
 
 export function CatalogScreen() {
   return (
@@ -107,6 +108,7 @@ function ChapterContent({ token, chapterId }: { token: string; chapterId: string
           <Icon name="book" />
         </span>
       </div>
+      <PretestCard chapterTitle={query.data.chapter.title} state="unavailable" />
       <SectionHeader title="Materi dalam bab ini" />
       {query.data.subchapters.length ? (
         <div className="subchapter-list">
