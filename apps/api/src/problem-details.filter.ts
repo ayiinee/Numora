@@ -4,8 +4,14 @@ import { STATUS_CODES } from 'node:http';
 @Catch()
 export class ProblemDetailsFilter implements ExceptionFilter {
   catch(exception: unknown, host: ArgumentsHost) {
+    const tooLarge =
+      exception instanceof Error && 'type' in exception && exception.type === 'entity.too.large';
     const status =
-      exception instanceof HttpException ? exception.getStatus() : HttpStatus.INTERNAL_SERVER_ERROR;
+      exception instanceof HttpException
+        ? exception.getStatus()
+        : tooLarge
+          ? 413
+          : HttpStatus.INTERNAL_SERVER_ERROR;
     const body = exception instanceof HttpException ? exception.getResponse() : undefined;
     const details =
       typeof body === 'object' && body !== null ? (body as Record<string, unknown>) : {};
@@ -17,7 +23,9 @@ export class ProblemDetailsFilter implements ExceptionFilter {
           : typeof message === 'string'
             ? message
             : exception.message
-        : 'An unexpected error occurred.';
+        : tooLarge
+          ? 'Request body exceeds 2 MiB.'
+          : 'An unexpected error occurred.';
     const request = host.switchToHttp().getRequest<{ url: string }>();
     const response = host.switchToHttp().getResponse<{
       setHeader(name: string, value: string): void;
@@ -35,6 +43,7 @@ export class ProblemDetailsFilter implements ExceptionFilter {
         detail,
         instance: request.url,
         ...(typeof details.code === 'string' ? { code: details.code } : {}),
+        ...(details.code === 'IMPORT_VALIDATION_FAILED' ? { report: details.report } : {}),
       });
   }
 }
