@@ -16,7 +16,7 @@ Entri tambahan Staging dengan hash `21ee101cf8b257b55669138811f66e19829203b89c8b
 
 - Migrasi `packages/database/drizzle/0023_draft_difficulty.sql` melepas NOT NULL difficulty dan menambahkan `question_versions_ready_difficulty_ck`; tidak menghapus/menulis ulang konten.
 - Schema Drizzle serta kontrak draft JSON mengikuti aturan null DRAFT/terisi READY. Respons Admin menyatakan difficulty nullable; form legacy tetap meminta difficulty untuk authoring legacy.
-- Skrip `scripts/prepare-draft-sample-import.mjs` memvalidasi sepuluh sumber, kunci tiga tipe, master/level serta SHA-256/enam gambar lokal, kemudian menghasilkan SQL. Skrip ini **tidak terkoneksi ke database**, tidak membaca env dan bukan endpoint importer Admin umum.
+- Skrip `scripts/prepare-draft-sample-import.mjs` memvalidasi sepuluh sumber, kunci tiga tipe, master/level serta SHA-256/enam gambar lokal, kemudian menghasilkan SQL. Skrip ini **tidak terkoneksi ke database**, tidak membaca env dan bukan endpoint importer Admin umum. Manifest PENDING tetap diterima untuk persiapan DRAFT; manifest hasil upload VERIFIED juga diterima dengan key/receipt yang sesuai.
 
 SQL akan membuat master sampel yang belum ada sebagai DRAFT: 2 bab, 3 subbab, 3 indikator, 3 level sumber. `display_order` baru ditambahkan setelah urutan existing, hanya untuk penempatan teknis demo, bukan persetujuan urutan akademik. Master existing yang sesuai digunakan; nama/slug/pemetaan yang konflik membatalkan seluruh transaksi.
 
@@ -35,6 +35,18 @@ Setiap sampel membuat satu `questions`, satu `question_variants` ORIGINAL dan sa
 | sumber/metadata asli                | sourcePayload pada audit_logs internal, disertai externalId, namespace dan fingerprint |
 
 Marker `[[asset:...]]` menunjuk assetId pada manifest. `assetKeys` masih kosong karena upload belum terkonfirmasi; proposedObjectKey bukan bukti objek tersedia. Enam file PNG tetap di paket repo, tidak dimasukkan sebagai binary database. Bucket tujuan `numora-bucket`.
+
+## Urutan untuk preview bergambar
+
+Untuk mencoba tampilan lengkap, **upload enam gambar lebih dahulu**, lalu hasilkan SQL dari JSON yang sudah menerima receipt backend. Uploader menggunakan API NestJS tim, bukan alamat publik bucket `*.r2.dev`. Token Admin hanya untuk API tim; key R2 tetap di server.
+
+1. Backend memastikan endpoint upload aktif, koneksi R2 siap dan tabel `content_media_uploads` tersedia pada target yang digunakan. Pada branch ini tabel tersebut berasal dari 0021; jangan menerapkan migrasi lama bernomor sama dari branch lain.
+2. Isi `API_BASE_URL` dan token sesi Admin di `.env.media-upload.local` yang diabaikan Git. Ikuti [panduan upload](../api/CONTENT_MEDIA_UPLOADS.md). Jalankan uploader; setiap file harus mendapat receipt VERIFIED.
+3. Uploader mengisi objectKey, uploadId, verifiedAt dan assetKeys sesuai posisi/urutan gambar. Importer kini memeriksa format receipt, planned key, identitas, checksum, dan placement. Klaim `uploadedToR2: true` saja ditolak.
+4. Saat SQL benar-benar dijalankan, setiap receipt dicocokkan dengan baris **VERIFIED pada content_media_uploads di database target yang sama**, termasuk externalId, assetId, versi 1, bucket, key, MIME, ukuran, hash dan verifiedAt. Receipt dari target lain/missing/PENDING membatalkan seluruh batch. Seeder tidak membuat atau memalsukan receipt.
+5. Sesudah impor DRAFT berhasil, backend preview memberi URL baca sementara untuk key terverifikasi; renderer menempatkan gambar sesuai marker dan tiga format. URL publik bucket tidak menggantikan pengecekan hak akses soal/pembahasan.
+
+Perubahan ini belum menjalankan upload nyata. Jangan impor JSON pending lalu mengharapkan seeder menimpa media saat gambar selesai: fingerprint akan berubah dan importer menolak overwrite. Gunakan alur upload-first untuk batch baru; bila soal sudah terimpor, gunakan importer revisi yang direview. Bukti uji lokal memakai receipt TEST ONLY dalam memory, tidak pernah ditulis ke file sampel.
 
 Jejak audit berasal dari operator SQL atas permintaan Reyhan, dengan actor_user_id null (bukan berpura-pura sebagai user Admin aplikasi). Metadata audit hanya untuk operator berwenang. Penyimpanan provenance/identitas impor umum yang durable tetap perlu desain importer versi berikutnya; audit bukan API konten siswa.
 

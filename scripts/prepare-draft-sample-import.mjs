@@ -3,6 +3,7 @@ import { readFile, writeFile } from 'node:fs/promises';
 import { resolve, dirname } from 'node:path';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
+import { verifyReceipt } from './upload-question-media.mjs';
 
 const root = resolve(dirname(fileURLToPath(import.meta.url)), '..');
 const sampleDir = resolve(root, 'docs/data/samples/2026-10-03');
@@ -111,24 +112,57 @@ export async function validateSampleBundle(bundle) {
     if (!Array.isArray(assets) || new Set(assets.map((a) => a.assetId)).size !== assets.length)
       throw new Error('Invalid media manifest');
     const referencedAssets = new Set();
-    for (const rich of [q.stem, q.explanation, ...q.options.map((o) => o.content)]) {
+    const blocks = [
+      { rich: q.stem, placement: 'STEM', itemId: null },
+      { rich: q.explanation, placement: 'EXPLANATION', itemId: null },
+      ...q.options.map((o) => ({
+        rich: o.content,
+        placement: q.type === 'CATEGORY' ? 'STATEMENT' : 'OPTION',
+        itemId: o.id,
+      })),
+    ];
+    for (const { rich, placement, itemId } of blocks) {
       const markers = [...rich.text.matchAll(/\[\[asset:([^\]]+)\]\]/g)].map((m) => m[1]);
-      // Pending draft markers resolve through the manifest; assetKeys receives confirmed R2 keys after upload.
-      if (rich.assetKeys.length)
-        throw new Error('Pending fixture must not claim uploaded asset keys');
+      const expected = assets.filter((a) => a.placement === placement && a.itemId === itemId);
+      const keys = expected
+        .filter((a) => a.uploadedToR2 === true)
+        .sort((a, b) => a.assetOrder - b.assetOrder)
+        .map((a) => a.objectKey);
+      if (JSON.stringify(rich.assetKeys ?? []) !== JSON.stringify(keys))
+        throw new Error('Media keys do not match verified placement/order');
       for (const id of markers) {
-        if (!assets.some((a) => a.assetId === id)) throw new Error('Unresolved asset');
+        if (!expected.some((a) => a.assetId === id))
+          throw new Error('Unresolved or misplaced asset');
         referencedAssets.add(id);
       }
     }
     for (const a of assets) {
       if (
         !referencedAssets.has(a.assetId) ||
-        a.objectKey !== null ||
-        a.uploadedToR2 !== false ||
-        a.bucket !== 'numora-bucket'
+        a.bucket !== 'numora-bucket' ||
+        a.externalId !== q.externalId ||
+        !Number.isInteger(a.assetOrder) ||
+        a.assetOrder < 1
       )
-        throw new Error('Fixture expects referenced pending R2 assets');
+        throw new Error('Invalid referenced R2 asset identity/order');
+      if (a.uploadedToR2 === true) {
+        if (
+          a.uploadStatus !== 'VERIFIED_BY_BACKEND' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-8][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            a.uploadId ?? '',
+          ) ||
+          !Number.isFinite(Date.parse(a.verifiedAt))
+        )
+          throw new Error('Uploaded asset needs a valid backend receipt');
+        verifyReceipt(a, { ...a, status: 'VERIFIED' });
+      } else if (
+        a.uploadedToR2 !== false ||
+        a.objectKey !== null ||
+        a.uploadId != null ||
+        a.verifiedAt != null
+      ) {
+        throw new Error('Pending asset must not claim a final key/receipt');
+      }
       if (!/^images\/[A-Za-z0-9_-]+\.png$/.test(a.fileReference))
         throw new Error('Unsafe asset path');
       const bytes = await readFile(resolve(sampleDir, a.fileReference));
@@ -162,7 +196,7 @@ DO ${blockTag}
 DECLARE
   master jsonb := ${quote(bundle.master)};
   payload jsonb := ${quote(payload)};
-  item jsonb; source jsonb; existing public.question_versions%ROWTYPE;
+  item jsonb; source jsonb; asset jsonb; existing public.question_versions%ROWTYPE;
   chapter_uuid uuid; subchapter_uuid uuid; competency_uuid uuid; level_uuid uuid;
   question_uuid uuid; variant_uuid uuid; version_uuid uuid; n integer;
 BEGIN
@@ -213,6 +247,19 @@ BEGIN
   END LOOP;
   FOR item IN SELECT value FROM jsonb_array_elements(payload) LOOP
     source := item->'source';
+    -- Local JSON is not proof of upload: confirm every claimed receipt on this same database target.
+    FOR asset IN SELECT value FROM jsonb_array_elements(source->'metadata'->'assetManifest') LOOP
+      IF asset->>'uploadedToR2'='true' THEN
+        PERFORM id FROM public.content_media_uploads
+          WHERE id=(asset->>'uploadId')::uuid AND status='VERIFIED'
+            AND external_id=source->>'externalId' AND asset_id=asset->>'assetId'
+            AND content_version=1 AND bucket=asset->>'bucket' AND object_key=asset->>'objectKey'
+            AND content_type=asset->>'contentType' AND byte_length=(asset->>'byteLength')::integer
+            AND sha256=asset->>'sha256' AND verified_at=(asset->>'verifiedAt')::timestamptz
+          FOR SHARE;
+        IF NOT FOUND THEN RAISE EXCEPTION 'Media receipt not verified on target: %/%',source->>'externalId',asset->>'assetId'; END IF;
+      END IF;
+    END LOOP;
     SELECT k.id,l.id INTO STRICT competency_uuid,level_uuid FROM public.competencies k
       JOIN public.subchapters s ON s.id=k.subchapter_id JOIN public.chapters c ON c.id=s.chapter_id
       JOIN public.levels l ON l.subchapter_id=s.id AND l.level_number=(source->'metadata'->>'sourceLevelNumber')::integer
@@ -272,6 +319,6 @@ if (process.argv[1] && import.meta.url === pathToFileURL(resolve(process.argv[1]
   const sql = await prepareSampleImport();
   await writeFile(resolve(process.argv[2]), sql, { flag: 'wx' });
   console.log(
-    'Validated 10 DRAFT samples and pending asset checksums; SQL prepared. No database writes.',
+    'Validated 10 DRAFT samples and asset checksums/receipts; SQL prepared. No database writes.',
   );
 }
