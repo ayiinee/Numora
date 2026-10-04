@@ -1,7 +1,28 @@
-import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Inject,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  Query,
+  Req,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiHeader,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IrtService } from './irt.service';
-import { AdminGuard } from '../identity/admin.guard';
+import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import { IrtRequestsService } from './irt-requests.service';
+import { IrtRequestDto, IrtRequestsDto, PrepareIrtRequestDto } from './irt-requests.dto';
 import { ContentPageDto } from '../content/content.dto';
 
 export class AdminIrtItemDto {
@@ -34,13 +55,46 @@ export class AdminIrtBatchesDto {
   @ApiProperty({ type: [AdminIrtBatchDto] }) items!: AdminIrtBatchDto[];
 }
 
-// Read existing batch output only. Model configuration/computation remains OPEN-12/18.
+// Legacy readers and v3 operational handoff. Scientific configuration/publication remains OPEN-12/18.
 @ApiTags('admin-irt')
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
 @Controller('admin/irt')
 export class IrtController {
-  constructor(@Inject(IrtService) private readonly irt: IrtService) {}
+  constructor(
+    @Inject(IrtService) private readonly irt: IrtService,
+    @Inject(IrtRequestsService) private readonly requests: IrtRequestsService,
+  ) {}
+  @Post('requests')
+  @ApiHeader({ name: 'Idempotency-Key', required: true })
+  @ApiCreatedResponse({ type: IrtRequestDto })
+  prepare(
+    @Req() request: AdminRequest,
+    @Headers('idempotency-key') key: string | undefined,
+    @Body() input: PrepareIrtRequestDto,
+  ) {
+    return this.requests.prepare(request.adminId, key ?? '', input);
+  }
+  @Get('requests')
+  @ApiOkResponse({ type: IrtRequestsDto })
+  requestList(@Query() page: ContentPageDto) {
+    return this.requests.list(page);
+  }
+  @Get('requests/:id')
+  @ApiOkResponse({ type: IrtRequestDto })
+  requestDetail(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.detail(id);
+  }
+  @Post('requests/:id/retry')
+  @ApiHeader({ name: 'Idempotency-Key', required: true })
+  @ApiCreatedResponse({ type: IrtRequestDto })
+  retry(
+    @Req() request: AdminRequest,
+    @Headers('idempotency-key') key: string | undefined,
+    @Param('id', new ParseUUIDPipe()) id: string,
+  ) {
+    return this.requests.retry(request.adminId, key ?? '', id);
+  }
   @Get()
   @ApiOkResponse({ type: AdminIrtDto })
   list(@Query() page: ContentPageDto) {

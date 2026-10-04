@@ -4,6 +4,7 @@ import { checkDatabaseConnection, closeDatabaseConnection } from '@tka/database'
 import { drainOutboxBatch, outboxStatus } from './outbox.js';
 import { projectClassLeaderboard } from './class-leaderboard.js';
 import { recoverOverdueTryouts, type RecoveryCursor } from './tryout-recovery.js';
+import { createIrtQueue, pollIrtV3 } from './irt-v3.js';
 
 const OPERATION_TIMEOUT_MS = 5_000;
 const ERROR_LOG_INTERVAL_MS = 60_000;
@@ -33,6 +34,9 @@ async function bounded<T>(operation: Promise<T>): Promise<T> {
 export async function runWorker(exit: (code: number) => void = (code) => process.exit(code)) {
   let connection: Redis | undefined;
   let worker: Worker | undefined;
+  let irtQueue: ReturnType<typeof createIrtQueue> | undefined;
+  let irtTimer: ReturnType<typeof setInterval> | undefined;
+  let irtBusy = false;
   let outboxTimer: ReturnType<typeof setInterval> | undefined;
   let leaderboardTimer: ReturnType<typeof setTimeout> | undefined;
   let tryoutTimer: ReturnType<typeof setInterval> | undefined;
@@ -51,6 +55,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     stopping = true;
     if (outboxTimer) clearInterval(outboxTimer);
     if (tryoutTimer) clearInterval(tryoutTimer);
+    if (irtTimer) clearInterval(irtTimer);
     if (leaderboardTimer) clearTimeout(leaderboardTimer);
     process.off('SIGINT', onSignal);
     process.off('SIGTERM', onSignal);
@@ -59,8 +64,9 @@ export async function runWorker(exit: (code: number) => void = (code) => process
         await bounded(
           Promise.all([
             worker?.close(force),
+            irtQueue?.close(),
             (async () => {
-              while (outboxBusy || leaderboardBusy || tryoutBusy) {
+              while (outboxBusy || leaderboardBusy || tryoutBusy || irtBusy) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),
@@ -139,6 +145,25 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (stopping) return;
     void worker.run().catch(reportError);
     console.log('[worker] Redis connected; background processing enabled');
+    if (process.env.IRT_V3_ENABLED === 'true') {
+      irtQueue = createIrtQueue(connection, prefix);
+      const pollIrt = async () => {
+        if (stopping || irtBusy) return;
+        irtBusy = true;
+        try {
+          const result = await pollIrtV3(irtQueue!);
+          if (result.notified || result.adopted || result.failed)
+            console.log('[irt-v3] batch', result);
+        } catch (error) {
+          reportError(isRedisQuotaError(error) ? error : new Error('IRT_V3_POLL_FAILED'));
+        } finally {
+          irtBusy = false;
+        }
+      };
+      await pollIrt();
+      if (stopping) return;
+      irtTimer = setInterval(() => void pollIrt(), 5_000);
+    }
 
     const poll = async () => {
       if (stopping || outboxBusy) return;
@@ -183,12 +208,19 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       try {
         const result = await recoverOverdueTryouts(100, recoveryCursor);
         recoveryCursor = result.nextCursor;
-        if (result.finalized || ((result.failed || result.backlog) && Date.now() - lastRecoveryLogAt >= ERROR_LOG_INTERVAL_MS)) {
+        if (
+          result.finalized ||
+          ((result.failed || result.backlog) &&
+            Date.now() - lastRecoveryLogAt >= ERROR_LOG_INTERVAL_MS)
+        ) {
           lastRecoveryLogAt = Date.now();
           console.log('[tryout] recovery', { ...result, nextCursor: undefined });
         }
-      } catch { reportError(new Error('TRYOUT_RECOVERY_FAILED')); }
-      finally { tryoutBusy = false; }
+      } catch {
+        reportError(new Error('TRYOUT_RECOVERY_FAILED'));
+      } finally {
+        tryoutBusy = false;
+      }
     };
     await recover();
     if (stopping) return;

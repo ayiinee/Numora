@@ -1,0 +1,108 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/compute/calibration-payload-v3.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "items"
+  ],
+  "properties": {
+    "items": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "questionVersionId",
+          "rubricVersionId",
+          "modelFamily",
+          "sampleSize",
+          "eligibleRespondentCount",
+          "measurementState",
+          "discriminationA",
+          "difficultyB",
+          "steps",
+          "qualityEvidence"
+        ],
+        "properties": {
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rubricVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "modelFamily": {
+            "enum": [
+              "2PL",
+              "GPCM"
+            ]
+          },
+          "sampleSize": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "eligibleRespondentCount": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "measurementState": {
+            "enum": [
+              "UNCALIBRATED",
+              "INSUFFICIENT",
+              "CALIBRATION_FAILED",
+              "CALIBRATED",
+              "WATCH",
+              "DRIFT",
+              "ANOMALY"
+            ]
+          },
+          "discriminationA": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "difficultyB": {
+            "type": [
+              "number",
+              "null"
+            ]
+          },
+          "steps": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "step",
+                "value",
+                "standardError"
+              ],
+              "properties": {
+                "step": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "value": {
+                  "type": "number"
+                },
+                "standardError": {
+                  "type": [
+                    "number",
+                    "null"
+                  ],
+                  "minimum": 0
+                }
+              }
+            }
+          },
+          "qualityEvidence": {
+            "type": "object"
+          }
+        }
+      }
+    }
+  }
+}

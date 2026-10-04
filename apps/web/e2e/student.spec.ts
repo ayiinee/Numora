@@ -927,6 +927,172 @@ test('joined class affiliation persists after signing out and back in', async ({
   ).toBeVisible();
 });
 
+for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
+  test(`class join link ${joinCode} trims the query and keeps its capitalization`, async ({
+    page,
+  }) => {
+    await fixtures(page);
+    const sent: string[] = [];
+    let identityReads = 0;
+    await page.route('http://localhost:3301/api/v1/classes/join', async (route) => {
+      sent.push((route.request().postDataJSON() as { joinCode: string }).joinCode);
+      await route.fulfill({ json: { joined: true, class: { id: chapterId, name: 'IX fixture' } } });
+    });
+    page.on('request', (request) => {
+      if (new URL(request.url()).pathname === '/api/v1/identity/me') identityReads += 1;
+    });
+
+    await page.goto(`/student/join?code=%20${joinCode}%20`);
+    await expect(page.getByRole('heading', { name: 'Konfirmasi gabung kelas' })).toBeVisible();
+    await expect(page.getByRole('main').getByText(joinCode, { exact: true })).toBeVisible();
+
+    await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+    await expect(page).toHaveURL('http://localhost:3300/student');
+    expect(sent).toEqual([joinCode]);
+    expect(identityReads).toBeGreaterThanOrEqual(2);
+  });
+
+test('class join link reports the server reason for a code that no longer joins', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.goto('/student/join?code=BAD999');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText(
+    'Kode Class tidak valid. Kode bisa salah, kelas sudah diarsipkan, atau sekolah tidak aktif.',
+  );
+  await expect(page.getByRole('main').getByRole('status')).toHaveCount(0);
+});
+
+test('class join link explains the one-class rule without offering a self-transfer', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.route('http://localhost:3301/api/v1/classes/join', async (route) => {
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/problem+json',
+      json: { code: 'ALREADY_IN_CLASS', detail: 'Siswa sudah menjadi anggota Class lain.' },
+    });
+  });
+  await page.goto('/student/join?code=FIX234');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText(
+    'Siswa sudah menjadi anggota Class lain. Satu Siswa hanya boleh aktif pada satu kelas. Keluar atau pindah kelas tidak dapat dilakukan sendiri.',
+  );
+});
+
+for (const [status, code, detail, hint] of [
+  [
+    429,
+    'CODE_ATTEMPT_LIMIT',
+    'Terlalu banyak percobaan kode. Coba lagi setelah jeda.',
+    'Tunggu beberapa saat sebelum mencoba kode lagi.',
+  ],
+  [
+    503,
+    'CODE_LIMITER_UNAVAILABLE',
+    'Verifikasi kode sementara tidak tersedia.',
+    'Pemeriksaan kode sementara tidak tersedia. Coba lagi nanti.',
+  ],
+] as const)
+  test(`class join link keeps the code retryable on ${status}`, async ({ page }) => {
+    await fixtures(page);
+    await page.route('http://localhost:3301/api/v1/classes/join', async (route) => {
+      await route.fulfill({
+        status,
+        contentType: 'application/problem+json',
+        json: { code, detail },
+      });
+    });
+    await page.goto('/student/join?code=FIX234');
+    await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+    await expect(page.getByRole('main').getByRole('alert')).toHaveText(`${detail} ${hint}`);
+    await expect(page.getByRole('button', { name: 'Gabung kelas', exact: true })).toBeEnabled();
+  });
+
+test('class join link refuses a malformed code before any request', async ({ page }) => {
+  await fixtures(page);
+  let joinRequests = 0;
+  page.on('request', (request) => {
+    if (new URL(request.url()).pathname === '/api/v1/classes/join') joinRequests += 1;
+  });
+  await page.goto('/student/join?code=ab!');
+  await expect(page.getByRole('main').getByRole('alert')).toHaveText(
+    'Format kode kelas tidak dikenali.',
+  );
+  await expect(page.getByRole('button', { name: 'Gabung kelas' })).toHaveCount(0);
+  expect(joinRequests).toBe(0);
+});
+
+test('class join link without a code points to the existing manual entry', async ({ page }) => {
+  await fixtures(page);
+  await page.goto('/student/join');
+  await expect(page.getByRole('heading', { name: 'Kode kelas tidak tersedia' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Gabung dengan kode' })).toHaveAttribute(
+    'href',
+    '/student/profile',
+  );
+  await expect(page.getByRole('button', { name: 'Gabung kelas' })).toHaveCount(0);
+});
+
+test('class join link warns an already affiliated Student and stays server-authoritative', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.getByLabel('Kode kelas').fill('FIX234');
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+
+  await page.goto('/student/join?code=QA_LEGACY-CLASS');
+  await expect(
+    page.getByText(
+      'Akunmu sudah terhubung dengan sebuah kelas. Hasil akhir tetap ditentukan server.',
+    ),
+  ).toBeVisible();
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page).toHaveURL('http://localhost:3300/student');
+  await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+});
+
+test('class join link opened while signed out falls back to login and loses the code', async ({
+  page,
+}) => {
+  await fixtures(page);
+  await page.goto('/student/profile');
+  await page.evaluate(() => {
+    localStorage.setItem('test-logged-out', '1');
+    localStorage.removeItem('sb-numora-e2e-auth-token');
+  });
+
+  await page.goto('/student/join?code=FIX234');
+  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+});
+
+for (const width of [320, 390, 1440])
+  test(`class join link at ${width}px is operable by keyboard without horizontal overflow`, async ({
+    page,
+  }, testInfo) => {
+    await page.setViewportSize({ width, height: 900 });
+    await fixtures(page);
+    await page.goto('/student/join?code=FIX234');
+    await expect(page.getByRole('heading', { name: 'Konfirmasi gabung kelas' })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await page.screenshot({ path: testInfo.outputPath(`class-join-${width}.png`), fullPage: true });
+
+    await page.getByRole('button', { name: 'Gabung kelas', exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page).toHaveURL('http://localhost:3300/student');
+    await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+  });
+
 for (const width of [390, 1440]) {
   test(`Teacher class monitoring at ${width}px keeps zero scores and accessible navigation`, async ({
     page,

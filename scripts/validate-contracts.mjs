@@ -8,6 +8,7 @@ const roots = [
   'packages/contracts/questions',
   'packages/contracts/events',
   'packages/contracts/websocket',
+  'packages/contracts/compute',
 ];
 
 export async function loadContractValidators(directories = roots) {

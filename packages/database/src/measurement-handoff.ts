@@ -1,11 +1,14 @@
-import type { Sql } from 'postgres';
+import type { Sql, TransactionSql } from 'postgres';
 import type { ComputeArtifact, CreateAnalysisRequest } from './measurement-contract.js';
 
 /** Main only: the DB trigger creates the request/outbox/delivery atomically. */
-export async function createAnalysisRequest(client: Sql, input: CreateAnalysisRequest) {
+export async function createAnalysisRequest(
+  client: Sql | TransactionSql,
+  input: CreateAnalysisRequest,
+) {
   const [row] = await client<{ id: string; input_digest: string; status: string }[]>`
     INSERT INTO public.analysis_requests(idempotency_key,request_type,context_id,snapshot_id,wave_item_id,package_id,baseline_id,reference_set_id,configuration_pins,input_digest,due_at)
-    VALUES (${input.idempotencyKey},${input.requestType},${input.contextId},${input.snapshotId ?? null},${input.waveItemId ?? null},${input.packageId ?? null},${input.baselineId ?? null},${input.referenceSetId ?? null},${JSON.stringify(input.configurationPins)}::text::jsonb,'',${input.dueAt ?? null})
+    VALUES (${input.idempotencyKey},${input.requestType},${input.contextId},${input.snapshotId ?? null},${input.waveItemId ?? null},${input.packageId ?? null},${input.baselineId ?? null},${input.referenceSetId ?? null},${JSON.stringify(input.configurationPins)}::text::jsonb,'',${input.dueAt instanceof Date ? input.dueAt.toISOString() : (input.dueAt ?? null)}::timestamptz)
     ON CONFLICT(idempotency_key) DO UPDATE SET idempotency_key=EXCLUDED.idempotency_key
       WHERE analysis_requests.input_digest=EXCLUDED.input_digest
     RETURNING id,input_digest,status`;
@@ -19,6 +22,7 @@ export async function claimComputeExecution(
   requestId: string,
   servicePrincipalId: string,
   leaseSeconds = 60,
+  dispatchGeneration?: number,
 ) {
   if (!Number.isInteger(leaseSeconds) || leaseSeconds < 1) throw new Error('INVALID_LEASE');
   return client.begin(async (tx) => {
@@ -27,14 +31,23 @@ export async function claimComputeExecution(
       { status: string }[]
     >`SELECT status FROM public.irt_input_requests_v3 WHERE id=${requestId}`;
     if (!request || ['COMPLETED', 'CANCELLED'].includes(request.status)) return null;
+    const [dispatch] = await tx<{ id: string; generation: number }[]>`
+      SELECT id,generation FROM public.irt_input_dispatches_v3 WHERE request_id=${requestId}
+      ORDER BY generation DESC LIMIT 1`;
+    if (dispatch && dispatch.generation !== dispatchGeneration) return null;
     await tx`UPDATE irt_compute.compute_executions SET status='EXPIRED',finished_at=clock_timestamp(),failure_code='LEASE_EXPIRED'
       WHERE request_id=${requestId} AND status='RUNNING' AND lease_expires_at<=clock_timestamp()`;
     const [active] =
       await tx`SELECT id FROM irt_compute.compute_executions WHERE request_id=${requestId} AND status='RUNNING'`;
     if (active) return null;
+    if (dispatch) {
+      const used =
+        await tx`SELECT id FROM irt_compute.compute_executions WHERE dispatch_id=${dispatch.id}`;
+      if (used.length || request.status !== 'PENDING') return null;
+    }
     const [execution] = await tx<{ id: string; fencing_token: string; attempt_number: number }[]>`
-      INSERT INTO irt_compute.compute_executions(request_id,attempt_number,service_principal_id,lease_expires_at)
-      SELECT ${requestId},coalesce(max(attempt_number),0)+1,${servicePrincipalId},clock_timestamp()+(${leaseSeconds}::text||' seconds')::interval
+      INSERT INTO irt_compute.compute_executions(request_id,attempt_number,service_principal_id,lease_expires_at,dispatch_id)
+      SELECT ${requestId},coalesce(max(attempt_number),0)+1,${servicePrincipalId},clock_timestamp()+(${leaseSeconds}::text||' seconds')::interval,${dispatch?.id ?? null}
       FROM irt_compute.compute_executions WHERE request_id=${requestId}
       RETURNING id,fencing_token,attempt_number`;
     if (!execution) throw new Error('COMPUTE_CLAIM_FAILED');
@@ -90,6 +103,7 @@ export async function acceptComputeExecution(
   expectedInputDigest: string,
 ) {
   return client.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,3))`;
     const [request] = await tx<{ input_digest: string; accepted_execution_id: string | null }[]>`
       SELECT input_digest,accepted_execution_id FROM public.analysis_requests WHERE id=${requestId} FOR UPDATE`;
     if (!request || request.input_digest !== expectedInputDigest)

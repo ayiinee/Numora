@@ -50,11 +50,11 @@ integration('Drill lifecycle against PostgreSQL', () => {
     const catalog = new LearningCatalogService(identity);
     const history = new AssessmentHistoryService(identity, new TryoutReleaseService());
     const [chapter] = await db.insert(chapters).values({
-      code: `TEST-${suffix}`, name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000,
+      code: `TEST-${suffix}`, slug: (`TEST-${suffix}`).toLowerCase(), name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000,
       status: 'READY',
     }).returning({ id: chapters.id });
     const [subchapter] = await db.insert(subchapters).values({
-      chapterId: chapter!.id, code: `SUB-${suffix}`, name: 'Subbab', displayOrder: 1, status: 'READY',
+      chapterId: chapter!.id, code: `SUB-${suffix}`, slug: (`SUB-${suffix}`).toLowerCase(), name: 'Subbab', displayOrder: 1, status: 'READY',
     }).returning({ id: subchapters.id });
     const [firstLevel, nextLevel] = await db.insert(levels).values([1, 2].map((number) => ({
       subchapterId: subchapter!.id, description: null,
