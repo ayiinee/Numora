@@ -91,11 +91,6 @@ jobs:
       - name: Install browser for E2E
         run: pnpm --filter @tka/web exec playwright install --with-deps chromium
 
-      - name: Browser E2E
-        env:
-          DEBUG: pw:webserver
-        run: pnpm --filter @tka/web test:e2e
-
       - name: Connected release chain (real API, PostgreSQL and Redis)
         env:
           PGPASSWORD: test_only
@@ -112,6 +107,11 @@ jobs:
           name: job06-connected-${{ github.sha }}
           path: .tmp/job06-evidence/connected.json
           if-no-files-found: warn
+
+      - name: Browser E2E
+        env:
+          DEBUG: pw:webserver
+        run: pnpm --filter @tka/web test:e2e
 
       - name: Build
         run: pnpm build

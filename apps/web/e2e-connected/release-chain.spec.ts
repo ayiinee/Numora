@@ -98,11 +98,14 @@ async function answer(page: Page, count: number) {
   }
 }
 async function submit(page: Page) {
-  page.once('dialog', (dialog) => dialog.accept());
   const sent = page.waitForResponse(
     (r) => r.request().method() === 'POST' && r.url().endsWith('/submit') && r.status() === 201,
   );
   await page.getByRole('button', { name: 'Kirim Drill', exact: true }).click();
+  await page
+    .getByRole('dialog', { name: 'Kumpulkan Latihan Sekarang?', exact: true })
+    .getByRole('button', { name: 'Ya, Kumpulkan Jawaban', exact: true })
+    .click();
   const result = (await (await sent).json()) as DrillResultDto;
   await expect(page).toHaveURL(new RegExp(`/student/drill/${result.attemptId}/result$`));
   return result;
@@ -195,9 +198,19 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto('/student/profile');
     await student.getByLabel(/^Kode kelas/).fill(cls.joinCode);
     await student.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(student.getByText('Terhubung dengan kelas', { exact: false })).toBeVisible();
+    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText(cls.name, { exact: true }),
+    ).toBeVisible();
     await student.reload();
-    await expect(student.getByText('Terhubung dengan kelas', { exact: false })).toBeVisible();
+    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText(cls.name, { exact: true }),
+    ).toBeVisible();
     expect(
       (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).class?.id,
     ).toBe(cls.id);
@@ -640,8 +653,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
-    mandiri.once('dialog', (dialog) => dialog.accept());
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
+    await mandiri
+      .getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?', exact: true })
+      .getByRole('button', { name: 'Ya, Kumpulkan Jawaban', exact: true })
+      .click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     await expect(
       mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
