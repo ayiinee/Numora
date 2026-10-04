@@ -18,7 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci": "pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "test:checks": "node --test scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs",
+    "test:checks": "node --test scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs scripts/upload-question-media.test.mjs",
     "test:release-chain": "node scripts/test-release-chain.mjs",
     "test:irt-chain": "node scripts/test-irt-chain.mjs",
     "db:generate": "pnpm --filter @tka/database db:generate",
@@ -42,7 +42,8 @@
     "dev:full": "pnpm dev:prepare && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api --filter=@tka/worker",
     "dev:prepare": "pnpm env:check && dotenv -e .env -- pnpm --filter @tka/database build && pnpm --filter @tka/assessment-engine build && pnpm --filter @tka/irt-orchestration build && pnpm db:check",
     "test:local": "dotenv -e .env.test.local -- node scripts/check-test-env.mjs && dotenv -e .env.test.local -- pnpm test",
-    "db:migrate:test": "dotenv -e .env.test.local -- node scripts/check-test-env.mjs && dotenv -e .env.test.local -- pnpm --filter @tka/database db:migrate"
+    "db:migrate:test": "dotenv -e .env.test.local -- node scripts/check-test-env.mjs && dotenv -e .env.test.local -- pnpm --filter @tka/database db:migrate",
+    "media:upload:samples": "node --env-file-if-exists=.env.media-upload.local scripts/upload-question-media.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
