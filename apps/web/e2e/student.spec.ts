@@ -1043,7 +1043,12 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill('FIX234');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('Terhubung dengan kelas')).toBeVisible();
+  await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('IX fixture', { exact: true }),
+  ).toBeVisible();
 
   await page.goto('/student/join?code=QA_LEGACY-CLASS');
   await expect(
@@ -1053,7 +1058,15 @@ test('class join link warns an already affiliated Student and stays server-autho
   ).toBeVisible();
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page).toHaveURL('http://localhost:3300/student');
-  await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+  await expect(
+    page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
+  await expect(
+    page
+      .getByRole('region', { name: 'Profil dan progres' })
+      .getByText('IX fixture', { exact: true }),
+  ).toBeVisible();
 });
 
 test('class join link opened while signed out falls back to login and loses the code', async ({
@@ -1087,10 +1100,18 @@ for (const width of [320, 390, 1440])
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
-    await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+    ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
     ).toBe(true);
+    await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
+    await expect(
+      page
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText('IX fixture', { exact: true }),
+    ).toBeVisible();
   });
 
 for (const width of [390, 1440]) {
