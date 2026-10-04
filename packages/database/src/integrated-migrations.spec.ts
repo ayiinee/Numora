@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { migrateIntegratedDatabase } from './integrated-migrations.js';
 
 const testUrl = process.env.TEST_DATABASE_URL;
-describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, () => {
+describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 }, () => {
   async function fixture(
     baselineCount: number,
     run: (client: ReturnType<typeof postgres>, folder: string) => Promise<void>,

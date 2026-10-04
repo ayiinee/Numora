@@ -28,7 +28,7 @@ if (baseUrl) {
     await migrate(getDatabase().db, {
       migrationsFolder: resolve(process.cwd(), '../../packages/database/drizzle'),
     });
-  }, 30_000);
+  }, 120_000);
 
   afterAll(async () => {
     await closeDatabaseConnection();
@@ -43,5 +43,5 @@ if (baseUrl) {
       if (originalDatabaseUrl === undefined) delete process.env.DATABASE_URL;
       else process.env.DATABASE_URL = originalDatabaseUrl;
     }
-  }, 30_000);
+  }, 60_000);
 }

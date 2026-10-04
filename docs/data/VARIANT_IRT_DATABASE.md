@@ -1,5 +1,7 @@
 # Variant and IRT persistence
 
+**ENGINEERING UPDATE — JOB-10 foundation:** a main-owned immutable dispatch table now authorizes one execution per manual retry generation. `compute_executions.dispatch_id` is nullable for preserved PR #51 history, and canonical batches have a unique source artifact. New `irt_input_dispatches_v3` exposes only dispatch ID/request/generation to compute. [Admin/Redis handoff and runbook](../development/IRT_V3_RUNBOOK.md) implements CALIBRATE_TRYOUT snapshots and atomic evidence/parameter adoption, default off. No respondent score, activation or publication is enabled. Existing migrations are unchanged; 0018 appends schema/guards and preserves legacy v1/v2 and unmanaged PR #51 helper behavior.
+
 **ENGINEERING DECISION — 3 October 2026:** implement the database plan requested by
 Shafwan. [ADR-011](../adr/ADR-011-separated-irt-compute.md) records ownership and migration
 boundaries. The source PDF is `docs/rancangan fitur soal variant dan irt.pdf`.

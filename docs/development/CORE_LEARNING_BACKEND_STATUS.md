@@ -46,6 +46,8 @@ Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setia
 
 ## Tryout dan IRT
 
+**ENGINEERING UPDATE — JOB-10 foundation, 4 October 2026:** implements Admin v3 prepare/list/detail/manual retry, transactional frozen pseudonymous input, immutable dispatch generations, BullMQ notifications recovered from PostgreSQL and atomic evidence/2PL/GPCM parameter adoption based on PR #51. `IRT_V3_ENABLED=false` by default; legacy v1/v2 and Student release gate remain. No respondent grades, parameter activation, publication, fallback or XP. [Runbook and contract](IRT_V3_RUNBOOK.md) describe restricted roles, prerequisites, compute-repository handoff and isolated connected verification. Validation evidence is recorded on the new JOB-10 PR; complete JOB-10, scientific/product approvals, cloud rollout and independent QA remain outstanding.
+
 - [x] Infrastruktur PG untuk paket terbit: akses seluruh Student aktif, rilis Senin 00:00 WIB, satu attempt/paket, resume, save/clear, deadline dari paket, submit idempotent, dan outbox. Migrasi 0006 mencegah dua paket TRYOUT berstatus PUBLISHED pada waktu rilis yang sama.
 - [x] Result dan riwayat menyembunyikan skor/kunci hingga batch SUCCEEDED yang dirilis mencakup seluruh versi soal dengan minimal 30 respons dan status SUFFICIENT.
 - [x] Tes PostgreSQL memakai paket dan model berlabel fixture; tes batas waktu rilis memakai `Asia/Jakarta`.
