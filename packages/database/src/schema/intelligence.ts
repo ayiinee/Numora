@@ -246,7 +246,8 @@ export const irtBatches = pgTable(
       onDelete: 'restrict',
     }),
   },
-  (table) => [index('irt_batches_package_idx').on(table.packageId)],
+  (table) => [index('irt_batches_package_idx').on(table.packageId),
+    uniqueIndex('irt_batches_source_output_uq').on(table.sourceOutputId)],
 ).enableRLS();
 
 export const irtItemResults = pgTable(
