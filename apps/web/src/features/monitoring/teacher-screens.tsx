@@ -4,7 +4,7 @@ import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Badge, Button, Card, EmptyState, Icon, Input, SectionHeader } from '@tka/ui';
+import { Avatar, Button, Card, EmptyState, Icon, Input, SectionHeader, Select } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { TeacherShell } from '@/components/shell';
 import { destination } from '@/features/onboarding/destination';
@@ -15,7 +15,14 @@ import {
   getClassStudents,
   getTeacherClasses,
   getTeacherStudentProgress,
+  ApiProblem,
 } from '@/lib/api';
+import {
+  MonitoredLevelCard,
+  TeacherClassCard,
+  TeacherStudentRow,
+  TeacherWelcome,
+} from './teacher-presentation';
 
 export function TeacherGate({
   children,
@@ -62,6 +69,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   const [name, setName] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const [errorStatus, setErrorStatus] = useState(0);
   const [createdCode, setCreatedCode] = useState('');
   const cache = useQueryClient();
   const query = useQuery({
@@ -73,6 +81,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
     if (!name.trim() || busy) return;
     setBusy(true);
     setError('');
+    setErrorStatus(0);
     try {
       const result = await createTeacherClass(token, name.trim());
       setCreatedCode(result.joinCode);
@@ -80,6 +89,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       await cache.invalidateQueries({ queryKey: ['teacher-classes'] });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
+      setErrorStatus(err instanceof ApiProblem ? err.status : 0);
     } finally {
       setBusy(false);
     }
@@ -90,48 +100,53 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       description="Dampingi setiap langkah belajar siswa."
       teacherName={teacherName}
     >
-      <div className="stack">
-        <section className="teacher-welcome">
-          <span className="icon-tile accent-0">
-            <Icon name="school" />
-          </span>
-          <div>
-            <span className="eyebrow">Ruang guru</span>
-            <h2>Selamat datang, {teacherName}</h2>
-            <p>Buka kelas untuk melihat siswa dan hasil latihan mereka.</p>
-          </div>
-          <Badge variant="success">Guru terverifikasi</Badge>
-        </section>
-        <details className="surface-card create-class">
-          <summary>
-            Buat kelas baru <Icon name="users" />
-          </summary>
-          <form className="inline-form" onSubmit={create}>
-            <Input
-              label="Nama kelas"
-              placeholder="Contoh: IX A"
-              value={name}
-              onChange={(e) => setName(e.target.value)}
-              required
-            />
-            <Button type="submit" disabled={busy || !name.trim()}>
-              {busy ? 'Membuat…' : 'Buat kelas'}
-            </Button>
-          </form>
-        </details>
-        {error && (
-          <p className="form-error" role="alert">
-            {error}
-          </p>
-        )}
-        {createdCode && (
-          <p className="success-message" role="status">
-            Kelas berhasil dibuat. Bagikan kode <strong>{createdCode}</strong> kepada siswa.
-          </p>
-        )}
-        <section>
+      <div className="teacher-dashboard-layout">
+        <TeacherWelcome name={teacherName} count={query.data?.items.length} />
+        <Card className="teacher-create-card">
+          <details className="teacher-create-details">
+            <summary>
+              <span className="icon-tile accent-0">
+                <Icon name="users" />
+              </span>
+              <span>
+                Buat kelas baru<small>Bagikan kode kelas kepada siswa.</small>
+              </span>
+              <Icon name="chevron" />
+            </summary>
+            <form className="teacher-create-form" onSubmit={create}>
+              <Input
+                label="Nama kelas"
+                placeholder="Contoh: IX A"
+                value={name}
+                onChange={(e) => setName(e.target.value)}
+                disabled={busy}
+                required
+              />
+              <Button type="submit" loading={busy} disabled={busy || !name.trim()}>
+                {busy ? 'Membuat…' : 'Buat kelas'}
+              </Button>
+            </form>
+          </details>
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          {errorStatus === 401 && (
+            <Link className="button-link" href="/">
+              Masuk kembali
+            </Link>
+          )}
+          {createdCode && (
+            <p className="teacher-created-code" role="status">
+              <Icon name="check" width={20} height={20} /> Kelas berhasil dibuat. Bagikan kode{' '}
+              <strong>{createdCode}</strong> kepada siswa.
+            </p>
+          )}
+        </Card>
+        <section className="teacher-classes-section">
           <SectionHeader
-            title="Kelas yang kamu dampingi"
+            title="Kelas yang Anda dampingi"
             subtitle={query.data ? `${query.data.items.length} kelas` : ''}
           />
           {query.isPending || query.isError ? (
@@ -141,22 +156,9 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
               retry={() => void query.refetch()}
             />
           ) : query.data.items.length ? (
-            <div className="class-grid">
+            <div className="teacher-class-grid">
               {query.data.items.map((cls, index) => (
-                <Link className="class-card" href={`/teacher/classes/${cls.id}`} key={cls.id}>
-                  <span className={`icon-tile accent-${index % 4}`}>
-                    <Icon name="users" />
-                  </span>
-                  <h3>{cls.name}</h3>
-                  {cls.joinCode && (
-                    <p>
-                      Kode kelas <strong>{cls.joinCode}</strong>
-                    </p>
-                  )}
-                  <span className="card-link">
-                    Lihat siswa <Icon name="arrow" />
-                  </span>
-                </Link>
+                <TeacherClassCard key={cls.id} value={cls} index={index} />
               ))}
             </div>
           ) : (
@@ -204,12 +206,12 @@ function ClassStudentsContent({
       description="Kenali perkembangan siswa melalui hasil latihan mereka."
       teacherName={teacherName}
     >
-      <div className="stack">
+      <div className="teacher-page-stack">
         <Link className="back-link" href="/teacher">
           <Icon name="back" />
           Kembali ke kelas saya
         </Link>
-        <div className="catalog-toolbar">
+        <Card className="teacher-filter-card">
           <Input
             label="Cari siswa"
             type="search"
@@ -218,14 +220,16 @@ function ClassStudentsContent({
             onChange={(e) => setSearch(e.target.value)}
             leftIcon={<Icon name="search" />}
           />
-          <label className="sort-field">
-            Urutkan
-            <select value={sort} onChange={(e) => setSort(e.target.value)}>
-              <option value="asc">Nama A–Z</option>
-              <option value="desc">Nama Z–A</option>
-            </select>
-          </label>
-        </div>
+          <Select
+            label="Urutkan"
+            value={sort}
+            onChange={(e) => setSort(e.target.value)}
+            options={[
+              { value: 'asc', label: 'Nama A–Z' },
+              { value: 'desc', label: 'Nama Z–A' },
+            ]}
+          />
+        </Card>
         {query.isPending || query.isError ? (
           <DataState
             pending={query.isPending}
@@ -239,24 +243,15 @@ function ClassStudentsContent({
               subtitle={`${query.data.items.length} siswa bergabung`}
             />
             {filtered?.length ? (
-              <div className="settings-list">
+              <Card className="teacher-students-card">
                 {filtered.map((student) => (
-                  <Link
-                    className="settings-row"
+                  <TeacherStudentRow
+                    name={student.displayName}
                     href={`/teacher/classes/${classId}/students/${student.id}`}
                     key={student.id}
-                  >
-                    <span className="account-avatar">
-                      {student.displayName.charAt(0).toUpperCase()}
-                    </span>
-                    <div>
-                      <strong>{student.displayName}</strong>
-                      <p>Lihat progres dan nilai Drill</p>
-                    </div>
-                    <Icon name="chevron" />
-                  </Link>
+                  />
                 ))}
-              </div>
+              </Card>
             ) : (
               <Card>
                 <EmptyState
@@ -317,7 +312,7 @@ function StudentProgressContent({
       description={query.data?.class.name}
       teacherName={teacherName}
     >
-      <div className="stack">
+      <div className="teacher-page-stack">
         <Link className="back-link" href={`/teacher/classes/${classId}`}>
           <Icon name="back" />
           Kembali ke daftar siswa
@@ -330,42 +325,32 @@ function StudentProgressContent({
           />
         ) : (
           <>
-            <section className="teacher-welcome">
-              <span className="icon-tile accent-2">
-                <Icon name="chart" />
-              </span>
-              <div>
-                <span className="eyebrow">Nilai Drill terakhir</span>
+            <div className="teacher-progress-summary">
+              <Card className="teacher-student-identity">
+                <Avatar name={query.data.student.displayName} size="lg" />
+                <div>
+                  <span className="eyebrow">Siswa di {query.data.class.name}</span>
+                  <h2>{query.data.student.displayName}</h2>
+                  <p>Nilai terakhir dan terbaik setiap level tercatat di bawah.</p>
+                </div>
+              </Card>
+              <Card className="teacher-latest-score">
+                <span className="teacher-score-label">
+                  <Icon name="chart" width={18} height={18} /> Nilai Drill terakhir
+                </span>
                 <h2>{query.data.latestDrillScore ?? 'Belum ada latihan'}</h2>
-                <p>Nilai terakhir dan terbaik setiap level tercatat di bawah.</p>
-              </div>
-            </section>
+                <p>
+                  {query.data.latestDrillScore === null
+                    ? 'Hasil tampil setelah latihan dikumpulkan.'
+                    : 'Hasil latihan terakhir yang telah dikumpulkan.'}
+                </p>
+              </Card>
+            </div>
             <SectionHeader title="Progres per level" />
             {query.data.levels.length ? (
-              <div className="level-grid">
+              <div className="teacher-level-grid">
                 {query.data.levels.map((level) => (
-                  <Card className="level-card" key={level.levelId}>
-                    <span className="eyebrow">{level.chapterLabel}</span>
-                    <h3>{level.subchapterLabel}</h3>
-                    <p>{level.levelLabel}</p>
-                    <Badge variant={level.inProgress ? 'primary' : 'default'}>
-                      {level.inProgress
-                        ? 'Sedang dikerjakan'
-                        : level.accessStatus === 'UNLOCKED'
-                          ? 'Terbuka'
-                          : 'Terkunci'}
-                    </Badge>
-                    <dl className="score-pair">
-                      <div>
-                        <dt>Terakhir</dt>
-                        <dd>{level.latestDrillScore ?? '—'}</dd>
-                      </div>
-                      <div>
-                        <dt>Terbaik</dt>
-                        <dd>{level.bestDrillScore ?? '—'}</dd>
-                      </div>
-                    </dl>
-                  </Card>
+                  <MonitoredLevelCard key={level.levelId} value={level} />
                 ))}
               </div>
             ) : (

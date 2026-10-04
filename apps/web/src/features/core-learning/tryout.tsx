@@ -1,58 +1,49 @@
 'use client';
 
-import Link from 'next/link';
-import { Badge, Icon } from '@tka/ui';
+import { Button, Card, EmptyState, Icon, Tabs } from '@tka/ui';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import { learningApi, LearningApiError } from './api';
 import type { TryoutAttempt } from './types';
 import { AssessmentSession } from './assessment-session';
+import { AssessmentHeader } from './assessment-presentation';
+import { useAssessmentHistory } from './assessment-queries';
+import { ActivityRow } from './cards';
 import { useLearningView } from './learning-interactions';
+import { DataState, LearningFrame, Status, StudentGate } from './ui';
 import {
-  DataState,
-  LearningFrame,
-  MathText,
-  Panel,
-  PrimaryButton,
-  Status,
-  StudentGate,
-} from './ui';
+  TryoutDetail,
+  TryoutHero,
+  TryoutPackageCard,
+  TryoutReleasedResult,
+  TryoutWaiting,
+} from './tryout-presentation';
 
 export function TryoutScreen() {
-  return (
-    <LearningFrame title="TryOut">
-      <Panel className="tryout-hero mb-5">
-        <span className="icon-tile accent-1">
-          <Icon name="clipboard" />
-        </span>
-        <p className="text-sm font-bold uppercase tracking-wide text-[var(--numora-purple)]">
-          Simulasi mingguan
-        </p>
-        <h2 className="mt-2 text-2xl font-extrabold">Uji pemahamanmu dengan paket bersama.</h2>
-        <p className="mt-3 max-w-2xl leading-7 text-slate-700">
-          Paket baru dirilis Senin 00.00 WIB. TryOut gratis untuk seluruh siswa, baik Mandiri maupun
-          Sekolah, dengan satu kesempatan per paket. Paket final terdiri dari 35 soal. Hasil dan
-          pembahasan tersedia setelah pemrosesan IRT selesai.
-        </p>
-      </Panel>
-      <StudentGate>{(token) => <CurrentTryout token={token} />}</StudentGate>
-    </LearningFrame>
-  );
+  return <StudentGate>{(token) => <CurrentTryout token={token} />}</StudentGate>;
 }
 
 function CurrentTryout({ token }: { token: string }) {
   const router = useRouter();
   const [details, setDetails] = useState(false);
-  const [rulesAccepted, setRulesAccepted] = useState(false);
+  const [rulesAccepted, setRulesAccepted] = useState<string | null>(null);
+  const [tab, setTab] = useState('current');
+  const starting = useRef(false);
+  const detailTitle = useRef<HTMLDivElement>(null);
+  const detailsButton = useRef<HTMLButtonElement>(null);
   useLearningView(token, 'tryout_opened');
   const query = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
   });
+  const history = useAssessmentHistory(token, tab === 'history');
   const start = useMutation({
     mutationFn: (packageId: string) => learningApi.startTryout(token, packageId),
     onSuccess: (attempt) => router.push(`/student/tryout/${attempt.id}`),
+    onError: () => {
+      starting.current = false;
+    },
   });
   useLearningView(
     token,
@@ -60,133 +51,167 @@ function CurrentTryout({ token }: { token: string }) {
     { packageId: query.data?.id },
     details && !!query.data?.id,
   );
-  if (query.isPending || query.isError)
-    return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
-    );
   const current = query.data;
-  if (current.state === 'unavailable' || !current.id || !current.releaseAt)
-    return (
-      <Status title="Paket belum tersedia">
-        <p>
-          Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia akan muncul di sini.
-        </p>
-        <Link className="button-link" href="/student/learn">
-          Latihan dulu
-          <Icon name="arrow" />
-        </Link>
-      </Status>
-    );
-  const packageId = current.id;
+  const available =
+    current && current.state !== 'unavailable' && !!current.id && !!current.releaseAt;
+  const historyRecords =
+    history.data?.pages
+      .flatMap((page) => page.records)
+      .filter((record) => record.activity === 'tryout') ?? [];
   return (
-    <Panel className="tryout-package">
-      <Badge variant="primary">
-        {
-          {
-            open: 'Tersedia',
-            inProgress: 'Sedang berlangsung',
-            waitingIrt: 'Menunggu IRT',
-            resultReady: 'Selesai',
-          }[current.state]
-        }
-      </Badge>
-      <p className="text-sm font-semibold text-[var(--numora-purple)]">Paket berjalan</p>
-      <h2 className="mt-2 text-xl font-bold">{current.title}</h2>
-      <p className="mt-2 text-sm text-slate-700">
-        Dirilis{' '}
-        {new Intl.DateTimeFormat('id-ID', {
-          dateStyle: 'medium',
-          timeStyle: 'short',
-          timeZone: 'Asia/Jakarta',
-        }).format(new Date(current.releaseAt))}{' '}
-        WIB
-      </p>
-      {current.questionCount != null && (
-        <p className="mt-1 text-sm text-slate-700">{current.questionCount} soal</p>
-      )}
-      {current.durationSeconds != null && (
-        <p className="mt-1 text-sm text-slate-700">
-          Durasi paket: {Math.ceil(current.durationSeconds / 60)} menit
-        </p>
-      )}
-      {current.eligible && current.state === 'open' && (
-        <div className="mt-4 space-y-3">
-          <button
-            className="min-h-11 font-semibold underline"
-            onClick={() => setDetails(!details)}
-            aria-expanded={details}
-          >
-            Detail dan aturan paket
-          </button>
-          {details && (
-            <section aria-label="Aturan TryOut" className="space-y-3">
-              <p>
-                Gunakan navigator untuk berpindah soal. Jawaban dapat diubah sebelum pengiriman
-                akhir. Perhatikan status penyimpanan.
-              </p>
-              <p>
-                Waktu tidak dapat dijeda. Saat waktu habis, halaman ini meminta pengiriman jawaban
-                yang diterima server tanpa konfirmasi. Pengiriman manual memerlukan konfirmasi.
-              </p>
-              <p>
-                Setelah submit, nilai dan pembahasan menunggu rilis hasil simulasi. Tidak ada
-                pembayaran atau percobaan ulang paket yang sama.
-              </p>
-              <label className="flex min-h-11 items-center gap-3">
-                <input
-                  type="checkbox"
-                  checked={rulesAccepted}
-                  onChange={(e) => setRulesAccepted(e.target.checked)}
-                />
-                Saya memahami aturan pengerjaan.
-              </label>
-            </section>
-          )}
-          <PrimaryButton
-            disabled={start.isPending || !rulesAccepted}
-            onClick={() => start.mutate(packageId)}
-          >
-            {start.isPending ? 'Memulai…' : 'Mulai TryOut'}
-          </PrimaryButton>
-        </div>
-      )}
-      {current.state === 'inProgress' && current.attemptId && (
-        <Link
-          className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--numora-purple)] px-5 font-semibold text-white"
-          href={`/student/tryout/${current.attemptId}`}
-        >
-          Lanjutkan TryOut
-        </Link>
-      )}
-      {current.state === 'waitingIrt' && (
-        <p
-          role="status"
-          className="mt-4 rounded-xl bg-purple-50 p-3 font-semibold text-[var(--numora-purple)]"
-        >
-          Jawaban terkirim. Hasil menunggu batch IRT; pembahasan belum tersedia.
-        </p>
-      )}
-      {current.state === 'resultReady' && current.attemptId && (
-        <Link
-          className="mt-5 inline-flex min-h-11 items-center rounded-xl bg-[var(--numora-purple)] px-5 font-semibold text-white"
-          href={`/student/tryout/${current.attemptId}/result`}
-        >
-          Lihat hasil simulasi
-        </Link>
-      )}
-      {start.isError && (
-        <p role="alert" className="mt-3 text-sm text-red-700">
-          {start.error.message}
-        </p>
-      )}
-    </Panel>
+    <LearningFrame
+      title={details ? 'Detail Tryout' : 'Tryout TKA'}
+      className={`tryout-shell ${details && available ? 'tryout-shell--detail' : 'tryout-shell--catalog'}`}
+      focus={details && !!available}
+    >
+      <div ref={detailTitle} tabIndex={-1}>
+        {details && available ? (
+          <TryoutDetail
+            key={current.id}
+            current={current}
+            accepted={rulesAccepted === current.id}
+            onAccepted={(value) => setRulesAccepted(value ? (current.id ?? null) : null)}
+            onBack={() => {
+              setDetails(false);
+              setRulesAccepted(null);
+              requestAnimationFrame(() => detailsButton.current?.focus());
+            }}
+            pending={start.isPending || start.isSuccess}
+            error={start.isError ? start.error.message : undefined}
+            onStart={() => {
+              if (
+                rulesAccepted !== current.id ||
+                !current.eligible ||
+                !current.id ||
+                starting.current
+              )
+                return;
+              starting.current = true;
+              start.mutate(current.id);
+            }}
+          />
+        ) : (
+          <>
+            <TryoutHero onHistory={() => setTab('history')} />
+            <div className="tryout-catalog-content">
+              <Tabs
+                value={tab}
+                onChange={setTab}
+                label="Daftar Tryout"
+                items={[
+                  {
+                    value: 'current',
+                    label: 'Berlangsung',
+                    content:
+                      query.isPending || query.isError ? (
+                        <DataState
+                          pending={query.isPending}
+                          error={query.error}
+                          retry={() => void query.refetch()}
+                        />
+                      ) : available ? (
+                        <TryoutPackageCard
+                          detailsButtonRef={detailsButton}
+                          current={current}
+                          onDetails={() => {
+                            setDetails(true);
+                            requestAnimationFrame(() => detailTitle.current?.focus());
+                            window.scrollTo(0, 0);
+                          }}
+                        />
+                      ) : (
+                        <Status title="Paket belum tersedia">
+                          <p>
+                            Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia
+                            akan muncul di sini.
+                          </p>
+                          <a className="button-link" href="/student/learn">
+                            Latihan dulu
+                            <Icon name="arrow" width={18} height={18} />
+                          </a>
+                        </Status>
+                      ),
+                  },
+                  {
+                    value: 'history',
+                    label: 'Tryout Saya',
+                    content: (
+                      <section aria-label="Riwayat Tryout">
+                        <h2>Riwayat Tryout</h2>
+                        <p className="tryout-history-note">
+                          Paket yang sudah dikerjakan tidak dapat diulang. Riwayat mengikuti
+                          aktivitas yang sudah dimuat.
+                        </p>
+                        {history.isPending || (history.isError && !history.data) ? (
+                          <DataState
+                            pending={history.isPending}
+                            error={history.error}
+                            retry={() => void history.refetch()}
+                          />
+                        ) : historyRecords.length ? (
+                          <div className="activity-list">
+                            {historyRecords.map((item) => (
+                              <ActivityRow key={item.attemptId} item={item} />
+                            ))}
+                          </div>
+                        ) : (
+                          <Card fullWidth>
+                            <EmptyState
+                              icon={<Icon name="clock" />}
+                              title="Belum ada riwayat Tryout"
+                              description={
+                                history.hasNextPage
+                                  ? 'Belum ada Tryout pada aktivitas yang dimuat. Muat aktivitas lainnya untuk melanjutkan pemeriksaan.'
+                                  : 'Riwayat Tryout akan muncul setelah jawaban dikirim.'
+                              }
+                            />
+                          </Card>
+                        )}
+                        {history.hasNextPage && (
+                          <Button
+                            variant="secondary"
+                            disabled={history.isFetchingNextPage}
+                            onClick={() => void history.fetchNextPage()}
+                          >
+                            {history.isFetchingNextPage ? 'Memuat…' : 'Muat riwayat lainnya'}
+                          </Button>
+                        )}
+                        {history.isFetchNextPageError && (
+                          <p className="form-error" role="alert">
+                            Riwayat berikutnya belum dapat dimuat. Coba muat kembali.
+                          </p>
+                        )}
+                      </section>
+                    ),
+                  },
+                ]}
+              />
+              <Card fullWidth className="tryout-catalog-info">
+                <Icon name="info" />
+                <div>
+                  <h2>Satu kesempatan, hasil setelah rilis</h2>
+                  <p>
+                    Paket dan waktu pengerjaan mengikuti server. Nilai serta pembahasan menunggu
+                    rilis IRT.
+                  </p>
+                </div>
+              </Card>
+            </div>
+          </>
+        )}
+      </div>
+    </LearningFrame>
   );
 }
 
 export function TryoutAttemptScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Mengerjakan TryOut" focus>
+    <LearningFrame
+      title="Mengerjakan TryOut"
+      focus
+      className="learning-practice-shell tryout-attempt-shell"
+    >
       <StudentGate>{(token) => <AttemptData token={token} attemptId={attemptId} />}</StudentGate>
     </LearningFrame>
   );
@@ -204,22 +229,25 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
     );
   if (query.data.status === 'submitted')
     return (
-      <Status title="Jawaban sudah dikirim">
-        Hasil dan pembahasan menunggu batch IRT.{' '}
-        <Link className="underline" href="/student/tryout">
-          Lihat status paket
-        </Link>
-        .
-      </Status>
+      <>
+        <AssessmentHeader
+          title="Tryout terkirim"
+          status="Jawaban tersimpan"
+          progress={100}
+          progressLabel="Tryout terkirim"
+          exitHref="/student/tryout"
+        />
+        <TryoutWaiting submitted />
+      </>
     );
   return (
     <>
       {query.isError && (
         <Status title="Status server belum dapat diperbarui">
           Jawaban lokal tetap ditampilkan. Periksa koneksi dan status pengiriman sebelum keluar.
-          <button className="min-h-11 font-semibold underline" onClick={() => void query.refetch()}>
+          <Button variant="secondary" onClick={() => void query.refetch()}>
             Periksa status sesi
-          </button>
+          </Button>
         </Status>
       )}
       <TryoutForm
@@ -243,18 +271,12 @@ function TryoutForm({
 }) {
   const router = useRouter();
   const client = useQueryClient();
-  const deadline = attempt.deadlineAt
-    ? new Intl.DateTimeFormat('id-ID', {
-        dateStyle: 'medium',
-        timeStyle: 'short',
-        timeZone: 'Asia/Jakarta',
-      }).format(new Date(attempt.deadlineAt))
-    : null;
   return (
     <AssessmentSession
+      redesign
+      sessionKind="tryout"
       title={attempt.packageTitle}
       questions={attempt.questions}
-      headerExtra={deadline ? <span>Batas waktu server: {deadline} WIB</span> : null}
       deadlineAt={attempt.deadlineAt}
       serverTime={attempt.serverTime}
       onFinalizationCheck={check}
@@ -278,7 +300,18 @@ function TryoutForm({
 export function TryoutResultScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
-    <LearningFrame title="Hasil TryOut">
+    <LearningFrame
+      title="Hasil TryOut"
+      focus
+      className="learning-practice-shell tryout-result-shell"
+    >
+      <AssessmentHeader
+        title="Hasil Tryout"
+        status="Status hasil dari server"
+        progress={100}
+        progressLabel="Pengerjaan selesai"
+        exitHref="/student/tryout"
+      />
       <StudentGate>
         {(token) => <TryoutResultData token={token} attemptId={attemptId} />}
       </StudentGate>
@@ -301,50 +334,10 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
     query.error instanceof LearningApiError &&
     query.error.code === 'TRYOUT_RESULT_PENDING'
   )
-    return (
-      <Status title="Menunggu hasil IRT">
-        <p>
-          Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
-          selesai belum berarti hasil telah dirilis.
-        </p>
-        <button
-          className="min-h-11 font-semibold underline"
-          disabled={query.isFetching}
-          onClick={() => void query.refetch()}
-        >
-          Periksa status hasil
-        </button>
-      </Status>
-    );
+    return <TryoutWaiting fetching={query.isFetching} onCheck={() => void query.refetch()} />;
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  return (
-    <div className="space-y-5">
-      <Panel>
-        <p className="text-sm font-semibold text-[var(--numora-purple)]">
-          Hasil simulasi · {query.data.packageTitle}
-        </p>
-        <p className="mt-2 text-5xl font-extrabold">{query.data.score}</p>
-        <p className="mt-2 text-slate-700">
-          {query.data.correctCount} dari {query.data.questionCount} benar. Nilai ini bukan nilai TKA
-          resmi.
-        </p>
-      </Panel>
-      <h2 className="text-xl font-bold">Pembahasan</h2>
-      {query.data.explanation.map((item, index) => (
-        <Panel key={item.questionInstanceId}>
-          <h3 className="font-bold">
-            Soal {index + 1}: <MathText value={item.stem} />
-          </h3>
-          <p className="mt-2 text-sm">Jawabanmu: {item.selectedOptionId ?? 'Tidak dijawab'}</p>
-          <p className="text-sm">Jawaban benar: {item.correctOptionId}</p>
-          <p className="mt-3 text-slate-700">
-            <MathText value={item.explanation} />
-          </p>
-        </Panel>
-      ))}
-    </div>
-  );
+  return <TryoutReleasedResult result={query.data} />;
 }

@@ -1,14 +1,16 @@
 'use client';
 
-import { useState } from 'react';
+import { useRef, useState } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Badge, Button, Card, EmptyState, Icon, Input, ProgressBar, SectionHeader } from '@tka/ui';
+import { Badge, Card, EmptyState, Icon, Input, SectionHeader } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ChapterCard } from './cards';
+import { LevelPath } from './level-path';
+import { StudentIdentityHeader } from './dashboard-presentation';
 
 export function CatalogScreen() {
   return (
@@ -31,7 +33,7 @@ function CatalogContent({ token }: { token: string }) {
       chapter.title.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
     );
   return (
-    <div className="page-stack">
+    <div className="page-stack learning-catalog">
       <div className="catalog-intro">
         <div>
           <Badge variant="secondary">TKA Matematika · Kelas IX</Badge>
@@ -94,7 +96,7 @@ function ChapterContent({ token, chapterId }: { token: string; chapterId: string
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   return (
-    <div className="page-stack">
+    <div className="page-stack learning-catalog">
       <div className="catalog-intro">
         <div>
           <span className="eyebrow">Bab matematika</span>
@@ -143,15 +145,52 @@ function ChapterContent({ token, chapterId }: { token: string; chapterId: string
 export function SubchapterScreen() {
   const { chapterId, subchapterId } = useParams<{ chapterId: string; subchapterId: string }>();
   return (
-    <StudentLayout title="Langkah belajarmu" backHref={`/student/learn/${chapterId}`}>
-      <StudentGate>
-        {(token) => <SubchapterContent token={token} subchapterId={subchapterId} />}
-      </StudentGate>
+    <StudentGate>
+      {(token) => (
+        <SubchapterLayout token={token} chapterId={chapterId} subchapterId={subchapterId} />
+      )}
+    </StudentGate>
+  );
+}
+function SubchapterLayout({
+  token,
+  chapterId,
+  subchapterId,
+}: {
+  token: string;
+  chapterId: string;
+  subchapterId: string;
+}) {
+  const dashboard = useQuery({
+    queryKey: ['student-dashboard'],
+    queryFn: () => learningApi.dashboard(token),
+  });
+  const tryout = useQuery({
+    queryKey: ['current-tryout'],
+    queryFn: () => learningApi.currentTryout(token),
+  });
+  return (
+    <StudentLayout
+      title="Langkah belajarmu"
+      backHref={`/student/learn/${chapterId}`}
+      className="learning-map-shell"
+      mobileHeader={
+        dashboard.data && (
+          <StudentIdentityHeader
+            data={dashboard.data}
+            tryout={tryout.data}
+            feedbackHref="/student#catatan-guru"
+          />
+        )
+      }
+    >
+      <SubchapterContent token={token} subchapterId={subchapterId} />
     </StudentLayout>
   );
 }
 function SubchapterContent({ token, subchapterId }: { token: string; subchapterId: string }) {
   const router = useRouter();
+  const starting = useRef(false);
   const query = useQuery({
     queryKey: ['subchapter', subchapterId],
     queryFn: () => learningApi.subchapter(token, subchapterId),
@@ -165,101 +204,23 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const levels = [...query.data.levels].sort((a, b) => a.order - b.order);
-  const completed = levels.filter((level) => level.status === 'completed').length;
   return (
-    <div className="page-stack">
-      <div className="catalog-intro">
-        <div>
-          <span className="eyebrow">Subbab</span>
-          <h2>{query.data.subchapter.title}</h2>
-          <p>Latihan dengan ritmemu. Nilai minimal 80 membuka level berikutnya.</p>
-          {levels.length > 0 && (
-            <ProgressBar
-              value={completed}
-              max={levels.length}
-              showLabel
-              label={`${completed} dari ${levels.length} level selesai`}
-            />
-          )}
-        </div>
-        <span className="icon-tile accent-2">
-          <Icon name="target" />
-        </span>
-      </div>
-      <SectionHeader
-        title="Pilih level latihan"
-        subtitle="Nilai terakhir dan terbaik tersimpan di setiap level."
-      />
+    <div className="page-stack learning-catalog">
       {levels.length ? (
-        <div className="level-grid">
-          {levels.map((level, index) => (
-            <Card key={level.id} className={`level-card level-card--${level.status}`}>
-              <div className="level-card-top">
-                <span className="level-number">
-                  {level.status === 'locked' ? (
-                    <Icon name="lock" />
-                  ) : level.status === 'completed' ? (
-                    <Icon name="check" />
-                  ) : (
-                    String(index + 1).padStart(2, '0')
-                  )}
-                </span>
-                <Badge
-                  variant={
-                    level.status === 'completed'
-                      ? 'success'
-                      : level.status === 'inProgress'
-                        ? 'primary'
-                        : 'default'
-                  }
-                >
-                  {
-                    {
-                      locked: 'Terkunci',
-                      open: 'Terbuka',
-                      inProgress: 'Sedang dikerjakan',
-                      completed: 'Selesai',
-                    }[level.status]
-                  }
-                </Badge>
-              </div>
-              <h3>{level.title}</h3>
-              <p className="muted">Latihan bertahap</p>
-              <dl className="score-pair">
-                <div>
-                  <dt>Terakhir</dt>
-                  <dd>{level.latestScore ?? '—'}</dd>
-                </div>
-                <div>
-                  <dt>Terbaik</dt>
-                  <dd>{level.bestScore ?? '—'}</dd>
-                </div>
-              </dl>
-              {level.status === 'locked' ? (
-                <p className="locked-note">
-                  <Icon name="lock" width={16} height={16} />
-                  Selesaikan level sebelumnya dengan nilai minimal 80.
-                </p>
-              ) : (
-                <Button
-                  fullWidth
-                  variant={level.status === 'completed' ? 'secondary' : 'primary'}
-                  disabled={start.isPending}
-                  onClick={() => start.mutate(level.id)}
-                >
-                  {start.isPending && start.variables === level.id
-                    ? 'Membuka latihan…'
-                    : level.status === 'inProgress'
-                      ? 'Lanjutkan latihan'
-                      : level.status === 'completed'
-                        ? 'Latihan lagi'
-                        : 'Mulai latihan'}
-                  <Icon name="arrow" width={18} height={18} />
-                </Button>
-              )}
-            </Card>
-          ))}
-        </div>
+        <LevelPath
+          data={query.data}
+          pending={start.isPending}
+          pendingLevelId={start.variables}
+          onStart={(id) => {
+            if (starting.current) return;
+            starting.current = true;
+            start.mutate(id, {
+              onError: () => {
+                starting.current = false;
+              },
+            });
+          }}
+        />
       ) : (
         <EmptyState
           icon={<Icon name="target" />}

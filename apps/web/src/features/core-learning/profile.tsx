@@ -3,19 +3,23 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
-import { useQueryClient } from '@tanstack/react-query';
-import { Badge, Button, Icon, Input, SectionHeader } from '@tka/ui';
+import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { Button, Card, Icon, Input, Skeleton } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { StudentLayout } from '@/components/shell';
+import { AppShell } from '@/components/shell';
 import { joinClass } from '@/lib/api';
-import { StudentGate } from './ui';
+import { DataState, StudentGate } from './ui';
+import { learningApi } from './api';
+import {
+  AccountHeader,
+  ProfileIdentity,
+  ProfileStats,
+  ProfileTryout,
+  ProfileSetting,
+} from './account-presentation';
 
 export function ProfileScreen() {
-  return (
-    <StudentLayout title="Profil & akun" subtitle="Ruang untuk mengenal akun dan status belajarmu.">
-      <StudentGate>{(token) => <ProfileContent token={token} />}</StudentGate>
-    </StudentLayout>
-  );
+  return <StudentGate>{(token) => <ProfileContent token={token} />}</StudentGate>;
 }
 
 function ProfileContent({ token }: { token: string }) {
@@ -26,6 +30,14 @@ function ProfileContent({ token }: { token: string }) {
   const [error, setError] = useState('');
   const [success, setSuccess] = useState('');
   const [busy, setBusy] = useState(false);
+  const dashboard = useQuery({
+    queryKey: ['student-dashboard'],
+    queryFn: () => learningApi.dashboard(token),
+  });
+  const tryout = useQuery({
+    queryKey: ['current-tryout'],
+    queryFn: () => learningApi.currentTryout(token),
+  });
   if (state.status !== 'ready') return null;
   const profile = state.profile;
   const school = profile.studentAffiliation === 'SCHOOL';
@@ -49,6 +61,7 @@ function ProfileContent({ token }: { token: string }) {
     }
   }
   async function signOut() {
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
@@ -59,134 +72,192 @@ function ProfileContent({ token }: { token: string }) {
       setBusy(false);
     }
   }
+  const avatar = state.session.user?.user_metadata?.avatar_url;
   return (
-    <div className="profile-layout">
-      <section className="profile-identity">
-        <div className="profile-cover" aria-hidden="true">
-          <span>÷</span>
-          <span>✦</span>
-          <span>π</span>
-        </div>
-        <div className="profile-avatar">
-          {profile.displayName
-            .split(' ')
-            .map((n) => n[0])
-            .slice(0, 2)
-            .join('')
-            .toUpperCase()}
-        </div>
-        <h2>{profile.displayName}</h2>
-        <p>{profile.email}</p>
-        <Badge variant="secondary">
-          <Icon name={school ? 'school' : 'user'} width={16} height={16} />
-          {school ? 'Siswa sekolah' : 'Siswa mandiri'}
-        </Badge>
-        <p className="profile-motto">Setiap langkah belajar punya arti.</p>
-      </section>
-      <div className="stack">
-        <section>
-          <SectionHeader title="Informasi akun" />
-          <div className="settings-list">
-            <div className="settings-row">
-              <span className="icon-tile accent-0">
-                <Icon name="user" />
-              </span>
-              <div>
-                <small>Nama</small>
-                <strong>{profile.displayName}</strong>
-              </div>
+    <AppShell className="student-profile-shell student-account-shell">
+      <AccountHeader title="Profil" settings />
+      <div className="student-profile-layout">
+        <section className="student-profile-overview" aria-label="Profil dan progres">
+          <ProfileIdentity
+            profile={profile}
+            avatarUrl={typeof avatar === 'string' ? avatar : undefined}
+            data={dashboard.data}
+            progressState={
+              dashboard.isPending ? (
+                <>
+                  <Skeleton height={14} width="70%" />
+                  <Skeleton height={8} />
+                </>
+              ) : (
+                <p>Progres belum dapat dimuat.</p>
+              )
+            }
+          />
+          {dashboard.isPending ? (
+            <div className="student-profile-stats" aria-label="Memuat statistik">
+              <Skeleton height={96} />
+              <Skeleton height={96} />
             </div>
-            <div className="settings-row">
-              <span className="icon-tile accent-3">
-                <Icon name="mail" />
-              </span>
-              <div>
-                <small>Email akun</small>
-                <strong>{profile.email}</strong>
-              </div>
-              <Badge>Google</Badge>
-            </div>
-            <div className="settings-row">
-              <span className="icon-tile accent-1">
-                <Icon name="school" />
-              </span>
-              <div>
-                <small>Status belajar</small>
-                <strong>{school ? 'Terhubung dengan kelas' : 'Belajar mandiri'}</strong>
-                <p>
-                  {school
-                    ? 'Kamu sudah menjadi bagian dari satu kelas.'
-                    : 'Gunakan kode dari guru untuk bergabung dengan kelas.'}
-                </p>
-              </div>
-            </div>
-          </div>
-        </section>
-        {!school && (
-          <section className="surface-card">
-            <SectionHeader
-              title="Gabung kelas"
-              subtitle="Masukkan kode kelas yang diberikan oleh gurumu."
-            />
-            <form className="inline-form" onSubmit={join}>
-              <Input
-                label="Kode kelas"
-                minLength={6}
-                maxLength={32}
-                pattern="(?:[A-Za-z0-9]{6}|[A-Za-z0-9_\x2D]{8,32})"
-                autoCapitalize="characters"
-                spellCheck={false}
-                value={joinCode}
-                onChange={(e) => setJoinCode(e.target.value.trim())}
-                placeholder="Kode dari guru"
-                required
-                autoComplete="off"
+          ) : dashboard.isError ? (
+            <Card>
+              <DataState
+                pending={false}
+                error={dashboard.error}
+                retry={() => void dashboard.refetch()}
               />
-              <Button type="submit" disabled={busy || !joinCode.trim()}>
-                {busy ? 'Menghubungkan…' : 'Gabung kelas'}
-              </Button>
-            </form>
-          </section>
-        )}
-        {error && (
-          <p role="alert" className="form-error">
-            {error}
-          </p>
-        )}
-        {success && (
-          <p role="status" className="success-message">
-            {success}
-          </p>
-        )}
-        <section>
-          <SectionHeader title="Aktivitas belajar" />
-          <div className="settings-list">
-            <Link className="settings-row" href="/student/assessment">
-              <span className="icon-tile accent-2">
-                <Icon name="chart" />
-              </span>
-              <div>
-                <strong>Progres & riwayat</strong>
-                <p>Lihat perjalanan dan hasil latihanmu.</p>
-              </div>
-              <Icon name="chevron" />
-            </Link>
-            <Link className="settings-row" href="/student/learn">
-              <span className="icon-tile accent-0">
-                <Icon name="book" />
-              </span>
-              <div>
-                <strong>Materi belajar</strong>
-                <p>Jelajahi bab, subbab, dan level.</p>
-              </div>
-              <Icon name="chevron" />
-            </Link>
-          </div>
+            </Card>
+          ) : (
+            <ProfileStats data={dashboard.data} />
+          )}
+          {tryout.isPending ? (
+            <Skeleton height={84} />
+          ) : tryout.isError ? (
+            <Card>
+              <DataState pending={false} error={tryout.error} retry={() => void tryout.refetch()} />
+            </Card>
+          ) : (
+            <ProfileTryout data={tryout.data} />
+          )}
+          <Link className="button-link student-profile-report" href="/student/assessment">
+            Lihat Rapor & Statistik Lengkap <Icon name="arrow" width={18} height={18} />
+          </Link>
         </section>
-        <Button variant="danger" onClick={() => void signOut()} disabled={busy}>
-          <Icon name="logout" width={18} height={18} /> Keluar dari akun
-        </Button>
+        <div className="student-profile-account">
+          <Card
+            id="pengaturan-akun"
+            className="student-profile-settings"
+            aria-labelledby="profile-settings-title"
+          >
+            <h2 id="profile-settings-title">PENGATURAN BELAJAR & AKUN</h2>
+            <ProfileSetting
+              icon="user"
+              title="Data Diri & Akun Siswa"
+              description={`${profile.email} (Google terhubung)`}
+            >
+              <dl>
+                <div>
+                  <dt>Nama</dt>
+                  <dd>{profile.displayName}</dd>
+                </div>
+                <div>
+                  <dt>Email akun</dt>
+                  <dd>{profile.email}</dd>
+                </div>
+                <div>
+                  <dt>Login</dt>
+                  <dd>Google</dd>
+                </div>
+              </dl>
+            </ProfileSetting>
+            {school ? (
+              <ProfileSetting
+                icon="users"
+                title={
+                  dashboard.data?.class
+                    ? `Sekolah & Kelas ${dashboard.data.class.name}`
+                    : 'Sekolah & Kelas'
+                }
+                description={dashboard.data?.class?.schoolName ?? 'Terhubung dengan kelas'}
+              >
+                <p>Terhubung dengan kelas</p>
+                {dashboard.data?.class && (
+                  <p>
+                    {dashboard.data.class.name} · {dashboard.data.class.schoolName}
+                  </p>
+                )}
+                <p>Kamu sudah menjadi bagian dari satu kelas.</p>
+              </ProfileSetting>
+            ) : (
+              <ProfileSetting
+                icon="users"
+                title="Sekolah & Kelas"
+                description="Belajar mandiri · gabung kelas opsional"
+                href="#gabung-kelas"
+              />
+            )}
+            <ProfileSetting
+              icon="clock"
+              title="Riwayat Drill & Pembahasan"
+              description="Lihat hasil dan riwayat latihanmu."
+              href="/student/assessment"
+            />
+            <ProfileSetting
+              icon="clipboard"
+              title="Tryout & Hasil IRT"
+              description="Paket dan hasil mengikuti rilis server."
+              href="/student/tryout"
+            />
+            <ProfileSetting
+              icon="chat"
+              title="Catatan Guru"
+              description="Baca pesan dan masukan dari guru."
+              href="/student/feedback"
+            />
+            <ProfileSetting
+              icon="book"
+              title="Materi Belajar"
+              description="Jelajahi bab, subbab, dan level."
+              href="/student/learn"
+            />
+          </Card>
+          {!school && (
+            <Card
+              id="gabung-kelas"
+              className="student-profile-join"
+              aria-labelledby="profile-join-title"
+            >
+              <h2 id="profile-join-title">Gabung kelas</h2>
+              <p>
+                Masukkan kode kelas yang diberikan oleh gurumu. Drill, Tryout, dan PvP tetap dapat
+                diakses sebagai siswa Mandiri sesuai ketersediaan layanan.
+              </p>
+              <form className="student-profile-join__form" onSubmit={join}>
+                <Input
+                  label="Kode kelas"
+                  minLength={6}
+                  maxLength={32}
+                  pattern="(?:[A-Za-z0-9]{6}|[A-Za-z0-9_\x2D]{8,32})"
+                  autoCapitalize="characters"
+                  spellCheck={false}
+                  value={joinCode}
+                  onChange={(e) => setJoinCode(e.target.value.trim())}
+                  placeholder="Kode dari guru"
+                  required
+                  autoComplete="off"
+                  disabled={busy}
+                />
+                <Button type="submit" disabled={busy || !joinCode.trim()}>
+                  {busy ? 'Menghubungkan…' : 'Gabung kelas'}
+                </Button>
+              </form>
+            </Card>
+          )}
+          {error && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p role="status" className="success-message">
+              {success}
+            </p>
+          )}
+          <Button
+            variant="danger-outline"
+            fullWidth
+            onClick={() => void signOut()}
+            disabled={busy}
+            className="student-profile-logout"
+          >
+            <Icon name="logout" width={18} height={18} />{' '}
+            {busy ? 'Mohon tunggu…' : 'Keluar Akun Google'}
+          </Button>
+          <p className="student-profile-note">
+            Progres dan riwayat belajar tersimpan di akun Numora.
+          </p>
+          <p className="student-profile-note">NUMORA · Persiapan TKA Matematika SMP</p>
+        </div>
       </div>
-    </div>
+    </AppShell>
   );
 }

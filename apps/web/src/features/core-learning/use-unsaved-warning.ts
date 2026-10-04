@@ -27,6 +27,13 @@ export function useUnsavedWarning(unsaved: boolean) {
         link.href === window.location.href
       )
         return;
+      const target = new URL(link.href);
+      if (
+        target.origin === window.location.origin &&
+        target.pathname === window.location.pathname &&
+        target.search === window.location.search
+      )
+        return;
       if (
         !window.confirm(
           'Jawaban terakhir belum tersimpan. Keluar dapat menghilangkan perubahan tersebut. Tetap keluar?',

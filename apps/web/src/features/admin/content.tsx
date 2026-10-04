@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Button } from '@tka/ui';
+import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import {
@@ -33,7 +32,13 @@ import type {
   AdminVersionDto,
   QuestionContentDto,
 } from './generated-types';
-import { AppShell } from '@/components/shell';
+import {
+  AdminFrame,
+  AdminLoading,
+  AdminMessage,
+  AdminStats,
+  AdminEditorForm,
+} from './admin-presentation';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
 type View =
@@ -110,6 +115,7 @@ function AdminContentScreenContent() {
     };
   }, [token, offset, revision]);
   async function run(action: () => Promise<{ id: string }>) {
+    if (busy) return false;
     setBusy(true);
     setError('');
     setNotice('');
@@ -120,6 +126,7 @@ function AdminContentScreenContent() {
       return true;
     } catch (cause) {
       setError(message(cause));
+      if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setDenied(true);
       return false;
     } finally {
       setBusy(false);
@@ -146,23 +153,25 @@ function AdminContentScreenContent() {
   }, [profileId]);
   if (!token || denied)
     return (
-      <AppShell area="admin">
-        <section className="monitoring-frame">
-          <h1>Kelola konten</h1>
-          <p role="status">
-            {state.status === 'loading'
-              ? 'Memeriksa akun…'
-              : 'Halaman ini hanya tersedia untuk Admin yang aktif.'}
-          </p>
-          {error && (
-            <p role="alert" className="form-error">
-              {error}
-            </p>
-          )}
-          <Link href="/">Ke halaman masuk</Link>{' '}
-          <Button onClick={() => void refresh()}>Periksa akun lagi</Button>
-        </section>
-      </AppShell>
+      <AdminFrame
+        title="Konten dan operasional"
+        description="Kelola konten, tinjau laporan, dan pantau proses IRT."
+        icon="book"
+      >
+        {state.status === 'loading' ? (
+          <AdminLoading message="Memeriksa akun…" />
+        ) : (
+          <AdminMessage
+            error
+            message={error || 'Halaman ini hanya tersedia untuk Admin yang aktif.'}
+            login
+            retry={() => {
+              retry();
+              void refresh();
+            }}
+          />
+        )}
+      </AdminFrame>
     );
   const current = loadedFor === profileId ? data : null;
   const pageLength = current
@@ -179,19 +188,23 @@ function AdminContentScreenContent() {
       }[view]
     : 0;
   return (
-    <AppShell area="admin">
+    <AdminFrame
+      title="Konten dan operasional"
+      description="Kelola konten, tinjau laporan, dan pantau proses IRT."
+      icon="book"
+    >
       <div className="monitoring-frame admin-content">
-        <h1>Konten dan operasional</h1>
-        <p>
-          Data berasal dari server. Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
+        <p className="admin-context-note">
+          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
           tetap dipertahankan.
         </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
           {views.map((item) => (
             <Button
               key={item.id}
-              variant="secondary"
-              className="secondary-button"
+              disabled={busy}
+              variant={view === item.id ? 'primary' : 'secondary'}
+              className="admin-view-button"
               aria-current={view === item.id ? 'page' : undefined}
               onClick={() => navigate(item.id)}
             >
@@ -199,11 +212,7 @@ function AdminContentScreenContent() {
             </Button>
           ))}
         </nav>
-        {notice && (
-          <p className="monitoring-notice" role="status">
-            {notice}
-          </p>
-        )}
+        {notice && <AdminMessage message={notice} />}
         {error && (
           <div role="alert" className="form-error">
             <p>{error}</p>
@@ -213,228 +222,251 @@ function AdminContentScreenContent() {
           </div>
         )}
         {loading || !current ? (
-          <p role="status">{error ? 'Data belum dapat dimuat.' : 'Memuat data Admin…'}</p>
+          error ? (
+            <p className="admin-empty-inline" role="status">
+              Data belum dapat dimuat.
+            </p>
+          ) : (
+            <AdminLoading message="Memuat data Admin…" />
+          )
         ) : (
           <>
-            <p className="monitoring-notice">
-              {current.dashboard.questions} keluarga soal · {current.dashboard.readyVersions} versi
-              READY · {current.dashboard.openReports} laporan terbuka
-            </p>
-            {view === 'curriculum' && (
-              <Curriculum data={current} token={token} busy={busy} run={run} />
-            )}
-            {view === 'questions' && (
-              <>
-                <QuestionEditor
-                  key={editing?.id ?? 'new'}
-                  version={editing}
+            <AdminStats
+              items={[
+                { label: 'Keluarga soal', value: current.dashboard.questions, icon: 'book' },
+                { label: 'Versi READY', value: current.dashboard.readyVersions, icon: 'check' },
+                { label: 'Laporan terbuka', value: current.dashboard.openReports, icon: 'chat' },
+              ]}
+            />
+            <div
+              className="admin-content-view"
+              aria-label={views.find((item) => item.id === view)?.label}
+            >
+              {view === 'curriculum' && (
+                <Curriculum data={current} token={token} busy={busy} run={run} />
+              )}
+              {view === 'questions' && (
+                <>
+                  <QuestionEditor
+                    key={editing?.id ?? 'new'}
+                    version={editing}
+                    data={current}
+                    token={token}
+                    busy={busy}
+                    run={run}
+                    close={() => setEditing(null)}
+                  />
+                  <section>
+                    <h2>Versi soal</h2>
+                    {!current.versions.items.length && (
+                      <p>Belum ada versi soal pada halaman ini.</p>
+                    )}
+                    <ul className="monitoring-list">
+                      {current.versions.items.map((v) => (
+                        <li className="monitoring-notice admin-content-row" key={v.id}>
+                          <strong>{v.stem || `Konten ${v.questionType}`}</strong>
+                          <small>
+                            {v.variantCode} · v{v.versionNumber} · {v.questionType}
+                          </small>
+                          <p>
+                            Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
+                          </p>
+                          {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
+                          <small>ID versi: {v.id}</small>
+                          {v.reviewedAt && (
+                            <small>
+                              Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
+                            </small>
+                          )}
+                          <div className="admin-content-actions">
+                            {v.questionType === 'SINGLE_CHOICE' && (
+                              <Button
+                                variant="secondary"
+                                disabled={busy}
+                                onClick={() => setEditing(v)}
+                              >
+                                Buat revisi / varian
+                              </Button>
+                            )}
+                            {v.questionStatus !== 'READY' && (
+                              <Button
+                                disabled={busy}
+                                onClick={() =>
+                                  void run(() =>
+                                    setContentStatus(token, 'questions', v.questionId, 'READY'),
+                                  )
+                                }
+                              >
+                                Atur keluarga READY
+                              </Button>
+                            )}
+                            {v.contentStatus === 'DRAFT' && (
+                              <Button
+                                disabled={busy}
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      'Saya sudah meninjau isi, kunci jawaban, pembahasan, dan materi induk versi ini. Publikasikan sebagai READY?',
+                                    )
+                                  )
+                                    void run(() =>
+                                      setContentStatus(token, 'versions', v.id, 'READY'),
+                                    );
+                                }}
+                              >
+                                Publikasikan versi
+                              </Button>
+                            )}
+                            {v.contentStatus !== 'ARCHIVED' && (
+                              <Button
+                                variant="danger-outline"
+                                disabled={busy}
+                                onClick={() => {
+                                  if (
+                                    window.confirm(
+                                      'Arsipkan versi ini untuk mencegah pengerjaan baru? Riwayat tetap disimpan.',
+                                    )
+                                  )
+                                    void run(() =>
+                                      setContentStatus(token, 'versions', v.id, 'ARCHIVED'),
+                                    );
+                                }}
+                              >
+                                Arsipkan versi
+                              </Button>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                  </section>
+                </>
+              )}
+              {view === 'verification' && <VerificationHistory data={current} />}
+              {view === 'videos' && <Videos data={current} token={token} busy={busy} run={run} />}
+              {view === 'packages' && (
+                <>
+                  <TryoutEditor
+                    key={draft?.id ?? 'new'}
+                    draft={draft}
+                    data={current}
+                    token={token}
+                    busy={busy}
+                    run={run}
+                    close={() => setDraft(null)}
+                  />
+                  <ul className="monitoring-list">
+                    {current.packages.items.map((p) => (
+                      <li key={p.id} className="monitoring-notice admin-content-row">
+                        <strong>{p.name}</strong>
+                        <p>
+                          {p.familyCode} · v{p.packageVersion} · {p.status} ·{' '}
+                          {p.questionVersionIds.length} soal
+                        </p>
+                        <small>{p.id}</small>
+                        {p.status === 'DRAFT' && (
+                          <Button variant="secondary" disabled={busy} onClick={() => setDraft(p)}>
+                            Edit draf
+                          </Button>
+                        )}
+                      </li>
+                    ))}
+                  </ul>
+                  {!current.packages.items.length && <p>Belum ada draf Tryout pada halaman ini.</p>}
+                </>
+              )}
+              {view === 'drillPackages' && (
+                <DrillPackages
                   data={current}
                   token={token}
                   busy={busy}
                   run={run}
-                  close={() => setEditing(null)}
+                  draft={drillDraft}
+                  setDraft={setDrillDraft}
                 />
+              )}
+              {view === 'reports' && (
+                <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
+              )}
+              {view === 'irt' && (
                 <section>
-                  <h2>Versi soal</h2>
-                  {!current.versions.items.length && <p>Belum ada versi soal pada halaman ini.</p>}
+                  <h2>Status dan riwayat batch IRT</h2>
+                  <p>
+                    Status batch dan waktu rilis berasal dari API. Batch SUCCEEDED tidak otomatis
+                    berarti hasil Tryout sudah dirilis.
+                  </p>
+                  {!current.irtBatches.items.length && <p>Belum ada batch IRT pada halaman ini.</p>}
                   <ul className="monitoring-list">
-                    {current.versions.items.map((v) => (
-                      <li className="monitoring-notice admin-content-row" key={v.id}>
-                        <strong>{v.stem || `Konten ${v.questionType}`}</strong>
+                    {current.irtBatches.items.map((batch) => (
+                      <li key={batch.id} className="monitoring-notice admin-content-row">
+                        <strong>
+                          {batch.batchKind} · {batch.status}
+                        </strong>
                         <small>
-                          {v.variantCode} · v{v.versionNumber} · {v.questionType}
+                          Model {batch.modelVersion} · Batch {batch.id}
                         </small>
                         <p>
-                          Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
+                          Mulai {new Date(batch.startedAt).toLocaleString('id-ID')} · Selesai{' '}
+                          {batch.finishedAt
+                            ? new Date(batch.finishedAt).toLocaleString('id-ID')
+                            : 'belum selesai'}
                         </p>
-                        {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
-                        <small>ID versi: {v.id}</small>
-                        {v.reviewedAt && (
-                          <small>Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}</small>
-                        )}
-                        <div className="admin-content-actions">
-                          {v.questionType === 'SINGLE_CHOICE' && (
-                            <Button disabled={busy} onClick={() => setEditing(v)}>
-                              Buat revisi / varian
-                            </Button>
-                          )}
-                          {v.questionStatus !== 'READY' && (
-                            <Button
-                              disabled={busy}
-                              onClick={() =>
-                                void run(() =>
-                                  setContentStatus(token, 'questions', v.questionId, 'READY'),
-                                )
-                              }
-                            >
-                              Atur keluarga READY
-                            </Button>
-                          )}
-                          {v.contentStatus === 'DRAFT' && (
-                            <Button
-                              disabled={busy}
-                              onClick={() => {
-                                if (
-                                  window.confirm(
-                                    'Saya sudah meninjau isi, kunci jawaban, pembahasan, dan materi induk versi ini. Publikasikan sebagai READY?',
-                                  )
-                                )
-                                  void run(() =>
-                                    setContentStatus(token, 'versions', v.id, 'READY'),
-                                  );
-                              }}
-                            >
-                              Publikasikan versi
-                            </Button>
-                          )}
-                          {v.contentStatus !== 'ARCHIVED' && (
-                            <Button
-                              disabled={busy}
-                              onClick={() => {
-                                if (
-                                  window.confirm(
-                                    'Arsipkan versi ini untuk mencegah pengerjaan baru? Riwayat tetap disimpan.',
-                                  )
-                                )
-                                  void run(() =>
-                                    setContentStatus(token, 'versions', v.id, 'ARCHIVED'),
-                                  );
-                              }}
-                            >
-                              Arsipkan versi
-                            </Button>
-                          )}
-                        </div>
+                        <p>
+                          Paket {batch.packageId ?? 'tidak terkait'} · Rilis{' '}
+                          {batch.resultReleasedAt
+                            ? new Date(batch.resultReleasedAt).toLocaleString('id-ID')
+                            : 'belum tercatat'}
+                        </p>
+                        {batch.failureCode && <small>Kode kegagalan: {batch.failureCode}</small>}
+                      </li>
+                    ))}
+                  </ul>
+                  <h2>Parameter IRT per versi soal</h2>
+                  <p>
+                    Parameter hanya tampil untuk batch SUCCEEDED dengan minimal 30 respons. Model
+                    dan kebijakan rilis hasil resmi masih mengikuti keputusan Data/PO yang terbuka.
+                  </p>
+                  {!current.irt.items.length && <p>Belum ada output batch IRT pada halaman ini.</p>}
+                  <ul className="monitoring-list">
+                    {current.irt.items.map((r) => (
+                      <li key={r.id} className="monitoring-notice admin-content-row">
+                        <strong>
+                          {r.modelVersion} · {r.batchStatus}
+                        </strong>
+                        <small>Versi soal: {r.questionVersionId}</small>
+                        <p>
+                          {r.sampleSize} respons · {r.dataStatus}
+                        </p>
+                        <p>
+                          a: {r.discriminationA ?? 'Belum tersedia'} · b:{' '}
+                          {r.difficultyB ?? 'Belum tersedia'} · c: {r.guessingC ?? 'Belum tersedia'}
+                        </p>
                       </li>
                     ))}
                   </ul>
                 </section>
-              </>
-            )}
-            {view === 'verification' && <VerificationHistory data={current} />}
-            {view === 'videos' && <Videos data={current} token={token} busy={busy} run={run} />}
-            {view === 'packages' && (
-              <>
-                <TryoutEditor
-                  key={draft?.id ?? 'new'}
-                  draft={draft}
-                  data={current}
-                  token={token}
-                  busy={busy}
-                  run={run}
-                  close={() => setDraft(null)}
-                />
-                <ul className="monitoring-list">
-                  {current.packages.items.map((p) => (
-                    <li key={p.id} className="monitoring-notice admin-content-row">
-                      <strong>{p.name}</strong>
-                      <p>
-                        {p.familyCode} · v{p.packageVersion} · {p.status} ·{' '}
-                        {p.questionVersionIds.length} soal
-                      </p>
-                      <small>{p.id}</small>
-                      {p.status === 'DRAFT' && (
-                        <Button disabled={busy} onClick={() => setDraft(p)}>
-                          Edit draf
-                        </Button>
-                      )}
-                    </li>
-                  ))}
-                </ul>
-                {!current.packages.items.length && <p>Belum ada draf Tryout pada halaman ini.</p>}
-              </>
-            )}
-            {view === 'drillPackages' && (
-              <DrillPackages
-                data={current}
-                token={token}
-                busy={busy}
-                run={run}
-                draft={drillDraft}
-                setDraft={setDrillDraft}
-              />
-            )}
-            {view === 'reports' && (
-              <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
-            )}
-            {view === 'irt' && (
-              <section>
-                <h2>Status dan riwayat batch IRT</h2>
-                <p>
-                  Status batch dan waktu rilis berasal dari API. Batch SUCCEEDED tidak otomatis
-                  berarti hasil Tryout sudah dirilis.
-                </p>
-                {!current.irtBatches.items.length && <p>Belum ada batch IRT pada halaman ini.</p>}
-                <ul className="monitoring-list">
-                  {current.irtBatches.items.map((batch) => (
-                    <li key={batch.id} className="monitoring-notice admin-content-row">
-                      <strong>
-                        {batch.batchKind} · {batch.status}
-                      </strong>
-                      <small>
-                        Model {batch.modelVersion} · Batch {batch.id}
-                      </small>
-                      <p>
-                        Mulai {new Date(batch.startedAt).toLocaleString('id-ID')} · Selesai{' '}
-                        {batch.finishedAt
-                          ? new Date(batch.finishedAt).toLocaleString('id-ID')
-                          : 'belum selesai'}
-                      </p>
-                      <p>
-                        Paket {batch.packageId ?? 'tidak terkait'} · Rilis{' '}
-                        {batch.resultReleasedAt
-                          ? new Date(batch.resultReleasedAt).toLocaleString('id-ID')
-                          : 'belum tercatat'}
-                      </p>
-                      {batch.failureCode && <small>Kode kegagalan: {batch.failureCode}</small>}
-                    </li>
-                  ))}
-                </ul>
-                <h2>Parameter IRT per versi soal</h2>
-                <p>
-                  Parameter hanya tampil untuk batch SUCCEEDED dengan minimal 30 respons. Model dan
-                  kebijakan rilis hasil resmi masih mengikuti keputusan Data/PO yang terbuka.
-                </p>
-                {!current.irt.items.length && <p>Belum ada output batch IRT pada halaman ini.</p>}
-                <ul className="monitoring-list">
-                  {current.irt.items.map((r) => (
-                    <li key={r.id} className="monitoring-notice admin-content-row">
-                      <strong>
-                        {r.modelVersion} · {r.batchStatus}
-                      </strong>
-                      <small>Versi soal: {r.questionVersionId}</small>
-                      <p>
-                        {r.sampleSize} respons · {r.dataStatus}
-                      </p>
-                      <p>
-                        a: {r.discriminationA ?? 'Belum tersedia'} · b:{' '}
-                        {r.difficultyB ?? 'Belum tersedia'} · c: {r.guessingC ?? 'Belum tersedia'}
-                      </p>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
-            {view === 'audit' && (
-              <section>
-                <h2>Audit perubahan</h2>
-                {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
-                <ul className="monitoring-list">
-                  {current.audit.items.map((r) => (
-                    <li key={r.id} className="monitoring-notice admin-content-row">
-                      <strong>{r.action}</strong>
-                      <p>
-                        {r.entityType} · {new Date(r.createdAt).toLocaleString('id-ID')}
-                      </p>
-                      <small>
-                        Entitas: {r.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
-                        {r.actorUserId ?? 'Tidak tersedia'}
-                      </small>
-                    </li>
-                  ))}
-                </ul>
-              </section>
-            )}
+              )}
+              {view === 'audit' && (
+                <section>
+                  <h2>Audit perubahan</h2>
+                  {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
+                  <ul className="monitoring-list">
+                    {current.audit.items.map((r) => (
+                      <li key={r.id} className="monitoring-notice admin-content-row">
+                        <strong>{r.action}</strong>
+                        <p>
+                          {r.entityType} · {new Date(r.createdAt).toLocaleString('id-ID')}
+                        </p>
+                        <small>
+                          Entitas: {r.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
+                          {r.actorUserId ?? 'Tidak tersedia'}
+                        </small>
+                      </li>
+                    ))}
+                  </ul>
+                </section>
+              )}
+            </div>
             {view !== 'curriculum' && (
               <nav className="admin-content-actions" aria-label="Halaman data">
                 <Button
@@ -461,7 +493,7 @@ function AdminContentScreenContent() {
           </>
         )}
       </div>
-    </AppShell>
+    </AdminFrame>
   );
 }
 
@@ -545,9 +577,22 @@ function Reports({
                 className="monitoring-notice admin-content-row"
                 data-testid={`report-${report.id}`}
               >
-                <div>
+                <div className="admin-report-heading">
                   <strong>{report.kind === 'QUESTION' ? 'Laporan soal' : 'Laporan video'}</strong>
-                  <span className="status-badge">{reportStatusLabel(report.status)}</span>
+                  <Badge
+                    className="status-badge"
+                    variant={
+                      report.status === 'RESOLVED'
+                        ? 'success'
+                        : report.status === 'IN_REVIEW'
+                          ? 'warning'
+                          : report.status === 'OPEN'
+                            ? 'primary'
+                            : 'default'
+                    }
+                  >
+                    {reportStatusLabel(report.status)}
+                  </Badge>
                 </div>
                 <p>Kategori: {report.category}</p>
                 <p>{report.details || 'Pelapor tidak menambahkan rincian.'}</p>
@@ -591,7 +636,8 @@ function Reports({
                     {report.kind === 'VIDEO' ? 'Kelola metadata video' : 'Buka daftar soal'}
                   </Button>
                 </div>
-                <form
+                <AdminEditorForm
+                  busy={busy}
                   className="admin-content-form"
                   onSubmit={(event) => {
                     event.preventDefault();
@@ -625,7 +671,7 @@ function Reports({
                   <Button type="submit" disabled={busy}>
                     Simpan status dan tindak lanjut
                   </Button>
-                </form>
+                </AdminEditorForm>
               </li>
             );
           })}
@@ -761,7 +807,7 @@ function DrillPackages({
             </ul>
             {pack.status === 'DRAFT' && (
               <div className="admin-content-actions">
-                <Button disabled={busy} onClick={() => setDraft(pack)}>
+                <Button variant="secondary" disabled={busy} onClick={() => setDraft(pack)}>
                   Edit draf
                 </Button>
                 <Button
@@ -781,6 +827,7 @@ function DrillPackages({
             )}
             {pack.status !== 'ARCHIVED' && (
               <Button
+                variant="danger-outline"
                 disabled={busy}
                 onClick={() => {
                   if (
@@ -839,7 +886,7 @@ function DrillPackageEditor({
     }
   }
   return (
-    <form className="monitoring-notice admin-content-form" onSubmit={(event) => void submit(event)}>
+    <AdminEditorForm busy={busy} onSubmit={(event) => void submit(event)}>
       <h3>{draft ? 'Edit draf paket Drill' : 'Susun draf paket Drill'}</h3>
       {draft ? (
         <>
@@ -847,7 +894,7 @@ function DrillPackageEditor({
             {draft.familyCode} · v{draft.packageVersion} · Level {draft.levelId} · Varian{' '}
             {draft.variantIndex ?? 'Belum tersedia'}
           </p>
-          <Button type="button" disabled={busy} onClick={close}>
+          <Button variant="secondary" type="button" disabled={busy} onClick={close}>
             Batal edit
           </Button>
         </>
@@ -915,7 +962,7 @@ function DrillPackageEditor({
       >
         Simpan draf paket
       </Button>
-    </form>
+    </AdminEditorForm>
   );
 }
 
@@ -952,7 +999,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
   return (
     <section>
       <h2>Materi dan kompetensi</h2>
-      <form className="monitoring-notice admin-content-form" onSubmit={(e) => void submit(e)}>
+      <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
         <Field label="Jenis materi" name="kind">
           <select
             name="kind"
@@ -1001,7 +1048,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
         <Button type="submit" disabled={busy || (kind !== 'CHAPTER' && !parents.length)}>
           Simpan draf materi
         </Button>
-      </form>
+      </AdminEditorForm>
       {!data.curriculum.items.length && <p>Belum ada materi. Mulai dengan Bab.</p>}
       <ul className="monitoring-list">
         {data.curriculum.items.map((r) => (
@@ -1013,6 +1060,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
             </small>
             <div className="admin-content-actions">
               <Button
+                variant="secondary"
                 disabled={busy}
                 onClick={() => {
                   const name = window.prompt('Nama / deskripsi baru', r.name);
@@ -1033,6 +1081,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
               )}
               {r.status !== 'ARCHIVED' && (
                 <Button
+                  variant="danger-outline"
                   disabled={busy}
                   onClick={() => {
                     if (
@@ -1095,7 +1144,7 @@ function QuestionEditor({
     }
   }
   return (
-    <form className="monitoring-notice admin-content-form" onSubmit={(e) => void submit(e)}>
+    <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
       <h2>
         {version ? `Revisi ${version.variantCode} v${version.versionNumber}` : 'Buat soal PG'}
       </h2>
@@ -1104,7 +1153,7 @@ function QuestionEditor({
       </p>
       {version ? (
         <>
-          <Button type="button" disabled={busy} onClick={close}>
+          <Button variant="secondary" type="button" disabled={busy} onClick={close}>
             Batal revisi
           </Button>
           <label>
@@ -1182,7 +1231,7 @@ function QuestionEditor({
       >
         Simpan versi DRAFT
       </Button>
-    </form>
+    </AdminEditorForm>
   );
 }
 
@@ -1205,7 +1254,7 @@ function Videos({ data, token, busy, run }: EditorProps) {
   return (
     <section>
       <h2>Metadata video</h2>
-      <form className="monitoring-notice admin-content-form" onSubmit={(e) => void submit(e)}>
+      <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
         <Field label="Judul video" name="title">
           <input name="title" required maxLength={240} />
         </Field>
@@ -1233,7 +1282,7 @@ function Videos({ data, token, busy, run }: EditorProps) {
         <Button type="submit" disabled={busy}>
           Simpan draf video
         </Button>
-      </form>
+      </AdminEditorForm>
       {!data.videos.items.length && <p>Belum ada video pada halaman ini.</p>}
       <ul className="monitoring-list">
         {data.videos.items.map((v) => (
@@ -1251,6 +1300,7 @@ function Videos({ data, token, busy, run }: EditorProps) {
             </p>
             <div className="admin-content-actions">
               <Button
+                variant="secondary"
                 disabled={busy}
                 onClick={() => {
                   const url = window.prompt('URL HTTPS baru', v.url);
@@ -1272,6 +1322,7 @@ function Videos({ data, token, busy, run }: EditorProps) {
               )}
               {v.status !== 'ARCHIVED' && (
                 <Button
+                  variant="danger-outline"
                   disabled={busy}
                   onClick={() =>
                     void run(() => setContentStatus(token, 'videos', v.mappingId, 'ARCHIVED'))
@@ -1321,14 +1372,14 @@ function TryoutEditor({
     }
   }
   return (
-    <form className="monitoring-notice admin-content-form" onSubmit={(e) => void submit(e)}>
+    <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
       <h2>{draft ? 'Edit draf Tryout' : 'Susun draf Tryout'}</h2>
       <p>
         Belum diterbitkan ke Siswa. Konfigurasi resmi Tryout, scoring, dan release IRT masih OPEN;
         parameter produk tidak dapat diubah di sini.
       </p>
       {draft ? (
-        <Button type="button" onClick={close}>
+        <Button variant="secondary" type="button" onClick={close}>
           Batal edit
         </Button>
       ) : (
@@ -1374,6 +1425,6 @@ function TryoutEditor({
       <Button type="submit" disabled={busy}>
         Simpan draf paket
       </Button>
-    </form>
+    </AdminEditorForm>
   );
 }

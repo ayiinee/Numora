@@ -2,6 +2,7 @@
 
 import { useId, useRef, useState, type FormEvent } from 'react';
 import { useQuery } from '@tanstack/react-query';
+import { Dialog } from '@tka/ui';
 import { learningApi } from './api';
 import { recordLearningInteraction } from './learning-interactions';
 import { DataState, Panel, PrimaryButton } from './ui';
@@ -17,10 +18,12 @@ export function ReportForm<T extends string = string>({
   submit,
   label,
   categories,
+  modal = false,
 }: {
   submit: (category: T, details: string, clientRequestId: string) => Promise<unknown>;
   label: string;
   categories?: readonly { value: T; label: string }[];
+  modal?: boolean;
 }) {
   const id = useId();
   const [open, setOpen] = useState(false);
@@ -64,7 +67,7 @@ export function ReportForm<T extends string = string>({
         {label}
       </button>
     );
-  return (
+  const form = (
     <form onSubmit={(event) => void send(event)} className="mt-4 space-y-3" aria-label={label}>
       <label className="block text-sm font-semibold" htmlFor={`${id}-category`}>
         Jenis masalah
@@ -131,6 +134,13 @@ export function ReportForm<T extends string = string>({
         </button>
       </div>
     </form>
+  );
+  return modal ? (
+    <Dialog open={open} onClose={() => setOpen(false)} title={label} pending={state === 'saving'}>
+      {form}
+    </Dialog>
+  ) : (
+    form
   );
 }
 

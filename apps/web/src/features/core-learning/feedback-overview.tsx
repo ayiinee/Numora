@@ -1,19 +1,29 @@
 'use client';
 
-import { useQuery } from '@tanstack/react-query';
-import type { FeedbackSummaryDto } from '@/lib/generated-api-types';
-import { request } from './api';
-import { Panel } from './ui';
+import Link from 'next/link';
+import { Avatar, Card, Icon } from '@tka/ui';
+import { useFeedbackSummary } from './feedback-queries';
 
 export function FeedbackOverview({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ['student-feedback-summary'],
-    queryFn: () => request<FeedbackSummaryDto>(token, '/students/me/feedback/summary'),
-    staleTime: 60_000,
-  });
+  const query = useFeedbackSummary(token);
   return (
-    <Panel>
-      <h2 className="text-lg font-bold">Catatan Guru</h2>
+    <Card
+      id="catatan-guru"
+      className="student-home-card home-feedback"
+      aria-labelledby="home-feedback-title"
+    >
+      <div className="home-card-heading">
+        <h2 id="home-feedback-title">
+          <Icon name="chat" width={18} height={18} />
+          Catatan Guru Pembimbing
+        </h2>
+        {query.data?.unreadCount === 0 && Boolean(query.data.latest.length) && (
+          <span className="home-feedback__read">
+            <Icon name="check" width={12} height={12} />
+            Sudah Dibaca
+          </span>
+        )}
+      </div>
       {query.isPending ? (
         <p role="status">Memuat catatan Guru…</p>
       ) : query.isError ? (
@@ -25,30 +35,38 @@ export function FeedbackOverview({ token }: { token: string }) {
         </div>
       ) : (
         <>
-          <p className="mt-2 text-sm">{query.data.unreadCount} catatan belum dibaca.</p>
+          {(query.data.unreadCount > 0 || !query.data.latest.length) && (
+            <p className="home-feedback__count">{query.data.unreadCount} catatan belum dibaca.</p>
+          )}
           {!query.data.latest.length ? (
             <p className="mt-2 text-sm text-slate-700">Belum ada catatan dari Guru.</p>
           ) : (
-            <ul className="mt-3 space-y-3">
+            <ul className="home-feedback__list">
               {query.data.latest.map((item) => (
-                <li key={item.id} className="border-t border-[var(--color-border)] pt-3">
-                  <p className="font-semibold">
-                    {item.teacherName}
-                    {item.readAt === null ? ' · Belum dibaca' : ''}
-                  </p>
-                  <p className="whitespace-pre-wrap break-words mt-1">{item.body}</p>
-                  <time className="text-xs text-slate-700" dateTime={item.sentAt}>
-                    {new Intl.DateTimeFormat('id-ID', {
-                      timeZone: 'Asia/Jakarta',
-                      dateStyle: 'medium',
-                    }).format(new Date(item.sentAt))}
-                  </time>
+                <li key={item.id}>
+                  <div className="home-feedback__author">
+                    <Avatar name={item.teacherName} size="sm" />
+                    <div>
+                      <strong>{item.teacherName}</strong>
+                      <small>{item.readAt === null ? 'Belum dibaca' : 'Sudah dibaca'}</small>
+                    </div>
+                    <time dateTime={item.sentAt}>
+                      {new Intl.DateTimeFormat('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                        dateStyle: 'medium',
+                      }).format(new Date(item.sentAt))}
+                    </time>
+                  </div>
+                  <p className="home-feedback__quote">{item.body}</p>
                 </li>
               ))}
             </ul>
           )}
         </>
       )}
-    </Panel>
+      <Link href="/student/feedback" className="home-feedback__inbox">
+        Lihat semua catatan <Icon name="arrow" width={16} height={16} />
+      </Link>
+    </Card>
   );
 }

@@ -7,6 +7,7 @@ import type { PvpSnapshotDto } from '@/features/core-learning/generated-types';
 
 const mocks = vi.hoisted(() => ({
   emit: vi.fn(),
+  qr: vi.fn(),
   push: vi.fn(),
   connect: vi.fn(),
   io: vi.fn(),
@@ -35,16 +36,33 @@ vi.mock('@/features/onboarding/auth', () => ({
   }),
   destination: () => '/student',
 }));
-vi.mock('@/features/core-learning/api', () => ({ request: vi.fn() }));
+vi.mock('@/features/core-learning/api', () => ({
+  request: vi.fn(),
+  learningApi: {
+    dashboard: async () => ({
+      displayName: 'TEST Student',
+      affiliation: 'MANDIRI',
+      class: null,
+      completedLevels: 0,
+      availableLevels: 1,
+      bestDrillScore: null,
+    }),
+  },
+}));
 vi.mock('socket.io-client', () => ({ io: mocks.io }));
-vi.mock('qrcode', () => ({ default: { toDataURL: async () => 'TEST-QR' } }));
+vi.mock('qrcode', () => ({ default: { toDataURL: mocks.qr } }));
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.token = 'TEST-only-token';
   mocks.matchId = 'TEST-match';
   mocks.listeners = [];
+  mocks.qr.mockResolvedValue('TEST-QR');
   vi.mocked(request).mockImplementation(async (_token, path) =>
-    path === '/pvp/availability' ? { available: true } : { invites: [] },
+    path === '/pvp/availability'
+      ? { available: true }
+      : path.startsWith('/leaderboards/')
+        ? { policyPending: true, entries: [], ownEntry: null }
+        : { invites: [] },
   );
   mocks.io.mockImplementation(() => {
     const listeners = new Map<string, (event?: unknown) => void>();
@@ -190,4 +208,170 @@ it('shows the current match after a route change and ignores snapshots from othe
   );
   expect(screen.getByText('Room NEW-ROOM')).toBeTruthy();
   expect(screen.queryByText('Room FOREIGN-ROOM')).toBeNull();
+});
+
+function matchSnapshot(status: PvpSnapshotDto['status'] = 'RUNNING'): PvpSnapshotDto {
+  return {
+    matchId: mocks.matchId,
+    roomCode: 'NMR842ABC123',
+    creatorStudentId: 'TEST-student',
+    difficulty: 'medium',
+    status,
+    serverTime: new Date().toISOString(),
+    isDemo: true,
+    recordEligible: false,
+    endReason: null,
+    players: [
+      {
+        studentId: 'TEST-student',
+        displayName: 'TEST Student',
+        slot: 1,
+        ready: false,
+        connectionStatus: 'CONNECTED',
+        reconnectDeadlineAt: null,
+        points: 0,
+        result: null,
+      },
+    ],
+    question:
+      status === 'RUNNING'
+        ? {
+            id: 'TEST-question',
+            order: 4,
+            stem: 'TEST: 2 + 2?',
+            options: [
+              { id: 'option-a', text: '4' },
+              { id: 'option-b', text: '5' },
+            ],
+            deadlineAt: new Date(Date.now() + 45_000).toISOString(),
+            durationSeconds: 45,
+            answered: false,
+            selectedOptionId: null,
+          }
+        : null,
+  };
+}
+function serveMatch(snapshot: PvpSnapshotDto) {
+  vi.mocked(request).mockImplementation(async (_token, path) =>
+    path === '/pvp/availability'
+      ? { available: true }
+      : path.startsWith('/pvp/matches/')
+        ? snapshot
+        : { classmates: [], invites: [] },
+  );
+}
+it('keeps selection separate from server lock and retries uncertain answers with the same identity', async () => {
+  const snapshot = matchSnapshot();
+  serveMatch(snapshot);
+  const locked = {
+    ...snapshot,
+    question: { ...snapshot.question!, answered: true, selectedOptionId: 'option-a' },
+  };
+  mocks.emit
+    .mockRejectedValueOnce(new Error('TEST lost ACK'))
+    .mockResolvedValueOnce({ payload: { ok: true, state: locked } });
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  const radio = await screen.findByRole('radio', { name: /A\s*\.\s*4/ });
+  await waitFor(() => expect(radio.matches(':disabled')).toBe(false));
+  fireEvent.click(radio);
+  expect(screen.getByText('Jawaban dipilih • Belum dikirim')).toBeTruthy();
+  fireEvent.click(screen.getByRole('button', { name: 'Kunci jawaban' }));
+  const retry = await screen.findByRole('button', { name: 'Periksa permintaan sebelumnya' });
+  expect(screen.queryByText('Jawaban Kamu • Terkunci')).toBeNull();
+  expect(radio.matches(':disabled')).toBe(true);
+  fireEvent.click(retry);
+  await screen.findByText('Jawaban Kamu • Terkunci');
+  expect(mocks.emit).toHaveBeenCalledTimes(2);
+  expect(mocks.emit.mock.calls[1]![1].requestId).toBe(mocks.emit.mock.calls[0]![1].requestId);
+  expect(mocks.emit.mock.calls[0]![1].payload).toEqual({
+    matchId: mocks.matchId,
+    questionId: 'TEST-question',
+    optionId: 'option-a',
+  });
+  expect(screen.getByRole('radio', { name: /B\s*\.\s*5/ }).matches(':disabled')).toBe(true);
+});
+it('keeps ready waiting on the server and allows Mandiri to share without classmates', async () => {
+  const snapshot = matchSnapshot('WAITING');
+  serveMatch(snapshot);
+  mocks.emit.mockResolvedValue({
+    payload: {
+      ok: true,
+      state: {
+        ...snapshot,
+        players: snapshot.players.map((player) => ({ ...player, ready: true })),
+      },
+    },
+  });
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  const ready = await screen.findByRole('button', { name: 'Saya siap' });
+  await waitFor(() => expect(ready.hasAttribute('disabled')).toBe(false));
+  await screen.findByText('Belum ada teman sekelas. Kamu tetap dapat membagikan link room.');
+  fireEvent.click(ready);
+  await screen.findByRole('button', { name: 'Menunggu pemain lain' });
+  expect(screen.queryByRole('radio')).toBeNull();
+  expect(mocks.emit.mock.calls[0]![1].payload).toEqual({ matchId: mocks.matchId });
+  expect(screen.getByRole('button', { name: 'Bagikan Link Duel' })).toBeTruthy();
+});
+it('locks expired round controls and waits for the server instead of advancing or scoring locally', async () => {
+  const snapshot = matchSnapshot();
+  snapshot.question!.deadlineAt = new Date(Date.now() - 1000).toISOString();
+  serveMatch(snapshot);
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  await screen.findByRole('timer', { name: 'Sisa waktu' });
+  expect(screen.getByRole('timer', { name: 'Sisa waktu' }).textContent).toBe('0');
+  expect(screen.getByRole('radio', { name: /A\s*\.\s*4/ }).matches(':disabled')).toBe(true);
+  expect(mocks.emit).not.toHaveBeenCalled();
+});
+it.each(['CANCELLED', 'FINISHED'] as const)(
+  'keeps %s outcomes out of ranking when the server marks them ineligible',
+  async (status) => {
+    const snapshot = {
+      ...matchSnapshot(status),
+      endReason: status === 'FINISHED' ? 'FORFEIT' : 'SERVICE_INTERRUPTED',
+    };
+    serveMatch(snapshot);
+    render(
+      <StudentAccess>
+        <PvpMatchScreen />
+      </StudentAccess>,
+    );
+    await screen.findByText('Pertandingan ini tidak berkontribusi pada leaderboard.');
+    expect(screen.queryByRole('button', { name: 'Saya siap' })).toBeNull();
+    expect(screen.queryByRole('radio')).toBeNull();
+    expect(
+      screen
+        .getAllByRole('link', { name: 'Kembali ke PvP' })
+        .every((link) => link.getAttribute('href') === '/student/pvp'),
+    ).toBe(true);
+    expect(screen.queryByText('+120 XP')).toBeNull();
+  },
+);
+
+it('replaces failed QR loading with a truthful code/link fallback', async () => {
+  mocks.qr.mockRejectedValueOnce(new Error('TEST QR failure'));
+  serveMatch(matchSnapshot('WAITING'));
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  await screen.findByText('QR belum tersedia. Gunakan kode atau link room.');
+  expect(screen.queryByText('Menyiapkan QR…')).toBeNull();
+  expect(screen.queryByRole('img', { name: 'QR link gabung room' })).toBeNull();
+  expect(screen.getByRole('button', { name: 'Salin' })).toBeTruthy();
+  expect(screen.getByRole('link', { name: /student\/pvp\?room=/ }).getAttribute('href')).toContain(
+    'NMR842ABC123',
+  );
 });

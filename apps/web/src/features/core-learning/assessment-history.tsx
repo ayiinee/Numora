@@ -1,18 +1,20 @@
 'use client';
 
 import Link from 'next/link';
-import { useInfiniteQuery, useQuery } from '@tanstack/react-query';
+import { useQuery } from '@tanstack/react-query';
 import { Button, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ActivityRow, ProgressSummary } from './cards';
+import { useAssessmentHistory } from './assessment-queries';
 
 export function AssessmentScreen() {
   return (
     <StudentLayout
       title="Progres & riwayat"
       subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
+      className="assessment-history-shell"
     >
       <StudentGate>{(token) => <AssessmentContent token={token} />}</StudentGate>
     </StudentLayout>
@@ -23,25 +25,22 @@ function AssessmentContent({ token }: { token: string }) {
     queryKey: ['student-progress'],
     queryFn: () => learningApi.progress(token),
   });
-  const query = useInfiniteQuery({
-    queryKey: ['assessment-history'],
-    initialPageParam: undefined as string | undefined,
-    queryFn: ({ pageParam }) => learningApi.assessmentHistory(token, pageParam),
-    getNextPageParam: (page) => page.nextCursor ?? undefined,
-  });
+  const query = useAssessmentHistory(token);
   const records = query.data?.pages.flatMap((page) => page.records) ?? [];
   return (
-    <div className="stack">
-      {progress.isPending || progress.isError ? (
-        <DataState
-          pending={progress.isPending}
-          error={progress.error}
-          retry={() => void progress.refetch()}
-        />
-      ) : (
-        <ProgressSummary progress={progress.data} />
-      )}
-      <section>
+    <div className="assessment-history-layout">
+      <aside className="assessment-history-progress">
+        {progress.isPending || progress.isError ? (
+          <DataState
+            pending={progress.isPending}
+            error={progress.error}
+            retry={() => void progress.refetch()}
+          />
+        ) : (
+          <ProgressSummary progress={progress.data} />
+        )}
+      </aside>
+      <section className="assessment-history-records">
         <SectionHeader title="Riwayat aktivitas" subtitle="Hasil terbaru tampil paling atas." />
         {query.isPending || (query.isError && !query.data) ? (
           <DataState

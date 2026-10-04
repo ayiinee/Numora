@@ -1,6 +1,12 @@
 # NUMORA UI DESIGN SYSTEM
 
+**ENGINEERING DECISION — approved screenshot redesign, 3 October 2026:** the [current redesign baseline](UI_REDESIGN_BASELINE_2026-10-03.md) supersedes conflicting visual values below. Phase 1 applies local Plus Jakarta Sans, semantic lavender surfaces, 20 px cards, 44 px control targets, and Belajar / Materi / Tryout / PvP / Profil navigation. Canonical runtime values live in `packages/ui/src/tokens.css`; see the [foundation report](UI_REDESIGN_PHASE_1_2026-10-03.md). The original team baseline is retained below as historical guidance. This visual decision does not approve OPEN product policies.
+
 **Version:** 0.1 - Parallel Engineering Baseline
+
+**ENGINEERING DECISION — Phase 4, 4 October 2026:** measured Tryout PNG surfaces add `--color-surface-muted` (`#f8f7fc`, catalog) and `--color-surface-cool` (`#f3f6fa`, detail) to the existing tokens. These preserve the supplied screen-specific neutral surfaces without changing other screens. See the [Phase 4 report](UI_REDESIGN_PHASE_4_2026-10-04.md); original Figma metadata remains unverified.
+
+**ENGINEERING DECISION — Phase 5, 4 October 2026:** PvP shares translucent header surface/border tokens and a deep green hero token in `packages/ui/src/tokens.css`, with existing purple/success/warm tokens for difficulty variants. Podium and question choice primitives are extended without parallel libraries. See the [Phase 5 report](UI_REDESIGN_PHASE_5_2026-10-04.md); screenshot metadata/assets and production PvP policies remain unresolved.
 
 **Date:** 28 September 2026
 
@@ -173,14 +179,14 @@ Do not:
 
 These values are **source-defined and must not be changed casually**.
 
-| Token | Name | HEX | Primary role |
-|---|---|---:|---|
-| `--numora-purple` | Sagat Purple | `#722CCE` | Primary/action color, active navigation, high-emphasis actions |
-| `--numora-purple-soft` | Soft Purple | `#B88AC9` | Secondary actions, tabs, badges, progress, level accents |
-| `--numora-peach` | Peach | `#FA9A71` | Warm highlights, illustration accents, notifications, playful moments |
-| `--numora-gold` | Golden Yellow | `#F8D080` | Rewards, XP, achievements, level-up, streak, milestones |
-| `--numora-ivory` | Ivory | `#F6EFCD` | Main warm page background |
-| `--numora-pearl` | Pearl | `#F3FAF8` | Cards, surfaces, clean neutral sections |
+| Token                  | Name          |       HEX | Primary role                                                          |
+| ---------------------- | ------------- | --------: | --------------------------------------------------------------------- |
+| `--numora-purple`      | Sagat Purple  | `#722CCE` | Primary/action color, active navigation, high-emphasis actions        |
+| `--numora-purple-soft` | Soft Purple   | `#B88AC9` | Secondary actions, tabs, badges, progress, level accents              |
+| `--numora-peach`       | Peach         | `#FA9A71` | Warm highlights, illustration accents, notifications, playful moments |
+| `--numora-gold`        | Golden Yellow | `#F8D080` | Rewards, XP, achievements, level-up, streak, milestones               |
+| `--numora-ivory`       | Ivory         | `#F6EFCD` | Main warm page background                                             |
+| `--numora-pearl`       | Pearl         | `#F3FAF8` | Cards, surfaces, clean neutral sections                               |
 
 ## 3.2 Semantic usage
 
@@ -283,17 +289,17 @@ The source material does not define a full neutral or semantic status palette. U
 
 ```css
 :root {
-  --color-text: #2F213D;
-  --color-text-muted: #675B72;
-  --color-border: #E4DDCF;
-  --color-surface: #F3FAF8;
-  --color-surface-strong: #FFFFFF;
-  --color-bg: #F6EFCD;
+  --color-text: #2f213d;
+  --color-text-muted: #675b72;
+  --color-border: #e4ddcf;
+  --color-surface: #f3faf8;
+  --color-surface-strong: #ffffff;
+  --color-bg: #f6efcd;
 
-  --color-success: #2F8F6B;
-  --color-warning: #A86D00;
-  --color-danger: #B83A45;
-  --color-info: #2E6F9E;
+  --color-success: #2f8f6b;
+  --color-warning: #a86d00;
+  --color-danger: #b83a45;
+  --color-info: #2e6f9e;
 }
 ```
 
@@ -308,12 +314,12 @@ Rules:
 
 ```css
 :root {
-  --numora-purple: #722CCE;
-  --numora-purple-soft: #B88AC9;
-  --numora-peach: #FA9A71;
-  --numora-gold: #F8D080;
-  --numora-ivory: #F6EFCD;
-  --numora-pearl: #F3FAF8;
+  --numora-purple: #722cce;
+  --numora-purple-soft: #b88ac9;
+  --numora-peach: #fa9a71;
+  --numora-gold: #f8d080;
+  --numora-ivory: #f6efcd;
+  --numora-pearl: #f3faf8;
 
   --color-primary: var(--numora-purple);
   --color-secondary: var(--numora-purple-soft);
@@ -321,11 +327,11 @@ Rules:
   --color-reward: var(--numora-gold);
   --color-bg: var(--numora-ivory);
   --color-surface: var(--numora-pearl);
-  --color-surface-strong: #FFFFFF;
+  --color-surface-strong: #ffffff;
 
-  --color-text: #2F213D;
-  --color-text-muted: #675B72;
-  --color-border: #E4DDCF;
+  --color-text: #2f213d;
+  --color-text-muted: #675b72;
+  --color-border: #e4ddcf;
 }
 ```
 
@@ -344,8 +350,9 @@ Therefore typography below is an **engineering baseline**, not a final brand dec
 If the repository does not already have an approved font:
 
 ```css
---font-sans: "Nunito Sans", "Inter", ui-sans-serif, system-ui, -apple-system,
-  BlinkMacSystemFont, "Segoe UI", sans-serif;
+--font-sans:
+  'Nunito Sans', 'Inter', ui-sans-serif, system-ui, -apple-system, BlinkMacSystemFont, 'Segoe UI',
+  sans-serif;
 ```
 
 Why this baseline:
@@ -358,16 +365,16 @@ Do **not** add a new font package if the repository already contains an approved
 
 ## 4.3 Type scale - provisional implementation baseline
 
-| Token | Size | Line height | Weight | Typical usage |
-|---|---:|---:|---:|---|
-| `display` | 32px | 40px | 800 | Hero greeting, major success state |
-| `h1` | 28px | 36px | 800 | Page title |
-| `h2` | 22px | 30px | 700 | Section title |
-| `h3` | 18px | 26px | 700 | Card/feature title |
-| `body-lg` | 16px | 24px | 600/400 | Main reading text |
-| `body` | 14px | 22px | 400/600 | Standard interface text |
-| `label` | 13px | 18px | 700 | Field labels, tabs, compact actions |
-| `caption` | 12px | 16px | 600/400 | Metadata, timestamps, helper copy |
+| Token     | Size | Line height |  Weight | Typical usage                       |
+| --------- | ---: | ----------: | ------: | ----------------------------------- |
+| `display` | 32px |        40px |     800 | Hero greeting, major success state  |
+| `h1`      | 28px |        36px |     800 | Page title                          |
+| `h2`      | 22px |        30px |     700 | Section title                       |
+| `h3`      | 18px |        26px |     700 | Card/feature title                  |
+| `body-lg` | 16px |        24px | 600/400 | Main reading text                   |
+| `body`    | 14px |        22px | 400/600 | Standard interface text             |
+| `label`   | 13px |        18px |     700 | Field labels, tabs, compact actions |
+| `caption` | 12px |        16px | 600/400 | Metadata, timestamps, helper copy   |
 
 Guidelines:
 
@@ -446,7 +453,7 @@ NUMORA should feel soft, not glossy or enterprise-heavy.
 
 ```css
 --shadow-sm: 0 2px 6px rgba(47, 33, 61, 0.06);
---shadow-md: 0 6px 18px rgba(47, 33, 61, 0.10);
+--shadow-md: 0 6px 18px rgba(47, 33, 61, 0.1);
 ```
 
 Guidelines:
@@ -1176,7 +1183,7 @@ Engineering baseline:
 
 ```css
 :focus-visible {
-  outline: 3px solid #722CCE;
+  outline: 3px solid #722cce;
   outline-offset: 3px;
 }
 ```
@@ -1307,9 +1314,9 @@ Do not create this structure if an equivalent already exists. Integrate with the
 Feature code should not contain scattered values such as:
 
 ```css
-color: #722CCE;
+color: #722cce;
 border-radius: 17px;
-background: #F6EFCD;
+background: #f6efcd;
 ```
 
 Instead use tokens/components:
@@ -1324,22 +1331,22 @@ background: var(--color-bg);
 
 ```css
 :root {
-  --numora-purple: #722CCE;
-  --numora-purple-soft: #B88AC9;
-  --numora-peach: #FA9A71;
-  --numora-gold: #F8D080;
-  --numora-ivory: #F6EFCD;
-  --numora-pearl: #F3FAF8;
+  --numora-purple: #722cce;
+  --numora-purple-soft: #b88ac9;
+  --numora-peach: #fa9a71;
+  --numora-gold: #f8d080;
+  --numora-ivory: #f6efcd;
+  --numora-pearl: #f3faf8;
 
   --color-primary: var(--numora-purple);
   --color-secondary: var(--numora-purple-soft);
   --color-reward: var(--numora-gold);
   --color-bg: var(--numora-ivory);
   --color-surface: var(--numora-pearl);
-  --color-surface-strong: #FFFFFF;
-  --color-text: #2F213D;
-  --color-text-muted: #675B72;
-  --color-border: #E4DDCF;
+  --color-surface-strong: #ffffff;
+  --color-text: #2f213d;
+  --color-text-muted: #675b72;
+  --color-border: #e4ddcf;
 
   --space-1: 4px;
   --space-2: 8px;
@@ -1358,9 +1365,9 @@ background: var(--color-bg);
   --radius-pill: 999px;
 
   --shadow-sm: 0 2px 6px rgba(47, 33, 61, 0.06);
-  --shadow-md: 0 6px 18px rgba(47, 33, 61, 0.10);
+  --shadow-md: 0 6px 18px rgba(47, 33, 61, 0.1);
 
-  --font-sans: "Nunito Sans", "Inter", ui-sans-serif, system-ui, sans-serif;
+  --font-sans: 'Nunito Sans', 'Inter', ui-sans-serif, system-ui, sans-serif;
 }
 ```
 
@@ -1699,3 +1706,27 @@ Avoid hidden design-system changes inside one feature PR.
 ---
 
 **End of NUMORA UI Design System v0.1**
+
+## Phase 6 account and feedback alignment — 4 October 2026
+
+**ENGINEERING DECISION:** the owner approved Phase 6 after Phase 5. Student Profile follows the supplied identity/statistics/Tryout/settings screenshot and uses real authenticated information, completed levels and latest Drill score. Inbox Catatan Guru uses existing generated list/summary/read DTOs, explicit server-acknowledged read state, offset pagination and account-isolated cache. Home and desktop navigation link to `/student/feedback`; mobile navigation remains five items.
+
+Shared Card adds optional CSS variables for radius/border/shadow alongside existing background/padding customization; defaults remain unchanged. ListRow adds optional text reflow for long account names/email. Shared Icon includes settings; `--color-surface-profile: #f7f8fc` is sampled from the PNG. No new component library or API/schema/product-policy change is introduced. Unsupported editable profile/certificates/XP/average accuracy and feedback-to-attempt context remain gaps. See the [Phase 6 report](UI_REDESIGN_PHASE_6_2026-10-04.md) for verification and deviations.
+
+## Screenshot redesign Phase 7 — Teacher, 4 October 2026
+
+**ENGINEERING DECISION:** the owner approved continuing from Phase 6. Teacher verification, class/create, students, progress and profile use a derived Student visual language: purple identity/context, ivory page, white 20 px cards, lavender rows, 24 px hero and existing responsive breakpoints. Reduce decorative density and prioritize monitoring readability. Shared AppShell keeps Teacher navigation and the existing sidebar; no Student bottom nav is copied into Teacher routes.
+
+**PRD RULE:** verified owned-Class access and read-only monitoring remain server-authoritative. Keep latest/best independent, render score zero, and distinguish null with a dash/legend; no new academic completion, XP or mastery formula is derived. Verification preserves short/legacy case-sensitive tokens and identity refresh; unauthorized resources and expired sessions use explicit recovery. See the [Phase 7 report](UI_REDESIGN_PHASE_7_2026-10-04.md) for files, evidence, tests and limitations. No Teacher screenshot was supplied; pixel identity against an unavailable Teacher Figma frame is not claimed.
+
+## Screenshot redesign Phase 8 — Auth, 4 October 2026
+
+**ENGINEERING DECISION:** the owner approved continuing from Phase 7. Login, callback and onboarding use a derived Student visual language: purple welcome/header, ivory background, white 24 px form card, lavender role choices, existing owl/Brand/Icon and local Plus Jakarta Sans. Mobile form gutter is 16 px; tablet forms are centered; desktop starts at the existing 960 px breakpoint with a two-column layout and maximum 480 px form. Narrow screens reserve title space for the illustration and hide it at 320 px. Role cards use native radios with a visible containing-card focus outline; busy states disable submission/selection and loading motion respects reduced motion.
+
+**PRD RULE:** Google Student/Teacher authentication, one-time registration, Teacher verification and internally provisioned Admin identity remain unchanged. AuthProvider, PKCE/session infrastructure, generated identity contracts and role destinations retain their ownership. Browser metadata is displayed as Google identity, never used as authorization. Auth has no supplied screenshot; see the [Phase 8 report](UI_REDESIGN_PHASE_8_2026-10-04.md) for derived-design limitations, files, states, verification and mobile/desktop evidence. No database seed or new auth capability is introduced in this phase.
+
+## Screenshot redesign Phase 9 — Admin, 4 October 2026
+
+**ENGINEERING DECISION:** the owner approved continuing from Phase 8 to Phase 9. Existing school/token management and all nine workbench panels use the Student-derived purple/ivory/white/lavender language, local Plus Jakarta Sans and shared UI primitives. Admin has no supplied screenshot; this is a derived composition, not a verified Admin Figma match. Header/card radii, input/button states and spacing use existing tokens. Mobile uses one column, a locally scrolling workbench navigator and safe text wrapping; existing 700/960/1200 breakpoints expand school detail and editor/list composition. Primary actions remain purple, editing actions use secondary lavender, archive/revoke actions use the shared danger outline. Loading, empty, retry and API-denied states follow the same visual pattern.
+
+**PRD RULE:** NestJS authorization, single-use Teacher verification, historical question/content versions and server-owned IRT/result release remain authoritative. No schema, scoring, generated contract, Supabase business query, parameter editor or production fixture activation is introduced. Pending native forms disable controls; 401/403 states hide cached forms. Existing native confirmation/prompt interactions remain in place with the original handlers. The [Phase 9 report](UI_REDESIGN_PHASE_9_2026-10-04.md) records verification and screenshots. Earlier additive DEMO learning seeds remain unchanged.

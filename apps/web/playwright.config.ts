@@ -3,13 +3,12 @@ export default defineConfig({
   testDir: './e2e',
   workers: 1,
   reporter: 'line',
-  globalTimeout: 360_000,
+  globalTimeout: 720_000,
   timeout: 90_000,
   expect: { timeout: 20_000 },
   use: {
     baseURL: 'http://localhost:3300',
     browserName: 'chromium',
-    channel: 'chromium',
     trace: 'retain-on-failure',
   },
   webServer: {

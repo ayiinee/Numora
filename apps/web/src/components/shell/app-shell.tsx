@@ -1,21 +1,22 @@
 'use client';
 
-import { useState, type ReactNode } from 'react';
+import { useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { Brand, Icon, type IconName } from '@tka/ui';
+import { BottomNav, Brand, Icon, TopBar, type IconName, type TopBarProps } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 
 type Area = 'student' | 'teacher' | 'admin';
 const navigation: Record<Area, { href: string; label: string; icon: IconName }[]> = {
   student: [
-    { href: '/student', label: 'Beranda', icon: 'home' },
-    { href: '/student/learn', label: 'Belajar', icon: 'book' },
+    { href: '/student', label: 'Belajar', icon: 'graduation' },
+    { href: '/student/learn', label: 'Materi', icon: 'book' },
     { href: '/student/tryout', label: 'Tryout', icon: 'clipboard' },
-    { href: '/student/assessment', label: 'Progres', icon: 'chart' },
+    { href: '/student/pvp', label: 'PvP', icon: 'gamepad' },
     { href: '/student/profile', label: 'Profil', icon: 'user' },
-    { href: '/student/pvp', label: 'PvP', icon: 'users' },
+    { href: '/student/assessment', label: 'Progres', icon: 'chart' },
     { href: '/student/leaderboards', label: 'Peringkat', icon: 'chart' },
+    { href: '/student/feedback', label: 'Catatan Guru', icon: 'chat' },
   ],
   teacher: [
     { href: '/teacher', label: 'Kelas saya', icon: 'users' },
@@ -35,6 +36,9 @@ export function AppShell({
   backHref,
   focus = false,
   actions,
+  headerVariant,
+  mobileHeader,
+  className = '',
 }: {
   area?: Area;
   title?: string;
@@ -43,11 +47,15 @@ export function AppShell({
   backHref?: string | undefined;
   focus?: boolean | undefined;
   actions?: ReactNode;
+  headerVariant?: TopBarProps['variant'];
+  mobileHeader?: ReactNode;
+  className?: string;
 }) {
   const pathname = usePathname();
   const router = useRouter();
   const { state, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
+  const menuButton = useRef<HTMLButtonElement>(null);
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
@@ -75,7 +83,7 @@ export function AppShell({
       ),
     );
   return (
-    <div className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''}`}>
+    <div className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''} ${className}`}>
       <a className="skip-link" href="#main-content">
         Lewati ke konten
       </a>
@@ -115,58 +123,79 @@ export function AppShell({
         </aside>
       )}
       <div className="app-workspace">
-        <header className="app-topbar">
-          <Link className="mobile-brand" href={`/${area}`}>
-            <Brand />
-          </Link>
-          <span className="desktop-context">
-            {areaName}
-            <span>/</span>
-            {title || navigation[area].find((item) => active(item.href))?.label || 'Beranda'}
-          </span>
-          <div className="topbar-actions">
-            {actions}
-            {area !== 'admin' ? (
-              <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
-                <span className="account-avatar">
-                  {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
-                </span>
-                <span className="account-name">{profile?.displayName || 'Profil'}</span>
+        {mobileHeader && <header className="app-mobile-header">{mobileHeader}</header>}
+        <TopBar
+          className={`app-topbar${mobileHeader ? ' app-topbar--custom-mobile' : ''}`}
+          variant={headerVariant ?? (focus ? 'assessment' : 'context')}
+          logo={
+            <>
+              <Link className="mobile-brand" href={`/${area}`}>
+                <Brand />
               </Link>
-            ) : (
-              <button
-                className="text-button"
-                disabled={loggingOut}
-                onClick={async () => {
-                  setLoggingOut(true);
-                  try {
-                    setLogoutError('');
-                    await logout();
-                    router.replace('/');
-                  } catch {
-                    setLogoutError('Belum dapat keluar. Coba lagi.');
-                    setLoggingOut(false);
-                  }
-                }}
-              >
-                <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
-              </button>
-            )}
-            {area !== 'student' && (
-              <button
-                className="menu-toggle"
-                aria-label="Menu navigasi"
-                aria-expanded={menuOpen}
-                aria-controls="mobile-menu"
-                onClick={() => setMenuOpen(!menuOpen)}
-              >
-                <Icon name={menuOpen ? 'close' : 'menu'} />
-              </button>
-            )}
-          </div>
-        </header>
+              <span className="desktop-context">
+                {areaName}
+                <span>/</span>
+                {title || navigation[area].find((item) => active(item.href))?.label || 'Beranda'}
+              </span>
+            </>
+          }
+          right={
+            <div className="topbar-actions">
+              {actions}
+              {area !== 'admin' ? (
+                <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
+                  <span className="account-avatar">
+                    {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
+                  </span>
+                  <span className="account-name">{profile?.displayName || 'Profil'}</span>
+                </Link>
+              ) : (
+                <button
+                  className="text-button"
+                  disabled={loggingOut}
+                  onClick={async () => {
+                    setLoggingOut(true);
+                    try {
+                      setLogoutError('');
+                      await logout();
+                      router.replace('/');
+                    } catch {
+                      setLogoutError('Belum dapat keluar. Coba lagi.');
+                      setLoggingOut(false);
+                    }
+                  }}
+                >
+                  <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
+                </button>
+              )}
+              {area !== 'student' && (
+                <button
+                  ref={menuButton}
+                  type="button"
+                  className="menu-toggle"
+                  aria-label="Menu navigasi"
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-menu"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                >
+                  <Icon name={menuOpen ? 'close' : 'menu'} />
+                </button>
+              )}
+            </div>
+          }
+        />
         {menuOpen && (
-          <nav id="mobile-menu" className="mobile-menu" aria-label="Menu navigasi">
+          <nav
+            id="mobile-menu"
+            className="mobile-menu"
+            aria-label="Menu navigasi"
+            onKeyDown={(event) => {
+              if (event.key === 'Escape') {
+                setMenuOpen(false);
+                menuButton.current?.focus();
+              }
+            }}
+          >
             {links()}
           </nav>
         )}
@@ -197,9 +226,20 @@ export function AppShell({
         )}
       </div>
       {area === 'student' && !focus && (
-        <nav className="student-bottom-nav" aria-label="Navigasi utama">
-          {links(true)}
-        </nav>
+        <BottomNav
+          className="student-bottom-nav"
+          pathname={pathname}
+          items={navigation.student.slice(0, 5).map((item) => ({
+            ...item,
+            icon: <Icon name={item.icon} />,
+            active: active(item.href),
+          }))}
+          renderLink={({ href, children, 'aria-current': current }) => (
+            <Link href={href} aria-current={current} onClick={() => setMenuOpen(false)}>
+              {children}
+            </Link>
+          )}
+        />
       )}
     </div>
   );

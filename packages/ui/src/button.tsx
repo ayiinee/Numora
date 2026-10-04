@@ -7,7 +7,7 @@ import { forwardRef, type ButtonHTMLAttributes, type ReactNode } from 'react';
  * Full-featured button with variants, sizes, and states
  * ============================================ */
 
-export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger';
+export type ButtonVariant = 'primary' | 'secondary' | 'ghost' | 'danger' | 'danger-outline';
 export type ButtonSize = 'sm' | 'md' | 'lg';
 
 export interface ButtonProps extends ButtonHTMLAttributes<HTMLButtonElement> {
@@ -34,9 +34,9 @@ const variantStyles: Record<ButtonVariant, string> = {
     border: 2px solid transparent;
   `,
   secondary: `
-    background: var(--color-surface-raised);
-    color: var(--color-primary);
-    border: 2px solid var(--color-border);
+    background: var(--color-primary-light);
+    color: var(--color-primary-strong);
+    border: 1px solid transparent;
   `,
   ghost: `
     background: transparent;
@@ -48,11 +48,16 @@ const variantStyles: Record<ButtonVariant, string> = {
     color: var(--color-text-inverse);
     border: 2px solid transparent;
   `,
+  'danger-outline': `
+    background: var(--color-surface-raised);
+    color: var(--color-danger);
+    border: 1px solid var(--color-danger);
+  `,
 };
 
 const sizeStyles: Record<ButtonSize, string> = {
   sm: `
-    height: 36px;
+    min-height: var(--touch-target-min);
     padding: 0 var(--space-3);
     font-size: var(--text-sm);
     gap: var(--space-1);
@@ -64,7 +69,7 @@ const sizeStyles: Record<ButtonSize, string> = {
     gap: var(--space-2);
   `,
   lg: `
-    height: 52px;
+    min-height: var(--control-height-lg);
     padding: 0 var(--space-6);
     font-size: var(--text-lg);
     gap: var(--space-2);
@@ -216,7 +221,7 @@ const iconVariantStyles: Record<IconButtonVariant, string> = {
     color: var(--color-text-inverse);
   `,
   secondary: `
-    background: var(--color-surface-raised);
+    background: var(--color-primary-light);
     color: var(--color-primary);
   `,
   ghost: `
@@ -226,8 +231,8 @@ const iconVariantStyles: Record<IconButtonVariant, string> = {
 };
 
 const iconSizeStyles: Record<IconButtonSize, string> = {
-  sm: 'width: 32px; height: 32px;',
-  md: 'width: 40px; height: 40px;',
+  sm: 'width: var(--touch-target-min); height: var(--touch-target-min);',
+  md: 'width: var(--touch-target-min); height: var(--touch-target-min);',
   lg: 'width: 48px; height: 48px;',
 };
 
@@ -254,6 +259,7 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
       icon,
       disabled,
       loading,
+      type = 'button',
       className = '',
       style,
       ...props
@@ -265,7 +271,9 @@ export const IconButton = forwardRef<HTMLButtonElement, IconButtonProps>(
     return (
       <button
         ref={ref}
+        type={type}
         disabled={isDisabled}
+        aria-busy={loading || undefined}
         aria-disabled={isDisabled}
         className={`numora-icon-button numora-icon-button--${variant} numora-icon-button--${size} ${className}`}
         style={{

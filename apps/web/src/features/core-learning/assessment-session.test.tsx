@@ -1,6 +1,6 @@
 import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react-query';
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
-import { afterEach, describe, expect, it, vi } from 'vitest';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentSession } from './assessment-session';
 
 afterEach(() => {
@@ -28,6 +28,8 @@ function mount(
   questions = [question],
   deadlineAt?: string,
   submit?: () => Promise<unknown>,
+  redesign = false,
+  sessionKind: 'drill' | 'tryout' = 'drill',
 ) {
   const onSubmit = submit ? vi.fn(submit) : vi.fn().mockResolvedValue({});
   const onSubmitted = vi.fn();
@@ -35,6 +37,8 @@ function mount(
   render(
     <QueryClientProvider client={queryClient}>
       <AssessmentSession
+        redesign={redesign}
+        sessionKind={sessionKind}
         title="Level 1"
         questions={questions}
         submitLabel="Kirim Drill"
@@ -218,5 +222,143 @@ describe('sesi asesmen', () => {
     );
     fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
     await waitFor(() => expect(onSave).toHaveBeenCalledTimes(3));
+  });
+});
+
+describe('screenshot Drill controls', () => {
+  beforeEach(() => {
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.setAttribute('open', '');
+        },
+      },
+      close: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.removeAttribute('open');
+        },
+      },
+    });
+  });
+  afterEach(() => {
+    cleanup();
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+  });
+  it('keeps ragu local and finalizes only after explicit confirmation, once while pending', async () => {
+    const onSave = vi.fn();
+    let finish!: (value: object) => void;
+    const { onSubmit, onSubmitted } = mount(
+      onSave,
+      [question],
+      undefined,
+      () =>
+        new Promise((resolve) => {
+          finish = resolve;
+        }),
+      true,
+    );
+    fireEvent.click(screen.getByLabelText('Tandai Ragu-ragu'));
+    expect(onSave).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    const dialog = await screen.findByRole('dialog', { name: 'Kumpulkan Latihan Sekarang?' });
+    expect(within(dialog).getAllByText('No. 1')).toHaveLength(2);
+    expect(onSubmit).not.toHaveBeenCalled();
+    const confirm = within(dialog).getByRole('button', { name: 'Ya, Kumpulkan Jawaban' });
+    fireEvent.click(confirm);
+    fireEvent.click(confirm);
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    finish({});
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
+    expect(
+      screen.getByRole('radio', { name: /^A\./ }).closest('fieldset')?.hasAttribute('disabled'),
+    ).toBe(true);
+  });
+  it('automatically finalizes at zero while a manual confirmation is open, without confirming', async () => {
+    let elapsed = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => elapsed);
+    const confirm = vi.spyOn(window, 'confirm');
+    const { onSubmit } = mount(
+      vi.fn(),
+      [question],
+      new Date(Date.now() + 2000).toISOString(),
+      undefined,
+      true,
+      'tryout',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    await screen.findByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
+    expect(onSubmit).not.toHaveBeenCalled();
+    elapsed = 3000;
+    await waitFor(() => expect(onSubmit).toHaveBeenCalledOnce());
+    await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
+    expect(confirm).not.toHaveBeenCalled();
+    expect(screen.getByRole('timer').textContent).toBe('00:00');
+  });
+  it('keeps expired answers locked and allows finalization recovery without reopening the modal', async () => {
+    let elapsed = 0;
+    vi.spyOn(performance, 'now').mockImplementation(() => elapsed);
+    const complete = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Finalisasi terputus'))
+      .mockResolvedValue({});
+    const { onSubmit, onSubmitted } = mount(
+      vi.fn(),
+      [question],
+      new Date(Date.now() + 2000).toISOString(),
+      complete,
+      true,
+      'tryout',
+    );
+    elapsed = 3000;
+    await screen.findByRole('alert');
+    expect(onSubmit).toHaveBeenCalledOnce();
+    expect(onSubmitted).not.toHaveBeenCalled();
+    expect(
+      screen.getByRole('radio', { name: /^A\./ }).closest('fieldset')?.hasAttribute('disabled'),
+    ).toBe(true);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Periksa pengiriman akhir' }));
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
+    expect(onSubmit).toHaveBeenCalledTimes(2);
+  });
+  it('blocks the modal after a mismatched ACK until an acknowledged retry', async () => {
+    const save = vi
+      .fn()
+      .mockResolvedValueOnce({ questionInstanceId: 'wrong', selectedOptionId: 'A' })
+      .mockResolvedValueOnce({
+        questionInstanceId: question.questionInstanceId,
+        selectedOptionId: 'A',
+      });
+    mount(save, [question], undefined, undefined, true);
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    await screen.findByRole('alert');
+    expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByRole('dialog')).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Coba simpan lagi' }));
+    await waitFor(() =>
+      expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(
+        false,
+      ),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    await screen.findByRole('dialog');
+    expect(save).toHaveBeenCalledTimes(2);
+  });
+  it('keeps submit failure visible inside the modal and retries without false success', async () => {
+    const complete = vi
+      .fn()
+      .mockRejectedValueOnce(new Error('Submit terputus'))
+      .mockResolvedValue({});
+    const { onSubmitted } = mount(vi.fn(), [question], undefined, complete, true);
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Ya, Kumpulkan Jawaban' }));
+    await screen.findByRole('alert');
+    expect(onSubmitted).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }));
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
+    expect(complete).toHaveBeenCalledTimes(2);
   });
 });
