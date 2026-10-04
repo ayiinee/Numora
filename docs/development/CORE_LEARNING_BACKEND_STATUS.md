@@ -1,5 +1,11 @@
 # Status backend Core Learning
 
+**ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah
+diterapkan sampai `0022`, termasuk dispatch IRT, slug/level, audit media dan
+penguncian default grant Data API. Backup/restore, preservation data dan
+pemeriksaan Cloud lulus. IRT/R2 tetap belum diaktifkan. Lihat
+[bukti operasi dan batas validasi](../data/SUPABASE_MIGRATION_2026-10-04.md).
+
 Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setiap bagian mempertahankan scope dan tanggal buktinya; bukti lokal/CI belum merupakan bukti kesiapan staging. Sumber aturan produk: [Product Context](../product/PRODUCT_CONTEXT.md), [Open Decisions](../product/OPEN_DECISIONS.md), dan [PRD Mapping](../product/PRD_MAPPING.md).
 
 **PROPOSED — integrasi 2 Oktober 2026:** PR #25/#22/#23/#24 digabung pada branch integrasi untuk satu PR menuju main. Paket Admin, laporan Student dan snapshot IRT memakai engine canonical yang sama; jurnal gabungan menambahkan 0009 untuk metadata IRT. Review, bukti pengujian dan jalur upgrade ada pada [laporan integrasi](CORE_CONTENT_IRT_INTEGRATION_2026-10-02.md). Status merge aktual tetap mengikuti GitHub.
