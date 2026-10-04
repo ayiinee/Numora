@@ -234,7 +234,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const started = student.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
     );
-    await student.getByRole('button', { name: 'Mulai latihan', exact: true }).first().click();
+    await student
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     const attempt = (await (await started).json()) as DrillAttemptDto;
     expect(attempt.questions).toHaveLength(10);
     expect(attempt.isDemo).toBe(true);
@@ -328,7 +331,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
     await resumed.goto(`/student/learn/${chapter}/${subchapter}`);
-    await resumed.getByRole('button', { name: 'Mulai latihan', exact: true }).click();
+    await resumed
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     await answer(resumed, 0);
     expect((await submit(resumed)).score).toBe(0);
     await teacher.reload();
@@ -486,7 +492,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const started = student.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
     );
-    await student.getByRole('button', { name: 'Mulai latihan', exact: true }).first().click();
+    await student
+      .getByRole('list', { name: 'Pilih level latihan' })
+      .getByRole('button', { name: 'Mulai latihan', exact: true })
+      .click();
     const attempt = (await (await started).json()) as DrillAttemptDto;
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     await student.reload();
