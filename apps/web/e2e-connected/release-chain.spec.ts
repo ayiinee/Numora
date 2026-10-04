@@ -789,12 +789,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
   }) => {
     const admin = await login(browser, 'admin');
     const token = fixtures.actors.admin!.session.access_token;
-    async function content<T>(path: string, data: object, key?: string): Promise<T> {
+    async function content<T>(path: string, data: object, key?: string, status = 201): Promise<T> {
       const response = await request.post(`${apiBase}/admin/content/${path}`, {
         headers: { Authorization: `Bearer ${token}`, ...(key ? { 'Idempotency-Key': key } : {}) },
         data,
       });
-      expect(response.status(), path).toBe(201);
+      expect(response.status(), path).toBe(status);
       return response.json();
     }
     const source = resolve(root, 'docs/data/samples/2026-10-03');
@@ -865,9 +865,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
           data: readFileSync(resolve(source, asset.fileReference)),
         });
         expect(put.status()).toBe(200);
-        const receipt = await content<{ objectKey: string }>(
+      const receipt = await content<{ objectKey: string }>(
           `media/uploads/${reservation.uploadId}/complete`,
           {},
+        undefined,
+        200,
         );
         asset.objectKey = receipt.objectKey;
       }
