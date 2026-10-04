@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** lanjutan PR #56 adalah fondasi importer/preview DRAFT pada [PRD v0.6](../product/sources/PRD_Numora_v0.6.docx.md). Implementasi capability konten, impor v2 dan preview tiga format sedang menjalani gate engineering serta smoke sandbox; [kontrak](../api/CONTENT_IMPORT_PREVIEW.md), [runbook](CONTENT_IMPORT_PREVIEW_RUNBOOK.md). Bukan penutupan JOB-07 penuh: rubrik PGK, publication/lifecycle, Curriculum approval, XP, IRT dan QA independen tetap tersisa. Master sandbox merupakan PROPOSED, bukan master akademik final.
+
 # Joblist MVP — rekonsiliasi pekerjaan lama dan urutan pelaksanaan
 
 **Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering; **ENGINEERING DECISION:** klarifikasi pengguna pada tanggal ini menetapkan sembilan pekerjaan dalam gambar sebagai pekerjaan aktif Farel. Penugasan sembilan pekerjaan itu berlaku menggantikan pembagian yang bertumpang tindih pada versi sebelumnya. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.

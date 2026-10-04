@@ -19,6 +19,13 @@ Object.assign(process.env, {
   TEACHER_TOKEN_PEPPER: 'job06-fixture-only-pepper-not-for-deployment',
   CORS_ORIGINS: 'http://localhost:3400',
   IRT_ENABLED: 'false',
+  CONTENT_IMPORT_PREVIEW_ENABLED: 'true',
+  R2_MEDIA_UPLOADS_ENABLED: 'true',
+  R2_ACCOUNT_ID: '0'.repeat(32),
+  R2_ACCESS_KEY_ID: 'TEST_ONLY_ACCESS_KEY',
+  R2_SECRET_ACCESS_KEY: 'TEST_ONLY_STORAGE_SECRET',
+  R2_BUCKET: 'numora-bucket',
+  R2_TEST_ENDPOINT: 'http://localhost:3402/r2',
 });
 const {
   getDatabase,
@@ -96,6 +103,7 @@ for (const [alias, role] of [
     .values({
       authUserId: id,
       role,
+      adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
       displayName: user.user_metadata.name,
       email: user.email,
       status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
@@ -183,6 +191,7 @@ await db.insert(packageItems).values(
   })),
 );
 
+const testStorage = new Map();
 const authServer = createServer(async (req, res) => {
   // SDK auth boundary only. Every product request uses real Nest services/guards/transactions.
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3400');
@@ -196,6 +205,35 @@ const authServer = createServer(async (req, res) => {
     res.end(JSON.stringify(value));
   };
   if (req.method === 'OPTIONS') return send(200, {});
+  // TEST ONLY S3 transport: real SDK presigning, bounded verification and final publish run in API.
+  if (req.url?.startsWith('/r2/')) {
+    const key = decodeURIComponent(req.url.split('?')[0]);
+    if (req.method === 'PUT') {
+      const chunks = [];
+      let size = 0;
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 5242880) return send(413, {});
+        chunks.push(chunk);
+      }
+      testStorage.set(key, {
+        bytes: Buffer.concat(chunks),
+        contentType: req.headers['content-type'],
+      });
+      res.writeHead(200);
+      return res.end();
+    }
+    const object = testStorage.get(key);
+    if (!object) {
+      res.writeHead(404, { 'Content-Type': 'application/xml' });
+      return res.end('<Error><Code>NoSuchKey</Code></Error>');
+    }
+    res.writeHead(200, {
+      'Content-Type': object.contentType,
+      'Content-Length': object.bytes.length,
+    });
+    return res.end(object.bytes);
+  }
   if (req.url === '/auth/v1/user') {
     const actor = Object.values(actors).find(
       (a) => `Bearer ${a.session.access_token}` === req.headers.authorization,

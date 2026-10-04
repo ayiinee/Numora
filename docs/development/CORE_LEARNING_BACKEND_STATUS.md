@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** fondasi importer JSON v2 dan preview internal Admin sedang diverifikasi dalam PR terpisah. Scope DRAFT, capability konten, tiga tipe soal, media terverifikasi, jawaban persisten/revision, snapshot immutable dan seluruh skor null. Kontrak Student/XP/IRT tidak berubah. Lihat [kontrak](../api/CONTENT_IMPORT_PREVIEW.md) dan [runbook](CONTENT_IMPORT_PREVIEW_RUNBOOK.md). Rehearsal restore/migrasi mempertahankan fingerprint 100 tabel lama dan history append-only; acceptance connected pada satu SHA serta smoke Cloud dicatat setelah benar-benar lulus. Bukti JOB-06 sebelumnya tetap berlaku sebagai bukti historis masing-masing SHA.
+
 # Status backend Core Learning
 
 **ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah
