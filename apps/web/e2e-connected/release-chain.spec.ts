@@ -783,7 +783,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
   });
 
-  test('DRAFT JSON importer ? ten three-format previews ? server save/resume ? unscored review', async ({
+  test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
     browser,
     request,
   }) => {
@@ -865,11 +865,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
           data: readFileSync(resolve(source, asset.fileReference)),
         });
         expect(put.status()).toBe(200);
-      const receipt = await content<{ objectKey: string }>(
+        const receipt = await content<{ objectKey: string }>(
           `media/uploads/${reservation.uploadId}/complete`,
           {},
-        undefined,
-        200,
+          undefined,
+          200,
         );
         asset.objectKey = receipt.objectKey;
       }
@@ -890,6 +890,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(report.items.every((i) => i.canPreview)).toBe(true);
     await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
     await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+    await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
     await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
     for (let i = 0; i < 10; i++) {
@@ -922,6 +923,20 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(result.items.every((i) => i.score === null && i.answerKey && i.explanation)).toBe(true);
     expect(result.score).toBe(null);
     expect(result.media).toHaveLength(6);
+    let renderedImages = 0;
+    for (let position = 9; position >= 0; position--) {
+      await expect(admin.getByText(new RegExp(`Soal ${position + 1}/10`))).toBeVisible();
+      const images = admin.locator('.content-preview-image');
+      for (let index = 0; index < (await images.count()); index++) {
+        await expect
+          .poll(() => images.nth(index).evaluate((img: HTMLImageElement) => img.naturalWidth))
+          .toBeGreaterThan(0);
+        renderedImages++;
+      }
+      if (position > 0)
+        await admin.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
+    }
+    expect(renderedImages).toBe(6);
     await admin.setViewportSize({ width: 390, height: 844 });
     await expect(admin.getByRole('heading', { name: 'Review tanpa scoring' })).toBeVisible();
     expect(
