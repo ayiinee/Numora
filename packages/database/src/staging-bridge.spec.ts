@@ -13,12 +13,13 @@ describe('development sandbox bridge guard', () => {
           SUPABASE_PROJECT_REF: 'pkamenfnwmoeisccnrnk',
           ALLOW_AUDITED_SANDBOX_BRIDGE: '',
         },
-        stdio: 'pipe', timeout: 15000,
+        // Includes cold tsx/module startup on Windows; the authorization assertion is unchanged.
+        stdio: 'pipe', timeout: 60000,
       });
     } catch (error) {
       if (error && typeof error === 'object' && 'stderr' in error)
         output = String(error.stderr);
     }
     expect(output).toContain('ALLOW_AUDITED_SANDBOX_BRIDGE=true');
-  }, 20000);
+  }, 75000);
 });

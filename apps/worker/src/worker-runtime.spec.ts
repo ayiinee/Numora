@@ -33,6 +33,7 @@ vi.mock('@tka/database', () => ({
 vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
 vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox, outboxStatus: mocks.status }));
 vi.mock('./class-leaderboard.js', () => ({ projectClassLeaderboard: mocks.project }));
+vi.mock('./irt-v3.js', () => ({ createIrtQueue: vi.fn(), pollIrtV3: vi.fn() }));
 import { runWorker } from './worker-runtime.js';
 
 describe('worker Redis outage lifecycle', () => {

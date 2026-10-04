@@ -5,6 +5,21 @@ import { join } from 'node:path';
 import { test } from 'node:test';
 import { loadContractValidators } from './validate-contracts.mjs';
 
+test('v3 compute schemas reject unversioned notifications and respondent grades in foundation payload',async()=>{
+  const validators=await loadContractValidators();
+  const notify=validators.get(join('packages/contracts/compute','notification-v3.schema.json'));
+  const payload=validators.get(join('packages/contracts/compute','calibration-payload-v3.schema.json'));
+  const notification={contractVersion:3,requestId:'00000000-0000-4000-8000-000000000001',inputDigest:'a'.repeat(64),dispatchGeneration:1};
+  assert.equal(notify(notification),true);
+  assert.equal(notify({...notification,dispatchGeneration:0}),false);
+  assert.equal(notify({...notification,contractVersion:2}),false);
+  assert.equal(notify({...notification,studentId:'private'}),false);
+  assert.equal(payload({items:[]}),true);
+  assert.equal(payload({items:[],respondents:[]}),false);
+  const envelope=validators.get(join('packages/contracts/events','analytics-event.schema.json'));
+  assert.equal(envelope({eventId:notification.requestId,eventName:'analysis.requested',eventVersion:3,occurredAt:'2026-10-03T00:00:00Z',entityType:'analysis_request',entityId:notification.requestId,payload:{}}),true);
+});
+
 test('committed event contract rejects malformed UUIDs and timestamps', async () => {
   const validators = await loadContractValidators();
   const validate = validators.get(join('packages/contracts/events', 'analytics-event.schema.json'));

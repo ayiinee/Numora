@@ -61,6 +61,18 @@ export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersio
 
 export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; };
 
+export type IrtConfigurationPinDto = { "approvalId": string; "digest": string; };
+
+export type PrepareIrtRequestDto = { "contextId": string; "configurationPins": (IrtConfigurationPinDto)[]; };
+
+export type IrtRequestExecutionDto = { "id": string; "status": "RUNNING" | "SUCCEEDED" | "FAILED" | "EXPIRED"; "attemptNumber": number; "leaseExpired": boolean; "failureCode": string | null; };
+
+export type IrtRequestArtifactDto = { "id": string; "digest": string; "scientificDecision": string; };
+
+export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
+
+export type IrtRequestsDto = { "items": (IrtRequestDto)[]; };
+
 export type AdminIrtBatchDto = { "id": string; "packageId": string | null; "batchKind": string; "modelVersion": string; "status": "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED"; "startedAt": string; "finishedAt": string | null; "resultReleasedAt": string | null; "failureCode": string | null; };
 
 export type AdminIrtBatchesDto = { "items": (AdminIrtBatchDto)[]; };
