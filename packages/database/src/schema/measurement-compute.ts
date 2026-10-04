@@ -11,7 +11,7 @@ import {
   uniqueIndex,
   uuid,
 } from 'drizzle-orm/pg-core';
-import { analysisRequests, responseSnapshotItems, responseSnapshots } from './measurement.js';
+import { analysisRequestDispatches, analysisRequests, responseSnapshotItems, responseSnapshots } from './measurement.js';
 import { generationCandidates, generatorConfigs } from './intelligence.js';
 import {
   irtCompute,
@@ -27,6 +27,7 @@ export const computeExecutions = irtCompute
       requestId: uuid('request_id')
         .notNull()
         .references((): AnyPgColumn => analysisRequests.id, { onDelete: 'restrict' }),
+      dispatchId: uuid('dispatch_id').references(() => analysisRequestDispatches.id, { onDelete: 'restrict' }),
       attemptNumber: integer('attempt_number').notNull(),
       fencingToken: uuid('fencing_token').defaultRandom().notNull(),
       servicePrincipalId: uuid('service_principal_id')
@@ -41,6 +42,7 @@ export const computeExecutions = irtCompute
     },
     (t) => [
       uniqueIndex('compute_executions_request_attempt_uq').on(t.requestId, t.attemptNumber),
+      uniqueIndex('compute_executions_dispatch_uq').on(t.dispatchId),
       uniqueIndex('compute_executions_request_active_uq')
         .on(t.requestId)
         .where(sql`${t.status} = 'RUNNING'`),

@@ -551,6 +551,26 @@ export const outboxDeliveries = pgTable(
   ],
 ).enableRLS();
 
+/** Main-owned immutable authorization to run one compute execution. */
+export const analysisRequestDispatches = pgTable(
+  'analysis_request_dispatches',
+  {
+    id: id(),
+    requestId: ref('request_id', () => analysisRequests.id).notNull(),
+    generation: integer('generation').notNull(),
+    operationKey: text('operation_key').notNull(),
+    operationFingerprint: text('operation_fingerprint').notNull(),
+    actorUserId: ref('actor_user_id', () => users.id).notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('analysis_dispatch_operation_uq').on(t.operationKey),
+    uniqueIndex('analysis_dispatch_generation_uq').on(t.requestId, t.generation),
+    uniqueIndex('analysis_dispatch_id_request_uq').on(t.id, t.requestId),
+    check('analysis_dispatch_generation_ck', sql`${t.generation} > 0`),
+  ],
+).enableRLS();
+
 export const calibrationBaselines = pgTable(
   'calibration_baselines',
   {

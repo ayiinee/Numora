@@ -25,7 +25,7 @@ export async function adminMutation<T extends { id: string }>(
     for (let depth = 0; depth < 4 && cause instanceof Object; depth++) {
       const record = cause as { code?: string; cause?: unknown };
       if (record.code === '23505')
-        throw new ConflictException('Kode, urutan, atau versi sudah digunakan.');
+        throw new ConflictException('Kode, slug, urutan, atau versi sudah digunakan.');
       if (record.code === '23503') throw new BadRequestException('Referensi tidak tersedia.');
       if (record.code === '23514')
         throw new BadRequestException('Data tidak memenuhi aturan skema.');

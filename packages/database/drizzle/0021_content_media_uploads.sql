@@ -28,3 +28,7 @@ ALTER TABLE "content_media_uploads" ADD CONSTRAINT "content_media_uploads_actor_
 CREATE UNIQUE INDEX "content_media_uploads_actor_idempotency_uq" ON "content_media_uploads" USING btree ("actor_user_id","idempotency_key");--> statement-breakpoint
 CREATE UNIQUE INDEX "content_media_uploads_pending_key_uq" ON "content_media_uploads" USING btree ("bucket","pending_object_key");--> statement-breakpoint
 CREATE INDEX "content_media_uploads_actor_time_idx" ON "content_media_uploads" USING btree ("actor_user_id","created_at");
+--> statement-breakpoint
+GRANT SELECT, INSERT, UPDATE ON public.content_media_uploads TO numora_main_runtime;
+--> statement-breakpoint
+CREATE POLICY numora_main_access ON public.content_media_uploads FOR ALL TO numora_main_runtime USING (true) WITH CHECK (true);

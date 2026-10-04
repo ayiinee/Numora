@@ -75,9 +75,9 @@ Tidak ada signed GET endpoint dalam PR ini. Untuk preview/penyajian soal, backen
 
 ## Migrasi database
 
-Drizzle menghasilkan **`0018_content_media_uploads.sql`**, menambah satu tabel reservasi `content_media_uploads` beserta FK user, uniqueness actor/idempotency, indeks, constraint ukuran/hash/status/expiry, dan RLS aktif tanpa policy browser. Operasi melalui NestJS memakai koneksi database server yang sudah digunakan repo. Pastikan role server mempunyai hak yang diperlukan; jangan memberi akses Supabase Data API pada Student untuk tabel ini.
+Drizzle menghasilkan **`0021_content_media_uploads.sql`**, menambah satu tabel reservasi `content_media_uploads` beserta FK user, uniqueness actor/idempotency, indeks, constraint ukuran/hash/status/expiry, dan RLS aktif tanpa policy browser. Operasi melalui NestJS memakai koneksi database server yang sudah digunakan repo. Pastikan role server mempunyai hak yang diperlukan; jangan memberi akses Supabase Data API pada Student untuk tabel ini.
 
-Migrasi belum diterapkan ke Cloud. Setelah review, pemilik database menjalankan alur migrasi standar repo dengan backup/restore dan target koneksi yang diverifikasi. Rantai baru berbasis main `2dc6bf6`, yang sudah memiliki migrasi Variant/IRT 0014–0017. Jangan menerapkan SQL bernomor sama dari branch lama. PR slug/level #54 tetap terpisah dan perlu rekonsiliasi nomor/rantai terhadap main sebelum merge. Upload media sendiri tidak membutuhkan slug/level baru.
+Migrasi belum diterapkan ke Cloud. Rantai rekonsiliasi 4 Oktober 2026 mempertahankan migrasi main 0014?0018 (Variant/IRT dan dispatch), menambahkan slug/level #54 sebagai 0019?0020, lalu media sebagai **0021**. Role `numora_main_runtime` menerima SELECT/INSERT/UPDATE dengan policy RLS server; role compute dan browser tidak mendapat akses media. Setelah review, pemilik database menjalankan alur migrasi standar repo dengan backup/restore dan target koneksi yang diverifikasi. Jangan menerapkan SQL bernomor sama dari branch lama.
 
 ## Menjalankan enam gambar sampel
 
@@ -114,3 +114,5 @@ Enam file total **9.191 byte**, lima isi unik. Satu gambar boleh muncul di beber
 Tes HTTP menggunakan guard/validasi asli dengan database/storage terisolasi. Tes storage memakai signer SDK asli dan network mock; memeriksa staging vs final, header signature, hash/type/size dan error sanitization. Tes uploader memastikan token tidak terkirim ke R2, kegagalan PUT tidak completion, receipt mismatch tidak mengisi key, dan replay VERIFIED tidak PUT ulang. Tes integrasi PostgreSQL menguji race reservasi/completion dan audit satu kali, hanya pada database TEST lokal; CI menyediakan database tersebut.
 
 Semua itu belum membuktikan credentials R2 nyata, CORS browser, deployment, upload Cloud atau importer berhasil. Uji Cloud satu file setelah konfigurasi operator sebelum upload batch. Rubrik PGK, mapping kesulitan PvP dan review akademik tidak ditutup oleh endpoint ini.
+
+**Bukti rekonsiliasi:** tes concurrency/audit memakai LOGIN main non-owner dengan NOBYPASSRLS; tes terpisah memastikan role compute ditolak. CI PostgreSQL menjalankan keduanya. Ini tidak menyatakan Cloud/R2 sudah diaktifkan.

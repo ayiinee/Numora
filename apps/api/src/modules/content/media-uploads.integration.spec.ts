@@ -1,12 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
-import {
-  auditLogs,
-  closeDatabaseConnection,
-  contentMediaUploads,
-  getDatabase,
-  users,
-} from '@tka/database';
+import { auditLogs, closeDatabaseConnection, getDatabase } from '@tka/database';
+import postgres from 'postgres';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { MediaUploadsRepository, type NewMediaUpload } from './media-uploads.repository';
 
@@ -16,6 +11,9 @@ const url = process.env.TEST_DATABASE_URL;
   () => {
     const owner = randomUUID();
     const repository = new MediaUploadsRepository();
+    const previousUrl = process.env.DATABASE_URL;
+    const login = `test_media_${owner.replaceAll('-', '')}`;
+    let admin: ReturnType<typeof postgres>;
     beforeAll(async () => {
       if (
         !url ||
@@ -23,24 +21,39 @@ const url = process.env.TEST_DATABASE_URL;
         process.env.NODE_ENV !== 'test'
       )
         throw new Error('Test database must be local and NODE_ENV=test.');
-      process.env.DATABASE_URL = url;
-      await getDatabase()
-        .db.insert(users)
-        .values({
-          id: owner,
-          authUserId: randomUUID(),
-          role: 'ADMIN',
-          email: `media-${owner}@example.test`,
-          displayName: 'TEST Media Admin',
-        });
+      admin = postgres(url, { max: 1, onnotice: () => {} });
+      const password = randomUUID();
+      await admin.unsafe(
+        `CREATE ROLE "${login}" LOGIN INHERIT NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS PASSWORD '${password}'`,
+      );
+      await admin.unsafe(`GRANT numora_main_runtime TO "${login}"`);
+      await admin`INSERT INTO users(id, auth_user_id, role, email, display_name)
+        VALUES(${owner}, ${randomUUID()}, 'ADMIN', ${`media-${owner}@example.test`}, 'TEST Media Admin')`;
+      await closeDatabaseConnection();
+      const runtimeUrl = new URL(url);
+      runtimeUrl.username = login;
+      runtimeUrl.password = password;
+      process.env.DATABASE_URL = runtimeUrl.toString();
     });
     afterAll(async () => {
-      await getDatabase().db.delete(auditLogs).where(eq(auditLogs.actorUserId, owner));
-      await getDatabase()
-        .db.delete(contentMediaUploads)
-        .where(eq(contentMediaUploads.actorUserId, owner));
-      await getDatabase().db.delete(users).where(eq(users.id, owner));
       await closeDatabaseConnection();
+      if (previousUrl === undefined) delete process.env.DATABASE_URL;
+      else process.env.DATABASE_URL = previousUrl;
+      if (admin) {
+        await admin`DELETE FROM audit_logs WHERE actor_user_id=${owner}`;
+        await admin`DELETE FROM content_media_uploads WHERE actor_user_id=${owner}`;
+        await admin`DELETE FROM users WHERE id=${owner}`;
+        await admin.unsafe(`DROP ROLE IF EXISTS "${login}"`);
+        await admin.end();
+      }
+    });
+    it('does not grant media access to the compute role', async () => {
+      await expect(
+        admin.begin(async (tx) => {
+          await tx.unsafe('SET LOCAL ROLE numora_irt_runtime');
+          await tx`SELECT id FROM content_media_uploads LIMIT 1`;
+        }),
+      ).rejects.toMatchObject({ code: '42501' });
     });
     it('concurrent retries create one durable row and one audit record for each transition', async () => {
       const input: NewMediaUpload = {

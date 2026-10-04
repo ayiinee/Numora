@@ -1,0 +1,29 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "https://tka.local/contracts/compute/notification-v3.schema.json",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "requestId",
+    "inputDigest",
+    "dispatchGeneration"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": 3
+    },
+    "requestId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "inputDigest": {
+      "type": "string",
+      "pattern": "^[0-9a-f]{64}$"
+    },
+    "dispatchGeneration": {
+      "type": "integer",
+      "minimum": 1
+    }
+  }
+}

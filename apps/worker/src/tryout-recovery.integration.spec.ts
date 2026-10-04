@@ -21,9 +21,9 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
     const [reviewer] = await db.insert(users).values({ authUserId: randomUUID(),
       role: 'ADMIN', displayName: 'TEST ONLY reviewer', email: `${tag}@example.test` })
       .returning();
-    const [chapter] = await db.insert(chapters).values({ code: tag, name: 'TEST ONLY', displayOrder: ++chapterOrder }).returning();
+    const [chapter] = await db.insert(chapters).values({ code: tag, slug: tag, name: 'TEST ONLY', displayOrder: ++chapterOrder }).returning();
     const [subchapter] = await db.insert(subchapters).values({ chapterId: chapter!.id,
-      code: tag, name: 'TEST ONLY', displayOrder: 1 }).returning();
+      code: tag, slug: tag, name: 'TEST ONLY', displayOrder: 1 }).returning();
     const [level] = await db.insert(levels).values({ subchapterId: subchapter!.id, levelNumber: 1 }).returning();
     const [competency] = await db.insert(competencies).values({ subchapterId: subchapter!.id,
       code: tag, description: 'TEST ONLY' }).returning();

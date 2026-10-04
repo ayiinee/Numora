@@ -33,7 +33,8 @@
     "ioredis": "6.0.0",
     "reflect-metadata": "^0.2.2",
     "rxjs": "^7.8.2",
-    "socket.io": "4.8.4"
+    "socket.io": "4.8.4",
+    "@tka/irt-orchestration": "workspace:*"
   },
   "devDependencies": {
     "@nestjs/cli": "^12.0.0",
@@ -41,6 +42,7 @@
     "@types/node": "24.19.0",
     "socket.io-client": "4.8.4",
     "typescript": "5.9.3",
-    "vitest": "5.0.2"
+    "vitest": "5.0.2",
+    "postgres": "3.4.9"
   }
 }

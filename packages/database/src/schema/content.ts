@@ -30,6 +30,7 @@ export const chapters = pgTable(
   {
     id: uuid('id').defaultRandom().primaryKey(),
     code: text('code').notNull(),
+    slug: text('slug').notNull(),
     name: text('name').notNull(),
     description: text('description'),
     displayOrder: integer('display_order').notNull(),
@@ -37,6 +38,8 @@ export const chapters = pgTable(
   },
   (table) => [
     uniqueIndex('chapters_code_uq').on(table.code),
+    uniqueIndex('chapters_slug_uq').on(table.slug),
+    check('chapters_slug_ck', sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
     uniqueIndex('chapters_order_uq').on(table.displayOrder),
     check('chapters_order_ck', sql`${table.displayOrder} > 0`),
     check('chapters_name_ck', sql`length(trim(${table.name})) > 0`),
@@ -51,6 +54,7 @@ export const subchapters = pgTable(
       .notNull()
       .references(() => chapters.id, { onDelete: 'restrict' }),
     code: text('code').notNull(),
+    slug: text('slug').notNull(),
     name: text('name').notNull(),
     description: text('description'),
     displayOrder: integer('display_order').notNull(),
@@ -58,6 +62,8 @@ export const subchapters = pgTable(
   },
   (table) => [
     uniqueIndex('subchapters_chapter_code_uq').on(table.chapterId, table.code),
+    uniqueIndex('subchapters_chapter_slug_uq').on(table.chapterId, table.slug),
+    check('subchapters_slug_ck', sql`${table.slug} ~ '^[a-z0-9]+(-[a-z0-9]+)*$'`),
     uniqueIndex('subchapters_chapter_order_uq').on(table.chapterId, table.displayOrder),
     check('subchapters_order_ck', sql`${table.displayOrder} > 0`),
   ],
@@ -102,11 +108,23 @@ export const questions = pgTable(
     primaryCompetencyId: uuid('primary_competency_id')
       .notNull()
       .references(() => competencies.id, { onDelete: 'restrict' }),
+    // Source level within an indicator; learner progress remains scoped to subchapter levels.
+    curriculumLevelNumber: integer('curriculum_level_number'),
     sourceRef: text('source_ref'),
     status: contentStatus('status').notNull().default('DRAFT'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('questions_competency_idx').on(table.primaryCompetencyId)],
+  (table) => [
+    index('questions_competency_idx').on(table.primaryCompetencyId),
+    index('questions_competency_level_idx').on(
+      table.primaryCompetencyId,
+      table.curriculumLevelNumber,
+    ),
+    check(
+      'questions_curriculum_level_ck',
+      sql`${table.curriculumLevelNumber} is null or ${table.curriculumLevelNumber} > 0`,
+    ),
+  ],
 ).enableRLS();
 
 export const questionVariants = pgTable(

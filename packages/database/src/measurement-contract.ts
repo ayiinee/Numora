@@ -31,7 +31,7 @@ export interface CreateAnalysisRequest {
   baselineId?: string;
   referenceSetId?: string;
   configurationPins: ConfigurationPin[];
-  dueAt?: Date;
+  dueAt?: Date | string;
 }
 export interface ComputeArtifact {
   executionId: string;
@@ -87,4 +87,15 @@ export interface TryoutRespondentResult {
   score: number;
   /** Mapping defines rounding/resolution; main ranks this canonical score. */
   mappingApprovalId: string;
+}
+
+/** Foundation adopts item evidence only; respondent grades require a later contract. */
+export interface CalibrationArtifactPayloadV3 {
+  items: CalibrationItem[];
+}
+export interface ComputeNotificationV3 {
+  contractVersion: 3;
+  requestId: string;
+  inputDigest: string;
+  dispatchGeneration: number;
 }

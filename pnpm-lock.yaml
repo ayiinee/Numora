@@ -235,6 +235,9 @@ importers:
       '@tka/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@tka/irt-orchestration':
+        specifier: workspace:*
+        version: link:../../packages/irt-orchestration
       bullmq:
         specifier: 6.3.9
         version: 6.3.9(ioredis@6.0.0(supports-color@7.2.0))
@@ -269,6 +272,9 @@ importers:
       '@types/node':
         specifier: 24.19.0
         version: 24.19.0
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
       socket.io-client:
         specifier: 4.8.4
         version: 4.8.4(supports-color@7.2.0)
@@ -363,6 +369,9 @@ importers:
       '@tka/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@tka/irt-orchestration':
+        specifier: workspace:*
+        version: link:../../packages/irt-orchestration
       bullmq:
         specifier: 6.3.9
         version: 6.3.9(ioredis@6.0.0(supports-color@7.2.0))
@@ -427,6 +436,25 @@ importers:
       tsx:
         specifier: ^4.23.0
         version: 4.23.15
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 5.0.2
+        version: 5.0.2(@types/node@24.19.0)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(jiti@2.7.0))
+
+  packages/irt-orchestration:
+    dependencies:
+      '@tka/database':
+        specifier: workspace:*
+        version: link:../database
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.0
+        version: 24.19.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
