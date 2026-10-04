@@ -159,8 +159,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
   }) => {
     const admin = await login(browser, 'admin');
     await admin.goto('/admin/schools');
-    await admin.getByLabel('Kode sekolah', { exact: true }).fill(`JOB06-${Date.now()}`);
-    await admin.getByLabel('Nama sekolah', { exact: true }).fill('JOB06 Test School');
+    await admin
+      .getByRole('textbox', { name: 'Kode sekolah', exact: true })
+      .fill(`JOB06-${Date.now()}`);
+    await admin
+      .getByRole('textbox', { name: 'Nama sekolah', exact: true })
+      .fill('JOB06 Test School');
     const created = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/schools'),
     );
@@ -177,8 +181,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher');
     await expect(teacher).toHaveURL(/verification-required/);
-    await teacher.getByLabel('Sekolah', { exact: true }).selectOption(school.id);
-    await teacher.getByLabel('Token verifikasi', { exact: true }).fill(token.token);
+    await teacher.getByRole('combobox', { name: 'Sekolah', exact: true }).selectOption(school.id);
+    await teacher.getByRole('textbox', { name: 'Token verifikasi', exact: true }).fill(token.token);
     await teacher.getByRole('button', { name: 'Verifikasi dan lanjutkan', exact: true }).click();
     await expect(teacher).toHaveURL(/\/teacher$/);
     await teacher.getByText('Buat kelas baru', { exact: false }).click();
