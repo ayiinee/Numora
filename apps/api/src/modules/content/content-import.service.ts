@@ -179,7 +179,7 @@ export class ContentImportService {
       sourceNamespace: body.sourceNamespace,
       canImportDraft: records.every((r) => !r.errors.length),
       items: records.map((r) => ({
-        externalId: r.q.externalId ?? '',
+        externalId: typeof r.q.externalId === 'string' ? r.q.externalId : '',
         canImportDraft: !r.errors.length,
         canPreview: !r.errors.length && r.ready,
         blockers: [...new Set([...r.errors, ...(!r.ready ? ['MEDIA_NOT_READY'] : [])])],

@@ -227,6 +227,13 @@ describe.skipIf(!testUrl)(
       expect((await owner`SELECT count(*)::int AS n FROM content_imports`)[0]!.n).toBe(0);
     });
     it('rejects malformed items, oversized batches and bodies at the HTTP boundary', async () => {
+      const malformed = await ok<ImportReportDto>('admin/content/import-validations', 'POST', {
+        sourceNamespace: namespace,
+        questions: [{ ...samples[0], externalId: { untrusted: 'object' } }],
+      });
+      expect(malformed.canImportDraft).toBe(false);
+      expect(malformed.items[0]!.externalId).toBe('');
+      expect(malformed.items[0]!.blockers).toContain('INVALID_SCHEMA');
       for (const questions of [[], [null], ['untrusted'], Array(101).fill(samples[0])]) {
         const response = await request('admin/content/import-validations', 'POST', {
           sourceNamespace: namespace,
