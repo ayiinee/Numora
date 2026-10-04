@@ -821,11 +821,19 @@ test('history keeps zero/context, hides pending links and retries pagination wit
   await expect(
     page.getByRole('link', { name: /History waiting fixture|History Pretest fixture/ }),
   ).toHaveCount(0);
-  expect(
-    await page
-      .getByText('Menunggu hasil', { exact: true })
-      .evaluate((element) => element.scrollWidth <= element.clientWidth),
-  ).toBe(true);
+  await page.evaluate(() => document.fonts.ready);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 844 });
+    expect(
+      await page
+        .getByText('Menunggu hasil', { exact: true })
+        .evaluate((element) => element.scrollWidth <= element.clientWidth),
+    ).toBe(true);
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+  }
+  await page.setViewportSize({ width: 390, height: 844 });
   await page.getByRole('button', { name: 'Muat hasil lain' }).click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'Halaman berikutnya belum dapat dimuat' }),
