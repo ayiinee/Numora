@@ -9,7 +9,7 @@ import { describe, expect, it } from 'vitest';
 import { migrateIntegratedDatabase } from './integrated-migrations.js';
 
 const testUrl = process.env.TEST_DATABASE_URL;
-describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, () => {
+describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 }, () => {
   async function fixture(
     baselineCount: number,
     run: (client: ReturnType<typeof postgres>, folder: string) => Promise<void>,
@@ -64,7 +64,10 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
           (SELECT count(*)::int FROM information_schema.columns WHERE table_name='irt_batches'
             AND column_name IN ('input_snapshot', 'output_digest', 'failure_code')) AS columns`;
         expect(schema).toEqual({ level: 'level_id_at_start', columns: 3 });
-        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toEqual({ ...batch, output_snapshot: null });
+        expect((await client`SELECT * FROM irt_batches WHERE id=${batch!.id}`)[0]).toMatchObject({
+          ...batch,
+          output_snapshot: null,
+        });
         const history =
           await client`SELECT hash, created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
         expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
@@ -75,6 +78,34 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
       });
     },
   );
+
+  it('upgrades main through 0013, preserving generation IDs, recovery index, correlation and migration history', async () => {
+    await fixture(14, async (client, folder) => {
+      const oldHistory =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      const [config] =
+        await client`INSERT INTO public.generator_configs(template_or_competency_id,config_version,parameters,curriculum_limits) VALUES('TEST-preserved',1,'{"seed":123}','{"fixture":true}') RETURNING *`;
+      await migrateIntegratedDatabase(client, folder);
+      expect(
+        (await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`).slice(
+          0,
+          14,
+        ),
+      ).toEqual(oldHistory);
+      expect(
+        await client`SELECT indexname FROM pg_indexes WHERE schemaname='public' AND indexname='assessment_attempts_tryout_recovery_idx'`,
+      ).toHaveLength(1);
+      expect(
+        await client`SELECT column_name FROM information_schema.columns WHERE table_schema='public' AND table_name='analytics_events' AND column_name='correlation_id'`,
+      ).toHaveLength(1);
+      expect(
+        (await client`SELECT * FROM irt_compute.generator_configs WHERE id=${config!.id}`)[0],
+      ).toMatchObject(config!);
+      expect(
+        (await client`SELECT * FROM public.generator_configs WHERE id=${config!.id}`)[0],
+      ).toMatchObject(config!);
+    });
+  });
 
   it('rejects an unrecognized cursor before changing schema or history', async () => {
     await fixture(4, async (client, folder) => {

@@ -189,6 +189,7 @@ export class IrtIntegrationService {
             version === '2'
               ? eq(assessmentAttempts.assessmentType, 'TRYOUT')
               : eq(questionVersions.questionType, 'SINGLE_CHOICE'),
+            eq(assessmentAttempts.purpose, 'REGULAR'),
             isNotNull(assessmentAttempts.finishedAt),
             lte(assessmentAttempts.finishedAt, new Date(input.cutoffAt)),
             version === '1' ? isNotNull(attemptAnswers.gradedAt) : undefined,

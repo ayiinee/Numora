@@ -40,6 +40,7 @@ export class AssessmentHistoryService {
     // A cursor must belong to the same visible result set as the requested page.
     const visible = and(
       eq(assessmentAttempts.studentId, studentId),
+      eq(assessmentAttempts.purpose, 'REGULAR'),
       inArray(assessmentAttempts.assessmentType, ['PRETEST', 'DRILL', 'TRYOUT']),
       isNotNull(assessmentAttempts.finishedAt),
       or(

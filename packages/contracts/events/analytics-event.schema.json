@@ -14,15 +14,65 @@
     "payload"
   ],
   "properties": {
-    "eventId": { "type": "string", "format": "uuid" },
-    "eventName": { "type": "string", "pattern": "^[a-z][a-z0-9_]*$" },
-    "eventVersion": { "type": "integer", "minimum": 1 },
-    "occurredAt": { "type": "string", "format": "date-time" },
-    "actorId": { "type": ["string", "null"], "format": "uuid" },
-    "actorRole": { "type": ["string", "null"], "enum": ["STUDENT", "TEACHER", "ADMIN", null] },
-    "entityType": { "type": "string", "minLength": 1 },
-    "entityId": { "type": "string", "format": "uuid" },
-    "correlationId": { "type": ["string", "null"], "format": "uuid" },
-    "payload": { "type": "object" }
+    "eventId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "eventName": {
+      "type": "string",
+      "anyOf": [
+        {
+          "pattern": "^[a-z][a-z0-9_]*$"
+        },
+        {
+          "const": "analysis.requested"
+        }
+      ]
+    },
+    "eventVersion": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "occurredAt": {
+      "type": "string",
+      "format": "date-time"
+    },
+    "actorId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "actorRole": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "enum": [
+        "STUDENT",
+        "TEACHER",
+        "ADMIN",
+        null
+      ]
+    },
+    "entityType": {
+      "type": "string",
+      "minLength": 1
+    },
+    "entityId": {
+      "type": "string",
+      "format": "uuid"
+    },
+    "correlationId": {
+      "type": [
+        "string",
+        "null"
+      ],
+      "format": "uuid"
+    },
+    "payload": {
+      "type": "object"
+    }
   }
 }

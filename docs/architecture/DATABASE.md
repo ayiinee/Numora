@@ -1,5 +1,11 @@
 # Database Architecture
 
+**ENGINEERING UPDATE — 3 October 2026:** [ADR-011](../adr/ADR-011-separated-irt-compute.md)
+introduces the `irt_compute` namespace, separate runtime roles and an additive compute
+handoff. See [Variant and IRT persistence](../data/VARIANT_IRT_DATABASE.md) for ownership,
+integrity rules and migration/rollout instructions. The single Drizzle migration stream
+remains owned by this repository.
+
 **Database:** PostgreSQL  
 **ORM/migrations:** Drizzle ORM + Drizzle Kit  
 **Durable source of truth:** PostgreSQL

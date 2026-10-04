@@ -1,6 +1,8 @@
 # NUMORA UI guidance
 
-**ENGINEERING DECISION — 2 October 2026:** the project owner authorized implementation of the responsive redesign inspired by the supplied `hunting.zip` education-app screenshots. The current composition and its boundaries are documented in [REDESIGN_IMPLEMENTATION.md](REDESIGN_IMPLEMENTATION.md). This supersedes the older screen composition below for the active frontend, while preserving NUMORA identity, PRD rules, routes, and API contracts. The older Figma mapping remains an asset/flow reference.
+**ENGINEERING DECISION — 2 October 2026:** the project owner authorized implementation of the responsive redesign inspired by the supplied `hunting.zip` education-app screenshots. The active implementation uses shared `AppShell` and UI primitives, local tokens, and responsive composition in `apps/web/src/app/numora.css`. This supersedes the older screen composition below for the active frontend, while preserving NUMORA identity, PRD rules, routes, and API contracts. The older Figma mapping remains an asset/flow reference.
+
+**ENGINEERING MAINTENANCE — 3 October 2026:** historical redesign proposals and implementation reports are removed from this directory. This README, the team-supplied design-system baseline, and the workflow reference remain available because `AGENTS.md` and the development guides require them. This cleanup does not approve a new visual or product policy.
 
 The UI/UX team supplied [NUMORA_UI_DESIGN_SYSTEM.md](NUMORA_UI_DESIGN_SYSTEM.md) (v0.1, 28 September 2026) and [NUMORA_UI_SKILL.md](NUMORA_UI_SKILL.md) as a visual and frontend workflow baseline while screen designs are being prepared. The design-system document is copied from the supplied file. The skill document is copied with its relative design-system path adjusted for this directory and its asset availability clarified. It is a team reference document here, not an installed Codex skill.
 

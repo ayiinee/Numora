@@ -46,14 +46,21 @@ export async function apiRequest<T>(
   options?: RequestInit,
 ): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl;
+  if (process.env.NODE_ENV === 'development') {
+    console.debug('[NUMORA API REQUEST]', {
+      path,
+      method: options?.method ?? 'GET',
+      hasToken: Boolean(token),
+    });
+  }
   let response: Response;
   try {
     response = await fetch(`${baseUrl}/${path}`, {
       ...options,
       headers: {
-        'Content-Type': 'application/json',
+        ...(options?.headers ?? {}),
         Authorization: `Bearer ${token}`,
-        ...options?.headers,
+        'Content-Type': 'application/json',
       },
       cache: 'no-store',
     });

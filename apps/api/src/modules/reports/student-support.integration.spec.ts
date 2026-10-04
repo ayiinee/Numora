@@ -83,14 +83,12 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
           curationStatus: 'READY',
         })
         .returning();
-      await db
-        .insert(videoSubchapterMappings)
-        .values({
-          videoId: unsafe!.id,
-          subchapterId: subchapter,
-          recommendationOrder: 1,
-          status: 'READY',
-        });
+      await db.insert(videoSubchapterMappings).values({
+        videoId: unsafe!.id,
+        subchapterId: subchapter,
+        recommendationOrder: 1,
+        status: 'READY',
+      });
     }
     for (let i = 0; i < 5; i++) {
       const [video] = await db
@@ -164,13 +162,22 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
         .from(videoReports)
         .where(eq(videoReports.mappingId, videos.items[0]!.mappingId)),
     ).toHaveLength(1);
-    await db
-      .update(assessmentAttempts)
-      .set({ score0To100: '80' })
+    const [source] = await db
+      .select()
+      .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, attemptId));
+    const [mastered] = await db
+      .insert(assessmentAttempts)
+      .values({ ...source!, id: randomUUID(), score0To100: '80' })
+      .returning();
     expect(
       await (
-        await request(`students/me/drill-attempts/${attemptId}/videos`, 'GET', undefined, 'student')
+        await request(
+          `students/me/drill-attempts/${mastered!.id}/videos`,
+          'GET',
+          undefined,
+          'student',
+        )
       ).json(),
     ).toEqual({ items: [] });
   });
@@ -205,95 +212,84 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
       expect(
         (await fixture.request('students/me/question-reports', 'POST', body, token)).status,
       ).toBe(409);
-    await db
-      .update(assessmentAttempts)
-      .set({ score0To100: '70' })
+    const videos = (await (
+      await fixture.request(
+        `students/me/drill-attempts/${fixture.attemptId}/videos`,
+        'GET',
+        undefined,
+        'student',
+      )
+    ).json()) as { items: { mappingId: string }[] };
+    const videoBody = {
+      clientRequestId: randomUUID(),
+      attemptId: fixture.attemptId,
+      mappingId: videos.items[0]!.mappingId,
+      category: 'TEST video retry',
+    };
+    const sent = await Promise.all(
+      Array.from({ length: 2 }, () =>
+        fixture.request('students/me/video-reports', 'POST', videoBody, 'student'),
+      ),
+    );
+    expect(sent.map((r) => r.status)).toEqual([201, 201]);
+    const [stored] = await db
+      .select()
+      .from(videoReports)
+      .where(eq(videoReports.id, videoBody.clientRequestId));
+    expect(stored!.attemptContext).toMatchObject({
+      attemptId: fixture.attemptId,
+      levelId: fixture.level,
+      subchapterId: fixture.subchapter,
+    });
+    const [original] = await db
+      .select()
+      .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, fixture.attemptId));
-    try {
-      const videos = (await (
+    const [different] = await db
+      .insert(assessmentAttempts)
+      .values({ ...original!, id: randomUUID() })
+      .returning();
+    expect(
+      (
         await fixture.request(
-          `students/me/drill-attempts/${fixture.attemptId}/videos`,
-          'GET',
-          undefined,
+          'students/me/video-reports',
+          'POST',
+          { ...videoBody, attemptId: different!.id },
           'student',
         )
-      ).json()) as { items: { mappingId: string }[] };
-      const videoBody = {
-        clientRequestId: randomUUID(),
-        attemptId: fixture.attemptId,
-        mappingId: videos.items[0]!.mappingId,
-        category: 'TEST video retry',
-      };
-      const sent = await Promise.all(
-        Array.from({ length: 2 }, () =>
-          fixture.request('students/me/video-reports', 'POST', videoBody, 'student'),
+      ).status,
+    ).toBe(409);
+    expect(
+      await db.select().from(videoReports).where(eq(videoReports.id, videoBody.clientRequestId)),
+    ).toHaveLength(1);
+    // More requests than the default pool capacity must not acquire a second connection inside a transaction.
+    const burst = await Promise.all(
+      Array.from({ length: 12 }, () =>
+        fixture.request(
+          'students/me/video-reports',
+          'POST',
+          { ...videoBody, clientRequestId: randomUUID() },
+          'student',
         ),
-      );
-      expect(sent.map((r) => r.status)).toEqual([201, 201]);
-      const [stored] = await db
-        .select()
-        .from(videoReports)
-        .where(eq(videoReports.id, videoBody.clientRequestId));
-      expect(stored!.attemptContext).toMatchObject({
-        attemptId: fixture.attemptId,
-        levelId: fixture.level,
-        subchapterId: fixture.subchapter,
-      });
-      const [original] = await db
-        .select()
-        .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, fixture.attemptId));
-      const [different] = await db
-        .insert(assessmentAttempts)
-        .values({ ...original!, id: randomUUID() })
-        .returning();
-      expect(
-        (
-          await fixture.request(
-            'students/me/video-reports',
-            'POST',
-            { ...videoBody, attemptId: different!.id },
-            'student',
-          )
-        ).status,
-      ).toBe(409);
-      expect(
-        await db.select().from(videoReports).where(eq(videoReports.id, videoBody.clientRequestId)),
-      ).toHaveLength(1);
-      // More requests than the default pool capacity must not acquire a second connection inside a transaction.
-      const burst = await Promise.all(
-        Array.from({ length: 12 }, () =>
-          fixture.request(
-            'students/me/video-reports',
-            'POST',
-            { ...videoBody, clientRequestId: randomUUID() },
-            'student',
-          ),
-        ),
-      );
-      expect(burst.map((response) => response.status)).toEqual(Array(12).fill(201));
-      await db
-        .update(videoSubchapterMappings)
-        .set({ status: 'ARCHIVED' })
-        .where(eq(videoSubchapterMappings.id, videoBody.mappingId));
-      expect(
-        (await fixture.request('students/me/video-reports', 'POST', videoBody, 'student')).status,
-      ).toBe(201);
-      expect(
-        (
-          await fixture.request(
-            'students/me/video-reports',
-            'POST',
-            { ...videoBody, category: 'Different' },
-            'student',
-          )
-        ).status,
-      ).toBe(409);
-    } finally {
-      await db
-        .update(assessmentAttempts)
-        .set({ score0To100: '80' })
-        .where(eq(assessmentAttempts.id, fixture.attemptId));
-    }
+      ),
+    );
+    expect(burst.map((response) => response.status)).toEqual(Array(12).fill(201));
+    await db
+      .update(videoSubchapterMappings)
+      .set({ status: 'ARCHIVED' })
+      .where(eq(videoSubchapterMappings.id, videoBody.mappingId));
+    expect(
+      (await fixture.request('students/me/video-reports', 'POST', videoBody, 'student')).status,
+    ).toBe(201);
+    expect(
+      (
+        await fixture.request(
+          'students/me/video-reports',
+          'POST',
+          { ...videoBody, category: 'Different' },
+          'student',
+        )
+      ).status,
+    ).toBe(409);
   });
 });

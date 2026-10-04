@@ -98,3 +98,9 @@ The source copies contain all 49 acceptance criteria. [QA Guide](../testing/QA_G
 ## JOB-09/20 engineering traceability - 3 October 2026
 
 TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recovery runbook; clean-SHA evidence is in backend status, with duration/close/release decisions still OPEN. Drill/TryOut events map to the [JOB-20 inventory](../development/JOB20_ANALYTICS_INVENTORY.md) and default-off proposed domain schema. Context is version-pinned and transactional; consumer correlation/backlog operations are implemented. Missing auth/view/Pretest/reward hooks and Data mapping/activation remain dependencies, not MVP acceptance.
+
+## Variant / IRT persistence ? 3 October 2026
+
+**ENGINEERING DECISION — JOB-10 foundation, Aini approved 3 October 2026:** TryOut v3 Admin prepare/status/manual retry, transactional frozen inputs, generation-fenced Redis notifications and atomic adoption of scientific evidence/item parameters extend PR #51. Default off; no statistical engine, respondent grades, parameter activation, publication, fallback or XP. See [handoff/runbook](../development/IRT_V3_RUNBOOK.md). Engineering acceptance uses isolated PostgreSQL/Redis and TEST ONLY compute fixtures.
+
+**ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.

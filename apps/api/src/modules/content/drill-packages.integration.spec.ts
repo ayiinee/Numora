@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import {
   assessmentPackages,
   assessmentAttempts,
@@ -45,6 +45,27 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         .where(eq(questions.id, row!.questionId));
     }
   });
+  async function copyVersion(id: string, changes: Partial<typeof questionVersions.$inferInsert>) {
+    const { db } = getDatabase();
+    const [source] = await db.select().from(questionVersions).where(eq(questionVersions.id, id));
+    const [latest] = await db
+      .select()
+      .from(questionVersions)
+      .where(eq(questionVersions.variantId, source!.variantId))
+      .orderBy(desc(questionVersions.versionNumber))
+      .limit(1);
+    const [copy] = await db
+      .insert(questionVersions)
+      .values({
+        ...source!,
+        id: randomUUID(),
+        versionNumber: latest!.versionNumber + 1,
+        revisedFromQuestionVersionId: id,
+        ...changes,
+      })
+      .returning();
+    return copy!;
+  }
   it('protects new endpoints and rejects forged identity/invalid inputs', async () => {
     const { request, body, other, versionIds } = fixture;
     for (const token of ['', 'bad', 'student', 'teacher', 'disabled'])
@@ -287,14 +308,16 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         .from(questionVersions)
         .where(eq(questionVersions.id, fixture.versionIds[0]!))
     )[0]!.optionsOrStatements;
-    await db
-      .update(questionVersions)
-      .set({ optionsOrStatements: (options as unknown[]).slice(0, 2) })
-      .where(eq(questionVersions.id, fixture.versionIds[0]!));
+    const copy = await copyVersion(fixture.versionIds[0]!, {
+      optionsOrStatements: (options as unknown[]).slice(0, 2),
+    });
     try {
       const invalid = await service.create(fixture.admin, {
         ...fixture.body,
         familyCode: `OPTIONS-${fixture.suffix}`,
+        questionVersionIds: fixture.versionIds.map((id) =>
+          id === fixture.versionIds[0] ? copy.id : id,
+        ),
       });
       await expect(service.publish(fixture.admin, invalid.id)).rejects.toMatchObject({
         status: 409,
@@ -303,7 +326,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
       await db
         .update(questionVersions)
         .set({ optionsOrStatements: options })
-        .where(eq(questionVersions.id, fixture.versionIds[0]!));
+        .where(eq(questionVersions.id, copy.id));
     }
   });
   it('rejects incomplete, unready and malformed content; rolls back audit failures', async () => {
@@ -316,21 +339,22 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     });
     await expect(service.publish(admin, incomplete.id)).rejects.toMatchObject({ status: 409 });
     const { db } = getDatabase();
-    const malformed = await service.create(admin, { ...body, familyCode: `BAD-${suffix}` });
-    await db
-      .update(questionVersions)
-      .set({ answerKey: { optionId: 'Z' } })
-      .where(eq(questionVersions.id, versionIds[9]!));
+    const copy = await copyVersion(versionIds[9]!, { answerKey: { optionId: 'Z' } });
+    const malformed = await service.create(admin, {
+      ...body,
+      familyCode: `BAD-${suffix}`,
+      questionVersionIds: versionIds.map((id) => (id === versionIds[9] ? copy.id : id)),
+    });
     await expect(service.publish(admin, malformed.id)).rejects.toMatchObject({ status: 409 });
     await db
       .update(questionVersions)
       .set({ answerKey: { optionId: 'A' }, contentStatus: 'DRAFT' })
-      .where(eq(questionVersions.id, versionIds[9]!));
+      .where(eq(questionVersions.id, copy.id));
     await expect(service.publish(admin, malformed.id)).rejects.toMatchObject({ status: 409 });
     await db
       .update(questionVersions)
       .set({ contentStatus: 'READY' })
-      .where(eq(questionVersions.id, versionIds[9]!));
+      .where(eq(questionVersions.id, copy.id));
     await expect(
       service.create(randomUUID(), { ...body, familyCode: `ROLLBACK-${suffix}` }),
     ).rejects.toMatchObject({ status: 400 });

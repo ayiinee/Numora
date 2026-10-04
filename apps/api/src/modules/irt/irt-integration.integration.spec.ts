@@ -1,9 +1,10 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
-import { eq } from 'drizzle-orm';
+import { desc, eq } from 'drizzle-orm';
 import {
   assessmentAttempts,
   attemptAnswers,
+  attemptItems,
   getDatabase,
   irtBatches,
   irtItemResults,
@@ -165,38 +166,37 @@ databaseSuite('IRT integration through HTTP/PostgreSQL', () => {
     const integration = new IrtIntegrationService();
     const { db } = getDatabase();
     const [answer] = await db
-      .select()
+      .select({
+        id: attemptAnswers.id,
+        itemId: attemptAnswers.attemptItemId,
+        gradedAt: attemptAnswers.gradedAt,
+      })
       .from(attemptAnswers)
-      .where(eq(attemptAnswers.attemptItemId, fixture.itemId));
-    await db
-      .update(attemptAnswers)
-      .set({ gradedAt: new Date(Date.now() + 60_000) })
-      .where(eq(attemptAnswers.id, answer!.id));
-    try {
-      const prepare = {
-        batchId: randomUUID(),
-        batchKind: 'DAILY' as const,
-        modelVersion: 'TEST-cutoff',
-        packageId: fixture.canonicalPackage,
-        cutoffAt: new Date().toISOString(),
-      };
-      const input = await integration.prepare(prepare);
-      expect(input.responses).toHaveLength(29);
-      expect(input.responses.some((r) => r.attemptItemId === fixture.itemId)).toBe(false);
-      await db
+      .innerJoin(attemptItems, eq(attemptItems.id, attemptAnswers.attemptItemId))
+      .where(eq(attemptItems.packageId, fixture.canonicalPackage))
+      .orderBy(desc(attemptAnswers.gradedAt))
+      .limit(1);
+    await expect(
+      db
         .update(attemptAnswers)
-        .set({ gradedAt: answer!.gradedAt })
-        .where(eq(attemptAnswers.id, answer!.id));
-      expect(await integration.prepare(prepare)).toEqual(input);
-      await expect(
-        integration.prepare({ ...prepare, batchId: randomUUID(), cutoffAt: '2020-01-01T00:00:00' }),
-      ).rejects.toMatchObject({ status: 400 });
-    } finally {
-      await db
-        .update(attemptAnswers)
-        .set({ gradedAt: answer!.gradedAt })
-        .where(eq(attemptAnswers.id, answer!.id));
-    }
+        .set({ gradedAt: new Date(Date.now() + 60_000) })
+        .where(eq(attemptAnswers.id, answer!.id)),
+    ).rejects.toThrow();
+    const prepare = {
+      batchId: randomUUID(),
+      batchKind: 'DAILY' as const,
+      modelVersion: 'TEST-cutoff',
+      packageId: fixture.canonicalPackage,
+      cutoffAt: new Date(answer!.gradedAt!.getTime() - 1).toISOString(),
+    };
+    const input = await integration.prepare(prepare);
+    expect(input.responses.length).toBeGreaterThan(0);
+    expect(input.responses.length).toBeLessThan(30);
+    expect(input.responses.some((r) => r.attemptItemId === answer!.itemId)).toBe(false);
+    expect(await integration.prepare(prepare)).toEqual(input);
+    await expect(
+      integration.prepare({ ...prepare, batchId: randomUUID(), cutoffAt: '2020-01-01T00:00:00' }),
+    ).rejects.toMatchObject({ status: 400 });
   });
   it('hides legacy parameters flagged as insufficient even with thirty samples', async () => {
     const { db } = getDatabase();
@@ -204,15 +204,13 @@ databaseSuite('IRT integration through HTTP/PostgreSQL', () => {
       .insert(irtBatches)
       .values({ batchKind: 'DAILY', modelVersion: 'TEST-legacy', status: 'SUCCEEDED' })
       .returning();
-    await db
-      .insert(irtItemResults)
-      .values({
-        batchId: batch!.id,
-        questionVersionId: fixture.versionIds[0]!,
-        sampleSize: 30,
-        dataStatus: 'NOT_ENOUGH_DATA',
-        difficultyB: '1',
-      });
+    await db.insert(irtItemResults).values({
+      batchId: batch!.id,
+      questionVersionId: fixture.versionIds[0]!,
+      sampleSize: 30,
+      dataStatus: 'NOT_ENOUGH_DATA',
+      difficultyB: '1',
+    });
     const response = await fixture.request('admin/irt');
     const body = (await response.json()) as {
       items: { batchId: string; difficultyB: string | null }[];

@@ -33,6 +33,40 @@ databaseSuite('PROPOSED IRT v2 integration, TEST ONLY model/scale/PGK answers', 
         releaseAt: new Date(Date.now() - 1000),
       })
       .returning();
+    const types = [
+      'SINGLE_CHOICE',
+      'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+      'CATEGORY',
+      'SINGLE_CHOICE',
+    ] as const;
+    const items: (typeof packageItems.$inferSelect)[] = [];
+    for (let i = 0; i < types.length; i++) {
+      const [source] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, fixture.versionIds[i]!));
+      const [version] = await db
+        .insert(questionVersions)
+        .values({
+          ...source!,
+          id: randomUUID(),
+          versionNumber: source!.versionNumber + 1,
+          questionType: types[i]!,
+          scoringRubricVersionId: null,
+          revisedFromQuestionVersionId: source!.id,
+        })
+        .returning();
+      const [pi] = await db
+        .insert(packageItems)
+        .values({
+          packageId: pkg!.id,
+          questionVersionId: version!.id,
+          displayOrder: i + 1,
+          maxPoints: '1',
+        })
+        .returning();
+      items.push(pi!);
+    }
     const [attempt] = await db
       .insert(assessmentAttempts)
       .values({
@@ -40,57 +74,39 @@ databaseSuite('PROPOSED IRT v2 integration, TEST ONLY model/scale/PGK answers', 
         packageId: pkg!.id,
         assessmentType: 'TRYOUT',
         scoringPolicyVersionId: fixture.policy,
-        status: 'SUBMITTED',
+        status: 'IN_PROGRESS',
         startedAt: new Date(Date.now() - 1000),
-        finishedAt: new Date(),
       })
       .returning();
-    const types = [
-      'SINGLE_CHOICE',
-      'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
-      'CATEGORY',
-      'SINGLE_CHOICE',
-    ] as const;
-    for (let i = 0; i < types.length; i++) {
-      const versionId = fixture.versionIds[i]!;
-      await db
-        .update(questionVersions)
-        .set({ questionType: types[i] })
-        .where(eq(questionVersions.id, versionId));
-      const [pi] = await db
-        .insert(packageItems)
-        .values({
-          packageId: pkg!.id,
-          questionVersionId: versionId,
-          displayOrder: i + 1,
-          maxPoints: '1',
-        })
-        .returning();
+    for (let i = 0; i < items.length; i++) {
+      const pi = items[i]!;
       const [item] = await db
         .insert(attemptItems)
         .values({
           attemptId: attempt!.id,
           packageId: pkg!.id,
-          packageItemId: pi!.id,
-          questionVersionId: versionId,
+          packageItemId: pi.id,
+          questionVersionId: pi.questionVersionId,
           displayOrder: i + 1,
           maxPoints: '1',
         })
         .returning();
       if (i < 3)
-        await db
-          .insert(attemptAnswers)
-          .values({
-            attemptItemId: item!.id,
-            savedAt: new Date(Date.now() - 1000),
-            answer:
-              i === 0
-                ? { optionId: 'A' }
-                : i === 1
-                  ? { optionIds: ['A', 'C'] }
-                  : { categories: { S1: 'TRUE', S2: 'FALSE' } },
-          });
+        await db.insert(attemptAnswers).values({
+          attemptItemId: item!.id,
+          savedAt: new Date(Date.now() - 1000),
+          answer:
+            i === 0
+              ? { optionId: 'A' }
+              : i === 1
+                ? { optionIds: ['A', 'C'] }
+                : { categories: { S1: 'TRUE', S2: 'FALSE' } },
+        });
     }
+    await db
+      .update(assessmentAttempts)
+      .set({ status: 'SUBMITTED', finishedAt: new Date() })
+      .where(eq(assessmentAttempts.id, attempt!.id));
     const prepare = {
       batchId: randomUUID(),
       batchKind: 'TRYOUT' as const,
@@ -114,13 +130,15 @@ databaseSuite('PROPOSED IRT v2 integration, TEST ONLY model/scale/PGK answers', 
     );
     expect(JSON.stringify(snapshot)).not.toContain(fixture.student);
     expect(await integration.prepare(prepare)).toEqual(snapshot);
-    await db
-      .update(attemptAnswers)
-      .set({ answer: { optionId: 'B' }, savedAt: new Date(Date.now() + 60_000) })
-      .where(eq(attemptAnswers.attemptItemId, snapshot.responses[0]!.attemptItemId));
+    await expect(
+      db
+        .update(attemptAnswers)
+        .set({ answer: { optionId: 'B' }, savedAt: new Date(Date.now() + 60_000) })
+        .where(eq(attemptAnswers.attemptItemId, snapshot.responses[0]!.attemptItemId)),
+    ).rejects.toThrow();
     expect(await integration.prepare(prepare)).toEqual(snapshot);
-    await expect(integration.prepare({ ...prepare, batchId: randomUUID() })).rejects.toMatchObject({
-      status: 400,
+    expect(await integration.prepare({ ...prepare, batchId: randomUUID() })).toMatchObject({
+      responses: snapshot.responses,
     });
     await expect(integration.prepare({ ...prepare, scaleId: 'DIFFERENT' })).rejects.toMatchObject({
       status: 409,

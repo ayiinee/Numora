@@ -2,6 +2,7 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
+import { assertCurrentTryoutResponse } from './qa-smoke-contract.mjs';
 
 const ref = 'pkamenfnwmoeisccnrnk';
 assert.equal(process.env.NODE_ENV, 'development');
@@ -44,11 +45,9 @@ const history = await api('studentB', '/students/me/assessment-results');
 assert.equal(history.status, 200);
 assert.ok(Array.isArray(history.value.records));
 assert.equal((await api('studentB', '/students/me/assessment-results?cursor=bad')).status, 400);
-const tryout = await api('studentB', '/tryout/packages/current');
-assert.equal(tryout.status, 200);
-assert.deepEqual(tryout.value, { state: 'unavailable', eligible: false });
-assert.deepEqual((await api('studentA', '/tryout/packages/current')).value,
-  { state: 'unavailable', eligible: true });
+for (const actor of ['studentB', 'studentA']) {
+  assertCurrentTryoutResponse(await api(actor, '/tryout/packages/current'), actor);
+}
 assert.equal((await api('studentB', '/classes')).status, 403);
 assert.equal((await api('teacherB', '/classes')).status, identities.teacherB.teacherVerified ? 200 : 403);
 assert.equal((await api('studentA', '/admin/schools')).status, 403);

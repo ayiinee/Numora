@@ -261,11 +261,16 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
   it('paginates equal and sub-millisecond PostgreSQL timestamps without omissions or duplicates', async () => {
     const ids: string[] = [];
     for (let n = 0; n < 43; n++) {
-      const id = await addAttempt({ packageId: otherPackageId, levelIdAtStart: otherLevelId });
+      const id = await addAttempt({
+        packageId: otherPackageId,
+        levelIdAtStart: otherLevelId,
+        status: 'IN_PROGRESS',
+      });
       ids.push(id);
       await getDatabase()
         .db.update(assessmentAttempts)
         .set({
+          status: 'GRADED',
           finishedAt: sql`'2026-10-01T12:00:01.123000Z'::timestamptz + ${n % 3} * interval '1 microsecond'`,
         })
         .where(eq(assessmentAttempts.id, id));
@@ -323,11 +328,12 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
     const foreignClassId = classRows[1]!.id;
     const expected: string[] = [];
     for (let n = 0; n < 25; n++) {
-      const id = await addAttempt({ classIdAtStart: classId });
+      const id = await addAttempt({ classIdAtStart: classId, status: 'IN_PROGRESS' });
       expected.push(id);
       await db
         .update(assessmentAttempts)
         .set({
+          status: 'GRADED',
           finishedAt: sql`'2026-10-01T12:00:02.123000Z'::timestamptz + ${n % 3} * interval '1 microsecond'`,
         })
         .where(eq(assessmentAttempts.id, id));

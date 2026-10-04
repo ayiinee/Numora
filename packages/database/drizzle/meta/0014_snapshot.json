@@ -1,5 +1,5 @@
 {
-  "id": "5bf6f869-11e3-4924-90c6-24901d5b12df",
+  "id": "36edc671-09d5-4525-a475-dda01c3e1349",
   "prevId": "0fc8017a-dc9c-4454-a2cd-c97e26588098",
   "version": "7",
   "dialect": "postgresql",
@@ -1045,12 +1045,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1094,21 +1088,6 @@
           "method": "btree",
           "with": {}
         },
-        "chapters_slug_uq": {
-          "name": "chapters_slug_uq",
-          "columns": [
-            {
-              "expression": "slug",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
         "chapters_order_uq": {
           "name": "chapters_order_uq",
           "columns": [
@@ -1130,10 +1109,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "chapters_slug_ck": {
-          "name": "chapters_slug_ck",
-          "value": "\"chapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
-        },
         "chapters_order_ck": {
           "name": "chapters_order_ck",
           "value": "\"chapters\".\"display_order\" > 0"
@@ -1772,12 +1747,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "slug": {
-          "name": "slug",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
         "name": {
           "name": "name",
           "type": "text",
@@ -1817,27 +1786,6 @@
             },
             {
               "expression": "code",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "subchapters_chapter_slug_uq": {
-          "name": "subchapters_chapter_slug_uq",
-          "columns": [
-            {
-              "expression": "chapter_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "slug",
               "isExpression": false,
               "asc": true,
               "nulls": "last"
@@ -1889,10 +1837,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "subchapters_slug_ck": {
-          "name": "subchapters_slug_ck",
-          "value": "\"subchapters\".\"slug\" ~ '^[a-z0-9]+(-[a-z0-9]+)*$'"
-        },
         "subchapters_order_ck": {
           "name": "subchapters_order_ck",
           "value": "\"subchapters\".\"display_order\" > 0"
@@ -5010,305 +4954,6 @@
       },
       "isRLSEnabled": true
     },
-    "public.generation_candidates": {
-      "name": "generation_candidates",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "generation_run_id": {
-          "name": "generation_run_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "candidate_question_version_id": {
-          "name": "candidate_question_version_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "validation_status": {
-          "name": "validation_status",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "failure_reason": {
-          "name": "failure_reason",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "generation_candidates_version_uq": {
-          "name": "generation_candidates_version_uq",
-          "columns": [
-            {
-              "expression": "candidate_question_version_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "generation_candidates_run_idx": {
-          "name": "generation_candidates_run_idx",
-          "columns": [
-            {
-              "expression": "generation_run_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "generation_candidates_generation_run_id_generation_runs_id_fk": {
-          "name": "generation_candidates_generation_run_id_generation_runs_id_fk",
-          "tableFrom": "generation_candidates",
-          "tableTo": "generation_runs",
-          "columnsFrom": [
-            "generation_run_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "generation_candidates_candidate_question_version_id_question_versions_id_fk": {
-          "name": "generation_candidates_candidate_question_version_id_question_versions_id_fk",
-          "tableFrom": "generation_candidates",
-          "tableTo": "question_versions",
-          "columnsFrom": [
-            "candidate_question_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {},
-      "isRLSEnabled": true
-    },
-    "public.generation_runs": {
-      "name": "generation_runs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "config_id": {
-          "name": "config_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "original_question_version_id": {
-          "name": "original_question_version_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "generator_version": {
-          "name": "generator_version",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "random_seed": {
-          "name": "random_seed",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parameter_values": {
-          "name": "parameter_values",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "started_at": {
-          "name": "started_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "finished_at": {
-          "name": "finished_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "status": {
-          "name": "status",
-          "type": "data_job_status",
-          "typeSchema": "public",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "'PENDING'"
-        }
-      },
-      "indexes": {
-        "generation_runs_original_idx": {
-          "name": "generation_runs_original_idx",
-          "columns": [
-            {
-              "expression": "original_question_version_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "generation_runs_config_id_generator_configs_id_fk": {
-          "name": "generation_runs_config_id_generator_configs_id_fk",
-          "tableFrom": "generation_runs",
-          "tableTo": "generator_configs",
-          "columnsFrom": [
-            "config_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        },
-        "generation_runs_original_question_version_id_question_versions_id_fk": {
-          "name": "generation_runs_original_question_version_id_question_versions_id_fk",
-          "tableFrom": "generation_runs",
-          "tableTo": "question_versions",
-          "columnsFrom": [
-            "original_question_version_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "generation_runs_finished_ck": {
-          "name": "generation_runs_finished_ck",
-          "value": "\"generation_runs\".\"finished_at\" is null or \"generation_runs\".\"finished_at\" >= \"generation_runs\".\"started_at\""
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.generator_configs": {
-      "name": "generator_configs",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "template_or_competency_id": {
-          "name": "template_or_competency_id",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "config_version": {
-          "name": "config_version",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "parameters": {
-          "name": "parameters",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "curriculum_limits": {
-          "name": "curriculum_limits",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        }
-      },
-      "indexes": {
-        "generator_configs_template_version_uq": {
-          "name": "generator_configs_template_version_uq",
-          "columns": [
-            {
-              "expression": "template_or_competency_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "config_version",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {},
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "generator_configs_version_ck": {
-          "name": "generator_configs_version_ck",
-          "value": "\"generator_configs\".\"config_version\" > 0"
-        }
-      },
-      "isRLSEnabled": true
-    },
     "public.irt_batches": {
       "name": "irt_batches",
       "schema": "",
@@ -5824,12 +5469,6 @@
           "primaryKey": true,
           "notNull": true
         },
-        "correlation_id": {
-          "name": "correlation_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "event_name": {
           "name": "event_name",
           "type": "text",
@@ -5871,6 +5510,12 @@
           "type": "jsonb",
           "primaryKey": false,
           "notNull": true
+        },
+        "correlation_id": {
+          "name": "correlation_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
@@ -7055,6 +6700,307 @@
       "policies": {},
       "checkConstraints": {},
       "isRLSEnabled": true
+    },
+    "irt_compute.generation_runs": {
+      "name": "generation_runs",
+      "schema": "irt_compute",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "config_id": {
+          "name": "config_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "original_question_version_id": {
+          "name": "original_question_version_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "generator_version": {
+          "name": "generator_version",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "random_seed": {
+          "name": "random_seed",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parameter_values": {
+          "name": "parameter_values",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "started_at": {
+          "name": "started_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "finished_at": {
+          "name": "finished_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "status": {
+          "name": "status",
+          "type": "data_job_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'PENDING'"
+        }
+      },
+      "indexes": {
+        "generation_runs_original_idx": {
+          "name": "generation_runs_original_idx",
+          "columns": [
+            {
+              "expression": "original_question_version_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "generation_runs_config_id_generator_configs_id_fk": {
+          "name": "generation_runs_config_id_generator_configs_id_fk",
+          "tableFrom": "generation_runs",
+          "tableTo": "generator_configs",
+          "columnsFrom": [
+            "config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action",
+          "schemaTo": "irt_compute"
+        },
+        "generation_runs_original_question_version_id_question_versions_id_fk": {
+          "name": "generation_runs_original_question_version_id_question_versions_id_fk",
+          "tableFrom": "generation_runs",
+          "tableTo": "question_versions",
+          "columnsFrom": [
+            "original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "generation_runs_finished_ck": {
+          "name": "generation_runs_finished_ck",
+          "value": "\"generation_runs\".\"finished_at\" is null or \"generation_runs\".\"finished_at\" >= \"generation_runs\".\"started_at\""
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "irt_compute.generation_candidates": {
+      "name": "generation_candidates",
+      "schema": "irt_compute",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "generation_run_id": {
+          "name": "generation_run_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "candidate_question_version_id": {
+          "name": "candidate_question_version_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "validation_status": {
+          "name": "validation_status",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "failure_reason": {
+          "name": "failure_reason",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "generation_candidates_version_uq": {
+          "name": "generation_candidates_version_uq",
+          "columns": [
+            {
+              "expression": "candidate_question_version_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "generation_candidates_run_idx": {
+          "name": "generation_candidates_run_idx",
+          "columns": [
+            {
+              "expression": "generation_run_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "generation_candidates_generation_run_id_generation_runs_id_fk": {
+          "name": "generation_candidates_generation_run_id_generation_runs_id_fk",
+          "tableFrom": "generation_candidates",
+          "tableTo": "generation_runs",
+          "columnsFrom": [
+            "generation_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action",
+          "schemaTo": "irt_compute"
+        },
+        "generation_candidates_candidate_question_version_id_question_versions_id_fk": {
+          "name": "generation_candidates_candidate_question_version_id_question_versions_id_fk",
+          "tableFrom": "generation_candidates",
+          "tableTo": "question_versions",
+          "columnsFrom": [
+            "candidate_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "irt_compute.generator_configs": {
+      "name": "generator_configs",
+      "schema": "irt_compute",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "template_or_competency_id": {
+          "name": "template_or_competency_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "config_version": {
+          "name": "config_version",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "parameters": {
+          "name": "parameters",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "curriculum_limits": {
+          "name": "curriculum_limits",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "generator_configs_template_version_uq": {
+          "name": "generator_configs_template_version_uq",
+          "columns": [
+            {
+              "expression": "template_or_competency_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "config_version",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {},
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "generator_configs_version_ck": {
+          "name": "generator_configs_version_ck",
+          "value": "\"generator_configs\".\"config_version\" > 0"
+        }
+      },
+      "isRLSEnabled": true
     }
   },
   "enums": {
@@ -7235,7 +7181,9 @@
       ]
     }
   },
-  "schemas": {},
+  "schemas": {
+    "irt_compute": "irt_compute"
+  },
   "sequences": {},
   "roles": {},
   "policies": {},

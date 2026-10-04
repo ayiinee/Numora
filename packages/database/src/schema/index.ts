@@ -7,3 +7,6 @@ export * from './engagement.js';
 export * from './intelligence.js';
 export * from './support.js';
 export * from './legacy-drill.js';
+export * from './measurement-foundation.js';
+export * from './measurement.js';
+export * from './measurement-compute.js';

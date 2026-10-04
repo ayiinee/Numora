@@ -2,17 +2,25 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
   UnauthorizedException,
 } from '@nestjs/common';
-import { getDatabase, classMemberships, schools, teacherSchoolMemberships, users } from '@tka/database';
+import {
+  getDatabase,
+  classMemberships,
+  schools,
+  teacherSchoolMemberships,
+  users,
+} from '@tka/database';
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 
 @Injectable()
 export class IdentityService {
+  private readonly logger = new Logger(IdentityService.name);
   private supabase?: SupabaseClient;
 
   private authClient() {
@@ -96,21 +104,34 @@ export class IdentityService {
     authorization: string | undefined,
     input: RegisterProfileDto,
   ): Promise<IdentityProfileDto> {
+    this.logger.debug('Profile registration started');
+
     const authUser = await this.authenticate(authorization);
+
+    this.logger.debug('Profile registration authentication succeeded');
+
     const googleProvider =
       authUser.app_metadata.provider === 'google' ||
       authUser.app_metadata.providers?.includes('google');
+
     if (!googleProvider || !authUser.email) {
       throw new ForbiddenException('Student and Teacher registration requires Google sign-in.');
     }
 
     const name = authUser.user_metadata.full_name ?? authUser.user_metadata.name;
+
     const displayName =
       typeof name === 'string' && name.trim()
         ? name.trim().slice(0, 120)
         : (authUser.email.split('@')[0] ?? authUser.email);
+
     const { db } = getDatabase();
+
+    this.logger.debug('Profile registration database available');
+
     try {
+      this.logger.debug('Profile registration inserting profile');
+
       const inserted = await db
         .insert(users)
         .values({
@@ -119,21 +140,39 @@ export class IdentityService {
           displayName,
           email: authUser.email,
         })
-        .onConflictDoNothing({ target: users.authUserId })
-        .returning({ id: users.id });
-      if (inserted.length === 0) throw new ConflictException('Profile already exists.');
+        .onConflictDoNothing({
+          target: users.authUserId,
+        })
+        .returning({
+          id: users.id,
+        });
+
+      this.logger.debug(`Profile registration inserted ${inserted.length} profile(s)`);
+
+      if (inserted.length === 0) {
+        throw new ConflictException('Profile already exists.');
+      }
     } catch (error) {
-      if (error instanceof ConflictException) throw error;
+      if (error instanceof ConflictException) {
+        this.logger.warn('Profile registration rejected: profile already exists');
+        throw error;
+      }
+
       if (
         typeof error === 'object' &&
         error !== null &&
         'code' in error &&
         error.code === '23505'
       ) {
+        this.logger.warn('Profile registration rejected: email already in use');
         throw new ConflictException('Profile email is already in use.');
       }
+      this.logger.error('Profile registration insert failed');
       throw error;
     }
+
+    this.logger.debug('Profile registration loading profile');
+
     return this.getProfile(authorization);
   }
 }

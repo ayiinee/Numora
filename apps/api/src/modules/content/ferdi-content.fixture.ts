@@ -236,10 +236,8 @@ export function installFerdiFixture() {
           assessmentType: 'DRILL',
           levelIdAtStart: level,
           scoringPolicyVersionId: policy,
-          status: 'GRADED',
+          status: 'IN_PROGRESS',
           startedAt: new Date(Date.now() - 1000),
-          finishedAt: new Date(),
-          score0To100: '70',
         })
         .returning();
       const [ai] = await db
@@ -259,6 +257,10 @@ export function installFerdiFixture() {
         awardedPoints: '1',
         gradedAt: new Date(),
       });
+      await db
+        .update(assessmentAttempts)
+        .set({ status: 'GRADED', finishedAt: new Date(), score0To100: '70' })
+        .where(eq(assessmentAttempts.id, a!.id));
       if (person.id === student) {
         attemptId = a!.id;
         itemId = ai!.id;

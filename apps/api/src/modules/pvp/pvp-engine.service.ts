@@ -711,6 +711,8 @@ export class PvpEngineService {
             )
         : [];
       const content = active ? decodeSingleChoice(active.version) : null;
+      if (active && content)
+        await tx.execute(sql`select public.record_pvp_delivery(${studentId}::uuid, ${active.question.id}::uuid)`);
       const value = answer?.answer as { optionId?: string | null } | undefined;
       return {
         matchId,

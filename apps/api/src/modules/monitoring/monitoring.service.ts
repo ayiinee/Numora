@@ -54,6 +54,7 @@ export class MonitoringService {
       .where(and(
         eq(assessmentAttempts.studentId, studentId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
         eq(assessmentAttempts.status, 'IN_PROGRESS'),
       ));
     const progressByLevel = new Map(states.map((row) => [row.levelId, row]));
@@ -64,6 +65,7 @@ export class MonitoringService {
       .where(and(
         eq(assessmentAttempts.studentId, studentId),
         eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
         eq(assessmentAttempts.status, 'GRADED'),
       ))
       .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))

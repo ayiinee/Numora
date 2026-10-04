@@ -130,4 +130,6 @@ Lokasi kode tetap mengikuti tabel di atas. [Drill v1.2 / TryOut v1.1](../product
 
 ## Shared assessment finalization - JOB-09, 3 October 2026
 
+**ENGINEERING DECISION — JOB-10 foundation:** `packages/irt-orchestration/` is server-only shared orchestration for Admin API and worker: snapshot preparation, manual retry authorization, safe status and canonical evidence/parameter adoption. Database owns low-level handoff/leases and migrations; API owns Admin authorization; worker owns BullMQ notification and polling. Build database → irt-orchestration before API/worker. No compute engine or browser imports.
+
 **ENGINEERING DECISION:** `packages/assessment-engine/` is a server-only workspace used by NestJS and the worker for the same transactional TryOut finalizer and PG content decoder. HTTP identity/ownership errors remain in API services; scheduling stays in the worker. Do not import this package into the browser: it accesses PostgreSQL and private answer keys. API and worker builds depend on this workspace. Build database, then assessment-engine before running either app directly.

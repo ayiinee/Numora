@@ -46,6 +46,7 @@ export class StudentDashboardService {
           and(
             eq(assessmentAttempts.studentId, user.id),
             eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
             eq(assessmentAttempts.status, 'GRADED'),
           ),
         ),
@@ -61,6 +62,7 @@ export class StudentDashboardService {
           and(
             eq(assessmentAttempts.studentId, user.id),
             eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.purpose, 'REGULAR'),
             eq(assessmentAttempts.status, 'IN_PROGRESS'),
           ),
         )

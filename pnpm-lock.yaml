@@ -229,6 +229,9 @@ importers:
       '@tka/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@tka/irt-orchestration':
+        specifier: workspace:*
+        version: link:../../packages/irt-orchestration
       bullmq:
         specifier: 6.3.9
         version: 6.3.9(ioredis@6.0.0(supports-color@7.2.0))
@@ -263,6 +266,9 @@ importers:
       '@types/node':
         specifier: 24.19.0
         version: 24.19.0
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
       socket.io-client:
         specifier: 4.8.4
         version: 4.8.4(supports-color@7.2.0)
@@ -275,6 +281,9 @@ importers:
 
   apps/web:
     dependencies:
+      '@next/env':
+        specifier: ^16.3.8
+        version: 16.3.8
       '@supabase/supabase-js':
         specifier: 2.117.1
         version: 2.117.1
@@ -354,6 +363,9 @@ importers:
       '@tka/database':
         specifier: workspace:*
         version: link:../../packages/database
+      '@tka/irt-orchestration':
+        specifier: workspace:*
+        version: link:../../packages/irt-orchestration
       bullmq:
         specifier: 6.3.9
         version: 6.3.9(ioredis@6.0.0(supports-color@7.2.0))
@@ -418,6 +430,25 @@ importers:
       tsx:
         specifier: ^4.23.0
         version: 4.23.15
+      typescript:
+        specifier: 5.9.3
+        version: 5.9.3
+      vitest:
+        specifier: 5.0.2
+        version: 5.0.2(@types/node@24.19.0)(jsdom@30.1.1(@noble/hashes@1.8.0))(vite@8.3.1(@types/node@24.19.0)(jiti@2.7.0))
+
+  packages/irt-orchestration:
+    dependencies:
+      '@tka/database':
+        specifier: workspace:*
+        version: link:../database
+      postgres:
+        specifier: 3.4.9
+        version: 3.4.9
+    devDependencies:
+      '@types/node':
+        specifier: 24.19.0
+        version: 24.19.0
       typescript:
         specifier: 5.9.3
         version: 5.9.3
@@ -1576,6 +1607,9 @@ packages:
 
   '@next/env@16.3.6':
     resolution: {integrity: sha512-x9Vblze1EbtltQYnNH38xCPWU3TVfBd1eXqA3+w9+BTpedkkdNpAaltXlGQ/nsc1+E0mVTNrtcbX3GoO09zeLQ==}
+
+  '@next/env@16.3.8':
+    resolution: {integrity: sha512-Al9zqHVV7TJv0eFuOU4U7Lvv74PTih4Ch63sk2xCIpSTkE3udFnaOcnzP2lQVymiL7yS9Cj2iClUXlR3EQ5sEw==}
 
   '@next/swc-darwin-arm64@16.3.6':
     resolution: {integrity: sha512-E/7GEqaUkt8mk/T8v9lAnrhzR06kdq1ZBkC12F8tAMkdIadwNp3H1KqHynDHrpcTlGCUdq/qu6vUL2aYVyYBdw==}
@@ -4720,6 +4754,8 @@ snapshots:
       '@nestjs/platform-socket.io': 12.1.0(@nestjs/common@12.1.0(class-transformer@0.5.1)(class-validator@0.14.4)(reflect-metadata@0.2.2)(rxjs@7.8.2)(supports-color@7.2.0))(@nestjs/websockets@12.1.0)(rxjs@7.8.2)(supports-color@7.2.0)
 
   '@next/env@16.3.6': {}
+
+  '@next/env@16.3.8': {}
 
   '@next/swc-darwin-arm64@16.3.6':
     optional: true

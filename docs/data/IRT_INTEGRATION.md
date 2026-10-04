@@ -1,5 +1,21 @@
 # IRT Integration
 
+**ENGINEERING UPDATE — 3 October 2026:** the additive separated-service persistence
+and contract v3 are documented in [Variant and IRT persistence](VARIANT_IRT_DATABASE.md).
+The existing v1/v2 API release behavior below remains the transition path.
+
+**ENGINEERING IMPLEMENTATION — 4 October 2026:** JOB-10 foundation adds Admin
+prepare/status/manual retry for `CALIBRATE_TRYOUT`, frozen inputs, PostgreSQL dispatch
+generations and BullMQ notifications. The v3 notification and calibration payload
+schemas live in `packages/contracts/compute`; the exported types live in
+`@tka/database`. Compute must pass the notification generation to
+`claimComputeExecution`; one dispatch permits one execution. See the
+[v3 handoff runbook](../development/IRT_V3_RUNBOOK.md) for the consumer contract,
+role provisioning, recovery and adoption validation. `IRT_V3_ENABLED=false` remains
+the default. Adoption stores evidence and parameters without activating them,
+scoring respondents or releasing Student results. The legacy integration below
+stays compatible; scientific engine and release-policy acceptance remain separate.
+
 ## Baseline item-analysis requirements and latest TryOut rules
 
 PRD v0.5 states:

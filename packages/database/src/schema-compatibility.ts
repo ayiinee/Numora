@@ -7,25 +7,36 @@ import * as schema from './schema/index.js';
 export async function inspectSchema(client: Sql) {
   return client.begin(async (tx) => {
     await tx.unsafe('SET TRANSACTION READ ONLY');
-    const columns = await tx<{ table_name: string; column_name: string }[]>`
-      SELECT table_name, column_name FROM information_schema.columns WHERE table_schema = 'public'`;
-    const tables = await tx<{ tablename: string; rowsecurity: boolean }[]>`
-      SELECT tablename, rowsecurity FROM pg_catalog.pg_tables WHERE schemaname = 'public'`;
+    const columns = await tx<{ table_schema: string; table_name: string; column_name: string }[]>`
+      SELECT table_schema, table_name, column_name FROM information_schema.columns WHERE table_schema IN ('public', 'irt_compute')`;
+    const tables = await tx<{ schemaname: string; tablename: string; rowsecurity: boolean }[]>`
+      SELECT schemaname, tablename, rowsecurity FROM pg_catalog.pg_tables WHERE schemaname IN ('public', 'irt_compute')`;
     const problems: string[] = [];
     let expectedTables = 0;
     for (const value of Object.values(schema)) {
       if (!is(value, Table)) continue;
       expectedTables++;
       const definition = getTableConfig(value);
-      const table = tables.find((row) => row.tablename === definition.name);
+      const namespace = definition.schema ?? 'public';
+      const qualified = `${namespace}.${definition.name}`;
+      const table = tables.find(
+        (row) => row.schemaname === namespace && row.tablename === definition.name,
+      );
       if (!table) {
-        problems.push(`Missing table: ${definition.name}`);
+        problems.push(`Missing table: ${qualified}`);
         continue;
       }
-      if (!table.rowsecurity) problems.push(`RLS disabled: ${definition.name}`);
+      if (!table.rowsecurity) problems.push(`RLS disabled: ${qualified}`);
       for (const column of definition.columns) {
-        if (!columns.some((row) => row.table_name === definition.name && row.column_name === column.name))
-          problems.push(`Missing column: ${definition.name}.${column.name}`);
+        if (
+          !columns.some(
+            (row) =>
+              row.table_schema === namespace &&
+              row.table_name === definition.name &&
+              row.column_name === column.name,
+          )
+        )
+          problems.push(`Missing column: ${qualified}.${column.name}`);
       }
     }
     return { expectedTables, actualTables: tables.length, problems };

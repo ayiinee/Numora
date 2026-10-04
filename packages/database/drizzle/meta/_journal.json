@@ -103,15 +103,50 @@
     {
       "idx": 14,
       "version": "7",
-      "when": 1791020953804,
-      "tag": "0014_curriculum_slugs",
+      "when": 1791022790448,
+      "tag": "0014_separate_irt_compute",
       "breakpoints": true
     },
     {
       "idx": 15,
       "version": "7",
-      "when": 1791020957911,
-      "tag": "0015_indicator_question_levels",
+      "when": 1791022790449,
+      "tag": "0015_variant_irt_structure",
+      "breakpoints": true
+    },
+    {
+      "idx": 16,
+      "version": "7",
+      "when": 1791022790450,
+      "tag": "0016_variant_irt_integrity",
+      "breakpoints": true
+    },
+    {
+      "idx": 17,
+      "version": "7",
+      "when": 1791022790451,
+      "tag": "0017_pinned_measurement_references",
+      "breakpoints": true
+    },
+    {
+      "idx": 18,
+      "version": "7",
+      "when": 1791032175839,
+      "tag": "0018_mysterious_maelstrom",
+      "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791097916220,
+      "tag": "0019_curriculum_slugs",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791097920628,
+      "tag": "0020_indicator_question_levels",
       "breakpoints": true
     }
   ]
