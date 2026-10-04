@@ -20,6 +20,8 @@ Entri tambahan Staging dengan hash `21ee101cf8b257b55669138811f66e19829203b89c8b
 
 SQL akan membuat master sampel yang belum ada sebagai DRAFT: 2 bab, 3 subbab, 3 indikator, 3 level sumber. `display_order` baru ditambahkan setelah urutan existing, hanya untuk penempatan teknis demo, bukan persetujuan urutan akademik. Master existing yang sesuai digunakan; nama/slug/pemetaan yang konflik membatalkan seluruh transaksi.
 
+Untuk inventaris seluruh draf, tersedia [master lengkap dan seeder Curriculum](CURRICULUM_MASTER_SEED.md): 4 bab, 10 subbab, 23 indikator dan 50 level DRAFT. Kode/nama/deskripsi subset sampel tetap kompatibel. Menjalankan master lengkap terlebih dahulu membuat importer sampel menggunakan master yang sudah ada; importer sampel sendiri tidak melengkapi seluruh inventaris.
+
 Setiap sampel membuat satu `questions`, satu `question_variants` ORIGINAL dan satu `question_versions` versi 1, semuanya DRAFT. Komposisi: 7 PG, 2 MCMA, 1 Kategori. Foreign key level tetap per subbab. Tidak ada paket, attempt, skor, XP, rubrik atau perubahan akun.
 
 | Field sumber                        | Penyimpanan                                                                            |
