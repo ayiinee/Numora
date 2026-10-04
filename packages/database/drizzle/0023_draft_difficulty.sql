@@ -1,0 +1,2 @@
+ALTER TABLE "question_versions" ALTER COLUMN "difficulty" DROP NOT NULL;--> statement-breakpoint
+ALTER TABLE "question_versions" ADD CONSTRAINT "question_versions_ready_difficulty_ck" CHECK ("question_versions"."content_status" <> 'READY' or ("question_versions"."difficulty" is not null and length(trim("question_versions"."difficulty")) > 0));

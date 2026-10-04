@@ -47,6 +47,28 @@ const reservation = {
 const jsonResponse = (value) => new Response(JSON.stringify(value), { status: 200 });
 const settings = { baseUrl: 'http://localhost:4000/api/v1', token: 'TEST_ONLY' };
 
+test('rejects R2 storage URLs as backend targets without sending the Admin token', async () => {
+  let calls = 0;
+  for (const host of [
+    'pub-test.r2.dev',
+    'pub-test.r2.dev.',
+    `${'a'.repeat(32)}.r2.cloudflarestorage.com`,
+  ]) {
+    await assert.rejects(
+      uploadAsset(asset, Buffer.from('123'), {
+        ...settings,
+        baseUrl: `https://${host}/api/v1`,
+        fetchImpl: async () => {
+          calls++;
+          return jsonResponse(reservation);
+        },
+      }),
+      /application backend, not an R2/,
+    );
+  }
+  assert.equal(calls, 0);
+});
+
 test('sends Admin token only to API and confirms before applying final keys', async () => {
   const calls = [];
   const fetchImpl = async (url, init) => {

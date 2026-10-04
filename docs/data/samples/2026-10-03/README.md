@@ -10,7 +10,7 @@
 - `question-preview.proposed.schema.json`: schema review usulan, bukan schema impor runtime yang telah disetujui.
 - `validation-report.json`: bukti validasi offline; tidak membuktikan upload/import Cloud.
 
-Terdapat 7 PG, 2 PGK MCMA dan 1 PGK Kategori, tersebar pada 2 bab/3 subbab/3 indikator. Level mengikuti sumber Curriculum: `metadata.sourceLevelNumber: 1`. `difficulty: null` sengaja dipertahankan; EASY/MEDIUM/HARD untuk PvP belum disepakati. Schema impor repo saat ini masih mewajibkan difficulty, sehingga kesepuluh sampel **belum bisa langsung diimpor**. Jangan mengisi difficulty dengan nilai tebakan agar validasi lolos.
+Terdapat 7 PG, 2 PGK MCMA dan 1 PGK Kategori, tersebar pada 2 bab/3 subbab/3 indikator. Level mengikuti sumber Curriculum: `metadata.sourceLevelNumber: 1`. `difficulty: null` sengaja dipertahankan; EASY/MEDIUM/HARD untuk PvP belum disepakati. Pada 4 Oktober Reyhan menyetujui DRAFT dengan difficulty null, READY wajib terisi. Kontrak dan migrasi `0023_draft_difficulty` disiapkan; **Cloud belum diubah**. Lihat [panduan impor percobaan](../../DRAFT_SAMPLE_IMPORT.md) sebelum menerapkan. Jangan mengisi difficulty dengan tebakan. `validation-report.json` dan importBlockers metadata adalah catatan ekstraksi historis 3 Oktober; skrip baru memeriksa status aktual tanpa menimpa provenance sumber.
 
 Kode usulan: `CH-DP / SC-DATA / IND-020` (8 soal), `CH-GP / SC-OG / IND-016` (1), `CH-GP / SC-TG / IND-017` (1). Indikator memakai identitas teknis `competencies`. Pemetaan indikator/level memerlukan integrasi PR #54 setelah rekonsiliasi terhadap main terbaru.
 

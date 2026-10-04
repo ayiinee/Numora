@@ -26,7 +26,7 @@
     "subchapterCode": { "type": "string", "minLength": 1 },
     "competencyCode": { "type": "string", "minLength": 1 },
     "levelCode": { "type": ["string", "null"] },
-    "difficulty": { "type": "string", "enum": ["EASY", "MEDIUM", "HARD"] },
+    "difficulty": { "type": ["string", "null"], "enum": ["EASY", "MEDIUM", "HARD", null] },
     "stem": { "$ref": "#/$defs/richText" },
     "options": {
       "type": "array",
@@ -46,12 +46,27 @@
       "type": "object",
       "additionalProperties": true,
       "properties": {
+        "contentStatus": { "type": "string", "enum": ["DRAFT", "READY", "ARCHIVED"] },
         "source": { "type": ["string", "null"] },
         "generationModel": { "type": ["string", "null"] },
         "generationBatchId": { "type": ["string", "null"] }
       }
     }
   },
+  "allOf": [
+    {
+      "if": {
+        "properties": {
+          "metadata": {
+            "type": "object",
+            "properties": { "contentStatus": { "const": "READY" } },
+            "required": ["contentStatus"]
+          }
+        }
+      },
+      "then": { "properties": { "difficulty": { "type": "string", "minLength": 1 } } }
+    }
+  ],
   "$defs": {
     "richText": {
       "type": "object",

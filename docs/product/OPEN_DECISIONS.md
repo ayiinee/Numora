@@ -5,6 +5,8 @@
 
 ## Status legend
 
+**USER CLARIFICATION, 4 Oktober 2026 (Reyhan, Data):** soal DRAFT boleh memiliki `difficulty=null`; READY wajib memiliki difficulty nonkosong dari Curriculum. Migrasi `0023_draft_difficulty` menyiapkan constraint tanpa mengubah nilai legacy. Klasifikasi PvP/rubrik tetap OPEN. Penerapan Staging belum dilakukan; lihat [impor percobaan](../data/DRAFT_SAMPLE_IMPORT.md).
+
 **USER CLARIFICATION / engineering handoff, 3 Oktober 2026 (Reyhan, Data):** level bank sampel mengikuti Curriculum per indikator dan tidak otomatis menjadi EASY/MEDIUM/HARD. Mapping kategori PvP tetap OPEN. Arah PGK partial belum menetapkan formula/rounding atau menutup OPEN-04. [Handoff bank soal](../data/QUESTION_BANK_BACKEND_HANDOFF.md) dan [upload media](../api/CONTENT_MEDIA_UPLOADS.md) mendokumentasikan jalur review; upload tidak berarti soal/paket telah disetujui.
 
 - **PRD RULE** — aturan eksplisit sumber terbaru untuk fitur terkait; TBC tetap unresolved.

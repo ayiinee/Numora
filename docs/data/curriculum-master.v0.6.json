@@ -1,0 +1,808 @@
+{
+  "schemaVersion": 1,
+  "batchCode": "CURRICULUM-DRILL-MASTER-2026-10-04-v1",
+  "status": "DRAFT",
+  "source": {
+    "documentId": "1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg",
+    "title": "Blueprint Draft Soal Drill",
+    "revisionId": "ANLCKQlJVqtWU0irA_HHdl-BjP6g1UcF57uA53EV781jri-_1hZ0dYmG65oUPcClF3PLNGgwjWV_Ju-x1b598DoTcoIaVzhwZjVisnBR2ws",
+    "url": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit",
+    "primaryTabId": "t.0",
+    "primaryTabTitle": "Main Draft Soal",
+    "extractedAt": "2026-10-04",
+    "prdVersion": "0.6"
+  },
+  "chapters": [
+    {
+      "code": "CH-BIL",
+      "slug": "bilangan",
+      "name": "Bilangan",
+      "sourceName": "Bilangan",
+      "sourceOrder": 1,
+      "sourceTableRow": 4,
+      "reviewRequired": false
+    },
+    {
+      "code": "CH-ALG",
+      "slug": "aljabar",
+      "name": "Aljabar",
+      "sourceName": "Aljabar",
+      "sourceOrder": 2,
+      "sourceTableRow": 38,
+      "reviewRequired": false
+    },
+    {
+      "code": "CH-GP",
+      "slug": "geometri-pengukuran",
+      "name": "Geometri & Pengukuran",
+      "sourceName": "Geometri dan Pengukuran",
+      "sourceOrder": 3,
+      "sourceTableRow": 80,
+      "reviewRequired": true
+    },
+    {
+      "code": "CH-DP",
+      "slug": "data-peluang",
+      "name": "Data & Peluang",
+      "sourceName": "Data & Peluang",
+      "sourceOrder": 4,
+      "sourceTableRow": 117,
+      "reviewRequired": false
+    }
+  ],
+  "subchapters": [
+    {
+      "chapterCode": "CH-BIL",
+      "code": "SC-BR",
+      "slug": "bilangan-real",
+      "name": "Bilangan Real",
+      "sourceOrder": 1,
+      "sourceTableRow": 4
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-PPL",
+      "slug": "persamaan-pertidaksamaan-linier",
+      "name": "Persamaan dan Pertidaksamaan Linier",
+      "sourceOrder": 1,
+      "sourceTableRow": 38
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-BA",
+      "slug": "bentuk-aljabar",
+      "name": "Bentuk Aljabar",
+      "sourceOrder": 2,
+      "sourceTableRow": 56
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-FUNGSI",
+      "slug": "fungsi",
+      "name": "Fungsi",
+      "sourceOrder": 3,
+      "sourceTableRow": 62
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-BD",
+      "slug": "barisan-deret",
+      "name": "Barisan dan Deret",
+      "sourceOrder": 4,
+      "sourceTableRow": 68
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-OG",
+      "slug": "objek-geometri",
+      "name": "Objek Geometri",
+      "sourceOrder": 1,
+      "sourceTableRow": 80
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-TG",
+      "slug": "transformasi-geometri",
+      "name": "Transformasi Geometri",
+      "sourceOrder": 2,
+      "sourceTableRow": 98
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-PENG",
+      "slug": "pengukuran",
+      "name": "Pengukuran",
+      "sourceOrder": 3,
+      "sourceTableRow": 104
+    },
+    {
+      "chapterCode": "CH-DP",
+      "code": "SC-DATA",
+      "slug": "data",
+      "name": "Data",
+      "sourceOrder": 1,
+      "sourceTableRow": 117
+    },
+    {
+      "chapterCode": "CH-DP",
+      "code": "SC-PELUANG",
+      "slug": "peluang",
+      "name": "Peluang",
+      "sourceOrder": 2,
+      "sourceTableRow": 134
+    }
+  ],
+  "competencies": [
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-001",
+      "sourceIndicatorNumber": 1,
+      "description": "Perbandingan dan sifat-sifat bilangan",
+      "sourceDescription": "Perbandingan dan sifat-sifat bilangan",
+      "sourceTableRow": 4,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-002",
+      "sourceIndicatorNumber": 2,
+      "description": "Operasi aritmetika pada bilangan",
+      "sourceDescription": "Operasi aritmetika pada bilangan",
+      "sourceTableRow": 10,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-003",
+      "sourceIndicatorNumber": 3,
+      "description": "Estimasi/ perkiraan hasil perhitungan",
+      "sourceDescription": "Estimasi/ perkiraan hasil perhitungan",
+      "sourceTableRow": 16,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-004",
+      "sourceIndicatorNumber": 4,
+      "description": "Faktorisasi prima bilangan asli",
+      "sourceDescription": "Faktorisasi prima bilangan asli",
+      "sourceTableRow": 20,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-005",
+      "sourceIndicatorNumber": 5,
+      "description": "Rasio (skala, proporsi, dan laju perubahan)",
+      "sourceDescription": "Rasio (skala, proporsi, dan laju perubahan)",
+      "sourceTableRow": 26,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "code": "IND-006",
+      "sourceIndicatorNumber": 6,
+      "description": "Perbandingan senilai dan berbalik nilai.",
+      "sourceDescription": "Perbandingan senilai dan berbalik nilai.",
+      "sourceTableRow": 32,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "code": "IND-007",
+      "sourceIndicatorNumber": 7,
+      "description": "Persamaan linear satu variabel",
+      "sourceDescription": "Persamaan linear satu variabel",
+      "sourceTableRow": 38,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "code": "IND-008",
+      "sourceIndicatorNumber": 8,
+      "description": "Pertidaksamaan linear satu variabel",
+      "sourceDescription": "Pertidaksamaan linear satu variabel",
+      "sourceTableRow": 44,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "code": "IND-009",
+      "sourceIndicatorNumber": 9,
+      "description": "Sistem persamaan linear dua variabel",
+      "sourceDescription": "Sistem persamaan linear dua variabel",
+      "sourceTableRow": 50,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "code": "IND-010",
+      "sourceIndicatorNumber": 10,
+      "description": "Bentuk aljabar dan sifat-sifat operasinya (komutatif, asosiatif, dan distributif)",
+      "sourceDescription": "Bentuk aljabar dan sifat-sifat operasinya (komutatif, asosiatif, dan distributif)",
+      "sourceTableRow": 56,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "code": "IND-011",
+      "sourceIndicatorNumber": 11,
+      "description": "Relasi dan fungsi (domain, kodomain, range), serta penyajiannya.",
+      "sourceDescription": "Relasi dan fungsi (domain, kodomain, range), serta penyajiannya.",
+      "sourceTableRow": 62,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "code": "IND-012",
+      "sourceIndicatorNumber": 12,
+      "description": "Barisan berhingga bilangan",
+      "sourceDescription": "Barisan berhingga bilangan",
+      "sourceTableRow": 68,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "code": "IND-013",
+      "sourceIndicatorNumber": 13,
+      "description": "Deret berhingga bilangan.",
+      "sourceDescription": "Deret berhingga bilangan.",
+      "sourceTableRow": 74,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "code": "IND-014",
+      "sourceIndicatorNumber": 14,
+      "description": "Hubungan antar- sudut yang terbentuk oleh dua garis yang berpotongan, dan oleh dua garis sejajar yang dipotong suatu garis transversal (termasuk penentuan besar sudut dalam segitiga)",
+      "sourceDescription": "Hubungan antar- sudut yang terbentuk oleh dua garis yang berpotongan, dan oleh dua garis sejajar yang dipotong suatu garis transversal (termasuk penentuan besar sudut dalam segitiga)",
+      "sourceTableRow": 80,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "code": "IND-015",
+      "sourceIndicatorNumber": 15,
+      "description": "Teorema Pythagoras. Kekongruenan dan kesebangunan bangun datar",
+      "sourceDescription": "Teorema Pythagoras. Kekongruenan dan kesebangunan bangun datar",
+      "sourceTableRow": 85,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "code": "IND-016",
+      "sourceIndicatorNumber": 16,
+      "description": "Jaring-jaring bangun ruang: prisma, tabung, limas, dan kerucut",
+      "sourceDescription": "Jaring-jaring bangun ruang (prisma, tabung, limas dan kerucut)",
+      "sourceTableRow": 92,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "code": "IND-017",
+      "sourceIndicatorNumber": 17,
+      "description": "Transformasi tunggal: refleksi, translasi, rotasi, dan dilatasi terhadap titik, garis, dan bangun datar pada bidang",
+      "sourceDescription": "Transformasi tunggal (refleksi, translasi, rotasi, dan dilatasi) terhadap titik, garis, dan bangun datar pada bidang.",
+      "sourceTableRow": 98,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "code": "IND-018",
+      "sourceIndicatorNumber": 18,
+      "description": "Keliling dan luas bangun datar (daerah segi banyak dan daerah lingkaran, serta daerah gabungannya)",
+      "sourceDescription": "Keliling dan luas bangun datar (daerah segi banyak dan daerah lingkaran, serta daerah gabungannya)",
+      "sourceTableRow": 104,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "code": "IND-019",
+      "sourceIndicatorNumber": 19,
+      "description": "Volume bangun ruang (prisma, limas, dan bola)",
+      "sourceDescription": "Volume bangun ruang (prisma, limas, dan bola)",
+      "sourceTableRow": 110,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "code": "IND-020",
+      "sourceIndicatorNumber": 20,
+      "description": "Perumusan pertanyaan untuk mendapatkan data, serta penyajian dan penginterpretasian data",
+      "sourceDescription": "Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+      "sourceTableRow": 117,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "code": "IND-021",
+      "sourceIndicatorNumber": 21,
+      "description": "Penentuan dan penaksiran rerata (mean), median, modus, dan jangkauan (range) dari data",
+      "sourceDescription": "Penentuan dan penaksiran rerata (mean), median, modus, dan jangkauan (range) dari data",
+      "sourceTableRow": 123,
+      "reviewRequired": false
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "code": "IND-022",
+      "sourceIndicatorNumber": 22,
+      "description": "Perbandingan ukuran pemusatan dan ukuran penyebaran beberapa kelompok data",
+      "sourceDescription": "Perbandingan ukuran pemusatan dan ukuran penyebaran beberapa kelompok data",
+      "sourceTableRow": 129,
+      "reviewRequired": true
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "code": "IND-023",
+      "sourceIndicatorNumber": 23,
+      "description": "Peluang dan frekuensi relatif dari kejadian tunggal.",
+      "sourceDescription": "Peluang dan frekuensi relatif dari kejadian tunggal.",
+      "sourceTableRow": 134,
+      "reviewRequired": false
+    }
+  ],
+  "levels": [
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-BIL",
+      "subchapterCode": "SC-BR",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-PPL",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BA",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-FUNGSI",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "subchapterCode": "SC-BD",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-OG",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-TG",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-GP",
+      "subchapterCode": "SC-PENG",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-DATA",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "levelNumber": 1,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "levelNumber": 2,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "levelNumber": 3,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "levelNumber": 4,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    },
+    {
+      "chapterCode": "CH-DP",
+      "subchapterCode": "SC-PELUANG",
+      "levelNumber": 5,
+      "description": null,
+      "difficultyCriteria": null,
+      "basis": "PRD-v0.6:5-levels-per-subchapter"
+    }
+  ],
+  "reviewItems": [
+    {
+      "topic": "Indicator 6 subchapter",
+      "primary": "Main Draft Soal: Bilangan Real",
+      "other": "Indikator 6 - 10_Mehdi: Sub Bab 1 Bilangan",
+      "action": "Confirm label; do not create another subchapter from an author-header variation."
+    },
+    {
+      "topic": "Chapter 4 numbering",
+      "primary": "Indikator & Prediktor: Bab 4 Data & Peluang; Main Draft Soal shows four chapter groups",
+      "other": "Indikator 20 - 23_Abim: Bab 3 Data & Peluang",
+      "action": "Confirm source numbering; use stable chapter codes for references."
+    },
+    {
+      "topic": "Data chapter second subchapter",
+      "primary": "Main Draft Soal: Peluang",
+      "other": "Indikator & Prediktor summary: Transformasi Geometri below Bab 4",
+      "action": "Confirm likely copied heading; keep extraction attributed to primary table."
+    },
+    {
+      "topic": "Indicator 22 placement",
+      "primary": "Main Draft Soal and Indikator & Prediktor: Data",
+      "other": "Indikator 20 - 23_Abim: initial list places indicator 22 after Peluang heading",
+      "action": "Curriculum must confirm placement before approving full competency mapping."
+    },
+    {
+      "topic": "Chapter name aliases",
+      "primary": "Main Draft Soal: Geometri dan Pengukuran",
+      "other": "Other tabs/sample proposal: Geometri & Pengukuran",
+      "action": "Choose one display name, preserve aliases and existing proposed code CH-GP."
+    }
+  ],
+  "notes": [
+    "Kode baru adalah usulan Data; kode CH-DP/CH-GP dan SC-DATA/SC-OG/SC-TG mempertahankan kontrak 10 sampel.",
+    "Nama tampil CH-GP mempertahankan alias & agar kompatibel dengan master sampel; sourceName menyimpan nama primer.",
+    "Deskripsi IND-016/017/020 mempertahankan normalisasi sampel terdahulu; sourceDescription menyimpan teks primer tanpa koreksi diam-diam.",
+    "Lima level per subbab mengikuti PRD v0.6; tidak berarti bank soal atau rubrik tiap level sudah lengkap.",
+    "Semua baris baru DRAFT; tidak menetapkan READY, difficulty, paket, soal, atau pemetaan PvP."
+  ]
+}
