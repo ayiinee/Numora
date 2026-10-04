@@ -328,6 +328,40 @@ describe.skipIf(!testUrl)(
       );
       expect(unchanged.items.every((i) => i.outcome === 'SKIPPED_UNCHANGED')).toBe(true);
     });
+    it('requires review for type, indicator or level changes even when the new master scope exists', async () => {
+      const q = samples.find((item) => item.type === 'SINGLE_CHOICE')!;
+      const [sub] =
+        await owner`SELECT s.id FROM subchapters s JOIN chapters c ON c.id=s.chapter_id WHERE c.code=${q.chapterCode} AND s.code=${q.subchapterCode}`;
+      await owner`INSERT INTO levels(subchapter_id,level_number,status) VALUES(${sub!.id},2,'DRAFT')`;
+      await owner`INSERT INTO competencies(subchapter_id,code,description,status) VALUES(${sub!.id},'TEST_ALT_INDICATOR','TEST ONLY review scope','DRAFT')`;
+      const before =
+        await owner`SELECT (SELECT count(*) FROM content_imports)::int AS imports,(SELECT count(*) FROM content_import_versions)::int AS versions`;
+      const changes: ImportQuestion[] = [
+        {
+          ...q,
+          type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+          answer: { optionIds: [q.options[0]!.id] },
+        },
+        { ...q, competencyCode: 'TEST_ALT_INDICATOR' },
+        { ...q, metadata: { ...q.metadata, sourceLevelNumber: 2 } },
+      ];
+      for (const changed of changes) {
+        const response = await request(
+          'admin/content/imports',
+          'POST',
+          body([changed]),
+          'admin',
+          randomUUID(),
+        );
+        expect(response.status).toBe(422);
+        const result = (await response.json()) as { report: ImportReportDto };
+        expect(result.report.canImportDraft).toBe(false);
+        expect(result.report.items[0]!.blockers).toContain('NEEDS_REVIEW');
+      }
+      expect(
+        await owner`SELECT (SELECT count(*) FROM content_imports)::int AS imports,(SELECT count(*) FROM content_import_versions)::int AS versions`,
+      ).toEqual(before);
+    });
     it('verifies all six fixture media via actual upload API and creates new ready-to-preview revisions', async () => {
       for (const q of samples)
         for (const a of q.metadata.assetManifest ?? []) {
