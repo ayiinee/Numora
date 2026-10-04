@@ -8,6 +8,8 @@ import {
   auditLogs,
   getDatabase,
   packageItems,
+  questions,
+  questionVariants,
   questionVersions,
   scoringPolicyVersions,
 } from '@tka/database';
@@ -16,6 +18,33 @@ import { IrtIntegrationService } from '../irt/irt-integration.service';
 import { databaseSuite, installFerdiFixture } from './ferdi-content.fixture';
 databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
   const fixture = installFerdiFixture();
+  it('rejects a question mapped to another curriculum level without changing package history', async () => {
+    const { db } = getDatabase();
+    const [row] = await db
+      .select({ questionId: questionVariants.questionId })
+      .from(questionVersions)
+      .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+      .where(eq(questionVersions.id, fixture.versionIds[0]!));
+    await db
+      .update(questions)
+      .set({ curriculumLevelNumber: 2 })
+      .where(eq(questions.id, row!.questionId));
+    try {
+      expect(
+        (
+          await fixture.request('admin/content/drill-packages', 'POST', {
+            ...fixture.body,
+            familyCode: `TEST-LEVEL-${randomUUID()}`,
+          })
+        ).status,
+      ).toBe(400);
+    } finally {
+      await db
+        .update(questions)
+        .set({ curriculumLevelNumber: null })
+        .where(eq(questions.id, row!.questionId));
+    }
+  });
   async function copyVersion(id: string, changes: Partial<typeof questionVersions.$inferInsert>) {
     const { db } = getDatabase();
     const [source] = await db.select().from(questionVersions).where(eq(questionVersions.id, id));

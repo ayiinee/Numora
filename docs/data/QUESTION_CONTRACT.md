@@ -48,6 +48,8 @@ A candidate question should include or resolve:
 
 ### Taxonomy
 
+**USER CLARIFICATION — 3 October 2026:** competency means curriculum indicator. Learner levels remain under subchapters; a subchapter Level N draws from indicator Level N question families. The importer maps the preserved `metadata.sourceLevelNumber` to `questions.curriculumLevelNumber`, separately from difficulty. Slugs are master-data navigation fields and do not replace chapterCode/subchapterCode in this import envelope. See [migration mapping](CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
+
 - chapter;
 - subchapter;
 - competency;

@@ -214,6 +214,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-10 — Jalankan IRT dan initial weighted result/release TryOut
 
+- **Foundation implementation — 4 October 2026:** Admin v3 prepare/status/manual retry → frozen input → generation-fenced Redis notification → atomic scientific evidence/item parameter adoption is implemented from PR #51, default off. [Runbook](IRT_V3_RUNBOOK.md) and the new JOB-10 PR record integration/connected evidence. This stage does not produce/respondent grades, activate parameters, publish results or post XP. Daily analysis, Data engine/configuration and owner-approved batch/scoring/failure/release policies remain dependencies; overall JOB-10 is partial.
+
 - **Owner:** Aini orchestration/worker/release; Ferdi snapshot/output integration; Data model/calibration; Curriculum/PO scale/policy; Avicenna Admin state; Salim QA. **Asal:** LAMA-09,08.
 - **Kerjakan:** perluas existing pseudonymous envelope untuk PGK dan output berbobot per siswa; pisahkan daily Admin item analysis dari TryOut batch closure/release. Bekukan raw responses/input/model/policy; persist initial weighted score pada approved TKA scale, release atomik, retry/failure/low-response dan overdue monitoring.
 - **Output:** pipeline versioned end-to-end, resultReleasedAt/per-user result contract, approved batch end, processing/status dan Admin insufficient display. `sampleSize >=30` Admin tidak otomatis menjadi gate universal Student.
