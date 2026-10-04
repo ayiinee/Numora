@@ -21,10 +21,10 @@ export async function tryoutMeasurementFixture(
   >`INSERT INTO users(auth_user_id,role,display_name,email) VALUES(${randomUUID()},'TEACHER','TEST teacher',${'teacher-' + key + '@example.test'}) RETURNING id`;
   const [chapter] = await owner<
     { id: string }[]
-  >`INSERT INTO chapters(code,name,display_order) VALUES(${key},'TEST chapter',${parseInt(key.slice(0, 8), 16) % 2000000000}) RETURNING id`;
+  >`INSERT INTO chapters(code,slug,name,display_order) VALUES(${key},${key},'TEST chapter',${parseInt(key.slice(0, 8), 16) % 2000000000}) RETURNING id`;
   const [sub] = await owner<
     { id: string }[]
-  >`INSERT INTO subchapters(chapter_id,code,name,display_order) VALUES(${chapter!.id},${key},'TEST subchapter',1) RETURNING id`;
+  >`INSERT INTO subchapters(chapter_id,code,slug,name,display_order) VALUES(${chapter!.id},${key},${key},'TEST subchapter',1) RETURNING id`;
   const [competency] = await owner<
     { id: string }[]
   >`INSERT INTO competencies(subchapter_id,code,description) VALUES(${sub!.id},${key},'TEST competency') RETURNING id`;

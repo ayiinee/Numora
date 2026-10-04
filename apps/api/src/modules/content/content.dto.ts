@@ -42,6 +42,14 @@ export class ContentPageDto {
 
 export class CreateChapterDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
+  @ApiPropertyOptional({
+    description: 'Stable lowercase URL slug; generated from name when omitted on create.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsString()
+  @Matches(/^[a-z0-9]+(-[a-z0-9]+)*$/)
+  @MaxLength(200)
+  slug?: string;
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) name!: string;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
@@ -117,6 +125,16 @@ export class QuestionContentDto {
 }
 export class CreateQuestionDto extends QuestionContentDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() primaryCompetencyId!: string;
+  @ApiPropertyOptional({
+    minimum: 1,
+    description: 'Curriculum level within the indicator; not difficulty.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(2147483647)
+  curriculumLevelNumber?: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()
@@ -151,6 +169,7 @@ export class AdminTaxonDto {
     'CHAPTER' | 'SUBCHAPTER' | 'COMPETENCY' | 'LEVEL';
   @ApiProperty({ type: String, nullable: true }) parentId!: string | null;
   @ApiProperty() code!: string;
+  @ApiPropertyOptional({ type: String, nullable: true }) slug?: string | null;
   @ApiProperty() name!: string;
   @ApiProperty() displayOrder!: number;
   @ApiProperty({ enum: statuses }) status!: ContentState;
@@ -162,6 +181,7 @@ export class AdminVersionDto {
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;
   @ApiProperty() primaryCompetencyId!: string;
+  @ApiPropertyOptional({ type: Number, nullable: true }) curriculumLevelNumber?: number | null;
   @ApiProperty() variantId!: string;
   @ApiProperty() variantCode!: string;
   @ApiProperty({ enum: ['ORIGINAL', 'VARIANT'] }) variantKind!: 'ORIGINAL' | 'VARIANT';

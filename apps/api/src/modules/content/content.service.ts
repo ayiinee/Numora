@@ -52,6 +52,14 @@ function required<T>(row: T | undefined): T {
   if (!row) throw new NotFoundException('Konten tidak ditemukan.');
   return row;
 }
+function initialSlug(name: string, code: string): string {
+  const normalize = (value: string) =>
+    value
+      .toLowerCase()
+      .replace(/[^a-z0-9]+/g, '-')
+      .replace(/^-|-$/g, '');
+  return normalize(name) || normalize(code);
+}
 function nonempty(input: object) {
   if (Object.values(input).every((value) => value === undefined))
     throw new BadRequestException('Perubahan kosong.');
@@ -112,6 +120,7 @@ export class ContentService {
           kind: 'CHAPTER' as const,
           parentId: null,
           code: r.code,
+          slug: r.slug,
           name: r.name,
           displayOrder: r.displayOrder,
           status: r.status,
@@ -121,6 +130,7 @@ export class ContentService {
           kind: 'SUBCHAPTER' as const,
           parentId: r.chapterId,
           code: r.code,
+          slug: r.slug,
           name: r.name,
           displayOrder: r.displayOrder,
           status: r.status,
@@ -149,7 +159,14 @@ export class ContentService {
 
   createChapter(actor: string, body: CreateChapterDto) {
     return adminMutation(actor, 'chapter_created', 'chapter', async (tx) =>
-      required((await tx.insert(chapters).values(body).returning({ id: chapters.id }))[0]),
+      required(
+        (
+          await tx
+            .insert(chapters)
+            .values({ ...body, slug: body.slug ?? initialSlug(body.name, body.code) })
+            .returning({ id: chapters.id })
+        )[0],
+      ),
     );
   }
   updateChapter(actor: string, id: string, body: UpdateChapterDto) {
@@ -168,7 +185,14 @@ export class ContentService {
   }
   createSubchapter(actor: string, body: CreateSubchapterDto) {
     return adminMutation(actor, 'subchapter_created', 'subchapter', async (tx) =>
-      required((await tx.insert(subchapters).values(body).returning({ id: subchapters.id }))[0]),
+      required(
+        (
+          await tx
+            .insert(subchapters)
+            .values({ ...body, slug: body.slug ?? initialSlug(body.name, body.code) })
+            .returning({ id: subchapters.id })
+        )[0],
+      ),
     );
   }
   updateSubchapter(actor: string, id: string, body: UpdateSubchapterDto) {
@@ -234,6 +258,7 @@ export class ContentService {
         id: v.id,
         questionId: q.id,
         primaryCompetencyId: q.primaryCompetencyId,
+        curriculumLevelNumber: q.curriculumLevelNumber,
         variantId: variant.id,
         variantCode: variant.variantCode,
         versionNumber: v.versionNumber,
@@ -265,7 +290,11 @@ export class ContentService {
         (
           await tx
             .insert(questions)
-            .values({ primaryCompetencyId: body.primaryCompetencyId, sourceRef: body.sourceRef })
+            .values({
+              primaryCompetencyId: body.primaryCompetencyId,
+              sourceRef: body.sourceRef,
+              curriculumLevelNumber: body.curriculumLevelNumber,
+            })
             .returning({ id: questions.id })
         )[0],
       );

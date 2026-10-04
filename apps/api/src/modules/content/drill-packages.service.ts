@@ -191,11 +191,13 @@ export class DrillPackagesService {
       rows.some(
         (r) =>
           r.competency.subchapterId !== scope.level.subchapterId ||
+          (r.question.curriculumLevelNumber !== null &&
+            r.question.curriculumLevelNumber !== scope.level.levelNumber) ||
           r.version.questionType !== 'SINGLE_CHOICE',
       )
     )
       throw new BadRequestException(
-        'Soal harus unik, bertipe PG satu jawaban, dan sesuai subbab level.',
+        'Soal harus unik, bertipe PG satu jawaban, dan sesuai subbab serta nomor level kurikulum.',
       );
     if (
       publishing &&

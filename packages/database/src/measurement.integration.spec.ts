@@ -67,9 +67,9 @@ describe.skipIf(!testUrl)('variant/IRT persistence and role boundaries', { timeo
     const [student] =
       await owner`INSERT INTO users(auth_user_id,role,display_name,email) VALUES(${randomUUID()},'STUDENT','Private name',${'student-' + key + '@example.test'}) RETURNING id`;
     const [chapter] =
-      await owner`INSERT INTO chapters(code,name,display_order) VALUES(${key},'Test chapter',${parseInt(key.slice(0, 8), 16) % 2000000000}) RETURNING id`;
+      await owner`INSERT INTO chapters(code,slug,name,display_order) VALUES(${key},${key},'Test chapter',${parseInt(key.slice(0, 8), 16) % 2000000000}) RETURNING id`;
     const [subchapter] =
-      await owner`INSERT INTO subchapters(chapter_id,code,name,display_order) VALUES(${chapter!.id},${key},'Test subchapter',1) RETURNING id`;
+      await owner`INSERT INTO subchapters(chapter_id,code,slug,name,display_order) VALUES(${chapter!.id},${key},${key},'Test subchapter',1) RETURNING id`;
     const [level] =
       await owner`INSERT INTO levels(subchapter_id,level_number) VALUES(${subchapter!.id},1) RETURNING id`;
     const [competency] =

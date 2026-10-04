@@ -134,6 +134,20 @@
       "when": 1791032175839,
       "tag": "0018_mysterious_maelstrom",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1791097916220,
+      "tag": "0019_curriculum_slugs",
+      "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1791097920628,
+      "tag": "0020_indicator_question_levels",
+      "breakpoints": true
     }
   ]
 }
