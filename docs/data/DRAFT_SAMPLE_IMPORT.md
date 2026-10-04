@@ -1,6 +1,6 @@
 # Impor percobaan 10 soal Curriculum
 
-Tanggal: 4 Oktober 2026. Baseline main `6550710`, kemudian PR #62 commit `2539e3c` yang cocok dengan schema Staging; branch `feat/data-draft-sample-import`. PR #62 masih terbuka saat pemeriksaan. Migrasi fitur ini bernomor 0023 agar tidak bertabrakan dengan 0022 dari tim.
+Tanggal: 4 Oktober 2026. Branch `feat/data-draft-sample-import` menggunakan baseline PR #62 commit `2539e3c` yang cocok dengan schema Staging. PR #62 sudah digabung ke main pada commit `f58eea6`; pemeriksaan diff terhadap main terbaru hanya memuat perubahan fitur ini. Migrasi fitur ini bernomor 0023 agar tidak bertabrakan dengan 0022 dari tim.
 
 ## Keputusan dan status
 
@@ -55,7 +55,7 @@ Impor ulang identik dilewati tanpa duplikasi versi/audit. Konflik isi/status/pem
 ## Menyiapkan dan menerapkan
 
 1. Pada root branch ini, jalankan `corepack pnpm data:samples:prepare ./ten-draft-samples.sql`. File output baru diperlukan; file existing tidak ditimpa. Ini hanya validasi dan pembuatan SQL.
-2. Asal entri tambahan sudah cocok dengan PR #62. Integrasikan/review PR #62 sebelum menggabungkan branch ini ke main, atau koordinasikan baseline yang sudah diterapkan bersama admin; jangan mengedit migrasi yang sudah diterapkan. Branch ini bergantung pada 0022 tersebut.
+2. Asal entri tambahan sudah cocok dengan PR #62 yang telah digabung ke main (`f58eea6`). Pastikan checkout operator memuat baseline 0022 dan perubahan 0023 yang sudah direview; jangan mengedit migrasi yang sudah diterapkan. Branch ini bergantung pada 0022 tersebut.
 3. Lengkapi backup dengan hasil restore yang diminta admin, lalu uji migrasi dan SQL sampel pada salinan restore yang terisolasi. Tes PGlite di bawah bukan pengganti restore live Staging.
 4. Setelah baseline, backup/restore, rehearsal dan review siap, operator menjalankan rantai Drizzle yang sudah direkonsiliasi melalui `db:migrate` menggunakan koneksi migrasi server yang tersimpan lokal. Jangan menjalankan file SQL schema secara manual di dashboard sebagai pengganti rantai repo. Skrip impor tidak mengubah atau memalsukan histori migrasi.
 5. Jalankan SQL sampel pada koneksi operator ke Staging yang sudah diverifikasi. Jangan menggunakan koneksi Production. Catat hasil SELECT terakhir: tepat 10 source_ref, content_status DRAFT, difficulty null, level sumber 1.

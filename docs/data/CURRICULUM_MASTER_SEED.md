@@ -106,7 +106,7 @@ DATABASE_MIGRATION_URL=postgresql://postgres:[PASSWORD_URL_ENCODED]@db.pkamenfnw
 
 Gunakan URL asli dari Dashboard Connect; contoh di atas adalah placeholder. Untuk jaringan IPv4, session pooler port 5432 dengan username `postgres.pkamenfnwmoeisccnrnk` juga diterima. Port 6543, target Production, URL tanpa TLS, atau parameter yang bisa mengganti target ditolak. Cara koneksi mengikuti [dokumentasi Supabase](https://supabase.com/docs/guides/database/connecting-to-postgres).
 
-Seeder master hanya mengisi data pada schema yang sudah menyediakan code/slug/level/status; tidak memerlukan migrasi schema baru. Branch ini memakai baseline PR #62 dan juga memuat 0023 untuk importer soal; **master tidak otomatis menerapkan 0023**. Rekonsiliasi baseline tetap mengacu [panduan impor sampel](DRAFT_SAMPLE_IMPORT.md). Jangan menjalankan db:migrate hanya karena ingin mengisi master.
+Seeder master hanya mengisi data pada schema yang sudah menyediakan code/slug/level/status; tidak memerlukan migrasi schema baru. Branch ini memakai baseline PR #62 yang sudah digabung ke main (`f58eea6`) dan juga memuat 0023 untuk importer soal; **master tidak otomatis menerapkan 0023**. Rekonsiliasi baseline tetap mengacu [panduan impor sampel](DRAFT_SAMPLE_IMPORT.md). Jangan menjalankan db:migrate hanya karena ingin mengisi master.
 
 **3. Rehearsal transaksi di Staging:** lakukan setelah review dan kesiapan database; ini mencoba insert/audit lalu ROLLBACK. Bukan query read-only, dapat mengambil lock sebentar.
 
