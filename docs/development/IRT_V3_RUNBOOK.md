@@ -1,5 +1,11 @@
 # JOB-10 foundation: TryOut compute v3
 
+**ENGINEERING UPDATE — 4 October 2026:** the development Supabase sandbox has
+received migrations through `0022`, including dispatch and Data API ACL
+lockdown. [Operation evidence](../data/SUPABASE_MIGRATION_2026-10-04.md) records
+backup/restore and Cloud checks. This does not activate v3 or provision the
+separate runtime LOGINs/compute consumer.
+
 **ENGINEERING DECISION — approved by Aini, 3 October 2026:** extend PR #51 with Admin prepare/status/manual retry, frozen input, generation-fenced Redis notification and atomic adoption of evidence/item parameters. This is the foundation of JOB-10, not complete student IRT scoring or acceptance of a scientific model.
 
 ## Ownership and activation
