@@ -175,7 +175,8 @@ export const questionVersions = pgTable(
     answerKey: jsonb('answer_key').notNull(),
     explanation: jsonb('explanation').notNull(),
     media: jsonb('media'),
-    difficulty: text('difficulty').notNull(),
+    // Draft extraction may precede Curriculum classification; READY must be classified.
+    difficulty: text('difficulty'),
     parentOriginalQuestionVersionId: uuid('parent_original_question_version_id').references(
       (): AnyPgColumn => questionVersions.id,
       { onDelete: 'restrict' },
@@ -207,6 +208,10 @@ export const questionVersions = pgTable(
     uniqueIndex('question_versions_variant_version_uq').on(table.variantId, table.versionNumber),
     index('question_versions_status_idx').on(table.contentStatus),
     check('question_versions_number_ck', sql`${table.versionNumber} > 0`),
+    check(
+      'question_versions_ready_difficulty_ck',
+      sql`${table.contentStatus} <> 'READY' or (${table.difficulty} is not null and length(trim(${table.difficulty})) > 0)`,
+    ),
     index('question_versions_fingerprint_idx').on(table.contentFingerprint),
     check(
       'question_versions_review_ck',

@@ -4,6 +4,8 @@ Tanggal: 3 Oktober 2026 · Revisi dokumen: 0.2 · Pemilik handoff: Reyhan / Data
 
 **Tujuan:** menyepakati jalur JSON kurikulum → penyimpanan soal → preview tiga format → penyimpanan jawaban. Sepuluh soal adalah bank sampel preview, bukan paket Drill, TryOut, atau PvP siap terbit. Dokumen ini dapat dibagikan langsung ke Backend dan Frontend.
 
+**Pembaruan 4 Oktober 2026 — USER CLARIFICATION:** Reyhan menyetujui DRAFT tanpa difficulty dan READY wajib terisi. Usulan nullable pada bagian 4 kini disiapkan sebagai `0023_draft_difficulty` pada baseline main `6550710`. Skrip operator sepuluh sampel beserta batasannya ada di [DRAFT_SAMPLE_IMPORT.md](DRAFT_SAMPLE_IMPORT.md). Pembahasan NOT NULL dan nomor migrasi lama di bawah adalah konteks historis, bukan status penerapan terbaru. Cloud belum diubah dan importer Admin/renderer belum menjadi fitur selesai.
+
 ## 1. Status keputusan dan batas dokumen
 
 Label berikut harus dipertahankan saat handoff:
