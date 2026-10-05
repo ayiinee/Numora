@@ -375,8 +375,10 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByRole('link', { name: /Rumus abc/ })).toBeVisible();
     await page.getByLabel('Cari materi, bab, atau subbab', { exact: true }).fill('');
     await page.getByRole('button', { name: /1 Bab Geometri/ }).click();
+    expect(new URL(page.url()).searchParams.has('q')).toBe(false);
     await expect(page.locator('.material-chapter')).toHaveCount(1);
     await page.getByRole('button', { name: /Lihat semua kategori/ }).click();
+    expect(new URL(page.url()).searchParams.has('category')).toBe(false);
     await page.getByRole('link', { name: /2.1 Faktorisasi Kuadrat/ }).click();
     await expect(page).toHaveURL(`/student/learn/${chapter}/${sub}`);
     await page.goto(`/student/learn/${chapter}`);

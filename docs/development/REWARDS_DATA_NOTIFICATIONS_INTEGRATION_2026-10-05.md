@@ -9,6 +9,7 @@
 - Result Drill mempertahankan rincian `reward` untuk UI dan field XP kompatibel dari #71. History tetap memakai `ready`/`legacy` agar nilai lama tidak dianggap nol atau menunggu reward baru. Regenerasikan OpenAPI dan seluruh shared types.
 - Paket Drill resmi baru wajib memakai scoring policy v0.6; paket demo tetap jelas berlabel demo. Snapshot dan kebijakan attempt lama dipertahankan, termasuk expiry pembahasan legacy. Attempt reward v2 tidak memiliki expiry baru.
 - Integrasi mempertahankan notifikasi transactional saat unlock. Pagination notifikasi memakai timestamp PostgreSQL penuh serta UUID, memvalidasi filter jenis cursor, dan tetap mengizinkan cursor yang telah dibaca atau melewati batas arsip.
+- Filter Materi menyusun perubahan dari URL browser terkini dan memakai History API untuk filter lokal. Menghapus pencarian lalu cepat mengganti kategori tidak boleh mengembalikan pencarian lama; regresi browser memeriksa kedua parameter setelah interaksi berurutan.
 - Connected acceptance mencakup tujuh check wajib: reward/session, otorisasi, TryOut/privacy/history, importer/preview dan multi-class/ban/leave/takeover. Daftar check lengkap wajib hadir pada satu SHA; jumlah test saja tidak cukup.
 
 ## Gate dan rollout
