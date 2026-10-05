@@ -249,6 +249,32 @@ integration('Drill lifecycle against PostgreSQL', () => {
         .where(eq(questionVariants.variantCode, `ORIG-${suffix}-1`)))[0]!.id));
     expect(await learning.result('student', attempt.id)).toMatchObject({ score: 80, questions: resultA.questions });
     expect(await history.list('student', undefined, firstLevel!.id)).toEqual(retryHistory);
+    // Advance only the application clock; finalized assessment facts stay immutable.
+    const [beforeExpiry] = await db
+      .select()
+      .from(assessmentAttempts)
+      .where(eq(assessmentAttempts.id, attempt.id));
+    vi.useFakeTimers({ toFake: ['Date'] });
+    try {
+      vi.setSystemTime(new Date(beforeExpiry!.finishedAt!.getTime() + 91 * 24 * 60 * 60 * 1000));
+      expect(await learning.result('student', attempt.id)).toMatchObject({
+        score: 80,
+        explanationState: 'expired',
+        questions: [],
+      });
+      expect(
+        (await history.list('student', undefined, firstLevel!.id)).records.find(
+          (record) => record.attemptId === attempt.id,
+        ),
+      ).toMatchObject({ score: 80, resultState: 'ready' });
+      const [afterExpiry] = await db
+        .select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, attempt.id));
+      expect(afterExpiry).toEqual(beforeExpiry);
+    } finally {
+      vi.useRealTimers();
+    }
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });

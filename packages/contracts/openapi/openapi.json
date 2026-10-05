@@ -2586,6 +2586,455 @@
         ]
       }
     },
+    "/api/v1/admin/content/import-validations": {
+      "post": {
+        "operationId": "ContentPreviewController_validate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/imports": {
+      "post": {
+        "operationId": "ContentPreviewController_import",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/imports/{id}": {
+      "get": {
+        "operationId": "ContentPreviewController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions": {
+      "post": {
+        "operationId": "ContentPreviewController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}": {
+      "get": {
+        "operationId": "ContentPreviewController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/answers/{instanceId}": {
+      "patch": {
+        "operationId": "ContentPreviewController_save",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavePreviewAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewAckDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/submit": {
+      "post": {
+        "operationId": "ContentPreviewController_submit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/result": {
+      "get": {
+        "operationId": "ContentPreviewController_result",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/media-links": {
+      "post": {
+        "operationId": "ContentPreviewController_media",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLinksDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/excel-parses": {
+      "post": {
+        "operationId": "ExcelImportController_parse",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "sourceNamespace"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "sourceNamespace": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,128}$"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcelParseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/excel-template": {
+      "get": {
+        "operationId": "ExcelImportController_template",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -4129,6 +4578,24 @@
       "IdentityProfileDto": {
         "type": "object",
         "properties": {
+          "adminRole": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "OPERATIONS",
+              "CONTENT_DATA_MODERATION"
+            ],
+            "nullable": true
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "CONTENT_MANAGE"
+              ]
+            }
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -5967,6 +6434,9 @@
       "AdminVersionDto": {
         "type": "object",
         "properties": {
+          "imported": {
+            "type": "boolean"
+          },
           "id": {
             "type": "string"
           },
@@ -6020,7 +6490,8 @@
             "type": "string"
           },
           "difficulty": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "contentStatus": {
             "type": "string",
@@ -6587,7 +7058,7 @@
             "example": "bahas-1"
           },
           "contentVersion": {
-            "type": "object",
+            "type": "number",
             "default": 1,
             "minimum": 1
           },
@@ -6749,6 +7220,873 @@
           "byteLength",
           "sha256",
           "verifiedAt"
+        ]
+      },
+      "ImportBodyDto": {
+        "type": "object",
+        "properties": {
+          "sourceNamespace": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$"
+          },
+          "questions": {
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Question import v2 JSON Schema; runtime and semantic validation apply.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "sourceNamespace",
+          "questions"
+        ]
+      },
+      "ImportItemDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "canPreview": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "VALIDATED",
+              "CREATED",
+              "CREATED_REVISION",
+              "SKIPPED_UNCHANGED",
+              "INVALID"
+            ]
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "externalId",
+          "canImportDraft",
+          "canPreview",
+          "blockers",
+          "outcome",
+          "questionVersionId"
+        ]
+      },
+      "ImportReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sourceNamespace",
+          "canImportDraft",
+          "items"
+        ]
+      },
+      "CreatePreviewDto": {
+        "type": "object",
+        "properties": {
+          "questionVersionIds": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "questionVersionIds"
+        ]
+      },
+      "RichContentDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "PreviewOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/RichContentDto"
+          }
+        },
+        "required": [
+          "id",
+          "content"
+        ]
+      },
+      "PreviewCategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "PreviewItemDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "revision": {
+            "type": "number"
+          },
+          "serverSavedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "answerKey": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "instanceId",
+          "answer",
+          "revision",
+          "serverSavedAt",
+          "questionVersionId",
+          "externalId",
+          "type",
+          "stem",
+          "options",
+          "categories",
+          "score"
+        ]
+      },
+      "PreviewMediaDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "assetId",
+          "altText",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "PreviewSessionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "SUBMITTED"
+            ]
+          },
+          "scoringStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_SCORED"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewItemDto"
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "scoringStatus",
+          "score",
+          "items",
+          "media"
+        ]
+      },
+      "SavePreviewAnswerDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expectedRevision": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "answer",
+          "expectedRevision"
+        ]
+      },
+      "PreviewAckDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "revision": {
+            "type": "number"
+          },
+          "serverSavedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "answer",
+          "revision",
+          "serverSavedAt"
+        ]
+      },
+      "MediaLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WORK",
+              "REVIEW"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetIds": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "phase",
+          "instanceId",
+          "assetIds"
+        ]
+      },
+      "MediaLinksDto": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "media"
+        ]
+      },
+      "ExcelAssetDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "textMarker": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "STEM",
+              "OPTION",
+              "STATEMENT",
+              "EXPLANATION"
+            ]
+          },
+          "itemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetOrder": {
+            "type": "number"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "bucket": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "textMarker",
+          "placement",
+          "itemId",
+          "assetOrder",
+          "altText",
+          "objectKey",
+          "sha256",
+          "contentType",
+          "byteLength",
+          "bucket"
+        ]
+      },
+      "ExcelMetadataDto": {
+        "type": "object",
+        "properties": {
+          "sourceLevelNumber": {
+            "type": "number"
+          },
+          "sourceSheet": {
+            "type": "string"
+          },
+          "sourceRowNumber": {
+            "type": "number"
+          },
+          "assetManifest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelAssetDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          }
+        },
+        "required": [
+          "sourceLevelNumber",
+          "sourceSheet",
+          "sourceRowNumber",
+          "assetManifest"
+        ]
+      },
+      "ExcelQuestionDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "chapterCode": {
+            "type": "string"
+          },
+          "subchapterCode": {
+            "type": "string"
+          },
+          "competencyCode": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "answer": {
+            "nullable": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ExcelMetadataDto"
+          }
+        },
+        "required": [
+          "externalId",
+          "type",
+          "chapterCode",
+          "subchapterCode",
+          "competencyCode",
+          "difficulty",
+          "stem",
+          "options",
+          "answer",
+          "explanation",
+          "metadata"
+        ]
+      },
+      "ExcelEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "schemaVersion": {
+            "type": "number",
+            "enum": [
+              2
+            ]
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "sourceNamespace",
+          "questions"
+        ]
+      },
+      "ExcelMediaDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "base64": {
+            "type": "string",
+            "description": "Exact embedded bytes, separate from the import JSON."
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "base64"
+        ]
+      },
+      "ExcelIssueDto": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string"
+          },
+          "row": {
+            "type": "number"
+          },
+          "cell": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "row",
+          "cell",
+          "code",
+          "detail"
+        ]
+      },
+      "ExcelParseDto": {
+        "type": "object",
+        "properties": {
+          "envelope": {
+            "$ref": "#/components/schemas/ExcelEnvelopeDto"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelMediaDto"
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelIssueDto"
+            }
+          },
+          "report": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportReportDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelope",
+          "media",
+          "issues",
+          "report"
         ]
       },
       "AdminDashboardDto": {

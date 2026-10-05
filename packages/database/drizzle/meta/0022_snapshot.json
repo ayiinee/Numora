@@ -191,8 +191,12 @@
           "name": "teacher_school_memberships_teacher_user_id_users_id_fk",
           "tableFrom": "teacher_school_memberships",
           "tableTo": "users",
-          "columnsFrom": ["teacher_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "teacher_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -200,8 +204,12 @@
           "name": "teacher_school_memberships_school_id_schools_id_fk",
           "tableFrom": "teacher_school_memberships",
           "tableTo": "schools",
-          "columnsFrom": ["school_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -209,8 +217,12 @@
           "name": "teacher_school_memberships_verification_token_id_teacher_verification_tokens_id_fk",
           "tableFrom": "teacher_school_memberships",
           "tableTo": "teacher_verification_tokens",
-          "columnsFrom": ["verification_token_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "verification_token_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -218,8 +230,14 @@
           "name": "teacher_school_memberships_token_school_fk",
           "tableFrom": "teacher_school_memberships",
           "tableTo": "teacher_verification_tokens",
-          "columnsFrom": ["verification_token_id", "school_id"],
-          "columnsTo": ["id", "school_id"],
+          "columnsFrom": [
+            "verification_token_id",
+            "school_id"
+          ],
+          "columnsTo": [
+            "id",
+            "school_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -354,8 +372,12 @@
           "name": "teacher_verification_tokens_school_id_schools_id_fk",
           "tableFrom": "teacher_verification_tokens",
           "tableTo": "schools",
-          "columnsFrom": ["school_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -363,8 +385,12 @@
           "name": "teacher_verification_tokens_created_by_user_id_users_id_fk",
           "tableFrom": "teacher_verification_tokens",
           "tableTo": "users",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -372,8 +398,12 @@
           "name": "teacher_verification_tokens_used_by_user_id_users_id_fk",
           "tableFrom": "teacher_verification_tokens",
           "tableTo": "users",
-          "columnsFrom": ["used_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "used_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -574,8 +604,12 @@
           "name": "class_memberships_class_id_classes_id_fk",
           "tableFrom": "class_memberships",
           "tableTo": "classes",
-          "columnsFrom": ["class_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -583,8 +617,12 @@
           "name": "class_memberships_student_user_id_users_id_fk",
           "tableFrom": "class_memberships",
           "tableTo": "users",
-          "columnsFrom": ["student_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -708,8 +746,12 @@
           "name": "classes_school_id_schools_id_fk",
           "tableFrom": "classes",
           "tableTo": "schools",
-          "columnsFrom": ["school_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "school_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -717,8 +759,12 @@
           "name": "classes_teacher_user_id_users_id_fk",
           "tableFrom": "classes",
           "tableTo": "users",
-          "columnsFrom": ["teacher_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "teacher_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -845,8 +891,12 @@
           "name": "analytics_outbox_actor_user_id_users_id_fk",
           "tableFrom": "analytics_outbox",
           "tableTo": "users",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -962,8 +1012,12 @@
           "name": "audit_logs_actor_user_id_users_id_fk",
           "tableFrom": "audit_logs",
           "tableTo": "users",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -1167,8 +1221,12 @@
           "name": "competencies_subchapter_id_subchapters_id_fk",
           "tableFrom": "competencies",
           "tableTo": "subchapters",
-          "columnsFrom": ["subchapter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "subchapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1251,8 +1309,12 @@
           "name": "levels_subchapter_id_subchapters_id_fk",
           "tableFrom": "levels",
           "tableTo": "subchapters",
-          "columnsFrom": ["subchapter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "subchapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1391,8 +1453,12 @@
           "name": "question_variants_question_id_questions_id_fk",
           "tableFrom": "question_variants",
           "tableTo": "questions",
-          "columnsFrom": ["question_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1400,8 +1466,12 @@
           "name": "question_variants_original_variant_id_question_variants_id_fk",
           "tableFrom": "question_variants",
           "tableTo": "question_variants",
-          "columnsFrom": ["original_variant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "original_variant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1409,8 +1479,14 @@
           "name": "question_variants_same_family_fk",
           "tableFrom": "question_variants",
           "tableTo": "question_variants",
-          "columnsFrom": ["original_variant_id", "question_id"],
-          "columnsTo": ["id", "question_id"],
+          "columnsFrom": [
+            "original_variant_id",
+            "question_id"
+          ],
+          "columnsTo": [
+            "id",
+            "question_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1643,8 +1719,12 @@
           "name": "question_versions_variant_id_question_variants_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "question_variants",
-          "columnsFrom": ["variant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "variant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1652,8 +1732,12 @@
           "name": "question_versions_parent_original_question_version_id_question_versions_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "question_versions",
-          "columnsFrom": ["parent_original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "parent_original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1661,8 +1745,12 @@
           "name": "question_versions_revised_from_question_version_id_question_versions_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "question_versions",
-          "columnsFrom": ["revised_from_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "revised_from_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1670,8 +1758,12 @@
           "name": "question_versions_level_id_levels_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1679,8 +1771,12 @@
           "name": "question_versions_scoring_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["scoring_rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scoring_rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1688,8 +1784,12 @@
           "name": "question_versions_validation_decision_id_content_validation_decisions_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "content_validation_decisions",
-          "columnsFrom": ["validation_decision_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "validation_decision_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -1697,8 +1797,12 @@
           "name": "question_versions_reviewed_by_user_id_users_id_fk",
           "tableFrom": "question_versions",
           "tableTo": "users",
-          "columnsFrom": ["reviewed_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reviewed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1806,8 +1910,12 @@
           "name": "questions_primary_competency_id_competencies_id_fk",
           "tableFrom": "questions",
           "tableTo": "competencies",
-          "columnsFrom": ["primary_competency_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "primary_competency_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -1949,8 +2057,12 @@
           "name": "subchapters_chapter_id_chapters_id_fk",
           "tableFrom": "subchapters",
           "tableTo": "chapters",
-          "columnsFrom": ["chapter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "chapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2144,8 +2256,12 @@
           "name": "content_media_uploads_actor_user_id_users_id_fk",
           "tableFrom": "content_media_uploads",
           "tableTo": "users",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2495,8 +2611,12 @@
           "name": "assessment_attempts_student_id_users_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2504,8 +2624,12 @@
           "name": "assessment_attempts_package_id_assessment_packages_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2513,8 +2637,12 @@
           "name": "assessment_attempts_phase_id_trial_phases_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2522,8 +2650,12 @@
           "name": "assessment_attempts_trial_assignment_id_trial_assignments_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "trial_assignments",
-          "columnsFrom": ["trial_assignment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "trial_assignment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2531,8 +2663,12 @@
           "name": "assessment_attempts_chapter_id_at_start_chapters_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "chapters",
-          "columnsFrom": ["chapter_id_at_start"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "chapter_id_at_start"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2540,8 +2676,12 @@
           "name": "assessment_attempts_level_id_at_start_levels_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "levels",
-          "columnsFrom": ["level_id_at_start"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id_at_start"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2549,8 +2689,12 @@
           "name": "assessment_attempts_unlocked_level_id_levels_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "levels",
-          "columnsFrom": ["unlocked_level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "unlocked_level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2558,8 +2702,12 @@
           "name": "assessment_attempts_class_id_at_start_classes_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "classes",
-          "columnsFrom": ["class_id_at_start"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id_at_start"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2567,8 +2715,12 @@
           "name": "assessment_attempts_scoring_policy_version_id_scoring_policy_versions_id_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "scoring_policy_versions",
-          "columnsFrom": ["scoring_policy_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scoring_policy_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2576,8 +2728,14 @@
           "name": "assessment_attempts_package_purpose_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id", "purpose"],
-          "columnsTo": ["id", "purpose"],
+          "columnsFrom": [
+            "package_id",
+            "purpose"
+          ],
+          "columnsTo": [
+            "id",
+            "purpose"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2585,8 +2743,18 @@
           "name": "assessment_attempts_trial_assignment_scope_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "trial_assignments",
-          "columnsFrom": ["trial_assignment_id", "student_id", "package_id", "phase_id"],
-          "columnsTo": ["id", "student_id", "package_id", "phase_id"],
+          "columnsFrom": [
+            "trial_assignment_id",
+            "student_id",
+            "package_id",
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id",
+            "student_id",
+            "package_id",
+            "phase_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2594,8 +2762,14 @@
           "name": "assessment_attempts_package_type_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id", "assessment_type"],
-          "columnsTo": ["id", "assessment_type"],
+          "columnsFrom": [
+            "package_id",
+            "assessment_type"
+          ],
+          "columnsTo": [
+            "id",
+            "assessment_type"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2603,8 +2777,14 @@
           "name": "assessment_attempts_package_level_fk",
           "tableFrom": "assessment_attempts",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id", "level_id_at_start"],
-          "columnsTo": ["id", "level_id"],
+          "columnsFrom": [
+            "package_id",
+            "level_id_at_start"
+          ],
+          "columnsTo": [
+            "id",
+            "level_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -2888,8 +3068,12 @@
           "name": "assessment_packages_blueprint_version_id_assessment_blueprint_versions_id_fk",
           "tableFrom": "assessment_packages",
           "tableTo": "assessment_blueprint_versions",
-          "columnsFrom": ["blueprint_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "blueprint_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2897,8 +3081,12 @@
           "name": "assessment_packages_chapter_id_chapters_id_fk",
           "tableFrom": "assessment_packages",
           "tableTo": "chapters",
-          "columnsFrom": ["chapter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "chapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2906,8 +3094,12 @@
           "name": "assessment_packages_level_id_levels_id_fk",
           "tableFrom": "assessment_packages",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -2915,8 +3107,12 @@
           "name": "assessment_packages_scoring_policy_version_id_scoring_policy_versions_id_fk",
           "tableFrom": "assessment_packages",
           "tableTo": "scoring_policy_versions",
-          "columnsFrom": ["scoring_policy_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scoring_policy_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3040,8 +3236,12 @@
           "name": "attempt_answers_attempt_item_id_attempt_items_id_fk",
           "tableFrom": "attempt_answers",
           "tableTo": "attempt_items",
-          "columnsFrom": ["attempt_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3177,8 +3377,12 @@
           "name": "attempt_items_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "attempt_items",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3186,8 +3390,12 @@
           "name": "attempt_items_package_item_id_package_items_id_fk",
           "tableFrom": "attempt_items",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3195,8 +3403,12 @@
           "name": "attempt_items_question_version_id_question_versions_id_fk",
           "tableFrom": "attempt_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3204,8 +3416,12 @@
           "name": "attempt_items_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "attempt_items",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3213,8 +3429,14 @@
           "name": "attempt_items_attempt_package_fk",
           "tableFrom": "attempt_items",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id", "package_id"],
-          "columnsTo": ["id", "package_id"],
+          "columnsFrom": [
+            "attempt_id",
+            "package_id"
+          ],
+          "columnsTo": [
+            "id",
+            "package_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3222,8 +3444,14 @@
           "name": "attempt_items_package_item_scope_fk",
           "tableFrom": "attempt_items",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id", "package_id"],
-          "columnsTo": ["id", "package_id"],
+          "columnsFrom": [
+            "package_item_id",
+            "package_id"
+          ],
+          "columnsTo": [
+            "id",
+            "package_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3231,8 +3459,14 @@
           "name": "attempt_items_package_item_version_fk",
           "tableFrom": "attempt_items",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id", "question_version_id"],
-          "columnsTo": ["id", "question_version_id"],
+          "columnsFrom": [
+            "package_item_id",
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id",
+            "question_version_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3356,8 +3590,12 @@
           "name": "level_progress_student_id_users_id_fk",
           "tableFrom": "level_progress",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3365,8 +3603,12 @@
           "name": "level_progress_level_id_levels_id_fk",
           "tableFrom": "level_progress",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3374,8 +3616,12 @@
           "name": "level_progress_unlocking_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "level_progress",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["unlocking_attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "unlocking_attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3383,8 +3629,12 @@
           "name": "level_progress_completion_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "level_progress",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["completion_attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "completion_attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3544,8 +3794,12 @@
           "name": "package_items_package_id_assessment_packages_id_fk",
           "tableFrom": "package_items",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3553,8 +3807,12 @@
           "name": "package_items_question_version_id_question_versions_id_fk",
           "tableFrom": "package_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3562,8 +3820,12 @@
           "name": "package_items_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "package_items",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3754,8 +4016,12 @@
           "name": "class_leaderboard_entries_period_id_leaderboard_periods_id_fk",
           "tableFrom": "class_leaderboard_entries",
           "tableTo": "leaderboard_periods",
-          "columnsFrom": ["period_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "period_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3763,8 +4029,12 @@
           "name": "class_leaderboard_entries_class_id_classes_id_fk",
           "tableFrom": "class_leaderboard_entries",
           "tableTo": "classes",
-          "columnsFrom": ["class_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3772,8 +4042,12 @@
           "name": "class_leaderboard_entries_student_id_users_id_fk",
           "tableFrom": "class_leaderboard_entries",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -3979,8 +4253,12 @@
           "name": "pvp_answers_player_id_pvp_players_id_fk",
           "tableFrom": "pvp_answers",
           "tableTo": "pvp_players",
-          "columnsFrom": ["player_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "player_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3988,8 +4266,12 @@
           "name": "pvp_answers_match_question_id_pvp_match_questions_id_fk",
           "tableFrom": "pvp_answers",
           "tableTo": "pvp_match_questions",
-          "columnsFrom": ["match_question_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "match_question_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -3997,8 +4279,14 @@
           "name": "pvp_answers_player_match_fk",
           "tableFrom": "pvp_answers",
           "tableTo": "pvp_players",
-          "columnsFrom": ["player_id", "match_id"],
-          "columnsTo": ["id", "match_id"],
+          "columnsFrom": [
+            "player_id",
+            "match_id"
+          ],
+          "columnsTo": [
+            "id",
+            "match_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4006,8 +4294,14 @@
           "name": "pvp_answers_question_match_fk",
           "tableFrom": "pvp_answers",
           "tableTo": "pvp_match_questions",
-          "columnsFrom": ["match_question_id", "match_id"],
-          "columnsTo": ["id", "match_id"],
+          "columnsFrom": [
+            "match_question_id",
+            "match_id"
+          ],
+          "columnsTo": [
+            "id",
+            "match_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4105,8 +4399,12 @@
           "name": "pvp_best_records_period_id_leaderboard_periods_id_fk",
           "tableFrom": "pvp_best_records",
           "tableTo": "leaderboard_periods",
-          "columnsFrom": ["period_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "period_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4114,8 +4412,12 @@
           "name": "pvp_best_records_student_id_users_id_fk",
           "tableFrom": "pvp_best_records",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4123,8 +4425,12 @@
           "name": "pvp_best_records_match_id_pvp_matches_id_fk",
           "tableFrom": "pvp_best_records",
           "tableTo": "pvp_matches",
-          "columnsFrom": ["match_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4280,8 +4586,12 @@
           "name": "pvp_invites_match_id_pvp_matches_id_fk",
           "tableFrom": "pvp_invites",
           "tableTo": "pvp_matches",
-          "columnsFrom": ["match_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4289,8 +4599,12 @@
           "name": "pvp_invites_class_id_at_invite_classes_id_fk",
           "tableFrom": "pvp_invites",
           "tableTo": "classes",
-          "columnsFrom": ["class_id_at_invite"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id_at_invite"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4298,8 +4612,12 @@
           "name": "pvp_invites_sender_student_id_users_id_fk",
           "tableFrom": "pvp_invites",
           "tableTo": "users",
-          "columnsFrom": ["sender_student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "sender_student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4307,8 +4625,12 @@
           "name": "pvp_invites_recipient_student_id_users_id_fk",
           "tableFrom": "pvp_invites",
           "tableTo": "users",
-          "columnsFrom": ["recipient_student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "recipient_student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4415,8 +4737,12 @@
           "name": "pvp_leaderboard_entries_period_id_leaderboard_periods_id_fk",
           "tableFrom": "pvp_leaderboard_entries",
           "tableTo": "leaderboard_periods",
-          "columnsFrom": ["period_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "period_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4424,8 +4750,12 @@
           "name": "pvp_leaderboard_entries_student_id_users_id_fk",
           "tableFrom": "pvp_leaderboard_entries",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4576,8 +4906,12 @@
           "name": "pvp_match_questions_match_id_pvp_matches_id_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "pvp_matches",
-          "columnsFrom": ["match_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4585,8 +4919,12 @@
           "name": "pvp_match_questions_package_item_id_package_items_id_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4594,8 +4932,12 @@
           "name": "pvp_match_questions_question_version_id_question_versions_id_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4603,8 +4945,14 @@
           "name": "pvp_match_questions_item_version_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id", "question_version_id"],
-          "columnsTo": ["id", "question_version_id"],
+          "columnsFrom": [
+            "package_item_id",
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id",
+            "question_version_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4612,8 +4960,14 @@
           "name": "pvp_match_questions_match_package_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "pvp_matches",
-          "columnsFrom": ["match_id", "package_id"],
-          "columnsTo": ["id", "package_id"],
+          "columnsFrom": [
+            "match_id",
+            "package_id"
+          ],
+          "columnsTo": [
+            "id",
+            "package_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4621,8 +4975,14 @@
           "name": "pvp_match_questions_package_item_scope_fk",
           "tableFrom": "pvp_match_questions",
           "tableTo": "package_items",
-          "columnsFrom": ["package_item_id", "package_id"],
-          "columnsTo": ["id", "package_id"],
+          "columnsFrom": [
+            "package_item_id",
+            "package_id"
+          ],
+          "columnsTo": [
+            "id",
+            "package_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4803,8 +5163,12 @@
           "name": "pvp_matches_package_id_assessment_packages_id_fk",
           "tableFrom": "pvp_matches",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4812,8 +5176,12 @@
           "name": "pvp_matches_creator_student_id_users_id_fk",
           "tableFrom": "pvp_matches",
           "tableTo": "users",
-          "columnsFrom": ["creator_student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "creator_student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4821,8 +5189,12 @@
           "name": "pvp_matches_scoring_policy_version_id_scoring_policy_versions_id_fk",
           "tableFrom": "pvp_matches",
           "tableTo": "scoring_policy_versions",
-          "columnsFrom": ["scoring_policy_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scoring_policy_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -4981,8 +5353,12 @@
           "name": "pvp_players_match_id_pvp_matches_id_fk",
           "tableFrom": "pvp_players",
           "tableTo": "pvp_matches",
-          "columnsFrom": ["match_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "match_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -4990,8 +5366,12 @@
           "name": "pvp_players_student_id_users_id_fk",
           "tableFrom": "pvp_players",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5131,8 +5511,12 @@
           "name": "xp_ledger_student_id_users_id_fk",
           "tableFrom": "xp_ledger",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5140,8 +5524,12 @@
           "name": "xp_ledger_class_id_at_event_classes_id_fk",
           "tableFrom": "xp_ledger",
           "tableTo": "classes",
-          "columnsFrom": ["class_id_at_event"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id_at_event"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5149,8 +5537,12 @@
           "name": "xp_ledger_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "xp_ledger",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5158,8 +5550,12 @@
           "name": "xp_ledger_period_id_leaderboard_periods_id_fk",
           "tableFrom": "xp_ledger",
           "tableTo": "leaderboard_periods",
-          "columnsFrom": ["period_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "period_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5167,8 +5563,14 @@
           "name": "xp_ledger_attempt_student_fk",
           "tableFrom": "xp_ledger",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id", "student_id"],
-          "columnsTo": ["id", "student_id"],
+          "columnsFrom": [
+            "attempt_id",
+            "student_id"
+          ],
+          "columnsTo": [
+            "id",
+            "student_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5383,8 +5785,12 @@
           "tableFrom": "generation_candidates",
           "tableTo": "generation_runs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["generation_run_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "generation_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5392,8 +5798,12 @@
           "name": "generation_candidates_candidate_question_version_id_question_versions_id_fk",
           "tableFrom": "generation_candidates",
           "tableTo": "question_versions",
-          "columnsFrom": ["candidate_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5401,8 +5811,12 @@
           "name": "generation_candidates_parent_original_question_version_id_question_versions_id_fk",
           "tableFrom": "generation_candidates",
           "tableTo": "question_versions",
-          "columnsFrom": ["parent_original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "parent_original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5411,8 +5825,12 @@
           "tableFrom": "generation_candidates",
           "tableTo": "generation_candidates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["replacement_of_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "replacement_of_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5526,8 +5944,12 @@
           "tableFrom": "generation_runs",
           "tableTo": "generator_configs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["config_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5535,8 +5957,12 @@
           "name": "generation_runs_original_question_version_id_question_versions_id_fk",
           "tableFrom": "generation_runs",
           "tableTo": "question_versions",
-          "columnsFrom": ["original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5544,8 +5970,12 @@
           "name": "generation_runs_wave_item_id_generation_wave_items_id_fk",
           "tableFrom": "generation_runs",
           "tableTo": "generation_wave_items",
-          "columnsFrom": ["wave_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "wave_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5554,8 +5984,12 @@
           "tableFrom": "generation_runs",
           "tableTo": "compute_executions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["execution_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "execution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5669,8 +6103,12 @@
           "tableFrom": "generator_configs",
           "tableTo": "generator_templates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["template_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "template_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5678,8 +6116,12 @@
           "name": "generator_configs_context_id_measurement_contexts_id_fk",
           "tableFrom": "generator_configs",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -5837,8 +6279,12 @@
           "name": "irt_batches_package_id_assessment_packages_id_fk",
           "tableFrom": "irt_batches",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5846,8 +6292,12 @@
           "name": "irt_batches_context_id_measurement_contexts_id_fk",
           "tableFrom": "irt_batches",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5855,8 +6305,12 @@
           "name": "irt_batches_response_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "irt_batches",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["response_snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "response_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5864,8 +6318,12 @@
           "name": "irt_batches_analysis_request_id_analysis_requests_id_fk",
           "tableFrom": "irt_batches",
           "tableTo": "analysis_requests",
-          "columnsFrom": ["analysis_request_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "analysis_request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -5874,8 +6332,12 @@
           "tableFrom": "irt_batches",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6013,8 +6475,12 @@
           "name": "irt_item_results_batch_id_irt_batches_id_fk",
           "tableFrom": "irt_item_results",
           "tableTo": "irt_batches",
-          "columnsFrom": ["batch_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "batch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6022,8 +6488,12 @@
           "name": "irt_item_results_question_version_id_question_versions_id_fk",
           "tableFrom": "irt_item_results",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6031,8 +6501,12 @@
           "name": "irt_item_results_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "irt_item_results",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6120,8 +6594,12 @@
           "name": "irt_item_step_parameters_item_result_id_irt_item_results_id_fk",
           "tableFrom": "irt_item_step_parameters",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6276,8 +6754,12 @@
           "name": "variant_evaluations_candidate_question_version_id_question_versions_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "question_versions",
-          "columnsFrom": ["candidate_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6285,8 +6767,12 @@
           "name": "variant_evaluations_original_question_version_id_question_versions_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "question_versions",
-          "columnsFrom": ["original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6294,8 +6780,12 @@
           "name": "variant_evaluations_calibration_run_id_calibration_runs_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "calibration_runs",
-          "columnsFrom": ["calibration_run_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "calibration_run_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6303,8 +6793,12 @@
           "name": "variant_evaluations_reviewed_by_user_id_users_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "users",
-          "columnsFrom": ["reviewed_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reviewed_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6312,8 +6806,12 @@
           "name": "variant_evaluations_phase_id_trial_phases_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6321,8 +6819,12 @@
           "name": "variant_evaluations_baseline_id_calibration_baselines_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "calibration_baselines",
-          "columnsFrom": ["baseline_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "baseline_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6330,8 +6832,12 @@
           "name": "variant_evaluations_reference_set_id_reference_sets_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "reference_sets",
-          "columnsFrom": ["reference_set_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reference_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6340,8 +6846,12 @@
           "tableFrom": "variant_evaluations",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6349,8 +6859,12 @@
           "name": "variant_evaluations_control_item_result_id_irt_item_results_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["control_item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "control_item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6358,8 +6872,12 @@
           "name": "variant_evaluations_candidate_item_result_id_irt_item_results_id_fk",
           "tableFrom": "variant_evaluations",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["candidate_item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6441,8 +6959,12 @@
           "name": "account_restrictions_user_id_users_id_fk",
           "tableFrom": "account_restrictions",
           "tableTo": "users",
-          "columnsFrom": ["user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6450,8 +6972,12 @@
           "name": "account_restrictions_actor_admin_id_users_id_fk",
           "tableFrom": "account_restrictions",
           "tableTo": "users",
-          "columnsFrom": ["actor_admin_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_admin_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6558,8 +7084,12 @@
           "name": "analytics_events_actor_user_id_users_id_fk",
           "tableFrom": "analytics_events",
           "tableTo": "users",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "set null",
           "onUpdate": "no action"
         }
@@ -6668,8 +7198,12 @@
           "name": "feedback_teacher_id_users_id_fk",
           "tableFrom": "feedback",
           "tableTo": "users",
-          "columnsFrom": ["teacher_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "teacher_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6677,8 +7211,12 @@
           "name": "feedback_student_id_users_id_fk",
           "tableFrom": "feedback",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6686,8 +7224,12 @@
           "name": "feedback_class_id_at_send_classes_id_fk",
           "tableFrom": "feedback",
           "tableTo": "classes",
-          "columnsFrom": ["class_id_at_send"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id_at_send"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6857,8 +7399,12 @@
           "name": "question_reports_reporter_student_id_users_id_fk",
           "tableFrom": "question_reports",
           "tableTo": "users",
-          "columnsFrom": ["reporter_student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reporter_student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6866,8 +7412,12 @@
           "name": "question_reports_attempt_answer_id_attempt_answers_id_fk",
           "tableFrom": "question_reports",
           "tableTo": "attempt_answers",
-          "columnsFrom": ["attempt_answer_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_answer_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -6969,8 +7519,12 @@
           "name": "video_reports_reporter_student_id_users_id_fk",
           "tableFrom": "video_reports",
           "tableTo": "users",
-          "columnsFrom": ["reporter_student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reporter_student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -6978,8 +7532,12 @@
           "name": "video_reports_mapping_id_video_subchapter_mappings_id_fk",
           "tableFrom": "video_reports",
           "tableTo": "video_subchapter_mappings",
-          "columnsFrom": ["mapping_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "mapping_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7077,8 +7635,12 @@
           "name": "video_subchapter_mappings_video_id_learning_videos_id_fk",
           "tableFrom": "video_subchapter_mappings",
           "tableTo": "learning_videos",
-          "columnsFrom": ["video_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "video_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7086,8 +7648,12 @@
           "name": "video_subchapter_mappings_subchapter_id_subchapters_id_fk",
           "tableFrom": "video_subchapter_mappings",
           "tableTo": "subchapters",
-          "columnsFrom": ["subchapter_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "subchapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7197,8 +7763,12 @@
           "name": "drill_attempt_questions_attempt_id_drill_attempts_id_fk",
           "tableFrom": "drill_attempt_questions",
           "tableTo": "drill_attempts",
-          "columnsFrom": ["attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7206,8 +7776,12 @@
           "name": "drill_attempt_questions_question_variant_id_question_variants_id_fk",
           "tableFrom": "drill_attempt_questions",
           "tableTo": "question_variants",
-          "columnsFrom": ["question_variant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_variant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7215,8 +7789,12 @@
           "name": "drill_attempt_questions_question_version_id_question_versions_id_fk",
           "tableFrom": "drill_attempt_questions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7224,8 +7802,14 @@
           "name": "drill_attempt_questions_variant_version_fk",
           "tableFrom": "drill_attempt_questions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id", "question_variant_id"],
-          "columnsTo": ["id", "variant_id"],
+          "columnsFrom": [
+            "question_version_id",
+            "question_variant_id"
+          ],
+          "columnsTo": [
+            "id",
+            "variant_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7393,8 +7977,12 @@
           "name": "drill_attempts_student_id_users_id_fk",
           "tableFrom": "drill_attempts",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7402,8 +7990,12 @@
           "name": "drill_attempts_level_id_levels_id_fk",
           "tableFrom": "drill_attempts",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7411,8 +8003,12 @@
           "name": "drill_attempts_package_id_drill_packages_id_fk",
           "tableFrom": "drill_attempts",
           "tableTo": "drill_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7420,8 +8016,12 @@
           "name": "drill_attempts_unlocked_level_id_levels_id_fk",
           "tableFrom": "drill_attempts",
           "tableTo": "levels",
-          "columnsFrom": ["unlocked_level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "unlocked_level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7501,8 +8101,12 @@
           "name": "drill_package_questions_package_id_drill_packages_id_fk",
           "tableFrom": "drill_package_questions",
           "tableTo": "drill_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7510,8 +8114,12 @@
           "name": "drill_package_questions_question_variant_id_question_variants_id_fk",
           "tableFrom": "drill_package_questions",
           "tableTo": "question_variants",
-          "columnsFrom": ["question_variant_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_variant_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7519,8 +8127,12 @@
           "name": "drill_package_questions_question_version_id_question_versions_id_fk",
           "tableFrom": "drill_package_questions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -7528,8 +8140,14 @@
           "name": "drill_package_questions_variant_version_fk",
           "tableFrom": "drill_package_questions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id", "question_variant_id"],
-          "columnsTo": ["id", "variant_id"],
+          "columnsFrom": [
+            "question_version_id",
+            "question_variant_id"
+          ],
+          "columnsTo": [
+            "id",
+            "variant_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7605,8 +8223,12 @@
           "name": "drill_packages_level_id_levels_id_fk",
           "tableFrom": "drill_packages",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -7892,8 +8514,12 @@
           "name": "scoring_rubric_versions_approved_by_user_id_users_id_fk",
           "tableFrom": "scoring_rubric_versions",
           "tableTo": "users",
-          "columnsFrom": ["approved_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "approved_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8152,8 +8778,12 @@
           "name": "active_parameter_bindings_context_id_measurement_contexts_id_fk",
           "tableFrom": "active_parameter_bindings",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8161,8 +8791,12 @@
           "name": "active_parameter_bindings_question_version_id_question_versions_id_fk",
           "tableFrom": "active_parameter_bindings",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8170,8 +8804,12 @@
           "name": "active_parameter_bindings_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "active_parameter_bindings",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8179,8 +8817,12 @@
           "name": "active_parameter_bindings_item_result_id_irt_item_results_id_fk",
           "tableFrom": "active_parameter_bindings",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8188,8 +8830,12 @@
           "name": "active_parameter_bindings_activated_by_user_id_users_id_fk",
           "tableFrom": "active_parameter_bindings",
           "tableTo": "users",
-          "columnsFrom": ["activated_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "activated_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8313,8 +8959,12 @@
           "name": "analysis_request_dispatches_request_id_analysis_requests_id_fk",
           "tableFrom": "analysis_request_dispatches",
           "tableTo": "analysis_requests",
-          "columnsFrom": ["request_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8322,8 +8972,12 @@
           "name": "analysis_request_dispatches_actor_user_id_users_id_fk",
           "tableFrom": "analysis_request_dispatches",
           "tableTo": "users",
-          "columnsFrom": ["actor_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8466,8 +9120,12 @@
           "name": "analysis_requests_context_id_measurement_contexts_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8475,8 +9133,12 @@
           "name": "analysis_requests_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8484,8 +9146,12 @@
           "name": "analysis_requests_wave_item_id_generation_wave_items_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "generation_wave_items",
-          "columnsFrom": ["wave_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "wave_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8493,8 +9159,12 @@
           "name": "analysis_requests_package_id_assessment_packages_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8502,8 +9172,12 @@
           "name": "analysis_requests_baseline_id_calibration_baselines_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "calibration_baselines",
-          "columnsFrom": ["baseline_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "baseline_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8511,8 +9185,12 @@
           "name": "analysis_requests_reference_set_id_reference_sets_id_fk",
           "tableFrom": "analysis_requests",
           "tableTo": "reference_sets",
-          "columnsFrom": ["reference_set_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reference_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8521,8 +9199,12 @@
           "tableFrom": "analysis_requests",
           "tableTo": "compute_executions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["accepted_execution_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "accepted_execution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8623,8 +9305,12 @@
           "name": "assessment_errata_question_version_id_question_versions_id_fk",
           "tableFrom": "assessment_errata",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8632,8 +9318,12 @@
           "name": "assessment_errata_approved_by_user_id_users_id_fk",
           "tableFrom": "assessment_errata",
           "tableTo": "users",
-          "columnsFrom": ["approved_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "approved_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8762,8 +9452,12 @@
           "name": "calibration_baselines_context_id_measurement_contexts_id_fk",
           "tableFrom": "calibration_baselines",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8771,8 +9465,12 @@
           "name": "calibration_baselines_question_version_id_question_versions_id_fk",
           "tableFrom": "calibration_baselines",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8780,8 +9478,12 @@
           "name": "calibration_baselines_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "calibration_baselines",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8789,8 +9491,12 @@
           "name": "calibration_baselines_source_item_result_id_irt_item_results_id_fk",
           "tableFrom": "calibration_baselines",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["source_item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8799,8 +9505,12 @@
           "tableFrom": "calibration_baselines",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8808,8 +9518,12 @@
           "name": "calibration_baselines_quality_approval_id_configuration_approvals_id_fk",
           "tableFrom": "calibration_baselines",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["quality_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "quality_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -8912,8 +9626,12 @@
           "tableFrom": "candidate_imports",
           "tableTo": "generation_candidates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["candidate_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8921,8 +9639,12 @@
           "name": "candidate_imports_question_version_id_question_versions_id_fk",
           "tableFrom": "candidate_imports",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8930,8 +9652,12 @@
           "name": "candidate_imports_imported_by_user_id_users_id_fk",
           "tableFrom": "candidate_imports",
           "tableTo": "users",
-          "columnsFrom": ["imported_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "imported_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -8939,8 +9665,12 @@
           "name": "candidate_imports_imported_by_service_id_service_principals_id_fk",
           "tableFrom": "candidate_imports",
           "tableTo": "service_principals",
-          "columnsFrom": ["imported_by_service_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "imported_by_service_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9030,8 +9760,12 @@
           "tableFrom": "configuration_approvals",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["technical_policy_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "technical_policy_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9040,8 +9774,12 @@
           "tableFrom": "configuration_approvals",
           "tableTo": "generator_templates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["generator_template_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "generator_template_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9050,8 +9788,12 @@
           "tableFrom": "configuration_approvals",
           "tableTo": "generator_configs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["generator_config_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "generator_config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9059,8 +9801,12 @@
           "name": "configuration_approvals_approved_by_user_id_users_id_fk",
           "tableFrom": "configuration_approvals",
           "tableTo": "users",
-          "columnsFrom": ["approved_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "approved_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9146,8 +9892,12 @@
           "name": "content_delivery_items_manifest_id_content_delivery_manifests_id_fk",
           "tableFrom": "content_delivery_items",
           "tableTo": "content_delivery_manifests",
-          "columnsFrom": ["manifest_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "manifest_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9155,8 +9905,12 @@
           "name": "content_delivery_items_question_version_id_question_versions_id_fk",
           "tableFrom": "content_delivery_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9164,8 +9918,12 @@
           "name": "content_delivery_items_family_id_questions_id_fk",
           "tableFrom": "content_delivery_items",
           "tableTo": "questions",
-          "columnsFrom": ["family_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "family_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9173,8 +9931,12 @@
           "name": "content_delivery_items_attempt_item_id_attempt_items_id_fk",
           "tableFrom": "content_delivery_items",
           "tableTo": "attempt_items",
-          "columnsFrom": ["attempt_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9182,8 +9944,12 @@
           "name": "content_delivery_items_pvp_fk",
           "tableFrom": "content_delivery_items",
           "tableTo": "pvp_match_questions",
-          "columnsFrom": ["pvp_match_question_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "pvp_match_question_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9270,8 +10036,12 @@
           "name": "content_delivery_manifests_student_id_users_id_fk",
           "tableFrom": "content_delivery_manifests",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9365,8 +10135,12 @@
           "name": "content_validation_decisions_question_version_id_question_versions_id_fk",
           "tableFrom": "content_validation_decisions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9374,8 +10148,12 @@
           "name": "content_validation_decisions_reviewer_user_id_users_id_fk",
           "tableFrom": "content_validation_decisions",
           "tableTo": "users",
-          "columnsFrom": ["reviewer_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reviewer_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9383,8 +10161,12 @@
           "name": "content_validation_decisions_service_principal_id_service_principals_id_fk",
           "tableFrom": "content_validation_decisions",
           "tableTo": "service_principals",
-          "columnsFrom": ["service_principal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_principal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9393,8 +10175,12 @@
           "tableFrom": "content_validation_decisions",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9402,8 +10188,12 @@
           "name": "content_validation_decisions_configuration_approval_id_configuration_approvals_id_fk",
           "tableFrom": "content_validation_decisions",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["configuration_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "configuration_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9513,8 +10303,12 @@
           "name": "generation_wave_items_wave_id_generation_waves_id_fk",
           "tableFrom": "generation_wave_items",
           "tableTo": "generation_waves",
-          "columnsFrom": ["wave_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "wave_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9522,8 +10316,12 @@
           "name": "generation_wave_items_original_question_version_id_question_versions_id_fk",
           "tableFrom": "generation_wave_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9531,8 +10329,12 @@
           "name": "generation_wave_items_context_id_measurement_contexts_id_fk",
           "tableFrom": "generation_wave_items",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9541,8 +10343,12 @@
           "tableFrom": "generation_wave_items",
           "tableTo": "generator_configs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["generator_config_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "generator_config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9550,8 +10356,12 @@
           "name": "generation_wave_items_configuration_approval_id_configuration_approvals_id_fk",
           "tableFrom": "generation_wave_items",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["configuration_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "configuration_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9639,8 +10449,12 @@
           "name": "generation_waves_created_by_user_id_users_id_fk",
           "tableFrom": "generation_waves",
           "tableTo": "users",
-          "columnsFrom": ["created_by_user_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "created_by_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9758,8 +10572,12 @@
           "name": "item_distribution_decisions_question_version_id_question_versions_id_fk",
           "tableFrom": "item_distribution_decisions",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9767,8 +10585,12 @@
           "name": "item_distribution_decisions_context_id_measurement_contexts_id_fk",
           "tableFrom": "item_distribution_decisions",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9777,8 +10599,12 @@
           "tableFrom": "item_distribution_decisions",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -9900,8 +10726,12 @@
           "name": "measurement_contexts_level_id_levels_id_fk",
           "tableFrom": "measurement_contexts",
           "tableTo": "levels",
-          "columnsFrom": ["level_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9909,8 +10739,12 @@
           "name": "measurement_contexts_tryout_batch_id_tryout_batches_id_fk",
           "tableFrom": "measurement_contexts",
           "tableTo": "tryout_batches",
-          "columnsFrom": ["tryout_batch_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "tryout_batch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -9918,8 +10752,12 @@
           "name": "measurement_contexts_replaces_context_id_measurement_contexts_id_fk",
           "tableFrom": "measurement_contexts",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["replaces_context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "replaces_context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10001,8 +10839,12 @@
           "name": "monitoring_findings_request_id_analysis_requests_id_fk",
           "tableFrom": "monitoring_findings",
           "tableTo": "analysis_requests",
-          "columnsFrom": ["request_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10011,8 +10853,12 @@
           "tableFrom": "monitoring_findings",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10020,8 +10866,12 @@
           "name": "monitoring_findings_question_version_id_question_versions_id_fk",
           "tableFrom": "monitoring_findings",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10029,8 +10879,12 @@
           "name": "monitoring_findings_distribution_decision_id_item_distribution_decisions_id_fk",
           "tableFrom": "monitoring_findings",
           "tableTo": "item_distribution_decisions",
-          "columnsFrom": ["distribution_decision_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "distribution_decision_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10118,8 +10972,12 @@
           "name": "outbox_deliveries_outbox_id_analytics_outbox_id_fk",
           "tableFrom": "outbox_deliveries",
           "tableTo": "analytics_outbox",
-          "columnsFrom": ["outbox_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "outbox_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10209,8 +11067,12 @@
           "name": "package_quality_results_package_id_assessment_packages_id_fk",
           "tableFrom": "package_quality_results",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10218,8 +11080,12 @@
           "name": "package_quality_results_context_id_measurement_contexts_id_fk",
           "tableFrom": "package_quality_results",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10227,8 +11093,12 @@
           "name": "package_quality_results_blueprint_version_id_assessment_blueprint_versions_id_fk",
           "tableFrom": "package_quality_results",
           "tableTo": "assessment_blueprint_versions",
-          "columnsFrom": ["blueprint_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "blueprint_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10237,8 +11107,12 @@
           "tableFrom": "package_quality_results",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10246,8 +11120,12 @@
           "name": "package_quality_results_evaluation_approval_id_configuration_approvals_id_fk",
           "tableFrom": "package_quality_results",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["evaluation_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "evaluation_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10334,8 +11212,12 @@
           "name": "reference_set_items_reference_set_id_reference_sets_id_fk",
           "tableFrom": "reference_set_items",
           "tableTo": "reference_sets",
-          "columnsFrom": ["reference_set_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reference_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10343,8 +11225,12 @@
           "name": "reference_set_items_question_version_id_question_versions_id_fk",
           "tableFrom": "reference_set_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10352,8 +11238,12 @@
           "name": "reference_set_items_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "reference_set_items",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10361,8 +11251,12 @@
           "name": "reference_set_items_source_item_result_id_irt_item_results_id_fk",
           "tableFrom": "reference_set_items",
           "tableTo": "irt_item_results",
-          "columnsFrom": ["source_item_result_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_item_result_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10462,8 +11356,12 @@
           "name": "reference_sets_context_id_measurement_contexts_id_fk",
           "tableFrom": "reference_sets",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10472,8 +11370,12 @@
           "tableFrom": "reference_sets",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10481,8 +11383,12 @@
           "name": "reference_sets_quality_approval_id_configuration_approvals_id_fk",
           "tableFrom": "reference_sets",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["quality_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "quality_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10673,8 +11579,12 @@
           "name": "response_snapshot_items_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10682,8 +11592,12 @@
           "name": "response_snapshot_items_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10691,8 +11605,12 @@
           "name": "response_snapshot_items_attempt_item_id_attempt_items_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "attempt_items",
-          "columnsFrom": ["attempt_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10700,8 +11618,12 @@
           "name": "response_snapshot_items_question_version_id_question_versions_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10709,8 +11631,12 @@
           "name": "response_snapshot_items_rubric_version_id_scoring_rubric_versions_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "scoring_rubric_versions",
-          "columnsFrom": ["rubric_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "rubric_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10718,8 +11644,12 @@
           "name": "response_snapshot_items_assignment_id_trial_assignments_id_fk",
           "tableFrom": "response_snapshot_items",
           "tableTo": "trial_assignments",
-          "columnsFrom": ["assignment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "assignment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10835,8 +11765,12 @@
           "name": "response_snapshots_context_id_measurement_contexts_id_fk",
           "tableFrom": "response_snapshots",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10844,8 +11778,12 @@
           "name": "response_snapshots_phase_id_trial_phases_id_fk",
           "tableFrom": "response_snapshots",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10853,8 +11791,12 @@
           "name": "response_snapshots_replaces_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "response_snapshots",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["replaces_snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "replaces_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -10977,8 +11919,12 @@
           "name": "student_item_exposures_delivery_item_id_content_delivery_items_id_fk",
           "tableFrom": "student_item_exposures",
           "tableTo": "content_delivery_items",
-          "columnsFrom": ["delivery_item_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "delivery_item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10986,8 +11932,12 @@
           "name": "student_item_exposures_student_id_users_id_fk",
           "tableFrom": "student_item_exposures",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -10995,8 +11945,12 @@
           "name": "student_item_exposures_question_version_id_question_versions_id_fk",
           "tableFrom": "student_item_exposures",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11004,8 +11958,12 @@
           "name": "student_item_exposures_family_id_questions_id_fk",
           "tableFrom": "student_item_exposures",
           "tableTo": "questions",
-          "columnsFrom": ["family_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "family_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11132,8 +12090,12 @@
           "name": "trial_assignments_phase_id_trial_phases_id_fk",
           "tableFrom": "trial_assignments",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11141,8 +12103,12 @@
           "name": "trial_assignments_cohort_member_id_trial_cohort_members_id_fk",
           "tableFrom": "trial_assignments",
           "tableTo": "trial_cohort_members",
-          "columnsFrom": ["cohort_member_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "cohort_member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11150,8 +12116,12 @@
           "name": "trial_assignments_student_id_users_id_fk",
           "tableFrom": "trial_assignments",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11159,8 +12129,12 @@
           "name": "trial_assignments_package_id_assessment_packages_id_fk",
           "tableFrom": "trial_assignments",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11168,8 +12142,16 @@
           "name": "trial_assignments_phase_package_fk",
           "tableFrom": "trial_assignments",
           "tableTo": "trial_phase_packages",
-          "columnsFrom": ["phase_id", "package_id", "arm"],
-          "columnsTo": ["phase_id", "package_id", "arm"],
+          "columnsFrom": [
+            "phase_id",
+            "package_id",
+            "arm"
+          ],
+          "columnsTo": [
+            "phase_id",
+            "package_id",
+            "arm"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11251,8 +12233,12 @@
           "name": "trial_checkpoints_phase_id_trial_phases_id_fk",
           "tableFrom": "trial_checkpoints",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11260,8 +12246,12 @@
           "name": "trial_checkpoints_response_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "trial_checkpoints",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["response_snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "response_snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11344,8 +12334,12 @@
           "name": "trial_cohort_members_cohort_id_trial_cohorts_id_fk",
           "tableFrom": "trial_cohort_members",
           "tableTo": "trial_cohorts",
-          "columnsFrom": ["cohort_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "cohort_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11353,8 +12347,12 @@
           "name": "trial_cohort_members_student_id_users_id_fk",
           "tableFrom": "trial_cohort_members",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11425,8 +12423,12 @@
           "name": "trial_cohorts_study_id_trial_studies_id_fk",
           "tableFrom": "trial_cohorts",
           "tableTo": "trial_studies",
-          "columnsFrom": ["study_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "study_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11434,8 +12436,12 @@
           "name": "trial_cohorts_class_id_classes_id_fk",
           "tableFrom": "trial_cohorts",
           "tableTo": "classes",
-          "columnsFrom": ["class_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "class_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11522,8 +12528,12 @@
           "name": "trial_eligibility_snapshots_phase_id_trial_phases_id_fk",
           "tableFrom": "trial_eligibility_snapshots",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11531,8 +12541,12 @@
           "name": "trial_eligibility_snapshots_student_id_users_id_fk",
           "tableFrom": "trial_eligibility_snapshots",
           "tableTo": "users",
-          "columnsFrom": ["student_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11540,8 +12554,12 @@
           "name": "trial_eligibility_snapshots_assignment_id_trial_assignments_id_fk",
           "tableFrom": "trial_eligibility_snapshots",
           "tableTo": "trial_assignments",
-          "columnsFrom": ["assignment_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "assignment_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11629,8 +12647,12 @@
           "name": "trial_family_reservations_cohort_member_id_trial_cohort_members_id_fk",
           "tableFrom": "trial_family_reservations",
           "tableTo": "trial_cohort_members",
-          "columnsFrom": ["cohort_member_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "cohort_member_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11638,8 +12660,12 @@
           "name": "trial_family_reservations_family_id_questions_id_fk",
           "tableFrom": "trial_family_reservations",
           "tableTo": "questions",
-          "columnsFrom": ["family_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "family_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11647,8 +12673,12 @@
           "name": "trial_family_reservations_invalidating_exposure_id_student_item_exposures_id_fk",
           "tableFrom": "trial_family_reservations",
           "tableTo": "student_item_exposures",
-          "columnsFrom": ["invalidating_exposure_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "invalidating_exposure_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11749,8 +12779,12 @@
           "name": "trial_phase_packages_phase_id_trial_phases_id_fk",
           "tableFrom": "trial_phase_packages",
           "tableTo": "trial_phases",
-          "columnsFrom": ["phase_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "phase_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11758,8 +12792,12 @@
           "name": "trial_phase_packages_package_id_assessment_packages_id_fk",
           "tableFrom": "trial_phase_packages",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -11880,8 +12918,12 @@
           "name": "trial_phases_study_id_trial_studies_id_fk",
           "tableFrom": "trial_phases",
           "tableTo": "trial_studies",
-          "columnsFrom": ["study_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "study_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11889,8 +12931,12 @@
           "name": "trial_phases_candidate_question_version_id_question_versions_id_fk",
           "tableFrom": "trial_phases",
           "tableTo": "question_versions",
-          "columnsFrom": ["candidate_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11898,8 +12944,12 @@
           "name": "trial_phases_baseline_id_calibration_baselines_id_fk",
           "tableFrom": "trial_phases",
           "tableTo": "calibration_baselines",
-          "columnsFrom": ["baseline_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "baseline_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11907,8 +12957,12 @@
           "name": "trial_phases_reference_set_id_reference_sets_id_fk",
           "tableFrom": "trial_phases",
           "tableTo": "reference_sets",
-          "columnsFrom": ["reference_set_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "reference_set_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11916,8 +12970,12 @@
           "name": "trial_phases_blueprint_version_id_assessment_blueprint_versions_id_fk",
           "tableFrom": "trial_phases",
           "tableTo": "assessment_blueprint_versions",
-          "columnsFrom": ["blueprint_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "blueprint_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -11926,8 +12984,12 @@
           "tableFrom": "trial_phases",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["comparison_policy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "comparison_policy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12008,8 +13070,12 @@
           "name": "trial_studies_context_id_measurement_contexts_id_fk",
           "tableFrom": "trial_studies",
           "tableTo": "measurement_contexts",
-          "columnsFrom": ["context_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "context_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12017,8 +13083,12 @@
           "name": "trial_studies_original_question_version_id_question_versions_id_fk",
           "tableFrom": "trial_studies",
           "tableTo": "question_versions",
-          "columnsFrom": ["original_question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "original_question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12027,8 +13097,12 @@
           "tableFrom": "trial_studies",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["requirements_policy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "requirements_policy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12036,8 +13110,12 @@
           "name": "trial_studies_requirements_approval_id_configuration_approvals_id_fk",
           "tableFrom": "trial_studies",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["requirements_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "requirements_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12148,8 +13226,12 @@
           "name": "tryout_attempt_results_finalization_id_tryout_result_finalizations_id_fk",
           "tableFrom": "tryout_attempt_results",
           "tableTo": "tryout_result_finalizations",
-          "columnsFrom": ["finalization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "finalization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12157,8 +13239,12 @@
           "name": "tryout_attempt_results_attempt_id_assessment_attempts_id_fk",
           "tableFrom": "tryout_attempt_results",
           "tableTo": "assessment_attempts",
-          "columnsFrom": ["attempt_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "attempt_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12264,8 +13350,12 @@
           "name": "tryout_batches_package_id_assessment_packages_id_fk",
           "tableFrom": "tryout_batches",
           "tableTo": "assessment_packages",
-          "columnsFrom": ["package_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12361,8 +13451,12 @@
           "name": "tryout_finalization_items_finalization_id_tryout_result_finalizations_id_fk",
           "tableFrom": "tryout_finalization_items",
           "tableTo": "tryout_result_finalizations",
-          "columnsFrom": ["finalization_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "finalization_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12370,8 +13464,12 @@
           "name": "tryout_finalization_items_question_version_id_question_versions_id_fk",
           "tableFrom": "tryout_finalization_items",
           "tableTo": "question_versions",
-          "columnsFrom": ["question_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12379,8 +13477,12 @@
           "name": "tryout_finalization_items_erratum_id_assessment_errata_id_fk",
           "tableFrom": "tryout_finalization_items",
           "tableTo": "assessment_errata",
-          "columnsFrom": ["erratum_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "erratum_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12513,8 +13615,12 @@
           "name": "tryout_result_finalizations_batch_id_tryout_batches_id_fk",
           "tableFrom": "tryout_result_finalizations",
           "tableTo": "tryout_batches",
-          "columnsFrom": ["batch_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "batch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12523,8 +13629,12 @@
           "tableFrom": "tryout_result_finalizations",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12532,8 +13642,12 @@
           "name": "tryout_result_finalizations_scoring_policy_version_id_scoring_policy_versions_id_fk",
           "tableFrom": "tryout_result_finalizations",
           "tableTo": "scoring_policy_versions",
-          "columnsFrom": ["scoring_policy_version_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "scoring_policy_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12541,8 +13655,12 @@
           "name": "tryout_result_finalizations_mapping_approval_id_configuration_approvals_id_fk",
           "tableFrom": "tryout_result_finalizations",
           "tableTo": "configuration_approvals",
-          "columnsFrom": ["mapping_approval_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "mapping_approval_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12664,8 +13782,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12674,8 +13796,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "generation_candidates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["candidate_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12684,8 +13810,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "generation_candidates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["replacement_candidate_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "replacement_candidate_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12694,8 +13824,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "generator_configs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["from_config_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "from_config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12704,8 +13838,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "generator_configs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["to_config_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "to_config_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12714,8 +13852,12 @@
           "tableFrom": "adjustment_iterations",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["policy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "policy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12815,8 +13957,12 @@
           "tableFrom": "analysis_datasets",
           "tableTo": "compute_executions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["execution_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "execution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12824,8 +13970,12 @@
           "name": "analysis_datasets_snapshot_id_response_snapshots_id_fk",
           "tableFrom": "analysis_datasets",
           "tableTo": "response_snapshots",
-          "columnsFrom": ["snapshot_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12834,8 +13984,12 @@
           "tableFrom": "analysis_datasets",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["selection_policy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "selection_policy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -12926,8 +14080,14 @@
           "tableFrom": "analysis_response_selections",
           "tableTo": "analysis_datasets",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["dataset_id", "snapshot_id"],
-          "columnsTo": ["id", "snapshot_id"],
+          "columnsFrom": [
+            "dataset_id",
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id",
+            "snapshot_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -12935,8 +14095,14 @@
           "name": "analysis_response_selections_snapshot_fk",
           "tableFrom": "analysis_response_selections",
           "tableTo": "response_snapshot_items",
-          "columnsFrom": ["snapshot_item_id", "snapshot_id"],
-          "columnsTo": ["id", "snapshot_id"],
+          "columnsFrom": [
+            "snapshot_item_id",
+            "snapshot_id"
+          ],
+          "columnsTo": [
+            "id",
+            "snapshot_id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13008,8 +14174,12 @@
           "tableFrom": "candidate_validation_results",
           "tableTo": "generation_candidates",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["candidate_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "candidate_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -13018,8 +14188,12 @@
           "tableFrom": "candidate_validation_results",
           "tableTo": "technical_policy_versions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["validator_policy_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "validator_policy_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -13028,8 +14202,12 @@
           "tableFrom": "candidate_validation_results",
           "tableTo": "compute_outputs",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["source_output_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "source_output_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13207,8 +14385,12 @@
           "name": "compute_executions_request_id_analysis_requests_id_fk",
           "tableFrom": "compute_executions",
           "tableTo": "analysis_requests",
-          "columnsFrom": ["request_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -13216,8 +14398,12 @@
           "name": "compute_executions_dispatch_id_analysis_request_dispatches_id_fk",
           "tableFrom": "compute_executions",
           "tableTo": "analysis_request_dispatches",
-          "columnsFrom": ["dispatch_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "dispatch_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -13225,8 +14411,12 @@
           "name": "compute_executions_service_principal_id_service_principals_id_fk",
           "tableFrom": "compute_executions",
           "tableTo": "service_principals",
-          "columnsFrom": ["service_principal_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "service_principal_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13375,8 +14565,12 @@
           "tableFrom": "compute_outputs",
           "tableTo": "compute_executions",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["execution_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "execution_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         },
@@ -13385,8 +14579,12 @@
           "tableFrom": "compute_outputs",
           "tableTo": "analysis_datasets",
           "schemaTo": "irt_compute",
-          "columnsFrom": ["dataset_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "dataset_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13525,8 +14723,12 @@
           "name": "notification_outbox_recipient_id_users_id_fk",
           "tableFrom": "notification_outbox",
           "tableTo": "users",
-          "columnsFrom": ["recipient_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "recipient_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13694,8 +14896,12 @@
           "name": "notifications_recipient_id_users_id_fk",
           "tableFrom": "notifications",
           "tableTo": "users",
-          "columnsFrom": ["recipient_id"],
-          "columnsTo": ["id"],
+          "columnsFrom": [
+            "recipient_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
           "onDelete": "restrict",
           "onUpdate": "no action"
         }
@@ -13720,117 +14926,218 @@
     "public.account_status": {
       "name": "account_status",
       "schema": "public",
-      "values": ["ACTIVE", "DISABLED"]
+      "values": [
+        "ACTIVE",
+        "DISABLED"
+      ]
     },
     "public.school_status": {
       "name": "school_status",
       "schema": "public",
-      "values": ["ACTIVE", "INACTIVE"]
+      "values": [
+        "ACTIVE",
+        "INACTIVE"
+      ]
     },
     "public.user_role": {
       "name": "user_role",
       "schema": "public",
-      "values": ["STUDENT", "TEACHER", "ADMIN"]
+      "values": [
+        "STUDENT",
+        "TEACHER",
+        "ADMIN"
+      ]
     },
     "public.content_status": {
       "name": "content_status",
       "schema": "public",
-      "values": ["DRAFT", "READY", "ARCHIVED"]
+      "values": [
+        "DRAFT",
+        "READY",
+        "ARCHIVED"
+      ]
     },
     "public.question_type": {
       "name": "question_type",
       "schema": "public",
-      "values": ["SINGLE_CHOICE", "MULTIPLE_CHOICE_MULTIPLE_ANSWER", "CATEGORY"]
+      "values": [
+        "SINGLE_CHOICE",
+        "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+        "CATEGORY"
+      ]
     },
     "public.variant_kind": {
       "name": "variant_kind",
       "schema": "public",
-      "values": ["ORIGINAL", "VARIANT"]
+      "values": [
+        "ORIGINAL",
+        "VARIANT"
+      ]
     },
     "public.assessment_type": {
       "name": "assessment_type",
       "schema": "public",
-      "values": ["PRETEST", "DRILL", "TRYOUT", "PVP"]
+      "values": [
+        "PRETEST",
+        "DRILL",
+        "TRYOUT",
+        "PVP"
+      ]
     },
     "public.attempt_status": {
       "name": "attempt_status",
       "schema": "public",
-      "values": ["IN_PROGRESS", "SUBMITTED", "GRADED", "CANCELLED"]
+      "values": [
+        "IN_PROGRESS",
+        "SUBMITTED",
+        "GRADED",
+        "CANCELLED"
+      ]
     },
     "public.package_status": {
       "name": "package_status",
       "schema": "public",
-      "values": ["DRAFT", "PUBLISHED", "CLOSED", "ARCHIVED"]
+      "values": [
+        "DRAFT",
+        "PUBLISHED",
+        "CLOSED",
+        "ARCHIVED"
+      ]
     },
     "public.leaderboard_period_status": {
       "name": "leaderboard_period_status",
       "schema": "public",
-      "values": ["ACTIVE", "ARCHIVED"]
+      "values": [
+        "ACTIVE",
+        "ARCHIVED"
+      ]
     },
     "public.pvp_connection_status": {
       "name": "pvp_connection_status",
       "schema": "public",
-      "values": ["CONNECTED", "DISCONNECTED", "FORFEIT"]
+      "values": [
+        "CONNECTED",
+        "DISCONNECTED",
+        "FORFEIT"
+      ]
     },
     "public.pvp_invite_status": {
       "name": "pvp_invite_status",
       "schema": "public",
-      "values": ["PENDING", "ACCEPTED", "DECLINED", "CANCELLED", "EXPIRED"]
+      "values": [
+        "PENDING",
+        "ACCEPTED",
+        "DECLINED",
+        "CANCELLED",
+        "EXPIRED"
+      ]
     },
     "public.pvp_match_status": {
       "name": "pvp_match_status",
       "schema": "public",
-      "values": ["WAITING", "READY", "RUNNING", "FINISHED", "CANCELLED"]
+      "values": [
+        "WAITING",
+        "READY",
+        "RUNNING",
+        "FINISHED",
+        "CANCELLED"
+      ]
     },
     "public.xp_source_type": {
       "name": "xp_source_type",
       "schema": "public",
-      "values": ["DRILL", "TRYOUT"]
+      "values": [
+        "DRILL",
+        "TRYOUT"
+      ]
     },
     "public.data_job_status": {
       "name": "data_job_status",
       "schema": "public",
-      "values": ["PENDING", "RUNNING", "SUCCEEDED", "FAILED"]
+      "values": [
+        "PENDING",
+        "RUNNING",
+        "SUCCEEDED",
+        "FAILED"
+      ]
     },
     "public.evaluation_decision": {
       "name": "evaluation_decision",
       "schema": "public",
-      "values": ["PASS", "DRIFT", "ANOMALY", "NOT_ENOUGH_DATA", "DEMO"]
+      "values": [
+        "PASS",
+        "DRIFT",
+        "ANOMALY",
+        "NOT_ENOUGH_DATA",
+        "DEMO"
+      ]
     },
     "public.curation_status": {
       "name": "curation_status",
       "schema": "public",
-      "values": ["DRAFT", "READY", "ARCHIVED"]
+      "values": [
+        "DRAFT",
+        "READY",
+        "ARCHIVED"
+      ]
     },
     "public.report_status": {
       "name": "report_status",
       "schema": "public",
-      "values": ["OPEN", "IN_REVIEW", "RESOLVED", "REJECTED"]
+      "values": [
+        "OPEN",
+        "IN_REVIEW",
+        "RESOLVED",
+        "REJECTED"
+      ]
     },
     "public.drill_attempt_status": {
       "name": "drill_attempt_status",
       "schema": "public",
-      "values": ["IN_PROGRESS", "COMPLETED"]
+      "values": [
+        "IN_PROGRESS",
+        "COMPLETED"
+      ]
     },
     "public.assessment_purpose": {
       "name": "assessment_purpose",
       "schema": "public",
-      "values": ["REGULAR", "ORIGINAL_PILOT", "VARIANT_AB"]
+      "values": [
+        "REGULAR",
+        "ORIGINAL_PILOT",
+        "VARIANT_AB"
+      ]
     },
     "public.comparison_state": {
       "name": "comparison_state",
       "schema": "public",
-      "values": ["PENDING", "INSUFFICIENT", "PASS", "DRIFT", "NOT_COMPARABLE", "ANOMALY"]
+      "values": [
+        "PENDING",
+        "INSUFFICIENT",
+        "PASS",
+        "DRIFT",
+        "NOT_COMPARABLE",
+        "ANOMALY"
+      ]
     },
     "public.configuration_state": {
       "name": "configuration_state",
       "schema": "public",
-      "values": ["DRAFT", "SEALED", "RETIRED"]
+      "values": [
+        "DRAFT",
+        "SEALED",
+        "RETIRED"
+      ]
     },
     "public.distribution_state": {
       "name": "distribution_state",
       "schema": "public",
-      "values": ["PROVISIONAL", "READY", "HOLD", "RETIRED"]
+      "values": [
+        "PROVISIONAL",
+        "READY",
+        "HOLD",
+        "RETIRED"
+      ]
     },
     "public.measurement_state": {
       "name": "measurement_state",
@@ -13848,12 +15155,23 @@
     "public.response_state": {
       "name": "response_state",
       "schema": "public",
-      "values": ["RESPONDED", "OMITTED", "NOT_PRESENTED", "INVALID"]
+      "values": [
+        "RESPONDED",
+        "OMITTED",
+        "NOT_PRESENTED",
+        "INVALID"
+      ]
     },
     "public.content_validation_state": {
       "name": "content_validation_state",
       "schema": "public",
-      "values": ["DRAFT", "CONTENT_VALID", "REVIEW", "QUARANTINED", "ARCHIVED"]
+      "values": [
+        "DRAFT",
+        "CONTENT_VALID",
+        "REVIEW",
+        "QUARANTINED",
+        "ARCHIVED"
+      ]
     }
   },
   "schemas": {

@@ -22,7 +22,7 @@ Before implementing a feature, read:
 
 ## Source-of-truth precedence
 
-1. Latest approved PRD — product behavior and acceptance criteria. The team confirmed PRD v0.5 as the working source of truth on 28 September 2026; its explicitly OPEN items remain unresolved.
+1. Latest approved PRD — product behavior and acceptance criteria. The project owner supplied PRD v0.6 Final on 4 October 2026 as the latest source (docs/product/sources/PRD_Numora_v0.6.docx.md). Earlier rules below remain historical context; consult PRODUCT_CONTEXT.md and OPEN_DECISIONS.md for supersession and unresolved dependencies.
 2. Approved ADR — technical decision only.
 3. Approved module specification.
 4. Machine-readable contract.
@@ -37,7 +37,7 @@ For visual decisions, use the latest approved UI/UX handoff for screen-specific 
 
 When adding or changing documentation, distinguish:
 
-- **PRD RULE** — directly stated in the team-approved PRD v0.5.
+- **PRD RULE** — directly stated in the latest owner-approved PRD.
 - **ENGINEERING DECISION** — approved technical decision from team alignment/ADR.
 - **PROPOSED** — recommendation awaiting approval.
 - **OPEN** — unresolved product/academic decision.

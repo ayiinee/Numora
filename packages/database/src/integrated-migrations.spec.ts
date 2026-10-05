@@ -172,6 +172,34 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     },
   );
 
+  it.each([23, 24])(
+    'recovers notifications for the published content branch through %i without rewriting history',
+    async (last) => {
+      await fixture(22, async (client, folder) => {
+        const migrations = readMigrationFiles({ migrationsFolder: folder });
+        for (const entry of migrations.slice(23, last + 1)) {
+          for (const statement of entry.sql) if (statement.trim()) await client.unsafe(statement);
+          await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+        }
+        const before =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        await migrateIntegratedDatabase(client, folder);
+        const after =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        expect(after.slice(0, before.length)).toEqual(before);
+        expect(
+          (
+            await client`SELECT to_regclass('public.notification_outbox') AS notifications, to_regclass('public.content_imports') AS imports`
+          )[0],
+        ).toEqual({ notifications: 'notification_outbox', imports: 'content_imports' });
+        await migrateIntegratedDatabase(client, folder);
+        expect(
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+        ).toEqual(after);
+      });
+    },
+  );
+
   it('rolls back replayed DDL and history if the known fork schema has diverged', async () => {
     await fixture(4, async (client, folder) => {
       await migrate(drizzle(client), { migrationsFolder: resolve('staging/fixtures/irt-branch') });

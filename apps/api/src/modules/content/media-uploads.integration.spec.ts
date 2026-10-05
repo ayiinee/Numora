@@ -73,7 +73,12 @@ const url = process.env.TEST_DATABASE_URL;
       };
       const reservations = await Promise.all([
         repository.reserve(input),
-        repository.reserve({ ...input, id: randomUUID() }),
+        // Real reservations generate a fresh UUID/staging key for every call.
+        repository.reserve({
+          ...input,
+          id: randomUUID(),
+          pendingObjectKey: `question-media/_pending/${owner}/${randomUUID()}.png`,
+        }),
       ]);
       expect(reservations[0]!.id).toBe(reservations[1]!.id);
       const verified = await Promise.all([

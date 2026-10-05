@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — Aini, 5 October 2026:** remove the standalone development Admin mock and use the shared portal at `/admin`, internal login at `/admin/login`, and content tools under `/admin/content`. The `/admin/preview` frame mapping below is historical; that route no longer exists. Real unscored question preview remains part of the importer workflow. [Portal scope and validation](../development/ADMIN_PORTAL_2026-10-05.md).
+
 **ENGINEERING VERIFICATION — 4 October 2026:** the Phase 0 Teacher dataset is ready and the supported Teacher frontend phases have passed real development Auth/API browser QA. See the [connected QA report](TEACHER_CONNECTED_QA_2026-10-04.md) and [22-screen real-data gallery](screenshots/teacher-connected/README.md). This follow-up supersedes earlier connected-QA-pending statements; missing backend capabilities and OPEN product policies remain unresolved.
 
 **ENGINEERING DECISION — Teacher redesign, 4 October 2026:** the owner authorized all eight frontend phases without interim review, using 6 Desktop and 11 Mobile PNGs. Teacher uses a scoped blue theme and responsive screens. See the [Teacher audit](TEACHER_REDESIGN_AUDIT_2026-10-04.md), historical [Phase 1 report](TEACHER_REDESIGN_PHASE_1_2026-10-04.md), and [complete frontend report](TEACHER_REDESIGN_COMPLETE_2026-10-04.md). Geometry remains **PROPOSED** until current Figma metadata is available. Missing Teacher APIs remain visibly unavailable; this authorization does not change product policy or include backend/seeding work.

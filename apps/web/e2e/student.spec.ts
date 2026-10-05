@@ -75,6 +75,8 @@ async function fixtures(
         displayName: 'Siswa fixture',
         role,
         status: 'ACTIVE',
+        adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
+        capabilities: role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
         email: 'fixture@example.test',
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,
@@ -1636,7 +1638,7 @@ for (const { role, verified, path, destination } of [
     path: '/admin/schools',
     destination: '/teacher/verification-required',
   },
-  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/schools' },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin' },
 ] as const) {
   test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
     await fixtures(page, role, verified);

@@ -194,6 +194,7 @@ export class AdminCurriculumDto {
   @ApiProperty({ type: [AdminTaxonDto] }) items!: AdminTaxonDto[];
 }
 export class AdminVersionDto {
+  @ApiProperty({ required: false }) imported?: boolean;
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;
   @ApiProperty() primaryCompetencyId!: string;
@@ -208,7 +209,7 @@ export class AdminVersionDto {
   @ApiProperty({ type: [ContentOptionDto] }) options!: ContentOptionDto[];
   @ApiProperty({ type: String, nullable: true }) answerOptionId!: string | null;
   @ApiProperty() explanation!: string;
-  @ApiProperty() difficulty!: string;
+  @ApiProperty({ type: String, nullable: true }) difficulty!: string | null;
   @ApiProperty({ enum: statuses }) contentStatus!: ContentState;
   @ApiProperty({ enum: statuses }) questionStatus!: ContentState;
   @ApiProperty({ type: String, nullable: true }) reviewedByUserId!: string | null;

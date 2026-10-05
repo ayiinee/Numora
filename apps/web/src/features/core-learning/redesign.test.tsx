@@ -175,6 +175,27 @@ describe('assessment history states', () => {
       '/student/tryout/released/result',
     );
   });
+  it('keeps an old Drill score visible and linked from assessment history', async () => {
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [
+        {
+          ...record,
+          attemptId: 'expired-explanation-attempt',
+          title: 'Drill lama',
+          submittedAt: '2026-01-01T12:00:00Z',
+          score: 80,
+        },
+      ],
+      nextCursor: null,
+    });
+    renderStudent(<AssessmentScreen />);
+
+    const oldResult = await screen.findByRole('link', { name: /Drill lama/ });
+    expect(within(oldResult).getByText('80', { exact: true })).toBeTruthy();
+    expect(oldResult.getAttribute('href')).toBe(
+      '/student/drill/expired-explanation-attempt/result',
+    );
+  });
   it('retries a first-page network failure instead of showing empty data', async () => {
     vi.mocked(learningApi.assessmentHistory).mockRejectedValue(new Error('History offline'));
     renderStudent(<AssessmentScreen />);

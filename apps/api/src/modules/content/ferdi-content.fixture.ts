@@ -84,7 +84,8 @@ export function installFerdiFixture() {
     const [chapter] = await db
       .insert(chapters)
       .values({
-        code: `FERDI-${suffix}`, slug: (`FERDI-${suffix}`).toLowerCase(),
+        code: `FERDI-${suffix}`,
+        slug: `FERDI-${suffix}`.toLowerCase(),
         name: 'TEST chapter',
         displayOrder: (parseInt(suffix, 16) % 1_000_000) + 200_000,
         status: 'READY',
@@ -94,7 +95,8 @@ export function installFerdiFixture() {
       .insert(subchapters)
       .values({
         chapterId: chapter!.id,
-        code: 'SUB', slug: ('SUB').toLowerCase(),
+        code: 'SUB',
+        slug: 'SUB'.toLowerCase(),
         name: 'TEST subchapter',
         displayOrder: 1,
         status: 'READY',
@@ -196,6 +198,7 @@ export function installFerdiFixture() {
                   ? 'TEACHER'
                   : 'STUDENT',
             status: 'ACTIVE',
+            adminRole: 'CONTENT_DATA_MODERATION',
           };
         },
       })

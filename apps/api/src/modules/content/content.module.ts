@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ContentPreviewController } from './content-preview.controller';
+import { ContentPreviewService } from './content-preview.service';
+import { ContentImportService } from './content-import.service';
 import { ConfigModule } from '@nestjs/config';
 import { IdentityModule } from '../identity/identity.module';
 import { ContentController } from './content.controller';
@@ -9,11 +12,22 @@ import { MediaUploadsController } from './media-uploads.controller';
 import { MediaUploadsService } from './media-uploads.service';
 import { MediaUploadsRepository } from './media-uploads.repository';
 import { R2MediaStorage } from './r2-media.storage';
+import { ExcelImportController } from './excel-import.controller';
+import { ExcelImportService } from './excel-import.service';
 
 @Module({
   imports: [IdentityModule, ConfigModule],
-  controllers: [ContentController, DrillPackagesController, MediaUploadsController],
+  controllers: [
+    ContentController,
+    DrillPackagesController,
+    MediaUploadsController,
+    ContentPreviewController,
+    ExcelImportController,
+  ],
   providers: [
+    ContentImportService,
+    ExcelImportService,
+    ContentPreviewService,
     ContentService,
     DrillPackagesService,
     MediaUploadsService,

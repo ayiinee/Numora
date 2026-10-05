@@ -62,7 +62,18 @@ export async function migrateIntegratedDatabase(
         skipped.every((entry) =>
           migrations.slice(18, 22).some((remote) => remote.hash === entry.hash),
         );
-      if (!irtFork && !notificationFork) {
+      // Incoming main had already applied lockdown/import (formerly 0022/0023),
+      // while the UI branch independently added notifications at the same number.
+      const contentFork =
+        migrations.slice(0, 22).every((entry) => hashes.has(entry.hash)) &&
+        [23, 24].some(
+          (index) =>
+            cursor === migrations[index]!.folderMillis &&
+            migrations.slice(23, index + 1).every((entry) => hashes.has(entry.hash)),
+        ) &&
+        skipped.length === 1 &&
+        skipped[0]!.hash === migrations[22]!.hash;
+      if (!irtFork && !notificationFork && !contentFork) {
         throw new Error(
           'Migration history would skip unapplied migrations. Reconcile the database before migrating.',
         );

@@ -180,7 +180,7 @@ export const questionVersions = pgTable(
     answerKey: jsonb('answer_key').notNull(),
     explanation: jsonb('explanation').notNull(),
     media: jsonb('media'),
-    difficulty: text('difficulty').notNull(),
+    difficulty: text('difficulty'),
     parentOriginalQuestionVersionId: uuid('parent_original_question_version_id').references(
       (): AnyPgColumn => questionVersions.id,
       { onDelete: 'restrict' },

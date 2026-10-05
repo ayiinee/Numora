@@ -1,8 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
-import { mkdir, writeFile } from 'node:fs/promises';
+import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { loadAdminWorkbench } from '../src/features/admin/content-api';
 import type { AdminSchool, TeacherTokenSummary } from '../src/lib/api';
+import type { ExcelParseDto } from '../src/features/admin/generated-types';
 
 // Synthetic browser fixtures: real AuthProvider/REST clients, no database writes or auth bypass.
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -222,6 +223,7 @@ async function setup(page: Page) {
   );
   const state = {
     role: 'ADMIN' as 'ADMIN' | 'STUDENT' | 'TEACHER',
+    adminRole: 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'OPERATIONS' | 'CONTENT_DATA_MODERATION' | null,
     schools: [
       { id: id(101), code: 'SMP-TEST-JKT', name: 'SMPN 1 Jakarta — DEMO', status: 'ACTIVE' },
       {
@@ -275,6 +277,12 @@ async function setup(page: Page) {
           id: id(100),
           role: state.role,
           status: 'ACTIVE',
+          adminRole: state.role === 'ADMIN' ? state.adminRole : null,
+          capabilities:
+            state.role === 'ADMIN' &&
+            ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(state.adminRole ?? '')
+              ? ['CONTENT_MANAGE']
+              : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
           teacherVerified: state.role === 'TEACHER' ? true : null,
@@ -405,6 +413,53 @@ const panels = [
   ['IRT', 'irt'],
   ['Audit', 'audit'],
 ] as const;
+for (const width of [390, 1280]) {
+  for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null] as const) {
+    test(`Unified Admin portal ${role ?? 'unassigned'} at ${width}px uses assignment and shared navigation`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const { state, errors } = await setup(page);
+      state.adminRole = role;
+      await page.goto('/admin');
+      await expect(
+        page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
+      ).toBeVisible();
+      const main = page.getByRole('main');
+      if (role === 'SUPER_ADMIN' || role === 'OPERATIONS') {
+        await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
+      } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
+      if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
+        const link = main.getByRole('link', { name: 'Impor JSON' });
+        await expect(link).toBeVisible();
+        await capture(page, `portal-${role}`, width);
+        await link.focus();
+        await page.keyboard.press('Enter');
+        await expect(page).toHaveURL(/\/admin\/content\/imports$/);
+        await expect(page.getByRole('heading', { name: 'Impor & preview soal' })).toBeVisible();
+        if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
+        const nav =
+          width < 960
+            ? page.locator('#mobile-menu')
+            : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
+        await expect(nav.getByRole('link', { name: 'Impor JSON' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+        await expect(nav.getByRole('link', { name: 'Konten & assessment' })).not.toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+      } else {
+        await expect(main.getByRole('link', { name: 'Impor JSON' })).toHaveCount(0);
+        if (role === null) await expect(main.getByText(/Belum ada modul/)).toBeVisible();
+        await capture(page, `portal-${role ?? 'unassigned'}`, width);
+      }
+      expect(state.mutations).toEqual([]);
+      expect(errors).toEqual([]);
+    });
+  }
+}
 for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
   test(`Admin schools and all workbench panels at ${width}px keep server data and navigation`, async ({
     page,
@@ -423,7 +478,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await page.keyboard.press('Enter');
       const nav = page.locator('#mobile-menu');
       await expect(nav).toBeVisible();
-      await nav.getByRole('link', { name: 'Konten & operasional' }).focus();
+      await nav.getByRole('link', { name: 'Konten & assessment' }).focus();
       await page.keyboard.press('Escape');
       await expect(menu).toBeFocused();
     }
@@ -482,17 +537,12 @@ test('School lifecycle preserves input, code case, one-time token and inactive e
   expect(state.mutations.some((r) => r.path.endsWith('/revoke'))).toBe(true);
   expect(errors).toEqual([]);
 });
-test('Development preview remains local and QA login remains gated for the fixture project', async ({
+test('Removed Admin mock returns 404 and QA login remains gated for the fixture project', async ({
   page,
 }) => {
   const { state, errors } = await setup(page);
-  await page.goto('/admin/preview');
-  await expect(page.getByText(/Hanya tersedia saat development/)).toBeVisible();
-  await page.getByRole('button', { name: /Lihat pratinjau bank soal/ }).click();
-  await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-  await expect(
-    page.getByText('Simulasi tampilan bank soal. Tidak terhubung ke API atau penyimpanan.'),
-  ).toBeVisible();
+  const removed = await page.goto('/admin/preview');
+  expect(removed?.status()).toBe(404);
   expect(state.mutations).toEqual([]);
   const response = await page.goto('/qa/login');
   expect(response?.status()).toBe(404);
@@ -620,11 +670,170 @@ test('Admin loading, pinned Tryout edits, report follow-up and logout remain exp
   );
   await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Keluar', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Masuk Admin', exact: true })).toBeVisible();
   await page.goto('/admin/content');
   await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).toHaveCount(0);
   await expect(page.getByText('Halaman ini hanya tersedia untuk Admin yang aktif.')).toBeVisible();
   await page.getByRole('link', { name: 'Ke halaman masuk' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/admin/login');
+  expect(errors).toEqual([]);
+});
+
+test('Excel local preview, failed R2 PUT, retry and permanent JSON references', async ({
+  page,
+}) => {
+  const { errors } = await setup(page);
+  const png =
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aBZkAAAAASUVORK5CYII=';
+  const asset = {
+    externalId: 'TEST-EXCEL',
+    assetId: 'x-test-image',
+    textMarker: '[[asset:x-test-image]]',
+    placement: 'STEM' as const,
+    itemId: null,
+    assetOrder: 1,
+    altText: 'TEST Excel diagram',
+    objectKey: null,
+    sha256: 'a'.repeat(64),
+    contentType: 'image/png',
+    byteLength: Buffer.from(png, 'base64').length,
+    bucket: 'test-bucket',
+  };
+  const parsed: ExcelParseDto = {
+    envelope: {
+      schemaVersion: 2,
+      sourceNamespace: 'TEST',
+      questions: [
+        {
+          externalId: 'TEST-EXCEL',
+          type: 'SINGLE_CHOICE',
+          chapterCode: 'TEST',
+          subchapterCode: 'TEST',
+          competencyCode: 'TEST',
+          difficulty: null,
+          stem: { text: 'TEST ONLY Excel [[asset:x-test-image]]' },
+          options: [
+            { id: 'A', content: { text: 'Dua' } },
+            { id: 'B', content: { text: 'Tiga' } },
+          ],
+          answer: { optionId: 'A' },
+          explanation: { text: 'TEST ONLY explanation' },
+          metadata: {
+            sourceLevelNumber: 1,
+            sourceSheet: 'PG',
+            sourceRowNumber: 2,
+            assetManifest: [asset],
+          },
+        },
+      ],
+    },
+    media: [{ externalId: asset.externalId, assetId: asset.assetId, base64: png }],
+    issues: [],
+    report: {
+      id: null,
+      sourceNamespace: 'TEST',
+      canImportDraft: true,
+      items: [
+        {
+          externalId: 'TEST-EXCEL',
+          canImportDraft: true,
+          canPreview: false,
+          blockers: ['MEDIA_NOT_READY'],
+          outcome: 'VALIDATED',
+          questionVersionId: null,
+        },
+      ],
+    },
+  };
+  let failPut = true,
+    imports = 0;
+  const reserveKeys: string[] = [];
+  const objectKey = 'question-media/TEST-EXCEL/v1/x-test-image.png';
+  await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
+    const request = route.request(),
+      path = new URL(request.url()).pathname;
+    if (path.endsWith('/excel-parses')) {
+      expect(request.headers()['content-type']).toContain('multipart/form-data; boundary=');
+      return route.fulfill({ json: parsed });
+    }
+    if (path.endsWith('/media/uploads')) {
+      reserveKeys.push(request.headers()['idempotency-key']!);
+      return route.fulfill({
+        json: {
+          ...asset,
+          objectKey,
+          uploadId: id(900),
+          status: 'PENDING',
+          uploadUrl: 'https://abcd.r2.cloudflarestorage.com/test-bucket/TEST',
+          method: 'PUT',
+          headers: { 'Content-Type': 'image/png' },
+          expiresAt: '2099-01-01T00:00:00Z',
+          verifiedAt: null,
+        },
+      });
+    }
+    if (path.endsWith('/complete'))
+      return route.fulfill({
+        json: {
+          ...asset,
+          objectKey,
+          uploadId: id(900),
+          status: 'VERIFIED',
+          verifiedAt: '2026-10-05T00:00:00Z',
+        },
+      });
+    if (path.endsWith('/import-validations') || path.endsWith('/imports')) {
+      const body = request.postDataJSON();
+      expect(body.schemaVersion).toBeUndefined();
+      expect(body.questions[0].metadata.assetManifest[0].objectKey).toBe(objectKey);
+      if (path.endsWith('/imports')) imports++;
+      return route.fulfill({
+        json: {
+          ...parsed.report,
+          id: path.endsWith('/imports') ? id(901) : null,
+          items: [
+            {
+              ...parsed.report!.items[0],
+              canPreview: true,
+              blockers: [],
+              questionVersionId: path.endsWith('/imports') ? id(902) : null,
+              outcome: path.endsWith('/imports') ? 'CREATED' : 'VALIDATED',
+            },
+          ],
+        },
+      });
+    }
+    return route.fallback();
+  });
+  await page.route('https://abcd.r2.cloudflarestorage.com/**', async (route) => {
+    expect(route.request().headers()['authorization']).toBeUndefined();
+    return route.fulfill({
+      status: failPut ? 500 : 200,
+      headers: { 'Access-Control-Allow-Origin': '*' },
+      body: '',
+    });
+  });
+  await page.goto('/admin/content/imports');
+  await page.getByLabel('Namespace sumber').fill('TEST');
+  await page
+    .getByLabel('File soal Excel')
+    .setInputFiles(resolve('../api/src/modules/content/fixtures/excel-v3-mixed.xlsx'));
+  await expect(page.getByAltText('TEST Excel diagram')).toBeVisible();
+  expect(imports).toBe(0);
+  await page.getByRole('button', { name: 'Impor sebagai DRAFT' }).click();
+  await expect(page.getByText(/Unggah gambar gagal/)).toBeVisible();
+  expect(imports).toBe(0);
+  failPut = false;
+  await page.getByRole('button', { name: 'Impor sebagai DRAFT' }).click();
+  await expect(page.getByRole('heading', { name: 'Laporan impor' })).toBeVisible();
+  expect(imports).toBe(1);
+  expect(reserveKeys[0]).toBe(reserveKeys[1]);
+  const downloadPromise = page.waitForEvent('download');
+  await page.getByRole('button', { name: 'Ekspor JSON' }).click();
+  const exported = await downloadPromise;
+  const json = await readFile((await exported.path())!, 'utf8');
+  expect(JSON.parse(json).questions[0].metadata.assetManifest[0].objectKey).toBe(objectKey);
+  expect(json).not.toContain('uploadUrl');
+  expect(json).not.toContain('base64');
   expect(errors).toEqual([]);
 });

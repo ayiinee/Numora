@@ -50,6 +50,8 @@ async function setup(page: Page, signedIn = false) {
     identityError: 0,
     failRegister: false,
     failExchange: false,
+    failPassword: false,
+    passwords: [] as Record<string, unknown>[],
     posts: [] as unknown[],
     exchanges: [] as Record<string, unknown>[],
     identityWait: null as Promise<void> | null,
@@ -57,6 +59,15 @@ async function setup(page: Page, signedIn = false) {
   };
   await page.route('https://numora-e2e.supabase.co/**', async (route) => {
     const url = new URL(route.request().url());
+    if (url.pathname.endsWith('/token') && url.searchParams.get('grant_type') === 'password') {
+      state.passwords.push(route.request().postDataJSON());
+      if (state.failPassword)
+        return route.fulfill({
+          status: 400,
+          json: { error: 'invalid_grant', error_description: 'TEST ONLY invalid credentials' },
+        });
+      return route.fulfill({ json: value });
+    }
     if (url.pathname.endsWith('/token')) {
       state.exchanges.push(route.request().postDataJSON());
       if (state.exchangeWait) await state.exchangeWait;
@@ -345,11 +356,58 @@ test('loading and long Google identity reflow without overflow at narrow width',
   expect(errors).toEqual([]);
 });
 
+for (const width of [390, 1280]) {
+  test(`Internal Admin login at ${width}px authenticates before resolving identity`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const { state, errors } = await setup(page);
+    state.role = 'ADMIN';
+    state.failPassword = true;
+    await page.goto('/');
+    await page.getByRole('link', { name: 'Masuk Admin', exact: true }).click();
+    await expect(page).toHaveURL(/\/admin\/login$/);
+    await expect(page.getByRole('heading', { name: 'Masuk Admin' })).toBeVisible();
+    await page.getByLabel('Email Admin').fill('admin@example.invalid');
+    await page.getByLabel('Password', { exact: true }).fill('TEST ONLY PASSWORD');
+    await capture(page, 'admin-internal-login', width);
+    await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
+    await expect(page.getByRole('main').getByRole('alert')).toContainText('Login Admin gagal');
+    await expect(page).toHaveURL(/\/admin\/login$/);
+    state.failPassword = false;
+    await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
+    await expect(page).toHaveURL(/\/admin$/);
+    await expect(page.getByRole('heading', { name: 'Ringkasan Admin' })).toBeVisible();
+    expect(state.passwords).toHaveLength(2);
+    expect(state.posts).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('Internal Admin login rejects a Student identity after valid provider authentication', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.role = 'STUDENT';
+  await page.goto('/admin/login');
+  await page.getByLabel('Email Admin').fill('student@example.invalid');
+  await page.getByLabel('Password', { exact: true }).fill('TEST ONLY PASSWORD');
+  await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
+  await expect(page.getByRole('main').getByRole('alert')).toContainText('bukan akun Admin');
+  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(page.getByRole('link', { name: 'Kembali ke halaman akun' })).toHaveAttribute(
+    'href',
+    '/student',
+  );
+  expect(state.posts).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 for (const [role, verified, path] of [
   ['STUDENT', false, '/student'],
   ['TEACHER', false, '/teacher/verification-required'],
   ['TEACHER', true, '/teacher'],
-  ['ADMIN', false, '/admin/schools'],
+  ['ADMIN', false, '/admin'],
 ] as const) {
   test(`Existing ${role} ${verified ? 'verified' : 'default'} identity leaves login for ${path}`, async ({
     page,

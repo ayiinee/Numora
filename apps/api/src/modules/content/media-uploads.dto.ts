@@ -8,7 +8,7 @@ export class CreateMediaUploadDto {
   @ApiProperty({ example: 'bahas-1' })
   @Matches(/^[a-z0-9][a-z0-9-]{0,63}$/)
   assetId!: string;
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @ApiPropertyOptional({ type: Number, default: 1, minimum: 1 })
   @IsInt()
   @Min(1)
   @Max(100_000)

@@ -10,7 +10,7 @@ try {
     createClient,
   });
   console.log(
-    `Six Development QA Auth accounts ${result}; credentials and manifest are in ignored .qa-seed/.`,
+    `Six Development QA Auth accounts ${result}; Teacher/Student credentials: .qa-seed/accounts.json. Content Admin: .qa-seed/admin-roles/accounts.json. Six-actor IDs: .qa-seed/actors.json. All files are ignored.`,
   );
 } catch (error) {
   // Provider/filesystem errors may contain credentials: emit only fixed operator messages.

@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** importer dan preview DRAFT kini diimplementasikan untuk PG, MCMA dan Category, dengan difficulty nullable dan media receipt VERIFIED. Lihat [kontrak v2 dan API](../api/CONTENT_IMPORT_PREVIEW.md). Preview tidak melakukan scoring. Catatan importer yang masih PROPOSED di bawah adalah bukti historis sebelum implementasi; Curriculum approval dan publikasi tetap terpisah.
+
 # Numora — Handoff bank soal, JSON, dan kontrak API untuk Backend
 
 Tanggal: 3 Oktober 2026 · Revisi dokumen: 0.2 · Pemilik handoff: Reyhan / Data Engineering

@@ -3,15 +3,21 @@ import { resolve } from 'node:path';
 import { createHash, randomUUID } from 'node:crypto';
 import { describe, it, expect } from 'vitest';
 import postgres from 'postgres';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { verify, fingerprint } from './teacher-demo-seed.js';
 
-const testUrl = process.env.TEACHER_DEMO_TEST_DATABASE_URL;
+const restoredUrl = process.env.TEACHER_DEMO_TEST_DATABASE_URL;
+const testUrl = restoredUrl ?? process.env.TEST_DATABASE_URL;
 describe.skipIf(!testUrl)('Teacher DEMO SQL on an isolated restored database', () => {
   it('derives results, reruns without duplicates, refuses conflicting history and rolls back all writes', async () => {
     const target = new URL(testUrl!);
     if (
       !['127.0.0.1', 'localhost'].includes(target.hostname) ||
-      !target.pathname.startsWith('/teacher_demo_restore_')
+      process.env.NODE_ENV !== 'test' ||
+      !(restoredUrl
+        ? target.pathname.startsWith('/teacher_demo_restore_')
+        : target.pathname.startsWith('/numora_test'))
     )
       throw new Error('Seed integration tests require an isolated localhost restore database.');
     const root = resolve(__dirname, '../../..');
@@ -22,12 +28,46 @@ describe.skipIf(!testUrl)('Teacher DEMO SQL on an isolated restored database', (
       resolve(root, 'packages/database/seeds/teacher-demo.sql'),
       'utf8',
     );
-    const qa = JSON.parse(await readFile(resolve(root, '.qa-seed/actors.json'), 'utf8'));
-    const sql = postgres(testUrl!, { max: 1, connect_timeout: 5 });
+    const database = `teacher_demo_restore_${randomUUID().replaceAll('-', '')}`;
+    const adminConnection = postgres(testUrl!, { max: 1, connect_timeout: 5, onnotice: () => {} });
+    const isolatedTarget = new URL(testUrl!);
+    if (!restoredUrl) isolatedTarget.pathname = '/' + database;
+    const sql = postgres(isolatedTarget.toString(), {
+      max: 1,
+      connect_timeout: 5,
+      onnotice: () => {},
+    });
     try {
+      let qa: { actors: { admin: string; teacherB: string } };
+      if (restoredUrl) {
+        qa = JSON.parse(await readFile(resolve(root, '.qa-seed/actors.json'), 'utf8'));
+      } else {
+        await adminConnection.unsafe(`CREATE DATABASE "${database}"`);
+        const migration = postgres(isolatedTarget.toString(), { max: 1, onnotice: () => {} });
+        try {
+          await migrate(drizzle(migration), {
+            migrationsFolder: resolve(root, 'packages/database/drizzle'),
+          });
+        } finally {
+          await migration.end();
+        }
+        // TEST ONLY Auth transport tables and identities; no shared Cloud credentials or files.
+        await sql.unsafe(`CREATE SCHEMA auth;
+          CREATE TABLE auth.users(id uuid PRIMARY KEY, email text, raw_app_meta_data jsonb);
+          CREATE TABLE auth.identities(id uuid PRIMARY KEY, user_id uuid REFERENCES auth.users(id), provider text, provider_id text, identity_data jsonb);`);
+        qa = { actors: { admin: randomUUID(), teacherB: randomUUID() } };
+        await sql`INSERT INTO users(auth_user_id,role,email,display_name)
+          VALUES(${qa.actors.admin}::uuid,'ADMIN','seed-admin@example.test','TEST ONLY Seed Admin')`;
+        await sql.begin(async (tx) => {
+          await tx.unsafe(
+            await readFile(resolve(root, 'packages/database/seeds/redesign-learning.sql'), 'utf8'),
+          );
+        });
+      }
       const before = await fingerprint(sql);
-      await expect(
-        sql.begin(async (tx) => {
+      let rolledBack = false;
+      try {
+        await sql.begin(async (tx) => {
           const actors: Record<string, string> = {};
           // Synthetic email-provider rows are isolated test fixtures, never Google identities.
           for (const actor of roster.actors) {
@@ -71,11 +111,18 @@ describe.skipIf(!testUrl)('Teacher DEMO SQL on an isolated restored database', (
           expect(await verify(tx, config)).toEqual(first);
           expect(await fingerprint(tx)).toEqual(before);
           throw new Error('INTENTIONAL_TEST_ROLLBACK');
-        }),
-      ).rejects.toThrow('INTENTIONAL_TEST_ROLLBACK');
+        });
+      } catch (error) {
+        if (!(error instanceof Error) || error.message !== 'INTENTIONAL_TEST_ROLLBACK') throw error;
+        rolledBack = true;
+      }
+      expect(rolledBack).toBe(true);
       expect(await fingerprint(sql)).toEqual(before);
     } finally {
       await sql.end();
+      if (!restoredUrl)
+        await adminConnection.unsafe(`DROP DATABASE IF EXISTS "${database}" WITH (FORCE)`);
+      await adminConnection.end();
     }
   }, 120000);
 });

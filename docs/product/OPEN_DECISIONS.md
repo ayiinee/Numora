@@ -1,4 +1,12 @@
+> **PRD RULE - 4 October 2026:** [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied by the project owner, supersedes conflicting earlier product rules. Relevant content rules: Admin content access requires Super Admin or Content/Data/Moderation; initial JSON import and R2 media; 5 levels per subchapter and 10 Drill items per level; one Drill variant per level for MVP; TryOut has 30 items. Historical decisions below remain evidence, not overriding policy.
+>
+> **ENGINEERING DECISION:** importer/preview rollout imports DRAFT only, with all preview scores null. No production publication, PGK grading, XP, or IRT is enabled by preview.
+>
+> **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. TryOut XP conflicts between section 12 (x10) and AC-15 (x100), requiring PO correction before implementation. Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
+
 # Open Decisions Register
+
+**ENGINEERING DECISION — Aini, 5 October 2026:** consolidate Admin entry/navigation in `/admin` and remove the development-only mock `/admin/preview`. Internal login uses provisioned Supabase Auth accounts; no Admin signup or browser assignment. PRD v0.6 §3.2–3.3 defines the three subroles; navigation follows identity assignment, while full server permission enforcement/limited operational DTOs remain an implementation gap. See [portal scope](../development/ADMIN_PORTAL_2026-10-05.md). Real unscored content preview is retained.
 
 **Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) §18 dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md) §16, diberikan 2 Oktober 2026; PRD v0.5 §13 tetap baseline lintas fitur. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) menjelaskan supersession. The PDF still bears its prior “draft for review” label; the team approval was confirmed by the Software Engineering coordinator on 28 September 2026.
 **Rule:** an `OPEN` item must not be silently resolved. Approved PRD rules apply, while explicitly unresolved details remain open. Product decisions are made jointly with the responsible owners listed in the PRD; the Software Engineering coordinator coordinates FE/BE execution but does not unilaterally change academic/product policy.

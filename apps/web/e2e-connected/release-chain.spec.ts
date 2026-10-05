@@ -8,7 +8,7 @@ import {
 } from '@playwright/test';
 import type { Session } from '@supabase/supabase-js';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   DrillAttemptDto,
@@ -29,6 +29,7 @@ import type {
   TokenDto,
   IdentityProfileDto,
 } from '../src/lib/generated-api-types';
+import type { ImportReportDto, PreviewSessionDto } from '../src/features/admin/generated-types';
 
 // Auth is an explicitly isolated email fixture. No product API route mocks or service overrides.
 type Actor = { profileId: string; session: Session };
@@ -136,7 +137,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 4 ? 'PASS' : 'FAIL',
+          status: unchanged && checks.length === 5 ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
@@ -511,7 +512,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe('MANDIRI');
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher/profile');
-    await teacher.getByRole('button', { name: /Keluar/ }).click();
+    await teacher.getByRole('button', { name: 'Keluar dari akun', exact: true }).click();
     await expect(teacher).toHaveURL('http://localhost:3400/');
     await teacher.goto('/teacher');
     await expect(teacher).toHaveURL('http://localhost:3400/');
@@ -526,9 +527,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(signedInAgain).toHaveURL(/\/teacher$/);
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     await admin.goto('/student/learn');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     const foreign = await login(browser, 'foreignTeacher');
     await foreign.goto(`/teacher/classes/${cls.id}`);
     await expect(
@@ -780,5 +781,175 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     ).toMatchObject({ score: 0, resultState: 'ready' });
     checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
+  });
+
+  test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
+    browser,
+    request,
+  }) => {
+    const admin = await login(browser, 'admin');
+    const token = fixtures.actors.admin!.session.access_token;
+    async function content<T>(path: string, data: object, key?: string, status = 201): Promise<T> {
+      const response = await request.post(`${apiBase}/admin/content/${path}`, {
+        headers: { Authorization: `Bearer ${token}`, ...(key ? { 'Idempotency-Key': key } : {}) },
+        data,
+      });
+      expect(response.status(), path).toBe(status);
+      return response.json();
+    }
+    const source = resolve(root, 'docs/data/samples/2026-10-03');
+    const masters = JSON.parse(readFileSync(resolve(source, 'master-data.proposed.json'), 'utf8'));
+    const samples = JSON.parse(readFileSync(resolve(source, 'questions.draft.json'), 'utf8'));
+    const curriculum = await (await call(request, 'admin', 'admin/content/curriculum')).json();
+    const chapters = new Map<string, string>();
+    const subs = new Map<string, string>();
+    let chapterOrder = Math.max(
+      0,
+      ...curriculum.items
+        .filter((i: { kind: string }) => i.kind === 'CHAPTER')
+        .map((i: { displayOrder: number }) => i.displayOrder),
+    );
+    for (const ch of masters.chapters)
+      chapters.set(
+        ch.code,
+        (
+          await content<{ id: string }>('chapters', {
+            code: ch.code,
+            name: ch.name,
+            displayOrder: ++chapterOrder,
+          })
+        ).id,
+      );
+    for (const [i, sub] of masters.subchapters.entries()) {
+      const id = (
+        await content<{ id: string }>('subchapters', {
+          chapterId: chapters.get(sub.chapterCode),
+          code: sub.code,
+          name: sub.name,
+          displayOrder: i + 1,
+        })
+      ).id;
+      subs.set(sub.code, id);
+      await content('levels', {
+        subchapterId: id,
+        levelNumber: 1,
+        description: 'TEST ONLY DRAFT sample level',
+      });
+    }
+    for (const c of masters.competencies)
+      await content('competencies', {
+        subchapterId: subs.get(c.subchapterCode),
+        code: c.code,
+        description: c.description,
+      });
+    for (const q of samples)
+      for (const asset of q.metadata.assetManifest) {
+        const reservation = await content<{
+          uploadId: string;
+          uploadUrl: string;
+          headers: Record<string, string>;
+        }>(
+          'media/uploads',
+          {
+            externalId: q.externalId,
+            assetId: asset.assetId,
+            contentVersion: 1,
+            contentType: asset.contentType,
+            byteLength: asset.byteLength,
+            sha256: asset.sha256,
+          },
+          crypto.randomUUID(),
+        );
+        const put = await request.put(reservation.uploadUrl, {
+          headers: reservation.headers,
+          data: readFileSync(resolve(source, asset.fileReference)),
+        });
+        expect(put.status()).toBe(200);
+        const receipt = await content<{ objectKey: string }>(
+          `media/uploads/${reservation.uploadId}/complete`,
+          {},
+          undefined,
+          200,
+        );
+        asset.objectKey = receipt.objectKey;
+      }
+    await admin.goto('/admin/content/imports');
+    await admin.getByLabel('File soal JSON').setInputFiles({
+      name: 'questions.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(samples)),
+    });
+    await admin.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
+    await expect(admin.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
+    const imported = admin.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/content/imports'),
+    );
+    await admin.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
+    const report = (await (await imported).json()) as ImportReportDto;
+    expect(report.items).toHaveLength(10);
+    expect(report.items.every((i) => i.canPreview)).toBe(true);
+    await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
+    await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+    await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
+    await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
+    const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
+    for (let i = 0; i < 10; i++) {
+      await expect(admin.getByText(new RegExp(`Soal ${i + 1}/10`))).toBeVisible();
+      const controls = admin.getByRole('checkbox').or(admin.getByRole('radio'));
+      await controls.first().check();
+      await admin.getByRole('button', { name: 'Simpan jawaban', exact: true }).click();
+      await expect(admin.getByText(/Tersimpan di server.*revisi 1/)).toBeVisible();
+      await admin.reload();
+      await expect(controls.first()).toBeChecked();
+      if (await admin.locator('.content-preview-image').count())
+        await expect
+          .poll(() =>
+            admin
+              .locator('.content-preview-image')
+              .first()
+              .evaluate((img: HTMLImageElement) => img.naturalWidth),
+          )
+          .toBeGreaterThan(0);
+      if (i < 9) await admin.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+    }
+    await admin.getByRole('button', { name: 'Submit & review', exact: true }).click();
+    await expect(admin.getByRole('heading', { name: 'Review tanpa scoring' })).toBeVisible();
+    const result = await body<PreviewSessionDto>(
+      request,
+      'admin',
+      `admin/content/preview-sessions/${sessionId}/result`,
+    );
+    expect(result.items).toHaveLength(10);
+    expect(result.items.every((i) => i.score === null && i.answerKey && i.explanation)).toBe(true);
+    expect(result.score).toBe(null);
+    expect(result.media).toHaveLength(6);
+    let renderedImages = 0;
+    for (let position = 9; position >= 0; position--) {
+      await expect(admin.getByText(new RegExp(`Soal ${position + 1}/10`))).toBeVisible();
+      const images = admin.locator('.content-preview-image');
+      for (let index = 0; index < (await images.count()); index++) {
+        await expect
+          .poll(() => images.nth(index).evaluate((img: HTMLImageElement) => img.naturalWidth))
+          .toBeGreaterThan(0);
+        renderedImages++;
+      }
+      if (position > 0)
+        await admin.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
+    }
+    expect(renderedImages).toBe(6);
+    await admin.setViewportSize({ width: 390, height: 844 });
+    await expect(admin.getByRole('heading', { name: 'Review tanpa scoring' })).toBeVisible();
+    expect(
+      await admin.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await call(
+      request,
+      'student',
+      `admin/content/preview-sessions/${sessionId}`,
+      'GET',
+      undefined,
+      403,
+    );
+    checks.push('draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review');
   });
 });

@@ -1,14 +1,14 @@
 import assert from 'node:assert/strict';
-import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { assertCurrentTryoutResponse } from './qa-smoke-contract.mjs';
+import { readQaAccounts } from './qa-accounts.mjs';
 
 const ref = 'pkamenfnwmoeisccnrnk';
 assert.equal(process.env.NODE_ENV, 'development');
 assert.equal(process.env.SUPABASE_URL, `https://${ref}.supabase.co`);
 assert.equal(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_URL);
-const vault = JSON.parse(await readFile(resolve(import.meta.dirname, '../../../.qa-seed/accounts.json'), 'utf8'));
+const vault = await readQaAccounts(resolve(import.meta.dirname, '../../..'));
 assert.equal(vault.projectRef, ref);
 const base = process.env.API_INTERNAL_URL;
 assert.ok(base === 'http://localhost:3001/api/v1', 'Use the local Development API.');
@@ -16,7 +16,10 @@ assert.ok(base === 'http://localhost:3001/api/v1', 'Use the local Development AP
 const sessions = {};
 for (const [name, account] of Object.entries(vault.accounts)) {
   const client = createClient(process.env.SUPABASE_URL, process.env.SUPABASE_PUBLISHABLE_KEY);
-  const { data, error } = await client.auth.signInWithPassword({ email: account.email, password: account.password });
+  const { data, error } = await client.auth.signInWithPassword({
+    email: account.email,
+    password: account.password,
+  });
   assert.ifError(error);
   assert.equal(data.user.id, account.id);
   sessions[name] = data.session.access_token;
@@ -49,7 +52,10 @@ for (const actor of ['studentB', 'studentA']) {
   assertCurrentTryoutResponse(await api(actor, '/tryout/packages/current'), actor);
 }
 assert.equal((await api('studentB', '/classes')).status, 403);
-assert.equal((await api('teacherB', '/classes')).status, identities.teacherB.teacherVerified ? 200 : 403);
+assert.equal(
+  (await api('teacherB', '/classes')).status,
+  identities.teacherB.teacherVerified ? 200 : 403,
+);
 assert.equal((await api('studentA', '/admin/schools')).status, 403);
 const unauthenticated = await fetch(`${base}/identity/me`);
 assert.equal(unauthenticated.status, 401);
@@ -66,9 +72,18 @@ if (process.argv.includes('--apply')) {
   if (!identities.teacherB.teacherVerified) {
     const issued = await api('admin', `/admin/schools/${school.id}/teacher-tokens`, 'POST');
     assert.equal(issued.status, 201);
-    const verified = await api('teacherB', `/schools/${school.id}/teacher-verifications`, 'POST', { token: issued.value.token });
+    const verified = await api('teacherB', `/schools/${school.id}/teacher-verifications`, 'POST', {
+      token: issued.value.token,
+    });
     assert.equal(verified.status, 201);
-    assert.equal((await api('teacherB', `/schools/${school.id}/teacher-verifications`, 'POST', { token: issued.value.token })).status, 409);
+    assert.equal(
+      (
+        await api('teacherB', `/schools/${school.id}/teacher-verifications`, 'POST', {
+          token: issued.value.token,
+        })
+      ).status,
+      409,
+    );
   }
   const teacherBClasses = await api('teacherB', '/classes');
   assert.equal(teacherBClasses.status, 200);
@@ -79,7 +94,10 @@ if (process.argv.includes('--apply')) {
     classB = created.value;
   }
   assert.equal((await api('teacherA', `/classes/${classB.id}/students`)).status, 403);
-  assert.equal((await api('studentA', '/classes/join', 'POST', { joinCode: classB.joinCode })).status, 409);
+  assert.equal(
+    (await api('studentA', '/classes/join', 'POST', { joinCode: classB.joinCode })).status,
+    409,
+  );
   const joined = await api('studentC', '/classes/join', 'POST', { joinCode: classB.joinCode });
   assert.equal(joined.status, 201);
   assert.equal((await api('studentC', '/identity/me')).value.studentAffiliation, 'SCHOOL');
