@@ -163,3 +163,27 @@ it('keeps the account available after logout failure and retries the existing lo
   await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
   expect(auth.logout).toHaveBeenCalledTimes(2);
 });
+
+it('withholds total students when one class roster fails and recovers without a partial total', async () => {
+  vi.mocked(getTeacherClasses).mockResolvedValue({
+    items: [
+      { id: 'class-a', name: 'IX A' },
+      { id: 'class-b', name: 'IX B' },
+    ],
+  });
+  let failed = true;
+  vi.mocked(getClassStudents).mockImplementation(async (_, classId) => {
+    if (classId === 'class-b' && failed) throw new ApiProblem(503, 'UNAVAILABLE', 'Roster gagal.');
+    return {
+      class: { id: classId, name: classId },
+      items: [{ id: classId + '-student', displayName: classId }],
+    };
+  });
+  render(<TeacherDashboardScreen />);
+  const label = await screen.findByText('Total siswa');
+  await screen.findByRole('button', { name: 'Muat ulang jumlah siswa' }, { timeout: 4000 });
+  expect(label.parentElement?.querySelector('strong')?.textContent).toBe('—');
+  failed = false;
+  fireEvent.click(screen.getByRole('button', { name: 'Muat ulang jumlah siswa' }));
+  await waitFor(() => expect(label.parentElement?.querySelector('strong')?.textContent).toBe('2'));
+});

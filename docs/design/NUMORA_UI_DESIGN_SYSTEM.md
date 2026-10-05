@@ -1,5 +1,7 @@
 # NUMORA UI DESIGN SYSTEM
 
+**ENGINEERING DECISION — Teacher redesign, 4 October 2026:** the owner authorized Teacher frontend phases 1–8 without interim review. Teacher follows the supplied Desktop/Mobile PNGs with scoped blue tokens in `apps/web/src/app/teacher.css`. This replaces conflicting Student-derived Teacher values only. Student/Admin keep the shared palette below. See the [Teacher audit](TEACHER_REDESIGN_AUDIT_2026-10-04.md) and [complete report](TEACHER_REDESIGN_COMPLETE_2026-10-04.md). Sampled palette and provisional geometry are identified separately; no product rule or missing API capability is invented.
+
 **ENGINEERING DECISION — approved screenshot redesign, 3 October 2026:** the [current redesign baseline](UI_REDESIGN_BASELINE_2026-10-03.md) supersedes conflicting visual values below. Phase 1 applies local Plus Jakarta Sans, semantic lavender surfaces, 20 px cards, 44 px control targets, and Belajar / Materi / Tryout / PvP / Profil navigation. Canonical runtime values live in `packages/ui/src/tokens.css`; see the [foundation report](UI_REDESIGN_PHASE_1_2026-10-03.md). The original team baseline is retained below as historical guidance. This visual decision does not approve OPEN product policies.
 
 **Version:** 0.1 - Parallel Engineering Baseline
