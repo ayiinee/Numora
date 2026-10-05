@@ -45,6 +45,14 @@ let fixtures: Fixtures;
 let school: AdminSchoolDto;
 let cls: CreatedClassDto;
 const checks: string[] = [];
+const requiredChecks = [
+  'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+  'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
+  'real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth',
+  'direct-url-role-refresh-logout-reauth-mandiri-drill',
+  'tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history',
+  'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
+];
 const contexts: BrowserContext[] = [];
 
 async function call(
@@ -132,6 +140,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() &&
       execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim() === '';
     const dir = resolve(root, '.tmp/job06-evidence');
+    const complete = checks.length === requiredChecks.length && requiredChecks.every(check => checks.includes(check));
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       resolve(dir, 'connected.json'),
@@ -139,7 +148,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 5 ? 'PASS' : 'FAIL',
+          status: unchanged && complete ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
@@ -158,6 +167,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ) + '\n',
     );
     expect(unchanged, 'The entire run must retain one clean release SHA').toBe(true);
+    expect(complete, 'Every required connected acceptance check must be recorded').toBe(true);
   });
 
   test('Admin → Teacher → Student → saved/resumed Drill → monitoring → retry → Level 2', async ({
