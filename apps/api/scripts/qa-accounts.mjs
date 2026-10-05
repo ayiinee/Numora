@@ -200,14 +200,28 @@ export async function runQaAccounts({
   if (args.some((argument) => argument !== '--rotate-passwords') || args.length > 1)
     fail('Only one optional --rotate-passwords flag is supported.');
   const rotating = args.includes('--rotate-passwords');
-  if (
-    env.NODE_ENV !== 'development' ||
-    env.SUPABASE_URL !== `https://${projectRef}.supabase.co` ||
-    env.NEXT_PUBLIC_SUPABASE_URL !== env.SUPABASE_URL ||
-    env.SUPABASE_PROJECT_REF !== projectRef ||
-    !env.SUPABASE_SECRET_KEY?.startsWith('sb_secret_')
-  )
-    fail('QA accounts require the exact Development project and server secret key.');
+  const environmentIssues = [
+    [env.NODE_ENV !== 'development', 'NODE_ENV must be development'],
+    [
+      env.SUPABASE_URL !== `https://${projectRef}.supabase.co`,
+      `SUPABASE_URL must be https://${projectRef}.supabase.co`,
+    ],
+    [
+      env.NEXT_PUBLIC_SUPABASE_URL !== env.SUPABASE_URL,
+      'NEXT_PUBLIC_SUPABASE_URL must match SUPABASE_URL',
+    ],
+    [env.SUPABASE_PROJECT_REF !== projectRef, `SUPABASE_PROJECT_REF must be ${projectRef}`],
+    [
+      !env.SUPABASE_SECRET_KEY?.startsWith('sb_secret_'),
+      'SUPABASE_SECRET_KEY must be a server-only sb_secret_* key (SUPABASE_SERVICE_ROLE_KEY is not used)',
+    ],
+  ]
+    .filter(([invalid]) => invalid)
+    .map(([, message]) => message);
+  if (environmentIssues.length)
+    fail(
+      `QA accounts require the exact Development project and server secret key. Fix .env: ${environmentIssues.join('; ')}. No QA accounts were changed.`,
+    );
   const directory = join(root, '.qa-seed');
   const vaultFile = join(directory, 'accounts.json');
   const pendingFile = join(directory, 'accounts.pending.json');
