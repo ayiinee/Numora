@@ -54,6 +54,7 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
       onComplete={() => {
         void queryClient.invalidateQueries({ queryKey: ['student-progress'] });
         void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
+        void queryClient.invalidateQueries({ queryKey: ['student-materials'] });
         void queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
         void queryClient.invalidateQueries({ queryKey: ['subchapter'] });
         router.push(`/student/drill/${attemptId}/result`);

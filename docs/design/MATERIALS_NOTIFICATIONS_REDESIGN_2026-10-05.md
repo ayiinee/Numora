@@ -45,7 +45,25 @@ Feedback, invitation and first unlock produce notification outbox rows transacti
 
 ## Verification
 
-The final verification results are recorded below before publication. Browser identity/API fixtures and local Socket.IO transport are synthetic; database integration uses isolated local PostgreSQL. Connected Google OAuth, R2 credentials, Redis transport and shared deployment remain environment-dependent release checks.
+| Check | Result |
+| --- | --- |
+| Workspace lint | Passed; zero warnings |
+| Workspace typecheck | 14/14 tasks passed, serial execution |
+| API unit/integration | 137 passed; 7 Redis-dependent tests skipped |
+| Web unit tests | 190 passed |
+| Database tests | 24 passed |
+| Worker tests with local PostgreSQL | 15 passed |
+| Browser regression | 167 passed; zero skipped, failed or flaky; Student/Mandiri/School, Teacher, Admin, auth and PvP fixtures |
+| Script checks | 57 passed |
+| Migration / schema | Forward migration through 0024 passed; 106 tables/columns and RLS verified |
+| Legacy upgrade | Completed/active attempts, answers and pinned content versions preserved |
+| Contracts | Eight schemas valid; OpenAPI regenerated; generated learning/PvP types fresh |
+| Web production build | Passed with webpack and optional low-memory mode |
+| Final Drill smoke | Two browser tests passed after the final rebuild: retry/new attempt and failed-save recovery |
+
+Browser identity/API fixtures and local Socket.IO transport are synthetic; database integration uses isolated local PostgreSQL. Browser verification uses an ignored temporary copy of the existing specs with origin 3310 instead of 3300 and adjusted relative imports, because a concurrent team run owns port 3300. Assertions and fixtures are otherwise unchanged. Connected Google OAuth, R2 credentials, Redis transport and shared deployment remain environment-dependent release checks.
+
+The API database run uses one worker, a 30-second test timeout and 60-second hook timeout on the shared Windows development machine. The seven skipped API tests require isolated Redis (PvP transport/rate limit and scientific-consumer queue recovery); they are not counted as passes. No production policy is activated by any fixture.
 
 ## Review and deployment
 
