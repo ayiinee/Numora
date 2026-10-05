@@ -40,7 +40,7 @@ Feedback, invitation and first unlock produce notification outbox rows transacti
 | Category editor | Content DTO/service, Admin content UI/API, `packages/database/src/schema/content.ts`, guarded redesign seed |
 | Inbox UI | Notification route, `notifications.tsx`, `notification-queries.ts`, date helper, Student header/shell, feedback deep-link support |
 | Notification API/worker | `apps/api/src/modules/notifications/`, source services, `apps/worker/src/notifications.ts`, worker runtime |
-| Persistence/contracts | Migration `0023_polite_albert_cleary.sql`, snapshot/journal, notification schema/events, shared Tryout visibility, OpenAPI/generated types |
+| Persistence/contracts | Migration `0024_materials_notifications.sql`, snapshot/journal, notification schema/events, shared Tryout visibility, OpenAPI/generated types |
 | Verification | API integration tests, browser materials/notifications/admin/student tests, date tests, worker runtime test, gallery and rollout runbook |
 
 ## Verification
@@ -49,7 +49,7 @@ The final verification results are recorded below before publication. Browser id
 
 ## Review and deployment
 
-Use the [rollout runbook](../development/MATERIALS_NOTIFICATIONS_RUNBOOK.md) to apply migration 0023 through the team workflow before deploying API/worker/web. No manual dashboard schema changes. Team review and merge are required; no automatic merge is performed.
+Use the [rollout runbook](../development/MATERIALS_NOTIFICATIONS_RUNBOOK.md) to apply migration 0024 through the team workflow before deploying API/worker/web. No manual dashboard schema changes. Team review and merge are required; no automatic merge is performed.
 
 [All mobile/tablet/desktop screenshots](screenshots/materials-notifications/README.md). Baseline 390 px:
 

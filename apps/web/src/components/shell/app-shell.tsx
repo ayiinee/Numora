@@ -26,6 +26,8 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
   admin: [
     { href: '/admin/schools', label: 'Sekolah & token', icon: 'school' },
     { href: '/admin/content', label: 'Konten & operasional', icon: 'book' },
+    { href: '/admin/content/imports', label: 'Impor & preview', icon: 'clipboard' },
+    { href: '/admin/operations', label: 'Pengguna & kelas', icon: 'users' },
   ],
 };
 
@@ -69,8 +71,13 @@ export function AppShell({
         pathname.startsWith(`${href}/`) ||
         (href === '/student/learn' && pathname.startsWith('/student/drill/'));
   const links = (mobile = false) =>
-    (mobile && area === 'student' ? navigation.student.slice(0, 5) : navigation[area]).map(
-      (item) => (
+    (mobile && area === 'student' ? navigation.student.slice(0, 5) : navigation[area])
+      .filter(
+        (item) =>
+          !item.href.startsWith('/admin/content') ||
+          profile?.capabilities?.includes('CONTENT_MANAGE'),
+      )
+      .map((item) => (
         <Link
           key={item.href}
           href={item.href}
@@ -81,8 +88,7 @@ export function AppShell({
           <span>{item.label}</span>
           {!mobile && active(item.href) && <span className="nav-active-dot" />}
         </Link>
-      ),
-    );
+      ));
   return (
     <div className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''} ${className}`}>
       <a className="skip-link" href="#main-content">

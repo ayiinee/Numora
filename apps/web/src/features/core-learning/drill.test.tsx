@@ -89,6 +89,29 @@ describe('ringkasan hasil Drill', () => {
     expect(screen.getByText('Tuntas')).toBeTruthy();
     expect(screen.getByText('Level berikutnya terbuka.')).toBeTruthy();
   });
+  it('keeps the saved Drill score visible when the explanation has expired', async () => {
+    vi.spyOn(learningApi, 'result').mockResolvedValue({
+      ...result,
+      score: 80,
+      explanationState: 'expired',
+      questions: [],
+    });
+    vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
+
+    render(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
+
+    expect(await screen.findByText('80', { exact: true })).toBeTruthy();
+    expect(screen.getByText('Hasil tersimpan')).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Pembahasan tidak tersedia' })).toBeTruthy();
+    expect(
+      screen.getByText(/Nilai dan riwayat hasil tetap tersimpan/),
+    ).toBeTruthy();
+    expect(screen.queryByRole('navigation', { name: 'Matriks jawaban' })).toBeNull();
+  });
   it('retries a unavailable next-level package and navigates using the server attempt ID', async () => {
     vi.spyOn(learningApi, 'result').mockResolvedValue({ ...result, unlockedLevelId: 'next' });
     vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });

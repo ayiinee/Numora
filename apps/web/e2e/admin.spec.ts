@@ -275,6 +275,8 @@ async function setup(page: Page) {
           id: id(100),
           role: state.role,
           status: 'ACTIVE',
+          adminRole: state.role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
+          capabilities: state.role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
           teacherVerified: state.role === 'TEACHER' ? true : null,

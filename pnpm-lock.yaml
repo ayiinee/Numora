@@ -238,6 +238,12 @@ importers:
       '@tka/irt-orchestration':
         specifier: workspace:*
         version: link:../../packages/irt-orchestration
+      ajv:
+        specifier: 8.20.0
+        version: 8.20.0
+      ajv-formats:
+        specifier: 3.0.1
+        version: 3.0.1(ajv@8.20.0)
       bullmq:
         specifier: 6.3.9
         version: 6.3.9(ioredis@6.0.0(supports-color@7.2.0))

@@ -75,6 +75,8 @@ async function fixtures(
         displayName: 'Siswa fixture',
         role,
         status: 'ACTIVE',
+        adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
+        capabilities: role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
         email: 'fixture@example.test',
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,

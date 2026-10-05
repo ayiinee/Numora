@@ -9,6 +9,8 @@ import {
   assessmentPackages,
   chapters,
   competencies,
+  contentImportVersions,
+  contentImportIdentities,
   getDatabase,
   learningVideos,
   levels,
@@ -73,6 +75,7 @@ function text(value: unknown): string {
     : '';
 }
 function optionsFrom(value: unknown): { id: string; text: string }[] {
+  if (value && typeof value === 'object' && 'options' in value) value = value.options;
   return Array.isArray(value)
     ? value.flatMap((option: unknown) => {
         if (
@@ -247,15 +250,24 @@ export class ContentService {
 
   async versions(page: ContentPageDto): Promise<AdminVersionsDto> {
     const rows = await getDatabase()
-      .db.select({ version: questionVersions, variant: questionVariants, question: questions })
+      .db.select({
+        version: questionVersions,
+        variant: questionVariants,
+        question: questions,
+        imported: contentImportVersions.questionVersionId,
+      })
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+      .leftJoin(
+        contentImportVersions,
+        eq(contentImportVersions.questionVersionId, questionVersions.id),
+      )
       .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
       .limit(page.limit)
       .offset(page.offset);
     return {
-      items: rows.map(({ version: v, variant, question: q }): AdminVersionDto => ({
+      items: rows.map(({ version: v, variant, question: q, imported }): AdminVersionDto => ({
         id: v.id,
         questionId: q.id,
         primaryCompetencyId: q.primaryCompetencyId,
@@ -265,6 +277,7 @@ export class ContentService {
         versionNumber: v.versionNumber,
         questionType: v.questionType,
         stem: text(v.stem),
+        imported: imported !== null,
         variantKind: variant.kind,
         originalVariantId: variant.originalVariantId,
         options: optionsFrom(v.optionsOrStatements),
@@ -325,6 +338,15 @@ export class ContentService {
   createVariant(actor: string, questionId: string, body: CreateVariantDto) {
     const values = versionValues(body);
     return adminMutation(actor, 'question_variant_created', 'question_version', async (tx) => {
+      if (
+        (
+          await tx
+            .select()
+            .from(contentImportIdentities)
+            .where(eq(contentImportIdentities.questionId, questionId))
+        ).length
+      )
+        throw new ConflictException({ code: 'IMPORTED_VERSION_READ_ONLY' });
       const original = required(
         (
           await tx
@@ -370,6 +392,15 @@ export class ContentService {
   revise(actor: string, sourceId: string, body: QuestionContentDto) {
     const values = versionValues(body);
     return adminMutation(actor, 'question_version_created', 'question_version', async (tx) => {
+      if (
+        (
+          await tx
+            .select()
+            .from(contentImportVersions)
+            .where(eq(contentImportVersions.questionVersionId, sourceId))
+        ).length
+      )
+        throw new ConflictException({ code: 'IMPORTED_VERSION_READ_ONLY' });
       const source = required(
         (
           await tx.select().from(questionVersions).where(eq(questionVersions.id, sourceId)).limit(1)
@@ -400,8 +431,17 @@ export class ContentService {
     });
   }
   questionStatus(actor: string, id: string, status: ContentState) {
-    return adminMutation(actor, 'question_status_changed', 'question', async (tx) =>
-      required(
+    return adminMutation(actor, 'question_status_changed', 'question', async (tx) => {
+      if (
+        (
+          await tx
+            .select()
+            .from(contentImportIdentities)
+            .where(eq(contentImportIdentities.questionId, id))
+        ).length
+      )
+        throw new ConflictException({ code: 'IMPORTED_VERSION_READ_ONLY' });
+      return required(
         (
           await tx
             .update(questions)
@@ -409,8 +449,8 @@ export class ContentService {
             .where(eq(questions.id, id))
             .returning({ id: questions.id })
         )[0],
-      ),
-    );
+      );
+    });
   }
   versionStatus(actor: string, id: string, status: ContentState) {
     return adminMutation(
@@ -427,6 +467,18 @@ export class ContentService {
               .for('update')
           )[0],
         );
+        if (
+          (
+            await tx
+              .select({ id: contentImportVersions.questionVersionId })
+              .from(contentImportVersions)
+              .where(eq(contentImportVersions.questionVersionId, id))
+          ).length
+        )
+          throw new ConflictException({
+            code: 'IMPORTED_VERSION_READ_ONLY',
+            detail: 'Imported content remains DRAFT; use JSON reimport for a new version.',
+          });
         if (version.contentStatus === status) return { id };
         if (status === 'DRAFT' || version.contentStatus === 'ARCHIVED')
           throw new ConflictException(

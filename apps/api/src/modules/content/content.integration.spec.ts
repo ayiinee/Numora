@@ -125,6 +125,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
                   ? 'TEACHER'
                   : 'STUDENT',
             status: 'ACTIVE',
+            adminRole: 'CONTENT_DATA_MODERATION',
           };
         },
       })
@@ -169,7 +170,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
   it('validates inputs, writes taxonomy transactionally, and rejects duplicate and forged actor IDs', async () => {
     const body = {
       code: `TEST-${suffix}`,
-      name: 'TEST chapter',
+      name: `TEST chapter ${suffix}`,
       displayOrder: (parseInt(suffix, 16) % 2_000_000_000) + 1,
     };
     // UI is intentionally capped to 100k order; choose an unused positive slot in that range.
@@ -242,7 +243,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     await expect(
       new ContentService().createChapter(randomUUID(), {
         code: rollbackCode,
-        name: 'TEST rollback',
+        name: `TEST rollback ${suffix}`,
         displayOrder: body.displayOrder + 1,
       }),
     ).rejects.toMatchObject({ status: 400 });

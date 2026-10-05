@@ -14,6 +14,51 @@ const env = {
   SUPABASE_PROJECT_REF: projectRef,
   SUPABASE_SECRET_KEY: 'sb_secret_TEST_ONLY',
 };
+
+for (const key of [
+  'NODE_ENV',
+  'SUPABASE_URL',
+  'NEXT_PUBLIC_SUPABASE_URL',
+  'SUPABASE_PROJECT_REF',
+  'SUPABASE_SECRET_KEY',
+]) {
+  test(`invalid ${key} is identified before filesystem or Auth access`, async () => {
+    let accessed = false;
+    const unexpectedAccess = () => {
+      accessed = true;
+      throw new Error('Unexpected filesystem or Auth access');
+    };
+    await assert.rejects(
+      runQaAccounts({
+        root: '.',
+        env: { ...env, [key]: 'TEST-PRIVATE-INVALID-VALUE' },
+        createClient: unexpectedAccess,
+        io: { mkdir: unexpectedAccess },
+      }),
+      (error) => {
+        assert.match(error.message, new RegExp(`${key} must`));
+        assert.doesNotMatch(error.message, /TEST-PRIVATE-INVALID-VALUE/);
+        assert.match(error.message, /No QA accounts were changed/);
+        return true;
+      },
+    );
+    assert.equal(accessed, false);
+  });
+}
+
+test('missing QA settings are reported together without accepting a legacy service-role key', async () => {
+  const incomplete = { ...env, SUPABASE_SERVICE_ROLE_KEY: 'eyJ_TEST_PRIVATE_LEGACY_KEY' };
+  delete incomplete.SUPABASE_PROJECT_REF;
+  delete incomplete.SUPABASE_SECRET_KEY;
+  await assert.rejects(runQaAccounts({ root: '.', env: incomplete }), (error) => {
+    assert.match(error.message, /SUPABASE_PROJECT_REF must/);
+    assert.match(error.message, /SUPABASE_SECRET_KEY must/);
+    assert.match(error.message, /SUPABASE_SERVICE_ROLE_KEY is not used/);
+    assert.doesNotMatch(error.message, /eyJ_TEST_PRIVATE_LEGACY_KEY/);
+    return true;
+  });
+});
+
 async function fixture(t, existing = true) {
   const root = await fs.mkdtemp(join(tmpdir(), 'numora-qa-test-'));
   t.after(async () => {

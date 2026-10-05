@@ -180,7 +180,13 @@ beforeEach(() => {
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
-    profile: { id: 'admin-test', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin test' },
+    profile: {
+      id: 'admin-test',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      capabilities: ['CONTENT_MANAGE'],
+      displayName: 'Admin test',
+    },
     session: { access_token: 'test-token' },
   };
   vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
@@ -434,6 +440,7 @@ describe('Admin content UI', () => {
         id: 'another-admin-test',
         role: 'ADMIN',
         status: 'ACTIVE',
+        capabilities: ['CONTENT_MANAGE'],
         displayName: 'Admin lain',
       },
       session: { access_token: 'expired-test' },

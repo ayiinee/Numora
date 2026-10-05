@@ -3,6 +3,7 @@ import ts from 'typescript';
 
 export default defineConfig({
   test: {
+    include: ['src/**/*.{test,spec}.ts'],
     maxWorkers: 2,
     env: { TEACHER_TOKEN_PEPPER: 'fixture-only-teacher-token-pepper-not-for-deployment' },
   },

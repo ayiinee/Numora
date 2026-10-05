@@ -37,15 +37,16 @@ export function matchesImageSignature(bytes: Buffer, type: string) {
 export class R2MediaStorage {
   constructor(@Inject(ConfigService) private readonly config: ConfigService) {}
 
-  settings() {
+  settings(forRead = false) {
     const account = this.config.get<string>('R2_ACCOUNT_ID') ?? '';
     const accessKeyId = this.config.get<string>('R2_ACCESS_KEY_ID') ?? '';
     const secretAccessKey = this.config.get<string>('R2_SECRET_ACCESS_KEY') ?? '';
+    const sessionToken = this.config.get<string>('R2_SESSION_TOKEN');
     const bucket = this.config.get<string>('R2_BUCKET') ?? '';
     const prefix = this.config.get<string>('R2_MEDIA_PREFIX') ?? 'question-media';
     const ttl = Number(this.config.get('R2_UPLOAD_TTL_SECONDS') ?? 900);
     if (
-      this.config.get('R2_MEDIA_UPLOADS_ENABLED') !== 'true' ||
+      (!forRead && this.config.get('R2_MEDIA_UPLOADS_ENABLED') !== 'true') ||
       !/^[a-f0-9]{32}$/i.test(account) ||
       !accessKeyId ||
       !secretAccessKey ||
@@ -59,27 +60,57 @@ export class R2MediaStorage {
         code: 'R2_NOT_CONFIGURED',
         message: 'R2 media uploads are not configured.',
       });
-    return { account, accessKeyId, secretAccessKey, bucket, prefix, ttl };
+    return { account, accessKeyId, secretAccessKey, sessionToken, bucket, prefix, ttl };
   }
 
-  private client(bucket: string) {
-    const settings = this.settings();
+  private client(bucket: string, forRead = false) {
+    const settings = this.settings(forRead);
     if (bucket !== settings.bucket)
       throw new ServiceUnavailableException({
         code: 'R2_BUCKET_CHANGED',
         message: 'Upload bucket configuration changed; operator review is required.',
       });
+    // TEST ONLY loopback S3 transport; ignored in every deployed environment.
+    const testEndpoint =
+      process.env.NODE_ENV === 'test' ? this.config.get<string>('R2_TEST_ENDPOINT') : undefined;
+    if (testEndpoint) {
+      const endpoint = new URL(testEndpoint);
+      if (endpoint.protocol !== 'http:' || !['127.0.0.1', 'localhost'].includes(endpoint.hostname))
+        throw new ServiceUnavailableException('Test storage must be loopback.');
+    }
     return new S3Client({
       region: 'auto',
       // Keep the bucket in the path so the signed hostname matches the R2
       // account endpoint accepted by the batch uploader.
       forcePathStyle: true,
-      endpoint: `https://${settings.account}.r2.cloudflarestorage.com`,
-      credentials: { accessKeyId: settings.accessKeyId, secretAccessKey: settings.secretAccessKey },
+      endpoint: testEndpoint ?? `https://${settings.account}.r2.cloudflarestorage.com`,
+      credentials: {
+        accessKeyId: settings.accessKeyId,
+        secretAccessKey: settings.secretAccessKey,
+        ...(settings.sessionToken ? { sessionToken: settings.sessionToken } : {}),
+      },
       requestChecksumCalculation: 'WHEN_REQUIRED',
       responseChecksumValidation: 'WHEN_REQUIRED',
       maxAttempts: 2,
     });
+  }
+
+  async readLink(bucket: string, key: string) {
+    const client = this.client(bucket, true);
+    const ttl = 900;
+    try {
+      const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), {
+        expiresIn: ttl,
+      });
+      return { url, expiresAt: new Date(Date.now() + ttl * 1000).toISOString() };
+    } catch {
+      throw new ServiceUnavailableException({
+        code: 'R2_UNAVAILABLE',
+        detail: 'Media links could not be renewed.',
+      });
+    } finally {
+      client.destroy();
+    }
   }
 
   async presign(row: MediaUpload) {

@@ -4,7 +4,7 @@
 
 ## Deploy in order
 
-1. Review and apply the committed Drizzle migration `0023_polite_albert_cleary.sql` through the team's migration workflow, using the migration credential. It adds nullable chapter category metadata, the notification inbox/outbox, indexes, RLS and the `SYSTEM_STARTED` activation marker. Existing categories stay null. Do not manually reproduce the schema in a Supabase dashboard.
+1. Review and apply the committed Drizzle migration `0024_materials_notifications.sql` through the team's migration workflow, using the migration credential. It adds nullable chapter category metadata, the notification inbox/outbox, indexes, RLS and the `SYSTEM_STARTED` activation marker. Existing categories stay null. Do not manually reproduce the schema in a Supabase dashboard.
 2. Build/deploy database, API and worker together; then deploy the web app. The normal `db:check` detects missing new tables/columns before development starts. The worker requires this migration before notification discovery can run.
 3. Keep the existing Redis/worker configuration. The notification poll executes every five seconds independently of analytics feature flags; it does not require enabling analytics or a PvP product policy.
 4. Set chapter categories explicitly through Admin → taxonomy. `algebra`, `geometry`, `numbers`, `statistics`, or null are supported. The existing guarded redesign seed only maps its own `DEMO-UI-ALJABAR` chapter to algebra. It does not infer categories for real content or create demo inbox messages.

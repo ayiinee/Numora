@@ -1,5 +1,6 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
@@ -77,7 +78,10 @@ export function AdminContentScreen() {
 function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
   const token =
-    state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE'
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    state.profile.capabilities?.includes('CONTENT_MANAGE')
       ? state.session.access_token
       : null;
   const [data, setData] = useState<Workbench | null>(null);
@@ -259,6 +263,7 @@ function AdminContentScreenContent() {
                   />
                   <section>
                     <h2>Versi soal</h2>
+                    <Link href="/admin/content/imports">Impor JSON & preview internal</Link>
                     {!current.versions.items.length && (
                       <p>Belum ada versi soal pada halaman ini.</p>
                     )}
@@ -280,7 +285,10 @@ function AdminContentScreenContent() {
                             </small>
                           )}
                           <div className="admin-content-actions">
-                            {v.questionType === 'SINGLE_CHOICE' && (
+                            {v.imported && (
+                              <span>Konten impor hanya dibaca; revisi melalui JSON.</span>
+                            )}
+                            {!v.imported && v.questionType === 'SINGLE_CHOICE' && (
                               <Button
                                 variant="secondary"
                                 disabled={busy}
@@ -289,7 +297,7 @@ function AdminContentScreenContent() {
                                 Buat revisi / varian
                               </Button>
                             )}
-                            {v.questionStatus !== 'READY' && (
+                            {!v.imported && v.questionStatus !== 'READY' && (
                               <Button
                                 disabled={busy}
                                 onClick={() =>
@@ -301,7 +309,7 @@ function AdminContentScreenContent() {
                                 Atur keluarga READY
                               </Button>
                             )}
-                            {v.contentStatus === 'DRAFT' && (
+                            {!v.imported && v.contentStatus === 'DRAFT' && (
                               <Button
                                 disabled={busy}
                                 onClick={() => {
@@ -318,7 +326,7 @@ function AdminContentScreenContent() {
                                 Publikasikan versi
                               </Button>
                             )}
-                            {v.contentStatus !== 'ARCHIVED' && (
+                            {!v.imported && v.contentStatus !== 'ARCHIVED' && (
                               <Button
                                 variant="danger-outline"
                                 disabled={busy}

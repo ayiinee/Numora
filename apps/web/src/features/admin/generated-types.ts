@@ -1,6 +1,34 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type ImportBodyDto = { "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
+
+export type ImportItemDto = { "externalId": string; "canImportDraft": boolean; "canPreview": boolean; "blockers": (string)[]; "outcome": "VALIDATED" | "CREATED" | "CREATED_REVISION" | "SKIPPED_UNCHANGED" | "INVALID"; "questionVersionId": string | null; };
+
+export type ImportReportDto = { "id": string | null; "sourceNamespace": string; "canImportDraft": boolean; "items": (ImportItemDto)[]; };
+
+export type CreatePreviewDto = { "questionVersionIds": (string)[]; };
+
+export type SavePreviewAnswerDto = { "answer": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "expectedRevision": number; };
+
+export type PreviewAckDto = { "instanceId": string; "answer": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "revision": number; "serverSavedAt": string; };
+
+export type RichContentDto = { "text": string; };
+
+export type PreviewOptionDto = { "id": string; "content": RichContentDto; };
+
+export type PreviewCategoryDto = { "id": string; "label": string; };
+
+export type PreviewMediaDto = { "instanceId": string; "assetId": string; "altText": string; "url": string; "expiresAt": string; };
+
+export type PreviewItemDto = { "instanceId": string; "answer": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "revision": number; "serverSavedAt": string; "questionVersionId": string; "externalId": string; "type": "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "stem": RichContentDto; "options": (PreviewOptionDto)[]; "categories": (PreviewCategoryDto)[]; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "explanation"?: RichContentDto; "score": number | null; };
+
+export type PreviewSessionDto = { "id": string; "state": "IN_PROGRESS" | "SUBMITTED"; "scoringStatus": "NOT_SCORED"; "score": number | null; "items": (PreviewItemDto)[]; "media": (PreviewMediaDto)[]; };
+
+export type MediaLinkRequestDto = { "phase": "WORK" | "REVIEW"; "instanceId": string; "assetIds": (string)[]; };
+
+export type MediaLinksDto = { "media": (PreviewMediaDto)[]; };
+
 export type ContentOptionDto = { "id": string; "text": string; };
 
 export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; "id": string; "kind": "CHAPTER" | "SUBCHAPTER" | "COMPETENCY" | "LEVEL"; "parentId": string | null; "code": string; "slug"?: string | null; "name": string; "displayOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED"; };
@@ -15,7 +43,7 @@ export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": numb
 
 export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
-export type AdminVersionDto = { "id": string; "questionId": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string; "contentStatus": "DRAFT" | "READY" | "ARCHIVED"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
+export type AdminVersionDto = { "imported"?: boolean; "id": string; "questionId": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string | null; "contentStatus": "DRAFT" | "READY" | "ARCHIVED"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
 
 export type AdminVersionsDto = { "items": (AdminVersionDto)[]; };
 
