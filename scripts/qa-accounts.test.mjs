@@ -4,7 +4,13 @@ import { randomUUID } from 'node:crypto';
 import * as fs from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve, basename } from 'node:path';
-import { accountNames, projectRef, runQaAccounts } from '../apps/api/scripts/qa-accounts.mjs';
+import {
+  accountNames,
+  adminAccountNames,
+  projectRef,
+  runQaAccounts,
+  readQaAccounts,
+} from '../apps/api/scripts/qa-accounts.mjs';
 
 // Entirely fictional identities and local temporary files; no environment secrets or network.
 const env = {
@@ -128,7 +134,7 @@ async function fixture(t, existing = true) {
       createClient: () => ({ auth: { admin } }),
       ...options,
     });
-  const read = async () => JSON.parse(await fs.readFile(file, 'utf8'));
+  const read = async () => readQaAccounts(root);
   const consistent = async () => {
     const vault = await read();
     for (const name of accountNames)
@@ -317,6 +323,62 @@ test('default provisioning and rerun create only six QA identities and keep pass
   await f.consistent();
 });
 
+test('additional Admin group preserves the original vault, passwords and six-actor manifest', async (t) => {
+  const f = await fixture(t);
+  await f.run({ args: [] });
+  const original = await fs.readFile(f.file, 'utf8');
+  const originalActors = await fs.readFile(join(f.directory, 'actors.json'), 'utf8');
+  await f.run({ args: [], group: 'adminRoles' });
+  const file = join(f.directory, 'admin-roles/accounts.json');
+  const additional = await fs.readFile(file, 'utf8');
+  assert.deepEqual(
+    Object.keys(JSON.parse(additional).accounts).sort(),
+    ['admin', ...adminAccountNames].sort(),
+  );
+  await f.run({ args: [], group: 'adminRoles' });
+  await f.run({ args: [] });
+  assert.equal(await fs.readFile(f.file, 'utf8'), original);
+  assert.equal(await fs.readFile(join(f.directory, 'actors.json'), 'utf8'), originalActors);
+  assert.equal(await fs.readFile(file, 'utf8'), additional);
+  assert.equal(f.calls.creates.length, 2);
+  assert.equal(f.calls.updates.length, 0);
+});
+
+test('additional Admin creation recovers ambiguous Auth success without duplicate identities', async (t) => {
+  const f = await fixture(t);
+  const file = join(f.directory, 'admin-roles/accounts.json');
+  const pending = join(f.directory, 'admin-roles/accounts.pending.json');
+  const io = {
+    ...fs,
+    rename: async (from, to) => {
+      if (to === pending && f.calls.creates.length) throw new Error('TEST ONLY DISK FAILURE');
+      return fs.rename(from, to);
+    },
+  };
+  await assert.rejects(f.run({ args: [], group: 'adminRoles', io }), /atomically/);
+  const candidates = JSON.parse(await fs.readFile(pending, 'utf8')).accounts;
+  await f.run({ args: [], group: 'adminRoles' });
+  const accounts = JSON.parse(await fs.readFile(file, 'utf8')).accounts;
+  for (const name of adminAccountNames)
+    assert.equal(accounts[name].password, candidates[name].password);
+  assert.equal(f.calls.creates.length, 2);
+  assert.equal(f.calls.updates.length, 0);
+  await f.consistent();
+});
+
+test('additional Admin group refuses a foreign Auth identity before creating or changing users', async (t) => {
+  const f = await fixture(t);
+  const id = randomUUID();
+  f.users.set(id, {
+    id,
+    email: 'numora-qa-adminsuper@example.invalid',
+    app_metadata: { numora_qa: false },
+  });
+  await assert.rejects(f.run({ args: [], group: 'adminRoles' }), /expected QA account/);
+  assert.equal(f.calls.creates.length, 0);
+  assert.equal(f.calls.updates.length, 0);
+});
+
 test('interrupted creation reuses the journal after remote success/local confirmation failure', async (t) => {
   const f = await fixture(t, false);
   const io = {
@@ -349,11 +411,15 @@ test('pending rotation rejects default provisioning, external vault edits and a 
   await assert.rejects(f.run());
   f.admin.updateUserById = update;
   await assert.rejects(f.run({ args: [] }), /original command/);
-  const modified = await f.read();
+  const adminFile = join(f.directory, 'admin-roles/accounts.json');
+  const modified = JSON.parse(await fs.readFile(adminFile, 'utf8'));
   modified.accounts.admin.password = 'TEST-EXTERNAL-EDIT';
-  await fs.writeFile(f.file, JSON.stringify(modified));
+  await fs.writeFile(adminFile, JSON.stringify(modified));
   await assert.rejects(f.run(), /changed outside/);
-  await fs.writeFile(f.file, JSON.stringify(f.initial));
+  await fs.writeFile(
+    adminFile,
+    JSON.stringify({ projectRef, accounts: { admin: f.initial.accounts.admin } }),
+  );
   const journal = JSON.parse(await fs.readFile(f.pending, 'utf8'));
   journal.completed = ['unknown-user'];
   await fs.writeFile(f.pending, JSON.stringify(journal));
@@ -378,4 +444,117 @@ test('environment and unknown/duplicate flags are rejected; root/app aliases kee
   assert.match(root.scripts['test:checks'], /test-release-chain-guard.test.mjs/);
   assert.match(root.scripts['test:checks'], /qa-accounts.test.mjs/);
   assert.equal(f.calls.lookups, 0);
+});
+
+test('legacy Content Admin moves into the three-Admin vault without changing credentials or actor IDs', async (t) => {
+  const f = await fixture(t);
+  await f.run({ args: [], group: 'adminRoles' });
+  const adminFile = join(f.directory, 'admin-roles/accounts.json');
+  const admins = JSON.parse(await fs.readFile(adminFile, 'utf8'));
+  assert.deepEqual(admins.accounts.admin, f.accounts.admin);
+  assert.deepEqual(Object.keys(admins.accounts).sort(), ['admin', ...adminAccountNames].sort());
+  assert.equal('admin' in JSON.parse(await fs.readFile(f.file, 'utf8')).accounts, false);
+  await f.run({ args: [] });
+  const actors = JSON.parse(await fs.readFile(join(f.directory, 'actors.json'), 'utf8'));
+  assert.deepEqual(
+    actors.actors,
+    Object.fromEntries(accountNames.map((name) => [name, f.accounts[name].id])),
+  );
+  const extras = Object.fromEntries(adminAccountNames.map((name) => [name, admins.accounts[name]]));
+  await f.run();
+  const rotated = JSON.parse(await fs.readFile(adminFile, 'utf8'));
+  for (const name of adminAccountNames) assert.deepEqual(rotated.accounts[name], extras[name]);
+  await f.consistent();
+});
+
+test('interrupted move copies Content first and safely resumes source removal without Auth mutations', async (t) => {
+  const f = await fixture(t);
+  const io = {
+    ...fs,
+    rename: async (from, to) => {
+      if (to === f.file) throw new Error('TEST ONLY interrupted source replacement');
+      return fs.rename(from, to);
+    },
+  };
+  await assert.rejects(f.run({ args: [], io }), /atomically/);
+  const copied = JSON.parse(
+    await fs.readFile(join(f.directory, 'admin-roles/accounts.json'), 'utf8'),
+  );
+  assert.deepEqual(copied.accounts.admin, f.accounts.admin);
+  assert.deepEqual(await f.read(), f.initial);
+  assert.equal(f.calls.updates.length, 0);
+  assert.equal(f.calls.creates.length, 0);
+  await f.run({ args: [] });
+  assert.equal('admin' in JSON.parse(await fs.readFile(f.file, 'utf8')).accounts, false);
+  await f.consistent();
+});
+
+test('conflicting Content credentials stop before Auth access and leave both vaults intact', async (t) => {
+  const f = await fixture(t);
+  const directory = join(f.directory, 'admin-roles');
+  await fs.mkdir(directory);
+  const file = join(directory, 'accounts.json');
+  const destination = JSON.stringify({
+    projectRef,
+    accounts: { admin: { ...f.accounts.admin, password: 'TEST ONLY conflict' } },
+  });
+  await fs.writeFile(file, destination);
+  const source = await fs.readFile(f.file, 'utf8');
+  await assert.rejects(f.run({ args: [] }), /credentials conflict/);
+  assert.equal(f.calls.lookups, 0);
+  assert.equal(await fs.readFile(file, 'utf8'), destination);
+  assert.equal(await fs.readFile(f.file, 'utf8'), source);
+});
+
+test('core and additional Admin provisioning share the same exclusive lock', async (t) => {
+  const f = await fixture(t);
+  const list = f.admin.listUsers;
+  let release, started;
+  const entered = new Promise((resolve) => {
+    started = resolve;
+  });
+  const wait = new Promise((resolve) => {
+    release = resolve;
+  });
+  f.admin.listUsers = async (query) => {
+    started();
+    await wait;
+    return list(query);
+  };
+  const first = f.run({ args: [] });
+  await entered;
+  await assert.rejects(f.run({ args: [], group: 'adminRoles' }), /locked/);
+  release();
+  await first;
+  assert.equal(f.calls.creates.length, 0);
+  await f.consistent();
+});
+
+test('an existing legacy rotation journal finishes before its Admin credentials move', async (t) => {
+  const f = await fixture(t);
+  const before = structuredClone(f.accounts);
+  const candidate = structuredClone(before);
+  candidate.admin.password = 'TEST ONLY confirmed legacy candidate';
+  f.passwords.set(candidate.admin.id, candidate.admin.password);
+  await fs.writeFile(f.file, JSON.stringify({ projectRef, accounts: candidate }));
+  await fs.writeFile(
+    f.pending,
+    JSON.stringify({
+      version: 1,
+      projectRef,
+      mode: 'rotate',
+      hadVault: true,
+      before,
+      accounts: candidate,
+      completed: ['admin'],
+    }),
+  );
+  await f.run();
+  assert.equal(
+    f.calls.updates.some((call) => call.id === before.admin.id),
+    false,
+  );
+  assert.equal('admin' in JSON.parse(await fs.readFile(f.file, 'utf8')).accounts, false);
+  assert.deepEqual((await f.read()).accounts, candidate);
+  await f.consistent();
 });

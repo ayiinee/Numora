@@ -176,11 +176,13 @@ export function LoginScreen() {
             )}
           </>
         )}
+        <div className="demo-entry">
+          <Link className="demo-entry-admin" href="/admin/login">
+            Masuk Admin
+          </Link>
+        </div>
         {process.env.NODE_ENV === 'development' && (
           <div className="demo-entry">
-            <Link className="demo-entry-admin" href="/admin/preview">
-              Lihat pratinjau Admin (development)
-            </Link>
             {process.env.NEXT_PUBLIC_SUPABASE_URL ===
               'https://pkamenfnwmoeisccnrnk.supabase.co' && (
               <Link className="demo-entry-admin" href="/qa/login">

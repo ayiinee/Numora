@@ -222,6 +222,7 @@ async function setup(page: Page) {
   );
   const state = {
     role: 'ADMIN' as 'ADMIN' | 'STUDENT' | 'TEACHER',
+    adminRole: 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'OPERATIONS' | 'CONTENT_DATA_MODERATION' | null,
     schools: [
       { id: id(101), code: 'SMP-TEST-JKT', name: 'SMPN 1 Jakarta — DEMO', status: 'ACTIVE' },
       {
@@ -275,8 +276,12 @@ async function setup(page: Page) {
           id: id(100),
           role: state.role,
           status: 'ACTIVE',
-          adminRole: state.role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
-          capabilities: state.role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
+          adminRole: state.role === 'ADMIN' ? state.adminRole : null,
+          capabilities:
+            state.role === 'ADMIN' &&
+            ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(state.adminRole ?? '')
+              ? ['CONTENT_MANAGE']
+              : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
           teacherVerified: state.role === 'TEACHER' ? true : null,
@@ -407,6 +412,53 @@ const panels = [
   ['IRT', 'irt'],
   ['Audit', 'audit'],
 ] as const;
+for (const width of [390, 1280]) {
+  for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null] as const) {
+    test(`Unified Admin portal ${role ?? 'unassigned'} at ${width}px uses assignment and shared navigation`, async ({
+      page,
+    }) => {
+      await page.setViewportSize({ width, height: 900 });
+      const { state, errors } = await setup(page);
+      state.adminRole = role;
+      await page.goto('/admin');
+      await expect(
+        page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
+      ).toBeVisible();
+      const main = page.getByRole('main');
+      if (role === 'SUPER_ADMIN' || role === 'OPERATIONS') {
+        await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
+      } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
+      if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
+        const link = main.getByRole('link', { name: 'Impor JSON' });
+        await expect(link).toBeVisible();
+        await capture(page, `portal-${role}`, width);
+        await link.focus();
+        await page.keyboard.press('Enter');
+        await expect(page).toHaveURL(/\/admin\/content\/imports$/);
+        await expect(page.getByRole('heading', { name: 'Impor & preview soal' })).toBeVisible();
+        if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
+        const nav =
+          width < 960
+            ? page.locator('#mobile-menu')
+            : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
+        await expect(nav.getByRole('link', { name: 'Impor JSON' })).toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+        await expect(nav.getByRole('link', { name: 'Konten & assessment' })).not.toHaveAttribute(
+          'aria-current',
+          'page',
+        );
+      } else {
+        await expect(main.getByRole('link', { name: 'Impor JSON' })).toHaveCount(0);
+        if (role === null) await expect(main.getByText(/Belum ada modul/)).toBeVisible();
+        await capture(page, `portal-${role ?? 'unassigned'}`, width);
+      }
+      expect(state.mutations).toEqual([]);
+      expect(errors).toEqual([]);
+    });
+  }
+}
 for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
   test(`Admin schools and all workbench panels at ${width}px keep server data and navigation`, async ({
     page,
@@ -425,7 +477,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await page.keyboard.press('Enter');
       const nav = page.locator('#mobile-menu');
       await expect(nav).toBeVisible();
-      await nav.getByRole('link', { name: 'Konten & operasional' }).focus();
+      await nav.getByRole('link', { name: 'Konten & assessment' }).focus();
       await page.keyboard.press('Escape');
       await expect(menu).toBeFocused();
     }
@@ -484,17 +536,12 @@ test('School lifecycle preserves input, code case, one-time token and inactive e
   expect(state.mutations.some((r) => r.path.endsWith('/revoke'))).toBe(true);
   expect(errors).toEqual([]);
 });
-test('Development preview remains local and QA login remains gated for the fixture project', async ({
+test('Removed Admin mock returns 404 and QA login remains gated for the fixture project', async ({
   page,
 }) => {
   const { state, errors } = await setup(page);
-  await page.goto('/admin/preview');
-  await expect(page.getByText(/Hanya tersedia saat development/)).toBeVisible();
-  await page.getByRole('button', { name: /Lihat pratinjau bank soal/ }).click();
-  await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-  await expect(
-    page.getByText('Simulasi tampilan bank soal. Tidak terhubung ke API atau penyimpanan.'),
-  ).toBeVisible();
+  const removed = await page.goto('/admin/preview');
+  expect(removed?.status()).toBe(404);
   expect(state.mutations).toEqual([]);
   const response = await page.goto('/qa/login');
   expect(response?.status()).toBe(404);
@@ -622,11 +669,11 @@ test('Admin loading, pinned Tryout edits, report follow-up and logout remain exp
   );
   await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Keluar', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Masuk Admin', exact: true })).toBeVisible();
   await page.goto('/admin/content');
   await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).toHaveCount(0);
   await expect(page.getByText('Halaman ini hanya tersedia untuk Admin yang aktif.')).toBeVisible();
   await page.getByRole('link', { name: 'Ke halaman masuk' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/admin/login');
   expect(errors).toEqual([]);
 });

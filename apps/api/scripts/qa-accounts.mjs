@@ -4,6 +4,8 @@ import { dirname, join } from 'node:path';
 
 export const projectRef = 'pkamenfnwmoeisccnrnk';
 export const accountNames = ['admin', 'teacherA', 'teacherB', 'studentA', 'studentB', 'studentC'];
+export const adminAccountNames = ['adminSuper', 'adminOperations'];
+const participantNames = accountNames.filter((name) => name !== 'admin');
 const uuid = /^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i;
 const email = (name) => `numora-qa-${name.toLowerCase()}@example.invalid`;
 export class QaAccountError extends Error {}
@@ -52,15 +54,15 @@ async function atomicJson(io, file, value) {
   }
 }
 
-function validateAccounts(accounts) {
+function validateAccounts(accounts, names = accountNames) {
   if (
     !accounts ||
     typeof accounts !== 'object' ||
-    Object.keys(accounts).sort().join() !== accountNames.slice().sort().join()
+    Object.keys(accounts).sort().join() !== names.slice().sort().join()
   )
     fail('QA vault/journal has an unexpected account set.');
   const ids = new Set();
-  for (const name of accountNames) {
+  for (const name of names) {
     const account = accounts[name];
     if (
       !account ||
@@ -75,15 +77,113 @@ function validateAccounts(accounts) {
   }
 }
 
-function validateVault(vault) {
+function validateVault(vault, names = accountNames) {
   if (vault.projectRef !== projectRef) fail('QA vault/journal project does not match Development.');
-  validateAccounts(vault.accounts);
+  validateAccounts(vault.accounts, names);
 }
 
-function validateJournal(journal) {
-  validateVault(journal);
-  validateAccounts(journal.before);
-  for (const name of accountNames) {
+async function readLayout(root, io) {
+  const core = await readJson(io, join(root, '.qa-seed/accounts.json'));
+  const admins = await readJson(io, join(root, '.qa-seed/admin-roles/accounts.json'));
+  if (core) validateVault(core, core.accounts?.admin ? accountNames : participantNames);
+  if (admins) {
+    const names = admins.accounts?.admin
+      ? ['admin', ...adminAccountNames.filter((name) => name in admins.accounts)]
+      : adminAccountNames;
+    if (admins.accounts?.admin && names.length === 2)
+      fail('The QA Admin vault has an incomplete additional account set.');
+    validateVault(admins, names);
+  }
+  if (
+    core?.accounts.admin &&
+    admins?.accounts.admin &&
+    ['id', 'email', 'password'].some(
+      (key) => core.accounts.admin[key] !== admins.accounts.admin[key],
+    )
+  )
+    fail('Content Admin credentials conflict between QA vaults. Existing files were preserved.');
+  return { core, admins };
+}
+
+// Readers retain the six-actor QA workflow without duplicating Admin credentials on disk.
+export async function readQaAccounts(root, io = filesystem) {
+  const { core, admins } = await readLayout(root, io);
+  if (!core) return null;
+  const accounts = { ...core.accounts, admin: admins?.accounts.admin ?? core.accounts.admin };
+  validateAccounts(accounts);
+  return snapshot(Object.fromEntries(accountNames.map((name) => [name, accounts[name]])));
+}
+
+export async function readQaAdminAccounts(root, io = filesystem) {
+  const { core, admins } = await readLayout(root, io);
+  if (!admins && !core?.accounts.admin) return null;
+  return snapshot({
+    ...admins?.accounts,
+    ...(core?.accounts.admin ? { admin: core.accounts.admin } : {}),
+  });
+}
+
+async function readGroupVault(root, group, io) {
+  if (group === 'core') return readQaAccounts(root, io);
+  const { admins } = await readLayout(root, io);
+  if (!admins || !adminAccountNames.some((name) => name in admins.accounts)) return null;
+  return snapshot(
+    Object.fromEntries(adminAccountNames.map((name) => [name, admins.accounts[name]])),
+  );
+}
+
+async function migrateLayout(root, io) {
+  const { core, admins } = await readLayout(root, io);
+  if (!core?.accounts.admin) return;
+  // Copy first, remove from the source second; interrupted moves replay without lost credentials.
+  const directory = join(root, '.qa-seed/admin-roles');
+  await io.mkdir(directory, { recursive: true, mode: 0o700 });
+  const accounts = { admin: core.accounts.admin, ...admins?.accounts };
+  await atomicJson(io, join(directory, 'accounts.json'), snapshot(accounts));
+  await atomicJson(io, join(directory, 'actors.json'), {
+    projectRef,
+    mode: 'EMAIL_QA',
+    actors: Object.fromEntries(
+      Object.entries(accounts).map(([name, account]) => [name, account.id]),
+    ),
+  });
+  await atomicJson(
+    io,
+    join(root, '.qa-seed/accounts.json'),
+    snapshot(Object.fromEntries(participantNames.map((name) => [name, core.accounts[name]]))),
+  );
+}
+
+async function saveGroupVault(root, group, accounts, io, legacyPending = false) {
+  if (group === 'core' && legacyPending) {
+    await atomicJson(io, join(root, '.qa-seed/accounts.json'), snapshot(accounts));
+    return;
+  }
+  const { admins } = await readLayout(root, io);
+  const directory = join(root, '.qa-seed/admin-roles');
+  await io.mkdir(directory, { recursive: true, mode: 0o700 });
+  const merged = {
+    ...admins?.accounts,
+    ...(group === 'core' ? { admin: accounts.admin } : accounts),
+  };
+  await atomicJson(io, join(directory, 'accounts.json'), snapshot(merged));
+  await atomicJson(io, join(directory, 'actors.json'), {
+    projectRef,
+    mode: 'EMAIL_QA',
+    actors: Object.fromEntries(Object.entries(merged).map(([name, account]) => [name, account.id])),
+  });
+  if (group === 'core')
+    await atomicJson(
+      io,
+      join(root, '.qa-seed/accounts.json'),
+      snapshot(Object.fromEntries(participantNames.map((name) => [name, accounts[name]]))),
+    );
+}
+
+function validateJournal(journal, names = accountNames) {
+  validateVault(journal, names);
+  validateAccounts(journal.before, names);
+  for (const name of names) {
     if (
       journal.before[name].id &&
       journal.accounts[name].id &&
@@ -102,20 +202,20 @@ function validateJournal(journal) {
     typeof journal.hadVault !== 'boolean' ||
     !Array.isArray(journal.completed) ||
     new Set(journal.completed).size !== journal.completed.length ||
-    journal.completed.some((name) => !accountNames.includes(name)) ||
+    journal.completed.some((name) => !names.includes(name)) ||
     journal.completed.some((name) => !journal.accounts[name].id)
   )
     fail('Invalid QA recovery journal. Keep it for operator recovery.');
 }
 
-function validateCurrent(vault, journal) {
+function validateCurrent(vault, journal, names = accountNames) {
   if (!vault) {
     if (journal.hadVault)
       fail('The active QA vault is missing. Restore it before resuming rotation.');
     return;
   }
-  validateVault(vault);
-  for (const name of accountNames) {
+  validateVault(vault, names);
+  for (const name of names) {
     const current = vault.accounts[name];
     const before = journal.before[name];
     const confirmed = journal.completed.includes(name) ? journal.accounts[name] : before;
@@ -151,7 +251,7 @@ function assertQaUser(user, name, expectedId) {
     );
 }
 
-async function lookupAll(admin, accounts) {
+async function lookupAll(admin, accounts, names = accountNames) {
   await providerCall(
     () => admin.listUsers({ page: 1, perPage: 1 }),
     'Admin API preflight failed. Retry after restoring access.',
@@ -168,7 +268,7 @@ async function lookupAll(admin, accounts) {
   }
   const found = {};
   // Validate every identity before any create/password update, including the final account.
-  for (const name of accountNames) {
+  for (const name of names) {
     const account = accounts[name];
     let user;
     if (account.id) {
@@ -196,7 +296,10 @@ export async function runQaAccounts({
   createClient,
   io = filesystem,
   password = () => randomBytes(24).toString('base64url'),
+  group = 'core',
 }) {
+  if (!['core', 'adminRoles'].includes(group)) fail('Unknown QA account group.');
+  const names = group === 'core' ? accountNames : adminAccountNames;
   if (args.some((argument) => argument !== '--rotate-passwords') || args.length > 1)
     fail('Only one optional --rotate-passwords flag is supported.');
   const rotating = args.includes('--rotate-passwords');
@@ -222,12 +325,13 @@ export async function runQaAccounts({
     fail(
       `QA accounts require the exact Development project and server secret key. Fix .env: ${environmentIssues.join('; ')}. No QA accounts were changed.`,
     );
-  const directory = join(root, '.qa-seed');
-  const vaultFile = join(directory, 'accounts.json');
+  const directory = group === 'core' ? join(root, '.qa-seed') : join(root, '.qa-seed/admin-roles');
   const pendingFile = join(directory, 'accounts.pending.json');
-  const lockFile = join(directory, 'provisioning.lock');
+  // Both groups share a lock because they now share the Admin credential vault.
+  const lockFile = join(root, '.qa-seed/provisioning.lock');
   try {
     await io.mkdir(directory, { recursive: true, mode: 0o700 });
+    await io.mkdir(join(root, '.qa-seed'), { recursive: true, mode: 0o700 });
   } catch {
     fail('Could not open the local QA vault directory.');
   }
@@ -244,12 +348,14 @@ export async function runQaAccounts({
   try {
     await lock.writeFile(JSON.stringify({ pid: process.pid, startedAt: new Date().toISOString() }));
     await lock.sync();
-    const vault = await readJson(io, vaultFile);
-    if (vault) validateVault(vault);
+    if (await readJson(io, join(root, '.qa-seed/admin-roles/provisioning.lock')))
+      fail('Legacy Admin provisioning is locked. Verify its PID before removing that lock.');
+    const vault = await readGroupVault(root, group, io);
+    if (vault) validateVault(vault, names);
     let journal = await readJson(io, pendingFile);
     if (journal) {
-      validateJournal(journal);
-      validateCurrent(vault, journal);
+      validateJournal(journal, names);
+      validateCurrent(vault, journal, names);
       if ((journal.mode === 'rotate') !== rotating)
         fail(
           `An unfinished ${journal.mode} operation exists. Resume with its original command before starting another operation.`,
@@ -259,18 +365,30 @@ export async function runQaAccounts({
       journal?.before ??
       vault?.accounts ??
       Object.fromEntries(
-        accountNames.map((name) => [name, { email: email(name), password: password(), id: null }]),
+        names.map((name) => [name, { email: email(name), password: password(), id: null }]),
       );
-    validateAccounts(before);
+    validateAccounts(before, names);
     const admin = createClient(env.SUPABASE_URL, env.SUPABASE_SECRET_KEY, {
       auth: { autoRefreshToken: false, persistSession: false },
     }).auth.admin;
-    const found = await lookupAll(admin, journal?.accounts ?? before);
+    const found = await lookupAll(admin, journal?.accounts ?? before, names);
     if (!journal && !vault && !rotating && Object.values(found).some(Boolean))
       fail(
         'Existing QA Auth users require the original vault or explicit --rotate-passwords to re-provision credentials.',
       );
+    const legacyPending = Boolean(
+      journal && group === 'core' && (await readLayout(root, io)).core?.accounts.admin,
+    );
     if (!journal) {
+      const otherPending = join(
+        root,
+        group === 'core'
+          ? '.qa-seed/admin-roles/accounts.pending.json'
+          : '.qa-seed/accounts.pending.json',
+      );
+      if (await readJson(io, otherPending))
+        fail('Finish the pending QA operation in the other group before provisioning.');
+      await migrateLayout(root, io);
       journal = {
         version: 1,
         projectRef,
@@ -279,7 +397,7 @@ export async function runQaAccounts({
         before: structuredClone(before),
         completed: [],
         accounts: Object.fromEntries(
-          accountNames.map((name) => [
+          names.map((name) => [
             name,
             {
               ...before[name],
@@ -289,10 +407,10 @@ export async function runQaAccounts({
           ]),
         ),
       };
-      validateJournal(journal);
+      validateJournal(journal, names);
       await atomicJson(io, pendingFile, journal);
     }
-    for (const name of accountNames) {
+    for (const name of names) {
       if (journal.completed.includes(name)) continue;
       const account = journal.accounts[name];
       const existing = found[name];
@@ -323,19 +441,20 @@ export async function runQaAccounts({
       // Confirmation precedes the active vault write. Ambiguous updates replay the same candidate.
       await atomicJson(io, pendingFile, journal);
       if (journal.hadVault) {
-        validateCurrent(await readJson(io, vaultFile), journal);
+        validateCurrent(await readGroupVault(root, group, io), journal, names);
         const confirmed = structuredClone(journal.before);
         for (const done of journal.completed) confirmed[done] = journal.accounts[done];
-        await atomicJson(io, vaultFile, snapshot(confirmed));
+        await saveGroupVault(root, group, confirmed, io, legacyPending);
       }
     }
-    validateCurrent(await readJson(io, vaultFile), journal);
-    await atomicJson(io, vaultFile, snapshot(journal.accounts));
-    await atomicJson(io, join(directory, 'actors.json'), {
-      projectRef,
-      mode: 'EMAIL_QA',
-      actors: Object.fromEntries(accountNames.map((name) => [name, journal.accounts[name].id])),
-    });
+    validateCurrent(await readGroupVault(root, group, io), journal, names);
+    await saveGroupVault(root, group, journal.accounts, io, legacyPending);
+    if (group === 'core')
+      await atomicJson(io, join(directory, 'actors.json'), {
+        projectRef,
+        mode: 'EMAIL_QA',
+        actors: Object.fromEntries(names.map((name) => [name, journal.accounts[name].id])),
+      });
     try {
       await io.unlink(pendingFile);
     } catch {
@@ -343,6 +462,7 @@ export async function runQaAccounts({
         'QA credentials were confirmed but the journal could not be removed. Rerun the same command to finish.',
       );
     }
+    await migrateLayout(root, io);
     return rotating ? 'rotated' : 'verified';
   } finally {
     await lock.close();
