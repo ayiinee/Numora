@@ -7,7 +7,7 @@
 | Pemeriksaan                         | Hasil                                                                                      |
 | ----------------------------------- | ------------------------------------------------------------------------------------------ |
 | Database, PostgreSQL 17             | 25/25, 11 file, tanpa skip                                                                 |
-| API, HTTP + PostgreSQL              | 138/138, 33 file, tanpa skip                                                               |
+| API, HTTP + PostgreSQL              | 140/140, 33 file, tanpa skip                                                               |
 | Worker, PostgreSQL + Redis 7        | 15/15, 6 file, tanpa skip                                                                  |
 | Web, unit/component                 | 199/199, 27 file, tanpa skip                                                               |
 | Assessment engine                   | 3/3, formula XP, batas dan input invalid                                                   |
@@ -21,13 +21,14 @@
 | Typecheck                           | API, worker, database, assessment engine, IRT orchestration, UI dan web lulus              |
 | Build                               | Build workspace lulus, termasuk web dengan default Turbopack                               |
 
-Total tes paket adalah **382**, ditambah **72** script/SQL/QA checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek. Pengujian sebelum rebase pada baseline `d81c098` meluluskan 371 tes paket dan 59 script/SQL checks; perbedaan jumlah berasal dari tes portal/QA Admin terbaru pada main.
+Total tes paket adalah **384**, ditambah **72** script/SQL/QA checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek. Pengujian sebelum rebase pada baseline `d81c098` meluluskan 371 tes paket dan 59 script/SQL checks; perbedaan jumlah berasal dari tes portal/QA Admin terbaru pada main.
 
 ## Regresi yang dibuktikan
 
 - Migrator resmi menjalankan rantai 0000–0024 pada database kosong. Replay mempertahankan isi/hash journal tanpa apply kedua kali. Unique index referensi dibuat sebelum composite foreign key terbaru.
 - Pada PostgreSQL nyata, dua transaksi join dari empat kelas aktif menghasilkan satu sukses dan satu `CLASS_LIMIT_REACHED`; total tetap lima. Duplicate membership dan rejoin ketika diban ditolak oleh database.
 - Leave/ban/unban mempertahankan histori; siswa dapat join ulang sesudah unban. Guru keluar dari sekolah melepas kepemilikan, dan takeover memerlukan verifikasi sekolah yang sama serta kelas tanpa guru aktif.
+- Guard percobaan kode takeover menerima Teacher dengan scope limiter terpisah; Student/Admin ditolak dan kegagalan limiter menghentikan mutation. Enam tes HTTP guard dan seluruh 140 tes API lulus.
 - API memisahkan capability Operations, Content/Data/Moderation dan Super Admin. Role null tidak memperoleh capability. Audit umum tidak diberikan kepada Content Admin.
 - Submit Drill memperbarui bintang terbaru, mempertahankan best score/unlock, dan menulis satu ledger XP. Submit Tryout policy baru menulis XP sebelum release IRT; submit berulang tidak memberi XP kedua kali.
 - Proyeksi aktivitas memakai XP akun untuk kelas aktif dan global. Ledger XP runtime bersifat append-only, termasuk nilai pecahan.
@@ -72,4 +73,6 @@ Hash SHA-256 SQL 0024 pada pengujian ini: `df49e094541ea567476610f5f98af3b70e4ea
 
 Supabase Cloud belum menerima 0024. Audit baca menunjukkan jurnal terakhir 0023 dan 128 akun Auth; semuanya harus dipertahankan. Permintaan admin sebelumnya mensyaratkan backup yang berhasil diuji restore sebelum perubahan Staging. [Bukti restore lama](CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md) bukan bukti upgrade 0024 atas snapshot Cloud terbaru; arsip backup privat itu tidak tersedia pada host pekerjaan ini.
 
-Pengujian ini menggunakan data dummy. Restore snapshot Cloud terbaru, CI branch/PR, browser/E2E alur baru, UI aksi kelas, bank Curriculum/rubrik PGK, runtime Pretest, acceptance IRT dan R2 tetap perlu diselesaikan sesuai [rollout](../data/PRD_V06_DATA_ALIGNMENT.md). Tidak ada klaim seluruh acceptance aplikasi v0.6 sudah selesai.
+Pengujian ini menggunakan data dummy. Regresi browser Windows meluluskan 147 skenario sebelum batas waktu 720 detik; 18 sisanya tidak berjalan, sehingga run itu tidak dinyatakan PASS. Launcher Chromium penuh Windows mengalami `spawn UNKNOWN`; pengujian connected tambahan memakai Chromium headless shell melalui konfigurasi sementara di luar repo, tanpa mengubah test atau guard isolasi. Hasil seluruh tes connected/browser dan build Linux harus diperiksa pada [CI PR #71](https://github.com/ayiinee/Numora/pull/71/checks) untuk commit terbaru sebelum merge.
+
+Restore snapshot Cloud terbaru, UI aksi kelas, bank Curriculum/rubrik PGK, runtime Pretest, acceptance provider IRT/R2 dan QA independen tetap mengikuti [rollout](../data/PRD_V06_DATA_ALIGNMENT.md). Tidak ada klaim seluruh acceptance aplikasi v0.6 sudah selesai.

@@ -95,7 +95,7 @@ export class ClassesController {
   }
 
   @Post('takeover')
-  @CodeAttempt('class')
+  @CodeAttempt('class-takeover')
   @UseGuards(CodeAttemptGuard)
   @ApiCreatedResponse({ type: CreatedClassDto })
   takeover(

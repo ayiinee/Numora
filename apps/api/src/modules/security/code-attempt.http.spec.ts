@@ -20,7 +20,7 @@ describe('short-code HTTP boundaries', () => {
   let url: string;
   const identity = { me: vi.fn() };
   const schools = { verifyTeacher: vi.fn() };
-  const classes = { join: vi.fn() };
+  const classes = { join: vi.fn(), takeover: vi.fn() };
   const limiter = { consume: vi.fn() };
   beforeAll(async () => {
     const module = await Test.createTestingModule({ imports: [SchoolsModule, ClassesModule] })
@@ -44,6 +44,7 @@ describe('short-code HTTP boundaries', () => {
     identity.me.mockResolvedValue({ id: 'actor', role: 'TEACHER' });
     schools.verifyTeacher.mockResolvedValue({ verified: true });
     classes.join.mockResolvedValue({ joined: true, class: { id: schoolId, name: 'IX A' } });
+    classes.takeover.mockResolvedValue({ id: schoolId, name: 'IX A', joinCode: 'ABCD23' });
     limiter.consume.mockResolvedValue(undefined);
   });
   const post = (path: string, body: unknown) =>
@@ -80,6 +81,25 @@ describe('short-code HTTP boundaries', () => {
     expect(response.headers.get('content-type')).toContain('application/problem+json');
     expect(await response.json()).toMatchObject({ code: 'CODE_ATTEMPT_LIMIT', status: 429 });
     expect(schools.verifyTeacher).not.toHaveBeenCalled();
+  });
+  it('allows Teacher takeover with a separate limiter scope while rejecting Student and Admin', async () => {
+    expect((await post('classes/takeover', { joinCode: 'ABCD23' })).status).toBe(201);
+    expect(limiter.consume).toHaveBeenCalledWith('class-takeover:actor', 10);
+    expect(classes.takeover).toHaveBeenCalledTimes(1);
+    limiter.consume.mockClear();
+    for (const role of ['STUDENT', 'ADMIN']) {
+      identity.me.mockResolvedValue({ id: 'other', role });
+      expect((await post('classes/takeover', { joinCode: 'ABCD23' })).status).toBe(403);
+    }
+    expect(limiter.consume).not.toHaveBeenCalled();
+    expect(classes.takeover).toHaveBeenCalledTimes(1);
+  });
+  it('fails takeover closed when its code limiter is unavailable', async () => {
+    limiter.consume.mockRejectedValue(
+      new ServiceUnavailableException({ code: 'CODE_LIMITER_UNAVAILABLE' }),
+    );
+    expect((await post('classes/takeover', { joinCode: 'ABCD23' })).status).toBe(503);
+    expect(classes.takeover).not.toHaveBeenCalled();
   });
   it('fails closed on limiter outage and rejects unauthorized roles before limiting', async () => {
     identity.me.mockResolvedValue({ id: 'student', role: 'STUDENT' });
