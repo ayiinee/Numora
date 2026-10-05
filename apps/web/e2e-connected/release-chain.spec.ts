@@ -137,7 +137,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 5 ? 'PASS' : 'FAIL',
+          status: unchanged && checks.length === 6 ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
@@ -487,7 +487,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       bestDrillScore: 80,
       accessStatus: 'UNLOCKED',
     });
-    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth');
+    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth');
   });
 
   test('direct URL role guards, refresh, logout/re-auth and independent Mandiri persistence', async ({
@@ -568,11 +568,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
       });
       expect(
         await body<LeaderboardDto>(request, alias, 'leaderboards/pvp?difficulty=easy'),
-      ).toMatchObject({ policyPending: true, reasonCode: 'OPEN-07' });
+      ).toMatchObject({ policyPending: true, reasonCode: 'PVP_RUNTIME_ACTIVATION' });
+      expect(await body<LeaderboardDto>(request, alias, 'leaderboards/activity')).toMatchObject({
+        policyPending: false,
+        reasonCode: null,
+        unit: 'xp',
+        className: null,
+      });
     }
     expect(await body<LeaderboardDto>(request, 'student', 'leaderboards/class')).toMatchObject({
-      policyPending: true,
-      reasonCode: 'OPEN-11',
+      policyPending: false,
+      reasonCode: null,
+      unit: 'xp',
       className: cls.name,
     });
     await call(request, 'otherStudent', 'leaderboards/class', 'GET', undefined, 403);
