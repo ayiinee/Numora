@@ -81,6 +81,7 @@ export class AssessmentHistoryService {
         stars: assessmentAttempts.stars,
         drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
         xp: xpLedger.xpAmount,
+        tryoutXpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
         status: assessmentAttempts.status,
         chapterId: assessmentAttempts.chapterIdAtStart,
         chapterTitle: chapters.name,
@@ -136,12 +137,14 @@ export class AssessmentHistoryService {
           levelTitle: row.levelTitle,
           xpState:
             row.assessmentType === 'PRETEST' ? ('notApplicable' as const)
-              : row.assessmentType === 'DRILL' ? row.xp !== null ? ('ready' as const) : ('legacy' as const) : ('pending' as const),
+              : row.xp !== null ? ('ready' as const) : row.assessmentType === 'TRYOUT' && row.status !== 'GRADED'
+                ? ('pending' as const) : ('legacy' as const),
           starsState:
             row.assessmentType === 'DRILL' ? row.stars !== null ? ('ready' as const) : ('legacy' as const) : ('notApplicable' as const),
-          xp: row.assessmentType === 'DRILL' ? row.xp : null,
+          xp: row.assessmentType !== 'PRETEST' ? row.xp : null,
           stars: row.assessmentType === 'DRILL' ? row.stars : null,
           drillPolicyVersion: row.drillPolicyVersion,
+          tryoutXpPolicyVersion: row.tryoutXpPolicyVersion,
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
           score: ready && row.score !== null ? Number(row.score) : null,

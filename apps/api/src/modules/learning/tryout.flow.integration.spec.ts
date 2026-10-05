@@ -23,6 +23,7 @@ import {
   scoringPolicyVersions,
   subchapters,
   users,
+  xpLedger,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
 import { configureApplication } from '../../bootstrap';
@@ -413,7 +414,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     await db.update(assessmentAttempts).set({ deadlineAt: mandiriDeadline })
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(await tryout.attempt('independent', mandiri.id)).toMatchObject({
-      status: 'submitted', questions: [], deadlineAt: mandiriDeadline.toISOString(),
+      status: 'submitted', questions: [], deadlineAt: mandiriDeadline.toISOString(), xp: 0, xpPolicyVersion: 1,
     });
     expect(await tryout.current('independent')).toMatchObject({ state: 'waitingIrt' });
     await expect(tryout.result('independent', mandiri.id)).rejects.toMatchObject({
@@ -427,7 +428,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       tryout.submit('student', a.id),
       tryout.submit('student', a.id),
     ]);
-    expect(firstSubmit).toEqual({ state: 'waitingIrt' });
+    expect(firstSubmit).toEqual({ state: 'waitingIrt', xp: 10, xpPolicyVersion: 1 });
     expect(duplicateSubmit).toEqual(firstSubmit);
     expect(await tryout.current('student')).toMatchObject({ state: 'waitingIrt', eligible: false });
     expect((await tryout.attempt('student', a.id)).questions).toEqual([]);
@@ -459,6 +460,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       attemptId: a.id,
       resultState: 'waitingIrt',
       score: null,
+      xpState: 'ready', xp: 10, tryoutXpPolicyVersion: 1,
     });
     const [batch] = await db
       .insert(irtBatches)
@@ -488,6 +490,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       score: 50,
       correctCount: 1,
       questionCount: 2,
+      xp: 10, xpPolicyVersion: 1,
     });
     expect(await tryout.current('student')).toMatchObject({
       state: 'resultReady',
@@ -499,6 +502,12 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       score: 50,
     });
     await expect(tryout.result('independent', a.id)).rejects.toMatchObject({ status: 404 });
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, a.id))).toHaveLength(1);
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, mandiri.id))).toHaveLength(1);
+    const waitingResponse = await request(`tryout/attempts/${mandiri.id}`, 'GET', undefined, 'independent');
+    const waitingBody = await waitingResponse.json();
+    expect(waitingBody).toMatchObject({ xp: 0, status: 'submitted', questions: [] });
+    expect(waitingBody).not.toHaveProperty('score');
     // Availability must never be inferred from class affiliation, including an expired current package.
     for (const unavailable of [
       { status: 'DRAFT' as const },

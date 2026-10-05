@@ -131,11 +131,12 @@ export class AssessmentRecordDto {
   @ApiProperty({ type: String, nullable: true, required: false }) subchapterTitle?: string | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false, description: 'Level ID pinned at attempt start; absent for non-level assessments.' }) levelId?: string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) levelTitle?: string | null;
-  @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false, description: 'Legacy XP is unknown, not zero. TryOut policy remains pending; Pretest has no XP.' }) xpState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
+  @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false, description: 'Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP.' }) xpState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
   @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false }) starsState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
   @ApiPropertyOptional({ type: Number, nullable: true }) xp?: number | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) stars?: number | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) drillPolicyVersion?: number | null;
+  @ApiPropertyOptional({ type: Number, nullable: true }) tryoutXpPolicyVersion?: number | null;
   @ApiProperty({ format: 'date-time' }) submittedAt!: string;
   @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: string;
   @ApiProperty({ type: Number, nullable: true }) score!: number | null;

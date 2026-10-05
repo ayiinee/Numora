@@ -603,3 +603,6 @@ Login internal → sesuai role admin → modul yang diizinkan → action → aud
 | FINAL Versi 0.6 tidak memiliki status OPEN. Kebutuhan baru atau perubahan business rule setelah dokumen ini disepakati harus dicatat sebagai revisi PRD berikutnya beserta alasan, owner keputusan, tanggal berlaku, dan dampak modul. |
 | :---- |
 
+## Addendum keputusan owner — 5 Oktober 2026
+
+**ENGINEERING DECISION — koreksi produk oleh Aini:** XP TryOut mengikuti §12: skor benar ekuivalen ×10, tanpa bonus waktu, dihitung saat selesai tanpa menunggu IRT. AC-15 ×100 pada sumber di atas disupersede oleh keputusan ini; teks sumber dipertahankan untuk audit. Contoh 24,5 menghasilkan 245 XP; 30 menghasilkan 300 XP. Rubrik PGK tetap disediakan Research & Curriculum. [Implementasi dan kompatibilitas historis](../../development/TRYOUT_XP_V06.md).

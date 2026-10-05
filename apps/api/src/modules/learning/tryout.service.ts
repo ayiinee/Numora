@@ -18,8 +18,9 @@ import {
   questions,
   questionVariants,
   questionVersions,
+  xpLedger,
 } from '@tka/database';
-import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent } from '@tka/assessment-engine';
+import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent, TRYOUT_XP_POLICY } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
@@ -148,6 +149,7 @@ export class TryoutService {
         packageId: assessmentAttempts.packageId,
         title: assessmentPackages.name,
         deadlineAt: assessmentAttempts.deadlineAt,
+        xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
@@ -173,6 +175,8 @@ export class TryoutService {
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
       serverTime: (await databaseTime(getDatabase().db)).toISOString(),
+      xp: await this.storedXp(attemptId),
+      xpPolicyVersion: attempt.xpPolicyVersion,
       questions: rows.map((row) => {
         const content = decodeSingleChoice(row);
         return {
@@ -253,6 +257,7 @@ export class TryoutService {
           studentId,
           packageId,
           assessmentType: 'TRYOUT',
+          tryoutXpPolicyVersion: TRYOUT_XP_POLICY.version,
           classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
@@ -362,8 +367,17 @@ export class TryoutService {
   }
 
   async submit(authorization: string | undefined, attemptId: string) {
-    await this.finalizeForStudent(await this.student(authorization), attemptId, 'manual');
-    return { state: 'waitingIrt' as const };
+    const studentId = await this.student(authorization);
+    await this.finalizeForStudent(studentId, attemptId, 'manual');
+    const attempt = await this.forStudent(studentId, attemptId);
+    return { state: 'waitingIrt' as const, xp: await this.storedXp(attemptId),
+      xpPolicyVersion: attempt.xpPolicyVersion };
+  }
+
+  private async storedXp(attemptId: string) {
+    const [reward] = await getDatabase().db.select({ xp: xpLedger.xpAmount })
+      .from(xpLedger).where(eq(xpLedger.attemptId, attemptId)).limit(1);
+    return reward?.xp ?? null;
   }
 
   async result(authorization: string | undefined, attemptId: string) {
@@ -387,6 +401,8 @@ export class TryoutService {
     return {
       attemptId,
       packageTitle: attempt.title,
+      xp: await this.storedXp(attemptId),
+      xpPolicyVersion: attempt.xpPolicyVersion,
       score: Number(score?.score ?? 0),
       correctCount: rows.filter((row) => Number(row.awardedPoints) > 0).length,
       questionCount: rows.length,

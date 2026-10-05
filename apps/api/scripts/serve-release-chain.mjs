@@ -287,14 +287,16 @@ const authServer = createServer(async (req, res) => {
   }
   if (req.url === '/tryout-fixture/persistence' && req.method === 'GET') {
     const attempts =
-      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100, tryout_xp_policy_version
       from assessment_attempts where package_id = ${tryoutId}`;
     const events = await client`select o.entity_id, o.event_name from analytics_outbox o
       join assessment_attempts a on a.id = o.entity_id where a.package_id = ${tryoutId}
       and o.event_name in ('tryout_started', 'tryout_completed')`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.package_id = ${tryoutId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select x.attempt_id, x.xp_amount, x.policy_code, x.policy_version
+      from xp_ledger x join assessment_attempts a on a.id=x.attempt_id where a.package_id=${tryoutId}`;
+    return send(200, { attempts, events, pins, rewards });
   }
   if (req.url === '/persistence') {
     const attempts =

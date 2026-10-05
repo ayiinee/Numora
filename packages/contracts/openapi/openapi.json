@@ -4596,7 +4596,7 @@
               "pending",
               "notApplicable"
             ],
-            "description": "Legacy XP is unknown, not zero. TryOut policy remains pending; Pretest has no XP."
+            "description": "Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP."
           },
           "starsState": {
             "type": "string",
@@ -4616,6 +4616,10 @@
             "nullable": true
           },
           "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
+          "tryoutXpPolicyVersion": {
             "type": "number",
             "nullable": true
           },
@@ -5340,6 +5344,15 @@
       "TryoutAttemptDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Persisted XP available after completion, independently of IRT release; null for active/legacy attempts."
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "serverTime": {
             "type": "string",
             "format": "date-time"
@@ -5386,6 +5399,14 @@
       "TryoutSubmitDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "state": {
             "type": "string",
             "enum": [
@@ -5429,6 +5450,14 @@
       "TryoutResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"

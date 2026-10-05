@@ -15,6 +15,7 @@ import type {
   StudentQuestionReportDto,
   StudentVideoReportDto,
   StudentVideosDto,
+  TryoutSubmitDto,
 } from './generated-types';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -116,7 +117,7 @@ export const learningApi = {
       { method: 'PATCH', body: JSON.stringify({ optionId }) },
     ),
   submitTryout: (token: string, attemptId: string) =>
-    request<{ state: 'waitingIrt' }>(token, `/tryout/attempts/${id(attemptId)}/submit`, {
+    request<TryoutSubmitDto>(token, `/tryout/attempts/${id(attemptId)}/submit`, {
       method: 'POST',
     }),
   tryoutResult: (token: string, attemptId: string) =>

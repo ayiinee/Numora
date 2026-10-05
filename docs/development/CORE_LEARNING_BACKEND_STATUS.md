@@ -6,6 +6,8 @@
 
 # Status backend Core Learning
 
+**ENGINEERING UPDATE — JOB-11 TryOut, 5 Oktober 2026:** keputusan Aini menetapkan benar ekuivalen ×10 dan menyelesaikan konflik AC-15 ×100. Jalur PG mencatat XP prospektif saat submit/deadline/recovery dalam transaksi hasil/ledger/outbox, tanpa menunggu IRT dan tanpa bonus. UI waiting/released/history membaca XP tersimpan; nilai/kunci/pembahasan tetap gated. Pin nullable mempertahankan legacy tanpa backfill; migrasi `0025_tryout_xp_v06` memperluas guard immutable. [Keputusan, batas PGK, rollout](TRYOUT_XP_V06.md). Ini tidak menutup rubric/assessment PGK, JOB-17 atau QA independen.
+
 **ENGINEERING UPDATE — JOB-11 Drill / JOB-05, 5 Oktober 2026:** kebijakan v0.6 dipin prospektif, grading/XP/progres/outbox satu transaksi, ledger immutable/idempotent, 0 bintang, latestStars, retry satu paket, server count-up, konfirmasi setiap keluar dan pembahasan baru tanpa expiry. Result/history/level UI memakai generated contract. Attempt lama tetap utuh tanpa backfill XP. Migrasi `0024_drill_v06_rewards` dan checker read-only tersedia. [Aturan, rollout dan pengujian](DRILL_V06_REWARDS.md). Status ini bukan penutupan JOB-11 TryOut, JOB-17, review Curriculum atau independent QA; bukti JOB-06 historis di bawah tetap dipertahankan.
 
 **ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah

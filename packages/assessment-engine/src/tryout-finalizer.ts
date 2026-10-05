@@ -1,12 +1,13 @@
 import {
   analyticsOutbox, assessmentAttempts, attemptAnswers, attemptItems,
-  getDatabase, questionVersions,
+  getDatabase, questionVersions, xpLedger,
 } from '@tka/database';
 import { eq } from 'drizzle-orm';
 import { databaseTime } from './database-time.js';
 import { AssessmentFinalizationError } from './errors.js';
 import { recordDomainEvent } from './domain-events.js';
 import { decodeSingleChoice } from './single-choice.js';
+import { pgTryoutReward, TRYOUT_XP_POLICY } from './tryout-reward.js';
 
 
 type Request =
@@ -57,6 +58,8 @@ export async function finalizeTryout(request: Request) {
         points: option === content.correctOptionId ? Number(row.maxPoints) : 0 };
     });
     const raw = grades.reduce((sum, grade) => sum + grade.points, 0);
+    const xp = attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version
+      ? pgTryoutReward(grades) : null;
     const maximum = grades.reduce((sum, grade) => sum + grade.maximum, 0);
     if (!Number.isFinite(maximum) || maximum <= 0)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Poin paket tidak valid.');
@@ -71,6 +74,12 @@ export async function finalizeTryout(request: Request) {
       status: 'GRADED', finishedAt: now, rawPoints: String(raw),
       score0To100: String(Math.round(raw * 100 / maximum)),
     }).where(eq(assessmentAttempts.id, attempt.id));
+    if (xp !== null) await tx.insert(xpLedger).values({
+      studentId: attempt.studentId, classIdAtEvent: attempt.classIdAtStart,
+      sourceType: 'TRYOUT', attemptId: attempt.id, xpAmount: xp,
+      policyCode: TRYOUT_XP_POLICY.code, policyVersion: TRYOUT_XP_POLICY.version,
+      baseXp: xp, bonusXp: '0', occurredAt: now,
+    });
     await recordDomainEvent(tx, attempt.id, { eventName: 'tryout_submitted',
       submissionType: expired ? 'deadline' : 'manual', questionCount: rows.length,
       answeredCount: rows.filter(row => row.answer && typeof row.answer === 'object' &&
@@ -79,7 +88,8 @@ export async function finalizeTryout(request: Request) {
     await tx.insert(analyticsOutbox).values({
       eventName: 'tryout_completed', actorUserId: attempt.studentId,
       entityType: 'assessmentAttempt', entityId: attempt.id,
-      correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId },
+      correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId,
+        xp, xpPolicyVersion: attempt.tryoutXpPolicyVersion },
     });
     return { finalized: true, reason: expired ? 'deadline' as const : 'manual' as const };
   });

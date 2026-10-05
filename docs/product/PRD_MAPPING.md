@@ -4,7 +4,7 @@
 
 **ENGINEERING DECISION — 5 October 2026:** PRD v0.6 §3.2–3.3/§23.7 maps to a unified `/admin` entry, provisioned internal login at `/admin/login`, shared role-aware navigation and removal of the development mock. Content import/preview remains under `/admin/content`; operational subrole enforcement and limited view DTOs remain outstanding. [Scope and verification](../development/ADMIN_PORTAL_2026-10-05.md).
 >
-> **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. TryOut XP conflicts between section 12 (x10) and AC-15 (x100), requiring PO correction before implementation. Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
+> **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. **ENGINEERING DECISION — product correction by Aini, 5 October 2026:** TryOut XP uses correct-equivalent ×10, without speed bonus, immediately on completion (§12); this supersedes AC-15 ×100. The source wording remains historical evidence. See [decision and prospective compatibility](../development/TRYOUT_XP_V06.md). Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
 
 # PRD → Engineering Mapping
 

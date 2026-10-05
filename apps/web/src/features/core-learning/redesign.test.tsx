@@ -6,6 +6,7 @@ import { StudentAccess } from './student-session';
 import { NewStudentDashboard } from './dashboard-new';
 import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
+import { TryoutWaiting, TryoutReleasedResult } from './tryout-presentation';
 import { SubchapterScreen } from './catalog';
 import { AssessmentScreen } from './assessment-history';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
@@ -253,6 +254,19 @@ describe('assessment history states', () => {
   });
 });
 describe('responsive learning composition', () => {
+  it('shows persisted TryOut XP while IRT is pending, including zero', () => {
+    const view = render(<TryoutWaiting xp={245} />);
+    expect(screen.getByText('245 XP')).toBeTruthy();
+    expect(screen.queryByText(/Jawaban benar:/)).toBeNull();
+    view.rerender(<TryoutWaiting xp={0} />);
+    expect(screen.getByText('0 XP')).toBeTruthy();
+  });
+  it('shows stored XP on released TryOut without recomputing it from score', () => {
+    render(<TryoutReleasedResult result={{ attemptId: 'fixture', packageTitle: 'Fixture',
+      score: 80, correctCount: 24, questionCount: 30, explanation: [], xp: 240, xpPolicyVersion: 1 }} />);
+    expect(screen.getByText(/240 XP sudah tercatat/)).toBeTruthy();
+    expect(screen.queryByText(/XP belum tersedia/)).toBeNull();
+  });
   it('hides provisional Home podium values when the server policy is pending', async () => {
     const data = await learningApi.dashboard('test-token');
     data.class = { id: 'class-test', name: 'IX', schoolName: 'Sekolah fixture' };

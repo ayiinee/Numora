@@ -4,7 +4,7 @@ import { and, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox, assessmentAttempts, assessmentPackages, attemptAnswers, attemptItems,
   chapters, closeDatabaseConnection, competencies, getDatabase, levels, packageItems,
-  questionVariants, questions, questionVersions, scoringPolicyVersions, subchapters, users,
+  questionVariants, questions, questionVersions, scoringPolicyVersions, subchapters, users, xpLedger,
 } from '@tka/database';
 import { finalizeTryout } from '@tka/assessment-engine';
 import { recoverOverdueTryouts } from './tryout-recovery.js';
@@ -47,12 +47,13 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
         questionVersionId: version!.id, displayOrder: order, maxPoints: '1' }).returning();
       itemPins.push({ packageItemId: item!.id, versionId: version!.id, order });
     }
-    async function attempt(deadlineAt: Date | null, empty = false) {
+    async function attempt(deadlineAt: Date | null, empty = false, legacy = false) {
       const [student] = await db.insert(users).values({ authUserId: randomUUID(), role: 'STUDENT',
         displayName: 'TEST ONLY student', email: `${randomUUID()}@example.test` }).returning();
       const [row] = await db.insert(assessmentAttempts).values({ studentId: student!.id,
         packageId: pkg!.id, assessmentType: 'TRYOUT', startedAt: new Date(Date.now() - 60_000),
-        deadlineAt, scoringPolicyVersionId: policy!.id, classIdAtStart: null }).returning();
+        deadlineAt, scoringPolicyVersionId: policy!.id, classIdAtStart: null,
+        tryoutXpPolicyVersion: legacy ? null : 1 }).returning();
       const pinned = empty ? [] : await db.insert(attemptItems).values(itemPins.map(pin => ({
         attemptId: row!.id, packageId: pkg!.id, packageItemId: pin.packageItemId,
         questionVersionId: pin.versionId, displayOrder: pin.order, maxPoints: '1',
@@ -71,6 +72,7 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
     const due = await attempt(new Date(Date.now() - 1_000));
     const future = await attempt(new Date(Date.now() + 60_000));
     const noDeadline = await attempt(null);
+    const legacy = await attempt(new Date(Date.now() - 1_000), false, true);
     const [drillPackage] = await db.insert(assessmentPackages).values({ familyCode: randomUUID(),
       packageVersion: 1, name: 'TEST ONLY Drill', assessmentType: 'DRILL', levelId: level.id,
       isDemo: true, scoringPolicyVersionId: policy.id }).returning();
@@ -84,6 +86,16 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
     const [stored] = await db.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, due.row.id));
     expect(stored).toMatchObject({ status: 'GRADED', score0To100: '50.00', classIdAtStart: null,
       deadlineAt: due.row.deadlineAt, scoringPolicyVersionId: due.row.scoringPolicyVersionId });
+    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId, due.row.id));
+    expect(rewards).toHaveLength(1);
+    expect(rewards[0]).toMatchObject({ xpAmount: 10, baseXp: 10, policyCode: 'TRYOUT_PRD_V06',
+      policyVersion: 1, bonusXp: '0.000000000000', durationSeconds: null });
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, legacy.row.id))).toEqual([]);
+    await expect(db.update(assessmentAttempts).set({ tryoutXpPolicyVersion: null })
+      .where(eq(assessmentAttempts.id, due.row.id))).rejects.toThrow();
+    await expect(db.update(xpLedger).set({ xpAmount: 100 }).where(eq(xpLedger.attemptId, due.row.id))).rejects.toThrow();
+    await expect(db.insert(xpLedger).values({ ...rewards[0]!, id: randomUUID(),
+      xpAmount: 100, baseXp: 100 })).rejects.toThrow();
     const answers = await db.select().from(attemptAnswers).where(eq(attemptAnswers.attemptItemId, due.pinned[0]!.id));
     expect(answers[0]).toMatchObject({ answer: { optionId: 'A' }, savedAt: due.savedAt, awardedPoints: '1.00' });
     const events = await db.select().from(analyticsOutbox).where(and(eq(analyticsOutbox.entityId, due.row.id),
@@ -141,6 +153,7 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
       for each row execute function ${name}()`));
     try {
       expect((await recoverOverdueTryouts()).failed).toBe(1);
+      expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, due.row.id))).toEqual([]);
       expect((await db.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, due.row.id)))[0])
         .toMatchObject({ status: 'IN_PROGRESS', rawPoints: null, score0To100: null, finishedAt: null });
       expect((await db.select().from(attemptAnswers).where(eq(attemptAnswers.attemptItemId, due.pinned[0]!.id)))[0])
@@ -150,7 +163,34 @@ integration('TryOut recovery on real PostgreSQL without browser or Redis', () =>
       await db.execute(sql.raw(`drop function ${name}()`));
     }
     expect((await recoverOverdueTryouts()).finalized).toBe(1);
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, due.row.id))).toHaveLength(1);
     expect((await db.select().from(analyticsOutbox).where(eq(analyticsOutbox.entityId, due.row.id))))
       .toHaveLength(1);
+  });
+
+  it('posts manual TryOut XP through a non-owner runtime LOGIN with RLS', async () => {
+    const { db, attempt } = await fixture();
+    const active = await attempt(new Date(Date.now() + 60_000));
+    const role = `tryout_main_${randomUUID().replaceAll('-', '')}`;
+    const password = randomUUID();
+    await db.execute(sql.raw(`CREATE ROLE ${role} LOGIN PASSWORD '${password}'`));
+    await db.execute(sql.raw(`GRANT numora_main_runtime TO ${role}`));
+    const runtime = new URL(process.env.TEST_DATABASE_URL!);
+    runtime.username = role;
+    runtime.password = password;
+    await closeDatabaseConnection();
+    try {
+      process.env.DATABASE_URL = runtime.toString();
+      expect(await finalizeTryout({ kind: 'manual', attemptId: active.row.id,
+        studentId: active.row.studentId })).toMatchObject({ finalized: true });
+      const rewards = await getDatabase().db.select().from(xpLedger)
+        .where(eq(xpLedger.attemptId, active.row.id));
+      expect(rewards).toHaveLength(1);
+      expect(rewards[0]?.xpAmount).toBe(10);
+    } finally {
+      await closeDatabaseConnection();
+      process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+      await getDatabase().db.execute(sql.raw(`DROP ROLE ${role}`));
+    }
   });
 });

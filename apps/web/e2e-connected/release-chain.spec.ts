@@ -50,7 +50,7 @@ const requiredChecks = [
   'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
   'real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth',
   'direct-url-role-refresh-logout-reauth-mandiri-drill',
-  'tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history',
+  'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
   'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
 ];
 const contexts: BrowserContext[] = [];
@@ -702,7 +702,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         ),
       ),
     );
-    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
@@ -713,6 +713,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(
       mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
     ).toBeVisible();
+    await expect(mandiri.getByText('10 XP', { exact: true })).toBeVisible();
     for (const [alias, attempt] of [
       ['student', affiliated],
       ['otherStudent', independent],
@@ -734,7 +735,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
       expect(records.find((r) => r.attemptId === attempt.id)).toMatchObject({
         score: null,
         resultState: 'waitingIrt',
+        xpState: 'ready', tryoutXpPolicyVersion: 1,
       });
+      const persisted = await body<TryoutAttemptDto>(request, alias, `tryout/attempts/${attempt.id}`);
+      expect(persisted.xp).toBeGreaterThanOrEqual(0);
+      expect(persisted.questions).toEqual([]);
+      expect(persisted).not.toHaveProperty('score');
       expect(await body<CurrentTryoutDto>(request, alias, 'tryout/packages/current')).toMatchObject(
         { eligible: false, state: 'waitingIrt' },
       );
@@ -802,6 +808,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
       persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
     ).toHaveLength(2);
     expect(persistence.pins).toHaveLength(4);
+    expect(persistence.rewards).toHaveLength(2);
+    expect(persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id))
+      .toMatchObject({ xp_amount: 10, policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id))
+      .toMatchObject({ xp_amount: 0, policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
     expect(
       persistence.attempts.find((a: { id: string }) => a.id === independent.id).class_id_at_start,
     ).toBeNull();
@@ -813,7 +824,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (r) => r.attemptId === affiliated.id,
       ),
     ).toMatchObject({ score: 0, resultState: 'ready' });
-    checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
+    checks.push('tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history');
   });
 
   test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({

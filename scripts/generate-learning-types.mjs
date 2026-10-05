@@ -22,6 +22,7 @@ const names = [
   'AssessmentHistoryDto',
   'CurrentTryoutDto',
   'TryoutAttemptDto',
+  'TryoutSubmitDto',
   'TryoutReviewedQuestionDto',
   'TryoutResultDto',
   'DashboardClassDto',

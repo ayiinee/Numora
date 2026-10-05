@@ -31,6 +31,8 @@ export class CurrentTryoutDto {
 }
 
 export class TryoutAttemptDto {
+  @ApiProperty({ type: Number, nullable: true, required: false, description: 'Persisted XP available after completion, independently of IRT release; null for active/legacy attempts.' }) xp?: number | null;
+  @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ type: String, format: 'date-time', required: false }) serverTime?: string;
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) packageId!: string;
@@ -41,6 +43,8 @@ export class TryoutAttemptDto {
 }
 
 export class TryoutSubmitDto {
+  @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
+  @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ enum: ['waitingIrt'] }) state!: 'waitingIrt';
 }
 
@@ -53,6 +57,8 @@ export class TryoutReviewedQuestionDto {
 }
 
 export class TryoutResultDto {
+  @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
+  @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ format: 'uuid' }) attemptId!: string;
   @ApiProperty() packageTitle!: string;
   @ApiProperty() score!: number;

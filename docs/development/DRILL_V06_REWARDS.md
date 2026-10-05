@@ -6,7 +6,7 @@
 
 Kebijakan Drill versi 2 dipin secara terpisah dari versi scoring/konten paket pada saat start. Paket/kunci historis tidak diubah. `drillPolicyVersion: null` merupakan kebijakan legacy (rotasi paket saat start lama, bintang 0 null, pembahasan 90 hari, tanpa posting XP otomatis). Start baru memakai versi 2 dan boleh memakai ulang satu paket yang tersedia; resume tidak mengganti pin. Attempt lama, termasuk yang masih aktif, tidak diberi XP retroaktif atau dihitung ulang.
 
-XP versi 2 disimpan atomik pada ledger existing bersama grading/progres/outbox, dengan provenance kebijakan dan rincian bonus/durasi. XP melekat pada akun; snapshot kelas hanya metadata historis, bukan pembatas kepemilikan XP. Leaderboard account-based/global dan konflik TryOut XP §12 ×10 / AC-15 ×100 tetap pekerjaan JOB-17/JOB-11 TryOut. Pretest/PvP tidak diposting melalui jalur ini.
+XP versi 2 disimpan atomik pada ledger existing bersama grading/progres/outbox, dengan provenance kebijakan dan rincian bonus/durasi. XP melekat pada akun; snapshot kelas hanya metadata historis, bukan pembatas kepemilikan XP. Leaderboard account-based/global tetap JOB-17. Keputusan Aini berikutnya menetapkan TryOut ×10; lihat [keputusan dan implementasi TryOut](TRYOUT_XP_V06.md). Pretest/PvP tidak diposting melalui jalur ini.
 
 Hasil/history menampilkan reward tersimpan, bukan menghitung ulang berdasarkan kebijakan runtime. Legacy XP null diberi label hasil versi lama, tidak dianggap nol. Best score tetap monotonic; latestStars ditulis dari attempt terakhir, bukan bestStars. Riwayat level menggunakan filter `levelId` existing dan cache/cursor terpisah per filter.
 

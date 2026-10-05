@@ -193,6 +193,7 @@ export const assessmentAttempts = pgTable(
     score0To100: numeric('score_0_100', { precision: 5, scale: 2 }),
     stars: integer('stars'),
     drillPolicyVersion: integer('drill_policy_version'),
+    tryoutXpPolicyVersion: integer('tryout_xp_policy_version'),
   },
   (table) => [
     uniqueIndex('assessment_attempts_pretest_once_uq')
@@ -268,6 +269,7 @@ export const assessmentAttempts = pgTable(
       sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 0 and 3)`,
     ),
     check('assessment_attempts_drill_policy_ck', sql`${table.drillPolicyVersion} is null or (${table.assessmentType} = 'DRILL' and ${table.drillPolicyVersion} = 2)`),
+    check('assessment_attempts_tryout_xp_policy_ck', sql`${table.tryoutXpPolicyVersion} is null or (${table.assessmentType} = 'TRYOUT' and ${table.tryoutXpPolicyVersion} = 1)`),
   ],
 ).enableRLS();
 
