@@ -1,3 +1,4 @@
+import { AdminAnalyticsService } from './analytics.service';
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
 import { AdminController } from './admin.controller';
@@ -23,6 +24,7 @@ import { AdminStructuresService } from './structures.service';
   ],
   providers: [
     AdminService,
+    AdminAnalyticsService,
     AdminOperationsService,
     AdminAccountsService,
     AdminAuthProvider,

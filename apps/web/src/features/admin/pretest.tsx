@@ -25,7 +25,7 @@ export function AdminPretestScreen() {
       icon="book"
     >
       {state.status === 'loading' ? (
-        <AdminLoading message="Memeriksa akses?" />
+        <AdminLoading message="Memeriksa akses..." />
       ) : !token ? (
         <AdminMessage error message="Akses Content diperlukan." login />
       ) : (

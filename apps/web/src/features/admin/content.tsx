@@ -469,6 +469,7 @@ function AdminContentScreenContent() {
               {view === 'irt' && (
                 <section>
                   <h2>Status dan riwayat batch IRT</h2>
+                  <Link href="/admin/irt">Buka request IRT dan SLA publikasi</Link>
                   <p>
                     Status batch dan waktu rilis berasal dari API. Batch SUCCEEDED tidak otomatis
                     berarti hasil Tryout sudah dirilis.

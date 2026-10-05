@@ -10,6 +10,8 @@ Current rules: three fixed Admin subroles and action-level permissions; maximum 
 
 **ENGINEERING DECISION — user-approved 5 October plan:** full-stack Admin implementation, fixed role capabilities, invite by email, stage gates without a fixed date. Import preview stays unscored. Full Pretest Student remains a separate domain dependency. Main PR #77 supplies membership/ownership lifecycle; Admin readers must integrate that implementation without taking over Teacher-only actions. See [Admin implementation and acceptance](../development/ADMIN_FULL_STACK_STATUS.md).
 
+**ENGINEERING UPDATE - M6:** request/pin/adoption UI, aggregate analytics, batch SLA and immutable participant readers now reuse the foundation models. Response snapshot v2 separates collection deadline from actual grading time and preserves historical v1 data. Production participant publication remains blocked by the approved versioned respondent producer/mapping/release handoff. See [implementation boundary](../api/ADMIN_IRT_ANALYTICS.md).
+
 ## Current engineering mapping
 
 | Domain            | v0.6 implementation target                                                              | Gate                                   |

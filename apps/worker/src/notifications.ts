@@ -34,15 +34,26 @@ export async function discoverNotificationReleases() {
     .where(eq(notificationOutbox.sourceKey, 'SYSTEM_STARTED'));
   if (!activation) throw new Error('NOTIFICATION_MIGRATION_REQUIRED');
   const packages = await db.execute<{ package_id: string }>(sql`
-    SELECT DISTINCT b.package_id FROM irt_batches b WHERE b.status='SUCCEEDED'
-    AND b.result_released_at <= clock_timestamp()
+    WITH published AS (
+      SELECT b.package_id, f.published_at AS released_at
+      FROM tryout_result_finalizations f JOIN tryout_batches b ON b.id=f.batch_id
+      JOIN assessment_packages p ON p.id=b.package_id
+      WHERE NOT p.is_demo AND f.published_at <= clock_timestamp()
+      UNION ALL
+      SELECT b.package_id, b.result_released_at
+      FROM irt_batches b JOIN assessment_packages p ON p.id=b.package_id
+      WHERE p.is_demo AND b.status='SUCCEEDED' AND b.result_released_at <= clock_timestamp()
+    )
+    SELECT DISTINCT b.package_id FROM published b WHERE true
     AND EXISTS (SELECT 1 FROM assessment_attempts a WHERE a.package_id=b.package_id
       AND a.assessment_type='TRYOUT' AND a.status='GRADED' AND a.purpose='REGULAR'
-      AND (b.result_released_at >= ${activation.occurredAt.toISOString()}::timestamptz OR a.finished_at >= ${activation.occurredAt.toISOString()}::timestamptz)
+      AND (b.released_at >= ${activation.occurredAt.toISOString()}::timestamptz OR a.finished_at >= ${activation.occurredAt.toISOString()}::timestamptz)
       AND NOT EXISTS (SELECT 1 FROM notification_outbox o WHERE o.source_key='TRYOUT_RESULT_READY:' || a.id::text))`);
   const times = await releasedTryoutPackageTimes(packages.map((r) => r.package_id));
   const released = [...times.keys()];
-  const newlyReleased = [...times].filter(([, at]) => at >= activation.occurredAt).map(([id]) => id);
+  const newlyReleased = [...times]
+    .filter(([, at]) => at >= activation.occurredAt)
+    .map(([id]) => id);
   if (!released.length) return;
   const candidates = await db.execute<{ id: string; student_id: string }>(sql`
     SELECT a.id,a.student_id FROM assessment_attempts a
@@ -51,7 +62,14 @@ export async function discoverNotificationReleases() {
       released.map((id) => sql`${id}::uuid`),
       sql`, `,
     )})
-    AND (a.finished_at >= ${activation.occurredAt.toISOString()}::timestamptz OR ${newlyReleased.length ? sql`a.package_id IN (${sql.join(newlyReleased.map((id) => sql`${id}::uuid`), sql`, `)})` : sql`false`})
+    AND (a.finished_at >= ${activation.occurredAt.toISOString()}::timestamptz OR ${
+      newlyReleased.length
+        ? sql`a.package_id IN (${sql.join(
+            newlyReleased.map((id) => sql`${id}::uuid`),
+            sql`, `,
+          )})`
+        : sql`false`
+    })
     AND NOT EXISTS (SELECT 1 FROM notification_outbox o WHERE o.source_key='TRYOUT_RESULT_READY:' || a.id::text)
     ORDER BY a.id LIMIT 100`);
   for (const row of candidates)

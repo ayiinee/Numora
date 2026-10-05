@@ -119,11 +119,15 @@ export class AssessmentHistoryService {
       ...new Set(page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.packageId)),
     ];
     const releasedPackages = await this.releases.releasedPackageIds(tryoutIds);
+    const published = await this.releases.publishedResults(
+      page.filter((row) => row.assessmentType === 'TRYOUT' && !row.isDemo).map((row) => row.id),
+    );
     return {
       records: page.map((row) => {
         const ready =
           row.assessmentType !== 'TRYOUT' ||
-          (row.status === 'GRADED' && releasedPackages.has(row.packageId));
+          (row.status === 'GRADED' &&
+            (row.isDemo ? releasedPackages.has(row.packageId) : published.has(row.id)));
         return {
           attemptId: row.id,
           activity: row.assessmentType.toLowerCase() as 'drill' | 'pretest' | 'tryout',
@@ -136,18 +140,32 @@ export class AssessmentHistoryService {
           levelId: row.levelId,
           levelTitle: row.levelTitle,
           xpState:
-            row.assessmentType === 'PRETEST' ? ('notApplicable' as const)
-              : row.xp !== null ? ('ready' as const) : row.assessmentType === 'TRYOUT' && row.status !== 'GRADED'
-                ? ('pending' as const) : ('legacy' as const),
+            row.assessmentType === 'PRETEST'
+              ? ('notApplicable' as const)
+              : row.xp !== null
+                ? ('ready' as const)
+                : row.assessmentType === 'TRYOUT' && row.status !== 'GRADED'
+                  ? ('pending' as const)
+                  : ('legacy' as const),
           starsState:
-            row.assessmentType === 'DRILL' ? row.stars !== null ? ('ready' as const) : ('legacy' as const) : ('notApplicable' as const),
+            row.assessmentType === 'DRILL'
+              ? row.stars !== null
+                ? ('ready' as const)
+                : ('legacy' as const)
+              : ('notApplicable' as const),
           xp: row.assessmentType !== 'PRETEST' ? row.xp : null,
           stars: row.assessmentType === 'DRILL' ? row.stars : null,
           drillPolicyVersion: row.drillPolicyVersion,
           tryoutXpPolicyVersion: row.tryoutXpPolicyVersion,
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
-          score: ready && row.score !== null ? Number(row.score) : null,
+          score: ready
+            ? row.assessmentType === 'TRYOUT' && !row.isDemo
+              ? (published.get(row.id)?.score ?? null)
+              : row.score !== null
+                ? Number(row.score)
+                : null
+            : null,
         };
       }),
       nextCursor: rows.length > PAGE_SIZE ? page.at(-1)!.id : null,

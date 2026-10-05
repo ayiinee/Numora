@@ -1,3 +1,7 @@
+import { AdminController } from '../admin/admin.controller';
+import { AdminService } from '../admin/admin.service';
+import { AdminAnalyticsService } from '../admin/analytics.service';
+import { IrtOperationsService } from '../irt/irt-operations.service';
 import { PretestController } from '../content/pretest.controller';
 import { PretestService } from '../content/pretest.service';
 import 'reflect-metadata';
@@ -26,6 +30,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
   let app: INestApplication;
   let base: string;
   let assignment: string | null = null;
+  let status = 'ACTIVE';
   const users = vi.fn(() => ({ items: [], nextOffset: null }));
   const reports = vi.fn(() => ({ items: [] }));
   const prepare = vi.fn(() => ({ id: 'test-request' }));
@@ -33,7 +38,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     me: vi.fn(async () => ({
       id: 'test-admin',
       role: 'ADMIN',
-      status: 'ACTIVE',
+      status,
       adminRole: assignment,
     })),
   };
@@ -41,6 +46,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     const module = await Test.createTestingModule({
       controllers: [
         PretestController,
+        AdminController,
         AdminOperationsController,
         ReportsController,
         IrtController,
@@ -49,6 +55,8 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       ],
       providers: [
         AdminGuard,
+        { provide: AdminService, useValue: { dashboard: reports, audit: reports } },
+        { provide: AdminAnalyticsService, useValue: { summary: reports } },
         ContentAdminGuard,
         { provide: PretestService, useValue: { list: reports, blueprints: reports } },
         { provide: IdentityService, useValue: identity },
@@ -58,6 +66,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
         { provide: ReportsService, useValue: { list: reports } },
         { provide: IrtService, useValue: { list: reports } },
         { provide: IrtRequestsService, useValue: { prepare } },
+        { provide: IrtOperationsService, useValue: { options: reports, health: reports } },
       ],
     }).compile();
     app = module.createNestApplication();
@@ -76,6 +85,10 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
   ])('enforces the operations/moderation matrix for %s', async (role, operations, content) => {
     assignment = role as string | null;
     expect(
+      (await fetch(base + '/admin/analytics', { headers: { Authorization: 'Bearer unchanged' } }))
+        .status,
+    ).toBe(role ? 200 : 403);
+    expect(
       (await fetch(base + '/admin/users', { headers: { Authorization: 'Bearer unchanged' } }))
         .status,
     ).toBe(operations);
@@ -86,6 +99,8 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     for (const path of [
       '/admin/content/pretest-packages',
       '/admin/content/pretest-packages/blueprints',
+      '/admin/irt/options',
+      '/admin/irt/batch-health',
     ])
       expect(
         (await fetch(base + path, { headers: { Authorization: 'Bearer unchanged' } })).status,
@@ -134,6 +149,15 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     await expect(service.createSchool('Bearer unchanged', 'TEST', 'Test')).rejects.toMatchObject({
       status: 403,
     });
+  });
+  it('rejects a disabled admin with a still-valid token', async () => {
+    assignment = 'SUPER_ADMIN';
+    status = 'DISABLED';
+    expect(
+      (await fetch(base + '/admin/analytics', { headers: { Authorization: 'Bearer unchanged' } }))
+        .status,
+    ).toBe(403);
+    status = 'ACTIVE';
   });
   it('never derives unknown-role or non-Admin permissions from browser capabilities', () => {
     expect(adminCapabilities(null)).toEqual([]);

@@ -466,6 +466,18 @@ export class TryoutService {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
+    const [packageRow] = await db
+      .select({ isDemo: assessmentPackages.isDemo })
+      .from(assessmentPackages)
+      .where(eq(assessmentPackages.id, attempt.packageId))
+      .limit(1);
+    const published = packageRow?.isDemo
+      ? null
+      : (await this.releases.publishedResults([attemptId])).get(attemptId);
+    if (!packageRow?.isDemo && !published)
+      throw new ConflictException(
+        problem('TRYOUT_RESULT_PENDING', 'Finalisasi hasil peserta belum dipublikasikan.'),
+      );
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
@@ -474,7 +486,9 @@ export class TryoutService {
       packageTitle: attempt.title,
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
-      score: Number(score?.score ?? 0),
+      score: published ? published.score : Number(score?.score ?? 0),
+      mode: published?.mode ?? 'DEMO',
+      publicationVersion: published?.version ?? null,
       correctCount: rows.filter(
         (row) => row.fullyCorrect ?? Number(row.awardedPoints) === Number(row.maxPoints),
       ).length,

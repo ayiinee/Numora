@@ -1,5 +1,12 @@
 import { getDatabase } from './client.js';
-import { irtBatches, irtItemResults, packageItems, assessmentPackages } from './schema/index.js';
+import {
+  irtBatches,
+  irtItemResults,
+  packageItems,
+  assessmentPackages,
+  tryoutBatches,
+  tryoutResultFinalizations,
+} from './schema/index.js';
 import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 export function isJakartaMondayMidnight(instant: Date): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -26,18 +33,42 @@ export async function releasedTryoutPackageTimes(
 ): Promise<Map<string, Date>> {
   if (!packageIds.length) return new Map();
   const { db } = getDatabase();
+  // Production release is immutable publication, never compute execution status.
+  const finalizations = await db
+    .select({
+      packageId: tryoutBatches.packageId,
+      releasedAt: tryoutResultFinalizations.publishedAt,
+    })
+    .from(tryoutResultFinalizations)
+    .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutResultFinalizations.batchId))
+    .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatches.packageId))
+    .where(
+      and(
+        inArray(tryoutBatches.packageId, packageIds),
+        eq(assessmentPackages.isDemo, false),
+        isNotNull(tryoutResultFinalizations.publishedAt),
+        lte(tryoutResultFinalizations.publishedAt, now),
+      ),
+    );
+  const released = new Map(finalizations.map((row) => [row.packageId, row.releasedAt!]));
   const batches = await db
-    .select({ id: irtBatches.id, packageId: irtBatches.packageId, releasedAt: irtBatches.resultReleasedAt })
+    .select({
+      id: irtBatches.id,
+      packageId: irtBatches.packageId,
+      releasedAt: irtBatches.resultReleasedAt,
+    })
     .from(irtBatches)
+    .innerJoin(assessmentPackages, eq(assessmentPackages.id, irtBatches.packageId))
     .where(
       and(
         inArray(irtBatches.packageId, packageIds),
         eq(irtBatches.status, 'SUCCEEDED'),
+        eq(assessmentPackages.isDemo, true),
         isNotNull(irtBatches.resultReleasedAt),
         lte(irtBatches.resultReleasedAt, now),
       ),
     );
-  if (!batches.length) return new Map();
+  if (!batches.length) return released;
   const items = await db
     .select({
       packageId: packageItems.packageId,
@@ -72,7 +103,6 @@ export async function releasedTryoutPackageTimes(
     versions.add(result.questionVersionId);
     validByBatch.set(result.batchId, versions);
   }
-  const released = new Map<string, Date>();
   for (const batch of batches) {
     if (!batch.packageId) continue;
     const versions = itemsByPackage.get(batch.packageId) ?? [];
@@ -82,7 +112,10 @@ export async function releasedTryoutPackageTimes(
   }
   return released;
 }
-export async function releasedTryoutPackageIds(packageIds: string[], now = new Date()): Promise<Set<string>> {
+export async function releasedTryoutPackageIds(
+  packageIds: string[],
+  now = new Date(),
+): Promise<Set<string>> {
   return new Set((await releasedTryoutPackageTimes(packageIds, now)).keys());
 }
 

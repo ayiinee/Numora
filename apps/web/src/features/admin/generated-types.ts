@@ -155,6 +155,18 @@ export type AdminReportsDto = { "items": (AdminReportDto)[]; "nextOffset": numbe
 
 export type ResolveReportDto = { "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
 
+export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
+
+export type AdminAnalyticsDto = { "generatedAt": string; "source": "POSTGRESQL"; "metrics": (AdminAnalyticsMetricDto)[]; };
+
+export type IrtApprovedConfigurationDto = { "approvalId": string; "digest": string; "code": string; "version": number; "kind": string; "contextId": string | null; "approvedAt": string; };
+
+export type IrtBatchHealthDto = { "id": string; "packageId": string; "title": string; "status": string; "contextId": string | null; "closesAt": string; "dueAt": string; "overdue": boolean; "activeAttemptCount": number; "finalizedAttemptCount": number; "publicationMode": string | null; "publicationVersion": number | null; "publishedAt": string | null; "prepareBlockers": (string)[]; "publicationBlockers": (string)[]; };
+
+export type IrtOperationalOptionsDto = { "enabled": boolean; "configurations": (IrtApprovedConfigurationDto)[]; };
+
+export type IrtBatchHealthListDto = { "items": (IrtBatchHealthDto)[]; };
+
 export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersionId": string; "modelVersion": string; "batchStatus": string; "sampleSize": number; "dataStatus": string; "difficultyB": string | null; "discriminationA": string | null; "guessingC": string | null; };
 
 export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; };
@@ -167,7 +179,7 @@ export type IrtRequestExecutionDto = { "id": string; "status": "RUNNING" | "SUCC
 
 export type IrtRequestArtifactDto = { "id": string; "digest": string; "scientificDecision": string; };
 
-export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
+export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "configurationPins": (IrtConfigurationPinDto)[]; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
 
 export type IrtRequestsDto = { "items": (IrtRequestDto)[]; };
 

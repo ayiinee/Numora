@@ -69,7 +69,7 @@ export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "wai
 
 export type TryoutReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "richOptions"?: (PreviewOptionDto)[]; "categories"?: (PreviewCategoryDto)[]; "richStem"?: RichContentDto; "richExplanation"?: RichContentDto; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "fullyCorrect"?: boolean; "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string | null; "explanation": string; };
 
-export type TryoutResultDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
+export type TryoutResultDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number | null; "mode"?: "IRT" | "FALLBACK" | "UNSCORABLE" | "DEMO"; "publicationVersion"?: number | null; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
 
 export type DashboardClassDto = { "id": string; "name": string; "schoolName": string; };
 

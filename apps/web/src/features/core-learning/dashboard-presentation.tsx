@@ -279,6 +279,13 @@ export function HomeActivity({
             <span>Nilai belum tersedia</span>
           )}
           {item.isDemo && <span>Demo</span>}
+          {(item.xpState === 'posted' || item.starsState === 'available') && (
+            <small>
+              {item.xpState === 'posted' && `${item.xp} XP`}
+              {item.xpState === 'posted' && item.starsState === 'available' && ' - '}
+              {item.starsState === 'available' && `${item.stars} bintang`}
+            </small>
+          )}
           {(item.xpState === 'pending' || item.starsState === 'pending') && (
             <small className="home-activity__pending">XP dan bintang belum tersedia</small>
           )}

@@ -1,3 +1,5 @@
+import { AdminAnalyticsDto } from './analytics.dto';
+import { AdminAnalyticsService } from './analytics.service';
 import { Controller, Get, Inject, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
@@ -38,7 +40,15 @@ export class AdminAuditListDto {
 @UseGuards(AdminGuard)
 @Controller('admin')
 export class AdminController {
-  constructor(@Inject(AdminService) private readonly admin: AdminService) {}
+  constructor(
+    @Inject(AdminService) private readonly admin: AdminService,
+    @Inject(AdminAnalyticsService) private readonly analytics: AdminAnalyticsService,
+  ) {}
+  @Get('analytics')
+  @ApiOkResponse({ type: AdminAnalyticsDto })
+  summary(@Req() request: AdminRequest) {
+    return this.analytics.summary(request.adminRole);
+  }
   @Get('dashboard')
   @RequireAdminCapability('OPERATIONS_LIMITED_READ')
   @ApiOkResponse({ type: AdminDashboardDto })
