@@ -127,8 +127,8 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     await fixture(26, async (client, folder) => {
       const [student] = await client`INSERT INTO users(auth_user_id,role,display_name,email)
         VALUES(gen_random_uuid(),'STUDENT','TEST upgrade','upgrade@test.invalid') RETURNING id`;
-      const [chapter] = await client`INSERT INTO chapters(code,name,display_order) VALUES('TEST-UPGRADE','TEST',1) RETURNING id`;
-      const [sub] = await client`INSERT INTO subchapters(chapter_id,code,name,display_order) VALUES(${chapter!.id},'TEST-UPGRADE','TEST',1) RETURNING id`;
+      const [chapter] = await client`INSERT INTO chapters(code,name,slug,display_order) VALUES('TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
+      const [sub] = await client`INSERT INTO subchapters(chapter_id,code,name,slug,display_order) VALUES(${chapter!.id},'TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
       const [level] = await client`INSERT INTO levels(subchapter_id,level_number) VALUES(${sub!.id},1) RETURNING id`;
       const [pack] = await client`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,is_demo,chapter_id,level_id)
         VALUES('TEST-UPGRADE',1,'TEST upgrade','DRILL',true,${chapter!.id},${level!.id}) RETURNING id`;
