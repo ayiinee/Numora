@@ -211,6 +211,20 @@
       "when": 1791245270006,
       "tag": "0029_admin_recovery_operations",
       "breakpoints": true
+    },
+    {
+      "idx": 30,
+      "version": "7",
+      "when": 1791245489591,
+      "tag": "0030_content_revision_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791245491190,
+      "tag": "0031_historical_report_context",
+      "breakpoints": true
     }
   ]
 }

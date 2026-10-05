@@ -95,6 +95,7 @@ const data = {
     ],
   },
   reports: {
+    nextOffset: null,
     items: [
       {
         id: 'question-report-test',
@@ -419,15 +420,17 @@ describe('Admin content UI', () => {
       }),
     );
   });
-  it('filters video reports and shows their mapped destination context', async () => {
+  it('filters video reports on the server and links the independent target detail', async () => {
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
     fireEvent.change(await screen.findByLabelText('Jenis laporan'), { target: { value: 'VIDEO' } });
     const report = await screen.findByTestId('report-video-report-test');
-    expect(within(report).getByText(/Video demo.*YouTube.*Subbab demo/)).toBeTruthy();
     expect(
-      within(report).getByRole('link', { name: 'Buka video terkait' }).getAttribute('href'),
-    ).toBe('https://www.youtube.com/watch?v=demo');
+      within(report).getByRole('link', { name: 'Detail target & resolution' }).getAttribute('href'),
+    ).toBe('/admin/reports/VIDEO/video-report-test');
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 0, 'reports', {
+      kind: 'VIDEO',
+    });
     expect(screen.queryByTestId('report-question-report-test')).toBeNull();
   });
   it('removes administrative data on logout and on an API access rejection', async () => {

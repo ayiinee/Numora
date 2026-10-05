@@ -10,7 +10,7 @@ Semua endpoint `/api/v1/admin/content`, termasuk kurikulum, versi, paket Drill d
 
 `CONTENT_IMPORT_PREVIEW_ENABLED=false` adalah default. Penonaktifan menutup API importer/preview, termasuk pembacaan sesi, sambil mempertahankan histori. Upload memakai flag terpisah `R2_MEDIA_UPLOADS_ENABLED`. Signed GET tidak bergantung pada flag upload.
 
-Anonymous mendapat 401; sesi/laporan milik Admin lain disembunyikan sebagai 404. Error memakai `application/problem+json`. Subrole bukan implementasi penuh matriks permission Admin v0.6.
+Anonymous mendapat 401; sesi/laporan impor milik Admin lain disembunyikan sebagai 404. Error memakai `application/problem+json`. Matriks permission Admin lengkap dan DTO Operations terbatas mengikuti [authorization](AUTHORIZATION.md).
 
 ## Kontrak importer
 
@@ -28,7 +28,17 @@ Identitas unik `(sourceNamespace, externalId)` dilock secara berurutan. Idempote
 
 Hash canonical mencakup konten, taxonomy, kunci, difficulty dan manifest terpilih; tidak mencakup signed URL, token atau metadata operasional. Hash terakhir sama menghasilkan `SKIPPED_UNCHANGED`; perubahan menghasilkan versi DRAFT baru. Perubahan tipe, indikator atau nomor level menghasilkan `NEEDS_REVIEW` dan memblokir batch. Reimport media yang sudah lengkap menghasilkan versi baru. Provenance dan versi impor immutable. Keluarga/varian menggunakan ORIGINAL; tidak menerapkan multi-varian Drill.
 
-Opsi/pernyataan/kategori disimpan sebagai `{ options, categories }`. Decoder legacy tetap membaca array. Editor, revisi dan publikasi legacy menolak versi impor; database juga melindungi UPDATE/DELETE versi impor. Preview/paket/attempt yang memin versi lama tidak berpindah ke revisi baru.
+Opsi/pernyataan/kategori disimpan sebagai `{ options, categories }`. Decoder legacy tetap membaca array. Editor payload dan publikasi legacy menolak versi impor; review menggunakan endpoint lifecycle berikut. Migration 0026 melindungi UPDATE payload/DELETE versi impor sambil mengizinkan status/reviewer/waktu review. Bukti import dan snapshot tetap immutable. Preview/paket/attempt yang memin versi lama tidak berpindah ke revisi baru.
+
+## Review, revision dan readiness
+
+**ENGINEERING DECISION:** `GET /versions/:id` menampilkan payload v2 lengkap, taxonomy/level/difficulty, key/explanation/media, lineage, reviewer dan riwayat keputusan. Content dan Super dapat membuka versi lama/arsip. `POST /versions/:id/review` menerima `status` READY/REVISION/ARCHIVED, `expectedStatus`, dan alasan wajib. Lock versi menolak keputusan stale. READY memerlukan struktur semantik yang sah, taxonomy/keluarga/level READY, difficulty dan receipt media VERIFIED. PGK dapat direview secara editorial tanpa scoring; readiness publikasi menampilkan kebutuhan rubric yang disahkan secara terpisah. READY tidak menyetujui policy akademik atau mempublikasikan paket.
+
+Archive/REVISION menolak referensi paket PUBLISHED; archive menghentikan preview/pemilihan baru, sementara sesi dan attempt sebelumnya tetap pinned. Payload diperbaiki dengan import satu soal memakai `expectedSourceVersionId` dan `revisionReason`: sumber harus versi import terbaru dalam identitas yang sama. Replay key/payload yang sama mengembalikan versi yang sama; operasi baru dengan sumber stale ditolak. Revisi DRAFT menyimpan lineage, bukan menimpa sumber.
+
+UI `/admin/content/versions/:id` menampilkan JSON rich lengkap dan menghubungkan preview/render/media existing. `/admin/content/imports` menyediakan reserve–PUT–complete media, progress dan retry completion, tanpa menampilkan signed URL atau mengirim bearer API ke R2. Receipt VERIFIED dengan key durable digunakan pada asset manifest.
+
+`GET /api/v1/admin/reports` menerapkan filter kind/status/category/periode dan pagination gabungan di server. `GET /admin/reports/:kind/:id` membuka versi soal yang dipin attempt, tanpa jawaban/identitas siswa, atau snapshot target video. Snapshot video baru disimpan saat laporan dibuat; laporan lama diberi label CURRENT_METADATA. Resolution dapat merujuk revisi yang lineage-nya mencapai versi yang dilaporkan, dan alasan/status/pelaku/waktu tersimpan pada audit. Migration 0027 menjaga konteks laporan immutable. Audit umum mendukung actor/action/entity/periode dan tidak mengembalikan metadata rahasia; detail review mengembalikan proyeksi alasan editorial saja.
 
 ## Kontrak preview
 
@@ -53,6 +63,6 @@ UI nyata: `/admin/content/imports` dan `/admin/content/preview-sessions/:id`, de
 
 Migrasi `0023_content_import_preview` menambah subrole nullable tanpa backfill, nullable difficulty, tiga tabel impor dan tiga tabel preview. Tabel baru mempunyai RLS dan grant main eksplisit, tanpa akses compute atau Supabase Data API. Audit tidak membawa jawaban/kunci/token.
 
-**OPEN:** taxonomy, kode/urutan/indikator/blueprint/difficulty sampel belum approved Curriculum. Lima level dan sepuluh soal Drill per level tidak menyetujui master sandbox. Rubrik PGK, publication/lifecycle Ready–Revision–Archive, XP dan IRT tetap terpisah. Rumus XP TryOut section 12 x10 versus AC-15 x100 membutuhkan koreksi Product Owner.
+**OPEN:** taxonomy, kode/urutan/indikator/blueprint/difficulty sampel belum approved Curriculum. Lima level dan sepuluh soal Drill per level tidak menyetujui master sandbox. Lifecycle editorial di atas tersedia; publikasi assessment masih memerlukan policy/rubric akademik yang sah. XP dan IRT tetap terpisah. Rumus XP TryOut section 12 x10 versus AC-15 x100 membutuhkan koreksi Product Owner.
 
 Lihat [runbook sandbox](../development/CONTENT_IMPORT_PREVIEW_RUNBOOK.md), [handoff bank soal](../data/QUESTION_BANK_BACKEND_HANDOFF.md) dan [upload media](CONTENT_MEDIA_UPLOADS.md). Approval Curriculum, engine Data, trial Google dan QA independen bukan hasil otomatis dari PASS engineering.

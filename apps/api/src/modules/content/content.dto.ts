@@ -96,7 +96,12 @@ export class UpdateCompetencyDto extends PartialType(
 ) {}
 export class CreateLevelDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty({ minimum: 1, maximum: 5 }) @Type(() => Number) @IsInt() @Min(1) @Max(5) levelNumber!: number;
+  @ApiProperty({ minimum: 1, maximum: 5 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  levelNumber!: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()
@@ -156,6 +161,7 @@ export class CreateVariantDto extends QuestionContentDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() originalVariantId!: string;
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) variantCode!: string;
 }
+const videoStatuses = statuses;
 export class CreateVideoDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(240) @Matches(/\S/) title!: string;
   @ApiProperty()
@@ -166,10 +172,10 @@ export class CreateVideoDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) source!: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
   @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(100_000) recommendationOrder!: number;
-  @ApiPropertyOptional({ enum: statuses })
+  @ApiPropertyOptional({ enum: videoStatuses })
   @ValidateIf((_o, v) => v !== undefined)
-  @IsIn(statuses)
-  status?: ContentState;
+  @IsIn(videoStatuses)
+  status?: (typeof videoStatuses)[number];
 }
 export class UpdateVideoDto extends PartialType(CreateVideoDto, { skipNullProperties: false }) {}
 
@@ -226,7 +232,7 @@ export class AdminVideoDto {
   @ApiProperty() url!: string;
   @ApiProperty() source!: string;
   @ApiProperty() recommendationOrder!: number;
-  @ApiProperty({ enum: statuses }) status!: ContentState;
+  @ApiProperty({ enum: videoStatuses }) status!: (typeof videoStatuses)[number];
 }
 export class AdminVideosDto {
   @ApiProperty({ type: [AdminVideoDto] }) items!: AdminVideoDto[];

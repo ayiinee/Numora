@@ -424,6 +424,7 @@ export class ContentService {
               ...values,
               variantId: source.variantId,
               versionNumber: (last?.number ?? 0) + 1,
+              revisedFromQuestionVersionId: source.id,
             })
             .returning({ id: questionVersions.id })
         )[0],
@@ -432,15 +433,20 @@ export class ContentService {
   }
   questionStatus(actor: string, id: string, status: ContentState) {
     return adminMutation(actor, 'question_status_changed', 'question', async (tx) => {
-      if (
-        (
-          await tx
-            .select()
-            .from(contentImportIdentities)
-            .where(eq(contentImportIdentities.questionId, id))
-        ).length
-      )
-        throw new ConflictException({ code: 'IMPORTED_VERSION_READ_ONLY' });
+      required((await tx.select().from(questions).where(eq(questions.id, id)).for('update'))[0]);
+      if (status !== 'READY') {
+        const active = await tx
+          .select({ id: assessmentPackages.id })
+          .from(packageItems)
+          .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+          .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+          .innerJoin(assessmentPackages, eq(assessmentPackages.id, packageItems.packageId))
+          .where(
+            and(eq(questionVariants.questionId, id), eq(assessmentPackages.status, 'PUBLISHED')),
+          );
+        if (active.length)
+          throw new ConflictException({ code: 'CONTENT_REFERENCED_BY_ACTIVE_PACKAGE' });
+      }
       return required(
         (
           await tx
@@ -480,6 +486,20 @@ export class ContentService {
             detail: 'Imported content remains DRAFT; use JSON reimport for a new version.',
           });
         if (version.contentStatus === status) return { id };
+        if (status !== 'READY') {
+          const active = await tx
+            .select({ id: assessmentPackages.id })
+            .from(packageItems)
+            .innerJoin(assessmentPackages, eq(assessmentPackages.id, packageItems.packageId))
+            .where(
+              and(
+                eq(packageItems.questionVersionId, id),
+                eq(assessmentPackages.status, 'PUBLISHED'),
+              ),
+            );
+          if (active.length)
+            throw new ConflictException({ code: 'CONTENT_REFERENCED_BY_ACTIVE_PACKAGE' });
+        }
         if (status === 'DRAFT' || version.contentStatus === 'ARCHIVED')
           throw new ConflictException(
             'Buat revisi baru; versi yang telah digunakan tidak dapat dikembalikan menjadi draf.',
