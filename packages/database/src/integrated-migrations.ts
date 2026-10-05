@@ -64,8 +64,9 @@ export async function migrateIntegratedDatabase(
         );
       // Incoming main had already applied lockdown/import (formerly 0022/0023),
       // while the UI branch independently added notifications at the same number.
+      // The audited bridge also keeps alternate 0000–0002; 0003 onward is shared.
       const contentFork =
-        migrations.slice(0, 22).every((entry) => hashes.has(entry.hash)) &&
+        migrations.slice(3, 22).every((entry) => hashes.has(entry.hash)) &&
         [23, 24].some(
           (index) =>
             cursor === migrations[index]!.folderMillis &&

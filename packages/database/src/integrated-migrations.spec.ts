@@ -172,11 +172,20 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     },
   );
 
-  it.each([23, 24])(
-    'recovers notifications for the published content branch through %i without rewriting history',
-    async (last) => {
+  it.each([
+    [23, false],
+    [24, false],
+    [24, true],
+  ] as const)(
+    'recovers notifications for content through %i (alternate bridge=%s) without rewriting history',
+    async (last, alternateBridge) => {
       await fixture(22, async (client, folder) => {
         const migrations = readMigrationFiles({ migrationsFolder: folder });
+        if (alternateBridge) {
+          // TEST ONLY: the audited bridge retained different hashes for equivalent 0001/0002.
+          for (const index of [1, 2])
+            await client`UPDATE drizzle.__drizzle_migrations SET hash=${`TEST-bridge-${index}`} WHERE hash=${migrations[index]!.hash}`;
+        }
         for (const entry of migrations.slice(23, last + 1)) {
           for (const statement of entry.sql) if (statement.trim()) await client.unsafe(statement);
           await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
