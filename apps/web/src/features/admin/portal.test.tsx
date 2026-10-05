@@ -46,15 +46,15 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 
 describe('Admin portal navigation', () => {
   it('returns Admin logout to internal login', async () => {
-    ready('SUPER_ADMIN', ['CONTENT_MANAGE']);
+    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE']);
     render(<AppShell area="admin">Konten</AppShell>);
     fireEvent.click(screen.getByRole('button', { name: /^Keluar$/ }));
     await waitFor(() => expect(mocks.logout).toHaveBeenCalledOnce());
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
   });
   it.each([
-    ['SUPER_ADMIN', ['CONTENT_MANAGE'], true, true],
-    ['OPERATIONS', [], true, false],
+    ['SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE'], true, true],
+    ['OPERATIONS', ['OPERATIONS_MANAGE'], true, false],
     ['CONTENT_DATA_MODERATION', ['CONTENT_MANAGE'], false, true],
     [null, [], false, false],
   ] as const)('shows assigned modules for %s', (role, capabilities, operations, content) => {
@@ -67,7 +67,7 @@ describe('Admin portal navigation', () => {
     expect(mocks.signIn).not.toHaveBeenCalled();
   });
   it('selects only the most specific nested navigation item and drops links after access changes', () => {
-    ready('SUPER_ADMIN', ['CONTENT_MANAGE']);
+    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE']);
     mocks.pathname = '/admin/content/imports';
     const view = render(<AppShell area="admin">Konten</AppShell>);
     const navigation = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));

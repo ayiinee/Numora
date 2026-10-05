@@ -6,7 +6,8 @@ import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { ApiProblem } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
 import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
-import type { AdminClassDto, AdminUserDto } from './generated-types';
+import type { AdminClassDto, AdminUserDto, AdminUserDetailDto } from './generated-types';
+import { OperationsMemberships, OperationsRoster } from './membership-readers';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 
 type OperationsTab = 'users' | 'classes';
@@ -35,6 +36,16 @@ function accessDenied(error: unknown): error is ApiProblem {
 }
 
 export function AdminOperationsScreen() {
+  const { state } = useAuth();
+  return (
+    <AdminOperationsScreenContent
+      key={
+        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+      }
+    />
+  );
+}
+function AdminOperationsScreenContent() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const [tab, setTab] = useState<OperationsTab>('users');
@@ -44,10 +55,13 @@ export function AdminOperationsScreen() {
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.status === 'ACTIVE' &&
-    ['SUPER_ADMIN', 'OPERATIONS'].includes(state.profile.adminRole ?? '')
+    state.profile.capabilities?.includes('OPERATIONS_MANAGE')
       ? state.session.access_token
       : null;
 
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'classes') setTab('classes');
+  }, []);
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -98,8 +112,7 @@ export function AdminOperationsScreen() {
       <div className="monitoring-frame admin-content admin-operations">
         <p className="admin-context-note">
           <span>Data operasional · baca saja</span>
-          Detail mengikuti data yang tersedia pada API. Email, kode kelas, dan aksi perubahan akun
-          tidak ditampilkan di halaman ini.
+          Telusuri verifikasi Guru, affiliation siswa, membership, dan roster kelas.
         </p>
         <nav className="admin-content-nav" aria-label="Jenis data operasional">
           <Button
@@ -144,18 +157,39 @@ function UsersPanel({
   const [search, setSearch] = useState('');
   const [role, setRole] = useState('');
   const [status, setStatus] = useState('');
-  const [filters, setFilters] = useState({ search: '', role: '', status: '' });
+  const [affiliation, setAffiliation] = useState('');
+  const [schoolId, setSchoolId] = useState('');
+  const [filters, setFilters] = useState({
+    search: '',
+    role: '',
+    status: '',
+    affiliation: '',
+    schoolId: '',
+  });
+  const { state: auth } = useAuth();
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminUserDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState('');
-  const [detail, setDetail] = useState<AdminUserDto | null>(null);
+  const [detail, setDetail] = useState<AdminUserDetailDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
   const [detailRetry, setDetailRetry] = useState(0);
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
+  useEffect(() => {
+    const query = new URLSearchParams(window.location.search);
+    const school = query.get('schoolId') ?? '',
+      initialRole = query.get('role') ?? '',
+      selected = query.get('userId') ?? '';
+    if (school) {
+      setSchoolId(school);
+      setRole(initialRole);
+      setFilters({ search: '', role: initialRole, status: '', affiliation: '', schoolId: school });
+    }
+    if (selected) setSelectedId(selected);
+  }, []);
 
   useEffect(() => {
     let active = true;
@@ -215,7 +249,7 @@ function UsersPanel({
     event.preventDefault();
     setSelectedId('');
     setOffset(0);
-    setFilters({ search: search.trim(), role, status });
+    setFilters({ search: search.trim(), role, status, affiliation, schoolId: schoolId.trim() });
   }
 
   return (
@@ -239,8 +273,26 @@ function UsersPanel({
               <option value="">Semua role</option>
               <option value="STUDENT">Siswa</option>
               <option value="TEACHER">Guru</option>
-              <option value="ADMIN">Admin</option>
+              {auth.status === 'ready' && auth.profile.adminRole === 'SUPER_ADMIN' && (
+                <option value="ADMIN">Admin</option>
+              )}
             </select>
+          </label>
+          <label className="admin-content-field">
+            <span>Affiliation siswa</span>
+            <select value={affiliation} onChange={(event) => setAffiliation(event.target.value)}>
+              <option value="">Semua affiliation</option>
+              <option value="MANDIRI">Mandiri</option>
+              <option value="SCHOOL">Sekolah</option>
+            </select>
+          </label>
+          <label className="admin-content-field">
+            <span>ID sekolah pengguna (opsional)</span>
+            <Input
+              value={schoolId}
+              onChange={(event) => setSchoolId(event.target.value)}
+              placeholder="UUID sekolah"
+            />
           </label>
           <label className="admin-content-field">
             <span>Status akun</span>
@@ -299,6 +351,7 @@ function UsersPanel({
         ) : null}
       </section>
       <UserDetail
+        token={token}
         detail={detail}
         loading={detailLoading}
         error={detailError}
@@ -311,6 +364,7 @@ function UsersPanel({
 }
 
 function UserDetail({
+  token,
   detail,
   loading,
   error,
@@ -318,7 +372,8 @@ function UserDetail({
   onClose,
   onRetry,
 }: {
-  detail: AdminUserDto | null;
+  token: string;
+  detail: AdminUserDetailDto | null;
   loading: boolean;
   error: string;
   selected: boolean;
@@ -350,11 +405,27 @@ function UserDetail({
           </div>
           <dl>
             <DetailField label="Role">{roleLabels[detail.role]}</DetailField>
+            <DetailField label="Email">{detail.email}</DetailField>
+            {detail.affiliation && (
+              <DetailField label="Affiliation">
+                {detail.affiliation === 'SCHOOL' ? 'Sekolah' : 'Mandiri'}
+              </DetailField>
+            )}
+            {detail.teacherVerified !== null && (
+              <DetailField label="Verifikasi Guru">
+                {detail.teacherVerified
+                  ? 'Aktif dan terverifikasi'
+                  : 'Tidak aktif atau belum terverifikasi'}
+              </DetailField>
+            )}
             <DetailField label="ID pengguna">
               <code>{detail.id}</code>
             </DetailField>
             <DetailField label="Akun dibuat">{formatDate(detail.createdAt)}</DetailField>
           </dl>
+          {detail.role !== 'ADMIN' && (
+            <OperationsMemberships key={detail.id} token={token} userId={detail.id} />
+          )}
           <Button variant="secondary" onClick={onClose}>
             Tutup detail
           </Button>
@@ -378,6 +449,13 @@ function ClassesPanel({
   const [teacherId, setTeacherId] = useState('');
   const [state, setState] = useState('');
   const [filters, setFilters] = useState({ search: '', schoolId: '', teacherId: '', state: '' });
+  useEffect(() => {
+    const school = new URLSearchParams(window.location.search).get('schoolId');
+    if (school) {
+      setSchoolId(school);
+      setFilters({ search: '', schoolId: school, teacherId: '', state: '' });
+    }
+  }, []);
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminClassDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
@@ -546,6 +624,7 @@ function ClassesPanel({
         ) : null}
       </section>
       <ClassDetail
+        token={token}
         detail={detail}
         loading={detailLoading}
         error={detailError}
@@ -558,6 +637,7 @@ function ClassesPanel({
 }
 
 function ClassDetail({
+  token,
   detail,
   loading,
   error,
@@ -565,6 +645,7 @@ function ClassDetail({
   onClose,
   onRetry,
 }: {
+  token: string;
   detail: AdminClassDto | null;
   loading: boolean;
   error: string;
@@ -600,7 +681,12 @@ function ClassDetail({
             <DetailField label="ID sekolah">
               <code>{detail.schoolId}</code>
             </DetailField>
-            <DetailField label="Guru aktif">{detail.teacherName}</DetailField>
+            <DetailField label="Guru tercatat">
+              {detail.teacherName ?? 'Tidak ada Guru tercatat'}
+            </DetailField>
+            <DetailField label="Guru aktif">
+              {detail.teacherActive ? 'Aktif dan terverifikasi' : 'Tanpa Guru aktif'}
+            </DetailField>
             <DetailField label="ID Guru">
               <code>{detail.teacherId}</code>
             </DetailField>
@@ -613,9 +699,7 @@ function ClassDetail({
               <code>{detail.id}</code>
             </DetailField>
           </dl>
-          <p className="admin-operation-readonly-note">
-            Kode/link bergabung dan daftar siswa tidak ditampilkan pada ringkasan ini.
-          </p>
+          <OperationsRoster key={detail.id} token={token} classId={detail.id} />
           <Button variant="secondary" onClick={onClose}>
             Tutup detail
           </Button>

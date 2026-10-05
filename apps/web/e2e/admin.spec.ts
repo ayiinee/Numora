@@ -278,10 +278,20 @@ async function setup(page: Page) {
           status: 'ACTIVE',
           adminRole: state.role === 'ADMIN' ? state.adminRole : null,
           capabilities:
-            state.role === 'ADMIN' &&
-            ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(state.adminRole ?? '')
-              ? ['CONTENT_MANAGE']
-              : [],
+            state.role !== 'ADMIN'
+              ? []
+              : state.adminRole === 'SUPER_ADMIN'
+                ? [
+                    'CONTENT_MANAGE',
+                    'OPERATIONS_MANAGE',
+                    'OPERATIONS_LIMITED_READ',
+                    'ADMIN_ACCOUNTS_MANAGE',
+                  ]
+                : state.adminRole === 'OPERATIONS'
+                  ? ['OPERATIONS_MANAGE', 'OPERATIONS_LIMITED_READ']
+                  : state.adminRole === 'CONTENT_DATA_MODERATION'
+                    ? ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ']
+                    : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
           teacherVerified: state.role === 'TEACHER' ? true : null,
@@ -301,6 +311,7 @@ async function setup(page: Page) {
           code: String(body.code),
           name: String(body.name),
           status: 'ACTIVE' as const,
+          address: typeof body.address === 'string' ? body.address : null,
         };
         state.schools.push(school);
         result = school;
@@ -314,7 +325,15 @@ async function setup(page: Page) {
           token: 'DEMO-ONE-TIME',
           expiresAt: '2099-01-01T00:00:00Z',
         };
-        state.tokens.push({ ...issued, usedAt: null, revokedAt: null });
+        state.tokens.push({
+          ...issued,
+          usedAt: null,
+          revokedAt: null,
+          createdAt: '2026-10-05T00:00:00Z',
+          usedByUserId: null,
+          usedByName: null,
+          status: 'AVAILABLE',
+        });
         result = issued;
       } else if (path.endsWith('/revoke')) {
         const previous = state.tokens.find((t) => path.includes(t.id));
@@ -336,8 +355,10 @@ async function setup(page: Page) {
       return route.fulfill({ json: result });
     }
     let data: unknown = { items: [] };
-    if (path === '/admin/schools') data = { items: state.schools };
-    else if (path.endsWith('/teacher-tokens')) data = { items: state.tokens };
+    if (path === '/admin/schools') data = { items: state.schools, nextOffset: null };
+    else if (path.startsWith('/admin/schools/') && !path.endsWith('/teacher-tokens'))
+      data = state.schools.find((s) => path.endsWith(s.id));
+    else if (path.endsWith('/teacher-tokens')) data = { items: state.tokens, nextOffset: null };
     else {
       const mapping: Record<string, unknown> = {
         '/admin/content/curriculum': state.data.curriculum,
@@ -533,7 +554,11 @@ test('School lifecycle preserves input, code case, one-time token and inactive e
   await page.getByRole('button', { name: 'Nonaktifkan sekolah', exact: true }).click();
   await expect(page.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeDisabled();
   await capture(page, 'school-inactive', 390);
-  expect(state.mutations[0]?.body).toEqual({ code: 'Test-Ab', name: 'Sekolah DEMO Baru' });
+  expect(state.mutations[0]?.body).toEqual({
+    code: 'Test-Ab',
+    name: 'Sekolah DEMO Baru',
+    address: '',
+  });
   expect(state.mutations.some((r) => r.path.endsWith('/reissue'))).toBe(true);
   expect(state.mutations.some((r) => r.path.endsWith('/revoke'))).toBe(true);
   expect(errors).toEqual([]);

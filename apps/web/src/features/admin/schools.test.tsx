@@ -4,6 +4,7 @@ import { AdminSchoolsScreen } from './schools';
 import {
   ApiProblem,
   createSchool,
+  getAdminSchool,
   listAdminSchools,
   listTeacherTokens,
   issueTeacherToken,
@@ -21,6 +22,7 @@ vi.mock('@/features/onboarding/auth', () => ({
 vi.mock('@/lib/api', async (original) => ({
   ...(await original<object>()),
   createSchool: vi.fn(),
+  getAdminSchool: vi.fn(),
   listAdminSchools: vi.fn(),
   listTeacherTokens: vi.fn(),
   issueTeacherToken: vi.fn(),
@@ -32,6 +34,7 @@ const school = {
   code: 'Test-Ab',
   name: 'Sekolah TEST',
   status: 'ACTIVE' as const,
+  address: null,
 };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -41,13 +44,15 @@ beforeEach(() => {
       id: 'admin-one',
       role: 'ADMIN',
       adminRole: 'OPERATIONS',
+      capabilities: ['OPERATIONS_MANAGE'],
       status: 'ACTIVE',
       displayName: 'Admin TEST',
     },
     session: { access_token: 'test-admin' },
   };
-  vi.mocked(listAdminSchools).mockResolvedValue({ items: [school] });
-  vi.mocked(listTeacherTokens).mockResolvedValue({ items: [] });
+  vi.mocked(getAdminSchool).mockResolvedValue(school);
+  vi.mocked(listAdminSchools).mockResolvedValue({ items: [school], nextOffset: null });
+  vi.mocked(listTeacherTokens).mockResolvedValue({ items: [], nextOffset: null });
 });
 afterEach(cleanup);
 it('preserves code case and failed creation input, then selects the server-created school', async () => {
@@ -62,12 +67,13 @@ it('preserves code case and failed creation input, then selects the server-creat
   expect((screen.getByLabelText(/Nama sekolah/) as HTMLInputElement).value).toBe(' Sekolah TEST ');
   fireEvent.click(screen.getByRole('button', { name: 'Simpan sekolah' }));
   await screen.findByLabelText(/Ubah nama/);
-  expect(createSchool).toHaveBeenLastCalledWith('test-admin', 'Test-Ab', 'Sekolah TEST');
+  expect(createSchool).toHaveBeenLastCalledWith('test-admin', 'Test-Ab', 'Sekolah TEST', '');
   expect((screen.getByLabelText(/Ubah nama/) as HTMLInputElement).value).toBe('Sekolah TEST');
 });
 it('disables editing and selection during pending token issuance and removes its one-time value on school change', async () => {
   vi.mocked(listAdminSchools).mockResolvedValue({
     items: [school, { ...school, id: 'school-two', name: 'Sekolah lain' }],
+    nextOffset: null,
   });
   let finish!: (value: { id: string; token: string; expiresAt: string }) => void;
   vi.mocked(issueTeacherToken).mockImplementation(
@@ -92,21 +98,30 @@ it('disables editing and selection during pending token issuance and removes its
       (screen.getByRole('button', { name: /Sekolah lain/ }) as HTMLButtonElement).disabled,
     ).toBe(false),
   );
-  fireEvent.click(screen.getByRole('button', { name: /Sekolah lain/ }));
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah lain/ }));
   expect(screen.queryByText('SYNTHETIC-ONLY')).toBeNull();
 });
 it('keeps token failure retryable and hides revoked/used actions', async () => {
   vi.mocked(listTeacherTokens)
     .mockRejectedValueOnce(new Error('Token belum dapat dimuat.'))
     .mockResolvedValueOnce({
+      nextOffset: null,
       items: [
         {
+          createdAt: '2026-01-01T00:00:00Z',
+          usedByUserId: 'teacher',
+          usedByName: 'Guru TEST',
+          status: 'USED',
           id: 'used-token',
           usedAt: '2026-01-01T00:00:00Z',
           revokedAt: null,
           expiresAt: '2099-01-01T00:00:00Z',
         },
         {
+          createdAt: '2026-01-01T00:00:00Z',
+          usedByUserId: null,
+          usedByName: null,
+          status: 'REVOKED',
           id: 'revoked-token',
           usedAt: null,
           revokedAt: '2026-01-01T00:00:00Z',
@@ -124,7 +139,11 @@ it('keeps token failure retryable and hides revoked/used actions', async () => {
   expect(revokeTeacherToken).not.toHaveBeenCalled();
 });
 it('disables issuance for an inactive school and preserves the status update endpoint', async () => {
-  vi.mocked(listAdminSchools).mockResolvedValue({ items: [{ ...school, status: 'INACTIVE' }] });
+  vi.mocked(listAdminSchools).mockResolvedValue({
+    items: [{ ...school, status: 'INACTIVE' }],
+    nextOffset: null,
+  });
+  vi.mocked(getAdminSchool).mockResolvedValue({ ...school, status: 'INACTIVE' });
   vi.mocked(updateSchool).mockResolvedValue(school);
   render(<AdminSchoolsScreen />);
   fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
@@ -139,7 +158,7 @@ it('disables issuance for an inactive school and preserves the status update end
 it('offers list retry after a load error and conceals cached administrative detail after access rejection', async () => {
   vi.mocked(listAdminSchools)
     .mockRejectedValueOnce(new Error('Sekolah belum tersedia.'))
-    .mockResolvedValueOnce({ items: [school] });
+    .mockResolvedValueOnce({ items: [school], nextOffset: null });
   render(<AdminSchoolsScreen />);
   fireEvent.click(
     within(await screen.findByRole('alert')).getByRole('button', { name: 'Coba lagi' }),

@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApiProblem } from '@/lib/api';
 import { AdminOperationsScreen } from './operations';
-import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
+import {
+  getAdminClass,
+  getAdminUser,
+  getAdminMemberships,
+  getAdminRoster,
+  listAdminClasses,
+  listAdminUsers,
+} from './operations-api';
 
 const context = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
@@ -19,6 +26,8 @@ vi.mock('@/features/onboarding/auth', () => ({
 }));
 vi.mock('./operations-api', () => ({
   getAdminClass: vi.fn(),
+  getAdminMemberships: vi.fn(),
+  getAdminRoster: vi.fn(),
   getAdminUser: vi.fn(),
   listAdminClasses: vi.fn(),
   listAdminUsers: vi.fn(),
@@ -27,6 +36,9 @@ vi.mock('./operations-api', () => ({
 const user = {
   id: '00000000-0000-4000-8000-000000000001',
   displayName: 'Siswa TEST',
+  email: 'student@example.test',
+  affiliation: 'MANDIRI' as const,
+  teacherVerified: null,
   role: 'STUDENT' as const,
   status: 'ACTIVE' as const,
   createdAt: '2026-10-01T08:00:00.000Z',
@@ -38,6 +50,7 @@ const adminClass = {
   schoolName: 'Sekolah TEST',
   teacherId: '00000000-0000-4000-8000-000000000012',
   teacherName: 'Guru TEST',
+  teacherActive: true,
   studentCount: 3,
   createdAt: '2026-10-01T08:00:00.000Z',
   archivedAt: null,
@@ -51,6 +64,7 @@ beforeEach(() => {
       id: 'admin-test',
       role: 'ADMIN',
       adminRole: 'OPERATIONS',
+      capabilities: ['OPERATIONS_MANAGE'],
       status: 'ACTIVE',
       displayName: 'Admin TEST',
     },
@@ -58,6 +72,8 @@ beforeEach(() => {
   };
   vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 20 });
   vi.mocked(getAdminUser).mockResolvedValue(user);
+  vi.mocked(getAdminMemberships).mockResolvedValue({ items: [], nextOffset: null });
+  vi.mocked(getAdminRoster).mockResolvedValue({ items: [], nextOffset: null });
   vi.mocked(listAdminClasses).mockResolvedValue({ items: [adminClass], nextOffset: null });
   vi.mocked(getAdminClass).mockResolvedValue(adminClass);
 });
@@ -82,6 +98,8 @@ describe('Admin operations UI', () => {
         search: 'Guru TEST',
         role: 'TEACHER',
         status: 'DISABLED',
+        affiliation: '',
+        schoolId: '',
       }),
     );
 
@@ -89,7 +107,7 @@ describe('Admin operations UI', () => {
     fireEvent.click(within(row!).getByRole('button', { name: 'Lihat detail' }));
     await screen.findByText(user.id);
     expect(getAdminUser).toHaveBeenCalledWith('test-token', user.id);
-    expect(screen.queryByText(/@/)).toBeNull();
+    expect(screen.getByText('student@example.test')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /ban|nonaktifkan|koreksi/i })).toBeNull();
   });
 
@@ -146,6 +164,8 @@ describe('Admin operations UI', () => {
         search: '',
         role: '',
         status: '',
+        affiliation: '',
+        schoolId: '',
       }),
     );
   });

@@ -2,6 +2,7 @@
 
 import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
@@ -9,6 +10,7 @@ import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-pres
 import {
   ApiProblem,
   createSchool,
+  getAdminSchool,
   issueTeacherToken,
   listAdminSchools,
   listTeacherTokens,
@@ -34,7 +36,7 @@ function AdminSchoolsScreenContent() {
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.status === 'ACTIVE' &&
-    ['SUPER_ADMIN', 'OPERATIONS'].includes(state.profile.adminRole ?? '')
+    state.profile.capabilities?.includes('OPERATIONS_MANAGE')
       ? state.session.access_token
       : null;
   const [schools, setSchools] = useState<AdminSchool[] | null>(null);
@@ -43,6 +45,15 @@ function AdminSchoolsScreenContent() {
   const [issued, setIssued] = useState<IssuedTeacherToken | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('');
+  const [offset, setOffset] = useState(0);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [tokenOffset, setTokenOffset] = useState(0);
+  const [tokenNextOffset, setTokenNextOffset] = useState<number | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<AdminSchool | null>(null);
   const [editName, setEditName] = useState('');
   const [error, setError] = useState('');
   const [schoolError, setSchoolError] = useState('');
@@ -60,9 +71,13 @@ function AdminSchoolsScreenContent() {
     if (!token) return;
     let active = true;
     setSchoolError('');
-    listAdminSchools(token).then(
+    setSchools(null);
+    listAdminSchools(token, { offset, search: filter }).then(
       (result) => {
-        if (active) setSchools(result.items);
+        if (active) {
+          setSchools(result.items);
+          setNextOffset(result.nextOffset);
+        }
       },
       (cause: unknown) => {
         if (active) {
@@ -75,14 +90,35 @@ function AdminSchoolsScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, revision]);
+  }, [token, revision, offset, filter]);
+  useEffect(() => {
+    if (!token || !selected) {
+      setSelectedSchool(null);
+      return;
+    }
+    let active = true;
+    void getAdminSchool(token, selected)
+      .then((value) => {
+        if (active) setSelectedSchool(value);
+      })
+      .catch((cause) => {
+        if (active) setError(message(cause));
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, selected, revision]);
   useEffect(() => {
     if (!token || !selected) return;
     let active = true;
     setTokenError('');
-    listTeacherTokens(token, selected).then(
+    setTokens(null);
+    listTeacherTokens(token, selected, tokenOffset).then(
       (result) => {
-        if (active) setTokens(result.items);
+        if (active) {
+          setTokens(result.items);
+          setTokenNextOffset(result.nextOffset);
+        }
       },
       (cause: unknown) => {
         if (active) {
@@ -95,8 +131,8 @@ function AdminSchoolsScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, selected, revision]);
-  const current = schools?.find((school) => school.id === selected);
+  }, [token, selected, revision, tokenOffset]);
+  const current = selectedSchool;
   async function run(action: () => Promise<unknown>) {
     if (busy) return;
     setBusy(true);
@@ -115,19 +151,28 @@ function AdminSchoolsScreenContent() {
     event.preventDefault();
     if (!token) return;
     await run(async () => {
-      const created = await createSchool(token, code.trim(), name.trim());
+      const created = await createSchool(token, code.trim(), name.trim(), address.trim());
+      setSelectedSchool(created);
       setSelected(created.id);
       setEditName(name.trim());
+      setEditAddress(address.trim());
+      setTokenOffset(0);
       setIssued(null);
       setTokens(null);
       setCode('');
       setName('');
+      setAddress('');
     });
   }
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (token && current && editName.trim())
-      await run(() => updateSchool(token, current.id, { name: editName.trim() }));
+      await run(() =>
+        updateSchool(token, current.id, {
+          name: editName.trim(),
+          address: editAddress.trim() || null,
+        }),
+      );
   }
   const retry = () => {
     setAccessError(false);
@@ -169,9 +214,9 @@ function AdminSchoolsScreenContent() {
       {schools && (
         <AdminStats
           items={[
-            { label: 'Sekolah terdaftar', value: schools.length, icon: 'school' },
+            { label: 'Sekolah pada halaman ini', value: schools.length, icon: 'school' },
             {
-              label: 'Sekolah aktif',
+              label: 'Aktif pada halaman ini',
               value: schools.filter((s) => s.status === 'ACTIVE').length,
               icon: 'check',
             },
@@ -207,6 +252,13 @@ function AdminSchoolsScreenContent() {
                   maxLength={120}
                   required
                 />
+                <Input
+                  label="Alamat sekolah"
+                  id="school-address"
+                  value={address}
+                  onChange={(event) => setAddress(event.target.value)}
+                  maxLength={500}
+                />
                 <Button type="submit" disabled={busy} fullWidth>
                   Simpan sekolah
                 </Button>
@@ -214,6 +266,24 @@ function AdminSchoolsScreenContent() {
             </form>
           </Card>
           <section className="admin-school-list" aria-label="Daftar sekolah">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setFilter(search.trim());
+                setOffset(0);
+              }}
+            >
+              <Input
+                label="Cari sekolah"
+                id="school-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                maxLength={120}
+              />
+              <Button variant="secondary" type="submit">
+                Cari sekolah
+              </Button>
+            </form>
             <div className="admin-section-heading">
               <h2>Sekolah terdaftar</h2>
               {schools && <Badge variant="default">{schools.length} sekolah</Badge>}
@@ -240,7 +310,10 @@ function AdminSchoolsScreenContent() {
                       aria-pressed={selected === school.id}
                       onClick={() => {
                         setSelected(school.id);
+                        setSelectedSchool(school);
                         setEditName(school.name);
+                        setEditAddress(school.address ?? '');
+                        setTokenOffset(0);
                         setIssued(null);
                         setTokens(null);
                         setTokenError('');
@@ -262,6 +335,22 @@ function AdminSchoolsScreenContent() {
                 ))}
               </ul>
             )}
+            <div className="admin-content-actions">
+              <Button
+                variant="secondary"
+                disabled={offset === 0 || busy}
+                onClick={() => setOffset(Math.max(0, offset - 20))}
+              >
+                Sekolah sebelumnya
+              </Button>
+              <Button
+                variant="secondary"
+                disabled={nextOffset === null || busy}
+                onClick={() => setOffset(nextOffset!)}
+              >
+                Sekolah berikutnya
+              </Button>
+            </div>
           </section>
         </div>
         <aside className="admin-school-context" aria-label="Detail sekolah dan token">
@@ -270,6 +359,16 @@ function AdminSchoolsScreenContent() {
               <span className="admin-eyebrow">Sekolah dipilih</span>
               <h2>{current.name}</h2>
               <p>Status: {current.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}</p>
+              <p>Alamat: {current.address ?? 'Belum dicatat'}</p>
+              <p>
+                <Link href={`/admin/operations?schoolId=${current.id}&role=TEACHER`}>
+                  Lihat Guru sekolah
+                </Link>{' '}
+                ·{' '}
+                <Link href={`/admin/operations?schoolId=${current.id}&view=classes`}>
+                  Lihat kelas sekolah
+                </Link>
+              </p>
               <form onSubmit={(event) => void saveName(event)}>
                 <fieldset disabled={busy} className="admin-form-fields">
                   <Input
@@ -279,6 +378,13 @@ function AdminSchoolsScreenContent() {
                     onChange={(event) => setEditName(event.target.value)}
                     maxLength={120}
                     required
+                  />
+                  <Input
+                    label="Ubah alamat"
+                    id="edit-school-address"
+                    value={editAddress}
+                    onChange={(event) => setEditAddress(event.target.value)}
+                    maxLength={500}
                   />
                   <Button variant="secondary" type="submit" disabled={busy} fullWidth>
                     Simpan nama
@@ -363,6 +469,37 @@ function AdminSchoolsScreenContent() {
                           </Badge>
                           <small className="admin-token-id">{item.id}</small>
                           <small>
+                            Diterbitkan{' '}
+                            {new Date(item.createdAt).toLocaleString('id-ID', {
+                              timeZone: 'Asia/Jakarta',
+                            })}{' '}
+                            WIB
+                          </small>
+                          {item.usedAt && (
+                            <small>
+                              Dipakai{' '}
+                              {new Date(item.usedAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
+                              })}{' '}
+                              WIB oleh{' '}
+                              {item.usedByName ?? item.usedByUserId ?? 'Guru tidak tersedia'}
+                            </small>
+                          )}
+                          {item.usedByUserId && (
+                            <Link href={`/admin/operations?userId=${item.usedByUserId}`}>
+                              Detail Guru pemakai
+                            </Link>
+                          )}
+                          {item.revokedAt && (
+                            <small>
+                              Dicabut{' '}
+                              {new Date(item.revokedAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
+                              })}{' '}
+                              WIB
+                            </small>
+                          )}
+                          <small>
                             Kedaluwarsa{' '}
                             {new Date(item.expiresAt).toLocaleString('id-ID', {
                               timeZone: 'Asia/Jakarta',
@@ -401,6 +538,22 @@ function AdminSchoolsScreenContent() {
                     ))}
                   </ul>
                 )}
+                <div className="admin-content-actions">
+                  <Button
+                    variant="secondary"
+                    disabled={tokenOffset === 0 || busy}
+                    onClick={() => setTokenOffset(Math.max(0, tokenOffset - 20))}
+                  >
+                    Token sebelumnya
+                  </Button>
+                  <Button
+                    variant="secondary"
+                    disabled={tokenNextOffset === null || busy}
+                    onClick={() => setTokenOffset(tokenNextOffset!)}
+                  >
+                    Token berikutnya
+                  </Button>
+                </div>
               </div>
             </Card>
           ) : (

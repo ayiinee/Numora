@@ -18,6 +18,8 @@
 
 Class/Teacher checks still enforce resource relationships. Five memberships and nullable active Teacher are current product rules; main PR #77 supplies the membership/ownership domain implementation; Admin reader integration and its acceptance remain required. See [acceptance ledger](../development/ADMIN_FULL_STACK_STATUS.md).
 
+Privileged Admin responses expose `X-Numora-Admin-Role` through CORS, computed from the current database assignment. If this differs from the loaded identity, the browser discards the response, clears cached Admin data and reloads identity. A denied request also triggers access refresh; the identity request itself does not recursively trigger that refresh. This header informs cache invalidation and never grants access. Full Operations and limited structure DTOs are separate contracts; Content cannot choose an individual Teacher filter or retrieve rosters through the limited routes.
+
 <details><summary>Historical authorization baseline — superseded where v0.6 differs</summary>
 
 # Authorization Model
