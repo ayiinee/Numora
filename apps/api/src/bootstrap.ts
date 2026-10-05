@@ -1,10 +1,12 @@
 import { ValidationPipe } from '@nestjs/common';
 import type { INestApplication } from '@nestjs/common';
 import { SwaggerModule } from '@nestjs/swagger';
+import type { NestExpressApplication } from '@nestjs/platform-express';
 import { createOpenApiDocument } from './openapi';
 import { ProblemDetailsFilter } from './problem-details.filter';
 
 export function configureApplication(app: INestApplication) {
+  (app as NestExpressApplication).useBodyParser('json', { limit: '2mb' });
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({

@@ -17,7 +17,8 @@ import {
   ApiOkResponse,
   ApiTags,
 } from '@nestjs/swagger';
-import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import type { AdminRequest } from '../identity/admin.guard';
+import { ContentAdminGuard } from '../identity/content-admin.guard';
 import {
   CreateMediaUploadDto,
   MediaUploadReceiptDto,
@@ -27,7 +28,7 @@ import { MediaUploadsService } from './media-uploads.service';
 
 @ApiTags('admin-content-media')
 @ApiBearerAuth()
-@UseGuards(AdminGuard)
+@UseGuards(ContentAdminGuard)
 @Controller('admin/content/media/uploads')
 export class MediaUploadsController {
   constructor(@Inject(MediaUploadsService) private readonly uploads: MediaUploadsService) {}

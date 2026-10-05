@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** [PR #65](https://github.com/ayiinee/Numora/pull/65) mengimplementasikan fondasi importer JSON v2 dan preview Admin DRAFT: capability konten, tiga tipe soal, media receipt, jawaban/revision persisten dan snapshot immutable; semua skor null. Suite lokal dan connected browser pada satu SHA lulus. Migrasi Cloud serta assignment DEMO-QA Admin sudah diaudit; feature flag tetap false. Smoke R2/sepuluh sampel Cloud menunggu credential khusus bucket, sehingga acceptance sandbox belum ditutup. [Bukti](../testing/CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md), [kontrak](../api/CONTENT_IMPORT_PREVIEW.md), [runbook](CONTENT_IMPORT_PREVIEW_RUNBOOK.md). Student/XP/IRT tidak berubah; bukti JOB-06 historis dipertahankan.
+
 # Status backend Core Learning
 
 **ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah

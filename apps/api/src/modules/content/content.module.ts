@@ -1,4 +1,7 @@
 import { Module } from '@nestjs/common';
+import { ContentPreviewController } from './content-preview.controller';
+import { ContentPreviewService } from './content-preview.service';
+import { ContentImportService } from './content-import.service';
 import { ConfigModule } from '@nestjs/config';
 import { IdentityModule } from '../identity/identity.module';
 import { ContentController } from './content.controller';
@@ -12,8 +15,15 @@ import { R2MediaStorage } from './r2-media.storage';
 
 @Module({
   imports: [IdentityModule, ConfigModule],
-  controllers: [ContentController, DrillPackagesController, MediaUploadsController],
+  controllers: [
+    ContentController,
+    DrillPackagesController,
+    MediaUploadsController,
+    ContentPreviewController,
+  ],
   providers: [
+    ContentImportService,
+    ContentPreviewService,
     ContentService,
     DrillPackagesService,
     MediaUploadsService,

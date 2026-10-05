@@ -12,7 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import type { AdminRequest } from '../identity/admin.guard';
+import { ContentAdminGuard } from '../identity/content-admin.guard';
 import { ContentService } from './content.service';
 import {
   AdminCurriculumDto,
@@ -39,7 +40,7 @@ import { AdminTryoutDraftsDto, CreateTryoutDraftDto, UpdateTryoutDraftDto } from
 
 @ApiTags('admin-content')
 @ApiBearerAuth()
-@UseGuards(AdminGuard)
+@UseGuards(ContentAdminGuard)
 @Controller('admin/content')
 export class ContentController {
   constructor(@Inject(ContentService) private readonly content: ContentService) {}

@@ -1,3 +1,9 @@
+> **PRD RULE - 4 October 2026:** [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied by the project owner, supersedes conflicting earlier product rules. Relevant content rules: Admin content access requires Super Admin or Content/Data/Moderation; initial JSON import and R2 media; 5 levels per subchapter and 10 Drill items per level; one Drill variant per level for MVP; TryOut has 30 items. Historical decisions below remain evidence, not overriding policy.
+>
+> **ENGINEERING DECISION:** importer/preview rollout imports DRAFT only, with all preview scores null. No production publication, PGK grading, XP, or IRT is enabled by preview.
+>
+> **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. TryOut XP conflicts between section 12 (x10) and AC-15 (x100), requiring PO correction before implementation. Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
+
 # Product Context — Numora
 
 **Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md), diberikan pengguna pada 2 Oktober 2026, mengungguli konteks v0.5 yang berbeda untuk fitur tersebut. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) mencatat perubahan dan gap implementasi. Baseline lintas fitur: team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.

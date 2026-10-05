@@ -3,7 +3,7 @@ import { type INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { configureApplication } from '../../bootstrap';
-import { AdminGuard } from '../identity/admin.guard';
+import { ContentAdminGuard } from '../identity/content-admin.guard';
 import { IdentityService } from '../identity/identity.service';
 import { MediaUploadsController } from './media-uploads.controller';
 import { MediaUploadsService } from './media-uploads.service';
@@ -71,7 +71,7 @@ describe('media upload API (guard and validation real; database/R2 isolated)', (
     const module = await Test.createTestingModule({
       controllers: [MediaUploadsController],
       providers: [
-        AdminGuard,
+        ContentAdminGuard,
         MediaUploadsService,
         {
           provide: IdentityService,
@@ -81,6 +81,7 @@ describe('media upload API (guard and validation real; database/R2 isolated)', (
               return {
                 id: header === 'Bearer other' ? otherActor : actor,
                 role: header === 'Bearer student' ? 'STUDENT' : 'ADMIN',
+                adminRole: 'CONTENT_DATA_MODERATION',
                 status: header === 'Bearer disabled' ? 'DISABLED' : 'ACTIVE',
               };
             },

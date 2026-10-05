@@ -12,6 +12,11 @@ import {
 } from 'drizzle-orm/pg-core';
 
 export const userRole = pgEnum('user_role', ['STUDENT', 'TEACHER', 'ADMIN']);
+export const adminRole = pgEnum('admin_role', [
+  'SUPER_ADMIN',
+  'OPERATIONS',
+  'CONTENT_DATA_MODERATION',
+]);
 export const accountStatus = pgEnum('account_status', ['ACTIVE', 'DISABLED']);
 export const schoolStatus = pgEnum('school_status', ['ACTIVE', 'INACTIVE']);
 
@@ -26,6 +31,7 @@ export const users = pgTable(
     id: uuid('id').defaultRandom().primaryKey(),
     authUserId: uuid('auth_user_id').notNull(),
     role: userRole('role').notNull(),
+    adminRole: adminRole('admin_role'),
     displayName: text('display_name').notNull(),
     email: text('email').notNull(),
     status: accountStatus('status').notNull().default('ACTIVE'),
@@ -34,6 +40,7 @@ export const users = pgTable(
   (table) => [
     uniqueIndex('users_auth_user_id_uq').on(table.authUserId),
     uniqueIndex('users_email_uq').on(table.email),
+    check('users_admin_role_ck', sql`${table.adminRole} is null or ${table.role} = 'ADMIN'`),
   ],
 ).enableRLS();
 
@@ -79,8 +86,14 @@ export const teacherVerificationTokens = pgTable(
       'teacher_verification_tokens_expiry_ck',
       sql`${table.expiresAt} > ${table.createdAt} and ${table.expiresAt} <= ${table.createdAt} + interval '72 hours'`,
     ),
-    check('teacher_verification_tokens_used_time_ck', sql`${table.usedAt} is null or (${table.usedAt} >= ${table.createdAt} and ${table.usedAt} <= ${table.expiresAt})`),
-    check('teacher_verification_tokens_revoked_time_ck', sql`${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}`),
+    check(
+      'teacher_verification_tokens_used_time_ck',
+      sql`${table.usedAt} is null or (${table.usedAt} >= ${table.createdAt} and ${table.usedAt} <= ${table.expiresAt})`,
+    ),
+    check(
+      'teacher_verification_tokens_revoked_time_ck',
+      sql`${table.revokedAt} is null or ${table.revokedAt} >= ${table.createdAt}`,
+    ),
     check(
       'teacher_verification_tokens_usage_ck',
       sql`(${table.usedAt} is null) = (${table.usedByUserId} is null)`,

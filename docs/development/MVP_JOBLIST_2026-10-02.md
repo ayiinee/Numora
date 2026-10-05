@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** lanjutan PR #56 tersedia dalam [PR #65](https://github.com/ayiinee/Numora/pull/65): fondasi importer v2 dan preview DRAFT tiga format tanpa skor berdasarkan PRD v0.6. Pengujian lokal/connected lulus, migrasi Cloud dan Content Admin QA diprovision; acceptance sandbox penuh tertahan pada scoped R2 credential. [Bukti dan next step](../testing/CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md). Bukan penutupan JOB-07 penuh: rubric PGK, publication/lifecycle, Curriculum approval, XP/IRT serta QA independen tetap tersisa. Master sandbox belum dibuat dan tetap PROPOSED.
+
 # Joblist MVP — rekonsiliasi pekerjaan lama dan urutan pelaksanaan
 
 **Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering; **ENGINEERING DECISION:** klarifikasi pengguna pada tanggal ini menetapkan sembilan pekerjaan dalam gambar sebagai pekerjaan aktif Farel. Penugasan sembilan pekerjaan itu berlaku menggantikan pembagian yang bertumpang tindih pada versi sebelumnya. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.

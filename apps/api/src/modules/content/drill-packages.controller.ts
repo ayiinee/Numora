@@ -12,7 +12,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import type { AdminRequest } from '../identity/admin.guard';
+import { ContentAdminGuard } from '../identity/content-admin.guard';
 import { ContentMutationDto, ContentPageDto } from './content.dto';
 import {
   AdminDrillPackageDto,
@@ -24,7 +25,7 @@ import { DrillPackagesService } from './drill-packages.service';
 
 @ApiTags('admin-drill-packages')
 @ApiBearerAuth()
-@UseGuards(AdminGuard)
+@UseGuards(ContentAdminGuard)
 @Controller('admin/content/drill-packages')
 export class DrillPackagesController {
   constructor(@Inject(DrillPackagesService) private readonly packages: DrillPackagesService) {}

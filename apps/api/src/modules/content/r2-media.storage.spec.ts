@@ -58,6 +58,23 @@ describe('R2 media storage (SDK network mocked)', () => {
     expect(url.searchParams.get('X-Amz-SignedHeaders')).toContain('content-length');
     expect(url.pathname).not.toContain(item.objectKey);
   });
+  it('keeps GET renewal available when upload is disabled and ignores test transport in production', async () => {
+    const previous = process.env.NODE_ENV;
+    process.env.NODE_ENV = 'production';
+    try {
+      const settings = config();
+      settings.set('R2_MEDIA_UPLOADS_ENABLED', 'false');
+      settings.set('R2_TEST_ENDPOINT', 'http://localhost:1/fixture');
+      const storage = new R2MediaStorage(settings);
+      expect(() => storage.settings()).toThrow();
+      const link = await storage.readLink('numora-bucket', row().objectKey);
+      const url = new URL(link.url);
+      expect(url.hostname).toBe(`${'a'.repeat(32)}.r2.cloudflarestorage.com`);
+      expect(url.searchParams.get('X-Amz-Expires')).toBe('900');
+    } finally {
+      process.env.NODE_ENV = previous;
+    }
+  });
   it('publishes only the actual verified bytes to a separate final key', async () => {
     const item = row();
     const send = vi
@@ -73,6 +90,16 @@ describe('R2 media storage (SDK network mocked)', () => {
     const publish = send.mock.calls[1]![0] as PutObjectCommand;
     expect(publish.input.Key).toBe(item.objectKey);
     expect(publish.input.Body).toEqual(png);
+  });
+  it('propagates scoped temporary credentials to GET and PUT signatures', async () => {
+    const settings = config();
+    settings.set('R2_SESSION_TOKEN', 'TEST_ONLY_SESSION');
+    const storage = new R2MediaStorage(settings);
+    for (const url of [
+      await storage.presign(row()),
+      (await storage.readLink('numora-bucket', row().objectKey)).url,
+    ])
+      expect(new URL(url).searchParams.get('X-Amz-Security-Token')).toBe('TEST_ONLY_SESSION');
   });
   it('rejects checksum/type/size mismatch without publishing', async () => {
     for (const change of [
