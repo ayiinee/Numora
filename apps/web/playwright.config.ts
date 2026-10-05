@@ -12,7 +12,7 @@ export default defineConfig({
     trace: 'retain-on-failure',
   },
   webServer: {
-    command: 'node node_modules/next/dist/bin/next dev -p 3300',
+    command: `node node_modules/next/dist/bin/next ${process.env.NUMORA_E2E_PRODUCTION === 'true' ? 'start' : 'dev'} -p 3300${process.env.NUMORA_E2E_WEBPACK === 'true' && process.env.NUMORA_E2E_PRODUCTION !== 'true' ? ' --webpack' : ''}`,
     gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
     url: 'http://localhost:3300',
     reuseExistingServer: false,
@@ -22,7 +22,7 @@ export default defineConfig({
       NEXT_PUBLIC_API_URL: 'http://localhost:3301/api/v1',
       NEXT_PUBLIC_SUPABASE_URL: 'https://numora-e2e.supabase.co',
       NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'test-only-public-key',
-      NODE_ENV: 'development',
+      NODE_ENV: process.env.NUMORA_E2E_PRODUCTION === 'true' ? 'production' : 'development',
     },
   },
 });

@@ -2,6 +2,7 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import './numora.css';
+import './teacher.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 

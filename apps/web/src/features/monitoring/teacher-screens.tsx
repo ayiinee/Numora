@@ -1,15 +1,23 @@
 'use client';
 
-import { useEffect, useState, type ReactNode, type FormEvent } from 'react';
+import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import { Avatar, Button, Card, EmptyState, Icon, Input, SectionHeader, Select } from '@tka/ui';
-import { useAuth } from '@/features/onboarding/auth';
+import {
+  Avatar,
+  Button,
+  Card,
+  Dialog,
+  EmptyState,
+  Icon,
+  Input,
+  SectionHeader,
+  Select,
+} from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
-import { destination } from '@/features/onboarding/destination';
-import { LearningProvider } from '@/features/core-learning/provider';
-import { DataState, Status } from '@/features/core-learning/ui';
+import { TeacherGate } from './teacher-gate';
+export { TeacherGate } from './teacher-gate';
+import { DataState } from '@/features/core-learning/ui';
 import {
   createTeacherClass,
   getClassStudents,
@@ -23,41 +31,11 @@ import {
   TeacherStudentRow,
   TeacherWelcome,
 } from './teacher-presentation';
+import { useTeacherRosterCounts } from './teacher-data';
+import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
+import { TeacherInviteContent } from './teacher-class-tools';
+import { TeacherAssessmentHistory } from './teacher-assessment-history';
 
-export function TeacherGate({
-  children,
-}: {
-  children: (token: string, name: string) => ReactNode;
-}) {
-  const { state, refresh } = useAuth();
-  const router = useRouter();
-  useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
-    if (state.status === 'registration') router.replace('/onboarding');
-    if (state.status === 'ready' && destination(state.profile) !== '/teacher')
-      router.replace(destination(state.profile));
-  }, [router, state]);
-  if (state.status === 'ready' && destination(state.profile) === '/teacher')
-    return (
-      <LearningProvider key={state.profile.id}>
-        {children(state.session.access_token, state.profile.displayName)}
-      </LearningProvider>
-    );
-  return (
-    <TeacherShell title="Ruang guru" teacherName="">
-      {state.status === 'error' ? (
-        <Status title="Akun belum dapat dimuat">
-          <p>{state.message}</p>
-          <Button onClick={() => void refresh()}>Coba lagi</Button>
-        </Status>
-      ) : state.status === 'disabled' ? (
-        <Status title="Akun tidak aktif">Akses akun ini sedang tidak tersedia.</Status>
-      ) : (
-        <DataState pending />
-      )}
-    </TeacherShell>
-  );
-}
 export function TeacherDashboardScreen() {
   return (
     <TeacherGate>
@@ -71,11 +49,13 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   const [error, setError] = useState('');
   const [errorStatus, setErrorStatus] = useState(0);
   const [createdCode, setCreatedCode] = useState('');
+  const [search, setSearch] = useState('');
   const cache = useQueryClient();
   const query = useQuery({
     queryKey: ['teacher-classes'],
     queryFn: () => getTeacherClasses(token),
   });
+  const counts = useTeacherRosterCounts(token, query.isSuccess ? query.data.items : undefined);
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!name.trim() || busy) return;
@@ -101,7 +81,48 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       teacherName={teacherName}
     >
       <div className="teacher-dashboard-layout">
-        <TeacherWelcome name={teacherName} count={query.data?.items.length} />
+        <TeacherWelcome
+          name={teacherName}
+          count={query.isSuccess ? query.data.items.length : undefined}
+        />
+        <TeacherAnnouncement>
+          Bagikan kode kelas untuk mengajak siswa bergabung. Progres dan hasil latihan mereka dapat
+          Anda pantau dari ruang guru.
+        </TeacherAnnouncement>
+        <div className="teacher-metrics teacher-dashboard-metrics">
+          <TeacherMetric
+            label="Kelas Anda"
+            value={query.isSuccess ? query.data.items.length : '—'}
+            icon="users"
+            detail="Kelas yang Anda dampingi"
+          />
+          <TeacherMetric
+            label="Total siswa"
+            value={counts.total ?? '—'}
+            icon="graduation"
+            detail={
+              counts.error
+                ? 'Jumlah belum dapat dimuat'
+                : counts.complete
+                  ? 'Anggota aktif seluruh kelas'
+                  : 'Menunggu daftar anggota'
+            }
+          />
+          <TeacherMetric
+            label="Status guru"
+            value="Terverifikasi"
+            icon="school"
+            detail="Akses ruang guru aktif"
+          />
+        </div>
+        {counts.error && (
+          <div className="teacher-aggregate-error" role="alert">
+            <p>Jumlah siswa belum lengkap. Daftar kelas tetap dapat dibuka.</p>
+            <Button variant="secondary" onClick={counts.retry}>
+              Muat ulang jumlah siswa
+            </Button>
+          </div>
+        )}
         <Card className="teacher-create-card">
           <details className="teacher-create-details">
             <summary>
@@ -120,6 +141,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
                 value={name}
                 onChange={(e) => setName(e.target.value)}
                 disabled={busy}
+                maxLength={80}
                 required
               />
               <Button type="submit" loading={busy} disabled={busy || !name.trim()}>
@@ -149,6 +171,16 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             title="Kelas yang Anda dampingi"
             subtitle={query.data ? `${query.data.items.length} kelas` : ''}
           />
+          {query.isSuccess && query.data.items.length > 0 && (
+            <Input
+              label="Cari kelas"
+              type="search"
+              placeholder="Cari nama kelas…"
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+              leftIcon={<Icon name="search" />}
+            />
+          )}
           {query.isPending || query.isError ? (
             <DataState
               pending={query.isPending}
@@ -157,9 +189,21 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             />
           ) : query.data.items.length ? (
             <div className="teacher-class-grid">
-              {query.data.items.map((cls, index) => (
-                <TeacherClassCard key={cls.id} value={cls} index={index} />
-              ))}
+              {query.data.items
+                .filter((cls) =>
+                  cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
+                )
+                .map((cls) => (
+                  <TeacherClassCard
+                    key={cls.id}
+                    value={cls}
+                    index={query.data.items.indexOf(cls)}
+                    count={counts.queries[query.data.items.indexOf(cls)]?.data?.items.length}
+                  />
+                ))}
+              {!query.data.items.some((cls) =>
+                cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
+              ) && <EmptyState title="Kelas tidak ditemukan" description="Coba nama kelas lain." />}
             </div>
           ) : (
             <Card>
@@ -171,6 +215,25 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             </Card>
           )}
         </section>
+        <Card className="teacher-dashboard-context">
+          <SectionHeader title="Akses cepat" />
+          <Link className="teacher-quick-link" href="/teacher/monitoring">
+            <Icon name="chart" />
+            <span>
+              <strong>Monitoring progres</strong>
+              <small>Lihat hasil Drill siswa per kelas.</small>
+            </span>
+            <Icon name="chevron" />
+          </Link>
+          <Link className="teacher-quick-link" href="/teacher/feedback">
+            <Icon name="chat" />
+            <span>
+              <strong>Kirim feedback</strong>
+              <small>Berikan catatan belajar untuk siswa.</small>
+            </span>
+            <Icon name="chevron" />
+          </Link>
+        </Card>
       </div>
     </TeacherShell>
   );
@@ -193,6 +256,12 @@ function ClassStudentsContent({
 }) {
   const [search, setSearch] = useState('');
   const [sort, setSort] = useState('asc');
+  const [inviteOpen, setInviteOpen] = useState(false);
+  const classes = useQuery({
+    queryKey: ['teacher-classes'],
+    queryFn: () => getTeacherClasses(token),
+  });
+  const cls = classes.data?.items.find((value) => value.id === classId);
   const query = useQuery({
     queryKey: ['class-students', classId],
     queryFn: () => getClassStudents(token, classId),
@@ -205,12 +274,72 @@ function ClassStudentsContent({
       title={query.data?.class.name ?? 'Daftar siswa'}
       description="Kenali perkembangan siswa melalui hasil latihan mereka."
       teacherName={teacherName}
+      backHref="/teacher"
     >
       <div className="teacher-page-stack">
         <Link className="back-link" href="/teacher">
           <Icon name="back" />
           Kembali ke kelas saya
         </Link>
+        {query.isSuccess && (
+          <>
+            <Card className="teacher-class-overview">
+              <div>
+                <span className="eyebrow">Ruang kelas</span>
+                <h2>{query.data.class.name}</h2>
+                <p>{query.data.items.length} siswa bergabung</p>
+              </div>
+              <div className="teacher-class-overview__code">
+                <span>Kode kelas</span>
+                <strong>{classes.isError ? 'Belum dapat dimuat' : (cls?.joinCode ?? '—')}</strong>
+                {classes.isError && (
+                  <Button variant="secondary" onClick={() => void classes.refetch()}>
+                    Muat ulang kode
+                  </Button>
+                )}
+              </div>
+            </Card>
+            <div className="teacher-class-actions">
+              <Link
+                className="button-link"
+                href={`/teacher/classes/${classId}/invite`}
+                onClick={(event) => {
+                  if (window.matchMedia('(min-width: 960px)').matches) {
+                    event.preventDefault();
+                    setInviteOpen(true);
+                  }
+                }}
+              >
+                <Icon name="users" />
+                Undang siswa
+              </Link>
+              <Link
+                className="button-link secondary"
+                href={`/teacher/monitoring?classId=${classId}`}
+              >
+                <Icon name="chart" />
+                Monitoring kelas
+              </Link>
+              <Link className="button-link secondary" href={`/teacher/classes/${classId}/settings`}>
+                <Icon name="settings" />
+                Pengaturan kelas
+              </Link>
+            </div>
+            <TeacherAnnouncement>
+              Daftar ini menampilkan anggota aktif kelas. Buka siswa untuk melihat progres atau
+              mengirim feedback.
+            </TeacherAnnouncement>
+            <Dialog
+              open={inviteOpen}
+              onClose={() => setInviteOpen(false)}
+              title="Undang siswa"
+              description="Bagikan kode kelas Anda."
+              className="teacher-invite-dialog"
+            >
+              <TeacherInviteContent name={query.data.class.name} code={cls?.joinCode} />
+            </Dialog>
+          </>
+        )}
         <Card className="teacher-filter-card">
           <Input
             label="Cari siswa"
@@ -244,13 +373,24 @@ function ClassStudentsContent({
             />
             {filtered?.length ? (
               <Card className="teacher-students-card">
-                {filtered.map((student) => (
-                  <TeacherStudentRow
-                    name={student.displayName}
-                    href={`/teacher/classes/${classId}/students/${student.id}`}
-                    key={student.id}
-                  />
-                ))}
+                <table className="teacher-roster-table">
+                  <caption className="sr-only">Anggota kelas {query.data.class.name}</caption>
+                  <thead>
+                    <tr>
+                      <th scope="col">Nama siswa</th>
+                      <th scope="col">Progres latihan</th>
+                    </tr>
+                  </thead>
+                  <tbody>
+                    {filtered.map((student) => (
+                      <TeacherStudentRow
+                        name={student.displayName}
+                        href={`/teacher/classes/${classId}/students/${student.id}`}
+                        key={student.id}
+                      />
+                    ))}
+                  </tbody>
+                </table>
               </Card>
             ) : (
               <Card>
@@ -311,6 +451,7 @@ function StudentProgressContent({
       title={query.data?.student.displayName ?? 'Progres siswa'}
       description={query.data?.class.name}
       teacherName={teacherName}
+      backHref={`/teacher/classes/${classId}`}
     >
       <div className="teacher-page-stack">
         <Link className="back-link" href={`/teacher/classes/${classId}`}>
@@ -325,6 +466,22 @@ function StudentProgressContent({
           />
         ) : (
           <>
+            <div className="teacher-class-actions">
+              <Link
+                className="button-link"
+                href={`/teacher/feedback?classId=${classId}&studentId=${studentId}`}
+              >
+                <Icon name="chat" />
+                Kirim feedback untuk siswa
+              </Link>
+              <Link
+                className="button-link secondary"
+                href={`/teacher/monitoring?classId=${classId}`}
+              >
+                <Icon name="chart" />
+                Monitoring kelas
+              </Link>
+            </div>
             <div className="teacher-progress-summary">
               <Card className="teacher-student-identity">
                 <Avatar name={query.data.student.displayName} size="lg" />
@@ -362,6 +519,7 @@ function StudentProgressContent({
                 />
               </Card>
             )}
+            <TeacherAssessmentHistory token={token} classId={classId} studentId={studentId} />
           </>
         )}
       </div>
