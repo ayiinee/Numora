@@ -131,3 +131,7 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 **ENGINEERING DECISION — Aini approved JOB-10 foundation, 3 October 2026:** manual Admin retry authorizes a new execution against identical frozen input; Redis only notifies compute. Technical evidence adoption does not resolve TRY-TBC-06/07 or OPEN-12/18. Production batch close, thresholds, PGK rubrics, score mapping, fallback and release require owner approvals; foundation remains default off.
 
 **ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.
+
+## Materi / notification extension — 4 October 2026
+
+**ENGINEERING DECISION:** owner-approved [scope](MATERIALS_NOTIFICATIONS_2026-10-04.md) adds explicit category metadata, inline material navigation and durable event-driven in-app notifications, with 30-day archive. It does not resolve academic, scoring, reward or PvP OPEN policies.

@@ -31,6 +31,10 @@ vi.mock('@tka/database', () => ({
   closeDatabaseConnection: mocks.closeDatabase,
 }));
 vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
+vi.mock('./notifications.js', () => ({
+  discoverNotificationReleases: vi.fn(async () => {}),
+  drainNotificationBatch: vi.fn(async () => ({ delivered: 0, failed: 0 })),
+}));
 vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox, outboxStatus: mocks.status }));
 vi.mock('./class-leaderboard.js', () => ({ projectClassLeaderboard: mocks.project }));
 vi.mock('./irt-v3.js', () => ({ createIrtQueue: vi.fn(), pollIrtV3: vi.fn() }));

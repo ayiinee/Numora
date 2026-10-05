@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useNotificationSummary } from './notification-queries';
 import { Avatar, Card, Icon, ProgressBar, Skeleton, type IconName } from '@tka/ui';
 import type { StudentDashboardDto, CurrentTryoutDto, DashboardDrillDto } from './generated-types';
 import type { AssessmentRecord } from './types';
@@ -17,13 +18,12 @@ export function StudentIdentityHeader({
   data,
   avatarUrl,
   tryout,
-  feedbackHref = '#catatan-guru',
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
   tryout?: CurrentTryoutDto | undefined;
-  feedbackHref?: string;
 }) {
+  const notifications = useNotificationSummary();
   return (
     <div className="student-identity">
       <div className="student-identity__top">
@@ -53,9 +53,18 @@ export function StudentIdentityHeader({
               {data.bestDrillScore}
             </span>
           )}
-          <a className="student-identity__bell" href={feedbackHref} aria-label="Lihat catatan guru">
+          <Link
+            className="student-identity__bell"
+            href="/student/notifications"
+            aria-label={`Lihat notifikasi${notifications.data?.unread ? `, ${notifications.data.unread} belum dibaca` : ''}`}
+          >
             <Icon name="bell" width={20} height={20} />
-          </a>
+            {!!notifications.data?.unread && (
+              <span className="student-notification-count">
+                {notifications.data.unread > 99 ? '99+' : notifications.data.unread}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
       <div className="student-identity__progress">

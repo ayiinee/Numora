@@ -9,6 +9,9 @@ const nextConfig: NextConfig = {
   distDir: process.env.NUMORA_WEB_DIST_DIR ?? '.next',
   transpilePackages: ['@tka/ui'],
   agentRules: false,
+  ...(process.env.NUMORA_LOW_MEMORY === 'true'
+    ? { experimental: { cpus: 1, webpackBuildWorker: false, webpackMemoryOptimizations: true } }
+    : {}),
   async redirects() {
     if (process.env.NODE_ENV !== 'development') return [];
     return [

@@ -1,6 +1,6 @@
 'use client';
 
-import { useRef, useState } from 'react';
+import { useEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { useMutation, useQueryClient, type InfiniteData } from '@tanstack/react-query';
 import { Button, Card, EmptyState, Icon } from '@tka/ui';
@@ -71,6 +71,20 @@ function FeedbackInbox({ token }: { token: string }) {
     ).values(),
   ];
   const visible = filter === 'unread' ? items.filter((item) => item.readAt === null) : items;
+  useEffect(() => {
+    const target = window.location.hash.match(/^#feedback-([0-9a-f-]{36})$/i)?.[1];
+    if (!target || filter !== 'all') return;
+    const element = document.getElementById(`feedback-${target}`);
+    if (element) element.scrollIntoView?.({ block: 'center', behavior: 'auto' });
+    else if (query.hasNextPage && !query.isFetching && !query.isError) void query.fetchNextPage();
+  }, [
+    filter,
+    items.length,
+    query.hasNextPage,
+    query.isFetching,
+    query.isError,
+    query.fetchNextPage,
+  ]);
   function markRead(id: string) {
     if (marking.current) return;
     marking.current = true;

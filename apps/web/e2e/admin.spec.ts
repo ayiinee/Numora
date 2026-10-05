@@ -317,6 +317,8 @@ async function setup(page: Page) {
         const school = state.schools.find((s) => path.endsWith(s.id))!;
         Object.assign(school, body);
         result = school;
+      } else if (path.startsWith('/admin/content/chapters/')) {
+        Object.assign(state.data.curriculum.items.find((chapter) => path.endsWith(chapter.id))!, body);
       } else if (path.startsWith('/admin/content/tryout-packages/')) {
         Object.assign(state.data.packages.items[0]!, body);
         result = { id: id(18) };
@@ -486,17 +488,40 @@ test('Development preview remains local and QA login remains gated for the fixtu
   page,
 }) => {
   const { state, errors } = await setup(page);
-  await page.goto('/admin/preview');
-  await expect(page.getByText(/Hanya tersedia saat development/)).toBeVisible();
-  await page.getByRole('button', { name: /Lihat pratinjau bank soal/ }).click();
-  await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-  await expect(
-    page.getByText('Simulasi tampilan bank soal. Tidak terhubung ke API atau penyimpanan.'),
-  ).toBeVisible();
+  const preview = await page.goto('/admin/preview');
+  if (process.env.NUMORA_E2E_PRODUCTION === 'true') {
+    expect(preview?.status()).toBe(404);
+  } else {
+    await expect(page.getByText(/Hanya tersedia saat development/)).toBeVisible();
+    await page.getByRole('button', { name: /Lihat pratinjau bank soal/ }).click();
+    await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+    await expect(
+      page.getByText('Simulasi tampilan bank soal. Tidak terhubung ke API atau penyimpanan.'),
+    ).toBeVisible();
+  }
   expect(state.mutations).toEqual([]);
   const response = await page.goto('/qa/login');
   expect(response?.status()).toBe(404);
   expect(errors).toEqual([]);
+});
+test('Admin category changes preserve the server value on failure and allow a null reset', async ({ page }) => {
+  const { state } = await setup(page);
+  await page.goto('/admin/content');
+  await page.getByRole('button', { name: 'Materi', exact: true }).click();
+  const category = page.getByRole('combobox', { name: 'Kategori bab: Persamaan & Fungsi Kuadrat', exact: true });
+  await expect(category).toHaveValue('');
+  state.failMutation = true;
+  await category.selectOption('algebra');
+  await expect(page.locator('.form-error')).toContainText('Permintaan DEMO gagal');
+  await expect(category).toHaveValue('');
+  state.failMutation = false;
+  await category.selectOption('geometry');
+  await expect(category).toHaveValue('geometry');
+  await category.selectOption('');
+  await expect(category).toHaveValue('');
+  expect(state.mutations.map((mutation) => mutation.body)).toEqual([
+    { materialCategory: 'algebra' }, { materialCategory: 'geometry' }, { materialCategory: null },
+  ]);
 });
 test('Admin list/token errors, empty schools and expired access provide recovery', async ({
   page,

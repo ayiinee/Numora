@@ -1,5 +1,23 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiQuery, ApiTags } from '@nestjs/swagger';
+import { MaterialsService } from './materials.service';
+import { StudentMaterialsDto } from './materials.dto';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiQuery,
+  ApiTags,
+} from '@nestjs/swagger';
 import { DrillAssessmentService } from './drill-assessment.service';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { LearningCatalogService } from './learning-catalog.service';
@@ -23,6 +41,7 @@ import {
 @Controller()
 export class LearningController {
   constructor(
+    private readonly materialsService: MaterialsService,
     private readonly catalogService: LearningCatalogService,
     private readonly drillService: DrillAssessmentService,
     private readonly historyService: AssessmentHistoryService,
@@ -33,6 +52,12 @@ export class LearningController {
   @ApiOkResponse({ type: StudentDashboardDto })
   dashboard(@Headers('authorization') authorization?: string) {
     return this.dashboardService.dashboard(authorization);
+  }
+
+  @Get('students/me/materials')
+  @ApiOkResponse({ type: StudentMaterialsDto })
+  materials(@Headers('authorization') auth?: string) {
+    return this.materialsService.list(auth);
   }
 
   @Get('chapters')
@@ -67,8 +92,18 @@ export class LearningController {
 
   @Get('students/me/assessment-results')
   @ApiOkResponse({ type: AssessmentHistoryDto })
-  @ApiQuery({ name: 'cursor', required: false, schema: { type: 'string', format: 'uuid' }, description: 'Last record from the previous page of this Student and level filter.' })
-  @ApiQuery({ name: 'levelId', required: false, schema: { type: 'string', format: 'uuid' }, description: 'Optional pinned level ID; use the same filter on every page.' })
+  @ApiQuery({
+    name: 'cursor',
+    required: false,
+    schema: { type: 'string', format: 'uuid' },
+    description: 'Last record from the previous page of this Student and level filter.',
+  })
+  @ApiQuery({
+    name: 'levelId',
+    required: false,
+    schema: { type: 'string', format: 'uuid' },
+    description: 'Optional pinned level ID; use the same filter on every page.',
+  })
   history(
     @Headers('authorization') authorization: string | undefined,
     @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
@@ -100,7 +135,12 @@ export class LearningController {
     @Param('questionInstanceId', ParseUUIDPipe) questionInstanceId: string,
     @Body() input: SaveDrillAnswerDto,
   ) {
-    return this.drillService.saveAnswer(authorization, attemptId, questionInstanceId, input.optionId);
+    return this.drillService.saveAnswer(
+      authorization,
+      attemptId,
+      questionInstanceId,
+      input.optionId,
+    );
   }
 
   @Post('assessment-attempts/:attemptId/submit')

@@ -181,6 +181,26 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       400,
     );
     chapter = (await mutation('chapters', body)).id;
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: 'guess' }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: 'algebra' }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await getDatabase().db.select().from(chapters).where(eq(chapters.id, chapter)))[0]!
+        .materialCategory,
+    ).toBe('algebra');
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: null }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await getDatabase().db.select().from(chapters).where(eq(chapters.id, chapter)))[0]!
+        .materialCategory,
+    ).toBeNull();
     expect((await request('admin/content/chapters', 'POST', body)).status).toBe(409);
     expect(
       (await request(`admin/content/chapters/${chapter}`, 'PATCH', { name: null })).status,
@@ -216,7 +236,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       .db.select()
       .from(auditLogs)
       .where(eq(auditLogs.entityId, chapter));
-    expect(logs).toHaveLength(1);
+    expect(logs).toHaveLength(3); // Create plus two category updates, all audited.
     expect(logs[0]!.actorUserId).toBe(admin);
     const rollbackCode = `ROLLBACK-${suffix}`;
     await expect(

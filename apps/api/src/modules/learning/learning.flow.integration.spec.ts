@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox,
+  notificationOutbox,
   assessmentAttempts,
   assessmentPackages,
   attemptAnswers,
@@ -193,6 +194,7 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(resultA).toMatchObject({ score: 80, mastered: true, unlockedLevelId: nextLevel!.id });
     expect(resultA.levelTitle).toBe('Level 1');
     expect(resultB).toMatchObject({ attemptId: attempt.id, score: 80 });
+    expect(await db.select().from(notificationOutbox).where(and(eq(notificationOutbox.recipientId, student!.id), eq(notificationOutbox.kind, 'LEVEL_UNLOCKED')))).toHaveLength(1);
     expect(resultA.recommendations).toEqual([]);
     expect((await history.list('student')).records[0]).toMatchObject({
       attemptId: attempt.id, activity: 'drill', resultState: 'ready', score: 80,

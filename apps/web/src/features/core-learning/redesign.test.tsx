@@ -426,7 +426,7 @@ describe('responsive learning composition', () => {
     expect(within(nav).getByRole('link', { name: 'Materi' }).getAttribute('aria-current')).toBe(
       'page',
     );
-    expect(within(nav).getAllByRole('link')).toHaveLength(8);
+    expect(within(nav).getAllByRole('link')).toHaveLength(9);
     expect(within(nav).getByRole('link', { name: 'Catatan Guru' }).getAttribute('href')).toBe(
       '/student/feedback',
     );

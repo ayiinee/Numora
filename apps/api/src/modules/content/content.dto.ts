@@ -40,7 +40,7 @@ export class ContentPageDto {
   limit = 20;
 }
 
-export class CreateChapterDto {
+export class TaxonomyBaseDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
   @ApiPropertyOptional({
     description: 'Stable lowercase URL slug; generated from name when omitted on create.',
@@ -62,10 +62,20 @@ export class CreateChapterDto {
   @IsIn(statuses)
   status?: ContentState;
 }
+export class CreateChapterDto extends TaxonomyBaseDto {
+  @ApiPropertyOptional({
+    enum: ['algebra', 'geometry', 'numbers', 'statistics'],
+    nullable: true,
+    type: String,
+  })
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
+  @IsIn(['algebra', 'geometry', 'numbers', 'statistics'])
+  materialCategory?: string | null;
+}
 export class UpdateChapterDto extends PartialType(CreateChapterDto, {
   skipNullProperties: false,
 }) {}
-export class CreateSubchapterDto extends CreateChapterDto {
+export class CreateSubchapterDto extends TaxonomyBaseDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() chapterId!: string;
 }
 export class UpdateSubchapterDto extends PartialType(OmitType(CreateSubchapterDto, ['chapterId']), {
@@ -164,6 +174,12 @@ export class CreateVideoDto {
 export class UpdateVideoDto extends PartialType(CreateVideoDto, { skipNullProperties: false }) {}
 
 export class AdminTaxonDto {
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    enum: ['algebra', 'geometry', 'numbers', 'statistics'],
+  })
+  materialCategory?: string | null;
   @ApiProperty() id!: string;
   @ApiProperty({ enum: ['CHAPTER', 'SUBCHAPTER', 'COMPETENCY', 'LEVEL'] }) kind!:
     'CHAPTER' | 'SUBCHAPTER' | 'COMPETENCY' | 'LEVEL';

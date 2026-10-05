@@ -1,6 +1,22 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type StudentMaterialsDto = { "chapters": (MaterialChapterDto)[]; "recentChapterId": string | null; };
+
+export type MaterialChapterDto = { "id": string; "title": string; "order": number; "category": "algebra" | "geometry" | "numbers" | "statistics" | null; "totalLevels": number; "completedLevels": number; "continueSubchapterId": string | null; "subchapters": (MaterialSubchapterDto)[]; };
+
+export type MaterialSubchapterDto = { "id": string; "title": string; "order": number; "totalLevels": number; "completedLevels": number; "availableLevels": number; "latestScore": number | null; "bestScore": number | null; };
+
+export type NotificationActionDto = { "type": "feedback" | "pvp" | "tryout" | "result" | "roadmap" | "unavailable"; "enabled": boolean; "status": string | null; "feedbackId"?: string; "inviteId"?: string; "matchId"?: string; "packageId"?: string; "attemptId"?: string; "chapterId"?: string; "subchapterId"?: string; };
+
+export type NotificationDto = { "id": string; "kind": "FEEDBACK_RECEIVED" | "PVP_INVITED" | "TRYOUT_OPENED" | "TRYOUT_RESULT_READY" | "LEVEL_UNLOCKED"; "title": string; "body": string; "occurredAt": string; "readAt": string | null; "archived": boolean; "action": NotificationActionDto; };
+
+export type NotificationsDto = { "items": (NotificationDto)[]; "nextCursor": string | null; };
+
+export type NotificationSummaryDto = { "total": number; "unread": number; };
+
+export type NotificationReadDto = { "updated": number; };
+
 export type ChapterDto = { "id": string; "slug"?: string; "title": string; "order": number; };
 
 export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };

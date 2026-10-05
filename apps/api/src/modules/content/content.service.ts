@@ -116,6 +116,7 @@ export class ContentService {
     return {
       items: [
         ...chapterRows.map((r) => ({
+          materialCategory: r.materialCategory,
           id: r.id,
           kind: 'CHAPTER' as const,
           parentId: null,
