@@ -590,7 +590,13 @@ a.settings-row:hover {
   margin-bottom: 3px;
 }
 .activity-score {
+  flex-shrink: 0;
   text-align: right;
+}
+.activity-score .numora-badge {
+  display: block;
+  white-space: normal;
+  overflow-wrap: anywhere;
 }
 .activity-score strong {
   display: block;

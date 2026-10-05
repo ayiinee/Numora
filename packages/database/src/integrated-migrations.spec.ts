@@ -1,15 +1,16 @@
-import { randomBytes } from 'node:crypto';
+import { createHash, randomBytes } from 'node:crypto';
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
+import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { describe, expect, it } from 'vitest';
 import { migrateIntegratedDatabase } from './integrated-migrations.js';
 
 const testUrl = process.env.TEST_DATABASE_URL;
-describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, () => {
+describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 }, () => {
   async function fixture(
     baselineCount: number,
     run: (client: ReturnType<typeof postgres>, folder: string) => Promise<void>,
@@ -122,6 +123,54 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 30000 }, 
       ).toHaveLength(0);
     });
   });
+
+  it.each(['LF', 'CRLF'])(
+    'upgrades the notification fork (%s) without skipping remote DDL or changing existing hashes/data',
+    async (lineEnding) => {
+      await fixture(18, async (client, folder) => {
+        const notification = readMigrationFiles({ migrationsFolder: folder })[22]!;
+        for (const statement of notification.sql)
+          if (statement.trim()) await client.unsafe(statement);
+        const sql = (await readFile(join(folder, '0022_amusing_quasar.sql'), 'utf8')).replaceAll(
+          '\r\n',
+          '\n',
+        );
+        const hash = createHash('sha256')
+          .update(lineEnding === 'CRLF' ? sql.replaceAll('\n', '\r\n') : sql)
+          .digest('hex');
+        await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+        VALUES(${hash},${notification.folderMillis})`;
+        const [chapter] =
+          await client`INSERT INTO chapters(code,name,display_order,material_category)
+        VALUES('TEST-NOTIFICATION-FORK','Preserved chapter',1,'algebra') RETURNING id`;
+        const history =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        await migrateIntegratedDatabase(client, folder);
+        expect(
+          (
+            await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`
+          ).slice(0, history.length),
+        ).toEqual(history);
+        expect(
+          (await client`SELECT material_category,slug FROM chapters WHERE id=${chapter!.id}`)[0],
+        ).toEqual({ material_category: 'algebra', slug: 'preserved-chapter' });
+        expect(
+          (
+            await client`SELECT to_regclass('public.analysis_request_dispatches') AS dispatch, to_regclass('public.content_media_uploads') AS media`
+          )[0],
+        ).toEqual({ dispatch: 'analysis_request_dispatches', media: 'content_media_uploads' });
+        expect(await client`SELECT source_key FROM notification_outbox`).toEqual([
+          { source_key: 'SYSTEM_STARTED' },
+        ]);
+        const upgraded =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        await migrateIntegratedDatabase(client, folder);
+        expect(
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+        ).toEqual(upgraded);
+      });
+    },
+  );
 
   it('rolls back replayed DDL and history if the known fork schema has diverged', async () => {
     await fixture(4, async (client, folder) => {

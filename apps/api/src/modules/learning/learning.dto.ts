@@ -1,4 +1,4 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Allow, IsUUID } from 'class-validator';
 
 export class StartDrillDto {
@@ -19,12 +19,14 @@ export class SaveDrillAnswerDto {
 
 export class ChapterDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiPropertyOptional() slug?: string;
   @ApiProperty() title!: string;
   @ApiProperty() order!: number;
 }
 
 export class SubchapterDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
+  @ApiPropertyOptional() slug?: string;
   @ApiProperty({ format: 'uuid' }) chapterId!: string;
   @ApiProperty() title!: string;
   @ApiProperty() order!: number;

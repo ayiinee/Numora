@@ -17,9 +17,9 @@ export type NotificationSummaryDto = { "total": number; "unread": number; };
 
 export type NotificationReadDto = { "updated": number; };
 
-export type ChapterDto = { "id": string; "title": string; "order": number; };
+export type ChapterDto = { "id": string; "slug"?: string; "title": string; "order": number; };
 
-export type SubchapterDto = { "id": string; "chapterId": string; "title": string; "order": number; };
+export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };
 
 export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; };
 

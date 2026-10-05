@@ -97,10 +97,10 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     await expect(classes.join('student', firstClass.joinCode)).resolves.toMatchObject({ joined: true });
     await expect(classes.join('student', otherClass.joinCode)).rejects.toMatchObject({ status: 409 });
     const [chapter] = await db.insert(chapters).values({
-      code: `TEST-${suffix}`, name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000, status: 'READY',
+      code: `TEST-${suffix}`, slug: (`TEST-${suffix}`).toLowerCase(), name: `Bab ${suffix}`, displayOrder: parseInt(suffix, 16) % 2_000_000_000, status: 'READY',
     }).returning({ id: chapters.id });
     const [subchapter] = await db.insert(subchapters).values({
-      chapterId: chapter!.id, code: `SUB-${suffix}`, name: 'Subbab', displayOrder: 1, status: 'READY',
+      chapterId: chapter!.id, code: `SUB-${suffix}`, slug: (`SUB-${suffix}`).toLowerCase(), name: 'Subbab', displayOrder: 1, status: 'READY',
     }).returning({ id: subchapters.id });
     const [level] = await db.insert(levels).values({
       subchapterId: subchapter!.id, description: 'Level 1', levelNumber: 1, status: 'READY',

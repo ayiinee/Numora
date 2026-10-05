@@ -1,0 +1,96 @@
+{
+  "externalId": "CURR-IND20-L01-Q09",
+  "type": "CATEGORY",
+  "chapterCode": "CH-DP",
+  "subchapterCode": "SC-DATA",
+  "competencyCode": "IND-020",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Tentukan kategori data yang diperoleh dari pertanyaan berikut!",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "Berapa jam kamu belajar setiap hari?",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "Apa mata pelajaran yang paling kamu sukai?",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "Berapa jumlah saudara kandungmu?",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "categoryByStatementId": {
+      "A": "QUANTITATIVE",
+      "B": "QUALITATIVE",
+      "C": "QUANTITATIVE"
+    }
+  },
+  "explanation": {
+    "text": "A menghasilkan data berupa jumlah waktu → kuantitatif.\n B menghasilkan kategori mata pelajaran → kualitatif.\n C menghasilkan jumlah saudara → kuantitatif.",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 9",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+    "chapterSource": "Data & Peluang",
+    "subchapterSource": "Data",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 9,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "BELUM_DIREVIEW",
+    "sourceExtractionNotes": "Kategori dan kunci disalin dari sumber. isCorrect dikosongkan; setiap pernyataan memakai correctCategoryId. Rubrik skor dan dukungan UI/engine belum ditetapkan; pemetaan master dan difficulty menunggu.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": [],
+    "importReady": false,
+    "assetManifest": [],
+    "mediaMarkerConvention": null,
+    "scoringRubricStatus": "PARTIAL_DETAILS_PENDING_CURRICULUM",
+    "categories": [
+      {
+        "id": "QUANTITATIVE",
+        "label": "Kuantitatif"
+      },
+      {
+        "id": "QUALITATIVE",
+        "label": "Kualitatif"
+      }
+    ],
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts."
+    ]
+  }
+}

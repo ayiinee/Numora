@@ -1,5 +1,5 @@
 {
-  "id": "34063b44-4540-4d2a-b0ba-f515725fe58e",
+  "id": "bfc7ac6a-9fe3-4817-bdac-90f305ee8149",
   "prevId": "4821332c-3b6d-4d86-b430-a951fdb0d148",
   "version": "7",
   "dialect": "postgresql",
@@ -1057,12 +1057,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "material_category": {
-          "name": "material_category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
         "display_order": {
           "name": "display_order",
           "type": "integer",
@@ -1115,10 +1109,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "chapters_category_ck": {
-          "name": "chapters_category_ck",
-          "value": "\"chapters\".\"material_category\" is null or \"chapters\".\"material_category\" in ('algebra', 'geometry', 'numbers', 'statistics')"
-        },
         "chapters_order_ck": {
           "name": "chapters_order_ck",
           "value": "\"chapters\".\"display_order\" > 0"
@@ -5954,6 +5944,21 @@
           "concurrently": false,
           "method": "btree",
           "with": {}
+        },
+        "irt_batches_source_output_uq": {
+          "name": "irt_batches_source_output_uq",
+          "columns": [
+            {
+              "expression": "source_output_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
         }
       },
       "foreignKeys": {
@@ -8526,6 +8531,153 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.analysis_request_dispatches": {
+      "name": "analysis_request_dispatches",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "request_id": {
+          "name": "request_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "generation": {
+          "name": "generation",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_key": {
+          "name": "operation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_fingerprint": {
+          "name": "operation_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "analysis_dispatch_operation_uq": {
+          "name": "analysis_dispatch_operation_uq",
+          "columns": [
+            {
+              "expression": "operation_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "analysis_dispatch_generation_uq": {
+          "name": "analysis_dispatch_generation_uq",
+          "columns": [
+            {
+              "expression": "request_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "generation",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "analysis_dispatch_id_request_uq": {
+          "name": "analysis_dispatch_id_request_uq",
+          "columns": [
+            {
+              "expression": "id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "request_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "analysis_request_dispatches_request_id_analysis_requests_id_fk": {
+          "name": "analysis_request_dispatches_request_id_analysis_requests_id_fk",
+          "tableFrom": "analysis_request_dispatches",
+          "tableTo": "analysis_requests",
+          "columnsFrom": [
+            "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "analysis_request_dispatches_actor_user_id_users_id_fk": {
+          "name": "analysis_request_dispatches_actor_user_id_users_id_fk",
+          "tableFrom": "analysis_request_dispatches",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "analysis_dispatch_generation_ck": {
+          "name": "analysis_dispatch_generation_ck",
+          "value": "\"analysis_request_dispatches\".\"generation\" > 0"
+        }
+      },
       "isRLSEnabled": true
     },
     "public.analysis_requests": {
@@ -13775,6 +13927,12 @@
           "primaryKey": false,
           "notNull": true
         },
+        "dispatch_id": {
+          "name": "dispatch_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "attempt_number": {
           "name": "attempt_number",
           "type": "integer",
@@ -13856,6 +14014,21 @@
           "method": "btree",
           "with": {}
         },
+        "compute_executions_dispatch_uq": {
+          "name": "compute_executions_dispatch_uq",
+          "columns": [
+            {
+              "expression": "dispatch_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "compute_executions_request_active_uq": {
           "name": "compute_executions_request_active_uq",
           "columns": [
@@ -13901,6 +14074,19 @@
           "tableTo": "analysis_requests",
           "columnsFrom": [
             "request_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "compute_executions_dispatch_id_analysis_request_dispatches_id_fk": {
+          "name": "compute_executions_dispatch_id_analysis_request_dispatches_id_fk",
+          "tableFrom": "compute_executions",
+          "tableTo": "analysis_request_dispatches",
+          "columnsFrom": [
+            "dispatch_id"
           ],
           "columnsTo": [
             "id"
@@ -14101,323 +14287,6 @@
         "compute_outputs_decision_ck": {
           "name": "compute_outputs_decision_ck",
           "value": "\"irt_compute\".\"compute_outputs\".\"scientific_decision\" in ('PASS','DRIFT','ANOMALY','INSUFFICIENT','CALIBRATION_FAILED','NOT_COMPARABLE','CONTENT_VALID','REVIEW','TRYOUT_QUALITY_PASS')"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.notification_outbox": {
-      "name": "notification_outbox",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "source_key": {
-          "name": "source_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_id": {
-          "name": "source_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "recipient_id": {
-          "name": "recipient_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "occurred_at": {
-          "name": "occurred_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "audience_before": {
-          "name": "audience_before",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "cursor": {
-          "name": "cursor",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "failed_at": {
-          "name": "failed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "processed_at": {
-          "name": "processed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "notification_outbox_source_uq": {
-          "name": "notification_outbox_source_uq",
-          "columns": [
-            {
-              "expression": "source_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notification_outbox_pending_idx": {
-          "name": "notification_outbox_pending_idx",
-          "columns": [
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"notification_outbox\".\"processed_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "notification_outbox_recipient_id_users_id_fk": {
-          "name": "notification_outbox_recipient_id_users_id_fk",
-          "tableFrom": "notification_outbox",
-          "tableTo": "users",
-          "columnsFrom": [
-            "recipient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "notification_outbox_kind_ck": {
-          "name": "notification_outbox_kind_ck",
-          "value": "\"notification_outbox\".\"kind\" in ('SYSTEM_STARTED', 'FEEDBACK_RECEIVED', 'PVP_INVITED', 'TRYOUT_OPENED', 'TRYOUT_RESULT_READY', 'LEVEL_UNLOCKED')"
-        },
-        "notification_outbox_recipient_ck": {
-          "name": "notification_outbox_recipient_ck",
-          "value": "\"notification_outbox\".\"recipient_id\" is not null or \"notification_outbox\".\"kind\" in ('SYSTEM_STARTED', 'TRYOUT_OPENED')"
-        },
-        "notification_outbox_attempts_ck": {
-          "name": "notification_outbox_attempts_ck",
-          "value": "\"notification_outbox\".\"attempts\" >= 0"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.notifications": {
-      "name": "notifications",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "recipient_id": {
-          "name": "recipient_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_key": {
-          "name": "source_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "context": {
-          "name": "context",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "occurred_at": {
-          "name": "occurred_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "read_at": {
-          "name": "read_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "notifications_recipient_source_uq": {
-          "name": "notifications_recipient_source_uq",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notifications_recipient_time_idx": {
-          "name": "notifications_recipient_time_idx",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notifications_unread_idx": {
-          "name": "notifications_unread_idx",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"notifications\".\"read_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "notifications_recipient_id_users_id_fk": {
-          "name": "notifications_recipient_id_users_id_fk",
-          "tableFrom": "notifications",
-          "tableTo": "users",
-          "columnsFrom": [
-            "recipient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "notifications_kind_ck": {
-          "name": "notifications_kind_ck",
-          "value": "\"notifications\".\"kind\" in ('FEEDBACK_RECEIVED', 'PVP_INVITED', 'TRYOUT_OPENED', 'TRYOUT_RESULT_READY', 'LEVEL_UNLOCKED')"
-        },
-        "notifications_read_at_ck": {
-          "name": "notifications_read_at_ck",
-          "value": "\"notifications\".\"read_at\" is null or \"notifications\".\"read_at\" >= \"notifications\".\"created_at\""
         }
       },
       "isRLSEnabled": true

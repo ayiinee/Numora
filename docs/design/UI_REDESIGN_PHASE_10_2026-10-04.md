@@ -62,3 +62,11 @@ The [Git-tracked gallery](screenshots/redesign/README.md) includes Home, Bab/Sub
 Use **Node 24 and pnpm 12.6.0**, install dependencies with `pnpm install --frozen-lockfile`, configure the existing documented development environment, then run `pnpm dev` from the root. No new environment variable is required for the frontend redesign. Google redirect/provider configuration and API access remain the team's existing setup. Student uses `/student`, Teacher `/teacher`, Admin `/admin/schools`; protected destinations follow server identity.
 
 The optional DEMO seed requires the explicit development opt-in documented in its README. Do not run it as a migration or against an arbitrary project. It changes no users or progress, and its content is not Curriculum-approved. For isolated browser review run `pnpm --filter @tka/web exec playwright install chromium` once, then `pnpm --filter @tka/web test:e2e`; that suite uses synthetic data and makes no cloud writes.
+
+## Rekonsiliasi main ? 4 Oktober 2026
+
+**ENGINEERING DECISION:** integrasi PR #54/#56/#57/#60 mempertahankan kontrak IRT v3, slug/level curriculum, upload media, dan tujuan tautan gabung kelas. DEMO seed kini memberikan slug wajib dan level keluarga eksplisit; regression test PostgreSQL terisolasi memeriksa rerun idempotent, count 5 level/10 paket/100 item, serta tidak membuat user/attempt. Seed tidak dijalankan ke Cloud selama rekonsiliasi.
+
+Status history pending diperbaiki agar label dapat membungkus tanpa overflow. Tes browser lokal label history lulus pada 320/390/768/1440; seluruh CI dan connected JOB-06/JOB-10 harus lulus pada SHA gabungan sebelum menyatakan bukti engineering akhir. Bukti fase sebelumnya tetap historis; acceptance Google, Curriculum, dan QA independen terpisah.
+
+Tes gabung kelas lokal 13/13 lulus setelah assertion diperbarui untuk identitas dashboard/profil yang responsif. Connected JOB-06 kini memakai dialog konfirmasi DOM Drill/Tryout dan memeriksa nama kelas persis setelah join/reload; assertion bisnis/API/persistence tetap dipertahankan. CI menjalankan connected chain sebelum suite browser agar regresi alur nyata terdeteksi lebih awal. Hasil engineering akhir mengikuti CI pada SHA gabungan.

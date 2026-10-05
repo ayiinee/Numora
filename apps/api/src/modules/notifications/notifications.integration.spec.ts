@@ -117,6 +117,7 @@ const url = process.env.TEST_DATABASE_URL;
       .values({
         code: randomUUID(),
         name: 'TEST materials',
+        slug: randomUUID(),
         displayOrder: order,
         status: 'READY',
         materialCategory: 'algebra',
@@ -128,10 +129,11 @@ const url = process.env.TEST_DATABASE_URL;
         {
           code: randomUUID(),
           name: 'TEST null category',
+          slug: randomUUID(),
           displayOrder: order + 1,
           status: 'READY',
         },
-        { code: randomUUID(), name: 'TEST hidden', displayOrder: order + 2, status: 'DRAFT' },
+        { code: randomUUID(), slug: randomUUID(), name: 'TEST hidden', displayOrder: order + 2, status: 'DRAFT' },
       ])
       .returning();
     const subs = await db()
@@ -141,6 +143,7 @@ const url = process.env.TEST_DATABASE_URL;
           chapterId: chapter!.id,
           code: randomUUID(),
           name: `TEST sub ${n}`,
+          slug: randomUUID(),
           displayOrder: n,
           status: 'READY' as const,
         })),

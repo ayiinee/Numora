@@ -74,13 +74,22 @@ jobs:
           pnpm --filter @tka/database db:upgrade-check
           pnpm --filter @tka/database db:staging:bridge-check
 
+      - name: JOB-10 connected IRT foundation on one SHA
+        env:
+          TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+          TEST_REDIS_URL: redis://localhost:6379
+        run: pnpm test:irt-chain
+
+      - name: Upload JOB-10 connected evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: job10-connected-${{ github.sha }}
+          path: .tmp/job10-evidence/connected.json
+          if-no-files-found: warn
+
       - name: Install browser for E2E
         run: pnpm --filter @tka/web exec playwright install --with-deps chromium
-
-      - name: Browser E2E
-        env:
-          DEBUG: pw:webserver
-        run: pnpm --filter @tka/web test:e2e
 
       - name: Connected release chain (real API, PostgreSQL and Redis)
         env:
@@ -98,6 +107,11 @@ jobs:
           name: job06-connected-${{ github.sha }}
           path: .tmp/job06-evidence/connected.json
           if-no-files-found: warn
+
+      - name: Browser E2E
+        env:
+          DEBUG: pw:webserver
+        run: pnpm --filter @tka/web test:e2e
 
       - name: Build
         run: pnpm build

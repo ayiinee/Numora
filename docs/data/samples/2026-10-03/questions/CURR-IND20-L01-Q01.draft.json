@@ -1,0 +1,89 @@
+{
+  "externalId": "CURR-IND20-L01-Q01",
+  "type": "SINGLE_CHOICE",
+  "chapterCode": "CH-DP",
+  "subchapterCode": "SC-DATA",
+  "competencyCode": "IND-020",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Seorang siswa ingin mengetahui jenis olahraga yang paling disukai siswa kelas IX. Pertanyaan yang paling tepat untuk memperoleh data tersebut adalah ....",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "Apakah olahraga penting bagi kesehatan?",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "Jenis olahraga apa yang paling kamu sukai?",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "Mengapa olahraga harus dilakukan?",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "Apakah kamu suka berolahraga setiap hari?",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionId": "B"
+  },
+  "explanation": {
+    "text": "Tujuan pengumpulan data adalah mengetahui jenis olahraga yang paling disukai. Oleh karena itu, pertanyaan yang paling sesuai adalah menanyakan secara langsung jenis olahraga yang disukai.",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 20 - 23_Abim / Indikator 20 / Level 1 / Soal 1",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "20 - Perumusan pertanyaan untuk mendapatkan data, serta penyajian, dan peginterpretasian data",
+    "chapterSource": "Data & Peluang",
+    "subchapterSource": "Data",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 1,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "BELUM_DIREVIEW",
+    "sourceExtractionNotes": "Sampel ekstraksi; kunci disalin dari sumber, belum disetujui reviewer. Kode master, level database, dan difficulty belum dipetakan.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": [],
+    "importReady": false,
+    "assetManifest": [],
+    "mediaMarkerConvention": null,
+    "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts."
+    ]
+  }
+}

@@ -1,5 +1,7 @@
 # PRD → Engineering Mapping
 
+**USER CLARIFICATION — 3 Oktober 2026:** indikator kurikulum menggunakan `competencies`. Level/progres berada di subbab; nomor level kurikulum pada bank soal menentukan pool lintas indikator untuk level subbab yang sama. Ini tidak menetapkan kuota indikator, rubrik, atau jumlah level. [Rincian data dan migrasi](../data/CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
+
 This document maps [Drill v1.2 and TryOut v1.1](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) (supplied 2 October 2026) and the cross-feature PRD v0.5 baseline to implementation areas. It is not a replacement for the PRD. The Sprint 2 Student slice and additional Teacher prototype UI are recorded in `docs/development/SPRINT_2_GOAL.md`.
 
 | PRD area              | Key product behavior                                                                                                                | Primary backend modules                    | Primary frontend areas                         | Persistence / infrastructure                     | Test emphasis                                                                                    |
@@ -99,6 +101,8 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 
 ## Variant / IRT persistence ? 3 October 2026
 
+**ENGINEERING DECISION — JOB-10 foundation, Aini approved 3 October 2026:** TryOut v3 Admin prepare/status/manual retry, transactional frozen inputs, generation-fenced Redis notifications and atomic adoption of scientific evidence/item parameters extend PR #51. Default off; no statistical engine, respondent grades, parameter activation, publication, fallback or XP. See [handoff/runbook](../development/IRT_V3_RUNBOOK.md). Engineering acceptance uses isolated PostgreSQL/Redis and TEST ONLY compute fixtures.
+
 **ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.
 
 ## Materi / notification extension — 4 October 2026
@@ -108,3 +112,7 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 ## UI feedback revision — 5 October 2026
 
 **ENGINEERING DECISION — owner approved:** follow the [UI feedback revision](../design/UI_FEEDBACK_REVISION_2026-10-05.md). Teacher navigation becomes Kelas / Profil, feedback requires an explicitly selected owned-Class student, and Teacher read-receipt presentation is hidden while Student unread/read behavior remains. Student Pretest loses only its unavailable Home shortcut. No API, database, academic policy or OPEN decision is resolved by this UI revision.
+
+## Question media and review samples — 3 October 2026
+
+**ENGINEERING IMPLEMENTATION:** [R2 upload contract](../api/CONTENT_MEDIA_UPLOADS.md) adds Admin-only reservations/completion, durable idempotency/audit and verified hashed object keys in `numora-bucket`; migration 0021 adds only upload persistence. [Ten review samples](../data/samples/2026-10-03/README.md) cover all three content formats and six images. **USER CLARIFICATION:** source levels follow Curriculum; PvP difficulty mapping remains OPEN. **OPEN:** master approval/seed, nullable difficulty import contract, three-format rich runtime/renderer and partial PGK formula. No Cloud upload/migration or academic acceptance is implied by this infrastructure.

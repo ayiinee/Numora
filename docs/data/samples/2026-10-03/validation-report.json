@@ -1,0 +1,339 @@
+{
+  "questions": 10,
+  "masterCodesMapped": 10,
+  "proposedPreviewContractValid": 10,
+  "currentRepositoryValid": 0,
+  "currentRepositorySchemaBlockers": [
+    "difficulty null requires reviewed schema/backend/DB changes"
+  ],
+  "plannedObjectKeys": 6,
+  "confirmedUploadedObjectKeys": 0,
+  "imageHashesVerified": true,
+  "backendUploadEndpointKnown": true,
+  "cloudTouched": false,
+  "results": [
+    {
+      "externalId": "CURR-IND20-L01-Q01",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q02",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q03",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q04",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q05",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q06",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q07",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND20-L01-Q09",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND16-L01-Q03",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING",
+        "R2_UPLOAD_PENDING"
+      ]
+    },
+    {
+      "externalId": "CURR-IND17-L01-Q05",
+      "proposedPreviewContractValid": true,
+      "currentRepositorySchemaValid": false,
+      "repositoryErrors": [
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/type",
+          "keyword": "type",
+          "params": {
+            "type": "string"
+          },
+          "message": "must be string"
+        },
+        {
+          "instancePath": "/difficulty",
+          "schemaPath": "#/properties/difficulty/enum",
+          "keyword": "enum",
+          "params": {
+            "allowedValues": ["EASY", "MEDIUM", "HARD"]
+          },
+          "message": "must be equal to one of the allowed values"
+        }
+      ],
+      "importReady": false,
+      "importBlockers": [
+        "MASTER_DATA_NOT_SEEDED",
+        "DIFFICULTY_NULL_CONTRACT_PENDING",
+        "IMPORT_RUNTIME_PENDING",
+        "CURRICULUM_REVIEW_PENDING",
+        "R2_UPLOAD_PENDING"
+      ]
+    }
+  ],
+  "evidenceScope": "Offline sample/schema/hash validation; not a Cloud upload, import, or PR acceptance result."
+}

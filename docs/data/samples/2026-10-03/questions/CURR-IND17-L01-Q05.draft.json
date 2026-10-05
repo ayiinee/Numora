@@ -1,0 +1,180 @@
+{
+  "externalId": "CURR-IND17-L01-Q05",
+  "type": "SINGLE_CHOICE",
+  "chapterCode": "CH-GP",
+  "subchapterCode": "SC-TG",
+  "competencyCode": "IND-017",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Titik E(1, 6) dicerminkan terhadap garis [[asset:soal-1]]. Koordinat bayangan titik E adalah...",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "(1, -6)",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "(6, 1)",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "(-1, -6)",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "(-6, -1)",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionId": "B"
+  },
+  "explanation": {
+    "text": "Refleksi terhadap garis [[asset:bahas-1]]: [[asset:bahas-2]]\n [[asset:bahas-3]].",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "17 - Transformasi tunggal (refleksi, translasi, rotasi, dan dilatasi) terhadap titik, garis, dan bangun datar pada bidang.",
+    "chapterSource": "Geometri & Pengukuran",
+    "subchapterSource": "Transformasi Geometri",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 5,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "PERLU_PERBAIKAN",
+    "sourceExtractionNotes": "Satu gambar rumus dalam pertanyaan dan tiga gambar rumus dalam pembahasan belum diekspor/diperiksa visual. Kunci B disalin dari sumber; ketepatannya terhadap garis pada gambar belum diverifikasi. Jangan menebak garis pencerminan. Kode master/difficulty menunggu.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": ["metadata.assetManifest.objectKey"],
+    "importReady": false,
+    "assetManifest": [
+      {
+        "externalId": "CURR-IND17-L01-Q05",
+        "assetId": "bahas-1",
+        "textMarker": "[[asset:bahas-1]]",
+        "placement": "EXPLANATION",
+        "itemId": null,
+        "assetOrder": 1,
+        "fileReference": "images/CURR-IND17-L01-Q05_bahas-1.png",
+        "altText": "Persamaan garis pencerminan y = x.",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-1-39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71.png",
+        "uploadedToR2": false,
+        "sha256": "39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.87zkob7uuqnw",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1124,
+        "width": 59,
+        "height": 42,
+        "bucket": "numora-bucket"
+      },
+      {
+        "externalId": "CURR-IND17-L01-Q05",
+        "assetId": "bahas-2",
+        "textMarker": "[[asset:bahas-2]]",
+        "placement": "EXPLANATION",
+        "itemId": null,
+        "assetOrder": 2,
+        "fileReference": "images/CURR-IND17-L01-Q05_bahas-2.png",
+        "altText": "Refleksi terhadap garis y = x menukar koordinat (x, y) menjadi (y, x).",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-2-9325b4b542077483be863e3631bda4e103806c97c505079217d780b71729aed9.png",
+        "uploadedToR2": false,
+        "sha256": "9325b4b542077483be863e3631bda4e103806c97c505079217d780b71729aed9",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.4iufgzeawox1",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1881,
+        "width": 193,
+        "height": 50,
+        "bucket": "numora-bucket"
+      },
+      {
+        "externalId": "CURR-IND17-L01-Q05",
+        "assetId": "bahas-3",
+        "textMarker": "[[asset:bahas-3]]",
+        "placement": "EXPLANATION",
+        "itemId": null,
+        "assetOrder": 3,
+        "fileReference": "images/CURR-IND17-L01-Q05_bahas-3.png",
+        "altText": "Refleksi terhadap garis y = x mengubah titik (1, 6) menjadi (6, 1).",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/bahas-3-7d0b1be3275ece30af6b11e2574182fec04cb751b332beec3eb20a6d4334455c.png",
+        "uploadedToR2": false,
+        "sha256": "7d0b1be3275ece30af6b11e2574182fec04cb751b332beec3eb20a6d4334455c",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / EXPLANATION / inlineObjectId=kix.gbbak7f1t87e",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1841,
+        "width": 192,
+        "height": 50,
+        "bucket": "numora-bucket"
+      },
+      {
+        "externalId": "CURR-IND17-L01-Q05",
+        "assetId": "soal-1",
+        "textMarker": "[[asset:soal-1]]",
+        "placement": "STEM",
+        "itemId": null,
+        "assetOrder": 1,
+        "fileReference": "images/CURR-IND17-L01-Q05_soal-1.png",
+        "altText": "Persamaan garis pencerminan y = x.",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND17-L01-Q05/v1/soal-1-39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71.png",
+        "uploadedToR2": false,
+        "sha256": "39c0e3a0fb30f07bca95478d5b8ca47fc51db4f928f154781ee3a9cce6f01e71",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 17 / Level 1 / Soal 5 / STEM / inlineObjectId=kix.feyxrw801b59",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1124,
+        "width": 59,
+        "height": 42,
+        "bucket": "numora-bucket"
+      }
+    ],
+    "mediaMarkerConvention": "PROPOSED_RICH_TEXT_ASSET_MARKERS_V1",
+    "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING",
+      "R2_UPLOAD_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts.",
+      "R2 final key plan includes SHA-256; confirmed objectKey stays null until a VERIFIED backend receipt."
+    ]
+  }
+}

@@ -1,0 +1,136 @@
+{
+  "externalId": "CURR-IND16-L01-Q03",
+  "type": "SINGLE_CHOICE",
+  "chapterCode": "CH-GP",
+  "subchapterCode": "SC-OG",
+  "competencyCode": "IND-016",
+  "levelCode": null,
+  "difficulty": null,
+  "stem": {
+    "text": "Sebuah kubus memiliki jaring-jaring yang terdiri dari 6 buah persegi. Jika panjang sisi persegi pada jaring-jaring tersebut adalah 5 cm, maka luas total jaring-jaring kubus tersebut adalah...",
+    "assetKeys": []
+  },
+  "options": [
+    {
+      "id": "A",
+      "content": {
+        "text": "25 cm²",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "B",
+      "content": {
+        "text": "100 cm²",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "C",
+      "content": {
+        "text": "125 cm²",
+        "assetKeys": []
+      }
+    },
+    {
+      "id": "D",
+      "content": {
+        "text": "150 cm²",
+        "assetKeys": []
+      }
+    }
+  ],
+  "answer": {
+    "optionId": "D"
+  },
+  "explanation": {
+    "text": "Jaring-jaring kubus terdiri dari 6 buah persegi.\nPanjang sisi persegi = 5 cm.\nLuas 1 persegi:\n[[asset:bahas-1]]\nLuas total jaring-jaring kubus:\n[[asset:bahas-2]]",
+    "assetKeys": []
+  },
+  "metadata": {
+    "source": "CURRICULUM_SHEETS_SAMPLE",
+    "sourceSpreadsheetId": "1zU6OeahFcDWhF6Eq5HNy2LsSFi5yPVahr7QnZbKn0nw",
+    "sourceUrl": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit?usp=sharing",
+    "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3",
+    "batchId": "SAMPLE-2026-10-03",
+    "indicatorSource": "16 - Jaring-jaring bangun ruang (prisma, tabung, limas dan kerucut)",
+    "chapterSource": "Geometri & Pengukuran",
+    "subchapterSource": "Objek Geometri",
+    "sourceLevelNumber": 1,
+    "sourceQuestionNumber": 3,
+    "cognitiveLevel": "C3",
+    "variantKind": "ORIGINAL",
+    "contentStatus": "DRAFT",
+    "sourceReviewStatus": "PERLU_PERBAIKAN",
+    "sourceExtractionNotes": "Dua gambar rumus pembahasan belum diekspor atau diperiksa visual. Penanda [[asset:...]] merupakan format ekstraksi, belum sintaks renderer. Kunci sumber D; soal tertahan hingga file aset dan review lengkap. Pemetaan master/difficulty menunggu.",
+    "difficultyReview": "BELUM_DISETUJUI",
+    "pendingFields": ["metadata.assetManifest.objectKey"],
+    "importReady": false,
+    "assetManifest": [
+      {
+        "externalId": "CURR-IND16-L01-Q03",
+        "assetId": "bahas-1",
+        "textMarker": "[[asset:bahas-1]]",
+        "placement": "EXPLANATION",
+        "itemId": null,
+        "assetOrder": 1,
+        "fileReference": "images/CURR-IND16-L01-Q03_bahas-1.png",
+        "altText": "Luas satu persegi: 5 dikali 5 sama dengan 25 sentimeter persegi.",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND16-L01-Q03/v1/bahas-1-3a8420d839c65e905eb9a118cbaa82f72b261849309cea809d1c25cc85d685a4.png",
+        "uploadedToR2": false,
+        "sha256": "3a8420d839c65e905eb9a118cbaa82f72b261849309cea809d1c25cc85d685a4",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3 / EXPLANATION / inlineObjectId=kix.ftnf75z6gywr",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1499,
+        "width": 158,
+        "height": 43,
+        "bucket": "numora-bucket"
+      },
+      {
+        "externalId": "CURR-IND16-L01-Q03",
+        "assetId": "bahas-2",
+        "textMarker": "[[asset:bahas-2]]",
+        "placement": "EXPLANATION",
+        "itemId": null,
+        "assetOrder": 2,
+        "fileReference": "images/CURR-IND16-L01-Q03_bahas-2.png",
+        "altText": "Luas total enam persegi: 6 dikali 25 sama dengan 150 sentimeter persegi.",
+        "assetStatus": "SIAP_DIREVIEW",
+        "objectKey": null,
+        "proposedObjectKey": "question-media/CURR-IND16-L01-Q03/v1/bahas-2-7cd665c5849950951225c4c1a0767ee024861ac9da1fa71ee54ed6bb220079fe.png",
+        "uploadedToR2": false,
+        "sha256": "7cd665c5849950951225c4c1a0767ee024861ac9da1fa71ee54ed6bb220079fe",
+        "sourceLocation": "Indikator 16 - 19_Izza / Indikator 16 / Level 1 / Soal 3 / EXPLANATION / inlineObjectId=kix.1rhw8mf3q9n9",
+        "uploadStatus": "PENDING_BACKEND_DEPLOYMENT",
+        "contentType": "image/png",
+        "byteLength": 1722,
+        "width": 185,
+        "height": 43,
+        "bucket": "numora-bucket"
+      }
+    ],
+    "mediaMarkerConvention": "PROPOSED_RICH_TEXT_ASSET_MARKERS_V1",
+    "scoringRubricStatus": "NOT_SPECIFIED_IN_THIS_CONTENT_FILE",
+    "masterMappingStatus": "PROPOSED_FOR_SAMPLE_REVIEW",
+    "levelMappingMethod": "SUBCHAPTER_AND_SOURCE_LEVEL_NUMBER",
+    "difficultyClassification": "BANK_USES_CURRICULUM_LEVEL_PVP_MAPPING_OPEN",
+    "sourceNamespace": "CURRICULUM_SHEETS_SAMPLE",
+    "importBlockers": [
+      "MASTER_DATA_NOT_SEEDED",
+      "DIFFICULTY_NULL_CONTRACT_PENDING",
+      "IMPORT_RUNTIME_PENDING",
+      "CURRICULUM_REVIEW_PENDING",
+      "R2_UPLOAD_PENDING"
+    ],
+    "rendererStatus": "NOT_IMPLEMENTED",
+    "processingNotes": [
+      "Codes mapped to proposed sample master table on 2026-10-03; database not seeded.",
+      "Level follows Curriculum. difficulty and optional levelCode intentionally remain null.",
+      "Source review status and extraction notes preserved; they are not current upload receipts.",
+      "R2 final key plan includes SHA-256; confirmed objectKey stays null until a VERIFIED backend receipt."
+    ]
+  }
+}

@@ -2506,6 +2506,86 @@
         ]
       }
     },
+    "/api/v1/admin/content/media/uploads": {
+      "post": {
+        "operationId": "MediaUploadsController_reserve",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateMediaUploadDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadReservationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-media"
+        ]
+      }
+    },
+    "/api/v1/admin/content/media/uploads/{uploadId}/complete": {
+      "post": {
+        "operationId": "MediaUploadsController_complete",
+        "parameters": [
+          {
+            "name": "uploadId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaUploadReceiptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-media"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -3082,6 +3162,181 @@
         ],
         "tags": [
           "student-support"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/requests": {
+      "post": {
+        "operationId": "IrtController_prepare",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareIrtRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      },
+      "get": {
+        "operationId": "IrtController_requestList",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtRequestsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/requests/{id}": {
+      "get": {
+        "operationId": "IrtController_requestDetail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/requests/{id}/retry": {
+      "post": {
+        "operationId": "IrtController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
         ]
       }
     },
@@ -4422,6 +4677,9 @@
             "type": "string",
             "format": "uuid"
           },
+          "slug": {
+            "type": "string"
+          },
           "title": {
             "type": "string"
           },
@@ -4455,6 +4713,9 @@
           "id": {
             "type": "string",
             "format": "uuid"
+          },
+          "slug": {
+            "type": "string"
           },
           "chapterId": {
             "type": "string",
@@ -5385,6 +5646,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "nullable": true
+          },
           "name": {
             "type": "string"
           },
@@ -5429,6 +5694,10 @@
         "properties": {
           "code": {
             "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
           },
           "name": {
             "type": "string"
@@ -5482,6 +5751,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
+          },
           "name": {
             "type": "string"
           },
@@ -5518,6 +5791,10 @@
           "code": {
             "type": "string"
           },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
+          },
           "name": {
             "type": "string"
           },
@@ -5553,6 +5830,10 @@
         "properties": {
           "code": {
             "type": "string"
+          },
+          "slug": {
+            "type": "string",
+            "description": "Stable lowercase URL slug; generated from name when omitted on create."
           },
           "name": {
             "type": "string"
@@ -5695,6 +5976,10 @@
           "primaryCompetencyId": {
             "type": "string"
           },
+          "curriculumLevelNumber": {
+            "type": "number",
+            "nullable": true
+          },
           "variantId": {
             "type": "string"
           },
@@ -5823,6 +6108,11 @@
           "primaryCompetencyId": {
             "type": "string",
             "format": "uuid"
+          },
+          "curriculumLevelNumber": {
+            "type": "number",
+            "minimum": 1,
+            "description": "Curriculum level within the indicator; not difficulty."
           },
           "sourceRef": {
             "type": "string"
@@ -6285,6 +6575,182 @@
           "questionVersionIds"
         ]
       },
+      "CreateMediaUploadDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string",
+            "example": "CURR-IND16-L01-Q03"
+          },
+          "assetId": {
+            "type": "string",
+            "example": "bahas-1"
+          },
+          "contentVersion": {
+            "type": "object",
+            "default": 1,
+            "minimum": 1
+          },
+          "contentType": {
+            "type": "string",
+            "enum": [
+              "image/png",
+              "image/jpeg",
+              "image/webp"
+            ]
+          },
+          "byteLength": {
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5242880
+          },
+          "sha256": {
+            "type": "string",
+            "description": "SHA-256 hex of the exact file bytes."
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "contentType",
+          "byteLength",
+          "sha256"
+        ]
+      },
+      "MediaUploadReservationDto": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED"
+            ]
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "description": "Durable final key; usable only after VERIFIED."
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "verifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "uploadUrl": {
+            "type": "string",
+            "nullable": true,
+            "description": "Short-lived signed URL; never persist or log it."
+          },
+          "method": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "PUT"
+            ]
+          },
+          "headers": {
+            "type": "object",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "uploadId",
+          "status",
+          "externalId",
+          "assetId",
+          "bucket",
+          "objectKey",
+          "contentType",
+          "byteLength",
+          "sha256",
+          "verifiedAt",
+          "uploadUrl",
+          "method",
+          "headers",
+          "expiresAt"
+        ]
+      },
+      "MediaUploadReceiptDto": {
+        "type": "object",
+        "properties": {
+          "uploadId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "VERIFIED"
+            ]
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "bucket": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "description": "Durable final key; usable only after VERIFIED."
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "verifiedAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          }
+        },
+        "required": [
+          "uploadId",
+          "status",
+          "externalId",
+          "assetId",
+          "bucket",
+          "objectKey",
+          "contentType",
+          "byteLength",
+          "sha256",
+          "verifiedAt"
+        ]
+      },
       "AdminDashboardDto": {
         "type": "object",
         "properties": {
@@ -6711,6 +7177,201 @@
           "category",
           "attemptId",
           "mappingId"
+        ]
+      },
+      "IrtConfigurationPinDto": {
+        "type": "object",
+        "properties": {
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "digest": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "approvalId",
+          "digest"
+        ]
+      },
+      "PrepareIrtRequestDto": {
+        "type": "object",
+        "properties": {
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "configurationPins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtConfigurationPinDto"
+            }
+          }
+        },
+        "required": [
+          "contextId",
+          "configurationPins"
+        ]
+      },
+      "IrtRequestExecutionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "attemptNumber": {
+            "type": "number"
+          },
+          "leaseExpired": {
+            "type": "boolean"
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "attemptNumber",
+          "leaseExpired",
+          "failureCode"
+        ]
+      },
+      "IrtRequestArtifactDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "scientificDecision": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "digest",
+          "scientificDecision"
+        ]
+      },
+      "IrtRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "contractVersion": {
+            "type": "number",
+            "enum": [
+              3
+            ]
+          },
+          "contextId": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "PENDING",
+              "RUNNING",
+              "COMPLETED",
+              "FAILED",
+              "CANCELLED"
+            ]
+          },
+          "inputDigest": {
+            "type": "string"
+          },
+          "snapshotId": {
+            "type": "string"
+          },
+          "snapshotDigest": {
+            "type": "string"
+          },
+          "rowCount": {
+            "type": "number"
+          },
+          "dispatchGeneration": {
+            "type": "number"
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "acceptedExecutionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "execution": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/IrtRequestExecutionDto"
+              }
+            ]
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "artifacts": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtRequestArtifactDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "contractVersion",
+          "contextId",
+          "packageId",
+          "status",
+          "inputDigest",
+          "snapshotId",
+          "snapshotDigest",
+          "rowCount",
+          "dispatchGeneration",
+          "dueAt",
+          "overdue",
+          "acceptedExecutionId",
+          "execution",
+          "failureCode",
+          "artifacts"
+        ]
+      },
+      "IrtRequestsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtRequestDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "AdminIrtItemDto": {

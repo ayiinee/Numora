@@ -59,7 +59,7 @@ export async function pvpFixture() {
   const [chapter] = await db
     .insert(chapters)
     .values({
-      code: suffix,
+      code: suffix, slug: (suffix).toLowerCase(),
       name: 'PvP fixture chapter',
       displayOrder: Math.floor(Math.random() * 1_000_000_000) + 1,
       status: 'READY',
@@ -69,7 +69,7 @@ export async function pvpFixture() {
     .insert(subchapters)
     .values({
       chapterId: chapter!.id,
-      code: suffix,
+      code: suffix, slug: (suffix).toLowerCase(),
       name: 'PvP fixture subchapter',
       displayOrder: 1,
       status: 'READY',

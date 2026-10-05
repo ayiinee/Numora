@@ -3,7 +3,7 @@
 
 export type ContentOptionDto = { "id": string; "text": string; };
 
-export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; "id": string; "kind": "CHAPTER" | "SUBCHAPTER" | "COMPETENCY" | "LEVEL"; "parentId": string | null; "code": string; "name": string; "displayOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED"; };
+export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; "id": string; "kind": "CHAPTER" | "SUBCHAPTER" | "COMPETENCY" | "LEVEL"; "parentId": string | null; "code": string; "slug"?: string | null; "name": string; "displayOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED"; };
 
 export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
@@ -15,7 +15,7 @@ export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": numb
 
 export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
-export type AdminVersionDto = { "id": string; "questionId": string; "primaryCompetencyId": string; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string; "contentStatus": "DRAFT" | "READY" | "ARCHIVED"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
+export type AdminVersionDto = { "id": string; "questionId": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string; "contentStatus": "DRAFT" | "READY" | "ARCHIVED"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
 
 export type AdminVersionsDto = { "items": (AdminVersionDto)[]; };
 
@@ -25,13 +25,13 @@ export type AdminVideosDto = { "items": (AdminVideoDto)[]; };
 
 export type ContentMutationDto = { "id": string; };
 
-export type CreateChapterDto = { "code": string; "name": string; "description"?: string; "displayOrder": number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; };
+export type CreateChapterDto = { "code": string; "slug"?: string; "name": string; "description"?: string; "displayOrder": number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; };
 
-export type UpdateChapterDto = { "code"?: string; "name"?: string; "description"?: string; "displayOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; };
+export type UpdateChapterDto = { "code"?: string; "slug"?: string; "name"?: string; "description"?: string; "displayOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "materialCategory"?: "algebra" | "geometry" | "numbers" | "statistics" | null; };
 
-export type CreateSubchapterDto = { "code": string; "name": string; "description"?: string; "displayOrder": number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "chapterId": string; };
+export type CreateSubchapterDto = { "code": string; "slug"?: string; "name": string; "description"?: string; "displayOrder": number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; "chapterId": string; };
 
-export type UpdateSubchapterDto = { "code"?: string; "name"?: string; "description"?: string; "displayOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; };
+export type UpdateSubchapterDto = { "code"?: string; "slug"?: string; "name"?: string; "description"?: string; "displayOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED"; };
 
 export type CreateCompetencyDto = { "subchapterId": string; "code": string; "description": string; "status"?: "DRAFT" | "READY" | "ARCHIVED"; };
 
@@ -43,7 +43,7 @@ export type UpdateLevelDto = { "description"?: string; "status"?: "DRAFT" | "REA
 
 export type QuestionContentDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; };
 
-export type CreateQuestionDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "primaryCompetencyId": string; "sourceRef"?: string; "variantCode": string; };
+export type CreateQuestionDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number; "sourceRef"?: string; "variantCode": string; };
 
 export type CreateVariantDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "originalVariantId": string; "variantCode": string; };
 
@@ -60,6 +60,18 @@ export type ResolveReportDto = { "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "
 export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersionId": string; "modelVersion": string; "batchStatus": string; "sampleSize": number; "dataStatus": string; "difficultyB": string | null; "discriminationA": string | null; "guessingC": string | null; };
 
 export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; };
+
+export type IrtConfigurationPinDto = { "approvalId": string; "digest": string; };
+
+export type PrepareIrtRequestDto = { "contextId": string; "configurationPins": (IrtConfigurationPinDto)[]; };
+
+export type IrtRequestExecutionDto = { "id": string; "status": "RUNNING" | "SUCCEEDED" | "FAILED" | "EXPIRED"; "attemptNumber": number; "leaseExpired": boolean; "failureCode": string | null; };
+
+export type IrtRequestArtifactDto = { "id": string; "digest": string; "scientificDecision": string; };
+
+export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
+
+export type IrtRequestsDto = { "items": (IrtRequestDto)[]; };
 
 export type AdminIrtBatchDto = { "id": string; "packageId": string | null; "batchKind": string; "modelVersion": string; "status": "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED"; "startedAt": string; "finishedAt": string | null; "resultReleasedAt": string | null; "failureCode": string | null; };
 

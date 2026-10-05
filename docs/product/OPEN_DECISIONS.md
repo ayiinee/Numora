@@ -5,6 +5,8 @@
 
 ## Status legend
 
+**USER CLARIFICATION / engineering handoff, 3 Oktober 2026 (Reyhan, Data):** level bank sampel mengikuti Curriculum per indikator dan tidak otomatis menjadi EASY/MEDIUM/HARD. Mapping kategori PvP tetap OPEN. Arah PGK partial belum menetapkan formula/rounding atau menutup OPEN-04. [Handoff bank soal](../data/QUESTION_BANK_BACKEND_HANDOFF.md) dan [upload media](../api/CONTENT_MEDIA_UPLOADS.md) mendokumentasikan jalur review; upload tidak berarti soal/paket telah disetujui.
+
 - **PRD RULE** — aturan eksplisit sumber terbaru untuk fitur terkait; TBC tetap unresolved.
 - **OPEN** — unresolved policy/academic detail.
 - **PARTLY OPEN** — part of the decision is confirmed; remaining details are listed explicitly.
@@ -33,6 +35,8 @@
 | OPEN-18 | IRT batch duration for weekly Tryout package                         | Data + PO                  | TryOut v1.1 FINAL: hasil/pembahasan maksimum 3×24 jam sesudah akhir batch/periode. Jadwal akhir, insufficient data, failure/delay tetap TBC                                            | Blocks scheduler/failure policy, bukan SLA produk |
 
 ## OPEN dari PRD fitur terbaru
+
+**USER CLARIFICATION — Reyhan, 3 Oktober 2026:** `competencies` adalah indikator kurikulum. Navigasi dan progres tetap Bab → Subbab → Level; soal Level N diambil dari Level N indikator-indikator dalam subbab itu. Tidak ada progres/unlock terpisah per indikator. Jumlah level, kuota per indikator, definisi tuntas dan distribusi Pretest pada OPEN-01–03 tetap belum ditetapkan. Nama teknis tabel dipertahankan untuk kompatibilitas. Lihat [pemetaan data](../data/CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
 
 ID global OPEN-01–18 di atas tetap stabil untuk referensi lama. `DRL-OPEN-*` menambahkan namespace pada ID sumber Drill; `TRY-TBC-*` adalah alias engineering untuk topik tanpa ID pada TryOut §16.
 
@@ -123,6 +127,8 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 **PROPOSED:** Aini prepared default-off domain producers and a payload/trigger/dedup schema, plus durable consumer correlation and backlog status. [Inventory](../development/JOB20_ANALYTICS_INVENTORY.md) is the Data review/handoff reference. Exact mapping, activation and other-owner producers remain OPEN; no reward/model policy is resolved.
 
 ## Variant / IRT persistence ? 3 October 2026
+
+**ENGINEERING DECISION — Aini approved JOB-10 foundation, 3 October 2026:** manual Admin retry authorizes a new execution against identical frozen input; Redis only notifies compute. Technical evidence adoption does not resolve TRY-TBC-06/07 or OPEN-12/18. Production batch close, thresholds, PGK rubrics, score mapping, fallback and release require owner approvals; foundation remains default off.
 
 **ENGINEERING DECISION:** separate compute ownership and one shared migration stream follow [ADR-011](../adr/ADR-011-separated-irt-compute.md). [Persistence specification](../data/VARIANT_IRT_DATABASE.md) maps content lineage, scoring categories, trial/exposure, immutable inputs/results and Tryout finalization. **OPEN:** academic gates, rubrics, cohort/reference design, adjustment limits, score mapping/ties, release/fallback/correction and retention remain unresolved. Database capability does not approve or activate those product policies.
 
