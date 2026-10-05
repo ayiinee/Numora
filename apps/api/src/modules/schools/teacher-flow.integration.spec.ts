@@ -31,7 +31,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     const { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
     const profiles = {
-      admin: { role: 'ADMIN', adminRole: 'SUPER_ADMIN', teacherVerified: null },
+      admin: { role: 'ADMIN', adminRole: 'OPERATIONS', teacherVerified: null },
       teacherA: { role: 'TEACHER', teacherVerified: true },
       teacherB: { role: 'TEACHER', teacherVerified: true },
       teacherC: { role: 'TEACHER', teacherVerified: true },

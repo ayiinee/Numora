@@ -1,16 +1,25 @@
-import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
+import { Controller, Get, Inject, Query, Req, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
-import { AdminGuard } from '../identity/admin.guard';
-import { AdminAccess } from '../identity/admin-permissions';
+import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
+import { IsOptional, IsString, IsISO8601, IsUUID, MaxLength } from 'class-validator';
+import { ApiPropertyOptional } from '@nestjs/swagger';
 import { ContentPageDto } from '../content/content.dto';
 
 export class AdminDashboardDto {
   @ApiProperty() schools!: number;
-  @ApiProperty() chapters!: number;
-  @ApiProperty() questions!: number;
-  @ApiProperty() readyVersions!: number;
-  @ApiProperty() openReports!: number;
+  @ApiProperty({ type: Number, nullable: true }) chapters!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) questions!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) readyVersions!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) openReports!: number | null;
+}
+export class AdminAuditQueryDto extends ContentPageDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(120) action?: string;
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(120) entityType?: string;
+  @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() actorId?: string;
+  @ApiPropertyOptional({ format: 'date-time' }) @IsOptional() @IsISO8601() from?: string;
+  @ApiPropertyOptional({ format: 'date-time' }) @IsOptional() @IsISO8601() to?: string;
 }
 export class AdminAuditDto {
   @ApiProperty() id!: string;
@@ -31,14 +40,15 @@ export class AdminAuditListDto {
 export class AdminController {
   constructor(@Inject(AdminService) private readonly admin: AdminService) {}
   @Get('dashboard')
-  @AdminAccess('dashboard')
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
   @ApiOkResponse({ type: AdminDashboardDto })
-  dashboard() {
-    return this.admin.dashboard();
+  dashboard(@Req() request: AdminRequest) {
+    return this.admin.dashboard(request.adminRole);
   }
   @Get('audit-logs')
+  @RequireAdminCapability('AUDIT_READ')
   @ApiOkResponse({ type: AdminAuditListDto })
-  audit(@Query() page: ContentPageDto) {
-    return this.admin.audit(page);
+  audit(@Req() request: AdminRequest, @Query() page: AdminAuditQueryDto) {
+    return this.admin.audit(page, request.adminRole);
   }
 }

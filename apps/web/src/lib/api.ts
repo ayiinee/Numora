@@ -71,6 +71,15 @@ export async function apiRequest<T>(
     { code?: string; detail?: string } | T | null;
   if (!response.ok) {
     const problem = body as { code?: string; detail?: string } | null;
+    if (
+      typeof window !== 'undefined' &&
+      response.status === 403 &&
+      ['ADMIN_PERMISSION_REQUIRED', 'CONTENT_PERMISSION_REQUIRED', 'ACCOUNT_DISABLED'].includes(
+        problem?.code ?? '',
+      )
+    ) {
+      window.dispatchEvent(new Event('numora:authorization-changed'));
+    }
     throw new ApiProblem(
       response.status,
       problem?.code ?? 'API_ERROR',

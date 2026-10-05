@@ -3206,6 +3206,49 @@
                 }
               ]
             }
+          },
+          {
+            "name": "action",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "entityType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "actorId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4743,7 +4786,13 @@
             "items": {
               "type": "string",
               "enum": [
-                "CONTENT_MANAGE"
+                "ADMIN_ACCOUNTS_MANAGE",
+                "OPERATIONS_MANAGE",
+                "OPERATIONS_LIMITED_READ",
+                "CONTENT_MANAGE",
+                "ANALYTICS_OPERATIONS",
+                "ANALYTICS_CONTENT",
+                "AUDIT_READ"
               ]
             }
           },
@@ -8114,16 +8163,20 @@
             "type": "number"
           },
           "chapters": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "questions": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "readyVersions": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "openReports": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [

@@ -41,7 +41,10 @@ export function AdminOperationsScreen() {
   const [revision, setRevision] = useState(0);
   const [deniedError, setDeniedError] = useState('');
   const token =
-    state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE'
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    ['SUPER_ADMIN', 'OPERATIONS'].includes(state.profile.adminRole ?? '')
       ? state.session.access_token
       : null;
 

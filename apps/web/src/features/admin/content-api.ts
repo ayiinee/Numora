@@ -27,8 +27,23 @@ import type {
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
-export async function loadAdminWorkbench(token: string, offset: number) {
+export type AdminWorkbenchView =
+  | 'curriculum'
+  | 'questions'
+  | 'verification'
+  | 'videos'
+  | 'packages'
+  | 'drillPackages'
+  | 'reports'
+  | 'irt'
+  | 'audit';
+export async function loadAdminWorkbench(
+  token: string,
+  offset: number,
+  view: AdminWorkbenchView = 'questions',
+) {
   const page = `?limit=20&offset=${offset}`;
+  const empty = { items: [] };
   const [
     curriculum,
     versions,
@@ -41,16 +56,28 @@ export async function loadAdminWorkbench(token: string, offset: number) {
     packages,
     drillPackages,
   ] = await Promise.all([
-    apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
-    apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token),
-    apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
-    apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
-    apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
-    apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
-    apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
-    apiRequest<AdminDashboardDto>('admin/dashboard', token),
-    apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
-    apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
+    ['curriculum', 'questions', 'verification', 'videos', 'packages', 'drillPackages'].includes(
+      view,
+    )
+      ? apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
+      : Promise.resolve({ items: [] } as AdminCurriculumDto),
+    ['questions', 'verification', 'packages', 'drillPackages'].includes(view)
+      ? apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token)
+      : empty,
+    view === 'videos' ? apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token) : empty,
+    view === 'reports' ? apiRequest<AdminReportsDto>(`admin/reports${page}`, token) : empty,
+    view === 'irt' ? apiRequest<AdminIrtDto>(`admin/irt${page}`, token) : empty,
+    view === 'irt' ? apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token) : empty,
+    ['audit', 'verification'].includes(view)
+      ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
+      : empty,
+    apiRequest<AdminDashboardDto>('admin/dashboard', token).catch(() => null),
+    view === 'packages'
+      ? apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token)
+      : empty,
+    view === 'drillPackages'
+      ? apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token)
+      : empty,
   ]);
   return {
     curriculum,
@@ -65,6 +92,7 @@ export async function loadAdminWorkbench(token: string, offset: number) {
     drillPackages,
   };
 }
+
 function mutation(token: string, path: string, body: object, method = 'POST') {
   return apiRequest<ContentMutationDto>(path, token, { method, body: JSON.stringify(body) });
 }

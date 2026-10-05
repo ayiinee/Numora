@@ -17,6 +17,7 @@ import {
 import { createClient, type SupabaseClient, type User } from '@supabase/supabase-js';
 import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
+import { adminCapabilities } from './admin-capabilities';
 
 @Injectable()
 export class IdentityService {
@@ -92,11 +93,7 @@ export class IdentityService {
       displayName: profile.displayName,
       email: profile.email,
       adminRole: profile.adminRole,
-      capabilities:
-        profile.role === 'ADMIN' &&
-        ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(profile.adminRole ?? '')
-          ? ['CONTENT_MANAGE']
-          : [],
+      capabilities: profile.role === 'ADMIN' ? adminCapabilities(profile.adminRole) : [],
       teacherVerified,
       studentAffiliation,
     };

@@ -46,7 +46,7 @@ export function AdminFrame({
 export function AdminStats({
   items,
 }: {
-  items: { label: string; value: number; icon: IconName }[];
+  items: { label: string; value: number | null | undefined; icon: IconName }[];
 }) {
   return (
     <div className="admin-stats">
@@ -57,7 +57,7 @@ export function AdminStats({
           </span>
           <div>
             <span>{item.label}</span>
-            <strong>{item.value.toLocaleString('id-ID')}</strong>
+            <strong>{item.value == null ? '—' : item.value.toLocaleString('id-ID')}</strong>
           </div>
         </Card>
       ))}

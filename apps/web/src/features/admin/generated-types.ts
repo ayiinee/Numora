@@ -109,7 +109,7 @@ export type AdminAuditDto = { "id": string; "actorUserId": string | null; "actio
 
 export type AdminAuditListDto = { "items": (AdminAuditDto)[]; };
 
-export type AdminDashboardDto = { "schools": number; "chapters": number; "questions": number; "readyVersions": number; "openReports": number; };
+export type AdminDashboardDto = { "schools": number; "chapters": number | null; "questions": number | null; "readyVersions": number | null; "openReports": number | null; };
 
 export type CreateTryoutDraftDto = { "familyCode": string; "packageVersion": number; "name": string; "questionVersionIds": (string)[]; };
 

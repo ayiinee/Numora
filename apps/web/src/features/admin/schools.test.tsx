@@ -37,7 +37,13 @@ beforeEach(() => {
   vi.resetAllMocks();
   auth.state = {
     status: 'ready',
-    profile: { id: 'admin-one', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
+    profile: {
+      id: 'admin-one',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS',
+      status: 'ACTIVE',
+      displayName: 'Admin TEST',
+    },
     session: { access_token: 'test-admin' },
   };
   vi.mocked(listAdminSchools).mockResolvedValue({ items: [school] });
