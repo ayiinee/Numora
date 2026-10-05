@@ -7722,6 +7722,38 @@ a.settings-row:hover {
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
+.admin-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+}
+.admin-home-intro,
+.admin-home-module {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-home-module > svg {
+  color: var(--color-primary-strong);
+}
+.admin-home-module h2,
+.admin-home-intro h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.admin-home-module a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.admin-home-module p,
+.admin-home-intro p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
 .admin-context-note {
   font-size: 12px;
   line-height: 1.7;

@@ -1,5 +1,5 @@
-import { redirect } from 'next/navigation';
+import { AdminHomeScreen } from '@/features/admin/home';
 
 export default function AdminPage() {
-  redirect('/admin/schools');
+  return <AdminHomeScreen />;
 }

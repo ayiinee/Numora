@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
 import { BottomNav, Brand, Icon, TopBar, type IconName, type TopBarProps } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
+import { activeAdminHref, adminNavigation } from '@/features/admin/navigation';
 
 type Area = 'student' | 'teacher' | 'admin';
 const navigation: Record<Area, { href: string; label: string; icon: IconName }[]> = {
@@ -22,12 +23,7 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
     { href: '/teacher', label: 'Kelas saya', icon: 'users' },
     { href: '/teacher/profile', label: 'Profil', icon: 'user' },
   ],
-  admin: [
-    { href: '/admin/schools', label: 'Sekolah & token', icon: 'school' },
-    { href: '/admin/content', label: 'Konten & operasional', icon: 'book' },
-    { href: '/admin/content/imports', label: 'Impor & preview', icon: 'clipboard' },
-    { href: '/admin/operations', label: 'Pengguna & kelas', icon: 'users' },
-  ],
+  admin: [],
 };
 
 export function AppShell({
@@ -61,33 +57,36 @@ export function AppShell({
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
+  const adminItems = adminNavigation(profile);
+  const adminActive = activeAdminHref(pathname, adminItems);
   const areaName =
     area === 'student' ? 'Ruang belajar' : area === 'teacher' ? 'Ruang guru' : 'Ruang admin';
   const active = (href: string) =>
-    href === `/${area}`
-      ? pathname === href || (area === 'teacher' && pathname.startsWith('/teacher/classes/'))
-      : pathname === href ||
-        pathname.startsWith(`${href}/`) ||
-        (href === '/student/learn' && pathname.startsWith('/student/drill/'));
+    area === 'admin'
+      ? href === adminActive
+      : href === `/${area}`
+        ? pathname === href || (area === 'teacher' && pathname.startsWith('/teacher/classes/'))
+        : pathname === href ||
+          pathname.startsWith(`${href}/`) ||
+          (href === '/student/learn' && pathname.startsWith('/student/drill/'));
   const links = (mobile = false) =>
-    (mobile && area === 'student' ? navigation.student.slice(0, 5) : navigation[area])
-      .filter(
-        (item) =>
-          !item.href.startsWith('/admin/content') ||
-          profile?.capabilities?.includes('CONTENT_MANAGE'),
-      )
-      .map((item) => (
-        <Link
-          key={item.href}
-          href={item.href}
-          aria-current={active(item.href) ? 'page' : undefined}
-          onClick={() => setMenuOpen(false)}
-        >
-          <Icon name={item.icon} />
-          <span>{item.label}</span>
-          {!mobile && active(item.href) && <span className="nav-active-dot" />}
-        </Link>
-      ));
+    (area === 'admin'
+      ? adminItems
+      : mobile && area === 'student'
+        ? navigation.student.slice(0, 5)
+        : navigation[area]
+    ).map((item) => (
+      <Link
+        key={item.href}
+        href={item.href}
+        aria-current={active(item.href) ? 'page' : undefined}
+        onClick={() => setMenuOpen(false)}
+      >
+        <Icon name={item.icon} />
+        <span>{item.label}</span>
+        {!mobile && active(item.href) && <span className="nav-active-dot" />}
+      </Link>
+    ));
   return (
     <div className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''} ${className}`}>
       <a className="skip-link" href="#main-content">
@@ -164,7 +163,7 @@ export function AppShell({
                     try {
                       setLogoutError('');
                       await logout();
-                      router.replace('/');
+                      router.replace(area === 'admin' ? '/admin/login' : '/');
                     } catch {
                       setLogoutError('Belum dapat keluar. Coba lagi.');
                       setLoggingOut(false);

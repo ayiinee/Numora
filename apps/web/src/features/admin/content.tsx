@@ -158,7 +158,7 @@ function AdminContentScreenContent() {
   if (!token || denied)
     return (
       <AdminFrame
-        title="Konten dan operasional"
+        title="Konten & assessment"
         description="Kelola konten, tinjau laporan, dan pantau proses IRT."
         icon="book"
       >
@@ -193,7 +193,7 @@ function AdminContentScreenContent() {
     : 0;
   return (
     <AdminFrame
-      title="Konten dan operasional"
+      title="Konten & assessment"
       description="Kelola konten, tinjau laporan, dan pantau proses IRT."
       icon="book"
     >

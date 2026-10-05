@@ -114,7 +114,23 @@ For the dedicated six-actor Google QA workflow, use the guarded [QA seed runbook
 
 Google OAuth/Supabase Auth integration was not a blocker for the original walking skeleton. The current Sprint 2 Student flow includes Google login; environment credentials and callback configuration are therefore a delivery dependency for that flow. See `SPRINT_2_GOAL.md`.
 
-The Admin school/token screen requires an Admin profile provisioned by an operator against a real Supabase Auth identity; public registration accepts only Student and Teacher. Admin login policy remains OPEN-14. For the Teacher demo, an Admin creates an active school and issues a 3×24 hour token, then a Google-authenticated Teacher consumes that token before creating a Class. A Student joins with the Class code and completes a Drill before Teacher monitoring can show persisted progress.
+The Admin school/token screen requires an Admin profile provisioned by an operator against a real Supabase Auth identity; public registration accepts only Student and Teacher. **ENGINEERING DECISION — 5 October 2026:** use `/admin/login` with the provisioned account's Supabase Auth email/password, then `/admin` as the common entry. The login form never creates an Admin profile or grants a subrole. The school/token navigation is shown for `SUPER_ADMIN`/`OPERATIONS`; `CONTENT_DATA_MODERATION` with `CONTENT_MANAGE` sees content and JSON import instead. An account without assignment sees a recovery message. See [portal scope and outstanding server permissions](ADMIN_PORTAL_2026-10-05.md). The development mock `/admin/preview` is removed; real question preview remains inside Content. This does not introduce a custom password service or change Student/Teacher Google login. For the Teacher demo, an Admin creates an active school and issues a 3×24 hour token, then a Google-authenticated Teacher consumes that token before creating a Class. A Student joins with the Class code and completes a Drill before Teacher monitoring can show persisted progress.
+
+## QA Admin subroles
+
+**ENGINEERING DECISION — 5 October 2026, updated at Aini's request:** all three Admin credentials are consolidated in `.qa-seed/admin-roles/accounts.json`. `.qa-seed/accounts.json` contains only the five Teacher/Student accounts. `pnpm qa:accounts` still verifies the original six identities and preserves `.qa-seed/actors.json`; it reads Content Admin from the shared Admin vault. Legacy vaults migrate automatically without changing passwords, copying Content before removing its source entry so an interrupted move can safely resume. Provisioning groups share `.qa-seed/provisioning.lock`; a pending operation must finish before starting the other group.
+
+A sandbox operator runs `pnpm qa:admins --check`, then `pnpm qa:admins`, with server-only `SUPABASE_SECRET_KEY` and a temporary owner `DATABASE_MIGRATION_URL` for the pinned Development project. Do not put operator credentials into routine developer configuration. The command refuses another project, an unassigned/disabled original Content Admin, or conflicting profiles; it does not rotate existing passwords.
+
+| Login role              | Ignored credential file              | Account entry              |
+| ----------------------- | ------------------------------------ | -------------------------- |
+| Content/Data/Moderation | `.qa-seed/admin-roles/accounts.json` | `accounts.admin`           |
+| Super Admin             | `.qa-seed/admin-roles/accounts.json` | `accounts.adminSuper`      |
+| Operations              | `.qa-seed/admin-roles/accounts.json` | `accounts.adminOperations` |
+
+All three log in at `/admin/login`. These are Development QA fixtures, not production account provisioning. Read credentials locally; never copy them into commits or shared logs. Replays preserve passwords and produce no duplicate profile/audit writes. If profile assignment fails after Auth creation, retain both vault and recovery journal and rerun with the same operator configuration. Full server permission scoping remains an outstanding task.
+
+Run `pnpm test:qa-admins` with `NODE_ENV=test` and an isolated localhost `TEST_DATABASE_URL` named `numora_test`/`numora_test_*`; the suite migrates and drops a disposable database and never skips. CI runs it alongside integration tests.
 
 ## Quality
 

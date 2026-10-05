@@ -1609,7 +1609,7 @@ for (const { role, verified, path, destination } of [
     path: '/admin/schools',
     destination: '/teacher/verification-required',
   },
-  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/schools' },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin' },
 ] as const) {
   test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
     await fixtures(page, role, verified);

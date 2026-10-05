@@ -4,6 +4,8 @@ import Link from 'next/link';
 import type { FormHTMLAttributes, ReactNode } from 'react';
 import { Badge, Button, Card, Icon, Skeleton, type IconName } from '@tka/ui';
 import { AppShell } from '@/components/shell';
+import { useAuth } from '@/features/onboarding/auth';
+import { adminRoleLabel } from './navigation';
 
 export function AdminFrame({
   title,
@@ -16,6 +18,7 @@ export function AdminFrame({
   icon: IconName;
   children: ReactNode;
 }) {
+  const { state } = useAuth();
   return (
     <AppShell area="admin" className="admin-redesign-shell">
       <div className="admin-redesign-frame">
@@ -29,7 +32,9 @@ export function AdminFrame({
             <p>{description}</p>
           </div>
           <Badge variant="default" className="admin-header-badge">
-            Operasional
+            {state.status === 'ready' && state.profile.role === 'ADMIN'
+              ? adminRoleLabel(state.profile.adminRole)
+              : 'Admin'}
           </Badge>
         </header>
         {children}
@@ -99,7 +104,7 @@ export function AdminMessage({
             </Button>
           )}
           {login && (
-            <Link className="admin-recovery-link" href="/">
+            <Link className="admin-recovery-link" href="/admin/login">
               Ke halaman masuk
             </Link>
           )}

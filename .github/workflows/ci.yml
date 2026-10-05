@@ -71,6 +71,7 @@ jobs:
         run: |
           pnpm --filter @tka/database db:migrate
           pnpm test
+          pnpm test:qa-admins
           pnpm --filter @tka/database db:upgrade-check
           pnpm --filter @tka/database db:staging:bridge-check
 

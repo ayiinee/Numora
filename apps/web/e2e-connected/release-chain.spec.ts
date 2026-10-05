@@ -527,9 +527,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(signedInAgain).toHaveURL(/\/teacher$/);
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     await admin.goto('/student/learn');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     const foreign = await login(browser, 'foreignTeacher');
     await foreign.goto(`/teacher/classes/${cls.id}`);
     await expect(

@@ -12,6 +12,10 @@ Even if Staging/Production are not provisioned in Sprint 2, configuration must n
 
 ## Development
 
+**ENGINEERING DECISION — 5 October 2026:** the unified Admin portal is `/admin`, with internal login at `/admin/login` using a provisioned Supabase Auth account and the NestJS identity endpoint. The development mock `/admin/preview` has been removed. Import JSON is under `/admin/content/imports`; real unscored question preview stays under `/admin/content/preview-sessions/:id`. Assignment/capability controls navigation; the outstanding full server permission matrix is recorded in [portal scope](ADMIN_PORTAL_2026-10-05.md). Cloud importer/media flags remain independent of this navigation change.
+
+**ENGINEERING DECISION — QA fixtures, updated at Aini's request:** all three Admin credentials live in ignored `.qa-seed/admin-roles/accounts.json`; `.qa-seed/accounts.json` contains only Teacher/Student credentials. `pnpm qa:accounts` still verifies the original six identities using both vaults and preserves the six-actor `.qa-seed/actors.json`. Legacy credentials move automatically without password changes. The operator-only `pnpm qa:admins` provisions Super Admin/Operations profiles using an owner `DATABASE_MIGRATION_URL`. Both groups share a local provisioning lock. See [QA Admin setup](GETTING_STARTED.md#qa-admin-subroles); this does not implement the outstanding full server permission matrix.
+
 Preferred local stack:
 
 - Next.js local process

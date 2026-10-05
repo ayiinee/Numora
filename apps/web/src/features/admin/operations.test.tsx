@@ -165,7 +165,9 @@ describe('Admin operations UI', () => {
     render(<AdminOperationsScreen />);
     await screen.findByText('Akses operasional ditolak.');
     expect(screen.queryByRole('heading', { name: 'Daftar pengguna' })).toBeNull();
-    expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe('/');
+    expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe(
+      '/admin/login',
+    );
   });
 
   it('does not request operational data for a non-Admin account', () => {

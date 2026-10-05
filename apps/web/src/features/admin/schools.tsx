@@ -45,7 +45,7 @@ function AdminSchoolsScreenContent() {
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
     if (state.status === 'ready' && state.profile.role !== 'ADMIN')
       router.replace(state.profile.role === 'STUDENT' ? '/student' : '/teacher');

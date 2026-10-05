@@ -9,6 +9,7 @@
     "typecheck": "tsc --noEmit",
     "test": "vitest run",
     "qa:accounts": "node scripts/create-qa-accounts.mjs",
+    "qa:admins": "node scripts/create-qa-admins.mjs",
     "qa:accounts:rotate": "node scripts/create-qa-accounts.mjs --rotate-passwords",
     "qa:smoke": "node scripts/smoke-qa-workflow.mjs",
     "openapi:generate": "pnpm build && node dist/scripts/export-openapi.js"
