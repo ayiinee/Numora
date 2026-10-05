@@ -379,7 +379,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       }[];
       events: { entity_id: string; event_name: string }[];
       pins: { attempt_id: string; question_version_id: string }[];
-      rewards: { attempt_id: string; xp_amount: number; base_xp: number; policy_version: number }[];
+      rewards: { attempt_id: string; xp_amount: string | number; base_xp: number; policy_version: number }[];
     };
     expect(persisted.attempts).toHaveLength(3);
     expect(persisted.events).toHaveLength(3);
@@ -393,7 +393,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
     expect(persisted.rewards).toHaveLength(3);
     expect(new Set(persisted.rewards.map(r => r.attempt_id)).size).toBe(3);
-    expect(persisted.rewards.find(r => r.attempt_id === attempt.id)).toMatchObject({ xp_amount: result.reward!.totalXp, base_xp: 80, policy_version: 2 });
+    const persistedReward = persisted.rewards.find(r => r.attempt_id === attempt.id)!;
+    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
     await expect(resumed.getByRole('heading', { name: 'Riwayat level', exact: true })).toBeVisible();
     await expect(resumed.locator('.activity-row')).toHaveCount(2);
