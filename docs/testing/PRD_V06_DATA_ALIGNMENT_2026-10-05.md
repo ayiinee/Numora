@@ -1,6 +1,6 @@
 # Bukti pengujian penyesuaian data PRD v0.6 — 5 Oktober 2026
 
-**ENGINEERING IMPLEMENTATION:** branch `feat/data-prd-v06-alignment`, baseline `d81c098`. Cakupan dan keputusan ada pada [data alignment](../data/PRD_V06_DATA_ALIGNMENT.md). XP Tryout memakai benar ekuivalen ×10 sesuai klarifikasi Reyhan; sumber PRD dan hasil historis tidak ditulis ulang.
+**ENGINEERING IMPLEMENTATION:** branch `feat/data-prd-v06-alignment`, baseline main `f3f75b3` setelah rebase dengan portal Admin PR #70. Pemeriksaan pasca-rebase dijalankan dari folder utama `D:/Project Big Data/Numora`. Cakupan dan keputusan ada pada [data alignment](../data/PRD_V06_DATA_ALIGNMENT.md). XP Tryout memakai benar ekuivalen ×10 sesuai klarifikasi Reyhan; sumber PRD dan hasil historis tidak ditulis ulang.
 
 ## Hasil
 
@@ -9,17 +9,19 @@
 | Database, PostgreSQL 17             | 25/25, 11 file, tanpa skip                                                                 |
 | API, HTTP + PostgreSQL              | 138/138, 33 file, tanpa skip                                                               |
 | Worker, PostgreSQL + Redis 7        | 15/15, 6 file, tanpa skip                                                                  |
-| Web, unit/component                 | 188/188, 26 file, tanpa skip                                                               |
+| Web, unit/component                 | 199/199, 27 file, tanpa skip                                                               |
 | Assessment engine                   | 3/3, formula XP, batas dan input invalid                                                   |
 | IRT orchestration                   | 2/2, tanpa skip                                                                            |
-| Script checks                       | 57/57, tanpa skip                                                                          |
+| Script checks                       | 68/68, tanpa skip                                                                          |
 | SQL PGlite, fresh + upgrade fixture | 2/2, tanpa skip                                                                            |
+| QA Admin PostgreSQL                 | 1/1, provisioning fixture, replay dan audit rollback                                       |
+| Upgrade-check / Staging bridge      | Lulus pada database fixture terisolasi                                                     |
 | Lint                                | ESLint workspace lulus tanpa warning                                                       |
 | Kontrak                             | Delapan JSON Schema valid; OpenAPI dan tipe web dihasilkan ulang dan freshness check lulus |
 | Typecheck                           | API, worker, database, assessment engine, IRT orchestration, UI dan web lulus              |
-| Build                               | Database, assessment engine, IRT orchestration, API, worker dan web (Webpack) lulus        |
+| Build                               | Build workspace lulus, termasuk web dengan default Turbopack                               |
 
-Total tes paket adalah **371**, ditambah **59** script/SQL checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek.
+Total tes paket adalah **382**, ditambah **71** script/SQL/QA checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek. Pengujian sebelum rebase pada baseline `d81c098` meluluskan 371 tes paket dan 59 script/SQL checks; perbedaan jumlah berasal dari tes portal/QA Admin terbaru pada main.
 
 ## Regresi yang dibuktikan
 
@@ -63,7 +65,7 @@ Uji tambahan `corepack pnpm test:prd-v06` memerlukan `CURRICULUM_TEST_PGLITE_MOD
 
 ## Batas bukti dan Cloud
 
-Build web menggunakan `next build --webpack`. Turbopack menolak junction `node_modules` worktree yang mengarah ke checkout lain di luar root proyek. Ini batas environment pengujian ini; konfigurasi build dan dependency manifest tidak diubah. Build default Turbopack tetap perlu diperiksa oleh CI pada instalasi dependency normal. Web typecheck juga dijalankan tanpa cache incremental setelah cache awal memberikan diagnosis lama.
+Build workspace pasca-rebase menggunakan command normal `pnpm build`; web default Turbopack lulus dari folder utama. Pengujian awal di worktree menggunakan Webpack karena Turbopack menolak junction dependency keluar root; perpindahan ke folder utama dan instalasi frozen-lockfile menyelesaikan batas environment tersebut. Tidak ada perubahan konfigurasi build atau versi dependency dalam PR ini.
 
 Hash SHA-256 SQL 0024 pada pengujian ini: `ac3eb1f3de3f71e34b06ad3930a6450e633198b8386ab24b58a5e94301bbea71`. Migrasi 0000–0023 tidak diubah.
 

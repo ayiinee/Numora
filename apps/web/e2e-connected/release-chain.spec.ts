@@ -280,6 +280,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await answer(resumed, 8);
     const result = await submit(resumed);
     expect(result.score).toBe(80);
+    expect(result.stars).toBe(2);
+    expect(result.xp).toBeGreaterThanOrEqual(80);
+    expect(result.xp).toBeLessThanOrEqual(130);
     expect(result.unlockedLevelId).toBe(levelTwo);
     const duplicates = await Promise.all(
       [1, 2].map(() =>
@@ -294,6 +297,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(duplicates.map((r) => r.score)).toEqual([80, 80]);
+    expect(duplicates.map((r) => r.xp)).toEqual([result.xp, result.xp]);
     await call(
       request,
       'student',
@@ -313,7 +317,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const retryId = resumed.url().split('/').at(-1)!;
     expect(retryId).not.toBe(attempt.id);
     const retry = await body<DrillAttemptDto>(request, 'student', `assessment-attempts/${retryId}`);
-    expect(retry.questions.map((q) => q.stem)).not.toEqual(attempt.questions.map((q) => q.stem));
+    expect(retry.questions.map((q) => q.stem)).toEqual(attempt.questions.map((q) => q.stem));
     await answer(resumed, 7);
     expect((await submit(resumed)).score).toBe(70);
     await teacher.reload();
@@ -328,6 +332,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelOne)).toMatchObject({
       latestScore: 70,
       bestScore: 80,
+      latestStars: 2,
     });
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
@@ -337,7 +342,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
       .getByRole('button', { name: 'Mulai latihan', exact: true })
       .click();
     await answer(resumed, 0);
-    expect((await submit(resumed)).score).toBe(0);
+    const zeroResult = await submit(resumed);
+    expect(zeroResult.score).toBe(0);
+    expect(zeroResult.stars).toBe(0);
     await teacher.reload();
     await expect(
       teacher.locator('.level-card').filter({ hasText: 'Level 2' }).locator('dd'),
@@ -362,7 +369,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (a) => a.class_id_at_start === cls.id && !!a.scoring_policy_version_id,
       ),
     ).toBe(true);
-    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(3);
+    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
     expect(
       (await body<DrillResultDto>(request, 'student', `assessment-attempts/${attempt.id}/result`))
         .score,
@@ -372,7 +379,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
   });
 
-  test('token lifecycle, single-use race, join race, one-class and authorization at real HTTP boundary', async ({
+  test('token lifecycle, single-use race, concurrent multi-class joins and authorization at real HTTP boundary', async ({
     request,
   }) => {
     const tokensPath = `admin/schools/${school.id}/teacher-tokens`;
@@ -421,7 +428,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       201,
     );
     await call(request, 'student', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
-    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(2);
+    await call(request, 'student', `classes/${foreign.id}/leave`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(1);
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: 'BAD234' }, 404);
     const joins = await Promise.all(
       [cls.joinCode, foreign.joinCode].map((joinCode) =>
@@ -431,7 +445,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         }),
       ),
     );
-    expect(joins.map((r) => r.status()).sort()).toEqual([201, 409]);
+    expect(joins.map((r) => r.status()).sort()).toEqual([201, 201]);
     const progressPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/progress`;
     await call(request, 'foreignTeacher', progressPath, 'GET', undefined, 403);
     await call(request, 'student', progressPath, 'GET', undefined, 403);
@@ -659,7 +673,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe(independent.id);
     const submissions = await Promise.all(
       Array.from({ length: 3 }, () =>
-        body<{ state: string }>(
+        body<{ state: string; xp: number }>(
           request,
           'student',
           `tryout/attempts/${affiliated.id}/submit`,
@@ -669,7 +683,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         ),
       ),
     );
-    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0 }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
@@ -951,5 +965,69 @@ test.describe.serial('JOB-06 connected release chain', () => {
       403,
     );
     checks.push('draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review');
+  });
+
+  test('five-class limit, teacher ban/unban and teacherless takeover preserve account progress', async ({
+    request,
+  }) => {
+    const extras: CreatedClassDto[] = [];
+    for (let i = 0; i < 4; i++) {
+      extras.push(
+        await body<CreatedClassDto>(
+          request,
+          'teacher',
+          'classes',
+          'POST',
+          { name: `JOB06 membership ${i}`, schoolId: school.id },
+          201,
+        ),
+      );
+    }
+    for (const extra of extras.slice(0, 3))
+      await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: extra.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(5);
+    await call(
+      request,
+      'raceStudent',
+      'classes/join',
+      'POST',
+      { joinCode: extras[3]!.joinCode },
+      409,
+    );
+
+    const banPath = `classes/${cls.id}/students/${fixtures.actors.raceStudent!.profileId}`;
+    await call(request, 'admin', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'foreignTeacher', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'teacher', `${banPath}/ban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 403);
+    await call(request, 'teacher', `${banPath}/unban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
+    await call(request, 'raceStudent', `classes/${extras[0]!.id}/leave`, 'POST', undefined, 201);
+
+    const foreign = (await body<{ items: CreatedClassDto[] }>(request, 'foreignTeacher', 'classes'))
+      .items[0]!;
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'foreignTeacher', `schools/${school.id}/leave`, 'POST', undefined, 201);
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 201);
+    await call(request, 'foreignTeacher', `classes/${foreign.id}/students`, 'GET', undefined, 403);
+    const progress = await body<SubchapterDetailDto>(
+      request,
+      'student',
+      `subchapters/${subchapter}`,
+    );
+    expect(progress.levels.find((level) => level.id === levelOne)).toMatchObject({
+      latestScore: 70,
+      bestScore: 80,
+      latestStars: 2,
+    });
+    checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
   });
 });
