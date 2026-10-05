@@ -102,6 +102,7 @@ export class DrillRewardDto {
   @ApiProperty() durationSeconds!: number;
 }
 export class DrillResultDto {
+  @ApiPropertyOptional({ type: Number, nullable: true }) xp?: number | null;
   @ApiProperty({ format: 'uuid' }) attemptId!: string;
   @ApiProperty({ format: 'uuid' }) levelId!: string;
   @ApiProperty() levelTitle!: string;
@@ -125,11 +126,32 @@ export class AssessmentRecordDto {
   @ApiProperty({ enum: ['drill', 'pretest', 'tryout'] }) activity!: string;
   @ApiProperty() title!: string;
   @ApiProperty() isDemo!: boolean;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false, description: 'Chapter ID pinned at attempt start.' }) chapterId?: string | null;
-  @ApiProperty({ type: String, nullable: true, required: false, description: 'Current taxonomy label; not a historical content snapshot.' }) chapterTitle?: string | null;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) subchapterId?: string | null;
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    required: false,
+    description: 'Chapter ID pinned at attempt start.',
+  })
+  chapterId?: string | null;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    required: false,
+    description: 'Current taxonomy label; not a historical content snapshot.',
+  })
+  chapterTitle?: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) subchapterId?:
+    string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) subchapterTitle?: string | null;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false, description: 'Level ID pinned at attempt start; absent for non-level assessments.' }) levelId?: string | null;
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    required: false,
+    description: 'Level ID pinned at attempt start; absent for non-level assessments.',
+  })
+  levelId?: string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) levelTitle?: string | null;
   @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false, description: 'Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP.' }) xpState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
   @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false }) starsState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';

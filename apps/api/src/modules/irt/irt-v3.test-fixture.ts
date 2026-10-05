@@ -12,7 +12,7 @@ export async function tryoutMeasurementFixture(
     partial = options.partial ?? false;
   const [actor] = await owner<
     { id: string }[]
-  >`INSERT INTO users(auth_user_id,role,display_name,email) VALUES(${randomUUID()},'ADMIN','TEST reviewer',${key + '@example.test'}) RETURNING id`;
+  >`INSERT INTO users(auth_user_id,role,admin_role,display_name,email) VALUES(${randomUUID()},'ADMIN','CONTENT_DATA_MODERATION','TEST reviewer',${key + '@example.test'}) RETURNING id`;
   const [student] = await owner<
     { id: string }[]
   >`INSERT INTO users(auth_user_id,role,display_name,email) VALUES(${randomUUID()},'STUDENT','Private fixture name',${'student-' + key + '@example.test'}) RETURNING id`;

@@ -48,10 +48,11 @@ const checks: string[] = [];
 const requiredChecks = [
   'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
   'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
-  'real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth',
+  'real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth',
   'direct-url-role-refresh-logout-reauth-mandiri-drill',
   'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
   'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
+  'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
 ];
 const contexts: BrowserContext[] = [];
 
@@ -361,7 +362,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
       .getByRole('button', { name: 'Mulai latihan', exact: true })
       .click();
     await answer(resumed, 0);
-    expect((await submit(resumed)).score).toBe(0);
+    const zeroResult = await submit(resumed);
+    expect(zeroResult.score).toBe(0);
+    expect(zeroResult.stars).toBe(0);
     await teacher.reload();
     await expect(
       teacher.locator('.level-card').filter({ hasText: 'Level 2' }).locator('dd'),
@@ -405,7 +408,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
   });
 
-  test('token lifecycle, single-use race, join race, one-class and authorization at real HTTP boundary', async ({
+  test('token lifecycle, single-use race, concurrent multi-class joins and authorization at real HTTP boundary', async ({
     request,
   }) => {
     const tokensPath = `admin/schools/${school.id}/teacher-tokens`;
@@ -454,7 +457,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       201,
     );
     await call(request, 'student', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
-    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(2);
+    await call(request, 'student', `classes/${foreign.id}/leave`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(1);
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: 'BAD234' }, 404);
     const joins = await Promise.all(
       [cls.joinCode, foreign.joinCode].map((joinCode) =>
@@ -464,7 +474,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         }),
       ),
     );
-    expect(joins.map((r) => r.status()).sort()).toEqual([201, 409]);
+    expect(joins.map((r) => r.status()).sort()).toEqual([201, 201]);
     const progressPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/progress`;
     await call(request, 'foreignTeacher', progressPath, 'GET', undefined, 403);
     await call(request, 'student', progressPath, 'GET', undefined, 403);
@@ -506,7 +516,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       bestDrillScore: 80,
       accessStatus: 'UNLOCKED',
     });
-    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth');
+    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth');
   });
 
   test('direct URL role guards, refresh, logout/re-auth and independent Mandiri persistence', async ({
@@ -587,11 +597,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
       });
       expect(
         await body<LeaderboardDto>(request, alias, 'leaderboards/pvp?difficulty=easy'),
-      ).toMatchObject({ policyPending: true, reasonCode: 'OPEN-07' });
+      ).toMatchObject({ policyPending: true, reasonCode: 'PVP_RUNTIME_ACTIVATION' });
+      expect(await body<LeaderboardDto>(request, alias, 'leaderboards/activity')).toMatchObject({
+        policyPending: false,
+        reasonCode: null,
+        unit: 'xp',
+        className: null,
+      });
     }
     expect(await body<LeaderboardDto>(request, 'student', 'leaderboards/class')).toMatchObject({
-      policyPending: true,
-      reasonCode: 'OPEN-11',
+      policyPending: false,
+      reasonCode: null,
+      unit: 'xp',
       className: cls.name,
     });
     await call(request, 'otherStudent', 'leaderboards/class', 'GET', undefined, 403);
@@ -692,7 +709,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe(independent.id);
     const submissions = await Promise.all(
       Array.from({ length: 3 }, () =>
-        body<{ state: string }>(
+        body<{ state: string; xp: number }>(
           request,
           'student',
           `tryout/attempts/${affiliated.id}/submit`,
@@ -995,5 +1012,69 @@ test.describe.serial('JOB-06 connected release chain', () => {
       403,
     );
     checks.push('draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review');
+  });
+
+  test('five-class limit, teacher ban/unban and teacherless takeover preserve account progress', async ({
+    request,
+  }) => {
+    const extras: CreatedClassDto[] = [];
+    for (let i = 0; i < 4; i++) {
+      extras.push(
+        await body<CreatedClassDto>(
+          request,
+          'teacher',
+          'classes',
+          'POST',
+          { name: `JOB06 membership ${i}`, schoolId: school.id },
+          201,
+        ),
+      );
+    }
+    for (const extra of extras.slice(0, 3))
+      await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: extra.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(5);
+    await call(
+      request,
+      'raceStudent',
+      'classes/join',
+      'POST',
+      { joinCode: extras[3]!.joinCode },
+      409,
+    );
+
+    const banPath = `classes/${cls.id}/students/${fixtures.actors.raceStudent!.profileId}`;
+    await call(request, 'admin', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'foreignTeacher', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'teacher', `${banPath}/ban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 403);
+    await call(request, 'teacher', `${banPath}/unban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
+    await call(request, 'raceStudent', `classes/${extras[0]!.id}/leave`, 'POST', undefined, 201);
+
+    const foreign = (await body<{ items: CreatedClassDto[] }>(request, 'foreignTeacher', 'classes'))
+      .items[0]!;
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'foreignTeacher', `schools/${school.id}/leave`, 'POST', undefined, 201);
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 201);
+    await call(request, 'foreignTeacher', `classes/${foreign.id}/students`, 'GET', undefined, 403);
+    const progress = await body<SubchapterDetailDto>(
+      request,
+      'student',
+      `subchapters/${subchapter}`,
+    );
+    expect(progress.levels.find((level) => level.id === levelOne)).toMatchObject({
+      latestScore: 70,
+      bestScore: 80,
+      latestStars: 2,
+    });
+    checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
   });
 });

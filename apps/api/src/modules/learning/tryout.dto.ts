@@ -46,6 +46,14 @@ export class TryoutSubmitDto {
   @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ enum: ['waitingIrt'] }) state!: 'waitingIrt';
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    required: false,
+    description:
+      'Immediate XP, independent of later IRT result release; null for legacy policy attempts.',
+  })
+  xp?: number | null;
 }
 
 export class TryoutReviewedQuestionDto {

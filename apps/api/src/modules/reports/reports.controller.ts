@@ -13,6 +13,7 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import { AdminAccess } from '../identity/admin-permissions';
 import { ContentMutationDto, ContentPageDto } from '../content/content.dto';
 import { AdminReportsDto, ResolveReportDto } from './reports.dto';
 import { ReportsService } from './reports.service';
@@ -24,6 +25,7 @@ enum ReportKind {
 @ApiTags('admin-reports')
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
+@AdminAccess('content')
 @Controller('admin/reports')
 export class ReportsController {
   constructor(@Inject(ReportsService) private readonly reports: ReportsService) {}

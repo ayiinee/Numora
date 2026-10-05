@@ -4,7 +4,7 @@ const problem = (code: string, detail: string) => ({ code, detail });
 
 export const DRILL_QUESTION_COUNT = 10;
 export const DRILL_MASTERY_SCORE = 80;
-export const DRILL_POLICY_CODE = 'DRILL_PG_DEMO';
+export const DRILL_POLICY_CODE = 'DRILL_PRD_V06';
 export const DRILL_POLICY_VERSION = 1;
 // Independent from package/content scoring pins; null means the historical policy.
 export const DRILL_REWARD_POLICY_VERSION = 2;
@@ -67,13 +67,14 @@ export function drillReward(
 
 export function selectDrillPackage<T extends { id: string }>(
   packages: T[],
-  previousPackageId?: string,
+  _previousPackageId?: string,
 ) {
   return previousPackageId ? packages.find((item) => item.id !== previousPackageId) : packages[0];
 }
 
-export function explanationAvailable(completedAt: Date, now = new Date()) {
-  return now.getTime() < completedAt.getTime() + 90 * 24 * 60 * 60 * 1000;
+export function explanationAvailable(_completedAt: Date, _now = new Date()) {
+  // v0.6 preserves historical context and introduces no 90-day expiry.
+  return true;
 }
 
 export type SingleChoiceContent = {

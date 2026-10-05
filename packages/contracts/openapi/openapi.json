@@ -187,6 +187,163 @@
         ]
       }
     },
+    "/api/v1/classes/takeover": {
+      "post": {
+        "operationId": "ClassesController_takeover",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinClassDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/leave": {
+      "post": {
+        "operationId": "ClassesController_leave",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/ban": {
+      "post": {
+        "operationId": "ClassesController_ban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/unban": {
+      "post": {
+        "operationId": "ClassesController_unban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
     "/api/v1/classes/join": {
       "post": {
         "operationId": "ClassesController_join",
@@ -1041,6 +1198,41 @@
           },
           "503": {
             "description": "Attempt limiter unavailable."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
+    "/api/v1/schools/{schoolId}/leave": {
+      "post": {
+        "operationId": "SchoolsController_leave",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftSchoolDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -3970,6 +4162,42 @@
         "operationId": "LeaderboardsController_class",
         "parameters": [
           {
+            "name": "classId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/activity": {
+      "get": {
+        "operationId": "LeaderboardsController_activity",
+        "parameters": [
+          {
             "name": "authorization",
             "required": true,
             "in": "header",
@@ -4338,6 +4566,11 @@
               "ADMIN"
             ]
           },
+          "profilePhotoObjectKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "Storage object key; never a stored signed URL."
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -4425,6 +4658,10 @@
       "CreateClassDto": {
         "type": "object",
         "properties": {
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -4467,6 +4704,28 @@
         },
         "required": [
           "joinCode"
+        ]
+      },
+      "LeftClassDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
+        ]
+      },
+      "ClassBanDto": {
+        "type": "object",
+        "properties": {
+          "banned": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "banned"
         ]
       },
       "JoinedClassDto": {
@@ -4725,6 +4984,13 @@
                 "$ref": "#/components/schemas/DashboardClassDto"
               }
             ]
+          },
+          "classes": {
+            "description": "All active classes, up to five. Legacy class is the latest joined class.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardClassDto"
+            }
           },
           "completedLevels": {
             "type": "number"
@@ -5412,6 +5678,11 @@
             "enum": [
               "waitingIrt"
             ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Immediate XP, independent of later IRT result release; null for legacy policy attempts."
           }
         },
         "required": [
@@ -5650,6 +5921,17 @@
           "verified"
         ]
       },
+      "LeftSchoolDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
+        ]
+      },
       "AdminSchoolDto": {
         "type": "object",
         "properties": {
@@ -5838,7 +6120,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -5890,7 +6173,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           }
@@ -5936,7 +6220,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           }
@@ -5966,7 +6251,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -6006,7 +6292,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           }
@@ -6030,7 +6317,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6054,7 +6342,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6067,7 +6356,9 @@
             "format": "uuid"
           },
           "levelNumber": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
           },
           "description": {
             "type": "string"
@@ -6077,7 +6368,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6097,7 +6389,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6188,7 +6481,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "questionStatus": {
@@ -6196,7 +6490,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "reviewedByUserId": {
@@ -6341,7 +6636,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6410,7 +6706,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6463,7 +6760,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6499,7 +6797,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6688,7 +6987,10 @@
             "format": "uuid"
           },
           "variantIndex": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1,
+            "description": "PRD v0.6 MVP uses one variant per level."
           },
           "scoringPolicyVersionId": {
             "type": "string",
@@ -7618,10 +7920,12 @@
           },
           "teacherId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "teacherName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "studentCount": {
             "type": "number"
@@ -8524,6 +8828,11 @@
           },
           "className": {
             "type": "string",
+            "nullable": true
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           },
           "unit": {

@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("CONTENT_MANAGE")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
+export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("CONTENT_MANAGE")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
 
 export type RegisterProfileDto = { "role": "STUDENT" | "TEACHER"; };
 
@@ -17,7 +17,7 @@ export type ClassSummaryDto = { "id": string; "name": string; "joinCode"?: strin
 
 export type CreatedClassDto = { "id": string; "name": string; "joinCode": string; };
 
-export type CreateClassDto = { "name": string; };
+export type CreateClassDto = { "schoolId"?: string; "name": string; };
 
 export type JoinClassDto = { "joinCode": string; };
 

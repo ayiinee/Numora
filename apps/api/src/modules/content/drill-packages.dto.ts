@@ -18,7 +18,11 @@ export class CreateDrillPackageDto {
   @ApiProperty() @IsInt() @Min(1) @Max(100_000) packageVersion!: number;
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) name!: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() levelId!: string;
-  @ApiProperty() @IsInt() @Min(1) @Max(100_000) variantIndex!: number;
+  @ApiProperty({ minimum: 1, maximum: 1, description: 'PRD v0.6 MVP uses one variant per level.' })
+  @IsInt()
+  @Min(1)
+  @Max(1)
+  variantIndex!: number;
   @ApiProperty({ format: 'uuid' }) @IsUUID() scoringPolicyVersionId!: string;
   @ApiProperty({ type: [String], maxItems: 10 })
   @IsArray()

@@ -4,6 +4,8 @@
 >
 > **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. **ENGINEERING DECISION — product correction by Aini, 5 October 2026:** TryOut XP uses correct-equivalent ×10, without speed bonus, immediately on completion (§12); this supersedes AC-15 ×100. The source wording remains historical evidence. See [decision and prospective compatibility](../development/TRYOUT_XP_V06.md). Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
 
+> **USER CLARIFICATION — Reyhan, 5 October 2026:** Tryout XP is equivalent-correct ×10; AC-15's ×100 is a typo. PRD v0.6 also supersedes the one-class rule, variant rotation, 90-day explanation expiry and unresolved XP/star rules below. [Data alignment and rollout](../data/PRD_V06_DATA_ALIGNMENT.md) records the implementation and remaining feature dependencies. Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. Historical sections below do not override v0.6.
+
 # Product Context — Numora
 
 **ENGINEERING DECISION — klarifikasi lanjutan Aini, 5 Oktober 2026:** bobot produk PG=2, MCMA=3, Kategori=3 final; parsial berkontribusi pada scoring ketuntasan Drill dan XP dasar benar ekuivalen ×10, ditambah bonus kecepatan existing. Bintang mengikuti nilai akhir Drill. Mode hasil fallback IRT berlaku seluruh batch. Rubrik PGK, pemetaan kategori/nilai IRT dan rumus nilai scoring biasa tetap memerlukan pengesahan; [rincian Drill](../development/DRILL_V06_REWARDS.md#klarifikasi-pgk--5-oktober-2026).
@@ -46,10 +48,10 @@ Pengembangan untuk penggunaan lebih luas adalah tahap berikutnya. Sasaran Sprint
 
 Role tetap `Student`, `Teacher`, dan `Admin`. `Student` memiliki dua status afiliasi, bukan dua role baru:
 
-| Status Student | Akses MVP setelah PRD fitur terbaru | Batas utama |
-|---|---|---|
-| User Mandiri | Login Google, Drill, TryOut gratis, membuat room PvP dan membagikan kode, leaderboard PvP global | Belum bergabung kelas; leaderboard kelas dan undangan teman sekelas tetap memerlukan kelas. Akses Pretest mempertahankan baseline kelas v0.5 sambil menunggu rekonsiliasi; tidak ada payment TryOut MVP |
-| User Terafiliasi Sekolah | Seluruh fitur belajar yang tersedia gratis; leaderboard kelas dan global; dapat mengundang teman sekelas ke PvP | Maksimal satu kelas; tidak melihat hasil pribadi siswa lain |
+| Status Student           | Akses MVP setelah PRD fitur terbaru                                                                             | Batas utama                                                                                                                                                                                             |
+| ------------------------ | --------------------------------------------------------------------------------------------------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| User Mandiri             | Login Google, Drill, TryOut gratis, membuat room PvP dan membagikan kode, leaderboard PvP global                | Belum bergabung kelas; leaderboard kelas dan undangan teman sekelas tetap memerlukan kelas. Akses Pretest mempertahankan baseline kelas v0.5 sambil menunggu rekonsiliasi; tidak ada payment TryOut MVP |
+| User Terafiliasi Sekolah | Seluruh fitur belajar yang tersedia gratis; leaderboard kelas dan global; dapat mengundang teman sekelas ke PvP | Maksimal satu kelas; tidak melihat hasil pribadi siswa lain                                                                                                                                             |
 
 User Mandiri dapat bergabung ke kelas dengan kode/QR/link valid dan menjadi User Terafiliasi Sekolah. Siswa tidak dapat keluar/berpindah kelas sendiri; penanganan oleh Admin serta dampaknya pada riwayat/progres masih `OPEN-08`/`OPEN-15`. Afiliasi kelas harus diperiksa di server. Riwayat Student Mandiri tetap disimpan.
 
@@ -103,10 +105,10 @@ Kode saat ini masih memiliki gap kelas, PG saja, retensi/rentang lama, dan auto-
 
 PvP adalah pertandingan 1v1 realtime via WebSocket dan dapat mempertemukan Student Mandiri dengan Student Sekolah, termasuk lintas kelas. Semua Student boleh membuat room dan berbagi kode/link/QR; hanya Student Sekolah dapat mengundang teman sekelas lewat notifikasi. Kategori awal Mudah/Sedang/Sulit, 10 soal dengan urutan sama untuk kedua pemain, timer 30/45/60 detik per soal, jawaban terkunci setelah submit, dan transisi setelah kedua pemain menjawab atau waktu habis. Server menentukan waktu, validitas, dan poin. Jawaban benar memperoleh `100 + floor(50 × remainingTime / questionDuration)`; salah/kosong memperoleh 0. Reconnect 20 detik; gagal kembali berarti forfeit dan hasil itu tidak masuk rekor. Detail expiry/putus dua pemain masih `OPEN-07`.
 
-| Papan peringkat | Peserta dan sumber | Periode |
-|---|---|---|
-| Kelas | Anggota kelas yang sama; akumulasi XP Drill + Tryout. Pretest/PvP tidak berkontribusi. Menunjukkan keaktifan, bukan kemampuan akademik. | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
-| Global PvP | Semua Student Mandiri dan Sekolah; best XP dari sesi PvP valid per kategori kesulitan. Tampilkan top 20 dan peringkat sendiri bila di luar top 20. | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
+| Papan peringkat | Peserta dan sumber                                                                                                                                 | Periode                                        |
+| --------------- | -------------------------------------------------------------------------------------------------------------------------------------------------- | ---------------------------------------------- |
+| Kelas           | Anggota kelas yang sama; akumulasi XP Drill + Tryout. Pretest/PvP tidak berkontribusi. Menunjukkan keaktifan, bukan kemampuan akademik.            | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
+| Global PvP      | Semua Student Mandiri dan Sekolah; best XP dari sesi PvP valid per kategori kesulitan. Tampilkan top 20 dan peringkat sendiri bila di luar top 20. | Perbarui tiap jam; tutup/arsip Rabu 23:59 WIB. |
 
 Leaderboard menampilkan data identitas minimum, bukan email atau riwayat belajar pribadi. PvP XP tidak membuka level Drill.
 

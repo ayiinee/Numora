@@ -113,6 +113,7 @@ describe('Drill access and duplicate submit', () => {
     await expect(learning().submit('Bearer valid', attemptId)).resolves.toMatchObject({
       score: 80,
       mastered: true,
+      xp: 105,
     });
     expect(tx.insert).not.toHaveBeenCalled();
     expect(tx.update).not.toHaveBeenCalled();

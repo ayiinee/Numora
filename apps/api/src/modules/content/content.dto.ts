@@ -20,7 +20,7 @@ import {
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { IsYouTubeVideoUrl } from './youtube-url';
 
-export const statuses = ['DRAFT', 'READY', 'ARCHIVED'] as const;
+export const statuses = ['DRAFT', 'READY', 'ARCHIVED', 'REVISION'] as const;
 export type ContentState = (typeof statuses)[number];
 
 export class ContentPageDto {
@@ -86,7 +86,7 @@ export class UpdateCompetencyDto extends PartialType(
 ) {}
 export class CreateLevelDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(1000) levelNumber!: number;
+  @ApiProperty({ minimum: 1, maximum: 5 }) @Type(() => Number) @IsInt() @Min(1) @Max(5) levelNumber!: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()

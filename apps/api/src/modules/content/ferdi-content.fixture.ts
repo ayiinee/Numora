@@ -214,6 +214,7 @@ export function installFerdiFixture() {
         familyCode: `IRT-${suffix}`,
         packageVersion: 1,
         name: 'TEST canonical',
+        isDemo: true,
         assessmentType: 'DRILL',
         levelId: level,
         scoringPolicyVersionId: policy,

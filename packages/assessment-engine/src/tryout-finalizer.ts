@@ -17,11 +17,20 @@ type Request =
 export async function finalizeTryout(request: Request) {
   const { db } = getDatabase();
   return db.transaction(async (tx) => {
-    const [attempt] = await tx.select().from(assessmentAttempts)
+    const [attempt] = await tx
+      .select()
+      .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, request.attemptId))
-      .limit(1).for('update', request.kind === 'automatic' && request.skipLocked ? { skipLocked: true } : {});
-    if (!attempt || attempt.assessmentType !== 'TRYOUT' ||
-        (request.studentId !== undefined && attempt.studentId !== request.studentId)) {
+      .limit(1)
+      .for(
+        'update',
+        request.kind === 'automatic' && request.skipLocked ? { skipLocked: true } : {},
+      );
+    if (
+      !attempt ||
+      attempt.assessmentType !== 'TRYOUT' ||
+      (request.studentId !== undefined && attempt.studentId !== request.studentId)
+    ) {
       if (request.kind === 'automatic' && request.skipLocked)
         return { finalized: false, reason: 'unavailable' as const };
       throw new AssessmentFinalizationError('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.');
@@ -37,13 +46,18 @@ export async function finalizeTryout(request: Request) {
     if (request.kind === 'automatic' && !expired)
       return { finalized: false, reason: 'notDue' as const };
 
-    const rows = await tx.select({
-      id: attemptItems.id, maxPoints: attemptItems.maxPoints,
-      questionType: questionVersions.questionType, stem: questionVersions.stem,
-      optionsOrStatements: questionVersions.optionsOrStatements,
-      answerKey: questionVersions.answerKey, explanation: questionVersions.explanation,
-      answer: attemptAnswers.answer,
-    }).from(attemptItems)
+    const rows = await tx
+      .select({
+        id: attemptItems.id,
+        maxPoints: attemptItems.maxPoints,
+        questionType: questionVersions.questionType,
+        stem: questionVersions.stem,
+        optionsOrStatements: questionVersions.optionsOrStatements,
+        answerKey: questionVersions.answerKey,
+        explanation: questionVersions.explanation,
+        answer: attemptAnswers.answer,
+      })
+      .from(attemptItems)
       .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
       .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
       .where(eq(attemptItems.attemptId, attempt.id));
@@ -52,10 +66,14 @@ export async function finalizeTryout(request: Request) {
     const grades = rows.map((row) => {
       const content = decodeSingleChoice(row);
       const answer = row.answer ?? { optionId: null };
-      const option = answer && typeof answer === 'object' && 'optionId' in answer
-        ? answer.optionId : null;
-      return { id: row.id, answer, maximum: Number(row.maxPoints),
-        points: option === content.correctOptionId ? Number(row.maxPoints) : 0 };
+      const option =
+        answer && typeof answer === 'object' && 'optionId' in answer ? answer.optionId : null;
+      return {
+        id: row.id,
+        answer,
+        maximum: Number(row.maxPoints),
+        points: option === content.correctOptionId ? Number(row.maxPoints) : 0,
+      };
     });
     const raw = grades.reduce((sum, grade) => sum + grade.points, 0);
     const xp = attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version
@@ -91,6 +109,6 @@ export async function finalizeTryout(request: Request) {
       correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId,
         xp, xpPolicyVersion: attempt.tryoutXpPolicyVersion },
     });
-    return { finalized: true, reason: expired ? 'deadline' as const : 'manual' as const };
+    return { finalized: true, reason: expired ? ('deadline' as const) : ('manual' as const) };
   });
 }
