@@ -132,3 +132,11 @@ export function setContentStatus(
     'PATCH',
   );
 }
+
+export const setChapterCategory = (token: string, id: string, materialCategory: string | null) =>
+  mutation(
+    token,
+    `admin/content/chapters/${encodeURIComponent(id)}`,
+    { materialCategory },
+    'PATCH',
+  );

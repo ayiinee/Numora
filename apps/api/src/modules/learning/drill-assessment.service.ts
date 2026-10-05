@@ -1,3 +1,4 @@
+import { enqueueNotification } from '@tka/database';
 import {
   BadRequestException,
   ConflictException,
@@ -556,15 +557,10 @@ export class DrillAssessmentService {
               unlockingAttemptId: sql`coalesce(${levelProgress.unlockingAttemptId}, ${attemptId}::uuid)`,
             },
             setWhere: isNull(levelProgress.unlockedAt),
-          })
-          .returning({ id: levelProgress.id });
-        if (unlocked.length)
-          await recordDomainEvent(
-            tx,
-            attemptId,
-            { eventName: 'level_unlocked', unlockedLevelId: next.id },
-            now,
-          );
+          }).returning({ id: levelProgress.id });
+        if (unlocked.length) await enqueueNotification(tx, { kind: 'LEVEL_UNLOCKED', sourceId: unlocked[0]!.id, recipientId: studentId, occurredAt: now });
+        if (unlocked.length) await recordDomainEvent(tx, attemptId,
+          { eventName: 'level_unlocked', unlockedLevelId: next.id }, now);
       }
       const [packageRow] = await tx
         .select({ isDemo: assessmentPackages.isDemo })

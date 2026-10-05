@@ -12,6 +12,7 @@ import {
   assessmentPackages,
   classMemberships,
   getDatabase,
+  enqueueNotification,
   packageItems,
   pvpAnswers,
   pvpInvites,
@@ -607,7 +608,10 @@ export class PvpEngineService {
         })
         .onConflictDoNothing()
         .returning({ id: pvpInvites.id });
-      if (invite) return { inviteId: invite.id };
+      if (invite) {
+        await enqueueNotification(tx, { kind: 'PVP_INVITED', sourceId: invite.id, recipientId });
+        return { inviteId: invite.id };
+      }
       const [existing] = await tx
         .select()
         .from(pvpInvites)

@@ -5,6 +5,8 @@ import { ForbiddenException, UnauthorizedException, type INestApplication } from
 import { Test } from '@nestjs/testing';
 import {
   analyticsOutbox,
+  notificationOutbox,
+  notifications,
   assessmentAttempts,
   assessmentPackages,
   chapters,
@@ -32,6 +34,7 @@ import { LearningModule } from './learning.module';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { TryoutReleaseService } from './tryout-release.service';
 import { TryoutService } from './tryout.service';
+import { discoverNotificationReleases, drainNotificationBatch } from '../../../../worker/src/notifications';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 const integration = testUrl ? describe : describe.skip;
@@ -506,6 +509,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       })),
     );
     await expect(tryout.result('student', a.id)).rejects.toMatchObject({ status: 409 });
+    await discoverNotificationReleases();
+    expect(await db.select().from(notificationOutbox).where(eq(notificationOutbox.sourceKey, `TRYOUT_RESULT_READY:${a.id}`))).toHaveLength(0);
     await db
       .update(irtItemResults)
       .set({ sampleSize: 30, dataStatus: 'SUFFICIENT' })
@@ -532,6 +537,12 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     const waitingBody = await waitingResponse.json();
     expect(waitingBody).toMatchObject({ xp: 0, status: 'submitted', questions: [] });
     expect(waitingBody).not.toHaveProperty('score');
+    await discoverNotificationReleases();
+    await discoverNotificationReleases();
+    await drainNotificationBatch(100);
+    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${a.id}`), eq(notifications.recipientId, student!.id)))).toHaveLength(1);
+    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${mandiri.id}`), eq(notifications.recipientId, independent!.id)))).toHaveLength(1);
+    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_OPENED:${selectedPackage!.id}`), eq(notifications.recipientId, independent!.id)))).toHaveLength(1);
     // Availability must never be inferred from class affiliation, including an expired current package.
     for (const unavailable of [
       { status: 'DRAFT' as const },

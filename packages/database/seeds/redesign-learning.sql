@@ -67,3 +67,6 @@ BEGIN
     END LOOP;
   END LOOP;
 END $seed$;
+
+-- Only this explicitly algebra-focused DEMO chapter is categorized.
+UPDATE chapters SET material_category = 'algebra' WHERE code = 'DEMO-UI-ALJABAR' AND material_category IS NULL;

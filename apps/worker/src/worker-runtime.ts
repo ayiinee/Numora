@@ -1,3 +1,4 @@
+import { discoverNotificationReleases, drainNotificationBatch } from './notifications.js';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { checkDatabaseConnection, closeDatabaseConnection } from '@tka/database';
@@ -40,6 +41,8 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   let outboxTimer: ReturnType<typeof setInterval> | undefined;
   let leaderboardTimer: ReturnType<typeof setTimeout> | undefined;
   let tryoutTimer: ReturnType<typeof setInterval> | undefined;
+  let notificationBusy = false;
+  let notificationTimer: ReturnType<typeof setInterval> | undefined;
   let tryoutBusy = false;
   let recoveryCursor: RecoveryCursor | undefined;
   let lastRecoveryLogAt = 0;
@@ -54,6 +57,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (shutdownPromise) return shutdownPromise;
     stopping = true;
     if (outboxTimer) clearInterval(outboxTimer);
+    if (notificationTimer) clearInterval(notificationTimer);
     if (tryoutTimer) clearInterval(tryoutTimer);
     if (irtTimer) clearInterval(irtTimer);
     if (leaderboardTimer) clearTimeout(leaderboardTimer);
@@ -66,7 +70,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
             worker?.close(force),
             irtQueue?.close(),
             (async () => {
-              while (outboxBusy || leaderboardBusy || tryoutBusy || irtBusy) {
+              while (outboxBusy || leaderboardBusy || tryoutBusy || irtBusy || notificationBusy) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),
@@ -222,6 +226,22 @@ export async function runWorker(exit: (code: number) => void = (code) => process
         tryoutBusy = false;
       }
     };
+    const notify = async () => {
+      if (stopping || notificationBusy) return;
+      notificationBusy = true;
+      try {
+        await discoverNotificationReleases();
+        const result = await drainNotificationBatch();
+        if (result.delivered || result.failed) console.log('[notifications] batch', result);
+      } catch {
+        reportError(new Error('NOTIFICATION_POLL_FAILED'));
+      } finally {
+        notificationBusy = false;
+      }
+    };
+    await notify();
+    if (stopping) return;
+    notificationTimer = setInterval(() => void notify(), 5_000);
     await recover();
     if (stopping) return;
     tryoutTimer = setInterval(() => void recover(), 5_000);

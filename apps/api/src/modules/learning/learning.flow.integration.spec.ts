@@ -3,6 +3,7 @@ import { randomUUID } from 'node:crypto';
 import { and, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox,
+  notificationOutbox,
   assessmentAttempts,
   assessmentPackages,
   attemptAnswers,
@@ -369,6 +370,7 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(resultA.xp).toBe(rewards[0]?.xpAmount);
     expect(resultA.xp).toBeGreaterThanOrEqual(80);
     expect(resultA.xp).toBeLessThanOrEqual(130);
+    expect(await db.select().from(notificationOutbox).where(and(eq(notificationOutbox.recipientId, student!.id), eq(notificationOutbox.kind, 'LEVEL_UNLOCKED')))).toHaveLength(1);
     expect(resultA.recommendations).toEqual([]);
     expect(resultA).toMatchObject({ drillPolicyVersion: 2, stars: 2, reward: { policyVersion: 2, baseXp: 80 } });
     expect(resultB.reward).toEqual(resultA.reward);

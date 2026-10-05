@@ -7,6 +7,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
+  currentTryoutPackage,
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
@@ -26,7 +27,6 @@ import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
 import { decodeSingleChoice } from './single-choice.policy';
-import { isJakartaMondayMidnight } from './tryout.policy';
 import { TryoutReleaseService } from './tryout-release.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -45,31 +45,8 @@ export class TryoutService {
     return user.id;
   }
 
-  private async currentPackage() {
-    const { db } = getDatabase();
-    const now = await databaseTime(db);
-    const [row] = await db
-      .select()
-      .from(assessmentPackages)
-      .where(
-        and(
-          eq(assessmentPackages.assessmentType, 'TRYOUT'),
-          eq(assessmentPackages.purpose, 'REGULAR'),
-          sql`public.package_can_distribute(${assessmentPackages.id})`,
-          eq(assessmentPackages.status, 'PUBLISHED'),
-          lte(assessmentPackages.releaseAt, now),
-        ),
-      )
-      .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
-      .limit(1);
-    if (
-      !row ||
-      !row.releaseAt ||
-      !isJakartaMondayMidnight(row.releaseAt) ||
-      (row.closeAt && row.closeAt <= now)
-    )
-      return null;
-    return row;
+  private currentPackage() {
+    return currentTryoutPackage();
   }
 
   async current(authorization?: string) {

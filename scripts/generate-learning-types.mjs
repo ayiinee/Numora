@@ -3,6 +3,8 @@ import { resolve } from 'node:path';
 
 const source = resolve('packages/contracts/openapi/openapi.json');
 const names = [
+  'StudentMaterialsDto', 'MaterialChapterDto', 'MaterialSubchapterDto',
+  'NotificationActionDto', 'NotificationDto', 'NotificationsDto', 'NotificationSummaryDto', 'NotificationReadDto',
   'ChapterDto',
   'SubchapterDto',
   'LevelDto',
