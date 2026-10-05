@@ -26,6 +26,7 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
     { href: '/admin/schools', label: 'Sekolah & token', icon: 'school' },
     { href: '/admin/content', label: 'Konten & operasional', icon: 'book' },
     { href: '/admin/content/imports', label: 'Impor & preview', icon: 'clipboard' },
+    { href: '/admin/operations', label: 'Pengguna & kelas', icon: 'users' },
   ],
 };
 
