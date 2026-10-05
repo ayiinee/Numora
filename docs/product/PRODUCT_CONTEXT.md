@@ -6,6 +6,10 @@
 
 # Product Context — Numora
 
+**ENGINEERING DECISION — klarifikasi lanjutan Aini, 5 Oktober 2026:** bobot produk PG=2, MCMA=3, Kategori=3 final; parsial berkontribusi pada scoring ketuntasan Drill dan XP dasar benar ekuivalen ×10, ditambah bonus kecepatan existing. Bintang mengikuti nilai akhir Drill. Mode hasil fallback IRT berlaku seluruh batch. Rubrik PGK, pemetaan kategori/nilai IRT dan rumus nilai scoring biasa tetap memerlukan pengesahan; [rincian Drill](../development/DRILL_V06_REWARDS.md#klarifikasi-pgk--5-oktober-2026).
+
+**ENGINEERING DECISION — klarifikasi Aini, 5 Oktober 2026:** XP TryOut selalu diposting saat submit. Jika parsial dapat dihitung, XP = ceil((benar penuh + benar ekuivalen parsial) ×10); jika perhitungan parsial terkendala saat submit, fallback XP = benar penuh ×10. Keputusan ini terpisah dari skor IRT dan tidak mengubah XP setelah hasil IRT tersedia. Pembahasan dirilis bersama hasil; IRT yang belum menghasilkan hasil valid hingga 72 jam setelah batch ditutup memakai scoring biasa. Rubrik PGK dan rumus nilai scoring biasa masih memerlukan spesifikasi; [rincian dan batas implementasi](../development/TRYOUT_XP_V06.md#klarifikasi-fallback-xp--5-oktober-2026).
+
 **PRD RULE / current Drill — 5 October 2026:** PRD v0.6 §8–10 supersedes the historical Drill TBC text below: base XP = correct/10 ×100, bonus = max(0,(900−server duration seconds)/900 ×50), cap 150; 0/1/2/3 stars at score 0/10–50/51–99/100; latest attempt determines displayed stars/score; one package per level may repeat, unlock never relocks. Every completed attempt uses its pinned policy and preserves history.
 
 **ENGINEERING DECISION — Aini:** round the final XP once to nearest integer; new Drill explanation access has no expiry; confirm every unfinished Drill exit, with timer continuing and unsaved-loss notice. Applies prospectively, without legacy XP backfill. [Decision, compatibility and rollout](../development/DRILL_V06_REWARDS.md). JOB-11 TryOut XP and JOB-17 leaderboard remain separate dependencies.

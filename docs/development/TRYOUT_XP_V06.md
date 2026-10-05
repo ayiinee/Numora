@@ -10,6 +10,20 @@ Jalur assessment saat ini mendukung PG. Benar ekuivalen PG dihitung per butir (`
 
 Migrasi maju menambah pin nullable dan memperluas guard ledger untuk kebijakan TryOut; tidak mengubah nilai, jawaban, ataupun XP lama. JOB-17 leaderboard account-based/global, IRT, paket Past, konten resmi, dan independent QA tetap terpisah. Migrasi baru diuji pada PostgreSQL lokal terlebih dahulu; aktivasi Cloud memerlukan penerapan migrasi sebelum build API/worker terbaru digunakan.
 
+## Klarifikasi fallback XP — 5 Oktober 2026
+
+**ENGINEERING DECISION — klarifikasi produk Aini:** XP selalu dihitung dan dicatat saat submit, terpisah dari skor maupun status proses IRT. Jika perhitungan parsial dapat dilakukan, gunakan `(jumlah benar penuh + benar ekuivalen parsial) ×10` dan jangan menjalankan fallback. Jika perhitungan parsial terkendala saat submit, gunakan `jumlah soal benar penuh ×10`; kontribusi parsial tidak dimasukkan. Fallback XP ini tidak dipicu oleh kegagalan IRT atau batas waktu rilis hasil. Hasil IRT yang muncul kemudian tidak menghitung ulang XP yang sudah dicatat.
+
+**ENGINEERING DECISION — klarifikasi lanjutan Aini:** XP TryOut pecahan dibulatkan ke atas. Formula final normal adalah `ceil((jumlah benar penuh + benar ekuivalen parsial) ×10)`; formula fallback tetap `jumlah soal benar penuh ×10`. Pembulatan diterapkan pada total XP, bukan setiap kontribusi butir. Contoh `(20 + 0,25) ×10 = 202,5` menjadi `203 XP`. Keputusan ini khusus TryOut; Drill tetap memakai kebijakan pembulatannya sendiri.
+
+**ENGINEERING DECISION — rilis hasil, terpisah dari XP:** pembahasan dibuka bersama hasil. Jika IRT belum menghasilkan hasil valid hingga batas 3×24 jam setelah batch ditutup, gunakan scoring biasa. Aini mengonfirmasi bahwa mode hasil fallback berlaku untuk seluruh batch. Rumus nilai scoring biasa, mapping nilai IRT dan perlakuan data tidak cukup masih memerlukan spesifikasi; fallback XP saat submit tidak menetapkan rumus nilai hasil ini.
+
+**ENGINEERING DECISION — bobot dan Drill, Aini:** bobot produk PG=2, MCMA=3 dan Kategori=3 adalah final. Partial credit diperhitungkan untuk scoring ketuntasan Drill dan benar ekuivalen XP Drill, dengan bonus kecepatan existing; bintang mengikuti nilai akhir Drill. Pengesahan bobot tidak mengesahkan tabel rubrik MCMA yang masih Draft. [Rincian Drill dan batas implementasi](DRILL_V06_REWARDS.md#klarifikasi-pgk--5-oktober-2026).
+
+**OPEN — rincian implementasi PGK:** rubrik benar ekuivalen dan evidence benar penuh perlu disahkan sebelum jalur PGK diaktifkan. Pemicu produk fallback XP sudah jelas: perhitungan parsial tidak memungkinkan saat submit; implementasi perlu mengidentifikasi kendala tersebut, tanpa menjadikan seluruh kegagalan transaksi sebagai alasan fallback. Penanganan presisi dan penyimpanan mengikuti keputusan pembulatan ke atas di atas. Total `225 XP` pada contoh lama memerlukan `22,5` benar ekuivalen sebelum pembulatan; contoh `20 + 0,25` telah dikoreksi.
+
+**Status implementasi:** jalur PG existing tetap berlaku. Fallback parsial PGK belum diimplementasikan atau diuji; bukti engineering di bawah mencakup implementasi PG pada SHA sebelumnya.
+
 ## Verifikasi
 
 Tes policy mencakup 30 benar, 24,5 ekuivalen, XP 0 dan bobot PG yang berbeda. PostgreSQL menguji manual/auto/recovery concurrent, ledger unik/immutable, pin immutable, rollback outbox, legacy tanpa reward dan LOGIN main non-owner dengan RLS. API menguji ownership/auth dan XP saat waiting tanpa nilai/kunci; UI menampilkan XP 0/persisted tanpa menghitung ulang dari skor. `pnpm tryout:reconcile` hanya membaca canonical grades/ledger; jangan menjalankan backfill.

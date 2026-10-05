@@ -12,6 +12,12 @@ Hasil/history menampilkan reward tersimpan, bukan menghitung ulang berdasarkan k
 
 Rollout: jalankan migrasi maju menggunakan role migrasi; runtime main memakai grant existing. Jangan menjalankan migrasi ke Cloud sebagai efek pengujian lokal. Konten resmi, review Curriculum, independent QA, dan trial Google tetap gate terpisah. Reconciliation hanya melaporkan inkonsistensi dan tidak menciptakan XP untuk attempt legacy.
 
+## Klarifikasi PGK — 5 Oktober 2026
+
+**ENGINEERING DECISION — Aini:** bobot produk PG=2, MCMA=3 dan Kategori=3 adalah final. Parsial diperhitungkan dalam scoring ketuntasan Drill; ambang tetap 80%. XP dasar memakai benar ekuivalen termasuk parsial ×10 untuk 10 soal, ditambah bonus kecepatan existing dan dibatasi 150. Bintang mengikuti rentang nilai akhir Drill, bukan XP atau kategori IRT. Bobot produk tidak mengubah kontribusi satu soal benar penuh menjadi 20/30 XP.
+
+Keputusan pembulatan XP akhir Drill ke integer terdekat tetap tercatat terpisah dari pembulatan XP TryOut ke atas. Rubrik parsial MCMA/Kategori dan aturan presisi nilai akhir untuk pemetaan bintang masih perlu disahkan. Implementasi dan bukti PG sebelumnya tidak membuktikan jalur PGK selesai; perlu pin kebijakan baru bila perilaku grading/reward berubah, tanpa menghitung ulang hasil historis.
+
 ## Verifikasi engineering
 
 Suite PostgreSQL menggunakan database lokal terisolasi; fixture baru menguji role LOGIN main non-owner, pin legacy yang tidak dapat diubah, concurrent start/submit, ledger immutable, rollback setelah posting XP dan sebelum completion outbox, retry satu paket, latestStars 0 tanpa relock, ownership dan retensi lama/baru. Unit policy menguji batas 900 detik, pembulatan sekali dan bonus attempt gagal. UI menguji clock browser meleset, reward tersimpan/0, history level, save failure dan konfirmasi keluar sebelum/selepas submit.
