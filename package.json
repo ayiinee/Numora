@@ -18,7 +18,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci": "pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "test:checks": "node --test scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs scripts/upload-question-media.test.mjs",
+    "test:checks": "node --test scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs scripts/upload-question-media.test.mjs apps/api/scripts/teacher-demo-accounts.test.mjs",
     "test:release-chain": "node scripts/test-release-chain.mjs",
     "test:irt-chain": "node scripts/test-irt-chain.mjs",
     "db:generate": "pnpm --filter @tka/database db:generate",
