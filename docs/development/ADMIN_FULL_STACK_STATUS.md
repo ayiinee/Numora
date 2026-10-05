@@ -12,15 +12,15 @@ Initial audit baseline: main f3f75b3. Current integration baseline: main fbb031b
 
 ## Acceptance ledger
 
-| Milestone | Engineering gate                                                                                         | External gate                                                   | Status                    |
-| --------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------- |
-| M0        | Current source reconciliation, action-level backlog and explicit dependencies                            | PO corrections below                                            | Documentation implemented |
-| M1        | HTTP/browser subrole matrix, revocation with existing token, scoped DTO/audit, independent tab failure   | Sandbox acceptance                                              | In progress               |
-| M2        | Invite/replay/recovery/conflict, fixed assignment, last-Super concurrency, callback/password             | SMTP/templates/redirects, actual email                          | Pending                   |
-| M3        | School address, credential used_by, teacher verification, affiliation/roster, limited structure          | Class lifecycle remains separate backlog                        | Pending                   |
-| M4        | Rich review/revision/readiness/archive, verified media, historical report detail/filter/audit            | Approved Curriculum metadata, R2 credentials/CORS               | Pending                   |
-| M5        | Published policy selectors, retry, zero/latest stars, rich consumer, batch-close finalization, unique XP | Approved scoring/precision/blueprints; Pretest Student consumer | Pending                   |
-| M6        | Existing IRT request UI, publication contract, aggregate analytics, release evidence                     | Data compute/mapping/fallback, independent QA                   | Pending                   |
+| Milestone | Engineering gate                                                                                         | External gate                                                   | Status                                                             |
+| --------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------ |
+| M0        | Current source reconciliation, action-level backlog and explicit dependencies                            | PO corrections below                                            | Documentation implemented                                          |
+| M1        | HTTP/browser subrole matrix, revocation with existing token, scoped DTO/audit, independent tab failure   | Sandbox acceptance                                              | In progress                                                        |
+| M2        | Invite/replay/recovery/conflict, fixed assignment, last-Super concurrency, callback/password             | SMTP/templates/redirects, actual email                          | Engineering implemented; sandbox email/operator acceptance pending |
+| M3        | School address, credential used_by, teacher verification, affiliation/roster, limited structure          | Class lifecycle remains separate backlog                        | Pending                                                            |
+| M4        | Rich review/revision/readiness/archive, verified media, historical report detail/filter/audit            | Approved Curriculum metadata, R2 credentials/CORS               | Pending                                                            |
+| M5        | Published policy selectors, retry, zero/latest stars, rich consumer, batch-close finalization, unique XP | Approved scoring/precision/blueprints; Pretest Student consumer | Pending                                                            |
+| M6        | Existing IRT request UI, publication contract, aggregate analytics, release evidence                     | Data compute/mapping/fallback, independent QA                   | Pending                                                            |
 
 Every milestone must include updated OpenAPI/generated types, migrations where required, tests of critical behavior/authorization, UI loading/error/empty/denied, lint/typecheck/build and review. Fixture and CI success do not establish Cloud acceptance.
 
@@ -39,3 +39,11 @@ Every milestone must include updated OpenAPI/generated types, migrations where r
 ## Release evidence
 
 Record SHA, environment, commands, passed/failed/skipped counts and limits of each check. Migrations are committed and rehearsed before cloud application; no destructive history backfill. Product readiness requires the applicable external gates, not just the engineering milestone.
+
+### M2 initial local evidence (pre-PR #77; rerun required)
+
+Account provisioning is implemented on `feat/admin-accounts`, stacked on M1. New `/admin/accounts`, `/admin/auth/confirm`, and `/admin/recovery` flows consume the generated account/invitation contracts. Migrations 0028/0029 grant only the main server role access to durable invitation/recovery operations. The existing operator assignment script now shares the last-Super transaction lock; a separate verified-identity bootstrap/emergency command and [runbook](ADMIN_ACCOUNTS_RUNBOOK.md) are provided.
+
+Local verification: 18 API tests passed (five dedicated PostgreSQL scenarios, five provider boundary scenarios, eight direct HTTP permission scenarios); 15 portal/account UI tests passed; three Chromium account scenarios passed, including retry key preservation, Operations direct-route denial, expired invite and 320/1440 px overflow checks. API/web typecheck and root lint passed. PostgreSQL was a temporary localhost-only test cluster; Auth and email delivery were fixtures. No Cloud account, email or schema was changed. Real SMTP/template/redirect acceptance, operator execution and independent QA remain open.
+
+M0/M1 branches were pushed. Creating their draft PRs failed with GitHub connector `403: Resource not accessible by integration`; the local GitHub CLI is unauthenticated. PR descriptions are prepared. This does not block local milestone implementation, but review/CI on pull requests requires repository write access through an authenticated interface.

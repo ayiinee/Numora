@@ -35,6 +35,20 @@ export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "num
 
 export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
+export type AdminAccountDto = { "id": string; "displayName": string; "email": string; "adminRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
+
+export type AdminAccountsDto = { "items": (AdminAccountDto)[]; "nextOffset": number | null; };
+
+export type AdminInvitationDto = { "id": string; "email": string; "displayName": string; "targetRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; "status": "RESERVED" | "SENDING" | "INVITED" | "FAILED" | "ACCEPTED" | "CANCELLED"; "userId": string | null; "failureCode": string | null; "createdAt": string; "updatedAt": string; };
+
+export type AdminRecoveryDto = { "id": string; "status": "RESERVED" | "SENDING" | "SENT" | "FAILED"; "failureCode": string | null; };
+
+export type AdminInvitationsDto = { "items": (AdminInvitationDto)[]; "nextOffset": number | null; };
+
+export type InviteAdminDto = { "email": string; "displayName": string; "adminRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; };
+
+export type UpdateAdminAccountDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; "status"?: "ACTIVE" | "DISABLED"; };
+
 export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; };
 
 export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
