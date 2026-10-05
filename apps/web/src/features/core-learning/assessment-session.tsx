@@ -80,7 +80,7 @@ export function AssessmentSession({
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
-  useUnsavedWarning(unsaved !== null);
+  useUnsavedWarning(!submit.isSuccess && unsaved !== null, sessionKind === 'drill' && !submit.isSuccess);
 
   if (!question)
     return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;

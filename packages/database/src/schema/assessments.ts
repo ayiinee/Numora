@@ -192,6 +192,7 @@ export const assessmentAttempts = pgTable(
     rawPoints: numeric('raw_points', { precision: 10, scale: 2 }),
     score0To100: numeric('score_0_100', { precision: 5, scale: 2 }),
     stars: integer('stars'),
+    drillPolicyVersion: integer('drill_policy_version'),
   },
   (table) => [
     uniqueIndex('assessment_attempts_pretest_once_uq')
@@ -264,8 +265,9 @@ export const assessmentAttempts = pgTable(
     ),
     check(
       'assessment_attempts_stars_ck',
-      sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 1 and 3)`,
+      sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 0 and 3)`,
     ),
+    check('assessment_attempts_drill_policy_ck', sql`${table.drillPolicyVersion} is null or (${table.assessmentType} = 'DRILL' and ${table.drillPolicyVersion} = 2)`),
   ],
 ).enableRLS();
 
@@ -368,6 +370,7 @@ export const levelProgress = pgTable(
     latestScore: numeric('latest_score', { precision: 5, scale: 2, mode: 'number' }),
     bestScore: numeric('best_score', { precision: 5, scale: 2, mode: 'number' }),
     bestStars: integer('best_stars'),
+    latestStars: integer('latest_stars'),
   },
   (table) => [
     uniqueIndex('level_progress_student_level_uq').on(table.studentId, table.levelId),

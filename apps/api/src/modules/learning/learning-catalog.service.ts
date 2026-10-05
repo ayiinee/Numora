@@ -127,6 +127,7 @@ export class LearningCatalogService {
           status,
           latestScore: state?.latestScore ?? null,
           bestScore: state?.bestScore ?? null,
+          latestStars: state?.latestStars ?? null,
         };
       }),
     };

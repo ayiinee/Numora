@@ -3803,12 +3803,18 @@ a.settings-row:hover {
   background: var(--color-secondary-light);
   padding: 12px;
 }
-.drill-rewards__stats span {
+.drill-rewards__stats span,
+.drill-rewards__stats dt {
   font-size: 12px;
   color: var(--color-text-muted);
 }
 .drill-rewards__stats strong {
   font-size: 16px;
+}
+.drill-rewards__stats dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
 }
 .drill-rewards p {
   font-size: 12px;

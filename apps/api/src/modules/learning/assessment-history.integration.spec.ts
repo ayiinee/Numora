@@ -215,8 +215,8 @@ integration('Assessment history PostgreSQL and HTTP boundary', () => {
       chapterId,
       subchapterId,
       subchapterTitle: 'History subchapter',
-      xpState: 'pending',
-      starsState: 'pending',
+      xpState: 'legacy',
+      starsState: 'legacy',
     });
     expect(rows.find((r) => r.attemptId === tryoutId)).toMatchObject({
       score: null,

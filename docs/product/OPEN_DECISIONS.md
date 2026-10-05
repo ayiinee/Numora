@@ -6,6 +6,8 @@
 
 # Open Decisions Register
 
+**PRD RULE / supersession — 5 October 2026:** Drill base/bonus and stars are FINAL in v0.6 §8–10. DRL-OPEN-01/02/03/09 are closed for the single-package MVP. **ENGINEERING DECISION — Aini:** nearest-integer final XP, no explanation expiry for new attempts, confirmation on every unfinished exit close DRL-OPEN-06/07 for this rollout; saved answers resume and server elapsed time continues (DRL-OPEN-05 minimum). OPEN-11 remains open for TryOut in this scope. Older conflicting entries below are historical; [current decision and compatibility](../development/DRILL_V06_REWARDS.md) take precedence. Content review, analytics schema and independent QA remain separate gates.
+
 **ENGINEERING DECISION — Aini, 5 October 2026:** consolidate Admin entry/navigation in `/admin` and remove the development-only mock `/admin/preview`. Internal login uses provisioned Supabase Auth accounts; no Admin signup or browser assignment. PRD v0.6 §3.2–3.3 defines the three subroles; navigation follows identity assignment, while full server permission enforcement/limited operational DTOs remain an implementation gap. See [portal scope](../development/ADMIN_PORTAL_2026-10-05.md). Real unscored content preview is retained.
 
 **Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) §18 dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md) §16, diberikan 2 Oktober 2026; PRD v0.5 §13 tetap baseline lintas fitur. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) menjelaskan supersession. The PDF still bears its prior “draft for review” label; the team approval was confirmed by the Software Engineering coordinator on 28 September 2026.

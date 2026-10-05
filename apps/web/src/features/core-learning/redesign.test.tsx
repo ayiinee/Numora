@@ -22,6 +22,7 @@ import { destination } from '@/features/onboarding/destination';
 const context = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
   pathname: '/student',
+  levelFilter: '',
   replace: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
@@ -31,6 +32,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => context.pathname,
   useRouter: () => ({ replace: context.replace, push: context.push }),
   useParams: () => ({ chapterId: 'chapter-test', subchapterId: 'sub-test' }),
+  useSearchParams: () => new URLSearchParams(context.levelFilter ? { levelId: context.levelFilter } : {}),
 }));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: context.state, refresh: context.refresh, logout: context.logout }),
@@ -68,6 +70,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   context.pathname = '/student';
+  context.levelFilter = '';
   context.state = { status: 'ready', profile, session: { access_token: 'test-token' } };
   vi.mocked(learningApi.dashboard).mockResolvedValue({
     displayName: profile.displayName,
@@ -124,6 +127,17 @@ describe('assessment history states', () => {
     expect(screen.getByRole('link', { name: 'Mulai belajar' }).getAttribute('href')).toBe(
       '/student/learn',
     );
+  });
+  it('requests the selected level and renders persisted zero rewards', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [{ ...record,
+      xpState: 'ready', starsState: 'ready', xp: 0, stars: 0, levelId: 'level-test',
+    }], nextCursor: null });
+    renderStudent(<AssessmentScreen />);
+    expect(await screen.findByText('0 XP')).toBeTruthy();
+    expect(screen.getByText('Bintang: 0 / 3')).toBeTruthy();
+    expect(learningApi.assessmentHistory).toHaveBeenCalledWith('test-token', undefined, 'level-test');
+    expect(screen.getByRole('heading', { name: 'Riwayat level' })).toBeTruthy();
   });
   it('shows loading without claiming an empty history', async () => {
     vi.mocked(learningApi.assessmentHistory).mockImplementation(() => new Promise(() => {}));

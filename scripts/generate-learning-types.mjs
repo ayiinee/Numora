@@ -16,6 +16,7 @@ const names = [
   'SavedAnswerDto',
   'ReviewedQuestionDto',
   'RecommendedVideoDto',
+  'DrillRewardDto',
   'DrillResultDto',
   'AssessmentRecordDto',
   'AssessmentHistoryDto',

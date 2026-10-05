@@ -298,13 +298,15 @@ const authServer = createServer(async (req, res) => {
   }
   if (req.url === '/persistence') {
     const attempts =
-      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100, drill_policy_version, stars
       from assessment_attempts where student_id = ${actors.student.profileId} order by started_at, id`;
     const events = await client`select entity_id, event_name from analytics_outbox
       where actor_user_id = ${actors.student.profileId} and event_name = 'drill_completed'`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.student_id = ${actors.student.profileId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select attempt_id, xp_amount, base_xp, bonus_xp, duration_seconds, policy_version
+      from xp_ledger where student_id = ${actors.student.profileId} order by occurred_at, attempt_id`;
+    return send(200, { attempts, events, pins, rewards });
   }
   send(404, { message: 'Unknown fixture request' });
 });

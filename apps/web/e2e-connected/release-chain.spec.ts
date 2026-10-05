@@ -82,6 +82,8 @@ async function login(browser: Browser, alias: string) {
       ],
     },
   });
+  // Explicitly accept browser-native unload prompts; exit-specific assertions opt out below.
+  context.on('page', page => page.on('dialog', dialog => void dialog.accept()));
   contexts.push(context);
   const page = await context.newPage();
   return page;
@@ -265,6 +267,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
+    student.removeAllListeners('dialog');
+    student.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('Timer tetap berjalan');
+      await dialog.dismiss();
+    });
+    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
+    student.on('dialog', dialog => void dialog.accept());
     await student.reload();
     await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
@@ -280,6 +290,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await answer(resumed, 8);
     const result = await submit(resumed);
     expect(result.score).toBe(80);
+    expect(result.reward).toMatchObject({ baseXp: 80, policyVersion: 2 });
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(result.unlockedLevelId).toBe(levelTwo);
     const duplicates = await Promise.all(
       [1, 2].map(() =>
@@ -294,6 +306,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(duplicates.map((r) => r.score)).toEqual([80, 80]);
+    expect(duplicates.map(r => r.reward)).toEqual([result.reward, result.reward]);
     await call(
       request,
       'student',
@@ -313,7 +326,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const retryId = resumed.url().split('/').at(-1)!;
     expect(retryId).not.toBe(attempt.id);
     const retry = await body<DrillAttemptDto>(request, 'student', `assessment-attempts/${retryId}`);
-    expect(retry.questions.map((q) => q.stem)).not.toEqual(attempt.questions.map((q) => q.stem));
+    expect(retry.questions.map((q) => q.stem)).toEqual(attempt.questions.map((q) => q.stem));
     await answer(resumed, 7);
     expect((await submit(resumed)).score).toBe(70);
     await teacher.reload();
@@ -328,6 +341,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelOne)).toMatchObject({
       latestScore: 70,
       bestScore: 80,
+      latestStars: 2,
     });
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
@@ -352,6 +366,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       }[];
       events: { entity_id: string; event_name: string }[];
       pins: { attempt_id: string; question_version_id: string }[];
+      rewards: { attempt_id: string; xp_amount: number; base_xp: number; policy_version: number }[];
     };
     expect(persisted.attempts).toHaveLength(3);
     expect(persisted.events).toHaveLength(3);
@@ -362,13 +377,21 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (a) => a.class_id_at_start === cls.id && !!a.scoring_policy_version_id,
       ),
     ).toBe(true);
-    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(3);
+    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
+    expect(persisted.rewards).toHaveLength(3);
+    expect(new Set(persisted.rewards.map(r => r.attempt_id)).size).toBe(3);
+    expect(persisted.rewards.find(r => r.attempt_id === attempt.id)).toMatchObject({ xp_amount: result.reward!.totalXp, base_xp: 80, policy_version: 2 });
+    await resumed.goto(`/student/assessment?levelId=${levelOne}`);
+    await expect(resumed.getByRole('heading', { name: 'Riwayat level', exact: true })).toBeVisible();
+    await expect(resumed.locator('.activity-row')).toHaveCount(2);
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(
       (await body<DrillResultDto>(request, 'student', `assessment-attempts/${attempt.id}/result`))
         .score,
     ).toBe(80);
     checks.push(
       'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+      'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
     );
   });
 

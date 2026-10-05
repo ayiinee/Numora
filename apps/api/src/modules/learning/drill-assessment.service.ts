@@ -23,6 +23,7 @@ import {
   questionVersions,
   scoringPolicyVersions,
   subchapters,
+  xpLedger,
 } from '@tka/database';
 import { databaseTime, recordDomainEvent, saveChoiceWithEvent } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
@@ -34,6 +35,8 @@ import {
   DRILL_POLICY_CODE,
   DRILL_POLICY_VERSION,
   DRILL_QUESTION_COUNT,
+  DRILL_REWARD_POLICY_VERSION,
+  drillReward,
   explanationAvailable,
   presentActiveQuestion,
   scoreDrill,
@@ -144,7 +147,7 @@ export class DrillAssessmentService {
         ))
         .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
         .limit(1);
-      const selected = selectDrillPackage(packages, last?.packageId);
+      const selected = selectDrillPackage(packages);
       if (!selected)
         throw new ServiceUnavailableException(
           problem('DRILL_VARIANT_UNAVAILABLE', 'Varian Drill berikutnya belum tersedia.'),
@@ -202,6 +205,7 @@ export class DrillAssessmentService {
           levelIdAtStart: levelId,
           classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: selected.scoringPolicyVersionId,
+          drillPolicyVersion: DRILL_REWARD_POLICY_VERSION,
         })
         .returning({ id: assessmentAttempts.id });
       if (!attempt) throw new Error('Attempt creation failed.');
@@ -281,6 +285,7 @@ export class DrillAssessmentService {
       levelTitle: attempt.levelTitle,
       status: attempt.status === 'GRADED' ? ('completed' as const) : ('inProgress' as const),
       startedAt: attempt.startedAt.toISOString(),
+      serverTime: (await databaseTime(db)).toISOString(),
       isDemo: attempt.isDemo,
       questions: rows.map((row) => presentActiveQuestion({
         id: row.id,
@@ -389,7 +394,7 @@ export class DrillAssessmentService {
         return { ...row, correct, awardedPoints: correct ? Number(row.maxPoints) : 0 };
       });
       const correctCount = graded.filter((item) => item.correct).length;
-      const scored = scoreDrill(correctCount, graded.length);
+      const scored = scoreDrill(correctCount, graded.length, attempt.drillPolicyVersion);
       const [level] = await tx
         .select()
         .from(levels)
@@ -408,6 +413,8 @@ export class DrillAssessmentService {
             .limit(1)
         : [];
       const now = await databaseTime(tx);
+      const reward = attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION
+        ? drillReward(correctCount, graded.length, attempt.startedAt, now) : null;
       for (const item of graded) {
         await tx
           .insert(attemptAnswers)
@@ -443,6 +450,7 @@ export class DrillAssessmentService {
           latestScore: scored.score,
           bestScore: scored.score,
           bestStars: scored.stars,
+          latestStars: scored.stars,
           completedAt: scored.mastered ? now : null,
           completionAttemptId: scored.mastered ? attemptId : null,
         })
@@ -451,6 +459,7 @@ export class DrillAssessmentService {
           set: {
             unlockedAt: sql`coalesce(${levelProgress.unlockedAt}, ${now.toISOString()}::timestamptz)`,
             latestScore: scored.score,
+            latestStars: scored.stars,
             bestScore: sql`greatest(coalesce(${levelProgress.bestScore}, 0), ${scored.score})`,
             bestStars: scored.stars === null
               ? sql`${levelProgress.bestStars}`
@@ -494,12 +503,19 @@ export class DrillAssessmentService {
         submissionType: 'manual', questionCount: rows.length,
         answeredCount: rows.filter(row => selectedOptionId(row.answer) !== null).length,
       }, now);
+      if (reward) await tx.insert(xpLedger).values({
+        studentId, attemptId, sourceType: 'DRILL', classIdAtEvent: attempt.classIdAtStart,
+        xpAmount: reward.totalXp, policyCode: reward.policyCode, policyVersion: reward.policyVersion,
+        baseXp: reward.baseXp, bonusXp: reward.bonusXp.toString(),
+        durationSeconds: reward.durationSeconds.toString(), occurredAt: now,
+      });
       await tx.insert(analyticsOutbox).values({
         eventName: 'drill_completed',
         actorUserId: studentId,
         entityType: 'assessmentAttempt',
         entityId: attemptId, correlationId: attemptId, occurredAt: now,
-        payload: { score: scored.score, mastered: scored.mastered, isDemo: packageRow?.isDemo ?? false },
+        payload: { score: scored.score, mastered: scored.mastered, isDemo: packageRow?.isDemo ?? false,
+          reward },
       });
     });
     return this.resultForStudent(studentId, attemptId);
@@ -519,6 +535,7 @@ export class DrillAssessmentService {
         score: assessmentAttempts.score0To100,
         rawPoints: assessmentAttempts.rawPoints,
         stars: assessmentAttempts.stars,
+        drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
         unlockedLevelId: assessmentAttempts.unlockedLevelId,
         isDemo: assessmentPackages.isDemo,
       })
@@ -544,7 +561,8 @@ export class DrillAssessmentService {
       .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
       .where(eq(attemptItems.attemptId, attemptId))
       .limit(1);
-    const available = explanationAvailable(attempt.completedAt);
+    const available = attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION || explanationAvailable(attempt.completedAt);
+    const [reward] = await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attemptId)).limit(1);
     const rows = available ? await this.questionRows(attemptId) : [];
     if (rows.length) await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const score = Number(attempt.score);
@@ -562,6 +580,12 @@ export class DrillAssessmentService {
       questionCount: counts?.questionCount ?? 0,
       mastered: score >= 80,
       stars: attempt.stars,
+      drillPolicyVersion: attempt.drillPolicyVersion,
+      reward: reward?.policyCode ? {
+        policyCode: reward.policyCode, policyVersion: reward.policyVersion!,
+        baseXp: reward.baseXp!, bonusXp: Number(reward.bonusXp),
+        totalXp: reward.xpAmount, durationSeconds: Number(reward.durationSeconds),
+      } : null,
       unlockedLevelId: attempt.unlockedLevelId,
       isDemo: attempt.isDemo,
       explanationState: available ? ('available' as const) : ('expired' as const),

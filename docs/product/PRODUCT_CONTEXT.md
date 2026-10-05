@@ -6,6 +6,10 @@
 
 # Product Context — Numora
 
+**PRD RULE / current Drill — 5 October 2026:** PRD v0.6 §8–10 supersedes the historical Drill TBC text below: base XP = correct/10 ×100, bonus = max(0,(900−server duration seconds)/900 ×50), cap 150; 0/1/2/3 stars at score 0/10–50/51–99/100; latest attempt determines displayed stars/score; one package per level may repeat, unlock never relocks. Every completed attempt uses its pinned policy and preserves history.
+
+**ENGINEERING DECISION — Aini:** round the final XP once to nearest integer; new Drill explanation access has no expiry; confirm every unfinished Drill exit, with timer continuing and unsaved-loss notice. Applies prospectively, without legacy XP backfill. [Decision, compatibility and rollout](../development/DRILL_V06_REWARDS.md). JOB-11 TryOut XP and JOB-17 leaderboard remain separate dependencies.
+
 **Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md), diberikan pengguna pada 2 Oktober 2026, mengungguli konteks v0.5 yang berbeda untuk fitur tersebut. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) mencatat perubahan dan gap implementasi. Baseline lintas fitur: team-approved PRD v0.5, 28 September 2026. The supplied PDF still labels itself a consolidated draft for review; the Software Engineering coordinator confirmed team approval on 28 September 2026. Explicit OPEN items remain unresolved.
 **Document purpose:** shared context for Software, Data/AI, QA, UI/UX, Research & Curriculum, and coding agents.
 

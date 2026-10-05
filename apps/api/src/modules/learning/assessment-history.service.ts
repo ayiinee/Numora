@@ -6,6 +6,7 @@ import {
   getDatabase,
   levels,
   subchapters,
+  xpLedger,
 } from '@tka/database';
 import { and, desc, eq, inArray, isNotNull, lt, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
@@ -77,6 +78,9 @@ export class AssessmentHistoryService {
         isDemo: assessmentPackages.isDemo,
         finishedAt: assessmentAttempts.finishedAt,
         score: assessmentAttempts.score0To100,
+        stars: assessmentAttempts.stars,
+        drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
+        xp: xpLedger.xpAmount,
         status: assessmentAttempts.status,
         chapterId: assessmentAttempts.chapterIdAtStart,
         chapterTitle: chapters.name,
@@ -89,6 +93,7 @@ export class AssessmentHistoryService {
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
+      .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
       .leftJoin(chapters, eq(chapters.id, assessmentAttempts.chapterIdAtStart))
       .leftJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))
       .leftJoin(subchapters, eq(subchapters.id, levels.subchapterId))
@@ -130,9 +135,13 @@ export class AssessmentHistoryService {
           levelId: row.levelId,
           levelTitle: row.levelTitle,
           xpState:
-            row.assessmentType === 'PRETEST' ? ('notApplicable' as const) : ('pending' as const),
+            row.assessmentType === 'PRETEST' ? ('notApplicable' as const)
+              : row.assessmentType === 'DRILL' ? row.xp !== null ? ('ready' as const) : ('legacy' as const) : ('pending' as const),
           starsState:
-            row.assessmentType === 'DRILL' ? ('pending' as const) : ('notApplicable' as const),
+            row.assessmentType === 'DRILL' ? row.stars !== null ? ('ready' as const) : ('legacy' as const) : ('notApplicable' as const),
+          xp: row.assessmentType === 'DRILL' ? row.xp : null,
+          stars: row.assessmentType === 'DRILL' ? row.stars : null,
+          drillPolicyVersion: row.drillPolicyVersion,
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
           score: ready && row.score !== null ? Number(row.score) : null,

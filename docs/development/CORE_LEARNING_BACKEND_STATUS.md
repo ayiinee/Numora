@@ -6,6 +6,8 @@
 
 # Status backend Core Learning
 
+**ENGINEERING UPDATE — JOB-11 Drill / JOB-05, 5 Oktober 2026:** kebijakan v0.6 dipin prospektif, grading/XP/progres/outbox satu transaksi, ledger immutable/idempotent, 0 bintang, latestStars, retry satu paket, server count-up, konfirmasi setiap keluar dan pembahasan baru tanpa expiry. Result/history/level UI memakai generated contract. Attempt lama tetap utuh tanpa backfill XP. Migrasi `0024_drill_v06_rewards` dan checker read-only tersedia. [Aturan, rollout dan pengujian](DRILL_V06_REWARDS.md). Status ini bukan penutupan JOB-11 TryOut, JOB-17, review Curriculum atau independent QA; bukti JOB-06 historis di bawah tetap dipertahankan.
+
 **ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah
 diterapkan sampai `0022`, termasuk dispatch IRT, slug/level, audit media dan
 penguncian default grant Data API. Backup/restore, preservation data dan

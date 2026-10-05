@@ -4591,18 +4591,33 @@
           "xpState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
             ],
-            "description": "Numeric XP policy/posting is pending JOB-11; Pretest never awards XP."
+            "description": "Legacy XP is unknown, not zero. TryOut policy remains pending; Pretest has no XP."
           },
           "starsState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
-            ],
-            "description": "Drill star thresholds are OPEN; other assessment types do not award Drill stars."
+            ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "stars": {
+            "type": "number",
+            "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true
           },
           "submittedAt": {
             "type": "string",
@@ -4865,6 +4880,13 @@
           "bestScore": {
             "type": "number",
             "nullable": true
+          },
+          "latestStars": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Stars from the latest completed attempt, not best stars."
           }
         },
         "required": [
@@ -5014,6 +5036,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Database time for count-up display; server timestamps own reward duration."
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -5062,6 +5089,39 @@
         "required": [
           "questionInstanceId",
           "selectedOptionId"
+        ]
+      },
+      "DrillRewardDto": {
+        "type": "object",
+        "properties": {
+          "policyCode": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "number"
+          },
+          "baseXp": {
+            "type": "number"
+          },
+          "bonusXp": {
+            "type": "number",
+            "description": "Unrounded speed bonus stored at submission."
+          },
+          "totalXp": {
+            "type": "number",
+            "description": "Once-rounded final XP, including bonus and cap."
+          },
+          "durationSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "policyCode",
+          "policyVersion",
+          "baseXp",
+          "bonusXp",
+          "totalXp",
+          "durationSeconds"
         ]
       },
       "ReviewedQuestionDto": {
@@ -5157,6 +5217,21 @@
           "stars": {
             "type": "number",
             "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true,
+            "description": "Pinned at start. Null identifies the historical Drill policy."
+          },
+          "reward": {
+            "nullable": true,
+            "description": "Persisted ledger details; null for legacy attempts without this reward policy.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillRewardDto"
+              }
+            ]
           },
           "unlockedLevelId": {
             "type": "string",

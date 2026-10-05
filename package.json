@@ -33,6 +33,7 @@
     "test:qa-admins": "node --test scripts/qa-admins.integration.test.mjs",
     "qa:accounts:rotate": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts:rotate",
     "qa:smoke": "dotenv -e .env -- pnpm --filter @tka/api qa:smoke",
+    "drill:reconcile": "dotenv -e .env -- node apps/api/scripts/reconcile-drill-rewards.mjs",
     "db:studio": "dotenv -e .env -- pnpm --filter @tka/database db:studio",
     "worker:probe": "dotenv -e .env -- pnpm --filter @tka/worker worker:probe",
     "openapi:generate": "pnpm --filter @tka/database build && pnpm --filter @tka/assessment-engine build && pnpm --filter @tka/irt-orchestration build && pnpm --filter @tka/api openapi:generate",

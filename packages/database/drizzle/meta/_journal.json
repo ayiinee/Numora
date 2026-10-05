@@ -169,6 +169,13 @@
       "when": 1791114616363,
       "tag": "0023_content_import_preview",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791204801052,
+      "tag": "0024_drill_v06_rewards",
+      "breakpoints": true
     }
   ]
 }

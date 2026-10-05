@@ -31,6 +31,11 @@ export const xpLedger = pgTable('xp_ledger', {
   sourceType: xpSourceType('source_type').notNull(),
   attemptId: uuid('attempt_id').notNull().references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
   xpAmount: integer('xp_amount').notNull(),
+  policyCode: text('policy_code'),
+  policyVersion: integer('policy_version'),
+  baseXp: integer('base_xp'),
+  bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
+  durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
   occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
   periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
 }, (table) => [

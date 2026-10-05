@@ -22,6 +22,7 @@ import {
   subchapters,
   users,
   videoSubchapterMappings,
+  xpLedger,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
 import { DrillAssessmentService } from './drill-assessment.service';
@@ -35,7 +36,7 @@ const integration = testUrl ? describe : describe.skip;
 integration('Drill lifecycle against PostgreSQL', () => {
   afterAll(async () => { vi.unstubAllEnvs(); await closeDatabaseConnection(); });
 
-  it('keeps submit idempotent, changes package on retry, and protects student results', async () => {
+  it('keeps reward/submit atomic and idempotent, reuses the MVP package, and protects historical results', async () => {
     process.env.DATABASE_URL = testUrl;
     const { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
@@ -194,6 +195,9 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(resultA.levelTitle).toBe('Level 1');
     expect(resultB).toMatchObject({ attemptId: attempt.id, score: 80 });
     expect(resultA.recommendations).toEqual([]);
+    expect(resultA).toMatchObject({ drillPolicyVersion: 2, stars: 2, reward: { policyVersion: 2, baseXp: 80 } });
+    expect(resultB.reward).toEqual(resultA.reward);
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(1);
     expect((await history.list('student')).records[0]).toMatchObject({
       attemptId: attempt.id, activity: 'drill', resultState: 'ready', score: 80,
     });
@@ -218,7 +222,7 @@ integration('Drill lifecycle against PostgreSQL', () => {
 
     const retry = await learning.start('student', firstLevel!.id);
     expect(retry.id).not.toBe(attempt.id);
-    expect(retry.questions[0]?.stem).toContain('varian 2');
+    expect(retry.questions[0]?.stem).toContain('varian 1');
     for (const item of retry.questions.slice(0, 7))
       await learning.saveAnswer('student', retry.id, item.questionInstanceId, 'A');
     const [video] = await db.insert(learningVideos).values({
@@ -257,8 +261,8 @@ integration('Drill lifecycle against PostgreSQL', () => {
       vi.setSystemTime(new Date(beforeExpiry!.finishedAt!.getTime() + 91 * 24 * 60 * 60 * 1000));
       expect(await learning.result('student', attempt.id)).toMatchObject({
         score: 80,
-        explanationState: 'expired',
-        questions: [],
+        explanationState: 'available',
+        questions: resultA.questions,
       });
       expect(
         (await history.list('student', undefined, firstLevel!.id)).records.find(

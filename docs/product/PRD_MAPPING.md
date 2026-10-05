@@ -8,6 +8,8 @@
 
 # PRD → Engineering Mapping
 
+**PRD RULE / current mapping — 5 October 2026:** v0.6 §8–10 maps to JOB-05/JOB-11 Drill: latest score/stars, 0–3 stars, 10 items, single-package retry, base correct×10 + speed bonus capped 150, account-owned immutable XP. **ENGINEERING DECISION — Aini:** once-rounded final integer XP, no expiry for new explanations, confirmation for every unfinished exit. Backend pins Drill policy v2 independently of existing content/scoring versions, grades/posts ledger/progress/outbox atomically; existing result/history/level UI consumes generated contract additions. Preserve legacy rules/results, with no retroactive rewards. [Implementation and tests](../development/DRILL_V06_REWARDS.md). TryOut XP and leaderboard reconciliation remain outside this slice; older conflicting mappings below are historical.
+
 **USER CLARIFICATION — 3 Oktober 2026:** indikator kurikulum menggunakan `competencies`. Level/progres berada di subbab; nomor level kurikulum pada bank soal menentukan pool lintas indikator untuk level subbab yang sama. Ini tidak menetapkan kuota indikator, rubrik, atau jumlah level. [Rincian data dan migrasi](../data/CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
 
 This document maps [Drill v1.2 and TryOut v1.1](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) (supplied 2 October 2026) and the cross-feature PRD v0.5 baseline to implementation areas. It is not a replacement for the PRD. The Sprint 2 Student slice and additional Teacher prototype UI are recorded in `docs/development/SPRINT_2_GOAL.md`.
