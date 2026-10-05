@@ -87,6 +87,7 @@ export class IdentityService {
     return {
       id: profile.id,
       role: profile.role,
+      profilePhotoObjectKey: profile.profilePhotoObjectKey ?? null,
       status: profile.status,
       displayName: profile.displayName,
       email: profile.email,

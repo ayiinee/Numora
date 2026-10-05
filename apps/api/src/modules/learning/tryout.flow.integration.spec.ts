@@ -21,6 +21,7 @@ import {
   questionVersions,
   schools,
   scoringPolicyVersions,
+  xpLedger,
   subchapters,
   users,
 } from '@tka/database';
@@ -138,7 +139,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     const [chapter] = await db
       .insert(chapters)
       .values({
-        code: `TRYOUT-${suffix}`, slug: (`TRYOUT-${suffix}`).toLowerCase(),
+        code: `TRYOUT-${suffix}`,
+        slug: `TRYOUT-${suffix}`.toLowerCase(),
         name: 'Tryout Chapter',
         displayOrder: parseInt(suffix, 16) % 2_000_000_000,
         status: 'READY',
@@ -148,7 +150,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .insert(subchapters)
       .values({
         chapterId: chapter!.id,
-        code: `TRYOUT-${suffix}`, slug: (`TRYOUT-${suffix}`).toLowerCase(),
+        code: `TRYOUT-${suffix}`,
+        slug: `TRYOUT-${suffix}`.toLowerCase(),
         name: 'Tryout Subchapter',
         displayOrder: 1,
         status: 'READY',
@@ -163,15 +166,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
         status: 'READY',
       })
       .returning({ id: competencies.id });
-    const [policy] = await db
-      .insert(scoringPolicyVersions)
-      .values({
-        policyCode: `TRYOUT_PG_TEST_${suffix}`,
-        version: 1,
-        configuration: { fixture: true, questionType: 'SINGLE_CHOICE' },
-        status: 'PUBLISHED',
-      })
-      .returning({ id: scoringPolicyVersions.id });
+    const [policy] = await db.select({ id: scoringPolicyVersions.id }).from(scoringPolicyVersions)
+      .where(eq(scoringPolicyVersions.policyCode,'TRYOUT_PRD_V06'));
     const releaseAt = currentMondayWib();
     await db
       .update(assessmentPackages)
@@ -374,7 +370,9 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(afterJoin?.classIdAtStart).toBeNull();
-    const [beforeClockSkew] = await db.select().from(assessmentAttempts)
+    const [beforeClockSkew] = await db
+      .select()
+      .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, a.id));
     const wallTime = Date.now();
     vi.useFakeTimers({ toFake: ['Date'] });
@@ -382,26 +380,40 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     try {
       const resumed = await tryout.attempt('student', a.id);
       expect(Math.abs(new Date(resumed.serverTime).getTime() - wallTime)).toBeLessThan(10_000);
-      expect((await db.select().from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, a.id)))[0]?.startedAt).toEqual(beforeClockSkew!.startedAt);
+      expect(
+        (await db.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, a.id)))[0]
+          ?.startedAt,
+      ).toEqual(beforeClockSkew!.startedAt);
       expect(resumed.deadlineAt).toBe(a.deadlineAt);
       expect(await tryout.current('student')).toMatchObject({ state: 'inProgress' });
-    } finally { vi.useRealTimers(); }
+    } finally {
+      vi.useRealTimers();
+    }
     expect(a.questions).toHaveLength(2);
     expect(a.questions[0]).not.toHaveProperty('correctOptionId');
     await tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'A');
     expect((await tryout.attempt('student', a.id)).questions[0]?.selectedOptionId).toBe('A');
     // A save queued behind the finalization lock must use time after acquiring it.
-    await db.update(assessmentAttempts).set({ deadlineAt: new Date(Date.now() + 150) })
+    await db
+      .update(assessmentAttempts)
+      .set({ deadlineAt: new Date(Date.now() + 150) })
       .where(eq(assessmentAttempts.id, a.id));
     let queuedSave: Promise<unknown> | undefined;
-    await db.transaction(async tx => {
-      await tx.select().from(assessmentAttempts).where(eq(assessmentAttempts.id, a.id)).for('update');
-      queuedSave = tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'B')
-        .catch(error => error);
-      await new Promise(resolve => setTimeout(resolve, 300));
+    await db.transaction(async (tx) => {
+      await tx
+        .select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, a.id))
+        .for('update');
+      queuedSave = tryout
+        .saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'B')
+        .catch((error) => error);
+      await new Promise((resolve) => setTimeout(resolve, 300));
     });
-    expect(await queuedSave).toMatchObject({ status: 409, response: { code: 'TRYOUT_DEADLINE_PASSED' } });
+    expect(await queuedSave).toMatchObject({
+      status: 409,
+      response: { code: 'TRYOUT_DEADLINE_PASSED' },
+    });
     await db
       .update(assessmentAttempts)
       .set({ deadlineAt: new Date(Date.now() - 1) })
@@ -410,25 +422,39 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'B'),
     ).rejects.toMatchObject({ status: 409, response: { code: 'TRYOUT_DEADLINE_PASSED' } });
     const mandiriDeadline = new Date(Date.now() - 1);
-    await db.update(assessmentAttempts).set({ deadlineAt: mandiriDeadline })
+    await db
+      .update(assessmentAttempts)
+      .set({ deadlineAt: mandiriDeadline })
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(await tryout.attempt('independent', mandiri.id)).toMatchObject({
-      status: 'submitted', questions: [], deadlineAt: mandiriDeadline.toISOString(),
+      status: 'submitted',
+      questions: [],
+      deadlineAt: mandiriDeadline.toISOString(),
     });
     expect(await tryout.current('independent')).toMatchObject({ state: 'waitingIrt' });
     await expect(tryout.result('independent', mandiri.id)).rejects.toMatchObject({
-      status: 409, response: { code: 'TRYOUT_RESULT_PENDING' },
+      status: 409,
+      response: { code: 'TRYOUT_RESULT_PENDING' },
     });
-    const [autoStored] = await db.select().from(assessmentAttempts)
+    const [autoStored] = await db
+      .select()
+      .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, mandiri.id));
-    expect(autoStored).toMatchObject({ classIdAtStart: null, startedAt: mandiriStored!.startedAt,
-      deadlineAt: mandiriDeadline, status: 'GRADED' });
+    expect(autoStored).toMatchObject({
+      classIdAtStart: null,
+      startedAt: mandiriStored!.startedAt,
+      deadlineAt: mandiriDeadline,
+      status: 'GRADED',
+    });
     const [firstSubmit, duplicateSubmit] = await Promise.all([
       tryout.submit('student', a.id),
       tryout.submit('student', a.id),
     ]);
-    expect(firstSubmit).toEqual({ state: 'waitingIrt' });
+    expect(firstSubmit).toEqual({ state: 'waitingIrt', xp: 10 });
     expect(duplicateSubmit).toEqual(firstSubmit);
+    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId,a.id));
+    expect(rewards).toHaveLength(1);
+    expect(rewards[0]?.xpAmount).toBe(10);
     expect(await tryout.current('student')).toMatchObject({ state: 'waitingIrt', eligible: false });
     expect((await tryout.attempt('student', a.id)).questions).toEqual([]);
     const [stored] = await db

@@ -39,6 +39,8 @@ export class LevelDto {
   @ApiProperty({ enum: ['locked', 'open', 'inProgress', 'completed'] }) status!: string;
   @ApiProperty({ type: Number, nullable: true }) latestScore!: number | null;
   @ApiProperty({ type: Number, nullable: true }) bestScore!: number | null;
+  @ApiProperty({ type: Number, nullable: true, required: false, minimum: 0, maximum: 3 })
+  latestStars?: number | null;
 }
 
 export class CatalogDto {
@@ -101,6 +103,7 @@ export class DrillResultDto {
   @ApiProperty() questionCount!: number;
   @ApiProperty() mastered!: boolean;
   @ApiProperty({ type: Number, nullable: true }) stars!: number | null;
+  @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) unlockedLevelId!: string | null;
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ enum: ['available', 'expired'] }) explanationState!: string;
@@ -113,14 +116,43 @@ export class AssessmentRecordDto {
   @ApiProperty({ enum: ['drill', 'pretest', 'tryout'] }) activity!: string;
   @ApiProperty() title!: string;
   @ApiProperty() isDemo!: boolean;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false, description: 'Chapter ID pinned at attempt start.' }) chapterId?: string | null;
-  @ApiProperty({ type: String, nullable: true, required: false, description: 'Current taxonomy label; not a historical content snapshot.' }) chapterTitle?: string | null;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) subchapterId?: string | null;
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    required: false,
+    description: 'Chapter ID pinned at attempt start.',
+  })
+  chapterId?: string | null;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    required: false,
+    description: 'Current taxonomy label; not a historical content snapshot.',
+  })
+  chapterTitle?: string | null;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) subchapterId?:
+    string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) subchapterTitle?: string | null;
-  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false, description: 'Level ID pinned at attempt start; absent for non-level assessments.' }) levelId?: string | null;
+  @ApiProperty({
+    type: String,
+    format: 'uuid',
+    nullable: true,
+    required: false,
+    description: 'Level ID pinned at attempt start; absent for non-level assessments.',
+  })
+  levelId?: string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) levelTitle?: string | null;
-  @ApiProperty({ enum: ['pending', 'notApplicable'], required: false, description: 'Numeric XP policy/posting is pending JOB-11; Pretest never awards XP.' }) xpState?: 'pending' | 'notApplicable';
-  @ApiProperty({ enum: ['pending', 'notApplicable'], required: false, description: 'Drill star thresholds are OPEN; other assessment types do not award Drill stars.' }) starsState?: 'pending' | 'notApplicable';
+  @ApiProperty({
+    enum: ['awarded', 'pending', 'notApplicable'],
+    required: false,
+    description: 'Reads the persisted XP ledger; legacy unposted attempts remain pending.',
+  })
+  xpState?: 'awarded' | 'pending' | 'notApplicable';
+  @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
+  @ApiProperty({ enum: ['recorded', 'pending', 'notApplicable'], required: false }) starsState?:
+    'recorded' | 'pending' | 'notApplicable';
+  @ApiProperty({ type: Number, nullable: true, required: false }) stars?: number | null;
   @ApiProperty({ format: 'date-time' }) submittedAt!: string;
   @ApiProperty({ enum: ['ready', 'waitingIrt'] }) resultState!: string;
   @ApiProperty({ type: Number, nullable: true }) score!: number | null;

@@ -33,6 +33,7 @@ export const users = pgTable(
     role: userRole('role').notNull(),
     adminRole: adminRole('admin_role'),
     displayName: text('display_name').notNull(),
+    profilePhotoObjectKey: text('profile_photo_object_key'),
     email: text('email').notNull(),
     status: accountStatus('status').notNull().default('ACTIVE'),
     ...timestamps,
@@ -41,6 +42,10 @@ export const users = pgTable(
     uniqueIndex('users_auth_user_id_uq').on(table.authUserId),
     uniqueIndex('users_email_uq').on(table.email),
     check('users_admin_role_ck', sql`${table.adminRole} is null or ${table.role} = 'ADMIN'`),
+    check(
+      'users_profile_photo_key_ck',
+      sql`${table.profilePhotoObjectKey} is null or length(trim(${table.profilePhotoObjectKey})) > 0`,
+    ),
   ],
 ).enableRLS();
 

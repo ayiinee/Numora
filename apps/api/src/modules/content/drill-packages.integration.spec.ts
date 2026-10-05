@@ -206,7 +206,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     const draft = await request('admin/content/drill-packages', 'POST', {
       ...body,
       familyCode: `PLAYABLE-${suffix}`,
-      variantIndex: 2,
+      variantIndex: 1,
     });
     expect(draft.status).toBe(201);
     const { id: packageId } = (await draft.json()) as { id: string };

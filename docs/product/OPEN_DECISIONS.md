@@ -2,7 +2,7 @@
 >
 > **ENGINEERING DECISION:** importer/preview rollout imports DRAFT only, with all preview scores null. No production publication, PGK grading, XP, or IRT is enabled by preview.
 >
-> **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. TryOut XP conflicts between section 12 (x10) and AC-15 (x100), requiring PO correction before implementation. Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
+> **USER CLARIFICATION — Reyhan, 5 October 2026:** Tryout XP is equivalent-correct ×10; AC-15's ×100 is a typo. OPEN-11's product formulas and OPEN-15's leave/affiliation rules are resolved by v0.6; the older register below is historical. Five active classes, account-based XP, latest-attempt stars and one Drill variant are final product rules. [Data alignment](../data/PRD_V06_DATA_ALIGNMENT.md) tracks implementation. Academic PGK rubrics, approved content, compute parameters and runtime acceptance remain delivery dependencies, not permission to guess new product formulas.
 
 # Open Decisions Register
 
@@ -21,26 +21,26 @@
 - **PROPOSED** — engineering recommendation awaiting owner agreement.
 - **BLOCKS FINAL** — cannot publish the affected final behavior before resolution.
 
-| ID | Decision needed | PRD owner | Baseline / treatment now | Impact |
-|---|---|---|---|---|
-| OPEN-01 | Bab/subbab/kompetensi, jumlah/urutan level, definisi tuntas | Curriculum + PO | PRD mentions 5 levels per subbab; keep taxonomy dynamic until Curriculum confirms | Blocks final content/progress |
-| OPEN-02 | Distribution of 20 Pretest questions per subbab | Curriculum + PO | 20 total per bab is baseline; demo package only until distribution approved | Blocks final Pretest package |
-| OPEN-03 | Seluruh mapping score Pretest → initial unlocked levels | Curriculum + PO | DRL-OPEN-04: seluruh mapping TBC; cap 3 dari v0.5 bukan keputusan final terbaru | Blocks final placement |
-| OPEN-04 | PGK MCMA/Category scoring and rounding | Research & Curriculum + PO | TryOut MVP wajib PG, PGK MCMA dan PGK Kategori; rubrik/pembulatan tetap OPEN, dukungan PG saja adalah gap | Blocks final PGK scoring |
-| OPEN-05 | Official Tryout specification | Research & Curriculum + PO | 35 soal dan ketiga format FINAL; gratis semua siswa FINAL. Durasi, komposisi, skala dan jadwal akhir batch tetap TBC; rilis Senin baseline v0.5 | Blocks final Tryout publication |
-| OPEN-06 | Name/positioning/language/visual identity | PO + UI/UX | Numora is current name; UI/UX supplied a v0.1 visual implementation baseline, but final identity/handoff remains open | Does not block backend |
-| OPEN-07 | PvP invite expiry and two-player disconnect/readiness edges | PO + Software + QA | Explicit state machine; no undocumented final outcome | Blocks final edge behavior |
-| OPEN-08 | Class end and wrong-class correction with history | PO + Data | No self-transfer; preserve immutable history | Blocks correction/transfer flow |
-| OPEN-09 | Performance, browser, retention, backup/recovery, Google integration | Technical + PO | Engineering planning targets below | Must close before broader real-user release |
-| OPEN-10 | Variant/package counts, fallback and video mapping | Curriculum + PO | Video gagal maksimum 3, YouTube relevan subbab FINAL; isi/pool dan fallback DRL-OPEN-09 belum final | Blocks content completeness |
-| OPEN-11 | Final XP formula | PO + Data | Drill base/XP gagal/bonus DRL-OPEN-01/02 TBC; <15 menit eligible, ≥15 tidak. TryOut dari skor tanpa bonus; TRY-TBC-03 mapping TBC. Formula v0.5 tidak final | Blocks final XP semantics |
-| OPEN-12 | IRT model/parameter details | Data + PO | Minimum 30 dan daily batch tetap baseline detail soal Admin v0.5. Model/input PGK/skala/release siswa perlu Data review; jangan menyimpulkan gate universal TryOut dari baseline Admin | Blocks final statistical configuration |
-| OPEN-13 | Admin ban policy | PO | Represent restriction with status/reason; avoid invented effects | Blocks final ban behavior |
-| OPEN-14 | Local password, if any | PO + Software | Google for Student/Teacher; internal Admin | Needs PO decision if local passwords are desired |
-| OPEN-15 | Conversion School ↔ Mandiri on leaving class | PO + Data | Joining class changes affiliation; no self-leave or automatic downgrade in v0.5 | Blocks exit/downgrade behavior |
-| OPEN-16 | Admin sub-role split | PO + Software | One Admin role in v0.5 | Deferred |
-| OPEN-17 | Tryout price/payment method | PO + Software | TryOut v1.1 FINAL: gratis semua siswa termasuk Mandiri, tanpa payment MVP. Harga/metode hanya fase berikutnya | Deferred; bukan blocker akses Mandiri |
-| OPEN-18 | IRT batch duration for weekly Tryout package | Data + PO | TryOut v1.1 FINAL: hasil/pembahasan maksimum 3×24 jam sesudah akhir batch/periode. Jadwal akhir, insufficient data, failure/delay tetap TBC | Blocks scheduler/failure policy, bukan SLA produk |
+| ID      | Decision needed                                                      | PRD owner                  | Baseline / treatment now                                                                                                                                                               | Impact                                            |
+| ------- | -------------------------------------------------------------------- | -------------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- | ------------------------------------------------- |
+| OPEN-01 | Bab/subbab/kompetensi, jumlah/urutan level, definisi tuntas          | Curriculum + PO            | PRD mentions 5 levels per subbab; keep taxonomy dynamic until Curriculum confirms                                                                                                      | Blocks final content/progress                     |
+| OPEN-02 | Distribution of 20 Pretest questions per subbab                      | Curriculum + PO            | 20 total per bab is baseline; demo package only until distribution approved                                                                                                            | Blocks final Pretest package                      |
+| OPEN-03 | Seluruh mapping score Pretest → initial unlocked levels              | Curriculum + PO            | DRL-OPEN-04: seluruh mapping TBC; cap 3 dari v0.5 bukan keputusan final terbaru                                                                                                        | Blocks final placement                            |
+| OPEN-04 | PGK MCMA/Category scoring and rounding                               | Research & Curriculum + PO | TryOut MVP wajib PG, PGK MCMA dan PGK Kategori; rubrik/pembulatan tetap OPEN, dukungan PG saja adalah gap                                                                              | Blocks final PGK scoring                          |
+| OPEN-05 | Official Tryout specification                                        | Research & Curriculum + PO | 35 soal dan ketiga format FINAL; gratis semua siswa FINAL. Durasi, komposisi, skala dan jadwal akhir batch tetap TBC; rilis Senin baseline v0.5                                        | Blocks final Tryout publication                   |
+| OPEN-06 | Name/positioning/language/visual identity                            | PO + UI/UX                 | Numora is current name; UI/UX supplied a v0.1 visual implementation baseline, but final identity/handoff remains open                                                                  | Does not block backend                            |
+| OPEN-07 | PvP invite expiry and two-player disconnect/readiness edges          | PO + Software + QA         | Explicit state machine; no undocumented final outcome                                                                                                                                  | Blocks final edge behavior                        |
+| OPEN-08 | Class end and wrong-class correction with history                    | PO + Data                  | No self-transfer; preserve immutable history                                                                                                                                           | Blocks correction/transfer flow                   |
+| OPEN-09 | Performance, browser, retention, backup/recovery, Google integration | Technical + PO             | Engineering planning targets below                                                                                                                                                     | Must close before broader real-user release       |
+| OPEN-10 | Variant/package counts, fallback and video mapping                   | Curriculum + PO            | Video gagal maksimum 3, YouTube relevan subbab FINAL; isi/pool dan fallback DRL-OPEN-09 belum final                                                                                    | Blocks content completeness                       |
+| OPEN-11 | Final XP formula                                                     | PO + Data                  | Drill base/XP gagal/bonus DRL-OPEN-01/02 TBC; <15 menit eligible, ≥15 tidak. TryOut dari skor tanpa bonus; TRY-TBC-03 mapping TBC. Formula v0.5 tidak final                            | Blocks final XP semantics                         |
+| OPEN-12 | IRT model/parameter details                                          | Data + PO                  | Minimum 30 dan daily batch tetap baseline detail soal Admin v0.5. Model/input PGK/skala/release siswa perlu Data review; jangan menyimpulkan gate universal TryOut dari baseline Admin | Blocks final statistical configuration            |
+| OPEN-13 | Admin ban policy                                                     | PO                         | Represent restriction with status/reason; avoid invented effects                                                                                                                       | Blocks final ban behavior                         |
+| OPEN-14 | Local password, if any                                               | PO + Software              | Google for Student/Teacher; internal Admin                                                                                                                                             | Needs PO decision if local passwords are desired  |
+| OPEN-15 | Conversion School ↔ Mandiri on leaving class                         | PO + Data                  | Joining class changes affiliation; no self-leave or automatic downgrade in v0.5                                                                                                        | Blocks exit/downgrade behavior                    |
+| OPEN-16 | Admin sub-role split                                                 | PO + Software              | One Admin role in v0.5                                                                                                                                                                 | Deferred                                          |
+| OPEN-17 | Tryout price/payment method                                          | PO + Software              | TryOut v1.1 FINAL: gratis semua siswa termasuk Mandiri, tanpa payment MVP. Harga/metode hanya fase berikutnya                                                                          | Deferred; bukan blocker akses Mandiri             |
+| OPEN-18 | IRT batch duration for weekly Tryout package                         | Data + PO                  | TryOut v1.1 FINAL: hasil/pembahasan maksimum 3×24 jam sesudah akhir batch/periode. Jadwal akhir, insufficient data, failure/delay tetap TBC                                            | Blocks scheduler/failure policy, bukan SLA produk |
 
 ## OPEN dari PRD fitur terbaru
 
@@ -48,25 +48,25 @@
 
 ID global OPEN-01–18 di atas tetap stabil untuk referensi lama. `DRL-OPEN-*` menambahkan namespace pada ID sumber Drill; `TRY-TBC-*` adalah alias engineering untuk topik tanpa ID pada TryOut §16.
 
-| ID | Keputusan yang belum final | Owner | Dampak / hubungan global |
-| --- | --- | --- | --- |
-| DRL-OPEN-01 | Formula speed bonus <15 menit | Product + Data | OPEN-11; eligibility durasi FINAL |
-| DRL-OPEN-02 | Base XP dan XP attempt gagal | Product + Data | OPEN-11; result/ledger/leaderboard |
-| DRL-OPEN-03 | Threshold score → 1/2/3 stars | Product | Menggantikan rentang lama dan CLARIFICATION-004 |
-| DRL-OPEN-04 | Seluruh mapping score Pretest → level awal | Curriculum + Product | OPEN-03; cap 3 dari sumber lama bukan final |
-| DRL-OPEN-05 | Persistence/session save dan expiry | Software + Product | Autosave/resume aktual bukan penutupan TBC |
-| DRL-OPEN-06 | Interaksi Exit sebelum submit | Product + UI/UX | Modal/warning final; konsekuensi jelas |
-| DRL-OPEN-07 | Retensi pembahasan/history jika dibatasi | Product | OPEN-09; angka 90 hari kembali OPEN |
-| DRL-OPEN-08 | Schema/metadata analitik final | Data | Kontrak event lintas tim |
-| DRL-OPEN-09 | Fallback pool variant habis | Data + Curriculum + Software | OPEN-10; jangan menjanjikan variant tanpa pool |
-| DRL-OPEN-10 | Definisi mastery score atau penghapusannya dari MVP | Product + Data | Jangan tampilkan metric tanpa formula |
-| TRY-TBC-01 | Durasi angka TryOut | Research/Curriculum | OPEN-05; countdown/auto-submit FINAL |
-| TRY-TBC-02 | Skala TKA, komposisi konten dan rubrik PGK | Research/Curriculum + Product | OPEN-04/05; 35 soal/ketiga format FINAL |
-| TRY-TBC-03 | Konversi final score → XP | Product + Data | OPEN-11; no speed/duration bonus FINAL; XP=score PROPOSED |
-| TRY-TBC-04 | Persistence jawaban/sesi dan resume | Software | Timer integrity/re-auth/data loss |
-| TRY-TBC-05 | Eligibility paket lampau belum pernah dikerjakan | Product | Gratis/no payment FINAL; tidak otomatis boleh Start |
-| TRY-TBC-06 | Waktu akhir batch/periode dan relasi deadline attempt | Product + Data + Curriculum | OPEN-05/18; rilis Senin baseline v0.5; SLA 3×24 jam FINAL |
-| TRY-TBC-07 | Model/kalibrasi IRT, low-response, retry dan failure/release policy | Data + Product | OPEN-12/18; tanpa skor parsial; released score immutable |
+| ID          | Keputusan yang belum final                                          | Owner                         | Dampak / hubungan global                                  |
+| ----------- | ------------------------------------------------------------------- | ----------------------------- | --------------------------------------------------------- |
+| DRL-OPEN-01 | Formula speed bonus <15 menit                                       | Product + Data                | OPEN-11; eligibility durasi FINAL                         |
+| DRL-OPEN-02 | Base XP dan XP attempt gagal                                        | Product + Data                | OPEN-11; result/ledger/leaderboard                        |
+| DRL-OPEN-03 | Threshold score → 1/2/3 stars                                       | Product                       | Menggantikan rentang lama dan CLARIFICATION-004           |
+| DRL-OPEN-04 | Seluruh mapping score Pretest → level awal                          | Curriculum + Product          | OPEN-03; cap 3 dari sumber lama bukan final               |
+| DRL-OPEN-05 | Persistence/session save dan expiry                                 | Software + Product            | Autosave/resume aktual bukan penutupan TBC                |
+| DRL-OPEN-06 | Interaksi Exit sebelum submit                                       | Product + UI/UX               | Modal/warning final; konsekuensi jelas                    |
+| DRL-OPEN-07 | Retensi pembahasan/history jika dibatasi                            | Product                       | OPEN-09; angka 90 hari kembali OPEN                       |
+| DRL-OPEN-08 | Schema/metadata analitik final                                      | Data                          | Kontrak event lintas tim                                  |
+| DRL-OPEN-09 | Fallback pool variant habis                                         | Data + Curriculum + Software  | OPEN-10; jangan menjanjikan variant tanpa pool            |
+| DRL-OPEN-10 | Definisi mastery score atau penghapusannya dari MVP                 | Product + Data                | Jangan tampilkan metric tanpa formula                     |
+| TRY-TBC-01  | Durasi angka TryOut                                                 | Research/Curriculum           | OPEN-05; countdown/auto-submit FINAL                      |
+| TRY-TBC-02  | Skala TKA, komposisi konten dan rubrik PGK                          | Research/Curriculum + Product | OPEN-04/05; 35 soal/ketiga format FINAL                   |
+| TRY-TBC-03  | Konversi final score → XP                                           | Product + Data                | OPEN-11; no speed/duration bonus FINAL; XP=score PROPOSED |
+| TRY-TBC-04  | Persistence jawaban/sesi dan resume                                 | Software                      | Timer integrity/re-auth/data loss                         |
+| TRY-TBC-05  | Eligibility paket lampau belum pernah dikerjakan                    | Product                       | Gratis/no payment FINAL; tidak otomatis boleh Start       |
+| TRY-TBC-06  | Waktu akhir batch/periode dan relasi deadline attempt               | Product + Data + Curriculum   | OPEN-05/18; rilis Senin baseline v0.5; SLA 3×24 jam FINAL |
+| TRY-TBC-07  | Model/kalibrasi IRT, low-response, retry dan failure/release policy | Data + Product                | OPEN-12/18; tanpa skor parsial; released score immutable  |
 
 **OPEN — rekonsiliasi Pretest:** PRD Drill menyebut keputusan one-time dan tidak ada reattempt setelah completed, tetapi belum menentukan kesempatan setelah Skip serta akses afiliasi. Pertahankan baseline kelas v0.5 sebagai konteks sementara; minta keputusan Product/Curriculum sebelum finalisasi eligibility, bukan memperluas aturan gratis TryOut ke Pretest.
 
@@ -118,7 +118,7 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 - The staging domain and access to Supabase/Google OAuth are not available yet and must be provisioned before online trial verification.
 - UI/UX will prepare designs/wireframes later; a simple mock UI is accepted for the first school trial if the connected flow and basic accessibility work.
 
-The supplied Sprint 2 Goal defines one Student vertical slice and excludes *full* Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. The first partner school has **not been selected**. The **team will decide together** which staging host to use and who owns its setup; no provider or accountable owner is confirmed yet, and the monthly budget is **not set**. DevOps for the domain and Database for Supabase/Google OAuth are **tentative owners pending team confirmation**. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
+The supplied Sprint 2 Goal defines one Student vertical slice and excludes _full_ Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. The first partner school has **not been selected**. The **team will decide together** which staging host to use and who owns its setup; no provider or accountable owner is confirmed yet, and the monthly budget is **not set**. DevOps for the domain and Database for Supabase/Google OAuth are **tentative owners pending team confirmation**. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
 
 **ENGINEERING UPDATE, 29 September 2026:** the Database team prepared a shared Supabase Cloud Development project. Development now uses Cloud PostgreSQL/Auth and no longer requires Supabase Local. The Database team owns Google provider/dashboard configuration for this migration. This does not close the separate staging domain, OAuth, hosting, or trial-readiness dependencies above.
 

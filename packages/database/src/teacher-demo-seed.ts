@@ -100,7 +100,7 @@ async function inspect(sql: Query, roster: Roster) {
     }[]
   >(`SELECT
     ARRAY(SELECT name FROM unnest(ARRAY['users','schools','teacher_verification_tokens','teacher_school_memberships','classes','class_memberships','chapters','subchapters','levels','competencies','questions','question_variants','question_versions','scoring_policy_versions','assessment_packages','package_items','assessment_attempts','attempt_items','attempt_answers','level_progress','tryout_batches','irt_batches','irt_item_results','feedback','analytics_outbox','audit_logs']) name WHERE to_regclass('public.'||name) IS NULL) missing,
-    (SELECT count(*)::int FROM pg_indexes WHERE schemaname='public' AND indexname IN ('users_auth_user_id_uq','users_email_uq','classes_join_code_uq','class_memberships_active_student_uq','assessment_attempts_tryout_once_uq','attempt_answers_attempt_item_uq','level_progress_student_level_uq')) indexes,
+    (SELECT count(*)::int FROM pg_indexes WHERE schemaname='public' AND indexname IN ('users_auth_user_id_uq','users_email_uq','classes_join_code_uq','class_memberships_active_student_class_uq','assessment_attempts_tryout_once_uq','attempt_answers_attempt_item_uq','level_progress_student_level_uq')) indexes,
     (SELECT count(*)::int FROM pg_tables WHERE schemaname='public' AND NOT rowsecurity) unprotected,
     (SELECT count(*)::int FROM scoring_policy_versions WHERE policy_code='DRILL_PG_DEMO' AND version=1 AND status='PUBLISHED' AND configuration->>'masteryThreshold'='80') "policyCount",
     (SELECT count(*)::int FROM assessment_packages WHERE family_code LIKE 'DEMO-UI-L%' AND is_demo AND status='PUBLISHED') "algebraPackages",

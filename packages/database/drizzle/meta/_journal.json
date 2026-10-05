@@ -169,6 +169,13 @@
       "when": 1791114616363,
       "tag": "0023_content_import_preview",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791198522572,
+      "tag": "0024_prd_v06_data_alignment",
+      "breakpoints": true
     }
   ]
 }

@@ -8,8 +8,12 @@ import {
   pvpPlayers,
   pvpBestRecords,
   pvpLeaderboardEntries,
+  classMemberships,
+  classes,
+  users,
+  globalActivityLeaderboardEntries,
 } from '@tka/database';
-import { and, asc, eq, gte, lte, inArray, isNotNull, lt, sql } from 'drizzle-orm';
+import { and, asc, eq, gte, lte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 
 export const classLeaderboardPeriod = leaderboardPeriod;
 
@@ -55,23 +59,44 @@ export async function projectClassLeaderboard(now = new Date()) {
     let pvpCount = 0;
     for (const projection of pending) {
       const period = projection;
+      const archivedInterval = period.endsAt <= now;
+      const membershipAt = archivedInterval ? period.endsAt : now;
+      // Reconcile missed periods against membership at the period boundary.
+      // Once archived, neither membership changes nor reruns rewrite the snapshot.
       const totals = await tx
         .select({
-          studentId: xpLedger.studentId,
-          classId: xpLedger.classIdAtEvent,
-          totalXp: sql<number>`sum(${xpLedger.xpAmount})::integer`,
+          studentId: classMemberships.studentUserId,
+          classId: classMemberships.classId,
+          totalXp: sql<string>`coalesce(sum(${xpLedger.xpAmount}),0)`,
         })
-        .from(xpLedger)
-        .where(
+        .from(classMemberships)
+        .leftJoin(
+          xpLedger,
           and(
+            eq(classMemberships.studentUserId, xpLedger.studentId),
             inArray(xpLedger.sourceType, ['DRILL', 'TRYOUT']),
-            isNotNull(xpLedger.classIdAtEvent),
             gte(xpLedger.occurredAt, period.startsAt),
             lt(xpLedger.occurredAt, period.endsAt),
           ),
         )
-        .groupBy(xpLedger.classIdAtEvent, xpLedger.studentId)
-        .orderBy(asc(xpLedger.classIdAtEvent));
+        .innerJoin(classes, eq(classes.id, classMemberships.classId))
+        .innerJoin(users, eq(users.id, xpLedger.studentId))
+        .where(
+          and(
+            lt(classMemberships.joinedAt, membershipAt),
+            or(
+              isNull(classMemberships.leftAt),
+              archivedInterval ? gte(classMemberships.leftAt, membershipAt) : undefined,
+            ),
+            or(
+              isNull(classes.archivedAt),
+              archivedInterval ? gte(classes.archivedAt, membershipAt) : undefined,
+            ),
+            eq(users.status, 'ACTIVE'),
+          ),
+        )
+        .groupBy(classMemberships.classId, classMemberships.studentUserId)
+        .orderBy(asc(classMemberships.classId));
       await tx
         .delete(classLeaderboardEntries)
         .where(eq(classLeaderboardEntries.periodId, projection.id));
@@ -101,6 +126,51 @@ export async function projectClassLeaderboard(now = new Date()) {
         });
       });
       if (entries.length) await tx.insert(classLeaderboardEntries).values(entries);
+      const globalTotals = await tx
+        .select({
+          studentId: users.id,
+          totalXp: sql<string>`coalesce(sum(${xpLedger.xpAmount}),0)`,
+        })
+        .from(users)
+        .leftJoin(
+          xpLedger,
+          and(
+            eq(xpLedger.studentId, users.id),
+            inArray(xpLedger.sourceType, ['DRILL', 'TRYOUT']),
+            gte(xpLedger.occurredAt, period.startsAt),
+            lt(xpLedger.occurredAt, period.endsAt),
+          ),
+        )
+        .where(
+          and(
+            eq(users.role, 'STUDENT'),
+            eq(users.status, 'ACTIVE'),
+            lt(users.createdAt, membershipAt),
+          ),
+        )
+        .groupBy(users.id);
+      globalTotals.sort(
+        (a, b) => Number(b.totalXp) - Number(a.totalXp) || a.studentId.localeCompare(b.studentId),
+      );
+      let globalRank = 0;
+      let previousGlobal: number | null = null;
+      const globalEntries = globalTotals.map((row, index) => {
+        const totalXp = Number(row.totalXp);
+        if (totalXp !== previousGlobal) globalRank = index + 1;
+        previousGlobal = totalXp;
+        return {
+          periodId: period.id,
+          studentId: row.studentId,
+          totalXp,
+          rank: globalRank,
+          updatedAt: now,
+        };
+      });
+      await tx
+        .delete(globalActivityLeaderboardEntries)
+        .where(eq(globalActivityLeaderboardEntries.periodId, period.id));
+      if (globalEntries.length)
+        await tx.insert(globalActivityLeaderboardEntries).values(globalEntries);
       await tx
         .delete(pvpLeaderboardEntries)
         .where(eq(pvpLeaderboardEntries.periodId, projection.id));
@@ -157,18 +227,16 @@ export async function projectClassLeaderboard(now = new Date()) {
         }
       }
       if (best.size)
-        await tx
-          .insert(pvpBestRecords)
-          .values(
-            [...best.values()].map((r) => ({
-              periodId: projection.id,
-              studentId: r.studentId,
-              difficulty: r.difficulty,
-              matchId: r.matchId,
-              bestPoints: r.points!,
-              achievedAt: r.achievedAt!,
-            })),
-          );
+        await tx.insert(pvpBestRecords).values(
+          [...best.values()].map((r) => ({
+            periodId: projection.id,
+            studentId: r.studentId,
+            difficulty: r.difficulty,
+            matchId: r.matchId,
+            bestPoints: r.points!,
+            achievedAt: r.achievedAt!,
+          })),
+        );
       if (projected.length) await tx.insert(pvpLeaderboardEntries).values(projected);
       if (projection.id === current.id) {
         classCount = entries.length;

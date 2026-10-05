@@ -24,6 +24,14 @@ export class IdentityProfileDto {
   @ApiProperty({ enum: ['STUDENT', 'TEACHER', 'ADMIN'] })
   role!: 'STUDENT' | 'TEACHER' | 'ADMIN';
 
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    required: false,
+    description: 'Storage object key; never a stored signed URL.',
+  })
+  profilePhotoObjectKey?: string | null;
+
   @ApiProperty({ enum: ['ACTIVE', 'DISABLED'] })
   status!: 'ACTIVE' | 'DISABLED';
 

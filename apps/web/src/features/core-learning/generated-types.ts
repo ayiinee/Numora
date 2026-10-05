@@ -5,7 +5,7 @@ export type ChapterDto = { "id": string; "slug"?: string; "title": string; "orde
 
 export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };
 
-export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; };
+export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; };
 
 export type CatalogDto = { "chapters": (ChapterDto)[]; };
 
@@ -27,9 +27,9 @@ export type ReviewedQuestionDto = { "questionInstanceId": string; "stem": string
 
 export type RecommendedVideoDto = { "id": string; "title": string; "url": string; "source": string; };
 
-export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
+export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "xp"?: number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
 
-export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "pending" | "notApplicable"; "starsState"?: "pending" | "notApplicable"; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
+export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "awarded" | "pending" | "notApplicable"; "xp"?: number | null; "starsState"?: "recorded" | "pending" | "notApplicable"; "stars"?: number | null; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
 
 export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCursor": string | null; };
 
@@ -47,7 +47,7 @@ export type DashboardDrillDto = { "attemptId": string; "levelId": string | null;
 
 export type StudentFeaturesDto = { "drill": boolean; "tryout": boolean; "pretest": boolean; "pvp": boolean; "classLeaderboard": boolean; "pendingPolicies": (string)[]; };
 
-export type StudentDashboardDto = { "displayName": string; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
+export type StudentDashboardDto = { "displayName": string; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "classes"?: (DashboardClassDto)[]; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
 
 export type PvpAvailabilityDto = { "available": boolean; "reasonCode": string | null; "message": string; };
 
@@ -69,7 +69,7 @@ export type LeaderboardEntryDto = { "studentId": string; "displayName": string; 
 
 export type LeaderboardPeriodDto = { "startsAt": string; "endsAt": string; "timezone": string; };
 
-export type LeaderboardDto = { "policyPending": boolean; "reasonCode": string | null; "className": string | null; "unit": "points" | "xp"; "period": LeaderboardPeriodDto; "updatedAt": string | null; "entries": (LeaderboardEntryDto)[]; "ownEntry": LeaderboardEntryDto | null; };
+export type LeaderboardDto = { "policyPending": boolean; "reasonCode": string | null; "className": string | null; "classId"?: string | null; "unit": "points" | "xp"; "period": LeaderboardPeriodDto; "updatedAt": string | null; "entries": (LeaderboardEntryDto)[]; "ownEntry": LeaderboardEntryDto | null; };
 
 export type StudentVideoDto = { "mappingId": string; "title": string; "url": string; "source": string; };
 

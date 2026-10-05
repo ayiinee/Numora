@@ -5,7 +5,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, eq, gt, inArray, isNull } from 'drizzle-orm';
+import { and, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
 import {
   auditLogs,
   getDatabase,
@@ -14,6 +14,7 @@ import {
   teacherVerificationTokens,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
+import { adminAllows } from '../identity/admin-permissions';
 import { generateTeacherToken, hashTeacherToken, teacherTokenHashes } from './teacher-token';
 
 const isUniqueViolation = (error: unknown): boolean => {
@@ -41,7 +42,10 @@ export class SchoolsService {
 
   private async role(authorization: string | undefined, role: 'TEACHER' | 'ADMIN') {
     const profile = await this.identity.me(authorization);
-    if (profile.role !== role)
+    if (
+      profile.role !== role ||
+      (role === 'ADMIN' && !adminAllows(profile.adminRole, 'operations'))
+    )
       throw new ForbiddenException({ code: 'ROLE_FORBIDDEN', detail: 'Akses ditolak.' });
     return profile.id;
   }
@@ -55,6 +59,33 @@ export class SchoolsService {
       .where(eq(schools.status, 'ACTIVE'))
       .orderBy(schools.name);
     return { items };
+  }
+
+  async leaveSchool(authorization: string | undefined, schoolId: string) {
+    const teacherId = await this.role(authorization, 'TEACHER');
+    return getDatabase().db.transaction(async (tx) => {
+      const ended = await tx
+        .update(teacherSchoolMemberships)
+        .set({ endedAt: sql`greatest(clock_timestamp(),${teacherSchoolMemberships.verifiedAt})` })
+        .where(
+          and(
+            eq(teacherSchoolMemberships.teacherUserId, teacherId),
+            eq(teacherSchoolMemberships.schoolId, schoolId),
+            isNull(teacherSchoolMemberships.endedAt),
+          ),
+        )
+        .returning({ id: teacherSchoolMemberships.id });
+      if (ended.length)
+        await tx
+          .insert(auditLogs)
+          .values({
+            actorUserId: teacherId,
+            action: 'teacher_left_school',
+            entityType: 'school',
+            entityId: schoolId,
+          });
+      return { left: true };
+    });
   }
 
   async verifyTeacher(authorization: string | undefined, schoolId: string, token: string) {

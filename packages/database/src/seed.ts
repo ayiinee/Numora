@@ -24,7 +24,9 @@ async function seed() {
   // Placeholder Auth IDs cannot sign in through the shared cloud Auth project.
   const target = new URL(process.env.DATABASE_URL ?? '');
   if (!['127.0.0.1', 'localhost', '[::1]'].includes(target.hostname)) {
-    throw new Error('Identity demo fixtures are restricted to localhost. Use db:seed:learning for cloud sandbox.');
+    throw new Error(
+      'Identity demo fixtures are restricted to localhost. Use db:seed:learning for cloud sandbox.',
+    );
   }
 
   await db
@@ -36,6 +38,7 @@ async function seed() {
     {
       authUserId: ids.adminAuth,
       role: 'ADMIN' as const,
+      adminRole: 'SUPER_ADMIN' as const,
       displayName: 'DEMO Admin',
       email: 'admin.demo@example.invalid',
     },

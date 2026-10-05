@@ -11,15 +11,16 @@ describe('Drill domain policy', () => {
     expect(scoreDrill(7, 10)).toEqual({ score: 70, mastered: false, stars: 2 });
     expect(scoreDrill(8, 10)).toEqual({ score: 80, mastered: true, stars: 2 });
     expect(scoreDrill(10, 10)).toEqual({ score: 100, mastered: true, stars: 3 });
-    expect(scoreDrill(0, 10)).toEqual({ score: 0, mastered: false, stars: null });
+    expect(scoreDrill(0, 10)).toEqual({ score: 0, mastered: false, stars: 0 });
+    expect(scoreDrill(95, 100).stars).toBe(2);
   });
 
-  it('uses the other equivalent package for the next completed attempt', () => {
+  it('reuses the sole MVP variant for retries', () => {
     const packages = [{ id: 'a' }, { id: 'b' }];
     expect(selectDrillPackage(packages)?.id).toBe('a');
-    expect(selectDrillPackage(packages, 'a')?.id).toBe('b');
+    expect(selectDrillPackage(packages, 'a')?.id).toBe('a');
     expect(selectDrillPackage(packages, 'b')?.id).toBe('a');
-    expect(selectDrillPackage([{ id: 'a' }], 'a')).toBeUndefined();
+    expect(selectDrillPackage([{ id: 'a' }], 'a')?.id).toBe('a');
   });
 
   it('does not expose answer key or explanation in an active attempt', () => {
@@ -40,9 +41,9 @@ describe('Drill domain policy', () => {
     });
   });
 
-  it('expires explanation at the exact 90-day boundary', () => {
+  it('preserves historical explanation access without an invented 90-day expiry', () => {
     const completed = new Date('2026-01-01T00:00:00.000Z');
     expect(explanationAvailable(completed, new Date('2026-03-31T23:59:59.999Z'))).toBe(true);
-    expect(explanationAvailable(completed, new Date('2026-04-01T00:00:00.000Z'))).toBe(false);
+    expect(explanationAvailable(completed, new Date('2026-04-01T00:00:00.000Z'))).toBe(true);
   });
 });
