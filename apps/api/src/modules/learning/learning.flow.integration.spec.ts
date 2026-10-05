@@ -247,6 +247,20 @@ integration('Drill lifecycle against PostgreSQL', () => {
         .where(eq(questionVariants.variantCode, `ORIG-${suffix}-1`)))[0]!.id));
     expect(await learning.result('student', attempt.id)).toMatchObject({ score: 80, questions: resultA.questions });
     expect(await history.list('student', undefined, firstLevel!.id)).toEqual(retryHistory);
+    const expiredAt = new Date(Date.now() - 91 * 24 * 60 * 60 * 1000);
+    await db.update(assessmentAttempts)
+      .set({ finishedAt: expiredAt })
+      .where(eq(assessmentAttempts.id, attempt.id));
+    expect(await learning.result('student', attempt.id)).toMatchObject({
+      score: 80,
+      explanationState: 'expired',
+      questions: [],
+    });
+    expect(
+      (await history.list('student', undefined, firstLevel!.id)).records.find(
+        (record) => record.attemptId === attempt.id,
+      ),
+    ).toMatchObject({ score: 80, resultState: 'ready' });
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503, response: { code: 'DRILL_CONTENT_NOT_READY' },
     });

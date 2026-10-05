@@ -763,6 +763,54 @@ a.settings-row:hover {
   display: grid;
   gap: 12px;
 }
+.pretest-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  --card-padding: 20px;
+}
+.pretest-card__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  color: var(--color-primary-strong);
+  background: var(--color-primary-light);
+}
+.pretest-card__copy {
+  min-width: 0;
+  flex: 1;
+}
+.pretest-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pretest-card__heading h3 {
+  font-size: 16px;
+}
+.pretest-card__copy p {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.pretest-card__meta {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.pretest-info-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 22px;
+  line-height: 1.55;
+}
+.pretest-info-list li::marker {
+  color: var(--color-primary-strong);
+}
 .subchapter-row {
   display: flex;
   align-items: center;
@@ -3631,6 +3679,17 @@ a.settings-row:hover {
 @media (max-width: 699px) {
   .learning-catalog .catalog-intro {
     padding: 20px;
+  }
+  .pretest-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .pretest-card__copy {
+    flex: 1 1 calc(100% - 64px);
+  }
+  .pretest-card > .numora-button {
+    flex: 1 1 calc(100% - 64px);
+    margin-left: 64px;
   }
   .level-path {
     padding-top: 12px;
