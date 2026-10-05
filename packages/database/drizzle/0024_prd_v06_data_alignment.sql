@@ -94,7 +94,7 @@ BEGIN
   RETURN NEW;
 END $$;
 --> statement-breakpoint
-REVOKE ALL ON FUNCTION public.enforce_student_class_membership() FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION public.enforce_student_class_membership() FROM PUBLIC;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION public.enforce_student_class_membership() TO numora_main_runtime;
 --> statement-breakpoint
@@ -112,7 +112,7 @@ BEGIN
   RETURN NEW;
 END $$;
 --> statement-breakpoint
-REVOKE ALL ON FUNCTION public.end_banned_class_membership() FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION public.end_banned_class_membership() FROM PUBLIC;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION public.end_banned_class_membership() TO numora_main_runtime;
 --> statement-breakpoint
@@ -135,7 +135,7 @@ BEGIN
   RETURN NEW;
 END $$;
 --> statement-breakpoint
-REVOKE ALL ON FUNCTION public.release_teacher_classes() FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON FUNCTION public.release_teacher_classes() FROM PUBLIC;
 --> statement-breakpoint
 GRANT EXECUTE ON FUNCTION public.release_teacher_classes() TO numora_main_runtime;
 --> statement-breakpoint
@@ -152,6 +152,20 @@ REVOKE UPDATE,DELETE ON public.xp_ledger FROM numora_main_runtime,numora_irt_run
 --> statement-breakpoint
 GRANT SELECT,INSERT,UPDATE,DELETE ON public.global_activity_leaderboard_entries TO numora_main_runtime;
 --> statement-breakpoint
-REVOKE ALL ON TABLE public.class_student_bans,public.global_activity_leaderboard_entries FROM PUBLIC,anon,authenticated,service_role;
+REVOKE ALL ON TABLE public.class_student_bans,public.global_activity_leaderboard_entries FROM PUBLIC;
+--> statement-breakpoint
+-- Plain PostgreSQL CI has no Supabase roles. Revoke existing Data API grants,
+-- including privileges inherited from Supabase default privileges, without
+-- creating deployment-specific roles on an ordinary PostgreSQL instance.
+DO $$
+DECLARE api_role text;
+BEGIN
+  FOREACH api_role IN ARRAY ARRAY['anon','authenticated','service_role'] LOOP
+    IF EXISTS(SELECT 1 FROM pg_roles WHERE rolname=api_role) THEN
+      EXECUTE format('REVOKE ALL ON TABLE public.class_student_bans,public.global_activity_leaderboard_entries FROM %I',api_role);
+      EXECUTE format('REVOKE ALL ON FUNCTION public.enforce_student_class_membership(),public.end_banned_class_membership(),public.release_teacher_classes() FROM %I',api_role);
+    END IF;
+  END LOOP;
+END $$;
 --> statement-breakpoint
 CREATE POLICY numora_main_access ON public.global_activity_leaderboard_entries FOR ALL TO numora_main_runtime USING (true) WITH CHECK (true);

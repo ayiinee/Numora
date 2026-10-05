@@ -13,10 +13,11 @@ const migrations = await Promise.all(
     sql: await readFile(new URL(`${entry.tag}.sql`, folder), 'utf8'),
   })),
 );
-async function database() {
+async function database(withSupabaseRoles = true) {
   const { PGlite } = await import(pathToFileURL(resolve(modulePath)).href);
   const db = new PGlite();
-  await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;');
+  if (withSupabaseRoles)
+    await db.exec('CREATE ROLE anon; CREATE ROLE authenticated; CREATE ROLE service_role;');
   return db;
 }
 async function apply(db, entries) {
@@ -31,12 +32,64 @@ const one = async (db, sql, params = []) => (await db.query(sql, params)).rows[0
 const insertId = async (db, sql, params = []) => (await one(db, `${sql} RETURNING id`, params)).id;
 
 test(
+  'fresh migration chain works on plain PostgreSQL without creating Supabase roles',
+  { skip: !modulePath },
+  async () => {
+    const db = await database(false);
+    try {
+      await apply(db, migrations);
+      assert.equal(
+        (
+          await one(
+            db,
+            "SELECT count(*)::int n FROM pg_roles WHERE rolname IN ('anon','authenticated','service_role')",
+          )
+        ).n,
+        0,
+      );
+      assert.equal(
+        (
+          await one(
+            db,
+            "SELECT has_table_privilege('numora_main_runtime','class_student_bans','SELECT') allowed",
+          )
+        ).allowed,
+        true,
+      );
+      assert.equal(
+        (
+          await one(
+            db,
+            "SELECT has_function_privilege('numora_main_runtime','enforce_student_class_membership()','EXECUTE') allowed",
+          )
+        ).allowed,
+        true,
+      );
+    } finally {
+      await db.close();
+    }
+  },
+);
+
+test(
   'fresh full migration chain commits with PRD v0.6 policies and backend-only new tables',
   { skip: !modulePath },
   async () => {
     const db = await database();
     try {
-      await apply(db, migrations);
+      await apply(
+        db,
+        migrations.filter((e) => e.idx <= 23),
+      );
+      // Simulate Data API default privileges on a Supabase project. The new
+      // migration must remove explicit grants as well as PUBLIC privileges.
+      await db.exec(
+        'ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT ALL ON TABLES TO anon,authenticated,service_role; ALTER DEFAULT PRIVILEGES IN SCHEMA public GRANT EXECUTE ON FUNCTIONS TO anon,authenticated,service_role;',
+      );
+      await apply(
+        db,
+        migrations.filter((e) => e.idx > 23),
+      );
       assert.equal(
         (
           await one(
@@ -82,15 +135,24 @@ test(
         ).allowed,
         true,
       );
-      assert.equal(
-        (
-          await one(
-            db,
-            "SELECT has_function_privilege('authenticated','enforce_student_class_membership()','EXECUTE') allowed",
-          )
-        ).allowed,
-        false,
-      );
+      for (const role of ['anon', 'authenticated', 'service_role']) {
+        for (const table of ['class_student_bans', 'global_activity_leaderboard_entries'])
+          assert.equal(
+            (await one(db, "SELECT has_table_privilege($1,$2,'SELECT') allowed", [role, table]))
+              .allowed,
+            false,
+          );
+        for (const fn of [
+          'enforce_student_class_membership()',
+          'end_banned_class_membership()',
+          'release_teacher_classes()',
+        ])
+          assert.equal(
+            (await one(db, "SELECT has_function_privilege($1,$2,'EXECUTE') allowed", [role, fn]))
+              .allowed,
+            false,
+          );
+      }
       assert.equal(
         (
           await one(

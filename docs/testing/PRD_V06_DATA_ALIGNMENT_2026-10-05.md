@@ -13,7 +13,7 @@
 | Assessment engine                   | 3/3, formula XP, batas dan input invalid                                                   |
 | IRT orchestration                   | 2/2, tanpa skip                                                                            |
 | Script checks                       | 68/68, tanpa skip                                                                          |
-| SQL PGlite, fresh + upgrade fixture | 2/2, tanpa skip                                                                            |
+| SQL PGlite, fresh + upgrade fixture | 3/3, tanpa skip                                                                            |
 | QA Admin PostgreSQL                 | 1/1, provisioning fixture, replay dan audit rollback                                       |
 | Upgrade-check / Staging bridge      | Lulus pada database fixture terisolasi                                                     |
 | Lint                                | ESLint workspace lulus tanpa warning                                                       |
@@ -21,7 +21,7 @@
 | Typecheck                           | API, worker, database, assessment engine, IRT orchestration, UI dan web lulus              |
 | Build                               | Build workspace lulus, termasuk web dengan default Turbopack                               |
 
-Total tes paket adalah **382**, ditambah **71** script/SQL/QA checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek. Pengujian sebelum rebase pada baseline `d81c098` meluluskan 371 tes paket dan 59 script/SQL checks; perbedaan jumlah berasal dari tes portal/QA Admin terbaru pada main.
+Total tes paket adalah **382**, ditambah **72** script/SQL/QA checks. Tes memakai PostgreSQL 17 dan Redis 7 terisolasi di localhost; tidak menggunakan koneksi Cloud, akun nyata, atau credential R2. Dua akun Auth pada fixture hanya menguji preservasi data dummy, bukan asumsi jumlah akun proyek. Pengujian sebelum rebase pada baseline `d81c098` meluluskan 371 tes paket dan 59 script/SQL checks; perbedaan jumlah berasal dari tes portal/QA Admin terbaru pada main.
 
 ## Regresi yang dibuktikan
 
@@ -32,11 +32,12 @@ Total tes paket adalah **382**, ditambah **71** script/SQL/QA checks. Tes memaka
 - Submit Drill memperbarui bintang terbaru, mempertahankan best score/unlock, dan menulis satu ledger XP. Submit Tryout policy baru menulis XP sebelum release IRT; submit berulang tidak memberi XP kedua kali.
 - Proyeksi aktivitas memakai XP akun untuk kelas aktif dan global. Ledger XP runtime bersifat append-only, termasuk nilai pecahan.
 - Upgrade fixture mempertahankan Auth, jawaban/hasil attempt, policy lama dan ledger lama. Seed demo v0.6 memakai ID deterministik, satu paket berisi sepuluh butir dan policy baru; replay tidak mengubah pin policy paket lama.
+- Rantai migrasi baru lulus pada PostgreSQL tanpa role Supabase. Pada fixture dengan default grants Supabase, privilege ketiga role Data API dicabut dari tabel dan fungsi baru.
 - Tabel ban/global aktivitas memakai RLS dan privilege runtime yang eksplisit; Data API tidak mendapatkan akses ke tabel baru.
 
 ## Reproduksi
 
-Gunakan instalasi dependency workspace biasa, Node 24 dan pnpm 12 sesuai lockfile. Siapkan PostgreSQL/Redis **khusus test di localhost** dengan database bernama mengandung `test`. Jangan arahkan variabel test ke Cloud. Runner integrated migration dan fixture Supabase test memerlukan role `anon`, `authenticated`, dan `service_role` pada instance terisolasi.
+Gunakan instalasi dependency workspace biasa, Node 24 dan pnpm 12 sesuai lockfile. Siapkan PostgreSQL/Redis **khusus test di localhost** dengan database bernama mengandung `test`. Jangan arahkan variabel test ke Cloud. Migrator mendukung PostgreSQL biasa tanpa role Supabase. Fixture Supabase tambahan membuat role `anon`, `authenticated`, dan `service_role` secara terisolasi untuk menguji pencabutan default grants; migrasi tidak membuat role tersebut.
 
 ```powershell
 $env:NODE_ENV = 'test'
@@ -61,13 +62,13 @@ corepack pnpm typecheck
 
 URL dan port di contoh hanya menunjuk fixture localhost sementara. Kredensial trust PostgreSQL pada fixture ini tidak menjadi konfigurasi deployment. Periksa guard environment dan sesuaikan koneksi test milik operator sebelum menjalankan.
 
-Uji tambahan `corepack pnpm test:prd-v06` memerlukan `CURRICULUM_TEST_PGLITE_MODULE` yang menunjuk file entry PGlite terpasang di luar repo. Tanpa variabel tersebut dua tes tambahan akan skip. Suite database PostgreSQL di atas tetap menjalankan regresi migrasi/race/seed dan tidak bergantung pada PGlite.
+Uji tambahan `corepack pnpm test:prd-v06` memerlukan `CURRICULUM_TEST_PGLITE_MODULE` yang menunjuk file entry PGlite terpasang di luar repo. Tanpa variabel tersebut tiga tes tambahan akan skip. Suite database PostgreSQL di atas tetap menjalankan regresi migrasi/race/seed dan tidak bergantung pada PGlite.
 
 ## Batas bukti dan Cloud
 
 Build workspace pasca-rebase menggunakan command normal `pnpm build`; web default Turbopack lulus dari folder utama. Pengujian awal di worktree menggunakan Webpack karena Turbopack menolak junction dependency keluar root; perpindahan ke folder utama dan instalasi frozen-lockfile menyelesaikan batas environment tersebut. Tidak ada perubahan konfigurasi build atau versi dependency dalam PR ini.
 
-Hash SHA-256 SQL 0024 pada pengujian ini: `ac3eb1f3de3f71e34b06ad3930a6450e633198b8386ab24b58a5e94301bbea71`. Migrasi 0000–0023 tidak diubah.
+Hash SHA-256 SQL 0024 pada pengujian ini: `df49e094541ea567476610f5f98af3b70e4ea5286f2b2f411935821b4f20797b`. Migrasi 0000–0023 tidak diubah.
 
 Supabase Cloud belum menerima 0024. Audit baca menunjukkan jurnal terakhir 0023 dan 128 akun Auth; semuanya harus dipertahankan. Permintaan admin sebelumnya mensyaratkan backup yang berhasil diuji restore sebelum perubahan Staging. [Bukti restore lama](CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md) bukan bukti upgrade 0024 atas snapshot Cloud terbaru; arsip backup privat itu tidak tersedia pada host pekerjaan ini.
 
