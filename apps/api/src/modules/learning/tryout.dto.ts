@@ -1,4 +1,11 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import type { ContentAnswer } from '@tka/database';
+import {
+  answerSchema,
+  RichContentDto,
+  PreviewOptionDto,
+  PreviewCategoryDto,
+} from '../content/content-preview.dto';
 import { IsUUID } from 'class-validator';
 import { DrillQuestionDto } from './learning.dto';
 
@@ -56,10 +63,19 @@ export class TryoutSubmitDto {
 }
 
 export class TryoutReviewedQuestionDto {
+  @ApiPropertyOptional({ enum: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE_MULTIPLE_ANSWER', 'CATEGORY'] })
+  type?: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CATEGORY';
+  @ApiPropertyOptional({ type: [PreviewOptionDto] }) richOptions?: PreviewOptionDto[];
+  @ApiPropertyOptional({ type: [PreviewCategoryDto] }) categories?: PreviewCategoryDto[];
+  @ApiPropertyOptional({ type: RichContentDto }) richStem?: RichContentDto;
+  @ApiPropertyOptional({ type: RichContentDto }) richExplanation?: RichContentDto;
+  @ApiPropertyOptional(answerSchema) answer?: ContentAnswer;
+  @ApiPropertyOptional(answerSchema) answerKey?: ContentAnswer;
+  @ApiPropertyOptional() fullyCorrect?: boolean;
   @ApiProperty({ format: 'uuid' }) questionInstanceId!: string;
   @ApiProperty() stem!: string;
   @ApiProperty({ type: String, nullable: true }) selectedOptionId!: string | null;
-  @ApiProperty() correctOptionId!: string;
+  @ApiProperty({ type: String, nullable: true }) correctOptionId!: string | null;
   @ApiProperty() explanation!: string;
 }
 

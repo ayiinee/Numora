@@ -1,4 +1,7 @@
 import { MaterialsService } from './materials.service';
+import { ConfigModule } from '@nestjs/config';
+import { AssessmentMediaController } from './assessment-media.controller';
+import { R2MediaStorage } from '../content/r2-media.storage';
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
 import { AssessmentHistoryService } from './assessment-history.service';
@@ -11,10 +14,11 @@ import { TryoutService } from './tryout.service';
 import { StudentDashboardService } from './student-dashboard.service';
 
 @Module({
-  imports: [IdentityModule],
-  controllers: [LearningController, TryoutController],
+  imports: [IdentityModule, ConfigModule],
+  controllers: [LearningController, TryoutController, AssessmentMediaController],
   providers: [
     MaterialsService,
+    R2MediaStorage,
     LearningCatalogService,
     DrillAssessmentService,
     AssessmentHistoryService,

@@ -1,16 +1,42 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
-import { MathText, Panel, PrimaryButton, Status } from './ui';
+import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { useAssessmentDeadline } from './use-assessment-deadline';
 import { AssessmentHeader, SubmitConfirmation } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
 
-type SavedAnswer = { questionInstanceId: string; selectedOptionId: string | null };
+import type { SavedAnswerDto, PreviewMediaDto } from './generated-types';
+import { ContentRichText } from '@/components/content-rich-text';
+type ContentAnswer = SavedAnswerDto['answer'];
+type Selection = string | string[] | Record<string, string> | null;
+type SavedAnswer = Pick<SavedAnswerDto, 'questionInstanceId' | 'selectedOptionId'> & {
+  answer?: ContentAnswer;
+};
+function selection(answer: ContentAnswer): Selection {
+  if (!answer) return null;
+  if ('optionId' in answer) return answer.optionId;
+  if ('optionIds' in answer) return answer.optionIds.length ? answer.optionIds : null;
+  return Object.keys(answer.categoryByStatementId).length ? answer.categoryByStatementId : null;
+}
+function contentAnswer(value: Selection): ContentAnswer {
+  if (typeof value === 'string') return { optionId: value };
+  if (Array.isArray(value)) return value.length ? { optionIds: [...value].sort() } : null;
+  return value && Object.keys(value).length
+    ? {
+        categoryByStatementId: Object.fromEntries(
+          Object.entries(value).sort(([a], [b]) => a.localeCompare(b)),
+        ),
+      }
+    : null;
+}
+function equalSelection(a: Selection, b: Selection) {
+  return JSON.stringify(contentAnswer(a)) === JSON.stringify(contentAnswer(b));
+}
 
 export function AssessmentSession({
   title,
@@ -20,6 +46,8 @@ export function AssessmentSession({
   submitLabel,
   confirmMessage,
   onSave,
+  onSaveContent,
+  loadMedia,
   onSubmit,
   onSubmitted,
   deadlineAt,
@@ -35,6 +63,8 @@ export function AssessmentSession({
   submitLabel: string;
   confirmMessage: (emptyCount: number) => string;
   onSave: (questionId: string, optionId: string | null) => Promise<SavedAnswer>;
+  onSaveContent?: (questionId: string, answer: ContentAnswer) => Promise<SavedAnswer>;
+  loadMedia?: (questionId: string, phase: 'WORK', assetIds: string[]) => Promise<PreviewMediaDto[]>;
   onSubmit: () => Promise<unknown>;
   onSubmitted: () => void;
   deadlineAt?: string | null | undefined;
@@ -46,22 +76,27 @@ export function AssessmentSession({
   const [index, setIndex] = useState(0);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
-  const [answers, setAnswers] = useState<Record<string, string | null>>(() =>
+  const [answers, setAnswers] = useState<Record<string, Selection>>(() =>
     Object.fromEntries(
-      questions.map((question) => [question.questionInstanceId, question.selectedOptionId]),
+      questions.map((question) => [
+        question.questionInstanceId,
+        question.answer === undefined ? question.selectedOptionId : selection(question.answer),
+      ]),
     ),
   );
-  const [unsaved, setUnsaved] = useState<{ questionId: string; optionId: string | null } | null>(
-    null,
-  );
+  const [unsaved, setUnsaved] = useState<{ questionId: string; optionId: Selection } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
   const saving = useRef(false);
   const save = useMutation({
     // Fail visibly when already offline instead of silently pausing the save queue.
     // Only a server acknowledgement may clear unsaved state; retry remains explicit.
     networkMode: 'always',
-    mutationFn: ({ questionId, optionId }: { questionId: string; optionId: string | null }) =>
-      onSave(questionId, optionId),
+    mutationFn: ({ questionId, optionId }: { questionId: string; optionId: Selection }) =>
+      onSaveContent
+        ? onSaveContent(questionId, contentAnswer(optionId))
+        : typeof optionId === 'string' || optionId === null
+          ? onSave(questionId, optionId)
+          : Promise.reject(new Error('Kontrak jawaban PGK belum tersedia.')),
   });
   const finalizing = useRef(false);
   const submit = useMutation({
@@ -80,13 +115,57 @@ export function AssessmentSession({
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
-  useUnsavedWarning(!submit.isSuccess && unsaved !== null, sessionKind === 'drill' && !submit.isSuccess);
+  useUnsavedWarning(
+    !submit.isSuccess && unsaved !== null,
+    sessionKind === 'drill' && !submit.isSuccess,
+  );
+  const workText = [
+    question?.richStem?.text ?? question?.stem ?? '',
+    ...(question?.richOptions?.map((o) => o.content.text) ??
+      question?.options.map((o) => o.text) ??
+      []),
+  ];
+  const assetIds = [
+    ...new Set(
+      workText.flatMap((text) =>
+        [...text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g)].map((match) => match[1]!),
+      ),
+    ),
+  ];
+  const media = useQuery({
+    queryKey: ['assessment-work-media', question?.questionInstanceId, assetIds],
+    enabled: !!loadMedia && !!question && assetIds.length > 0,
+    queryFn: () => loadMedia!(question!.questionInstanceId, 'WORK', assetIds),
+    retry: false,
+  });
+  const renderContent = (text: string) => (
+    <ContentRichText text={text} media={media.data ?? []} retry={() => void media.refetch()} />
+  );
+  const choiceOptions =
+    question?.richOptions?.map((o) => ({ id: o.id, text: o.content.text })) ??
+    question?.options ??
+    [];
+  const kind = question?.type ?? 'SINGLE_CHOICE';
+  const choices = (disabled: boolean) => (
+    <QuestionChoices
+      kind={kind}
+      name={`answer-${question!.questionInstanceId}`}
+      options={choiceOptions}
+      statements={choiceOptions}
+      categories={question?.categories?.map((c) => ({ id: c.id, text: c.label })) ?? []}
+      value={answers[question!.questionInstanceId] ?? null}
+      disabled={disabled}
+      renderContent={renderContent}
+      onChange={(value) => void choose(question!.questionInstanceId, value)}
+    />
+  );
+  useUnsavedWarning(unsaved !== null);
 
   if (!question)
     return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
   const emptyCount = questions.filter((item) => !answers[item.questionInstanceId]).length;
 
-  async function choose(questionId: string, optionId: string | null) {
+  async function choose(questionId: string, optionId: Selection) {
     if (
       deadline.expired ||
       finalizing.current ||
@@ -94,6 +173,7 @@ export function AssessmentSession({
       (unsaved && unsaved.questionId !== questionId)
     )
       return;
+    optionId = selection(contentAnswer(optionId));
     saving.current = true;
     setAnswers((previous) => ({ ...previous, [questionId]: optionId }));
     setUnsaved({ questionId, optionId });
@@ -102,7 +182,12 @@ export function AssessmentSession({
       const acknowledged = await save.mutateAsync({ questionId, optionId });
       if (
         acknowledged.questionInstanceId !== questionId ||
-        acknowledged.selectedOptionId !== optionId
+        !equalSelection(
+          acknowledged.answer === undefined
+            ? acknowledged.selectedOptionId
+            : selection(acknowledged.answer),
+          optionId,
+        )
       ) {
         throw new Error('Konfirmasi penyimpanan tidak sesuai. Coba simpan lagi.');
       }
@@ -186,22 +271,18 @@ export function AssessmentSession({
                 <span>
                   Soal {index + 1} dari {questions.length}
                 </span>
-                <span>Pilihan ganda</span>
+                <span>
+                  {kind === 'CATEGORY'
+                    ? 'Kategori'
+                    : kind === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
+                      ? 'Pilih semua jawaban'
+                      : 'Pilihan ganda'}
+                </span>
               </div>
               <h2 className="practice-stem">
-                <MathText value={question.stem} />
+                {renderContent(question.richStem?.text ?? question.stem)}
               </h2>
-              <QuestionChoices
-                kind="SINGLE_CHOICE"
-                name={`answer-${question.questionInstanceId}`}
-                options={question.options}
-                value={answers[question.questionInstanceId] ?? null}
-                disabled={disabled}
-                onChange={(value) => {
-                  if (typeof value === 'string' || value === null)
-                    void choose(question.questionInstanceId, value);
-                }}
-              />
+              {choices(disabled)}
               <div className="practice-question__footer">
                 <label>
                   <input
@@ -351,35 +432,15 @@ export function AssessmentSession({
       />
       <Panel className="assessment-question">
         <h2 className="text-lg font-bold">
-          <MathText value={question.stem} />
+          {renderContent(question.richStem?.text ?? question.stem)}
         </h2>
-        <fieldset
-          disabled={
-            save.isPending ||
+        {choices(
+          save.isPending ||
             deadline.expired ||
             submit.isPending ||
             submit.isSuccess ||
-            (!!unsaved && unsaved.questionId !== question.questionInstanceId)
-          }
-          className="mt-6 space-y-3"
-        >
-          <legend className="sr-only">Pilihan jawaban</legend>
-          {question.options.map((option) => (
-            <label
-              key={option.id}
-              className={`assessment-option flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${answers[question.questionInstanceId] === option.id ? 'border-[var(--numora-purple)] bg-purple-50' : 'border-slate-300'}`}
-            >
-              <input
-                type="radio"
-                name={`answer-${question.questionInstanceId}`}
-                checked={answers[question.questionInstanceId] === option.id}
-                onChange={() => void choose(question.questionInstanceId, option.id)}
-              />
-              <span className="font-bold">{option.id}.</span>
-              <MathText value={option.text} />
-            </label>
-          ))}
-        </fieldset>
+            (!!unsaved && unsaved.questionId !== question.questionInstanceId),
+        )}
         {answers[question.questionInstanceId] && (
           <button
             className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"

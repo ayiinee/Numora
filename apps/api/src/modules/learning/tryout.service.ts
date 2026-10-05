@@ -21,12 +21,23 @@ import {
   questionVersions,
   scoringPolicyVersions,
   xpLedger,
+  type ContentAnswer,
 } from '@tka/database';
-import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent, TRYOUT_XP_POLICY, TRYOUT_REWARD_POLICY } from '@tka/assessment-engine';
+import {
+  AssessmentFinalizationError,
+  readApprovedPolicy,
+  TRYOUT_XP_POLICY,
+  earlierDeadline,
+  databaseTime,
+  finalizeTryout,
+  saveContentAnswerWithEvent,
+  decodeRuntimeQuestion,
+  activeRuntimeQuestion,
+  validateRuntimeAnswer,
+} from '@tka/assessment-engine';
 import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
-import { decodeSingleChoice } from './single-choice.policy';
 import { TryoutReleaseService } from './tryout-release.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
@@ -108,6 +119,7 @@ export class TryoutService {
         explanation: questionVersions.explanation,
         answer: attemptAnswers.answer,
         awardedPoints: attemptAnswers.awardedPoints,
+        fullyCorrect: attemptAnswers.fullyCorrect,
       })
       .from(attemptItems)
       .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
@@ -128,6 +140,7 @@ export class TryoutService {
         title: assessmentPackages.name,
         deadlineAt: assessmentAttempts.deadlineAt,
         xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
+        closeAt: assessmentPackages.closeAt,
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
@@ -135,7 +148,7 @@ export class TryoutService {
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
-    return attempt;
+    return { ...attempt, deadlineAt: earlierDeadline(attempt.deadlineAt, attempt.closeAt) };
   }
 
   private async presentAttempt(studentId: string, attemptId: string) {
@@ -159,12 +172,13 @@ export class TryoutService {
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
       questions: rows.map((row) => {
-        const content = decodeSingleChoice(row);
+        const content = decodeRuntimeQuestion(row);
         return {
           questionInstanceId: row.id,
-          stem: content.stem,
-          options: content.options,
+          stem: content.stem.text,
+          options: content.options.map((option) => ({ id: option.id, text: option.content.text })),
           selectedOptionId: selectedOptionId(row.answer),
+          ...activeRuntimeQuestion(content, validateRuntimeAnswer(content, row.answer ?? null)),
         };
       }),
     };
@@ -207,21 +221,30 @@ export class TryoutService {
         .select()
         .from(scoringPolicyVersions)
         .where(eq(scoringPolicyVersions.id, current.scoringPolicyVersionId));
-      if (
-        !current.isDemo &&
-        (policy?.policyCode !== TRYOUT_REWARD_POLICY ||
-          policy.version !== 1 ||
-          policy.status !== 'PUBLISHED')
-      )
-        throw new ServiceUnavailableException(
-          problem('TRYOUT_POLICY_OLD', 'Terbitkan versi paket dengan kebijakan PRD v0.6.'),
-        );
+      if (!current.isDemo) {
+        if (!policy)
+          throw new ServiceUnavailableException(
+            problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
+          );
+        try {
+          readApprovedPolicy(policy, 'TRYOUT');
+        } catch {
+          throw new ServiceUnavailableException(
+            problem(
+              'TRYOUT_POLICY_OLD',
+              'Terbitkan versi paket dengan kebijakan PRD v0.6 yang disahkan.',
+            ),
+          );
+        }
+      }
       const items = await tx
         .select({
           id: packageItems.id,
           displayOrder: packageItems.displayOrder,
           questionVersionId: packageItems.questionVersionId,
           maxPoints: packageItems.maxPoints,
+          rubricVersionId: packageItems.rubricVersionId,
+          maximumScoreCategory: packageItems.maximumScoreCategory,
           contentStatus: questionVersions.contentStatus,
           questionStatus: questions.status,
           questionType: questionVersions.questionType,
@@ -244,7 +267,7 @@ export class TryoutService {
         throw new ServiceUnavailableException(
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
-      items.forEach(decodeSingleChoice);
+      items.forEach(decodeRuntimeQuestion);
       const now = await databaseTime(tx);
       const deadlineAt = current.durationSeconds
         ? new Date(
@@ -280,6 +303,8 @@ export class TryoutService {
           questionVersionId: item.questionVersionId,
           displayOrder: item.displayOrder,
           maxPoints: item.maxPoints,
+          rubricVersionId: item.rubricVersionId,
+          maximumScoreCategory: item.maximumScoreCategory,
         })),
       );
       await tx.insert(analyticsOutbox).values({
@@ -304,9 +329,18 @@ export class TryoutService {
     authorization: string | undefined,
     attemptId: string,
     questionInstanceId: string,
-    optionId: string | null,
+    optionId: string | null | undefined,
+    richAnswer?: unknown,
   ) {
-    if (optionId !== null && (typeof optionId !== 'string' || !optionId.trim()))
+    if (richAnswer !== undefined && optionId !== undefined)
+      throw new BadRequestException(
+        problem('ANSWER_AMBIGUOUS', 'Gunakan satu bentuk kontrak jawaban.'),
+      );
+    if (
+      richAnswer === undefined &&
+      optionId !== null &&
+      (typeof optionId !== 'string' || !optionId.trim())
+    )
       throw new BadRequestException(problem('OPTION_INVALID', 'optionId tidak valid.'));
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
@@ -321,7 +355,12 @@ export class TryoutService {
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      if (attempt.deadlineAt && attempt.deadlineAt <= (await databaseTime(tx)))
+      const [pkg] = await tx
+        .select({ closeAt: assessmentPackages.closeAt })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, attempt.packageId));
+      const deadlineAt = earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
+      if (deadlineAt && deadlineAt <= (await databaseTime(tx)))
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       const [item] = await tx
         .select({
@@ -340,28 +379,36 @@ export class TryoutService {
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
         );
-      if (
-        optionId !== null &&
-        !decodeSingleChoice(item).options.some((option) => option.id === optionId)
-      )
-        throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
+      const content = decodeRuntimeQuestion(item);
+      let answer: ContentAnswer;
+      try {
+        answer = validateRuntimeAnswer(
+          content,
+          richAnswer === undefined ? { optionId } : richAnswer,
+        );
+      } catch {
+        throw new BadRequestException(
+          problem('ANSWER_INVALID', 'Jawaban tidak sesuai format soal.'),
+        );
+      }
       const now = await databaseTime(tx);
-      if (attempt.deadlineAt && attempt.deadlineAt <= now)
+      if (deadlineAt && deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
-        await saveChoiceWithEvent(tx, {
+        await saveContentAnswerWithEvent(tx, {
           attemptId,
           questionInstanceId: item.id,
-          optionId,
+          answer,
+          questionType: item.questionType,
           now,
-          deadlineAt: attempt.deadlineAt,
+          deadlineAt,
         });
       } catch (error) {
         if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
           throw new ConflictException(problem(error.code, error.message));
         throw error;
       }
-      return { questionInstanceId, selectedOptionId: optionId };
+      return { questionInstanceId, selectedOptionId: selectedOptionId(answer), answer };
     });
   }
 
@@ -387,14 +434,20 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     await this.finalizeForStudent(studentId, attemptId, 'manual');
     const attempt = await this.forStudent(studentId, attemptId);
-    return { state: 'waitingIrt' as const, xp: await this.storedXp(attemptId),
-      xpPolicyVersion: attempt.xpPolicyVersion };
+    return {
+      state: 'waitingIrt' as const,
+      xp: await this.storedXp(attemptId),
+      xpPolicyVersion: attempt.xpPolicyVersion,
+    };
   }
 
   private async storedXp(attemptId: string) {
-    const [reward] = await getDatabase().db.select({ xp: xpLedger.xpAmount })
-      .from(xpLedger).where(eq(xpLedger.attemptId, attemptId)).limit(1);
-    return reward?.xp ?? null;
+    const [reward] = await getDatabase()
+      .db.select({ xp: xpLedger.xpAmount })
+      .from(xpLedger)
+      .where(eq(xpLedger.attemptId, attemptId))
+      .limit(1);
+    return reward ? Number(reward.xp) : null;
   }
 
   async result(authorization: string | undefined, attemptId: string) {
@@ -422,16 +475,22 @@ export class TryoutService {
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
       score: Number(score?.score ?? 0),
-      correctCount: rows.filter((row) => Number(row.awardedPoints) > 0).length,
+      correctCount: rows.filter(
+        (row) => row.fullyCorrect ?? Number(row.awardedPoints) === Number(row.maxPoints),
+      ).length,
       questionCount: rows.length,
       explanation: rows.map((row) => {
-        const content = decodeSingleChoice(row);
+        const content = decodeRuntimeQuestion(row);
         return {
           questionInstanceId: row.id,
-          stem: content.stem,
+          stem: content.stem.text,
           selectedOptionId: selectedOptionId(row.answer),
-          correctOptionId: content.correctOptionId,
-          explanation: content.explanation,
+          correctOptionId: selectedOptionId(content.answerKey),
+          explanation: content.explanation.text,
+          richExplanation: content.explanation,
+          answerKey: content.answerKey,
+          fullyCorrect: row.fullyCorrect ?? false,
+          ...activeRuntimeQuestion(content, validateRuntimeAnswer(content, row.answer ?? null)),
         };
       }),
     };

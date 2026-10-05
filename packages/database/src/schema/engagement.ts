@@ -58,31 +58,41 @@ export const leaderboardPeriods = pgTable(
   ],
 ).enableRLS();
 
-export const xpLedger = pgTable('xp_ledger', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
-  classIdAtEvent: uuid('class_id_at_event').references(() => classes.id, { onDelete: 'restrict' }),
-  sourceType: xpSourceType('source_type').notNull(),
-  attemptId: uuid('attempt_id').notNull().references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
-  xpAmount: numeric('xp_amount', { precision: 14, scale: 6, mode: 'number' }).notNull(),
-  policyCode: text('policy_code'),
-  policyVersion: integer('policy_version'),
-  baseXp: integer('base_xp'),
-  bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
-  durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
-  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
-  periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
-}, (table) => [
-  uniqueIndex('xp_ledger_attempt_uq').on(table.attemptId),
-  index('xp_ledger_student_time_idx').on(table.studentId, table.occurredAt),
-  index('xp_ledger_class_period_idx').on(table.classIdAtEvent, table.periodId),
-  foreignKey({
-    name: 'xp_ledger_attempt_student_fk',
-    columns: [table.attemptId, table.studentId],
-    foreignColumns: [assessmentAttempts.id, assessmentAttempts.studentId],
-  }).onDelete('restrict'),
-  check('xp_ledger_amount_ck', sql`${table.xpAmount} >= 0`),
-]).enableRLS();
+export const xpLedger = pgTable(
+  'xp_ledger',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    classIdAtEvent: uuid('class_id_at_event').references(() => classes.id, {
+      onDelete: 'restrict',
+    }),
+    sourceType: xpSourceType('source_type').notNull(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
+    xpAmount: numeric('xp_amount', { precision: 14, scale: 6, mode: 'number' }).notNull(),
+    policyCode: text('policy_code'),
+    policyVersion: integer('policy_version'),
+    baseXp: numeric('base_xp', { precision: 14, scale: 6, mode: 'number' }),
+    bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
+    durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+    periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
+  },
+  (table) => [
+    uniqueIndex('xp_ledger_attempt_uq').on(table.attemptId),
+    index('xp_ledger_student_time_idx').on(table.studentId, table.occurredAt),
+    index('xp_ledger_class_period_idx').on(table.classIdAtEvent, table.periodId),
+    foreignKey({
+      name: 'xp_ledger_attempt_student_fk',
+      columns: [table.attemptId, table.studentId],
+      foreignColumns: [assessmentAttempts.id, assessmentAttempts.studentId],
+    }).onDelete('restrict'),
+    check('xp_ledger_amount_ck', sql`${table.xpAmount} >= 0`),
+  ],
+).enableRLS();
 
 export const classLeaderboardEntries = pgTable(
   'class_leaderboard_entries',

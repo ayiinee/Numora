@@ -3,6 +3,26 @@
 
 export type ImportBodyDto = { "expectedSourceVersionId"?: string; "revisionReason"?: string; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
+export type PretestDraftDto = { "familyCode": string; "packageVersion": number; "name": string; "chapterId": string; "blueprintVersionId"?: Record<string, unknown> | null; "questionVersionIds": (string)[]; };
+
+export type PretestEditDto = { "name": string; "blueprintVersionId"?: Record<string, unknown> | null; "questionVersionIds": (string)[]; };
+
+export type PretestReviewDto = { "reason": string; };
+
+export type PretestDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "chapterId": string; "blueprintVersionId": string | null; "state": "DRAFT" | "REVIEWED" | "ARCHIVED"; "manifestDigest": string | null; "questionVersionIds": (string)[]; "reviewBlockers": (string)[]; "publicationBlockers": (string)[]; };
+
+export type PretestsDto = { "items": (PretestDto)[]; };
+
+export type PretestBlueprintDto = { "id": string; "code": string; "version": number; "approvalReference": string; "approvedAt": string; };
+
+export type PretestBlueprintsDto = { "items": (PretestBlueprintDto)[]; };
+
+export type AdminAssessmentPolicyDto = { "id": string; "code": string; "version": number; "assessmentType": "DRILL" | "TRYOUT"; "approvedByUserId": string | null; "approvedAt": string | null; "approvalReference": string; };
+
+export type AdminAssessmentPoliciesDto = { "items": (AdminAssessmentPolicyDto)[]; };
+
+export type PublishTryoutPackageDto = { "scoringPolicyVersionId": string; "releaseAt": string; "durationSeconds": number; };
+
 export type ReviewContentDto = { "status": "READY" | "REVISION" | "ARCHIVED"; "expectedStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reason": string; };
 
 export type AdminReportDetailDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; "question": ContentVersionDetailDto | null; "video": AdminVideoReportTargetDto | null; "revisionQuestionVersionId": string | null; };

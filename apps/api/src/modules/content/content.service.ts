@@ -1,10 +1,12 @@
+import { editorialPackageDigest } from './editorial-package-digest';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Inject,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, max } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, max, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   chapters,
@@ -20,9 +22,15 @@ import {
   questionVersions,
   subchapters,
   videoSubchapterMappings,
+  tryoutBatches,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
+import { isJakartaMondayMidnight } from '../learning/tryout.policy';
+import { databaseTime } from '@tka/assessment-engine';
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import type { PublishTryoutPackageDto } from './content.dto';
 import type {
   AdminCurriculumDto,
   AdminVersionDto,
@@ -108,6 +116,10 @@ function versionValues(input: QuestionContentDto) {
 
 @Injectable()
 export class ContentService {
+  constructor(
+    @Inject(AssessmentPoliciesService) private readonly policies: AssessmentPoliciesService,
+    @Inject(AssessmentReadinessService) private readonly readiness: AssessmentReadinessService,
+  ) {}
   async curriculum(): Promise<AdminCurriculumDto> {
     const { db } = getDatabase();
     const [chapterRows, subRows, competencyRows, levelRows] = await Promise.all([
@@ -778,11 +790,87 @@ export class ContentService {
       })),
     );
   }
-  publishPackage(): never {
-    throw new ConflictException({
-      code: 'TRYOUT_POLICY_OPEN',
-      detail:
-        'Publikasi Tryout menunggu konfigurasi resmi OPEN-05 serta kebijakan scoring/release yang disetujui. Draf tetap tersimpan.',
+  publishPackage(actor: string, id: string, body: PublishTryoutPackageDto) {
+    return adminMutation(actor, 'tryout_package_published', 'assessment_package', async (tx) => {
+      const releaseAt = new Date(body.releaseAt);
+      if (!isJakartaMondayMidnight(releaseAt))
+        throw new ConflictException({
+          code: 'TRYOUT_BATCH_WINDOW_INVALID',
+          detail: 'Batch harus mulai Senin 00:00 WIB.',
+        });
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext('admin:tryout-publish'), hashtext(${releaseAt.toISOString()}))`,
+      );
+      const [row] = await tx
+        .select()
+        .from(assessmentPackages)
+        .where(and(eq(assessmentPackages.id, id), eq(assessmentPackages.assessmentType, 'TRYOUT')))
+        .for('update');
+      if (!row) throw new NotFoundException({ code: 'TRYOUT_PACKAGE_NOT_FOUND' });
+      if (row.status === 'PUBLISHED') {
+        if (
+          row.releaseAt?.getTime() !== releaseAt.getTime() ||
+          row.durationSeconds !== body.durationSeconds ||
+          row.scoringPolicyVersionId !== body.scoringPolicyVersionId
+        )
+          throw new ConflictException({ code: 'TRYOUT_PUBLICATION_CONFLICT' });
+        return { id };
+      }
+      if (row.status !== 'DRAFT') throw new ConflictException({ code: 'TRYOUT_PACKAGE_IMMUTABLE' });
+      const now = await databaseTime(tx);
+      if (releaseAt < now) throw new ConflictException({ code: 'TRYOUT_BATCH_ALREADY_STARTED' });
+      const [sameBatch] = await tx
+        .select({ id: tryoutBatches.id })
+        .from(tryoutBatches)
+        .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatches.packageId))
+        .where(and(eq(tryoutBatches.startsAt, releaseAt), eq(assessmentPackages.isDemo, false)));
+      if (sameBatch) throw new ConflictException({ code: 'TRYOUT_BATCH_PACKAGE_EXISTS' });
+      const policy = await this.policies.require(tx, body.scoringPolicyVersionId, 'TRYOUT');
+      const items = await tx
+        .select()
+        .from(packageItems)
+        .where(eq(packageItems.packageId, id))
+        .orderBy(asc(packageItems.displayOrder));
+      const pins = await this.readiness.items(
+        tx,
+        items.map((item) => item.questionVersionId),
+        30,
+        policy,
+      );
+      for (const pin of pins)
+        await tx
+          .update(packageItems)
+          .set({
+            maxPoints: pin.maxPoints,
+            rubricVersionId: pin.rubricVersionId,
+            maximumScoreCategory: pin.maximumScoreCategory,
+          })
+          .where(
+            and(
+              eq(packageItems.packageId, id),
+              eq(packageItems.questionVersionId, pin.questionVersionId),
+            ),
+          );
+      const closeAt = new Date(releaseAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+      await tx
+        .update(assessmentPackages)
+        .set({
+          status: 'PUBLISHED',
+          scoringPolicyVersionId: body.scoringPolicyVersionId,
+          releaseAt,
+          closeAt,
+          durationSeconds: body.durationSeconds,
+          manifestDigest: await editorialPackageDigest(tx, id),
+        })
+        .where(eq(assessmentPackages.id, id));
+      await tx.insert(tryoutBatches).values({
+        packageId: id,
+        startsAt: releaseAt,
+        closesAt: closeAt,
+        cutoffAt: closeAt,
+        resultDueAt: new Date(closeAt.getTime() + 72 * 60 * 60 * 1000),
+      });
+      return { id };
     });
   }
 }

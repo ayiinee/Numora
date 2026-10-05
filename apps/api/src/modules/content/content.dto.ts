@@ -6,6 +6,7 @@ import {
   IsArray,
   IsIn,
   IsInt,
+  IsISO8601,
   IsString,
   IsUUID,
   IsUrl,
@@ -266,4 +267,9 @@ export class AdminTryoutDraftDto {
 }
 export class AdminTryoutDraftsDto {
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
+}
+export class PublishTryoutPackageDto {
+  @ApiProperty({ format: 'uuid' }) @IsUUID() scoringPolicyVersionId!: string;
+  @ApiProperty({ format: 'date-time' }) @IsISO8601({ strict: true }) releaseAt!: string;
+  @ApiProperty() @IsInt() @Min(1) @Max(604800) durationSeconds!: number;
 }

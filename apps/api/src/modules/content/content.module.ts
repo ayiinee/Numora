@@ -1,4 +1,8 @@
+import { PretestController } from './pretest.controller';
+import { PretestService } from './pretest.service';
 import { Module } from '@nestjs/common';
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
 import { ContentLifecycleController } from './content-lifecycle.controller';
 import { ContentLifecycleService } from './content-lifecycle.service';
 import { ContentPreviewController } from './content-preview.controller';
@@ -18,6 +22,7 @@ import { R2MediaStorage } from './r2-media.storage';
 @Module({
   imports: [IdentityModule, ConfigModule],
   controllers: [
+    PretestController,
     ContentLifecycleController,
     ContentController,
     DrillPackagesController,
@@ -25,6 +30,9 @@ import { R2MediaStorage } from './r2-media.storage';
     ContentPreviewController,
   ],
   providers: [
+    PretestService,
+    AssessmentPoliciesService,
+    AssessmentReadinessService,
     ContentLifecycleService,
     ContentImportService,
     ContentPreviewService,

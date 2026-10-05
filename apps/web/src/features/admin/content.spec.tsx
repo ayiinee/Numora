@@ -13,6 +13,14 @@ import {
   updateTryoutDraft,
 } from './content-api';
 
+vi.mock('./assessment-policy-selector', () => ({
+  AssessmentPolicySelector: ({ defaultValue = '' }: { defaultValue?: string }) => (
+    <label>
+      Versi kebijakan penilaian
+      <input name="scoringPolicyVersionId" required defaultValue={defaultValue} />
+    </label>
+  ),
+}));
 const context = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/admin/content',
@@ -244,9 +252,9 @@ describe('Admin content UI', () => {
     });
     fireEvent.change(screen.getByLabelText('Versi paket'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Level'), { target: { value: 'level-test' } });
-    fireEvent.change(screen.getByLabelText('Indeks varian'), { target: { value: '2' } });
+    expect((screen.getByLabelText(/^Indeks varian/) as HTMLInputElement).value).toBe('1');
     fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Draf baru' } });
-    fireEvent.change(screen.getByLabelText('ID versi kebijakan penilaian'), {
+    fireEvent.change(screen.getByLabelText('Versi kebijakan penilaian'), {
       target: { value: 'policy-test' },
     });
     fireEvent.change(
@@ -260,7 +268,7 @@ describe('Admin content UI', () => {
         packageVersion: 2,
         name: 'Draf baru',
         levelId: 'level-test',
-        variantIndex: 2,
+        variantIndex: 1,
         scoringPolicyVersionId: 'policy-test',
         questionVersionIds: ['version-test', 'pinned-outside-page', 'third-version'],
       }),

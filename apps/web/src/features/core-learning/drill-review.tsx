@@ -3,6 +3,7 @@
 import { Card, Icon } from '@tka/ui';
 import type { ReactNode } from 'react';
 import type { DrillResult } from './types';
+import { RichQuestionReview } from './rich-question-review';
 import { MathText } from './ui';
 
 export function AnswerMatrix({
@@ -12,7 +13,7 @@ export function AnswerMatrix({
 }: {
   questions: Pick<
     DrillResult['questions'][number],
-    'questionInstanceId' | 'selectedOptionId' | 'correctOptionId'
+    'questionInstanceId' | 'selectedOptionId' | 'correctOptionId' | 'fullyCorrect'
   >[];
   selected: number;
   onSelect: (index: number) => void;
@@ -20,7 +21,10 @@ export function AnswerMatrix({
   return (
     <nav className="answer-matrix" aria-label="Matriks jawaban">
       {questions.map((question, index) => {
-        const correct = question.selectedOptionId === question.correctOptionId;
+        const correct =
+          question.fullyCorrect ??
+          (question.selectedOptionId !== null &&
+            question.selectedOptionId === question.correctOptionId);
         return (
           <button
             key={question.questionInstanceId}
@@ -43,11 +47,13 @@ export function DrillReview({
   selected,
   onSelect,
   report,
+  token,
 }: {
   result: DrillResult;
   selected: number;
   onSelect: (index: number) => void;
   report: ReactNode;
+  token?: string | undefined;
 }) {
   const question = result.questions[selected];
   return (
@@ -67,56 +73,62 @@ export function DrillReview({
             <span>Soal #{selected + 1}</span>
             {report}
           </div>
-          <h3>
-            <MathText value={question.stem} />
-          </h3>
-          <div
-            className={`drill-review__answer ${question.selectedOptionId === question.correctOptionId ? 'drill-review__answer--correct' : 'drill-review__answer--wrong'}`}
-          >
-            <Icon
-              name={question.selectedOptionId === question.correctOptionId ? 'check' : 'close'}
-              width={18}
-              height={18}
-            />
-            <span>
-              <strong>Jawabanmu: </strong>
-              {question.selectedOptionId ? (
-                <>
-                  {question.selectedOptionId}.{' '}
+          {question.richStem ? (
+            <RichQuestionReview question={question} token={token} attemptId={result.attemptId} />
+          ) : (
+            <>
+              <h3>
+                <MathText value={question.stem} />
+              </h3>
+              <div
+                className={`drill-review__answer ${question.selectedOptionId === question.correctOptionId ? 'drill-review__answer--correct' : 'drill-review__answer--wrong'}`}
+              >
+                <Icon
+                  name={question.selectedOptionId === question.correctOptionId ? 'check' : 'close'}
+                  width={18}
+                  height={18}
+                />
+                <span>
+                  <strong>Jawabanmu: </strong>
+                  {question.selectedOptionId ? (
+                    <>
+                      {question.selectedOptionId}.{' '}
+                      <MathText
+                        value={
+                          question.options.find((option) => option.id === question.selectedOptionId)
+                            ?.text ?? ''
+                        }
+                      />
+                    </>
+                  ) : (
+                    'Tidak dijawab'
+                  )}
+                </span>
+              </div>
+              <div className="drill-review__answer drill-review__answer--correct">
+                <Icon name="check" width={18} height={18} />
+                <span>
+                  <strong>Jawaban benar: </strong>
+                  {question.correctOptionId}.{' '}
                   <MathText
                     value={
-                      question.options.find((option) => option.id === question.selectedOptionId)
+                      question.options.find((option) => option.id === question.correctOptionId)
                         ?.text ?? ''
                     }
                   />
-                </>
-              ) : (
-                'Tidak dijawab'
-              )}
-            </span>
-          </div>
-          <div className="drill-review__answer drill-review__answer--correct">
-            <Icon name="check" width={18} height={18} />
-            <span>
-              <strong>Jawaban benar: </strong>
-              {question.correctOptionId}.{' '}
-              <MathText
-                value={
-                  question.options.find((option) => option.id === question.correctOptionId)?.text ??
-                  ''
-                }
-              />
-            </span>
-          </div>
-          <div className="drill-review__explanation">
-            <strong>
-              <Icon name="info" width={18} height={18} />
-              Pembahasan Numora
-            </strong>
-            <p>
-              <MathText value={question.explanation} />
-            </p>
-          </div>
+                </span>
+              </div>
+              <div className="drill-review__explanation">
+                <strong>
+                  <Icon name="info" width={18} height={18} />
+                  Pembahasan Numora
+                </strong>
+                <p>
+                  <MathText value={question.explanation} />
+                </p>
+              </div>
+            </>
+          )}
         </article>
       ) : (
         <p>Pembahasan soal belum tersedia.</p>

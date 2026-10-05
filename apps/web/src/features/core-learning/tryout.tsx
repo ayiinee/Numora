@@ -284,6 +284,19 @@ function TryoutForm({
       confirmMessage={(emptyCount) =>
         `${emptyCount} soal belum dijawab. Kirim jawaban TryOut? Hasil baru tersedia setelah IRT.`
       }
+      onSaveContent={(questionId, answer) =>
+        attempt.questions.find((q) => q.questionInstanceId === questionId)?.type
+          ? learningApi.saveContentAnswer(token, attempt.id, questionId, answer, 'tryout')
+          : learningApi.saveTryoutAnswer(
+              token,
+              attempt.id,
+              questionId,
+              answer && 'optionId' in answer ? answer.optionId : null,
+            )
+      }
+      loadMedia={async (questionId, phase, assetIds) =>
+        (await learningApi.media(token, attempt.id, questionId, phase, assetIds)).media
+      }
       onSave={(questionId, optionId) =>
         learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
       }
@@ -351,5 +364,5 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  return <TryoutReleasedResult result={query.data} />;
+  return <TryoutReleasedResult token={token} result={query.data} />;
 }

@@ -1,3 +1,5 @@
+import { PretestController } from '../content/pretest.controller';
+import { PretestService } from '../content/pretest.service';
 import 'reflect-metadata';
 import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
@@ -38,6 +40,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
   beforeAll(async () => {
     const module = await Test.createTestingModule({
       controllers: [
+        PretestController,
         AdminOperationsController,
         ReportsController,
         IrtController,
@@ -47,6 +50,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       providers: [
         AdminGuard,
         ContentAdminGuard,
+        { provide: PretestService, useValue: { list: reports, blueprints: reports } },
         { provide: IdentityService, useValue: identity },
         { provide: AdminOperationsService, useValue: { users } },
         { provide: AdminAccountsService, useValue: { accounts: users } },
@@ -79,6 +83,13 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       (await fetch(base + '/admin/reports', { headers: { Authorization: 'Bearer unchanged' } }))
         .status,
     ).toBe(content);
+    for (const path of [
+      '/admin/content/pretest-packages',
+      '/admin/content/pretest-packages/blueprints',
+    ])
+      expect(
+        (await fetch(base + path, { headers: { Authorization: 'Bearer unchanged' } })).status,
+      ).toBe(content);
     expect(
       (await fetch(base + '/admin/irt', { headers: { Authorization: 'Bearer unchanged' } })).status,
     ).toBe(content);

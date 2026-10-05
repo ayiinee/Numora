@@ -3616,7 +3616,7 @@ a.settings-row:hover {
   border-radius: 14px;
   min-width: 0;
 }
-.practice-statement legend {
+.practice-statement legend:not(.sr-only) {
   float: left;
   width: 100%;
   font-size: 14px;
@@ -8964,11 +8964,38 @@ a.settings-row:hover {
   background: var(--numora-gold-100);
 }
 /* Internal content tools reuse Admin surfaces and assessment controls. */
-.content-import-card, .content-preview-card { padding: var(--space-6, 24px); margin-block: 16px; }
-.content-import-card label { display: grid; gap: 8px; margin-block: 16px; }
-.content-import-card input { min-height: 44px; max-width: 100%; }
-.content-rich-text { white-space: pre-wrap; overflow-wrap: anywhere; }
-.content-preview-stem { margin-block: 20px; }
-.content-preview-image { max-width: 100%; height: auto; vertical-align: middle; }
-.content-rich-text .katex-display { overflow-x: auto; max-width: 100%; }
-.content-preview-card .admin-content-actions { flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.content-import-card,
+.content-preview-card {
+  padding: var(--space-6, 24px);
+  margin-block: 16px;
+}
+.content-import-card label {
+  display: grid;
+  gap: 8px;
+  margin-block: 16px;
+}
+.content-import-card input {
+  min-height: 44px;
+  max-width: 100%;
+}
+.content-rich-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.content-preview-stem {
+  margin-block: 20px;
+}
+.content-preview-image {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+.content-rich-text .katex-display {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.content-preview-card .admin-content-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}

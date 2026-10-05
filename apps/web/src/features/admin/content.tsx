@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { AssessmentPolicySelector } from './assessment-policy-selector';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
@@ -19,6 +20,7 @@ import {
   loadAdminWorkbench,
   archiveDrillPackage,
   publishDrillPackage,
+  publishTryoutPackage,
   renameTaxon,
   resolveReport,
   reviseQuestion,
@@ -387,9 +389,51 @@ function AdminContentScreenContent() {
                         </p>
                         <small>{p.id}</small>
                         {p.status === 'DRAFT' && (
-                          <Button variant="secondary" disabled={busy} onClick={() => setDraft(p)}>
-                            Edit draf
-                          </Button>
+                          <>
+                            <Button variant="secondary" disabled={busy} onClick={() => setDraft(p)}>
+                              Edit draf
+                            </Button>
+                            <AdminEditorForm
+                              busy={busy}
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                const form = new FormData(event.currentTarget);
+                                void run(() =>
+                                  publishTryoutPackage(token, p.id, {
+                                    scoringPolicyVersionId: field(form, 'scoringPolicyVersionId'),
+                                    releaseAt: new Date(
+                                      `${field(form, 'releaseAt')}:00+07:00`,
+                                    ).toISOString(),
+                                    durationSeconds: Number(field(form, 'durationSeconds')),
+                                  }),
+                                );
+                              }}
+                            >
+                              <AssessmentPolicySelector token={token} type="TRYOUT" />
+                              <Field label="Mulai batch (Senin 00:00 WIB)" name="releaseAt">
+                                <input type="datetime-local" name="releaseAt" required />
+                              </Field>
+                              <Field label="Durasi pengerjaan (detik)" name="durationSeconds">
+                                <input
+                                  type="number"
+                                  name="durationSeconds"
+                                  min={1}
+                                  max={604800}
+                                  required
+                                />
+                              </Field>
+                              <p>
+                                Batch berakhir setelah Minggu 23:59 WIB. Deadline mengikuti batas
+                                terawal durasi dan batch close.
+                              </p>
+                              <Button
+                                type="submit"
+                                disabled={busy || p.questionVersionIds.length !== 30}
+                              >
+                                Publikasikan batch Tryout
+                              </Button>
+                            </AdminEditorForm>
+                          </>
                         )}
                       </li>
                     ))}
@@ -522,7 +566,10 @@ function AdminContentScreenContent() {
                 </Button>
                 <span>Halaman {offset / 20 + 1}</span>
                 <Button
-                  disabled={(view === 'reports' ? current.reports.nextOffset === null : pageLength < 20) || busy}
+                  disabled={
+                    (view === 'reports' ? current.reports.nextOffset === null : pageLength < 20) ||
+                    busy
+                  }
                   onClick={() => {
                     setLoading(true);
                     setOffset(offset + 20);
@@ -1029,25 +1076,19 @@ function DrillPackageEditor({
             </select>
           </Field>
           <Field label="Indeks varian" name="variantIndex">
-            <input name="variantIndex" type="number" min={1} max={100000} required />
+            <input name="variantIndex" type="number" min={1} max={1} value={1} readOnly required />
+            <small>MVP memakai satu varian per level.</small>
           </Field>
         </>
       )}
       <Field label="Nama paket" name="name">
         <input name="name" required maxLength={160} defaultValue={draft?.name ?? ''} />
       </Field>
-      <Field label="ID versi kebijakan penilaian" name="scoringPolicyVersionId">
-        <input
-          name="scoringPolicyVersionId"
-          required
-          defaultValue={draft?.scoringPolicyVersionId ?? ''}
-          aria-describedby="drill-policy-help"
-        />
-      </Field>
-      <small id="drill-policy-help">
-        API saat ini hanya dapat menerbitkan policy DRILL_PG_DEMO versi 1; masukkan ID policy yang
-        disediakan backend.
-      </small>
+      <AssessmentPolicySelector
+        token={token}
+        type="DRILL"
+        defaultValue={draft?.scoringPolicyVersionId ?? ''}
+      />
       <Field label="ID versi soal (pisahkan dengan baris baru atau koma)" name="questionVersionIds">
         <textarea
           name="questionVersionIds"

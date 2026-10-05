@@ -225,6 +225,41 @@
       "when": 1791245491190,
       "tag": "0031_historical_report_context",
       "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791245822719,
+      "tag": "0032_assessment_policy_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791245878275,
+      "tag": "0033_partial_reward_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791245879894,
+      "tag": "0034_admin_authored_package_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791245881584,
+      "tag": "0035_pretest_blueprint_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791245883267,
+      "tag": "0036_legacy_package_fixture_compatibility",
+      "breakpoints": true
     }
   ]
 }

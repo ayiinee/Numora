@@ -1109,6 +1109,51 @@
         ]
       }
     },
+    "/api/v1/assessment-attempts/{attemptId}/media": {
+      "post": {
+        "operationId": "AssessmentMediaController_media",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLinksDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/classes/{classId}/students/{studentId}/progress": {
       "get": {
         "operationId": "MonitoringController_read",
@@ -1643,6 +1688,340 @@
         ]
       }
     },
+    "/api/v1/admin/content/pretest-packages/blueprints": {
+      "get": {
+        "operationId": "PretestController_blueprints",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestBlueprintsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages": {
+      "get": {
+        "operationId": "PretestController_list",
+        "parameters": [
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      },
+      "post": {
+        "operationId": "PretestController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PretestDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages/{id}": {
+      "get": {
+        "operationId": "PretestController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PretestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      },
+      "put": {
+        "operationId": "PretestController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PretestEditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages/{id}/revisions": {
+      "post": {
+        "operationId": "PretestController_revise",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PretestEditDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages/{id}/review": {
+      "post": {
+        "operationId": "PretestController_review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PretestReviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages/{id}/archive": {
+      "post": {
+        "operationId": "PretestController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/pretest-packages/{id}/publish": {
+      "post": {
+        "operationId": "PretestController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
     "/api/v1/admin/content/versions/{id}": {
       "get": {
         "operationId": "ContentLifecycleController_get",
@@ -1708,6 +2087,32 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/assessment-policies": {
+      "get": {
+        "operationId": "ContentController_assessmentPolicies",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAssessmentPoliciesDto"
                 }
               }
             }
@@ -2622,9 +3027,26 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishTryoutPackageDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
-            "description": ""
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -6525,8 +6947,13 @@
             "type": "number",
             "nullable": true,
             "minimum": 0,
-            "maximum": 3,
-            "description": "Stars from the latest completed attempt, not best stars."
+            "maximum": 3
+          },
+          "bestStars": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 3
           }
         },
         "required": [
@@ -6608,6 +7035,47 @@
           "levelId"
         ]
       },
+      "RichContentDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "PreviewOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/RichContentDto"
+          }
+        },
+        "required": [
+          "id",
+          "content"
+        ]
+      },
+      "PreviewCategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
       "OptionDto": {
         "type": "object",
         "properties": {
@@ -6626,6 +7094,76 @@
       "DrillQuestionDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "richStem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "richOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "questionInstanceId": {
             "type": "string",
             "format": "uuid"
@@ -6708,15 +7246,106 @@
             "type": "string",
             "nullable": true,
             "description": "A-D for demo; null clears the answer."
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
           }
-        },
-        "required": [
-          "optionId"
-        ]
+        }
       },
       "SavedAnswerDto": {
         "type": "object",
         "properties": {
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "questionInstanceId": {
             "type": "string",
             "format": "uuid"
@@ -6767,6 +7396,76 @@
       "ReviewedQuestionDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "richStem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "richOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
           "questionInstanceId": {
             "type": "string",
             "format": "uuid"
@@ -6785,10 +7484,64 @@
             "nullable": true
           },
           "correctOptionId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "explanation": {
             "type": "string"
+          },
+          "richExplanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "answerKey": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "fullyCorrect": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -7062,6 +7815,129 @@
       "TryoutReviewedQuestionDto": {
         "type": "object",
         "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "richOptions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "richStem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "richExplanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "answerKey": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "fullyCorrect": {
+            "type": "boolean"
+          },
           "questionInstanceId": {
             "type": "string",
             "format": "uuid"
@@ -7074,7 +7950,8 @@
             "nullable": true
           },
           "correctOptionId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "explanation": {
             "type": "string"
@@ -7129,6 +8006,77 @@
           "correctCount",
           "questionCount",
           "explanation"
+        ]
+      },
+      "MediaLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WORK",
+              "REVIEW"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetIds": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "phase",
+          "instanceId",
+          "assetIds"
+        ]
+      },
+      "PreviewMediaDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "assetId",
+          "altText",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "MediaLinksDto": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "media"
         ]
       },
       "ClassDto": {
@@ -7506,6 +8454,211 @@
           "revoked"
         ]
       },
+      "PretestBlueprintDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "approvalReference": {
+            "type": "string"
+          },
+          "approvedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "version",
+          "approvalReference",
+          "approvedAt"
+        ]
+      },
+      "PretestBlueprintsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PretestBlueprintDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PretestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "chapterId": {
+            "type": "string"
+          },
+          "blueprintVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "REVIEWED",
+              "ARCHIVED"
+            ]
+          },
+          "manifestDigest": {
+            "type": "string",
+            "nullable": true
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "reviewBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publicationBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "chapterId",
+          "blueprintVersionId",
+          "state",
+          "manifestDigest",
+          "questionVersionIds",
+          "reviewBlockers",
+          "publicationBlockers"
+        ]
+      },
+      "PretestsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PretestDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PretestDraftDto": {
+        "type": "object",
+        "properties": {
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "blueprintVersionId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "questionVersionIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "familyCode",
+          "packageVersion",
+          "name",
+          "chapterId",
+          "questionVersionIds"
+        ]
+      },
+      "ContentMutationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "PretestEditDto": {
+        "type": "object",
+        "properties": {
+          "name": {
+            "type": "string"
+          },
+          "blueprintVersionId": {
+            "type": "object",
+            "format": "uuid",
+            "nullable": true
+          },
+          "questionVersionIds": {
+            "maxItems": 20,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "name",
+          "questionVersionIds"
+        ]
+      },
+      "PretestReviewDto": {
+        "type": "object",
+        "properties": {
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "reason"
+        ]
+      },
       "ContentReviewEventDto": {
         "type": "object",
         "properties": {
@@ -7654,15 +8807,59 @@
           "reason"
         ]
       },
-      "ContentMutationDto": {
+      "AdminAssessmentPolicyDto": {
         "type": "object",
         "properties": {
           "id": {
             "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "TRYOUT"
+            ]
+          },
+          "approvedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvalReference": {
+            "type": "string"
           }
         },
         "required": [
-          "id"
+          "id",
+          "code",
+          "version",
+          "assessmentType",
+          "approvedByUserId",
+          "approvedAt",
+          "approvalReference"
+        ]
+      },
+      "AdminAssessmentPoliciesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAssessmentPolicyDto"
+            }
+          }
+        },
+        "required": [
+          "items"
         ]
       },
       "AdminTaxonDto": {
@@ -8494,6 +9691,27 @@
           "questionVersionIds"
         ]
       },
+      "PublishTryoutPackageDto": {
+        "type": "object",
+        "properties": {
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "releaseAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "durationSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "scoringPolicyVersionId",
+          "releaseAt",
+          "durationSeconds"
+        ]
+      },
       "AdminDrillPackageDto": {
         "type": "object",
         "properties": {
@@ -8931,47 +10149,6 @@
           "questionVersionIds"
         ]
       },
-      "RichContentDto": {
-        "type": "object",
-        "properties": {
-          "text": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "text"
-        ]
-      },
-      "PreviewOptionDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "content": {
-            "$ref": "#/components/schemas/RichContentDto"
-          }
-        },
-        "required": [
-          "id",
-          "content"
-        ]
-      },
-      "PreviewCategoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "label"
-        ]
-      },
       "PreviewItemDto": {
         "type": "object",
         "properties": {
@@ -9130,35 +10307,6 @@
           "options",
           "categories",
           "score"
-        ]
-      },
-      "PreviewMediaDto": {
-        "type": "object",
-        "properties": {
-          "instanceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string"
-          },
-          "altText": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "instanceId",
-          "assetId",
-          "altText",
-          "url",
-          "expiresAt"
         ]
       },
       "PreviewSessionDto": {
@@ -9334,48 +10482,6 @@
           "answer",
           "revision",
           "serverSavedAt"
-        ]
-      },
-      "MediaLinkRequestDto": {
-        "type": "object",
-        "properties": {
-          "phase": {
-            "type": "string",
-            "enum": [
-              "WORK",
-              "REVIEW"
-            ]
-          },
-          "instanceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetIds": {
-            "maxItems": 100,
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          }
-        },
-        "required": [
-          "phase",
-          "instanceId",
-          "assetIds"
-        ]
-      },
-      "MediaLinksDto": {
-        "type": "object",
-        "properties": {
-          "media": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PreviewMediaDto"
-            }
-          }
-        },
-        "required": [
-          "media"
         ]
       },
       "AdminDashboardDto": {

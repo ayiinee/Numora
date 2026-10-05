@@ -24,6 +24,7 @@ import type {
   ResolveReportDto,
   UpdateTryoutDraftDto,
   UpdateDrillPackageDto,
+  PublishTryoutPackageDto,
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
@@ -142,6 +143,8 @@ export const archiveDrillPackage = (t: string, id: string) =>
   mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/archive`, {});
 export const updateTryoutDraft = (t: string, id: string, b: UpdateTryoutDraftDto) =>
   mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}`, b, 'PATCH');
+export const publishTryoutPackage = (t: string, id: string, b: PublishTryoutPackageDto) =>
+  mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}/publish`, b);
 export const resolveReport = (
   t: string,
   kind: 'QUESTION' | 'VIDEO',
