@@ -43,7 +43,6 @@ export class TryoutAttemptDto {
 }
 
 export class TryoutSubmitDto {
-  @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ enum: ['waitingIrt'] }) state!: 'waitingIrt';
   @ApiProperty({

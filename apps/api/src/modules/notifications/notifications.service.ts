@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray, isNull, lt, lte, or, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, isNull, lte, sql } from 'drizzle-orm';
 import {
   getDatabase,
   notifications,
@@ -46,9 +46,7 @@ export class NotificationsService {
   async list(auth: string | undefined, query: NotificationQueryDto) {
     const id = await this.student(auth);
     const { db } = getDatabase();
-    const scope = and(
-      eq(notifications.recipientId, id),
-      query.filter === 'archive' ? sql`not (${active})` : active,
+    const kindScope = and(
       query.filter === 'class'
         ? inArray(notifications.kind, ['FEEDBACK_RECEIVED', 'PVP_INVITED'])
         : undefined,
@@ -57,12 +55,17 @@ export class NotificationsService {
         : undefined,
       query.filter === 'learning' ? eq(notifications.kind, 'LEVEL_UNLOCKED') : undefined,
     );
+    const scope = and(
+      eq(notifications.recipientId, id),
+      query.filter === 'archive' ? sql`not (${active})` : active,
+      kindScope,
+    );
     let cursor: typeof notifications.$inferSelect | undefined;
     if (query.cursor) {
       [cursor] = await db
         .select()
         .from(notifications)
-        .where(and(eq(notifications.recipientId, id), eq(notifications.id, query.cursor)));
+        .where(and(eq(notifications.recipientId, id), eq(notifications.id, query.cursor), kindScope));
       if (!cursor)
         throw new BadRequestException('Cursor notifikasi tidak berlaku untuk filter ini.');
     }
@@ -74,13 +77,9 @@ export class NotificationsService {
           scope,
           query.filter === 'unread' ? isNull(notifications.readAt) : undefined,
           cursor
-            ? or(
-                lt(notifications.occurredAt, cursor.occurredAt),
-                and(
-                  eq(notifications.occurredAt, cursor.occurredAt),
-                  lt(notifications.id, cursor.id),
-                ),
-              )
+            // Keep PostgreSQL microseconds; a JavaScript Date truncates them.
+            ? sql`(${notifications.occurredAt}, ${notifications.id}) <
+                (select occurred_at, id from public.notifications where id = ${cursor.id}::uuid)`
             : undefined,
         ),
       )

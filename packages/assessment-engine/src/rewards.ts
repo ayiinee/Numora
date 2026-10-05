@@ -1,5 +1,6 @@
 // PRD v0.6 §§9/12; XP Tryout ×10 confirmed by Reyhan on 5 October 2026.
-// Persistence uses numeric(14,6), rather than an unapproved integer rounding rule.
+// Drill final rounding approved by Aini; PGK rubrics remain a separate dependency.
+export { tryoutXp } from './tryout-reward.js';
 export const DRILL_REWARD_POLICY = 'DRILL_PRD_V06';
 export const TRYOUT_REWARD_POLICY = 'TRYOUT_PRD_V06';
 
@@ -14,14 +15,8 @@ export function drillXp(correctCount: number, questionCount: number, durationSec
     correctCount > questionCount
   )
     throw new Error('Invalid Drill reward inputs.');
-  return Math.min(
+  return Math.round(Math.min(
     150,
     (correctCount / questionCount) * 100 + Math.max(0, ((900 - durationSeconds) / 900) * 50),
-  );
-}
-
-export function tryoutXp(equivalentCorrect: number) {
-  if (!Number.isFinite(equivalentCorrect) || equivalentCorrect < 0)
-    throw new Error('Invalid equivalent-correct score.');
-  return equivalentCorrect * 10;
+  ));
 }

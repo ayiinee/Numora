@@ -12,8 +12,10 @@ describe('Drill domain policy', () => {
     expect(scoreDrill(7, 10)).toEqual({ score: 70, mastered: false, stars: 2 });
     expect(scoreDrill(8, 10)).toEqual({ score: 80, mastered: true, stars: 2 });
     expect(scoreDrill(10, 10)).toEqual({ score: 100, mastered: true, stars: 3 });
-    expect(scoreDrill(0, 10)).toEqual({ score: 0, mastered: false, stars: 0 });
-    expect(scoreDrill(95, 100).stars).toBe(2);
+    expect(scoreDrill(0, 10, 2)).toEqual({ score: 0, mastered: false, stars: 0 });
+    expect(scoreDrill(95, 100, 2).stars).toBe(2);
+    expect(scoreDrill(0, 10, null).stars).toBeNull();
+    expect(scoreDrill(95, 100, null).stars).toBe(3);
   });
 
   it('reuses the sole MVP variant for retries', () => {
@@ -42,10 +44,10 @@ describe('Drill domain policy', () => {
     });
   });
 
-  it('preserves historical explanation access without an invented 90-day expiry', () => {
+  it('preserves the pinned legacy explanation expiry', () => {
     const completed = new Date('2026-01-01T00:00:00.000Z');
     expect(explanationAvailable(completed, new Date('2026-03-31T23:59:59.999Z'))).toBe(true);
-    expect(explanationAvailable(completed, new Date('2026-04-01T00:00:00.000Z'))).toBe(true);
+    expect(explanationAvailable(completed, new Date('2026-04-01T00:00:00.000Z'))).toBe(false);
   });
 
   it.each([[0, 0], [1, 1], [5, 1], [6, 2], [9, 2], [10, 3]])('v0.6 gives %i/10 %i stars', (correct, stars) => {

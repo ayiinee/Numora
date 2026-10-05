@@ -137,7 +137,6 @@ export class LearningCatalogService {
         return {
           id: row.id,
           title: row.description ?? `Level ${row.levelNumber}`,
-          latestStars: state?.latestStars ?? null,
           order: row.levelNumber,
           status,
           latestScore: state?.latestScore ?? null,

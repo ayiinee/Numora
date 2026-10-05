@@ -69,12 +69,12 @@ export function selectDrillPackage<T extends { id: string }>(
   packages: T[],
   _previousPackageId?: string,
 ) {
-  return previousPackageId ? packages.find((item) => item.id !== previousPackageId) : packages[0];
+  return packages[0];
 }
 
-export function explanationAvailable(_completedAt: Date, _now = new Date()) {
-  // v0.6 preserves historical context and introduces no 90-day expiry.
-  return true;
+export function explanationAvailable(completedAt: Date, now = new Date()) {
+  // Legacy policy only; newly pinned v2 attempts have no expiry.
+  return now.getTime() < completedAt.getTime() + 90 * 24 * 60 * 60 * 1000;
 }
 
 export type SingleChoiceContent = {

@@ -5765,6 +5765,10 @@
       "DrillResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"
@@ -5972,10 +5976,6 @@
       "TryoutSubmitDto": {
         "type": "object",
         "properties": {
-          "xp": {
-            "type": "number",
-            "nullable": true
-          },
           "xpPolicyVersion": {
             "type": "number",
             "nullable": true

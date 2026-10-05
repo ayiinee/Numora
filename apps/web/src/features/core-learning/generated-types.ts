@@ -45,7 +45,7 @@ export type RecommendedVideoDto = { "id": string; "title": string; "url": string
 
 export type DrillRewardDto = { "policyCode": string; "policyVersion": number; "baseXp": number; "bonusXp": number; "totalXp": number; "durationSeconds": number; };
 
-export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "drillPolicyVersion"?: number | null; "reward"?: DrillRewardDto | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
+export type DrillResultDto = { "xp"?: number | null; "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "drillPolicyVersion"?: number | null; "reward"?: DrillRewardDto | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
 
 export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "ready" | "legacy" | "pending" | "notApplicable"; "starsState"?: "ready" | "legacy" | "pending" | "notApplicable"; "xp"?: number | null; "stars"?: number | null; "drillPolicyVersion"?: number | null; "tryoutXpPolicyVersion"?: number | null; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
 
@@ -55,7 +55,7 @@ export type CurrentTryoutDto = { "id"?: string; "title"?: string; "releaseAt"?: 
 
 export type TryoutAttemptDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
 
-export type TryoutSubmitDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "state": "waitingIrt"; };
+export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "waitingIrt"; "xp"?: number | null; };
 
 export type TryoutReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 

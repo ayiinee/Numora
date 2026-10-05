@@ -145,7 +145,7 @@ export class DrillAssessmentService {
         .orderBy(asc(assessmentPackages.variantIndex), asc(assessmentPackages.id));
       const packages = availablePackages.filter(
         (item) =>
-          item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION,
+          item.isDemo || (item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION),
       );
       if (!packages.length)
         throw new ServiceUnavailableException(

@@ -83,8 +83,6 @@ export class AssessmentHistoryService {
         xp: xpLedger.xpAmount,
         tryoutXpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
         status: assessmentAttempts.status,
-        stars: assessmentAttempts.stars,
-        xp: xpLedger.xpAmount,
         chapterId: assessmentAttempts.chapterIdAtStart,
         chapterTitle: chapters.name,
         levelId: assessmentAttempts.levelIdAtStart,

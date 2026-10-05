@@ -14,7 +14,7 @@ describe('PRD v0.6 rewards', () => {
     expect(drillXp(0, 10, 450)).toBe(25);
     expect(drillXp(8, 10, 900)).toBe(80);
     expect(drillXp(8, 10, 901)).toBe(80);
-    expect(drillXp(7, 10, 1)).toBeCloseTo(119.9444444444);
+    expect(drillXp(7, 10, 1)).toBe(120);
   });
   it('rejects invalid reward inputs instead of writing invalid ledger entries', () => {
     expect(() => tryoutXp(NaN)).toThrow();

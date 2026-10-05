@@ -23,7 +23,7 @@ import {
   xpLedger,
 } from '@tka/database';
 import { AssessmentFinalizationError, databaseTime, finalizeTryout, saveChoiceWithEvent, TRYOUT_XP_POLICY, TRYOUT_REWARD_POLICY } from '@tka/assessment-engine';
-import { and, asc, desc, eq, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, eq, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { selectedOptionId } from './drill.policy';
 import { decodeSingleChoice } from './single-choice.policy';

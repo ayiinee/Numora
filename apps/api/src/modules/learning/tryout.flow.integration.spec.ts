@@ -26,7 +26,6 @@ import {
   xpLedger,
   subchapters,
   users,
-  xpLedger,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
 import { configureApplication } from '../../bootstrap';

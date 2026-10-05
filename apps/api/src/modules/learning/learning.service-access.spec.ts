@@ -107,7 +107,7 @@ describe('Drill access and duplicate submit', () => {
           ]),
         )
         .mockImplementationOnce(() => query([{ questionCount: 10, correctCount: 8 }]))
-        .mockImplementationOnce(() => query([])),
+        .mockImplementationOnce(() => query([{ xpAmount: 105 }])),
     };
     vi.mocked(getDatabase).mockReturnValue({ db } as never);
     await expect(learning().submit('Bearer valid', attemptId)).resolves.toMatchObject({
