@@ -828,10 +828,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toHaveLength(2);
     expect(persistence.pins).toHaveLength(4);
     expect(persistence.rewards).toHaveLength(2);
-    expect(persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id))
-      .toMatchObject({ xp_amount: 10, policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
-    expect(persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id))
-      .toMatchObject({ xp_amount: 0, policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    const independentReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id);
+    const affiliatedReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id);
+    expect(independentReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(affiliatedReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(Number(independentReward.xp_amount)).toBe(10);
+    expect(Number(affiliatedReward.xp_amount)).toBe(0);
     expect(
       persistence.attempts.find((a: { id: string }) => a.id === independent.id).class_id_at_start,
     ).toBeNull();
