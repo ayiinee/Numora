@@ -512,7 +512,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe('MANDIRI');
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher/profile');
-    await teacher.getByRole('button', { name: /Keluar/ }).click();
+    await teacher.getByRole('button', { name: 'Keluar dari akun', exact: true }).click();
     await expect(teacher).toHaveURL('http://localhost:3400/');
     await teacher.goto('/teacher');
     await expect(teacher).toHaveURL('http://localhost:3400/');

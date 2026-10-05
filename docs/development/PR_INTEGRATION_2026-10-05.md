@@ -12,6 +12,7 @@ Perubahan mencakup pembersihan types Next sebelum typecheck (#59), dashboard Adm
 - Vitest API hanya mengoleksi tes `src`; tes `node:test` provisioning Teacher ikut gate `pnpm test:checks`. Tes SQL Teacher dapat berjalan otomatis dari `TEST_DATABASE_URL`, membuat database localhost sendiri, memakai transport Auth **TEST ONLY**, dan menghapus database tersebut setelah membuktikan replay, konflik histori serta rollback. Mode rehearsal restore eksplisit tetap tersedia.
 - Connected release-chain hanya mengoleksi `release-chain.spec.ts`. Browser Teacher yang memerlukan sesi Cloud tetap memakai konfigurasi opt-in tersendiri; CI tidak membutuhkan credential Cloud untuk menjalankan rantai lokal.
 - Bootstrap/teardown suite preview memiliki batas 60 detik agar migrasi database terisolasi selesai sebelum pengujian dan cleanup.
+- Connected logout Teacher memilih tombol profil `Keluar dari akun` secara exact; shell Teacher baru juga memiliki tombol `Keluar akun`, sehingga selector regex lama ambigu. Pengujian tetap memverifikasi logout, penolakan URL langsung dan login ulang.
 
 ## Verifikasi dan batas
 
