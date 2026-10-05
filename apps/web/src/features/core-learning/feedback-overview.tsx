@@ -15,7 +15,7 @@ export function FeedbackOverview({ token }: { token: string }) {
       <div className="home-card-heading">
         <h2 id="home-feedback-title">
           <Icon name="chat" width={18} height={18} />
-          Catatan Guru Pembimbing
+          Feedback dari Guru
         </h2>
         {query.data?.unreadCount === 0 && Boolean(query.data.latest.length) && (
           <span className="home-feedback__read">

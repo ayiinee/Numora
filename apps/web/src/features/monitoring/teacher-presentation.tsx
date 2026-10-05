@@ -1,38 +1,18 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Avatar, Badge, Brand, Card, Icon, ListRow } from '@tka/ui';
+import { Avatar, Badge, Brand, Card, Icon } from '@tka/ui';
 import type { ClassSummaryDto, MonitoredLevelDto } from '@/lib/generated-api-types';
 
 // Presentation only: authorization, queries, scores and mutations remain in controllers.
-export function TeacherWelcome({ name, count }: { name: string; count: number | undefined }) {
-  return (
-    <Card className="teacher-identity-card">
-      <div className="teacher-identity-status">
-        <Badge variant="success">
-          <Icon name="school" width={16} height={16} /> Guru terverifikasi
-        </Badge>
-      </div>
-      <div className="teacher-identity-person">
-        <Avatar name={name} size="lg" />
-        <div>
-          <span className="teacher-kicker">Ruang guru NUMORA</span>
-          <h2>Selamat datang, {name}</h2>
-          <p>Dampingi setiap langkah belajar siswa.</p>
-        </div>
-      </div>
-      <div className="teacher-identity-foot">
-        <Icon name="users" width={18} height={18} />
-        <span>
-          {count === undefined
-            ? 'Buka kelas untuk melihat perkembangan siswa.'
-            : `${count} kelas yang Anda dampingi`}
-        </span>
-      </div>
-    </Card>
-  );
-}
-
-export function TeacherClassCard({ value, index }: { value: ClassSummaryDto; index: number }) {
+export function TeacherClassCard({
+  value,
+  index,
+  count,
+}: {
+  value: ClassSummaryDto;
+  index: number;
+  count?: number | undefined;
+}) {
   return (
     <Link className="teacher-class-link" href={`/teacher/classes/${value.id}`}>
       <Card className="teacher-class-card">
@@ -40,6 +20,10 @@ export function TeacherClassCard({ value, index }: { value: ClassSummaryDto; ind
           <Icon name="users" />
         </span>
         <h3>{value.name}</h3>
+        <p className="teacher-class-members">
+          <Icon name="graduation" width={16} height={16} />{' '}
+          {count === undefined ? 'Jumlah siswa belum tersedia' : `${count} siswa bergabung`}
+        </p>
         {value.joinCode && (
           <p className="teacher-class-code">
             Kode kelas <strong>{value.joinCode}</strong>
@@ -55,17 +39,20 @@ export function TeacherClassCard({ value, index }: { value: ClassSummaryDto; ind
 
 export function TeacherStudentRow({ name, href }: { name: string; href: string }) {
   return (
-    <Link className="teacher-student-link" href={href}>
-      <ListRow
-        wrapText
-        dividers={false}
-        leading={<Avatar name={name} />}
-        title={name}
-        description="Lihat progres dan nilai Drill"
-        trailing={<Icon name="chevron" />}
-        style={{ padding: 0, cursor: 'inherit' }}
-      />
-    </Link>
+    <tr className="teacher-student-record">
+      <td>
+        <div className="teacher-roster-name">
+          <Avatar name={name} />
+          <strong>{name}</strong>
+        </div>
+      </td>
+      <td>
+        <Link className="teacher-student-link" href={href} aria-label={`Lihat progres ${name}`}>
+          <span>Lihat progres dan nilai Drill</span>
+          <Icon name="chevron" width={20} height={20} />
+        </Link>
+      </td>
+    </tr>
   );
 }
 

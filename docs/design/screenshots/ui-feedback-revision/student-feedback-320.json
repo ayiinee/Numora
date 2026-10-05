@@ -1,0 +1,38 @@
+{
+  "width": 320,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "student-account-header",
+      "x": 0,
+      "y": 0,
+      "width": 320,
+      "height": 64,
+      "radius": "0px"
+    },
+    {
+      "className": "numora-card numora-card--default   student-feedback-card",
+      "x": 16,
+      "y": 144,
+      "width": 288,
+      "height": 416.625,
+      "radius": "24px"
+    },
+    {
+      "className": "numora-card numora-card--default   student-feedback-card",
+      "x": 16,
+      "y": 576.625,
+      "width": 288,
+      "height": 376.53125,
+      "radius": "24px"
+    },
+    {
+      "className": "numora-card numora-card--default   student-feedback-card",
+      "x": 16,
+      "y": 969.15625,
+      "width": 288,
+      "height": 284.15625,
+      "radius": "24px"
+    }
+  ]
+}

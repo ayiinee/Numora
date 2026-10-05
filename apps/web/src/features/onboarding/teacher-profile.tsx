@@ -3,20 +3,32 @@
 import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
+import { useQuery } from '@tanstack/react-query';
 import { Avatar, Badge, Button, Card, Icon, ListRow, SectionHeader } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from '@/features/monitoring/teacher-screens';
 import { useAuth } from './auth';
+import { getTeacherClasses } from '@/lib/api';
+import { DataState } from '@/features/core-learning/ui';
+import { TeacherAnnouncement } from '@/features/monitoring/teacher-ui';
 
 export function TeacherProfileScreen() {
-  return <TeacherGate>{(_, name) => <TeacherProfileContent name={name} />}</TeacherGate>;
+  return (
+    <TeacherGate>
+      {(token, name) => <TeacherProfileContent name={name} token={token} />}
+    </TeacherGate>
+  );
 }
 
-function TeacherProfileContent({ name }: { name: string }) {
+function TeacherProfileContent({ name, token }: { name: string; token: string }) {
   const { state, logout } = useAuth();
   const router = useRouter();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
+  const classes = useQuery({
+    queryKey: ['teacher-classes'],
+    queryFn: () => getTeacherClasses(token),
+  });
   if (state.status !== 'ready') return null;
 
   async function signOut() {
@@ -51,7 +63,7 @@ function TeacherProfileContent({ name }: { name: string }) {
             <ListRow
               wrapText
               title={state.profile.email}
-              description="Email akun · Google terhubung"
+              description="Email akun"
               leading={<Icon name="mail" />}
             />
             <ListRow
@@ -61,6 +73,34 @@ function TeacherProfileContent({ name }: { name: string }) {
               leading={<Icon name="school" />}
               dividers={false}
             />
+          </Card>
+          <Card className="teacher-account-card">
+            <SectionHeader
+              title="Kelas yang Anda dampingi"
+              subtitle={classes.isSuccess ? `${classes.data.items.length} kelas` : ''}
+            />
+            {classes.isPending || classes.isError ? (
+              <DataState
+                pending={classes.isPending}
+                error={classes.error}
+                retry={() => void classes.refetch()}
+              />
+            ) : classes.data.items.length ? (
+              classes.data.items.map((cls) => (
+                <div className="teacher-profile-class" key={cls.id}>
+                  <Link href={`/teacher/classes/${cls.id}`}>
+                    <Icon name="users" />
+                    <strong>{cls.name}</strong>
+                    <Icon name="chevron" />
+                  </Link>
+                  <div>
+                    <Link href={`/teacher/classes/${cls.id}/invite`}>Undang siswa</Link>
+                  </div>
+                </div>
+              ))
+            ) : (
+              <p>Belum ada kelas. Buat kelas pertama dari Kelas saya.</p>
+            )}
           </Card>
           <Card className="teacher-account-card">
             <SectionHeader title="Akses cepat" />
@@ -76,6 +116,9 @@ function TeacherProfileContent({ name }: { name: string }) {
               />
             </Link>
           </Card>
+          <TeacherAnnouncement>
+            Informasi akun mengikuti akun yang Anda gunakan untuk masuk.
+          </TeacherAnnouncement>
           {error && (
             <p role="alert" className="form-error">
               {error}

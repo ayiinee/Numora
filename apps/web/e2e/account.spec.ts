@@ -228,7 +228,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.keyboard.press('Enter');
     await page
       .locator('.student-profile-settings')
-      .getByRole('link', { name: /Catatan Guru/ })
+      .getByRole('link', { name: /Feedback dari Guru/ })
       .click();
     await expect(page).toHaveURL(/student\/feedback$/);
     await expect(page.getByRole('button', { name: 'Tandai Dibaca' })).toBeVisible();

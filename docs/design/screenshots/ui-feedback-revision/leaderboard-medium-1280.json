@@ -1,0 +1,46 @@
+{
+  "width": 1280,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "pvp-header",
+      "x": 232,
+      "y": 0,
+      "width": 1048,
+      "height": 64,
+      "radius": "0px"
+    },
+    {
+      "className": "pvp-ranking-hero pvp-ranking-hero--medium",
+      "x": 248,
+      "y": 208,
+      "width": 1016,
+      "height": 171.875,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-ranking-podium",
+      "x": 248,
+      "y": 395.875,
+      "width": 712,
+      "height": 253.578125,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-own-rank",
+      "x": 984,
+      "y": 395.875,
+      "width": 280,
+      "height": 158.578125,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-ranking-period",
+      "x": 984,
+      "y": 570.453125,
+      "width": 280,
+      "height": 166.78125,
+      "radius": "20px"
+    }
+  ]
+}

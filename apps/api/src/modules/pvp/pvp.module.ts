@@ -9,6 +9,7 @@ import { PVP_POLICY } from './pvp.policy';
 
 @Module({
   imports: [IdentityModule],
+  exports: [PvpService],
   controllers: [PvpController],
   providers: [
     PvpService,

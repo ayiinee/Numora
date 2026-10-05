@@ -1,3 +1,4 @@
+import { discoverNotificationReleases, drainNotificationBatch } from './notifications.js';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
 import { checkDatabaseConnection, closeDatabaseConnection } from '@tka/database';
@@ -36,6 +37,8 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   let outboxTimer: ReturnType<typeof setInterval> | undefined;
   let leaderboardTimer: ReturnType<typeof setTimeout> | undefined;
   let tryoutTimer: ReturnType<typeof setInterval> | undefined;
+  let notificationBusy = false;
+  let notificationTimer: ReturnType<typeof setInterval> | undefined;
   let tryoutBusy = false;
   let recoveryCursor: RecoveryCursor | undefined;
   let lastRecoveryLogAt = 0;
@@ -50,6 +53,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (shutdownPromise) return shutdownPromise;
     stopping = true;
     if (outboxTimer) clearInterval(outboxTimer);
+    if (notificationTimer) clearInterval(notificationTimer);
     if (tryoutTimer) clearInterval(tryoutTimer);
     if (leaderboardTimer) clearTimeout(leaderboardTimer);
     process.off('SIGINT', onSignal);
@@ -60,7 +64,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
           Promise.all([
             worker?.close(force),
             (async () => {
-              while (outboxBusy || leaderboardBusy || tryoutBusy) {
+              while (outboxBusy || leaderboardBusy || tryoutBusy || notificationBusy) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),
@@ -183,13 +187,36 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       try {
         const result = await recoverOverdueTryouts(100, recoveryCursor);
         recoveryCursor = result.nextCursor;
-        if (result.finalized || ((result.failed || result.backlog) && Date.now() - lastRecoveryLogAt >= ERROR_LOG_INTERVAL_MS)) {
+        if (
+          result.finalized ||
+          ((result.failed || result.backlog) &&
+            Date.now() - lastRecoveryLogAt >= ERROR_LOG_INTERVAL_MS)
+        ) {
           lastRecoveryLogAt = Date.now();
           console.log('[tryout] recovery', { ...result, nextCursor: undefined });
         }
-      } catch { reportError(new Error('TRYOUT_RECOVERY_FAILED')); }
-      finally { tryoutBusy = false; }
+      } catch {
+        reportError(new Error('TRYOUT_RECOVERY_FAILED'));
+      } finally {
+        tryoutBusy = false;
+      }
     };
+    const notify = async () => {
+      if (stopping || notificationBusy) return;
+      notificationBusy = true;
+      try {
+        await discoverNotificationReleases();
+        const result = await drainNotificationBatch();
+        if (result.delivered || result.failed) console.log('[notifications] batch', result);
+      } catch {
+        reportError(new Error('NOTIFICATION_POLL_FAILED'));
+      } finally {
+        notificationBusy = false;
+      }
+    };
+    await notify();
+    if (stopping) return;
+    notificationTimer = setInterval(() => void notify(), 5_000);
     await recover();
     if (stopping) return;
     tryoutTimer = setInterval(() => void recover(), 5_000);

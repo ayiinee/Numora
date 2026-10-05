@@ -5,6 +5,7 @@ import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import {
+  setChapterCategory,
   createChapter,
   createCompetency,
   createDrillPackage,
@@ -981,7 +982,14 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
       order = Number(field(f, 'order'));
     const result = await run(() =>
       kind === 'CHAPTER'
-        ? createChapter(token, { code, name, displayOrder: order })
+        ? createChapter(token, {
+            code,
+            name,
+            displayOrder: order,
+            materialCategory: field(f, 'category')
+              ? (field(f, 'category') as NonNullable<AdminTaxonDto['materialCategory']>)
+              : null,
+          })
         : kind === 'SUBCHAPTER'
           ? createSubchapter(token, { chapterId: parent, code, name, displayOrder: order })
           : kind === 'COMPETENCY'
@@ -1028,6 +1036,11 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
             <input name="code" required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" />
           </Field>
         )}
+        {kind === 'CHAPTER' && (
+          <Field label="Kategori bab" name="category">
+            <CategorySelect name="category" />
+          </Field>
+        )}
         <Field
           label={kind === 'COMPETENCY' ? 'Deskripsi kompetensi' : 'Nama / deskripsi'}
           name="name"
@@ -1058,6 +1071,18 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
               {r.kind} · {r.code} · {r.status} · Induk:{' '}
               {data.curriculum.items.find((p) => p.id === r.parentId)?.name ?? '—'}
             </small>
+            {r.kind === 'CHAPTER' && (
+              <label>
+                Kategori bab: {r.name}
+                <CategorySelect
+                  value={r.materialCategory ?? ''}
+                  disabled={busy}
+                  onChange={(e) =>
+                    void run(() => setChapterCategory(token, r.id, e.target.value || null))
+                  }
+                />
+              </label>
+            )}
             <div className="admin-content-actions">
               <Button
                 variant="secondary"
@@ -1426,5 +1451,17 @@ function TryoutEditor({
         Simpan draf paket
       </Button>
     </AdminEditorForm>
+  );
+}
+
+function CategorySelect(props: React.ComponentProps<'select'>) {
+  return (
+    <select {...props}>
+      <option value="">Belum dipetakan</option>
+      <option value="algebra">Aljabar & Fungsi</option>
+      <option value="geometry">Geometri & Ruang</option>
+      <option value="numbers">Bilangan & Eksponen</option>
+      <option value="statistics">Statistika & Peluang</option>
+    </select>
   );
 }

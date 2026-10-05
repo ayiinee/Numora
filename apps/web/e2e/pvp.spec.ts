@@ -277,7 +277,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByRole('button', { name: 'Buat room', exact: true })).toBeEnabled();
     await page.getByLabel(/Sedang.*45/).check();
     await capture('lobby-create');
-    await page.getByRole('tab', { name: 'Gabung via Kode / QR' }).click();
+    await page.getByRole('tab', { name: 'Gabung via Kode' }).click();
     await page.getByRole('textbox', { name: 'Kode room' }).fill(roomCode.toLowerCase());
     await capture('lobby-join');
     await page.getByRole('button', { name: 'Gabung room' }).click();
@@ -342,6 +342,14 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       ).toHaveAttribute('aria-pressed', 'true');
       await expect(page.getByLabel('Podium Global PvP')).toBeVisible();
       await expect(page.getByText('#8', { exact: true })).toBeVisible();
+      if (width < 960) {
+        const order = await page.evaluate(() =>
+          ['.pvp-ranking-podium', '.pvp-ranking-list', '.pvp-own-rank', '.pvp-ranking-period'].map(
+            (selector) => document.querySelector(selector)!.getBoundingClientRect().top,
+          ),
+        );
+        expect(order, `${difficulty} leaderboard order`).toEqual([...order].sort((a, b) => a - b));
+      }
       await capture(`leaderboard-${difficulty}`);
     }
     snapshot = state('RUNNING');

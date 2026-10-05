@@ -22,7 +22,7 @@ export function FeedbackCard({
         <Avatar name={item.teacherName} />
         <div>
           <h2 id={`feedback-${item.id}`}>{item.teacherName}</h2>
-          <p>Catatan guru pembimbing</p>
+          <p>Feedback dari Guru</p>
         </div>
         <div className="student-feedback-card__meta">
           {item.readAt && (

@@ -1,0 +1,94 @@
+{
+  "scenario": "teacher-demo-2026-v1",
+  "source": "Real Development Supabase Auth + NestJS + PostgreSQL; synthetic identities",
+  "screenshots": [
+    {
+      "sha256": "1bd2c75bf657aa66be84cdde78c145ba73b53532d463c48f667d57b65cd028ef",
+      "file": "alya-progress-1280.png"
+    },
+    {
+      "sha256": "3b5950a19798fe81f75b632f9e74ed32b9aacd49c2ca0e988f4145e4b92d76a1",
+      "file": "alya-progress-390.png"
+    },
+    {
+      "sha256": "bfa2786b5bcc530a58ad5f41d88dff44a4630dad2666dcb59f3a8993610fdc1f",
+      "file": "class-roster-1280.png"
+    },
+    {
+      "sha256": "2f6c545c548d81afc6a3bb91b9f6e56b23beb8daad38c57df1c32feb1e239632",
+      "file": "class-roster-390.png"
+    },
+    {
+      "sha256": "f4c42560ef0c733bc62207d5c4c28ab35575efc5af3bc35a523a5b85f33fec1f",
+      "file": "class-settings-1280.png"
+    },
+    {
+      "sha256": "002947c52f7fe4b00e79055ce138c4c8b69f755f1994e54a25545c39e3690d18",
+      "file": "class-settings-390.png"
+    },
+    {
+      "sha256": "c87b1fbd424dfb776638fdaa77914decdcdc000f7f874883c66b9d2f89a0f463",
+      "file": "dashboard-1280.png"
+    },
+    {
+      "sha256": "07f478a64185e3b75c6dc7df871d8a517872d367c477d1c5e76cf949bdaac4c7",
+      "file": "dashboard-390.png"
+    },
+    {
+      "sha256": "7d908907e84f0e6d79f4380ad2dd9d58d2ca28fe68110a2ba746281f3c3c8c24",
+      "file": "feedback-siti-1280.png"
+    },
+    {
+      "sha256": "96e67dcafef5db173b95b3171b0eea5d203925027f0142d18e47fa82123e455d",
+      "file": "feedback-siti-390.png"
+    },
+    {
+      "sha256": "b4739181e038a27ceb5f44203cd99c8680dad0c800b94a8dc929ce49cf5b8ab2",
+      "file": "invite-1280.png"
+    },
+    {
+      "sha256": "253e4afb85e5feda68acb62358cd4e57678d45ec8a819e23eaf3e79e090958f7",
+      "file": "invite-390.png"
+    },
+    {
+      "sha256": "348ae8179c8b8a317ed4826f82a37b87bfca01bf4bc6fc0f8d57bb76c2d5cd9b",
+      "file": "monitoring-1280.png"
+    },
+    {
+      "sha256": "0d8d281a4551bf17d39a371b44ac491823ecc1508eb112368b3527f27e01dcd4",
+      "file": "monitoring-390.png"
+    },
+    {
+      "sha256": "4ac436b3c153d48570b6f21b4d7249217e6078121685943b7ad4899068c2efde",
+      "file": "new-student-1280.png"
+    },
+    {
+      "sha256": "32228d80cec9f7e552a3cde84bbf85f57b37a9ae59221fe207af1fe1ed6fd439",
+      "file": "new-student-390.png"
+    },
+    {
+      "sha256": "f999d19012753fbb4d859085dc46f1cd23785e345f4a9b5fccfd183f496de988",
+      "file": "notifications-1280.png"
+    },
+    {
+      "sha256": "a419cea85b848745418fb16915c4a76cea15640036e9e3adec2ad1fede71554e",
+      "file": "notifications-390.png"
+    },
+    {
+      "sha256": "9df9e52235ffee201c9d1dc212006eac609cee7167c56c01d19bf8e718b4390d",
+      "file": "profile-1280.png"
+    },
+    {
+      "sha256": "c022c2793ffacc17d257940e17c6ba728991607cb4964653799a349cca0b1495",
+      "file": "profile-390.png"
+    },
+    {
+      "sha256": "94f4093b664d1913b0ed3bbc600871b2e9499da1c04145db689c66f733857a5b",
+      "file": "regression-1280.png"
+    },
+    {
+      "sha256": "b5fb42893007bd06e84e658d00a73c26f4ef25bf8499030308174ec7bf79c876",
+      "file": "regression-390.png"
+    }
+  ]
+}

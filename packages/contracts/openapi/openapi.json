@@ -307,6 +307,41 @@
         ]
       }
     },
+    "/api/v1/students/me/materials": {
+      "get": {
+        "operationId": "LearningController_materials",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentMaterialsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/chapters": {
       "get": {
         "operationId": "LearningController_catalog",
@@ -3659,6 +3694,164 @@
           "feedback"
         ]
       }
+    },
+    "/api/v1/students/me/notifications": {
+      "get": {
+        "operationId": "NotificationsController_list",
+        "parameters": [
+          {
+            "name": "filter",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": "all",
+              "type": "string",
+              "enum": [
+                "all",
+                "unread",
+                "class",
+                "tryout",
+                "learning",
+                "archive"
+              ]
+            }
+          },
+          {
+            "name": "cursor",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/students/me/notifications/summary": {
+      "get": {
+        "operationId": "NotificationsController_summary",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/students/me/notifications/read-all": {
+      "post": {
+        "operationId": "NotificationsController_readAll",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationReadDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notifications"
+        ]
+      }
+    },
+    "/api/v1/students/me/notifications/{id}/read": {
+      "post": {
+        "operationId": "NotificationsController_read",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/NotificationReadDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "notifications"
+        ]
+      }
     }
   },
   "info": {
@@ -4106,6 +4299,120 @@
           "activities",
           "activeDrill",
           "features"
+        ]
+      },
+      "MaterialSubchapterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "totalLevels": {
+            "type": "number"
+          },
+          "completedLevels": {
+            "type": "number"
+          },
+          "availableLevels": {
+            "type": "number"
+          },
+          "latestScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "order",
+          "totalLevels",
+          "completedLevels",
+          "availableLevels",
+          "latestScore",
+          "bestScore"
+        ]
+      },
+      "MaterialChapterDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "title": {
+            "type": "string"
+          },
+          "order": {
+            "type": "number"
+          },
+          "category": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "algebra",
+              "geometry",
+              "numbers",
+              "statistics"
+            ]
+          },
+          "totalLevels": {
+            "type": "number"
+          },
+          "completedLevels": {
+            "type": "number"
+          },
+          "continueSubchapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "subchapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialSubchapterDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "order",
+          "category",
+          "totalLevels",
+          "completedLevels",
+          "continueSubchapterId",
+          "subchapters"
+        ]
+      },
+      "StudentMaterialsDto": {
+        "type": "object",
+        "properties": {
+          "chapters": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MaterialChapterDto"
+            }
+          },
+          "recentChapterId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "chapters",
+          "recentChapterId"
         ]
       },
       "ChapterDto": {
@@ -5049,6 +5356,16 @@
       "AdminTaxonDto": {
         "type": "object",
         "properties": {
+          "materialCategory": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "algebra",
+              "geometry",
+              "numbers",
+              "statistics"
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -5130,6 +5447,16 @@
               "ARCHIVED"
             ],
             "default": "DRAFT"
+          },
+          "materialCategory": {
+            "type": "string",
+            "enum": [
+              "algebra",
+              "geometry",
+              "numbers",
+              "statistics"
+            ],
+            "nullable": true
           }
         },
         "required": [
@@ -5172,6 +5499,16 @@
               "ARCHIVED"
             ],
             "default": "DRAFT"
+          },
+          "materialCategory": {
+            "type": "string",
+            "enum": [
+              "algebra",
+              "geometry",
+              "numbers",
+              "statistics"
+            ],
+            "nullable": true
           }
         }
       },
@@ -6964,6 +7301,158 @@
         "required": [
           "id",
           "readAt"
+        ]
+      },
+      "NotificationActionDto": {
+        "type": "object",
+        "properties": {
+          "type": {
+            "type": "string",
+            "enum": [
+              "feedback",
+              "pvp",
+              "tryout",
+              "result",
+              "roadmap",
+              "unavailable"
+            ]
+          },
+          "enabled": {
+            "type": "boolean"
+          },
+          "status": {
+            "type": "string",
+            "nullable": true
+          },
+          "feedbackId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "inviteId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "matchId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "attemptId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "subchapterId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "type",
+          "enabled",
+          "status"
+        ]
+      },
+      "NotificationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "FEEDBACK_RECEIVED",
+              "PVP_INVITED",
+              "TRYOUT_OPENED",
+              "TRYOUT_RESULT_READY",
+              "LEVEL_UNLOCKED"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "body": {
+            "type": "string"
+          },
+          "occurredAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "readAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "archived": {
+            "type": "boolean"
+          },
+          "action": {
+            "$ref": "#/components/schemas/NotificationActionDto"
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "title",
+          "body",
+          "occurredAt",
+          "readAt",
+          "archived",
+          "action"
+        ]
+      },
+      "NotificationsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/NotificationDto"
+            }
+          },
+          "nextCursor": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextCursor"
+        ]
+      },
+      "NotificationSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number"
+          },
+          "unread": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "total",
+          "unread"
+        ]
+      },
+      "NotificationReadDto": {
+        "type": "object",
+        "properties": {
+          "updated": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "updated"
         ]
       }
     }

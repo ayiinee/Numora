@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useNotificationSummary } from './notification-queries';
 import { Avatar, Card, Icon, ProgressBar, Skeleton, type IconName } from '@tka/ui';
 import type { StudentDashboardDto, CurrentTryoutDto, DashboardDrillDto } from './generated-types';
 import type { AssessmentRecord } from './types';
@@ -17,13 +18,12 @@ export function StudentIdentityHeader({
   data,
   avatarUrl,
   tryout,
-  feedbackHref = '#catatan-guru',
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
   tryout?: CurrentTryoutDto | undefined;
-  feedbackHref?: string;
 }) {
+  const notifications = useNotificationSummary();
   return (
     <div className="student-identity">
       <div className="student-identity__top">
@@ -34,13 +34,18 @@ export function StudentIdentityHeader({
         >
           <span className="student-identity__avatar">
             <Avatar name={data.displayName} {...(avatarUrl ? { src: avatarUrl } : {})} />
-            <span className="student-identity__affiliation">
-              {data.affiliation === 'SCHOOL' ? 'SEKOLAH' : 'MANDIRI'}
-            </span>
           </span>
           <span className="student-identity__name">
             <strong>{data.displayName}</strong>
-            <small>{data.class?.schoolName ?? 'User Mandiri'}</small>
+            <small>
+              <span>{data.affiliation === 'SCHOOL' ? 'User Sekolah' : 'User Mandiri'}</span>
+              {data.class?.schoolName && (
+                <>
+                  {' · '}
+                  <span>{data.class.schoolName}</span>
+                </>
+              )}
+            </small>
           </span>
         </Link>
         <div className="student-identity__actions">
@@ -53,14 +58,23 @@ export function StudentIdentityHeader({
               {data.bestDrillScore}
             </span>
           )}
-          <a className="student-identity__bell" href={feedbackHref} aria-label="Lihat catatan guru">
+          <Link
+            className="student-identity__bell"
+            href="/student/notifications"
+            aria-label={`Lihat notifikasi${notifications.data?.unread ? `, ${notifications.data.unread} belum dibaca` : ''}`}
+          >
             <Icon name="bell" width={20} height={20} />
-          </a>
+            {!!notifications.data?.unread && (
+              <span className="student-notification-count">
+                {notifications.data.unread > 99 ? '99+' : notifications.data.unread}
+              </span>
+            )}
+          </Link>
         </div>
       </div>
       <div className="student-identity__progress">
         <div>
-          <strong>Progres Drill</strong>
+          <strong>Progres level Drill</strong>
           <span>
             {data.completedLevels} / {data.availableLevels} level
           </span>
@@ -159,16 +173,15 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
     subtitle: string;
     icon: IconName;
     badge: string;
-    href?: string;
+    href: string;
   }[] = [
     {
-      title: 'Drill Bab',
+      title: 'Latihan Soal',
       subtitle: 'Adaptif',
       icon: 'book',
       badge: data.availableLevels ? `${data.availableLevels} Lvl` : 'Latihan',
       href: '/student/learn',
     },
-    { title: 'Pretest', subtitle: 'Belum tersedia', icon: 'rocket', badge: 'Segera' },
     {
       title: 'Tryout',
       subtitle: 'Simulasi TKA',
@@ -190,10 +203,10 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
         Fitur Belajar <Icon name="info" width={14} height={14} />
       </h2>
       <div className="home-feature-grid">
-        {features.map((item, index) => {
+        {features.map((item) => {
           const content = (
             <>
-              <span className={`home-feature-icon home-feature-icon--${index}`}>
+              <span className={`home-feature-icon home-feature-icon--${item.icon}`}>
                 <Icon name={item.icon} width={28} height={28} />
                 <span>{item.badge}</span>
               </span>
@@ -201,14 +214,10 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
               <small>{item.subtitle}</small>
             </>
           );
-          return item.href ? (
+          return (
             <Link key={item.title} href={item.href}>
               {content}
             </Link>
-          ) : (
-            <button key={item.title} type="button" disabled aria-label="Pretest belum tersedia">
-              {content}
-            </button>
           );
         })}
       </div>

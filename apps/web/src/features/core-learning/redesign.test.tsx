@@ -285,7 +285,7 @@ describe('responsive learning composition', () => {
     await screen.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: /Fitur Belajar/ })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Aktivitas Terakhir' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Catatan Guru Pembimbing' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Feedback dari Guru' })).toBeTruthy();
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
       state: 'open',
       eligible: true,
@@ -407,9 +407,10 @@ describe('responsive learning composition', () => {
       ),
     ).toBeTruthy();
     expect(await screen.findByRole('region', { name: 'Paket Tryout Mingguan' })).toBeTruthy();
-    expect(
-      screen.getByRole('button', { name: 'Pretest belum tersedia' }).hasAttribute('disabled'),
-    ).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Pretest belum tersedia' })).toBeNull();
+    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(3);
+    expect(screen.getByRole('link', { name: /Latihan Soal/ })).toBeTruthy();
+    expect(screen.getAllByText('Progres level Drill').length).toBeGreaterThan(0);
     expect(request).not.toHaveBeenCalledWith('test-token', '/leaderboards/class');
     expect(screen.getByRole('link', { name: 'Lihat Leaderboard' }).getAttribute('href')).toBe(
       '/student/leaderboards',
@@ -426,8 +427,8 @@ describe('responsive learning composition', () => {
     expect(within(nav).getByRole('link', { name: 'Materi' }).getAttribute('aria-current')).toBe(
       'page',
     );
-    expect(within(nav).getAllByRole('link')).toHaveLength(8);
-    expect(within(nav).getByRole('link', { name: 'Catatan Guru' }).getAttribute('href')).toBe(
+    expect(within(nav).getAllByRole('link')).toHaveLength(9);
+    expect(within(nav).getByRole('link', { name: 'Feedback dari Guru' }).getAttribute('href')).toBe(
       '/student/feedback',
     );
     expect(

@@ -32,10 +32,15 @@ export const chapters = pgTable(
     code: text('code').notNull(),
     name: text('name').notNull(),
     description: text('description'),
+    materialCategory: text('material_category'),
     displayOrder: integer('display_order').notNull(),
     status: contentStatus('status').notNull().default('DRAFT'),
   },
   (table) => [
+    check(
+      'chapters_category_ck',
+      sql`${table.materialCategory} is null or ${table.materialCategory} in ('algebra', 'geometry', 'numbers', 'statistics')`,
+    ),
     uniqueIndex('chapters_code_uq').on(table.code),
     uniqueIndex('chapters_order_uq').on(table.displayOrder),
     check('chapters_order_ck', sql`${table.displayOrder} > 0`),

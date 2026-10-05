@@ -1,3 +1,4 @@
+import { NotificationsModule } from './modules/notifications/notifications.module';
 import { Module } from '@nestjs/common';
 import { ConfigModule } from '@nestjs/config';
 import { HealthModule } from './health/health.module';
@@ -33,6 +34,7 @@ import { FeedbackModule } from './modules/feedback/feedback.module';
     PvpModule,
     LeaderboardsModule,
     FeedbackModule,
+    NotificationsModule,
   ],
 })
 export class AppModule {}

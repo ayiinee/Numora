@@ -1,6 +1,16 @@
 import type { SVGProps } from 'react';
 
 const paths = {
+  zap: 'm13 2-9 12h7l-1 8 10-13h-8l1-7Z',
+  calculator: 'M5 3h14v18H5Zm3 4h3m-1.5-1.5v3M14 6l3 3m0-3-3 3M8 13h3m-3 3h3m3-3h3m-3 3h3',
+  verified:
+    'm12 2 3 2 3.5.5.5 3.5 2 4-2 3-.5 3.5-3.5.5-3 2-3-2-3.5-.5L5 15l-2-3 2-4 .5-3.5L9 4Zm-4 10 3 3 5-6',
+  globe: 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0M3 12h18M12 3c-5 5-5 13 0 18 5-5 5-13 0-18Z',
+  'chart-box': 'M4 3h16v18H4Zm4 13v-4m4 4V8m4 8v-6',
+  'check-circle': 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0m-14 0 3 3 7-7',
+  'play-circle': 'M21 12a9 9 0 1 1-18 0 9 9 0 0 1 18 0m-12-4 6 4-6 4Z',
+  geometry: 'M4 3v18h17L4 3Zm0 12h6v6',
+  numbers: 'M3 5h18v14H3Zm4 4v6m3-6h3v3h-3v3h3m3-6h3v6h-3m0-3h3',
   settings:
     'M9 3h6l1 3 3 1 2 5-2 5-3 1-1 3H9l-1-3-3-1-2-5 2-5 3-1Zm7 9a4 4 0 1 1-8 0 4 4 0 0 1 8 0',
   play: 'm8 5 11 7-11 7V5z',

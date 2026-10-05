@@ -10,3 +10,4 @@ export * from './legacy-drill.js';
 export * from './measurement-foundation.js';
 export * from './measurement.js';
 export * from './measurement-compute.js';
+export * from './notifications.js';

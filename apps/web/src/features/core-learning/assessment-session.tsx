@@ -136,7 +136,7 @@ export function AssessmentSession({
     return (
       <div className="practice-session">
         <AssessmentHeader
-          title={sessionKind === 'tryout' ? 'Sesi Tryout TKA' : 'Sesi Latihan Soal'}
+          title={sessionKind === 'tryout' ? 'Sesi Tryout' : 'Sesi Latihan Soal'}
           exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}
           status={
             <span role="status">

@@ -189,7 +189,7 @@ function ProfileContent({ token }: { token: string }) {
             />
             <ProfileSetting
               icon="chat"
-              title="Catatan Guru"
+              title="Feedback dari Guru"
               description="Baca pesan dan masukan dari guru."
               href="/student/feedback"
             />

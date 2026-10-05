@@ -130,6 +130,34 @@ async function fixtures(
         ],
       };
     else if (path === '/students/me/learning-interactions') data = { state: 'policyPending' };
+    else if (path === '/students/me/notifications/summary') data = { total: 0, unread: 0 };
+    else if (path === '/students/me/materials')
+      data = {
+        recentChapterId: chapterId,
+        chapters: [
+          {
+            id: chapterId,
+            title: 'Aljabar fixture',
+            order: 1,
+            category: 'algebra',
+            totalLevels: 2,
+            completedLevels: completed ? 1 : 0,
+            continueSubchapterId: subchapterId,
+            subchapters: [
+              {
+                id: subchapterId,
+                title: 'Persamaan fixture',
+                order: 1,
+                totalLevels: 2,
+                completedLevels: completed ? 1 : 0,
+                availableLevels: 1,
+                latestScore: completed ? 80 : null,
+                bestScore: completed ? 80 : null,
+              },
+            ],
+          },
+        ],
+      };
     else if (path === '/chapters')
       data = { chapters: [{ id: chapterId, title: 'Aljabar fixture', order: 1 }] };
     else if (path === `/chapters/${chapterId}`)
@@ -473,15 +501,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       fullPage: true,
     });
     expect(mutations).toEqual([]);
-    await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toHaveCount(0);
+    await expect(page.locator('.home-feature-grid > a')).toHaveCount(3);
+    await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
     await expect(
       page.getByRole('link', { name: 'Lanjutkan latihan', exact: true }),
     ).toHaveAttribute('href', `/student/drill/${attemptId}`);
     await page
-      .getByRole('link', { name: 'Lihat catatan guru', exact: true })
+      .getByRole('link', { name: width >= 960 ? 'Notifikasi' : 'Lihat notifikasi', exact: true })
       .filter({ visible: true })
       .click();
-    await expect(page).toHaveURL(/#catatan-guru$/);
+    await expect(page).toHaveURL('/student/notifications');
     expect(mutations).toEqual([]);
   });
 }
@@ -520,12 +550,11 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
       );
     }
     await nav.getByRole('link', { name: 'Materi', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Belajar matematika' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Materi Belajar' })).toBeVisible();
     await expect(nav.getByRole('link', { name: 'Materi', exact: true })).toHaveAttribute(
       'aria-current',
       'page',
     );
-    await page.getByRole('link', { name: /Aljabar fixture/ }).click();
     await page.getByRole('link', { name: /Persamaan fixture/ }).click();
     await page
       .locator('.adventure-focus')
@@ -1477,6 +1506,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       selectedOptionId: index === 5 ? null : 'A',
     }));
     const answerKeys = new Map(questions.map((q) => [q.questionInstanceId, q.selectedOptionId]));
+    let resultStars: number | null = null;
     let submits = 0;
     await page.route('http://localhost:3301/api/v1/subchapters/**', (route) =>
       route.fulfill({
@@ -1517,7 +1547,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             correctCount: 9,
             questionCount: 10,
             mastered: true,
-            stars: null,
+            stars: resultStars,
             unlockedLevelId: subchapterId,
             isDemo: false,
             explanationState: 'available',
@@ -1601,7 +1631,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       });
     };
     await page.goto('/student/learn');
-    await expect(page.getByRole('heading', { name: 'Temukan materi belajarmu' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Materi Belajar' })).toBeVisible();
     await capture('catalog');
     await page.goto(`/student/learn/${chapterId}`);
     await expect(page.getByRole('link', { name: /Persamaan fixture/ })).toBeVisible();
@@ -1611,6 +1641,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       page.locator('.adventure-focus').getByRole('heading', { name: 'Bentuk Kuadrat Sempurna' }),
     ).toBeVisible();
     expect(await page.locator('.level-path__step--locked button').count()).toBe(0);
+    await expect(page.locator('.adventure-summary')).not.toContainText('80');
+    await expect(page.locator('.adventure-shortcuts')).toHaveCount(0);
+    await expect(page.locator('.adventure-focus')).toContainText('≥80');
     await capture('level-map');
     await page.goto(`/student/drill/${attemptId}`);
     await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();
@@ -1631,7 +1664,16 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('button', { name: 'Pembahasan soal 3, salah' }).click();
     await expect(page.getByText('Soal #3', { exact: true })).toBeVisible();
     await expect(page.getByRole('region', { name: 'Rekomendasi video' })).toHaveCount(0);
+    await expect(page.locator('.result-stars')).toHaveCount(0);
     await capture('result');
+    // Explicit server fixture; no star formula is inferred from the score.
+    resultStars = 3;
+    await page.reload();
+    await expect(page.getByText('Bintang: 3', { exact: true })).toBeVisible();
+    await expect(page.locator('.result-stars svg')).toHaveCount(3);
+    await expect(page.locator('.result-stars svg').first()).toHaveCSS('width', '40px');
+    await expect(page.locator('.result-stars svg').first()).toHaveCSS('height', '40px');
+    await capture('result-stars');
   });
 }
 

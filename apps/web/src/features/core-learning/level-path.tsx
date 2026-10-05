@@ -1,7 +1,6 @@
 'use client';
 
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
-import Link from 'next/link';
 import type { Level, SubchapterDetail } from './types';
 
 /** The path is decorative. Access, scores and start targets come from the server. */
@@ -42,7 +41,6 @@ export function LevelPath({
           <span>
             {completed} / {levels.length} level selesai
           </span>
-          <strong>Target nilai: ≥80</strong>
         </div>
         <ProgressBar
           value={completed}
@@ -51,20 +49,6 @@ export function LevelPath({
           label="Level subbab selesai"
         />
       </Card>
-      <nav className="adventure-shortcuts" aria-label="Pilihan belajar">
-        <Link href="/student/learn">
-          <Icon name="book" width={18} height={18} />
-          Materi
-        </Link>
-        <Link href="/student/assessment">
-          <Icon name="clock" width={18} height={18} />
-          Riwayat skor
-        </Link>
-        <Link href="/student/leaderboards">
-          <Icon name="chart" width={18} height={18} />
-          Peringkat
-        </Link>
-      </nav>
       <div className="adventure-layout">
         <ol className="level-path" aria-label="Pilih level latihan">
           {[...levels].reverse().map((level, position) => (
