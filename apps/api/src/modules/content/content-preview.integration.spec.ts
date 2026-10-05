@@ -179,7 +179,7 @@ describe.skipIf(!testUrl)(
       configureApplication(app);
       await app.listen(0, '127.0.0.1');
       base = (await app.getUrl()) + '/api/v1';
-    });
+    }, 60000);
     afterAll(async () => {
       await app?.close();
       await closeDatabaseConnection();
@@ -192,7 +192,7 @@ describe.skipIf(!testUrl)(
           await admin.unsafe(`DROP ROLE IF EXISTS "${login}"`);
         await admin.end();
       }
-    });
+    }, 60000);
     it('rejects anonymous and every non-content principal on new and legacy routes', async () => {
       const paths = [
         'admin/content/curriculum',
