@@ -42,3 +42,5 @@ PRD feature inventories take precedence over old frame copy/feature assumptions.
 ## Portable redesign review evidence
 
 The owner authorized committing/publishing all redesign phases on 4 October 2026. The [tracked screenshot gallery](screenshots/redesign/README.md) contains 41 synthetic mobile/desktop screen pairs that are available in another checkout. Earlier phase reports preserve local `.tmp` artifact links as historical evidence; use this gallery for team review. See [Phase 10](UI_REDESIGN_PHASE_10_2026-10-04.md) for final regression, running the branch and remaining connected QA/CI gates.
+
+Materi accordion and durable Student notifications: [5 October handoff](MATERIALS_NOTIFICATIONS_REDESIGN_2026-10-05.md), with [mobile/desktop evidence](screenshots/materials-notifications/README.md).

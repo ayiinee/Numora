@@ -1,11 +1,27 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type StudentMaterialsDto = { "chapters": (MaterialChapterDto)[]; "recentChapterId": string | null; };
+
+export type MaterialChapterDto = { "id": string; "title": string; "order": number; "category": "algebra" | "geometry" | "numbers" | "statistics" | null; "totalLevels": number; "completedLevels": number; "continueSubchapterId": string | null; "subchapters": (MaterialSubchapterDto)[]; };
+
+export type MaterialSubchapterDto = { "id": string; "title": string; "order": number; "totalLevels": number; "completedLevels": number; "availableLevels": number; "latestScore": number | null; "bestScore": number | null; };
+
+export type NotificationActionDto = { "type": "feedback" | "pvp" | "tryout" | "result" | "roadmap" | "unavailable"; "enabled": boolean; "status": string | null; "feedbackId"?: string; "inviteId"?: string; "matchId"?: string; "packageId"?: string; "attemptId"?: string; "chapterId"?: string; "subchapterId"?: string; };
+
+export type NotificationDto = { "id": string; "kind": "FEEDBACK_RECEIVED" | "PVP_INVITED" | "TRYOUT_OPENED" | "TRYOUT_RESULT_READY" | "LEVEL_UNLOCKED"; "title": string; "body": string; "occurredAt": string; "readAt": string | null; "archived": boolean; "action": NotificationActionDto; };
+
+export type NotificationsDto = { "items": (NotificationDto)[]; "nextCursor": string | null; };
+
+export type NotificationSummaryDto = { "total": number; "unread": number; };
+
+export type NotificationReadDto = { "updated": number; };
+
 export type ChapterDto = { "id": string; "slug"?: string; "title": string; "order": number; };
 
 export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };
 
-export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; };
+export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; };
 
 export type CatalogDto = { "chapters": (ChapterDto)[]; };
 
@@ -19,7 +35,7 @@ export type OptionDto = { "id": string; "text": string; };
 
 export type DrillQuestionDto = { "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
 
-export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
+export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "serverTime"?: string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
 
 export type SavedAnswerDto = { "questionInstanceId": string; "selectedOptionId": string | null; };
 
@@ -27,19 +43,23 @@ export type ReviewedQuestionDto = { "questionInstanceId": string; "stem": string
 
 export type RecommendedVideoDto = { "id": string; "title": string; "url": string; "source": string; };
 
-export type DrillResultDto = { "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
+export type DrillRewardDto = { "policyCode": string; "policyVersion": number; "baseXp": number; "bonusXp": number; "totalXp": number; "durationSeconds": number; };
 
-export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "pending" | "notApplicable"; "starsState"?: "pending" | "notApplicable"; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
+export type DrillResultDto = { "xp"?: number | null; "attemptId": string; "levelId": string; "levelTitle": string; "score": number; "rawPoints": number; "correctCount": number; "questionCount": number; "mastered": boolean; "stars": number | null; "drillPolicyVersion"?: number | null; "reward"?: DrillRewardDto | null; "unlockedLevelId": string | null; "isDemo": boolean; "explanationState": "available" | "expired"; "questions": (ReviewedQuestionDto)[]; "recommendations": (RecommendedVideoDto)[]; };
+
+export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "pretest" | "tryout"; "title": string; "isDemo": boolean; "chapterId"?: string | null; "chapterTitle"?: string | null; "subchapterId"?: string | null; "subchapterTitle"?: string | null; "levelId"?: string | null; "levelTitle"?: string | null; "xpState"?: "ready" | "legacy" | "pending" | "notApplicable"; "starsState"?: "ready" | "legacy" | "pending" | "notApplicable"; "xp"?: number | null; "stars"?: number | null; "drillPolicyVersion"?: number | null; "tryoutXpPolicyVersion"?: number | null; "submittedAt": string; "resultState": "ready" | "waitingIrt"; "score": number | null; };
 
 export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCursor": string | null; };
 
 export type CurrentTryoutDto = { "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; };
 
-export type TryoutAttemptDto = { "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
+export type TryoutAttemptDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
+
+export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "waitingIrt"; "xp"?: number | null; };
 
 export type TryoutReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
 
-export type TryoutResultDto = { "attemptId": string; "packageTitle": string; "score": number; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
+export type TryoutResultDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
 
 export type DashboardClassDto = { "id": string; "name": string; "schoolName": string; };
 
@@ -47,7 +67,7 @@ export type DashboardDrillDto = { "attemptId": string; "levelId": string | null;
 
 export type StudentFeaturesDto = { "drill": boolean; "tryout": boolean; "pretest": boolean; "pvp": boolean; "classLeaderboard": boolean; "pendingPolicies": (string)[]; };
 
-export type StudentDashboardDto = { "displayName": string; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
+export type StudentDashboardDto = { "displayName": string; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "classes"?: (DashboardClassDto)[]; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
 
 export type PvpAvailabilityDto = { "available": boolean; "reasonCode": string | null; "message": string; };
 
@@ -69,7 +89,7 @@ export type LeaderboardEntryDto = { "studentId": string; "displayName": string; 
 
 export type LeaderboardPeriodDto = { "startsAt": string; "endsAt": string; "timezone": string; };
 
-export type LeaderboardDto = { "policyPending": boolean; "reasonCode": string | null; "className": string | null; "unit": "points" | "xp"; "period": LeaderboardPeriodDto; "updatedAt": string | null; "entries": (LeaderboardEntryDto)[]; "ownEntry": LeaderboardEntryDto | null; };
+export type LeaderboardDto = { "policyPending": boolean; "reasonCode": string | null; "className": string | null; "classId"?: string | null; "unit": "points" | "xp"; "period": LeaderboardPeriodDto; "updatedAt": string | null; "entries": (LeaderboardEntryDto)[]; "ownEntry": LeaderboardEntryDto | null; };
 
 export type StudentVideoDto = { "mappingId": string; "title": string; "url": string; "source": string; };
 

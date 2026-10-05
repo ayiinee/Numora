@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { and, count, desc, eq, isNull, sql } from 'drizzle-orm';
 import {
+  enqueueNotification,
   classes,
   classMemberships,
   feedback,
@@ -122,6 +123,11 @@ export class FeedbackService {
         entityId: created!.id,
         correlationId: body.clientRequestId,
         payload: { classId, studentId },
+      });
+      await enqueueNotification(tx, {
+        kind: 'FEEDBACK_RECEIVED',
+        sourceId: created!.id,
+        recipientId: studentId,
       });
       return created!;
     });

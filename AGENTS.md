@@ -57,29 +57,33 @@ Do not present a proposal as a PRD rule.
 - Business time rules such as weekly Tryout package release and leaderboard reset use `Asia/Jakarta`; durable timestamps are stored in UTC.
 - Sensitive state-changing operations must be idempotent or protected by equivalent database constraints/transactions.
 
-## Product rules from approved PRD v0.5
+## Product rules from approved PRD v0.6
+
+The full source is `docs/product/sources/PRD_Numora_v0.6.docx.md`. Reyhan confirmed on 5 October 2026 that Tryout XP uses equivalent-correct ×10; AC-15's ×100 is a typo. `docs/data/PRD_V06_DATA_ALIGNMENT.md` records the implementation and rollout boundaries. This supersedes conflicting older feature-PRD and OPEN register entries.
 
 - Students and Teachers authenticate with Google.
 - Teacher features require valid school verification through a single-use token valid for 3×24 hours.
-- A Student belongs to at most one class in the current version.
-- Student without a class is User Mandiri: may use Drill and create/share a PvP room; Pretest, Tryout, and class leaderboard require a Class. Joining a Class changes affiliation to User Sekolah.
-- Pretest is optional, at most once completed per chapter, with a 20-question baseline and at most 3 initially unlocked levels per subchapter on a perfect result; distribution and placement rules remain OPEN.
-- Drill baseline: 10 questions, unlimited count-up timer, 80% mastery threshold, unlimited retry, a different equivalent variant on subsequent attempt, explanation access for 90 days, and score-based stars.
-- Tryout: shared weekly package released Monday 00:00 WIB, one attempt per package per user, result/explanation after IRT; official content/configuration remains OPEN-05. Payment for User Mandiri is deferred; MVP scoring focuses on single-answer multiple choice while PGK remains OPEN-04.
-- Class leaderboard uses Drill + Tryout XP. PvP XP does not contribute.
+- A Student belongs to at most five active classes, possibly across schools. Zero active classes means Mandiri; one to five means School. Progress, history and XP belong to the account. Leave/ban ends membership without deleting history; only the active class Teacher can ban/unban.
+- Classes remain available without an active Teacher. Takeover requires a verified Teacher from the same school and no active class owner. A Teacher leaving a school loses class ownership and monitoring access.
+- Pretest is optional, 20 questions and at most once completed per chapter: 0–7 correct starts Level 1, 8–18 starts Level 2, 19–20 starts Level 3. Skip starts Level 1. Curriculum supplies the chapter/subchapter blueprint and distribution.
+- Drill: five levels/subchapter, 10 questions/level, unlimited count-up timer, 80% mastery, one variant/level for MVP and retry of that same pool. Score and stars in the current level state use the latest attempt; best score and unlock history persist. Stars: 0 score →0, up to 50 →1, below 100 →2, 100 →3. No 90-day explanation expiry is introduced by v0.6.
+- Tryout: shared 30-item weekly package released Monday 00:00 WIB, closing Sunday 23:59 WIB, one attempt/package/user, result/explanation together after IRT within 72 hours of batch close. The effective deadline cannot exceed batch close. PGK partial rubrics come from Curriculum; the current scoring engine remains single-choice until that handoff is implemented.
+- Class and global activity leaderboards use account-based Drill + Tryout XP. PvP uses separate Best Poin per difficulty/week. A Student appears in every active class; ban removes their current class entry immediately.
+- Drill XP = min(150, correct/total×100 + max(0,(900−elapsedSeconds)/900×50)). Tryout XP = equivalent-correct×10 immediately after completion, before IRT release. Pretest awards no XP. Never rewrite historical policy pins, results or posted XP.
+- Admin subroles separate Super Admin, Operations, and Content/Data/Moderation. Subrole null grants no Admin capability. No Admin role permits class ban/unban.
+- Content lifecycle is DRAFT/READY/REVISION/ARCHIVED. READY requires metadata, difficulty, answer key and explanation. DRAFT import/preview is not publication. Important content revisions create new immutable versions.
 - Leaderboards update hourly and reset/archive Wednesday 23:59 WIB.
 - PvP permits Mandiri and School students together; uses realtime WebSocket, 10 questions, server-authoritative scoring, and a 20-second reconnect window.
-- IRT runs as a daily batch and PRD baseline requires at least 30 responses before showing the result.
+- IRT methods, statistical thresholds and pipeline belong to Data/AI, not an invented product rule; retain versioned input/results and approved release/fallback boundaries.
 - Admin cannot modify MVP product parameters such as mastery threshold, tryout limit, XP formula, or leaderboard reset in the UI.
 
 ## Known PRD ambiguities that must not be guessed
 
 - Drill is described as an unlimited count-up timer, while some wording still refers to timeout/timer completion. Treat product timeout semantics as clarification pending; do not introduce a hidden timeout.
 - The supplied Sprint 2 Goal PDF uses the old 70% Drill threshold. The team confirmed that Sprint 2 follows PRD v0.5: 80% unlocks the next level.
-- Final XP formula is OPEN-11; PRD v0.5 provides a Drill baseline.
+- XP product formulas are final in v0.6 with the ×10 Tryout correction above. Display formatting must not silently replace the persisted decimal amount with an integer formula.
 - PGK scoring is OPEN-04.
-- Pretest question count is 20 per chapter; question distribution and placement remain OPEN-01 through OPEN-03.
-- Official tryout configuration is OPEN-05.
+- Curriculum's approved bank, difficulty, question distribution and PGK rubrics remain delivery dependencies. Missing academic inputs do not authorize publication or guesses.
 
 ## Coding rules
 
@@ -109,7 +113,7 @@ Do not present a proposal as a PRD rule.
 At minimum, test business-critical rules:
 
 - teacher token expiry and single-use race condition
-- one-class-per-student constraint
+- five-class limit, duplicate membership, leave/ban/rejoin and same-school teacherless takeover
 - locked-level access rejection
 - drill 80% unlock logic and star independence
 - duplicate submit/idempotency

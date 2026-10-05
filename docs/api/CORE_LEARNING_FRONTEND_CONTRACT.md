@@ -1,5 +1,21 @@
 # Core Learning Student API — implementation contract
 
+## JOB-11 TryOut — owner correction, 5 October 2026
+
+**ENGINEERING DECISION — Aini:** correct-equivalent ×10 follows PRD v0.6 §12 and supersedes AC-15 ×100. No speed bonus and no IRT dependency for XP. Current PG assessment support counts one equivalent per correct item regardless of item point weights. PGK rubric/assessment and fractional ledger support remain separate work; no partial rule is invented here. [Compatibility and rollout](../development/TRYOUT_XP_V06.md).
+
+Existing TryOut attempt/submit/result responses add nullable `xp` and `xpPolicyVersion`. A new attempt pins version 1; legacy stays null and is never backfilled. Numeric XP 0 is a persisted reward. A submitted attempt returns no questions or score while XP can be displayed immediately. Result remains 409 until IRT release; history adds `tryoutXpPolicyVersion`, `xpState: ready` with persisted XP independently of `resultState: waitingIrt`. Authentication/ownership applies to every read.
+
+## JOB-11 Drill / JOB-05 — v0.6, 5 October 2026
+
+**PRD RULE:** 10-question Drill, 80% unlock, latest-attempt stars 0/1/2/3, single-package MVP retry. **ENGINEERING DECISION — Aini:** once-round final XP to nearest integer; server elapsed seconds determine bonus; new explanations have no expiry; confirm every unfinished exit. [Policy and rollout](../development/DRILL_V06_REWARDS.md).
+
+No new product endpoint. `DrillAttemptDto.serverTime` anchors count-up display. Result adds nullable `drillPolicyVersion` and `reward` (`policyCode`, `policyVersion`, `baseXp`, unrounded stored `bonusXp`, `totalXp`, `durationSeconds`). Null reward identifies history without this reward policy, never an inferred zero. Version 2 is pinned at start separately from immutable content/scoring package pins. Legacy active/completed attempts retain prior policy and 90-day explanations, without XP backfill.
+
+`LevelDto.latestStars` comes from the latest completion, independently of best score/unlock. History adds nullable `xp`, `stars`, `drillPolicyVersion` and `ready`/`legacy` reward states, alongside existing `pending`/`notApplicable`. Numeric zero must display. The subsequent TryOut XP change above makes its persisted reward available without premature result release. Existing `levelId` query is used by `/student/assessment?levelId=...`; query/cache/pagination remain scoped to the same level.
+
+Submit commits grading, latest/best progress, immutable ledger and completion outbox atomically, once per attempt. Result/history reads persisted facts and never recalculates reward. Exit does not finalize, pause, or discard acknowledged answers; successful submit navigation is exempt from unfinished-exit warnings. Browser-native unload prompts use browser text; in-app confirmation explains continuing timer and possible unsaved loss.
+
 **Status: implementation awaiting FE/BE/QA review, 1 October 2026.** Drill, assessment history, and the generic PG Tryout lifecycle below are implemented in NestJS and generated in `packages/contracts/openapi/openapi.json`; frontend types are generated from that contract. Official Tryout publication remains **OPEN-05** and is rejected by the Admin API. The Tryout integration test uses explicitly labeled demo fixtures. This document does not approve unresolved product rules. See [backend implementation status](../development/CORE_LEARNING_BACKEND_STATUS.md) for verification and remaining gates.
 
 All endpoints use `/api/v1`, Supabase access token Bearer authentication, UUID identifiers, camelCase JSON, ISO-8601 UTC timestamps, and `application/problem+json` errors. NestJS authorizes the current Student, each attempt, and level access. No endpoint accepts a client-computed score, elapsed time, XP, or unlock state.

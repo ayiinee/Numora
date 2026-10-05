@@ -50,9 +50,7 @@ async function run() {
   try {
     manifest = parseQaManifest(JSON.parse(await readFile(manifestPath!, 'utf8')));
   } catch {
-    fail(
-      'Manifest must contain six distinct Auth UUIDs for the allowed Development project.',
-    );
+    fail('Manifest must contain six distinct Auth UUIDs for the allowed Development project.');
   }
   if (!check) {
     if (process.env.ALLOW_QA_SEED !== 'true')
@@ -99,7 +97,7 @@ async function run() {
       >`
         SELECT (SELECT count(*)::int FROM pg_catalog.pg_indexes WHERE schemaname = 'public' AND indexname IN
           ('users_auth_user_id_uq', 'users_email_uq', 'schools_code_uq',
-           'teacher_school_memberships_active_teacher_school_uq', 'class_memberships_active_student_uq',
+           'teacher_school_memberships_active_teacher_school_uq', 'class_memberships_active_student_class_uq',
            'classes_join_code_uq')) AS indexes,
           (SELECT count(*)::int FROM pg_catalog.pg_constraint WHERE conname = 'teacher_school_memberships_token_school_fk') AS "tokenSchoolFk",
           (SELECT count(*)::int FROM pg_catalog.pg_tables WHERE schemaname = 'public' AND tablename IN
@@ -127,7 +125,12 @@ async function run() {
       const emails = new Set<string>();
       for (const actor of actors) {
         const [auth] = await tx<
-          { email: string | null; providerIdentity: boolean; primaryProvider: boolean; qaFlag: boolean }[]
+          {
+            email: string | null;
+            providerIdentity: boolean;
+            primaryProvider: boolean;
+            qaFlag: boolean;
+          }[]
         >`
           SELECT u.email,
             (u.raw_app_meta_data->>'provider' = ${manifest.mode === 'EMAIL_QA' ? 'email' : 'google'}) AS "primaryProvider",

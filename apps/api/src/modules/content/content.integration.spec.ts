@@ -182,6 +182,26 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       400,
     );
     chapter = (await mutation('chapters', body)).id;
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: 'guess' }))
+        .status,
+    ).toBe(400);
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: 'algebra' }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await getDatabase().db.select().from(chapters).where(eq(chapters.id, chapter)))[0]!
+        .materialCategory,
+    ).toBe('algebra');
+    expect(
+      (await request(`admin/content/chapters/${chapter}`, 'PATCH', { materialCategory: null }))
+        .status,
+    ).toBe(200);
+    expect(
+      (await getDatabase().db.select().from(chapters).where(eq(chapters.id, chapter)))[0]!
+        .materialCategory,
+    ).toBeNull();
     expect((await request('admin/content/chapters', 'POST', body)).status).toBe(409);
     expect(
       (await request(`admin/content/chapters/${chapter}`, 'PATCH', { name: null })).status,
@@ -217,7 +237,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       .db.select()
       .from(auditLogs)
       .where(eq(auditLogs.entityId, chapter));
-    expect(logs).toHaveLength(1);
+    expect(logs).toHaveLength(3); // Create plus two category updates, all audited.
     expect(logs[0]!.actorUserId).toBe(admin);
     const rollbackCode = `ROLLBACK-${suffix}`;
     await expect(
@@ -428,10 +448,8 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         await getDatabase().db.select().from(auditLogs).where(eq(auditLogs.entityId, report!.id))
       )[0]!.actorUserId,
     ).toBe(admin);
-    const logs = (await (await request('admin/audit-logs?limit=100')).json()) as {
-      items: object[];
-    };
-    expect(logs.items.every((r) => !('metadata' in r))).toBe(true);
+    // General audit can include user identifiers; Content Admin gets only scoped content audit.
+    expect((await request('admin/audit-logs?limit=100')).status).toBe(403);
     expect((await request('admin/reports?limit=0')).status).toBe(400);
     expect((await request('admin/irt?offset=-1')).status).toBe(400);
     expect((await request('admin/content/videos?limit=100000')).status).toBe(400);

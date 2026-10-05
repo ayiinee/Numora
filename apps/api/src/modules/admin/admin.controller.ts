@@ -2,6 +2,7 @@ import { Controller, Get, Inject, Query, UseGuards } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
 import { AdminService } from './admin.service';
 import { AdminGuard } from '../identity/admin.guard';
+import { AdminAccess } from '../identity/admin-permissions';
 import { ContentPageDto } from '../content/content.dto';
 
 export class AdminDashboardDto {
@@ -30,6 +31,7 @@ export class AdminAuditListDto {
 export class AdminController {
   constructor(@Inject(AdminService) private readonly admin: AdminService) {}
   @Get('dashboard')
+  @AdminAccess('dashboard')
   @ApiOkResponse({ type: AdminDashboardDto })
   dashboard() {
     return this.admin.dashboard();

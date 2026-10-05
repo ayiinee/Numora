@@ -169,6 +169,34 @@
       "when": 1791114616363,
       "tag": "0023_content_import_preview",
       "breakpoints": true
+    },
+    {
+      "idx": 24,
+      "version": "7",
+      "when": 1791204801052,
+      "tag": "0024_drill_v06_rewards",
+      "breakpoints": true
+    },
+    {
+      "idx": 25,
+      "version": "7",
+      "when": 1791210467019,
+      "tag": "0025_tryout_xp_v06",
+      "breakpoints": true
+    },
+    {
+      "idx": 26,
+      "version": "7",
+      "when": 1791216531721,
+      "tag": "0026_prd_v06_data_alignment",
+      "breakpoints": true
+    },
+    {
+      "idx": 27,
+      "version": "7",
+      "when": 1791216584721,
+      "tag": "0027_materials_notifications",
+      "breakpoints": true
     }
   ]
 }

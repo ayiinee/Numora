@@ -166,7 +166,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     expect(cancelled.recordEligible).toBe(false);
     expect(cancelled.endReason).toBe('SERVICE_INTERRUPTED');
   }, 30_000);
-  it('enforces REST Student authorization, ownership, DTO validation and top20/own-rank privacy', async () => {
+  it('enforces REST Student authorization, ownership, DTO validation and top10/own-rank privacy', async () => {
     const headers = { authorization: 'Bearer fixture-2' };
     const unauth = await fetch(`${url}/api/v1/students/me/dashboard`);
     expect(unauth.status).toBe(401);
@@ -206,7 +206,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     );
     const response = await fetch(`${url}/api/v1/leaderboards/pvp?difficulty=medium`, { headers });
     const leaderboard = await response.json();
-    expect(leaderboard.entries).toHaveLength(20);
+    expect(leaderboard.entries).toHaveLength(10);
     expect(leaderboard.ownEntry.rank).toBe(23);
     expect(
       leaderboard.entries.some(

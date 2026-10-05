@@ -1,3 +1,4 @@
+import { MaterialsService } from './materials.service';
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
 import { AssessmentHistoryService } from './assessment-history.service';
@@ -12,7 +13,15 @@ import { StudentDashboardService } from './student-dashboard.service';
 @Module({
   imports: [IdentityModule],
   controllers: [LearningController, TryoutController],
-  providers: [LearningCatalogService, DrillAssessmentService, AssessmentHistoryService, TryoutReleaseService, TryoutService, StudentDashboardService],
+  providers: [
+    MaterialsService,
+    LearningCatalogService,
+    DrillAssessmentService,
+    AssessmentHistoryService,
+    TryoutReleaseService,
+    TryoutService,
+    StudentDashboardService,
+  ],
   exports: [LearningCatalogService, DrillAssessmentService, AssessmentHistoryService],
 })
 export class LearningModule {}

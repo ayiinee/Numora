@@ -20,7 +20,7 @@ import {
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { IsYouTubeVideoUrl } from './youtube-url';
 
-export const statuses = ['DRAFT', 'READY', 'ARCHIVED'] as const;
+export const statuses = ['DRAFT', 'READY', 'ARCHIVED', 'REVISION'] as const;
 export type ContentState = (typeof statuses)[number];
 
 export class ContentPageDto {
@@ -40,7 +40,7 @@ export class ContentPageDto {
   limit = 20;
 }
 
-export class CreateChapterDto {
+export class TaxonomyBaseDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
   @ApiPropertyOptional({
     description: 'Stable lowercase URL slug; generated from name when omitted on create.',
@@ -62,10 +62,20 @@ export class CreateChapterDto {
   @IsIn(statuses)
   status?: ContentState;
 }
+export class CreateChapterDto extends TaxonomyBaseDto {
+  @ApiPropertyOptional({
+    enum: ['algebra', 'geometry', 'numbers', 'statistics'],
+    nullable: true,
+    type: String,
+  })
+  @ValidateIf((_o, v) => v !== undefined && v !== null)
+  @IsIn(['algebra', 'geometry', 'numbers', 'statistics'])
+  materialCategory?: string | null;
+}
 export class UpdateChapterDto extends PartialType(CreateChapterDto, {
   skipNullProperties: false,
 }) {}
-export class CreateSubchapterDto extends CreateChapterDto {
+export class CreateSubchapterDto extends TaxonomyBaseDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() chapterId!: string;
 }
 export class UpdateSubchapterDto extends PartialType(OmitType(CreateSubchapterDto, ['chapterId']), {
@@ -86,7 +96,7 @@ export class UpdateCompetencyDto extends PartialType(
 ) {}
 export class CreateLevelDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(1000) levelNumber!: number;
+  @ApiProperty({ minimum: 1, maximum: 5 }) @Type(() => Number) @IsInt() @Min(1) @Max(5) levelNumber!: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()
@@ -164,6 +174,12 @@ export class CreateVideoDto {
 export class UpdateVideoDto extends PartialType(CreateVideoDto, { skipNullProperties: false }) {}
 
 export class AdminTaxonDto {
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    enum: ['algebra', 'geometry', 'numbers', 'statistics'],
+  })
+  materialCategory?: string | null;
   @ApiProperty() id!: string;
   @ApiProperty({ enum: ['CHAPTER', 'SUBCHAPTER', 'COMPETENCY', 'LEVEL'] }) kind!:
     'CHAPTER' | 'SUBCHAPTER' | 'COMPETENCY' | 'LEVEL';

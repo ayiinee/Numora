@@ -111,6 +111,8 @@ export function LevelPath({
                         <dd>{level.bestScore ?? '—'}</dd>
                       </div>
                     </dl>
+                    {level.latestStars != null && <p aria-label="Bintang attempt terbaru">Bintang terakhir: {level.latestStars} / 3</p>}
+                    <Link href={`/student/assessment?levelId=${encodeURIComponent(level.id)}`}>Riwayat level</Link>
                     {level.id !== current?.id && (
                       <Button
                         variant="secondary"

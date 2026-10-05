@@ -52,8 +52,8 @@ export class AdminClassDto {
   @ApiProperty() name!: string;
   @ApiProperty({ format: 'uuid' }) schoolId!: string;
   @ApiProperty() schoolName!: string;
-  @ApiProperty({ format: 'uuid' }) teacherId!: string;
-  @ApiProperty() teacherName!: string;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) teacherId!: string | null;
+  @ApiProperty({ type: String, nullable: true }) teacherName!: string | null;
   @ApiProperty() studentCount!: number;
   @ApiProperty({ format: 'date-time' }) createdAt!: string;
   @ApiProperty({ type: String, nullable: true, format: 'date-time' }) archivedAt!: string | null;

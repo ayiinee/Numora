@@ -5,6 +5,7 @@ import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { eq } from 'drizzle-orm';
 import {
   analyticsOutbox,
+  notificationOutbox,
   assessmentAttempts,
   assessmentPackages,
   classes,
@@ -30,7 +31,13 @@ const url = process.env.TEST_DATABASE_URL;
   let schoolId: string;
   const profiles = new Map<
     string,
-    { id: string; role: string; status: string; teacherVerified: boolean }
+    {
+      id: string;
+      role: string;
+      adminRole?: 'SUPER_ADMIN';
+      status: string;
+      teacherVerified: boolean;
+    }
   >();
   const studentId = () => profiles.get('student')!.id;
   const path = () => `classes/${classId}/students/${studentId()}/feedback`;
@@ -75,6 +82,7 @@ const url = process.env.TEST_DATABASE_URL;
       profiles.set(token, {
         id: user!.id,
         role,
+        ...(role === 'ADMIN' ? { adminRole: 'SUPER_ADMIN' as const } : {}),
         status: 'ACTIVE',
         teacherVerified: role === 'TEACHER',
       });
@@ -100,13 +108,11 @@ const url = process.env.TEST_DATABASE_URL;
           usedByUserId: profiles.get(token)!.id,
         })
         .returning();
-      await db
-        .insert(teacherSchoolMemberships)
-        .values({
-          schoolId,
-          teacherUserId: profiles.get(token)!.id,
-          verificationTokenId: verification!.id,
-        });
+      await db.insert(teacherSchoolMemberships).values({
+        schoolId,
+        teacherUserId: profiles.get(token)!.id,
+        verificationTokenId: verification!.id,
+      });
     }
     const [ownClass] = await db
       .insert(classes)
@@ -201,6 +207,12 @@ const url = process.env.TEST_DATABASE_URL;
     expect((await request(path(), 'teacher', 'POST', { ...body, body: 'Edited' })).status).toBe(
       409,
     );
+    expect(
+      await getDatabase()
+        .db.select()
+        .from(notificationOutbox)
+        .where(eq(notificationOutbox.sourceKey, `FEEDBACK_RECEIVED:${body.clientRequestId}`)),
+    ).toHaveLength(1);
     const list = await (await request(path())).json();
     expect(list.items[0]).toMatchObject({
       id: body.clientRequestId,

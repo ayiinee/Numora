@@ -111,12 +111,12 @@ describe('sesi asesmen', () => {
     finish({});
     await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
   });
-  it('warns on refresh while a save has not been acknowledged and removes the warning after success', async () => {
+  it('keeps the Drill exit warning after save acknowledgement and removes it after submit', async () => {
     let acknowledge!: (value: {
       questionInstanceId: string;
       selectedOptionId: string | null;
     }) => void;
-    mount(
+    const { onSubmitted } = mount(
       () =>
         new Promise((resolve) => {
           acknowledge = resolve;
@@ -135,7 +135,13 @@ describe('sesi asesmen', () => {
     );
     const saved = new Event('beforeunload', { cancelable: true });
     window.dispatchEvent(saved);
-    expect(saved.defaultPrevented).toBe(false);
+    expect(saved.defaultPrevented).toBe(true);
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
+    const submitted = new Event('beforeunload', { cancelable: true });
+    window.dispatchEvent(submitted);
+    expect(submitted.defaultPrevented).toBe(false);
   });
   it('auto-submits an already expired server deadline once without confirmation and locks answers', async () => {
     const confirm = vi.spyOn(window, 'confirm');

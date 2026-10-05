@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, describe, expect, it, vi } from 'vitest';
-import { ResultScreen, ResultSummary } from './drill';
+import { DrillTimer, ResultScreen, ResultSummary } from './drill';
 import { LearningApiError, learningApi } from './api';
 import type { DrillResult } from './types';
 import { StudentAccess } from './student-session';
@@ -52,6 +52,22 @@ const result: DrillResult = {
 };
 
 describe('ringkasan hasil Drill', () => {
+  it('renders persisted XP and zero stars without treating zero as missing', async () => {
+    vi.spyOn(learningApi, 'result').mockResolvedValue({ ...result, stars: 0, reward: {
+      policyCode: 'DRILL_PRD_V06', policyVersion: 2, baseXp: 80, bonusXp: 16.666666666667,
+      totalXp: 97, durationSeconds: 600,
+    } });
+    vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
+    render(<StudentAccess><ResultScreen /></StudentAccess>);
+    expect(await screen.findByText('97 XP')).toBeTruthy();
+    expect(screen.getByText('Bintang: 0')).toBeTruthy();
+    expect(screen.queryByText(/Formula reward menunggu/)).toBeNull();
+  });
+  it('uses server time instead of a skewed browser clock for count-up', () => {
+    vi.spyOn(Date, 'now').mockReturnValue(Date.parse('2100-01-01T00:00:00Z'));
+    render(<DrillTimer startedAt="2026-10-05T00:00:00Z" serverTime="2026-10-05T00:10:00Z" />);
+    expect(screen.getByLabelText('Waktu berjalan').textContent).toContain('10:00');
+  });
   it.each([false, true])(
     'starts a direct retry for mastered=%s using the same server level and a new server attempt',
     async (mastered) => {
