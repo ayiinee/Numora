@@ -4,17 +4,17 @@
 
 ## Review stack
 
-| Milestone | Branch                            | Review                                                                                      |
-| --------- | --------------------------------- | ------------------------------------------------------------------------------------------- |
-| M0        | `feat/admin-context`              | [#72](https://github.com/ayiinee/Numora/pull/72)                                            |
-| M1        | `feat/admin-rbac`                 | [#73](https://github.com/ayiinee/Numora/pull/73)                                            |
-| M2        | `feat/admin-accounts`             | [#74](https://github.com/ayiinee/Numora/pull/74)                                            |
-| M3        | `feat/admin-operations`           | [#75](https://github.com/ayiinee/Numora/pull/75)                                            |
-| M4        | `feat/admin-content-lifecycle`    | [#76](https://github.com/ayiinee/Numora/pull/76)                                            |
-| M5        | `feat/admin-assessment-publisher` | [#78](https://github.com/ayiinee/Numora/pull/78)                                            |
-| M6        | `feat/admin-irt-analytics`        | Engineering implementation; clean-SHA connected and final browser verification in progress. |
+| Milestone | Branch                            | Review                                           |
+| --------- | --------------------------------- | ------------------------------------------------ |
+| M0        | `feat/admin-context`              | [#72](https://github.com/ayiinee/Numora/pull/72) |
+| M1        | `feat/admin-rbac`                 | [#73](https://github.com/ayiinee/Numora/pull/73) |
+| M2        | `feat/admin-accounts`             | [#74](https://github.com/ayiinee/Numora/pull/74) |
+| M3        | `feat/admin-operations`           | [#75](https://github.com/ayiinee/Numora/pull/75) |
+| M4        | `feat/admin-content-lifecycle`    | [#76](https://github.com/ayiinee/Numora/pull/76) |
+| M5        | `feat/admin-assessment-publisher` | [#78](https://github.com/ayiinee/Numora/pull/78) |
+| M6        | `feat/admin-irt-analytics`        | [#79](https://github.com/ayiinee/Numora/pull/79) |
 
-M5 includes migrations 0028–0032; the full stack includes 0024–0032. Rehearse the canonical migration sequence and retain existing histories. M6 reuses the existing finalization models and guards; it adds no compute algorithm or replacement schema.
+Main canonical migrations 0000-0027 are retained unchanged. Admin adds migrations 0028-0036. Rehearse the canonical sequence and preserve existing histories. M6 reuses the existing finalization models and guards; it adds no compute algorithm or replacement schema.
 
 ## Environment and evidence boundary
 
@@ -24,12 +24,12 @@ Do not seed/migrate/provision/upload to a shared or real-user staging project. T
 
 Record the exact code SHA, schema head, target environment, commands, pass/fail/skip counts and external approvals. Connected evidence lives in ignored `.tmp/job10-evidence/connected.json` and `.tmp/job06-evidence/connected.json`; regenerate it after any code change. Production flags stay closed until the relevant acceptance passes.
 
-## Local checks already verified
+## Historical checks before PR #77 (rerun required)
 
 - CI-equivalent serial commands passed: `pnpm test:checks`, `pnpm contracts:validate`, `pnpm contracts:types:check`, `pnpm lint`, and `pnpm exec turbo run typecheck|test|build --concurrency=1` (three separate Turbo invocations). Tests: 169 API, 15 worker, 24 database, 221 web, four engine, two orchestration and 68 script checks; no connected suite skip in the test invocation.
 - `pnpm test:qa-admins`, `db:upgrade-check` and `db:staging:bridge-check` passed on localhost disposable databases. The Staging bridge check rehearses an audited historical schema fixture; it does not contact Staging.
 - The dedicated 14-scenario IRT integration suite additionally passed guarded FALLBACK and UNSCORABLE publication readers, keeping null scores and immutable explanations/history. These finalizations are TEST ONLY evidence, not an enabled production writer.
-- Final Admin/Auth browser regression and clean-SHA connected evidence are still being collected. A broader local browser attempt was stopped because Windows execution exceeded the practical default time budget; full-suite GitHub CI remains required. Do not report that interrupted attempt as a completed pass.
+- Final Admin/Auth regression and clean-SHA connected completion must be verified from matching-SHA evidence and GitHub checks; the local completion index is `.tmp/admin-final-evidence.json`. A broader local browser attempt was stopped because Windows execution exceeded the practical default time budget; full-suite GitHub CI remains required. Do not report that interrupted attempt as a completed pass.
 
 ## Independent acceptance scenarios
 
@@ -55,6 +55,10 @@ Record the exact code SHA, schema head, target environment, commands, pass/fail/
 | Curriculum     | Approved bank/metadata, Pretest distribution/blueprint, exhaustive PGK rubric including wrong-option/B=4 cases.                                         | Rich authoring/review works; rubric-dependent grading/readiness fails closed; Pretest production consumer remains separate.                                                              |
 | Data/AI        | Executable repository/build and versioned respondent output, pseudonymous mapping, quality/adoption gates, release policy and approved fallback labels. | Existing item-only v3 compute contract remains intact; no substitute statistical engine or participant writer/force release. See [IRT contract boundary](../api/ADMIN_IRT_ANALYTICS.md). |
 | Cloud/operator | Named isolated Development project, scoped Auth server key/redirect/templates/SMTP, private R2/CORS, migration/rollback procedure.                      | Local verification continues; actual email/media/schema acceptance is not claimed.                                                                                                       |
-| Domain/QA      | Separate Pretest Student and membership/ownership lifecycle; independent tester on a specified SHA/environment.                                         | Admin readers preserve history and tolerate nullable active Teacher/multiple membership records; no absent domain flow is simulated as production.                                       |
+| Domain/QA      | Separate Pretest Student lifecycle; membership/ownership supplied by main. Independent tester on a specified SHA/environment.                                         | Admin readers preserve history and tolerate nullable active Teacher/multiple membership records; no absent domain flow is simulated as production.                                       |
 
 The admin MVP is not fully accepted until all applicable engineering, academic, consumer and environment gates pass. Escalate the concrete missing handoff, not a request to bypass it.
+
+## PR #77 integration and current evidence
+
+The complete stack is rebased onto main fbb031b. Canonical XP and domain/notification behavior are retained. Production Tryout result, explanation and notification visibility share the immutable publication predicate; successful item compute alone never releases them. New partial policies require academic evidence and cannot override fixed product weights or XP. Final verification is recorded in ignored `.tmp/admin-final-evidence.json` and connected artifacts on an exact matching SHA. The historical counts above are not current integration acceptance. Actual SMTP, R2, approved respondent producer/mapping and independent QA remain required.
