@@ -73,6 +73,7 @@ export async function apiRequest<T>(
     const problem = body as { code?: string; detail?: string } | null;
     if (
       typeof window !== 'undefined' &&
+      path !== 'identity/me' &&
       response.status === 403 &&
       ['ADMIN_PERMISSION_REQUIRED', 'CONTENT_PERMISSION_REQUIRED', 'ACCOUNT_DISABLED'].includes(
         problem?.code ?? '',

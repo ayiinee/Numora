@@ -23,6 +23,7 @@ async function fixtures(
   role: 'STUDENT' | 'TEACHER' | 'ADMIN' = 'STUDENT',
   teacherVerified = true,
   verificationIdentityDelayMs = 0,
+  adminRole: 'OPERATIONS' | 'CONTENT_DATA_MODERATION' = 'CONTENT_DATA_MODERATION',
 ) {
   const jwt = [
     Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
@@ -75,8 +76,18 @@ async function fixtures(
         displayName: 'Siswa fixture',
         role,
         status: 'ACTIVE',
-        adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
-        capabilities: role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
+        adminRole: role === 'ADMIN' ? adminRole : null,
+        capabilities:
+          role !== 'ADMIN'
+            ? []
+            : adminRole === 'OPERATIONS'
+              ? [
+                  'OPERATIONS_MANAGE',
+                  'OPERATIONS_LIMITED_READ',
+                  'ANALYTICS_OPERATIONS',
+                  'AUDIT_READ',
+                ]
+              : ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ', 'ANALYTICS_CONTENT', 'AUDIT_READ'],
         email: 'fixture@example.test',
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,
@@ -297,6 +308,14 @@ async function fixtures(
       };
     else if (path === '/admin/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture', status: 'ACTIVE' }] };
+    else if (path === `/admin/schools/${chapterId}`)
+      data = {
+        id: chapterId,
+        code: 'QA',
+        name: 'Sekolah fixture',
+        status: 'ACTIVE',
+        address: null,
+      };
     else if (path === `/admin/schools/${chapterId}/teacher-tokens`)
       data =
         route.request().method() === 'POST'
@@ -1163,7 +1182,7 @@ for (const width of [390, 1440]) {
     page,
   }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
-    await fixtures(page, 'ADMIN');
+    await fixtures(page, 'ADMIN', true, 0, 'OPERATIONS');
     await page.goto('/admin/schools');
     await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Buka profil' })).toHaveCount(0);
