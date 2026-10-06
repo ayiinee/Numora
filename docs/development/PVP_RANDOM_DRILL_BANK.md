@@ -18,3 +18,8 @@ Both players and reconnects use saved version IDs/order. Retry returns the exist
 ## QA and rollout
 
 Use isolated PostgreSQL/Redis fixtures with explicitly READY Drill families; verify difficulty, hierarchy, review, latest versions, family deduplication, malformed/unsupported exclusions, pools of 0/9/10/>10, deterministic random tests, concurrent idempotency and transaction rollback. Connected two-player QA covers equal questions/order, saved answers/reconnect, pinned versions and no keys in responses. Drain rooms before deployment because the existing API restart policy cancels outstanding matches. Enable new rooms only when the scheduler/policy and at least one difficulty's ten eligible families are available; no writes to the active content bank are part of this rollout.
+
+
+## Verification - 7 October 2026
+
+**ENGINEERING UPDATE:** 44 focused unit/integration tests pass on isolated PostgreSQL 16 and Redis 7.2, including bank eligibility/sampling, transaction rollback/idempotency, PvP REST/Socket.IO, notifications and leaderboards. The two-browser connected acceptance passes all three difficulties, matching questions/order, browser reload reconnect, frozen ten-family READY Drill snapshots, finished results and leaderboard projection. Workspace lint/typecheck, API/worker/production-web builds and contract/type freshness checks pass. Browser verification used the shared working tree production build with local fixture authentication; it is not real-identity staging acceptance. No active content bank was seeded or promoted.
