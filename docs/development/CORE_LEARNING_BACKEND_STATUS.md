@@ -1,4 +1,22 @@
+**ENGINEERING UPDATE — 5 Oktober 2026:** [portal Admin terpadu](ADMIN_PORTAL_2026-10-05.md) menyatukan entry `/admin`, login internal `/admin/login`, navigasi dan penamaan modul mengikuti identity assignment PRD v0.6. Mock development `/admin/preview` dihapus; importer dan sesi preview soal nyata tetap berada di Konten. Tidak ada migrasi, assignment Cloud, atau perubahan API permission pada tahap navigasi ini; full server RBAC/limited operational view tetap pekerjaan lanjutan. Bukti backend/JOB-06 dan gate Cloud R2 sebelumnya dipertahankan.
+
+**ENGINEERING UPDATE - 4 Oktober 2026:** [PR #65](https://github.com/ayiinee/Numora/pull/65) mengimplementasikan fondasi importer JSON v2 dan preview Admin DRAFT: capability konten, tiga tipe soal, media receipt, jawaban/revision persisten dan snapshot immutable; semua skor null. Suite lokal dan connected browser pada satu SHA lulus. Migrasi Cloud serta assignment DEMO-QA Admin sudah diaudit; feature flag tetap false. Smoke R2/sepuluh sampel Cloud menunggu credential khusus bucket, sehingga acceptance sandbox belum ditutup. [Bukti](../testing/CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md), [kontrak](../api/CONTENT_IMPORT_PREVIEW.md), [runbook](CONTENT_IMPORT_PREVIEW_RUNBOOK.md). Student/XP/IRT tidak berubah; bukti JOB-06 historis dipertahankan.
+
+**ENGINEERING UPDATE — 5 Oktober 2026:** integrasi PR #59/#63/#64/#65/#67/#68 atas instruksi Aini menggunakan bypass mempertahankan capability konten, navigasi operasional, fakta assessment immutable dan feature flag Cloud nonaktif. Perbaikan runner Teacher, fixture media dan pengujian expiry Drill dicatat dalam [laporan integrasi](PR_INTEGRATION_2026-10-05.md). Acceptance gabungan mengikuti CI pada SHA main hasil integrasi; smoke R2 Cloud masih OPEN dan bukti historis tidak dihapus.
+
 # Status backend Core Learning
+
+**ENGINEERING UPDATE — integrasi PR #77/#71/#69, 5 Oktober 2026:** reward/pin/history UI direkonsiliasi dengan multi-class/account-based projection dan Materi/notifikasi. Hash migrasi XP 0024/0025 tetap; alignment data dan notifikasi menjadi 0026/0027. Satu jalur posting reward dengan rincian UI, preservation legacy dan pagination notifikasi mikrodetik dipertahankan. [Review, gates dan rollout](REWARDS_DATA_NOTIFICATIONS_INTEGRATION_2026-10-05.md). PGK/rubrik, frontend global activity leaderboard, publication/fallback IRT dan QA provider tetap terpisah; merge Git tidak menerapkan migrasi Cloud.
+
+**ENGINEERING UPDATE — JOB-11 TryOut, 5 Oktober 2026:** keputusan Aini menetapkan benar ekuivalen ×10 dan menyelesaikan konflik AC-15 ×100. Jalur PG mencatat XP prospektif saat submit/deadline/recovery dalam transaksi hasil/ledger/outbox, tanpa menunggu IRT dan tanpa bonus. UI waiting/released/history membaca XP tersimpan; nilai/kunci/pembahasan tetap gated. Pin nullable mempertahankan legacy tanpa backfill; migrasi `0025_tryout_xp_v06` memperluas guard immutable. [Keputusan, batas PGK, rollout](TRYOUT_XP_V06.md). Ini tidak menutup rubric/assessment PGK, JOB-17 atau QA independen.
+
+**ENGINEERING UPDATE — JOB-11 Drill / JOB-05, 5 Oktober 2026:** kebijakan v0.6 dipin prospektif, grading/XP/progres/outbox satu transaksi, ledger immutable/idempotent, 0 bintang, latestStars, retry satu paket, server count-up, konfirmasi setiap keluar dan pembahasan baru tanpa expiry. Result/history/level UI memakai generated contract. Attempt lama tetap utuh tanpa backfill XP. Migrasi `0024_drill_v06_rewards` dan checker read-only tersedia. [Aturan, rollout dan pengujian](DRILL_V06_REWARDS.md). Status ini bukan penutupan JOB-11 TryOut, JOB-17, review Curriculum atau independent QA; bukti JOB-06 historis di bawah tetap dipertahankan.
+
+**ENGINEERING UPDATE — 4 Oktober 2026:** migrasi sandbox Supabase telah
+diterapkan sampai `0022`, termasuk dispatch IRT, slug/level, audit media dan
+penguncian default grant Data API. Backup/restore, preservation data dan
+pemeriksaan Cloud lulus. IRT/R2 tetap belum diaktifkan. Lihat
+[bukti operasi dan batas validasi](../data/SUPABASE_MIGRATION_2026-10-04.md).
 
 Catatan baseline 1 Oktober 2026 dengan pembaruan integrasi 3 Oktober 2026. Setiap bagian mempertahankan scope dan tanggal buktinya; bukti lokal/CI belum merupakan bukti kesiapan staging. Sumber aturan produk: [Product Context](../product/PRODUCT_CONTEXT.md), [Open Decisions](../product/OPEN_DECISIONS.md), dan [PRD Mapping](../product/PRD_MAPPING.md).
 

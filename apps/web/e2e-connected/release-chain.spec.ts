@@ -8,7 +8,7 @@ import {
 } from '@playwright/test';
 import type { Session } from '@supabase/supabase-js';
 import { execFileSync } from 'node:child_process';
-import { mkdirSync, writeFileSync } from 'node:fs';
+import { mkdirSync, writeFileSync, readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
 import type {
   DrillAttemptDto,
@@ -29,6 +29,7 @@ import type {
   TokenDto,
   IdentityProfileDto,
 } from '../src/lib/generated-api-types';
+import type { ImportReportDto, PreviewSessionDto } from '../src/features/admin/generated-types';
 
 // Auth is an explicitly isolated email fixture. No product API route mocks or service overrides.
 type Actor = { profileId: string; session: Session };
@@ -44,6 +45,15 @@ let fixtures: Fixtures;
 let school: AdminSchoolDto;
 let cls: CreatedClassDto;
 const checks: string[] = [];
+const requiredChecks = [
+  'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+  'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
+  'real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth',
+  'direct-url-role-refresh-logout-reauth-mandiri-drill',
+  'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
+  'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
+  'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
+];
 const contexts: BrowserContext[] = [];
 
 async function call(
@@ -81,6 +91,8 @@ async function login(browser: Browser, alias: string) {
       ],
     },
   });
+  // Explicitly accept browser-native unload prompts; exit-specific assertions opt out below.
+  context.on('page', page => page.on('dialog', dialog => void dialog.accept()));
   contexts.push(context);
   const page = await context.newPage();
   return page;
@@ -129,6 +141,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() &&
       execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim() === '';
     const dir = resolve(root, '.tmp/job06-evidence');
+    const complete = checks.length === requiredChecks.length && requiredChecks.every(check => checks.includes(check));
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       resolve(dir, 'connected.json'),
@@ -136,7 +149,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 4 ? 'PASS' : 'FAIL',
+          status: unchanged && complete ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
@@ -155,6 +168,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ) + '\n',
     );
     expect(unchanged, 'The entire run must retain one clean release SHA').toBe(true);
+    expect(complete, 'Every required connected acceptance check must be recorded').toBe(true);
   });
 
   test('Admin → Teacher → Student → saved/resumed Drill → monitoring → retry → Level 2', async ({
@@ -264,6 +278,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
+    student.removeAllListeners('dialog');
+    student.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('Timer tetap berjalan');
+      await dialog.dismiss();
+    });
+    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
+    student.on('dialog', dialog => void dialog.accept());
     await student.reload();
     await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
@@ -279,6 +301,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await answer(resumed, 8);
     const result = await submit(resumed);
     expect(result.score).toBe(80);
+    expect(result.reward).toMatchObject({ baseXp: 80, policyVersion: 2 });
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(result.unlockedLevelId).toBe(levelTwo);
     const duplicates = await Promise.all(
       [1, 2].map(() =>
@@ -293,6 +317,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(duplicates.map((r) => r.score)).toEqual([80, 80]);
+    expect(duplicates.map(r => r.reward)).toEqual([result.reward, result.reward]);
     await call(
       request,
       'student',
@@ -312,7 +337,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const retryId = resumed.url().split('/').at(-1)!;
     expect(retryId).not.toBe(attempt.id);
     const retry = await body<DrillAttemptDto>(request, 'student', `assessment-attempts/${retryId}`);
-    expect(retry.questions.map((q) => q.stem)).not.toEqual(attempt.questions.map((q) => q.stem));
+    expect(retry.questions.map((q) => q.stem)).toEqual(attempt.questions.map((q) => q.stem));
     await answer(resumed, 7);
     expect((await submit(resumed)).score).toBe(70);
     await teacher.reload();
@@ -327,6 +352,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelOne)).toMatchObject({
       latestScore: 70,
       bestScore: 80,
+      latestStars: 2,
     });
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
@@ -336,7 +362,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
       .getByRole('button', { name: 'Mulai latihan', exact: true })
       .click();
     await answer(resumed, 0);
-    expect((await submit(resumed)).score).toBe(0);
+    const zeroResult = await submit(resumed);
+    expect(zeroResult.score).toBe(0);
+    expect(zeroResult.stars).toBe(0);
     await teacher.reload();
     await expect(
       teacher.locator('.level-card').filter({ hasText: 'Level 2' }).locator('dd'),
@@ -351,6 +379,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       }[];
       events: { entity_id: string; event_name: string }[];
       pins: { attempt_id: string; question_version_id: string }[];
+      rewards: { attempt_id: string; xp_amount: string | number; base_xp: number; policy_version: number }[];
     };
     expect(persisted.attempts).toHaveLength(3);
     expect(persisted.events).toHaveLength(3);
@@ -361,17 +390,27 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (a) => a.class_id_at_start === cls.id && !!a.scoring_policy_version_id,
       ),
     ).toBe(true);
-    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(3);
+    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
+    expect(persisted.rewards).toHaveLength(3);
+    expect(new Set(persisted.rewards.map(r => r.attempt_id)).size).toBe(3);
+    const persistedReward = persisted.rewards.find(r => r.attempt_id === attempt.id)!;
+    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
+    await resumed.goto(`/student/assessment?levelId=${levelOne}`);
+    await expect(resumed.getByRole('heading', { name: 'Riwayat level', exact: true })).toBeVisible();
+    await expect(resumed.locator('.activity-row')).toHaveCount(2);
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(
       (await body<DrillResultDto>(request, 'student', `assessment-attempts/${attempt.id}/result`))
         .score,
     ).toBe(80);
     checks.push(
       'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+      'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
     );
   });
 
-  test('token lifecycle, single-use race, join race, one-class and authorization at real HTTP boundary', async ({
+  test('token lifecycle, single-use race, concurrent multi-class joins and authorization at real HTTP boundary', async ({
     request,
   }) => {
     const tokensPath = `admin/schools/${school.id}/teacher-tokens`;
@@ -420,7 +459,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       201,
     );
     await call(request, 'student', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
-    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(2);
+    await call(request, 'student', `classes/${foreign.id}/leave`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(1);
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: 'BAD234' }, 404);
     const joins = await Promise.all(
       [cls.joinCode, foreign.joinCode].map((joinCode) =>
@@ -430,7 +476,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         }),
       ),
     );
-    expect(joins.map((r) => r.status()).sort()).toEqual([201, 409]);
+    expect(joins.map((r) => r.status()).sort()).toEqual([201, 201]);
     const progressPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/progress`;
     await call(request, 'foreignTeacher', progressPath, 'GET', undefined, 403);
     await call(request, 'student', progressPath, 'GET', undefined, 403);
@@ -472,7 +518,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       bestDrillScore: 80,
       accessStatus: 'UNLOCKED',
     });
-    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth');
+    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth');
   });
 
   test('direct URL role guards, refresh, logout/re-auth and independent Mandiri persistence', async ({
@@ -511,7 +557,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe('MANDIRI');
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher/profile');
-    await teacher.getByRole('button', { name: /Keluar/ }).click();
+    await teacher.getByRole('button', { name: 'Keluar dari akun', exact: true }).click();
     await expect(teacher).toHaveURL('http://localhost:3400/');
     await teacher.goto('/teacher');
     await expect(teacher).toHaveURL('http://localhost:3400/');
@@ -526,9 +572,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(signedInAgain).toHaveURL(/\/teacher$/);
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     await admin.goto('/student/learn');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin$/);
     const foreign = await login(browser, 'foreignTeacher');
     await foreign.goto(`/teacher/classes/${cls.id}`);
     await expect(
@@ -553,11 +599,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
       });
       expect(
         await body<LeaderboardDto>(request, alias, 'leaderboards/pvp?difficulty=easy'),
-      ).toMatchObject({ policyPending: true, reasonCode: 'OPEN-07' });
+      ).toMatchObject({ policyPending: true, reasonCode: 'PVP_RUNTIME_ACTIVATION' });
+      expect(await body<LeaderboardDto>(request, alias, 'leaderboards/activity')).toMatchObject({
+        policyPending: false,
+        reasonCode: null,
+        unit: 'xp',
+        className: null,
+      });
     }
     expect(await body<LeaderboardDto>(request, 'student', 'leaderboards/class')).toMatchObject({
-      policyPending: true,
-      reasonCode: 'OPEN-11',
+      policyPending: false,
+      reasonCode: null,
+      unit: 'xp',
       className: cls.name,
     });
     await call(request, 'otherStudent', 'leaderboards/class', 'GET', undefined, 403);
@@ -658,7 +711,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe(independent.id);
     const submissions = await Promise.all(
       Array.from({ length: 3 }, () =>
-        body<{ state: string }>(
+        body<{ state: string; xp: number }>(
           request,
           'student',
           `tryout/attempts/${affiliated.id}/submit`,
@@ -668,7 +721,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         ),
       ),
     );
-    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
@@ -679,6 +732,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(
       mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
     ).toBeVisible();
+    await expect(mandiri.getByText('10 XP', { exact: true })).toBeVisible();
     for (const [alias, attempt] of [
       ['student', affiliated],
       ['otherStudent', independent],
@@ -700,7 +754,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
       expect(records.find((r) => r.attemptId === attempt.id)).toMatchObject({
         score: null,
         resultState: 'waitingIrt',
+        xpState: 'ready', tryoutXpPolicyVersion: 1,
       });
+      const persisted = await body<TryoutAttemptDto>(request, alias, `tryout/attempts/${attempt.id}`);
+      expect(persisted.xp).toBeGreaterThanOrEqual(0);
+      expect(persisted.questions).toEqual([]);
+      expect(persisted).not.toHaveProperty('score');
       expect(await body<CurrentTryoutDto>(request, alias, 'tryout/packages/current')).toMatchObject(
         { eligible: false, state: 'waitingIrt' },
       );
@@ -768,6 +827,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
       persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
     ).toHaveLength(2);
     expect(persistence.pins).toHaveLength(4);
+    expect(persistence.rewards).toHaveLength(2);
+    const independentReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id);
+    const affiliatedReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id);
+    expect(independentReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(affiliatedReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(Number(independentReward.xp_amount)).toBe(10);
+    expect(Number(affiliatedReward.xp_amount)).toBe(0);
     expect(
       persistence.attempts.find((a: { id: string }) => a.id === independent.id).class_id_at_start,
     ).toBeNull();
@@ -779,6 +845,240 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (r) => r.attemptId === affiliated.id,
       ),
     ).toMatchObject({ score: 0, resultState: 'ready' });
-    checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
+    checks.push('tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history');
+  });
+
+  test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
+    browser,
+    request,
+  }) => {
+    const admin = await login(browser, 'admin');
+    const token = fixtures.actors.admin!.session.access_token;
+    async function content<T>(path: string, data: object, key?: string, status = 201): Promise<T> {
+      const response = await request.post(`${apiBase}/admin/content/${path}`, {
+        headers: { Authorization: `Bearer ${token}`, ...(key ? { 'Idempotency-Key': key } : {}) },
+        data,
+      });
+      expect(response.status(), path).toBe(status);
+      return response.json();
+    }
+    const source = resolve(root, 'docs/data/samples/2026-10-03');
+    const masters = JSON.parse(readFileSync(resolve(source, 'master-data.proposed.json'), 'utf8'));
+    const samples = JSON.parse(readFileSync(resolve(source, 'questions.draft.json'), 'utf8'));
+    const curriculum = await (await call(request, 'admin', 'admin/content/curriculum')).json();
+    const chapters = new Map<string, string>();
+    const subs = new Map<string, string>();
+    let chapterOrder = Math.max(
+      0,
+      ...curriculum.items
+        .filter((i: { kind: string }) => i.kind === 'CHAPTER')
+        .map((i: { displayOrder: number }) => i.displayOrder),
+    );
+    for (const ch of masters.chapters)
+      chapters.set(
+        ch.code,
+        (
+          await content<{ id: string }>('chapters', {
+            code: ch.code,
+            name: ch.name,
+            displayOrder: ++chapterOrder,
+          })
+        ).id,
+      );
+    for (const [i, sub] of masters.subchapters.entries()) {
+      const id = (
+        await content<{ id: string }>('subchapters', {
+          chapterId: chapters.get(sub.chapterCode),
+          code: sub.code,
+          name: sub.name,
+          displayOrder: i + 1,
+        })
+      ).id;
+      subs.set(sub.code, id);
+      await content('levels', {
+        subchapterId: id,
+        levelNumber: 1,
+        description: 'TEST ONLY DRAFT sample level',
+      });
+    }
+    for (const c of masters.competencies)
+      await content('competencies', {
+        subchapterId: subs.get(c.subchapterCode),
+        code: c.code,
+        description: c.description,
+      });
+    for (const q of samples)
+      for (const asset of q.metadata.assetManifest) {
+        const reservation = await content<{
+          uploadId: string;
+          uploadUrl: string;
+          headers: Record<string, string>;
+        }>(
+          'media/uploads',
+          {
+            externalId: q.externalId,
+            assetId: asset.assetId,
+            contentVersion: 1,
+            contentType: asset.contentType,
+            byteLength: asset.byteLength,
+            sha256: asset.sha256,
+          },
+          crypto.randomUUID(),
+        );
+        const put = await request.put(reservation.uploadUrl, {
+          headers: reservation.headers,
+          data: readFileSync(resolve(source, asset.fileReference)),
+        });
+        expect(put.status()).toBe(200);
+        const receipt = await content<{ objectKey: string }>(
+          `media/uploads/${reservation.uploadId}/complete`,
+          {},
+          undefined,
+          200,
+        );
+        asset.objectKey = receipt.objectKey;
+      }
+    await admin.goto('/admin/content/imports');
+    await admin.getByLabel('File soal JSON').setInputFiles({
+      name: 'questions.json',
+      mimeType: 'application/json',
+      buffer: Buffer.from(JSON.stringify(samples)),
+    });
+    await admin.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
+    await expect(admin.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
+    const imported = admin.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/content/imports'),
+    );
+    await admin.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
+    const report = (await (await imported).json()) as ImportReportDto;
+    expect(report.items).toHaveLength(10);
+    expect(report.items.every((i) => i.canPreview)).toBe(true);
+    await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
+    await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+    await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
+    await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
+    const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
+    for (let i = 0; i < 10; i++) {
+      await expect(admin.getByText(new RegExp(`Soal ${i + 1}/10`))).toBeVisible();
+      const controls = admin.getByRole('checkbox').or(admin.getByRole('radio'));
+      await controls.first().check();
+      await admin.getByRole('button', { name: 'Simpan jawaban', exact: true }).click();
+      await expect(admin.getByText(/Tersimpan di server.*revisi 1/)).toBeVisible();
+      await admin.reload();
+      await expect(controls.first()).toBeChecked();
+      if (await admin.locator('.content-preview-image').count())
+        await expect
+          .poll(() =>
+            admin
+              .locator('.content-preview-image')
+              .first()
+              .evaluate((img: HTMLImageElement) => img.naturalWidth),
+          )
+          .toBeGreaterThan(0);
+      if (i < 9) await admin.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+    }
+    await admin.getByRole('button', { name: 'Submit & review', exact: true }).click();
+    await expect(admin.getByRole('heading', { name: 'Review tanpa scoring' })).toBeVisible();
+    const result = await body<PreviewSessionDto>(
+      request,
+      'admin',
+      `admin/content/preview-sessions/${sessionId}/result`,
+    );
+    expect(result.items).toHaveLength(10);
+    expect(result.items.every((i) => i.score === null && i.answerKey && i.explanation)).toBe(true);
+    expect(result.score).toBe(null);
+    expect(result.media).toHaveLength(6);
+    let renderedImages = 0;
+    for (let position = 9; position >= 0; position--) {
+      await expect(admin.getByText(new RegExp(`Soal ${position + 1}/10`))).toBeVisible();
+      const images = admin.locator('.content-preview-image');
+      for (let index = 0; index < (await images.count()); index++) {
+        await expect
+          .poll(() => images.nth(index).evaluate((img: HTMLImageElement) => img.naturalWidth))
+          .toBeGreaterThan(0);
+        renderedImages++;
+      }
+      if (position > 0)
+        await admin.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
+    }
+    expect(renderedImages).toBe(6);
+    await admin.setViewportSize({ width: 390, height: 844 });
+    await expect(admin.getByRole('heading', { name: 'Review tanpa scoring' })).toBeVisible();
+    expect(
+      await admin.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+    await call(
+      request,
+      'student',
+      `admin/content/preview-sessions/${sessionId}`,
+      'GET',
+      undefined,
+      403,
+    );
+    checks.push('draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review');
+  });
+
+  test('five-class limit, teacher ban/unban and teacherless takeover preserve account progress', async ({
+    request,
+  }) => {
+    const extras: CreatedClassDto[] = [];
+    for (let i = 0; i < 4; i++) {
+      extras.push(
+        await body<CreatedClassDto>(
+          request,
+          'teacher',
+          'classes',
+          'POST',
+          { name: `JOB06 membership ${i}`, schoolId: school.id },
+          201,
+        ),
+      );
+    }
+    for (const extra of extras.slice(0, 3))
+      await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: extra.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(5);
+    await call(
+      request,
+      'raceStudent',
+      'classes/join',
+      'POST',
+      { joinCode: extras[3]!.joinCode },
+      409,
+    );
+
+    const banPath = `classes/${cls.id}/students/${fixtures.actors.raceStudent!.profileId}`;
+    await call(request, 'admin', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'foreignTeacher', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'teacher', `${banPath}/ban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 403);
+    await call(request, 'teacher', `${banPath}/unban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
+    await call(request, 'raceStudent', `classes/${extras[0]!.id}/leave`, 'POST', undefined, 201);
+
+    const foreign = (await body<{ items: CreatedClassDto[] }>(request, 'foreignTeacher', 'classes'))
+      .items[0]!;
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'foreignTeacher', `schools/${school.id}/leave`, 'POST', undefined, 201);
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 201);
+    await call(request, 'foreignTeacher', `classes/${foreign.id}/students`, 'GET', undefined, 403);
+    const progress = await body<SubchapterDetailDto>(
+      request,
+      'student',
+      `subchapters/${subchapter}`,
+    );
+    expect(progress.levels.find((level) => level.id === levelOne)).toMatchObject({
+      latestScore: 70,
+      bestScore: 80,
+      latestStars: 2,
+    });
+    checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
   });
 });

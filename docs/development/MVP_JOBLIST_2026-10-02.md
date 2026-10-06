@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** lanjutan PR #56 tersedia dalam [PR #65](https://github.com/ayiinee/Numora/pull/65): fondasi importer v2 dan preview DRAFT tiga format tanpa skor berdasarkan PRD v0.6. Pengujian lokal/connected lulus, migrasi Cloud dan Content Admin QA diprovision; acceptance sandbox penuh tertahan pada scoped R2 credential. [Bukti dan next step](../testing/CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md). Bukan penutupan JOB-07 penuh: rubric PGK, publication/lifecycle, Curriculum approval, XP/IRT serta QA independen tetap tersisa. Master sandbox belum dibuat dan tetap PROPOSED.
+
 # Joblist MVP — rekonsiliasi pekerjaan lama dan urutan pelaksanaan
 
 **Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering; **ENGINEERING DECISION:** klarifikasi pengguna pada tanggal ini menetapkan sembilan pekerjaan dalam gambar sebagai pekerjaan aktif Farel. Penugasan sembilan pekerjaan itu berlaku menggantikan pembagian yang bertumpang tindih pada versi sebelumnya. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.
@@ -96,9 +98,9 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### LAMA-14 — Admin pengguna/kelas
 
-- **Status:** BELUM SELESAI untuk scope ini
-- **Sudah tersedia atau berubah:** Operasi sekolah/token/content tersedia; tidak perlu dibuat ulang.
-- **Pekerjaan tersisa:** Daftar/detail/audit pengguna/kelas; koreksi/ban hanya sesudah keputusan OPEN. JOB-18.
+- **Status:** PARSIAL
+- **Sudah tersedia atau berubah:** Operasi sekolah/token/content dan API serta layar baca-saja daftar/detail/filter pengguna/kelas tersedia.
+- **Pekerjaan tersisa:** Audit pengguna/kelas; koreksi/ban hanya sesudah keputusan OPEN. JOB-18.
 
 ### LAMA-15 — Dashboard/share kelas
 
@@ -164,6 +166,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-05 — Tutup gap Drill session/result terhadap PRD terbaru
 
+- **Engineering update — 5 October 2026:** v0.6 single-package retry, latest stars/score, 0 stars, result XP, scoped level history, server-time count-up, every unfinished-exit confirmation and new explanations without expiry implemented with prospective policy pins. Saved/offline recovery retained. [Rules and acceptance](DRILL_V06_REWARDS.md); older conflicting requirements below are historical. Curriculum/trial/independent QA remain gates.
+
 - **Owner:** Ferdi frontend; Aini domain/policy; Avicenna history integration; Salim QA. **Asal:** LAMA-02,04,06,16; gap baru PRD.
 - **Kerjakan:** Retry langsung dari hasil gagal/completed, detail/history level, warning refresh/exit saat risiko data hilang, failed-save/retry/session lost, count-up tanpa pause/deadline. Representasikan XP/star/retensi pending sesuai keputusan; jangan menjanjikan 90 hari/rentang bintang sebagai rule terbaru. Durasi reward dari server, bukan jam UI.
 - **Output:** UI/result contract jujur tentang policy dan state yang tersedia, retry memakai attempt baru, history terpisah, best score monotonic dan unlock permanen.
@@ -223,8 +227,10 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-11 — Posting XP durable dan idempotent
 
+- **Engineering update — 5 October 2026:** Drill v0.6 base correct×10, speed bonus/cap150 and nearest-integer final XP implemented atomically/idempotently with ledger/outbox and persisted result details; no legacy backfill. [Rules and acceptance](DRILL_V06_REWARDS.md). Aini resolved TryOut multiplier as ×10; current PG path now posts XP on completion with prospective pins, immutable ledger and waiting/result/history UI. [TryOut scope](TRYOUT_XP_V06.md). PGK rubric/assessment/fractional persistence and leaderboard JOB-17 remain separate; this is not full JOB-11 acceptance.
+
 - **Owner:** Aini ledger/domain; Ferdi result UI; Data/PO formula; Salim consistency QA. **Asal:** LAMA-06,08,13.
-- **Kerjakan:** setelah approval formula, implementasikan XP Drill (base/gagal/bonus eligibility <15 menit) dan TryOut (final-score-only, tanpa speed bonus). Pin policy, satu source per valid attempt/released result, atomic ledger/outbox menurut timing approved; tampilkan pending sebelum valid.
+- **Kerjakan:** pertahankan XP Drill (base/gagal/bonus eligibility <15 menit); TryOut memakai benar ekuivalen ×10 langsung saat selesai, tanpa speed bonus atau menunggu IRT (§12, koreksi Aini atas AC-15). Pin policy, satu source per valid attempt, atomic ledger/outbox. Lengkapi assessment PGK setelah rubrik disetujui dan selaraskan XP pecahan tanpa pembulatan yang belum disepakati.
 - **Output:** API XP result, event/ledger transactional, reconciliation tooling dan regression tests. Consumer outbox yang sudah ada dipakai ulang.
 - **Bukti selesai:** duplicate submit/release/job tidak menggandakan XP; tepat 15 menit tidak eligible bonus Drill; TryOut duration tidak menambah XP; Pretest/PvP tidak masuk ledger XP kelas; perubahan formula tidak merombak XP historis.
 
@@ -283,7 +289,9 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 - **Owner:** Ferdi backend operational; Avicenna frontend; Farel PO/Data coordination; Aini identity/class reviewer; Salim access QA. **Asal:** LAMA-14.
 - **Kerjakan:** list/detail/filter/page minimal pengguna/kelas dan audit dengan data minimum. Finalkan scope correction/wrong-class/ban/School↔Mandiri lewat OPEN-08/13/15 sebelum mutation terkait; tidak mengasumsikan self-transfer.
+- **ENGINEERING UPDATE:** Frontend baca-saja tersedia di `/admin/operations`, memakai endpoint dan tipe generated yang sudah ada. Layar mencakup filter, pagination server, detail pengguna/kelas, serta state loading/error/akses; tidak menyediakan mutasi akun/kelas.
 - **Output:** authorized Admin read/use-case, approved transaction/idempotency/version-preserving correction bila policy siap; account restriction reason/effect sesuai keputusan.
+- **Pekerjaan tersisa:** Audit dan acceptance akses/data minimum end-to-end; correction/ban menunggu policy dan skenario yang disetujui.
 - **Bukti selesai:** non-Admin ditolak; history/class-at-event tetap utuh; correction/ban transaction dites dengan scenario approved; tidak mengekspos unnecessary PII. Menunggu policy bukan alasan membuat efek ban sendiri.
 
 ### JOB-19 — Kelas link/QR dan kelengkapan dashboard persisted

@@ -18,11 +18,13 @@ const names = [
   'SavedAnswerDto',
   'ReviewedQuestionDto',
   'RecommendedVideoDto',
+  'DrillRewardDto',
   'DrillResultDto',
   'AssessmentRecordDto',
   'AssessmentHistoryDto',
   'CurrentTryoutDto',
   'TryoutAttemptDto',
+  'TryoutSubmitDto',
   'TryoutReviewedQuestionDto',
   'TryoutResultDto',
   'DashboardClassDto',
@@ -88,6 +90,20 @@ const groups = [
   {
     target: 'apps/web/src/features/admin/generated-types.ts',
     names: [
+      'ImportBodyDto',
+      'ImportItemDto',
+      'ImportReportDto',
+      'CreatePreviewDto',
+      'SavePreviewAnswerDto',
+      'PreviewAckDto',
+      'RichContentDto',
+      'PreviewOptionDto',
+      'PreviewCategoryDto',
+      'PreviewMediaDto',
+      'PreviewItemDto',
+      'PreviewSessionDto',
+      'MediaLinkRequestDto',
+      'MediaLinksDto',
       'ContentOptionDto',
       'AdminTaxonDto',
       'AdminUserDto',
@@ -118,7 +134,12 @@ const groups = [
       'ResolveReportDto',
       'AdminIrtItemDto',
       'AdminIrtDto',
-      'IrtConfigurationPinDto', 'PrepareIrtRequestDto', 'IrtRequestExecutionDto', 'IrtRequestArtifactDto', 'IrtRequestDto', 'IrtRequestsDto',
+      'IrtConfigurationPinDto',
+      'PrepareIrtRequestDto',
+      'IrtRequestExecutionDto',
+      'IrtRequestArtifactDto',
+      'IrtRequestDto',
+      'IrtRequestsDto',
       'AdminIrtBatchDto',
       'AdminIrtBatchesDto',
       'AdminAuditDto',
@@ -141,7 +162,10 @@ function renderType(schema) {
   if (schema.allOf)
     return schema.allOf.map(renderType).join(' & ') + (schema.nullable ? ' | null' : '');
   if (schema.oneOf || schema.anyOf)
-    return (schema.oneOf ?? schema.anyOf).map(renderType).join(' | ');
+    return (
+      (schema.oneOf ?? schema.anyOf).map(renderType).join(' | ') +
+      (schema.nullable ? ' | null' : '')
+    );
   if ('const' in schema) return JSON.stringify(schema.const);
   if (Array.isArray(schema.type))
     return schema.type.map((type) => renderType({ ...schema, type })).join(' | ');
@@ -182,6 +206,8 @@ if (process.argv.includes('--check')) {
 } else await writeFile(socketTarget, socketResult);
 
 function renderObject(schema) {
+  if (!schema.properties)
+    return `Record<string, ${schema.additionalProperties && typeof schema.additionalProperties === 'object' ? renderType(schema.additionalProperties) : 'unknown'}>`;
   const required = new Set(schema.required ?? []);
   return `{ ${Object.entries(schema.properties ?? {})
     .map(

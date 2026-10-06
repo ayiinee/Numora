@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { getDatabase } from './client.js';
+import { seedPrdV06Demo } from './prd-v06-demo.js';
 import {
   chapters,
   subchapters,
@@ -21,17 +22,27 @@ const levelTwoId = uuid(103);
 const competencyId = uuid(104);
 
 // DEMO fixtures only. Curriculum must review every stem, key, and explanation before a school trial.
-export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db) {
+export async function seedDemoLearning(
+  db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db,
+) {
   await db
     .insert(chapters)
-    .values({ id: chapterId, code: 'DEMO-BILANGAN', slug: ('DEMO-BILANGAN').toLowerCase(), name: 'Bab Demo: Bilangan', displayOrder: 1, status: 'READY' })
+    .values({
+      id: chapterId,
+      code: 'DEMO-BILANGAN',
+      slug: 'DEMO-BILANGAN'.toLowerCase(),
+      name: 'Bab Demo: Bilangan',
+      displayOrder: 1,
+      status: 'READY',
+    })
     .onConflictDoNothing();
   await db
     .insert(subchapters)
     .values({
       id: subchapterId,
       chapterId,
-      code: 'DEMO-OPERASI', slug: ('DEMO-OPERASI').toLowerCase(),
+      code: 'DEMO-OPERASI',
+      slug: 'DEMO-OPERASI'.toLowerCase(),
       name: 'Subbab Demo: Operasi Bilangan',
       displayOrder: 1,
       status: 'READY',
@@ -57,27 +68,40 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
     ])
     .onConflictDoNothing();
 
-  await db.insert(competencies).values({ id: competencyId, subchapterId, code: 'DEMO-OPERASI', description: 'Operasi bilangan dasar', status: 'READY' }).onConflictDoNothing();
+  await db
+    .insert(competencies)
+    .values({
+      id: competencyId,
+      subchapterId,
+      code: 'DEMO-OPERASI',
+      description: 'Operasi bilangan dasar',
+      status: 'READY',
+    })
+    .onConflictDoNothing();
 
   const policyId = uuid(901);
-  await db.insert(scoringPolicyVersions).values({
-    id: policyId,
-    policyCode: 'DRILL_PG_DEMO',
-    version: 1,
-    configuration: {
-      questionType: 'SINGLE_CHOICE',
-      questionCount: 10,
-      masteryThreshold: 80,
-      stars: {
-        one: { minExclusive: 0, maxInclusive: 50 },
-        two: { minExclusive: 50, maxInclusive: 90 },
-        three: { minExclusive: 90, maxInclusive: 100 },
+  await db
+    .insert(scoringPolicyVersions)
+    .values({
+      id: policyId,
+      policyCode: 'DRILL_PG_DEMO',
+      version: 1,
+      configuration: {
+        questionType: 'SINGLE_CHOICE',
+        questionCount: 10,
+        masteryThreshold: 80,
+        stars: {
+          one: { minExclusive: 0, maxInclusive: 50 },
+          two: { minExclusive: 50, maxInclusive: 90 },
+          three: { minExclusive: 90, maxInclusive: 100 },
+        },
       },
-    },
-    effectiveAt: new Date(),
-    status: 'PUBLISHED',
-  }).onConflictDoNothing();
-  const [policy] = await db.select({ id: scoringPolicyVersions.id })
+      effectiveAt: new Date(),
+      status: 'PUBLISHED',
+    })
+    .onConflictDoNothing();
+  const [policy] = await db
+    .select({ id: scoringPolicyVersions.id })
     .from(scoringPolicyVersions)
     .where(eq(scoringPolicyVersions.policyCode, 'DRILL_PG_DEMO'))
     .limit(1);
@@ -112,17 +136,25 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
           origin: 'DEMO',
         })
         .onConflictDoNothing();
-      await db.insert(questionVersions).values({
-        id: uuid(300 + (i - 1) * 2 + set),
-        variantId,
-        versionNumber: 1,
-        questionType: 'SINGLE_CHOICE',
-        stem: { text: `Berapakah hasil $${left}+${right}$?` },
-        optionsOrStatements: optionValues.map((value, index) => ({ id: 'ABCD'[index]!, content: { text: String(value) } })),
-        answerKey: { optionId: 'B' },
-        explanation: { text: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah B.` },
-        difficulty: 'EASY',
-      }).onConflictDoNothing();
+      await db
+        .insert(questionVersions)
+        .values({
+          id: uuid(300 + (i - 1) * 2 + set),
+          variantId,
+          versionNumber: 1,
+          questionType: 'SINGLE_CHOICE',
+          stem: { text: `Berapakah hasil $${left}+${right}$?` },
+          optionsOrStatements: optionValues.map((value, index) => ({
+            id: 'ABCD'[index]!,
+            content: { text: String(value) },
+          })),
+          answerKey: { optionId: 'B' },
+          explanation: {
+            text: `$${left}+${right}=${answer}$, sehingga jawaban yang benar adalah B.`,
+          },
+          difficulty: 'EASY',
+        })
+        .onConflictDoNothing();
     }
   }
 
@@ -165,4 +197,5 @@ export async function seedDemoLearning(db: Pick<ReturnType<typeof getDatabase>['
     .where(eq(chapters.id, chapterId))
     .limit(1);
   if (!chapter) throw new Error('Demo learning seed failed.');
+  await seedPrdV06Demo(db);
 }

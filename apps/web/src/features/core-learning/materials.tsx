@@ -2,7 +2,7 @@
 
 import { Suspense } from 'react';
 import Link from 'next/link';
-import { useRouter, useSearchParams } from 'next/navigation';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Card, EmptyState, Icon, Input, type IconName } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
@@ -31,7 +31,6 @@ function MaterialsContent() {
   const token = useStudentToken();
   const { state } = useAuth();
   const params = useSearchParams();
-  const router = useRouter();
   const query = useQuery({
     queryKey: ['student-materials'],
     queryFn: () => request<StudentMaterialsDto>(token, '/students/me/materials'),
@@ -52,10 +51,11 @@ function MaterialsContent() {
     ? params.get('chapter')
     : (query.data?.recentChapterId ?? query.data?.chapters[0]?.id);
   function change(key: string, value: string | null) {
-    const next = new URLSearchParams(params.toString());
+    // Compose rapid filter changes from the current URL, not a pending router render.
+    const next = new URLSearchParams(window.location.search);
     if (value === null) next.delete(key);
     else next.set(key, value);
-    router.replace(`/student/learn${next.size ? '?' + next.toString() : ''}`, { scroll: false });
+    window.history.replaceState(null, '', `/student/learn${next.size ? '?' + next.toString() : ''}`);
   }
   const needle = search.trim().toLocaleLowerCase('id');
   const visible =

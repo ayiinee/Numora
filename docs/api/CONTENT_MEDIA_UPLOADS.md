@@ -1,3 +1,5 @@
+**ENGINEERING UPDATE - 4 Oktober 2026:** semua endpoint upload memakai ContentAdminGuard: ACTIVE Admin dengan subrole SUPER_ADMIN/CONTENT_DATA_MODERATION. AdminGuard generik pada uraian historis di bawah sudah diganti. Signed GET preview TTL 900 detik tidak bergantung pada upload flag dan dibatasi fase/asset ID sesi. [Importer/preview](CONTENT_IMPORT_PREVIEW.md) memverifikasi receipt; upload tidak menjadi approval akademik atau publikasi.
+
 # Upload media soal melalui backend
 
 **ENGINEERING IMPLEMENTATION — 3 Oktober 2026.** Reyhan meminta endpoint dan JSON sampel dalam satu PR serta mengonfirmasi bucket **`numora-bucket`**. Prefix final **`question-media/`** adalah pilihan engineering. Ini bukan perubahan rubrik, paket atau aturan akademik PRD.

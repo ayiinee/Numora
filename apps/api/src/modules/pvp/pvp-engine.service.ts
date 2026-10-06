@@ -80,16 +80,14 @@ export class PvpEngineService {
     return player;
   }
   private async event(tx: Transaction, match: Match, eventName: string) {
-    await tx
-      .insert(analyticsOutbox)
-      .values({
-        eventName,
-        entityType: 'pvp_match',
-        entityId: match.id,
-        actorUserId: match.creatorStudentId,
-        occurredAt: this.now(),
-        payload: { difficulty: match.difficulty },
-      });
+    await tx.insert(analyticsOutbox).values({
+      eventName,
+      entityType: 'pvp_match',
+      entityId: match.id,
+      actorUserId: match.creatorStudentId,
+      occurredAt: this.now(),
+      payload: { difficulty: match.difficulty },
+    });
   }
 
   async create(studentId: string, difficulty: Difficulty, requestId: string) {
@@ -177,17 +175,15 @@ export class PvpEngineService {
       await tx
         .insert(pvpPlayers)
         .values({ matchId: match!.id, studentId, playerSlot: 1, totalPoints: '0' });
-      await tx
-        .insert(pvpMatchQuestions)
-        .values(
-          items.map(({ item }, i) => ({
-            matchId: match!.id,
-            packageId: pack.id,
-            packageItemId: item.id,
-            questionVersionId: item.questionVersionId,
-            displayOrder: i + 1,
-          })),
-        );
+      await tx.insert(pvpMatchQuestions).values(
+        items.map(({ item }, i) => ({
+          matchId: match!.id,
+          packageId: pack.id,
+          packageItemId: item.id,
+          questionVersionId: item.questionVersionId,
+          displayOrder: i + 1,
+        })),
+      );
       await this.event(tx, match!, 'pvp_room_created');
       return match!.id;
     });
@@ -323,18 +319,16 @@ export class PvpEngineService {
         item.question.deadlineAt.getTime() - this.now().getTime(),
         durationSeconds(match.difficulty as Difficulty) * 1000,
       );
-      await tx
-        .insert(pvpAnswers)
-        .values({
-          playerId: player.id,
-          matchId,
-          matchQuestionId: questionId,
-          requestId,
-          answer: { optionId },
-          receivedAt: this.now(),
-          basePoints: String(points.basePoints),
-          speedBonus: String(points.speedBonus),
-        });
+      await tx.insert(pvpAnswers).values({
+        playerId: player.id,
+        matchId,
+        matchQuestionId: questionId,
+        requestId,
+        answer: { optionId },
+        receivedAt: this.now(),
+        basePoints: String(points.basePoints),
+        speedBonus: String(points.speedBonus),
+      });
       const answers = await tx
         .select()
         .from(pvpAnswers)
@@ -571,11 +565,14 @@ export class PvpEngineService {
           ),
         )
         .for('share');
-      if (
-        recipientId === studentId ||
-        members.length !== 2 ||
-        members[0]!.classId !== members[1]!.classId
-      )
+      const senderClasses = new Set(
+        members.filter((m) => m.studentUserId === studentId).map((m) => m.classId),
+      );
+      const commonClassId = members
+        .filter((m) => m.studentUserId === recipientId && senderClasses.has(m.classId))
+        .map((m) => m.classId)
+        .sort()[0];
+      if (recipientId === studentId || !commonClassId)
         throw new ForbiddenException({
           code: 'CLASSMATE_REQUIRED',
           detail: 'Undangan hanya untuk teman sekelas.',
@@ -603,7 +600,7 @@ export class PvpEngineService {
         .values({
           matchId,
           requestId,
-          classIdAtInvite: members[0]!.classId,
+          classIdAtInvite: commonClassId,
           senderStudentId: studentId,
           recipientStudentId: recipientId,
           createdAt: this.now(),
@@ -716,7 +713,9 @@ export class PvpEngineService {
         : [];
       const content = active ? decodeSingleChoice(active.version) : null;
       if (active && content)
-        await tx.execute(sql`select public.record_pvp_delivery(${studentId}::uuid, ${active.question.id}::uuid)`);
+        await tx.execute(
+          sql`select public.record_pvp_delivery(${studentId}::uuid, ${active.question.id}::uuid)`,
+        );
       const value = answer?.answer as { optionId?: string | null } | undefined;
       return {
         matchId,

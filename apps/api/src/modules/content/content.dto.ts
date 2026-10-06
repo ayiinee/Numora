@@ -20,7 +20,7 @@ import {
 import { ApiProperty, ApiPropertyOptional, OmitType, PartialType } from '@nestjs/swagger';
 import { IsYouTubeVideoUrl } from './youtube-url';
 
-export const statuses = ['DRAFT', 'READY', 'ARCHIVED'] as const;
+export const statuses = ['DRAFT', 'READY', 'ARCHIVED', 'REVISION'] as const;
 export type ContentState = (typeof statuses)[number];
 
 export class ContentPageDto {
@@ -96,7 +96,7 @@ export class UpdateCompetencyDto extends PartialType(
 ) {}
 export class CreateLevelDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(1000) levelNumber!: number;
+  @ApiProperty({ minimum: 1, maximum: 5 }) @Type(() => Number) @IsInt() @Min(1) @Max(5) levelNumber!: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()
@@ -194,6 +194,7 @@ export class AdminCurriculumDto {
   @ApiProperty({ type: [AdminTaxonDto] }) items!: AdminTaxonDto[];
 }
 export class AdminVersionDto {
+  @ApiProperty({ required: false }) imported?: boolean;
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;
   @ApiProperty() primaryCompetencyId!: string;
@@ -208,7 +209,7 @@ export class AdminVersionDto {
   @ApiProperty({ type: [ContentOptionDto] }) options!: ContentOptionDto[];
   @ApiProperty({ type: String, nullable: true }) answerOptionId!: string | null;
   @ApiProperty() explanation!: string;
-  @ApiProperty() difficulty!: string;
+  @ApiProperty({ type: String, nullable: true }) difficulty!: string | null;
   @ApiProperty({ enum: statuses }) contentStatus!: ContentState;
   @ApiProperty({ enum: statuses }) questionStatus!: ContentState;
   @ApiProperty({ type: String, nullable: true }) reviewedByUserId!: string | null;

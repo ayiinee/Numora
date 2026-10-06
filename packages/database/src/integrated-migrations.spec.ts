@@ -1,9 +1,8 @@
-import { createHash, randomBytes } from 'node:crypto';
+import { randomBytes } from 'node:crypto';
 import { copyFile, mkdir, mkdtemp, readFile, rm, writeFile } from 'node:fs/promises';
 import { tmpdir } from 'node:os';
 import { join, resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
-import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
 import { describe, expect, it } from 'vitest';
@@ -124,53 +123,32 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     });
   });
 
-  it.each(['LF', 'CRLF'])(
-    'upgrades the notification fork (%s) without skipping remote DDL or changing existing hashes/data',
-    async (lineEnding) => {
-      await fixture(18, async (client, folder) => {
-        const notification = readMigrationFiles({ migrationsFolder: folder })[22]!;
-        for (const statement of notification.sql)
-          if (statement.trim()) await client.unsafe(statement);
-        const sql = (await readFile(join(folder, '0022_amusing_quasar.sql'), 'utf8')).replaceAll(
-          '\r\n',
-          '\n',
-        );
-        const hash = createHash('sha256')
-          .update(lineEnding === 'CRLF' ? sql.replaceAll('\n', '\r\n') : sql)
-          .digest('hex');
-        await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
-        VALUES(${hash},${notification.folderMillis})`;
-        const [chapter] =
-          await client`INSERT INTO chapters(code,name,display_order,material_category)
-        VALUES('TEST-NOTIFICATION-FORK','Preserved chapter',1,'algebra') RETURNING id`;
-        const history =
-          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
-        await migrateIntegratedDatabase(client, folder);
-        expect(
-          (
-            await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`
-          ).slice(0, history.length),
-        ).toEqual(history);
-        expect(
-          (await client`SELECT material_category,slug FROM chapters WHERE id=${chapter!.id}`)[0],
-        ).toEqual({ material_category: 'algebra', slug: 'preserved-chapter' });
-        expect(
-          (
-            await client`SELECT to_regclass('public.analysis_request_dispatches') AS dispatch, to_regclass('public.content_media_uploads') AS media`
-          )[0],
-        ).toEqual({ dispatch: 'analysis_request_dispatches', media: 'content_media_uploads' });
-        expect(await client`SELECT source_key FROM notification_outbox`).toEqual([
-          { source_key: 'SYSTEM_STARTED' },
-        ]);
-        const upgraded =
-          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
-        await migrateIntegratedDatabase(client, folder);
-        expect(
-          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
-        ).toEqual(upgraded);
-      });
-    },
-  );
+  it('upgrades the already-applied XP chain through data and notifications without rewriting legacy rewards', async () => {
+    await fixture(26, async (client, folder) => {
+      const [student] = await client`INSERT INTO users(auth_user_id,role,display_name,email)
+        VALUES(gen_random_uuid(),'STUDENT','TEST upgrade','upgrade@test.invalid') RETURNING id`;
+      const [chapter] = await client`INSERT INTO chapters(code,name,slug,display_order) VALUES('TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
+      const [sub] = await client`INSERT INTO subchapters(chapter_id,code,name,slug,display_order) VALUES(${chapter!.id},'TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
+      const [level] = await client`INSERT INTO levels(subchapter_id,level_number) VALUES(${sub!.id},1) RETURNING id`;
+      const [pack] = await client`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,is_demo,chapter_id,level_id)
+        VALUES('TEST-UPGRADE',1,'TEST upgrade','DRILL',true,${chapter!.id},${level!.id}) RETURNING id`;
+      const [attempt] = await client`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,chapter_id_at_start,level_id_at_start,status,finished_at,score_0_100,raw_points,stars)
+        VALUES(${student!.id},${pack!.id},'DRILL',${chapter!.id},${level!.id},'GRADED',clock_timestamp(),80,8,2) RETURNING *`;
+      const [reward] = await client`INSERT INTO xp_ledger(student_id,attempt_id,source_type,xp_amount)
+        VALUES(${student!.id},${attempt!.id},'DRILL',80) RETURNING *`;
+      const oldHistory = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await migrateIntegratedDatabase(client, folder);
+      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toEqual(attempt);
+      const [preserved] = await client`SELECT * FROM xp_ledger WHERE id=${reward!.id}`;
+      expect({ ...preserved, xp_amount: Number(preserved!.xp_amount) }).toEqual({ ...reward, xp_amount: 80 });
+      const history = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
+      expect(history).toHaveLength(oldHistory.length + 2);
+      await expect(client`UPDATE xp_ledger SET xp_amount=81 WHERE id=${reward!.id}`).rejects.toThrow();
+      await migrateIntegratedDatabase(client, folder);
+      expect(await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`).toEqual(history);
+    });
+  });
 
   it('rolls back replayed DDL and history if the known fork schema has diverged', async () => {
     await fixture(4, async (client, folder) => {

@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, ilike, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, ilike, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 import { classes, classMemberships, getDatabase, schools, users } from '@tka/database';
 import type {
   AdminClassDto,
@@ -34,13 +34,14 @@ function userDto(
 
 @Injectable()
 export class AdminOperationsService {
-  async users(query: AdminUserQueryDto) {
+  async users(query: AdminUserQueryDto, includeAdminAccounts = false) {
     const term = search(query.search);
     const rows = await getDatabase()
       .db.select(userFields)
       .from(users)
       .where(
         and(
+          includeAdminAccounts ? undefined : ne(users.role, 'ADMIN'),
           term ? ilike(users.displayName, term) : undefined,
           query.role ? eq(users.role, query.role) : undefined,
           query.status ? eq(users.status, query.status) : undefined,
@@ -54,8 +55,11 @@ export class AdminOperationsService {
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
     };
   }
-  async user(id: string) {
-    const [row] = await getDatabase().db.select(userFields).from(users).where(eq(users.id, id));
+  async user(id: string, includeAdminAccounts = false) {
+    const [row] = await getDatabase()
+      .db.select(userFields)
+      .from(users)
+      .where(and(eq(users.id, id), includeAdminAccounts ? undefined : ne(users.role, 'ADMIN')));
     if (!row) throw new NotFoundException('Pengguna tidak ditemukan.');
     return userDto(row);
   }
@@ -74,7 +78,7 @@ export class AdminOperationsService {
       })
       .from(classes)
       .innerJoin(schools, eq(schools.id, classes.schoolId))
-      .innerJoin(users, eq(users.id, classes.teacherUserId));
+      .leftJoin(users, eq(users.id, classes.teacherUserId));
   }
   async classes(query: AdminClassQueryDto) {
     const term = search(query.search);
@@ -95,13 +99,11 @@ export class AdminOperationsService {
       .limit(query.limit + 1)
       .offset(query.offset);
     return {
-      items: rows
-        .slice(0, query.limit)
-        .map((r): AdminClassDto => ({
-          ...r,
-          createdAt: r.createdAt.toISOString(),
-          archivedAt: r.archivedAt?.toISOString() ?? null,
-        })),
+      items: rows.slice(0, query.limit).map((r): AdminClassDto => ({
+        ...r,
+        createdAt: r.createdAt.toISOString(),
+        archivedAt: r.archivedAt?.toISOString() ?? null,
+      })),
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
     };
   }

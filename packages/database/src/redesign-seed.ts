@@ -2,6 +2,8 @@ import { readFile } from 'node:fs/promises';
 import postgres from 'postgres';
 import { resolve } from 'node:path';
 import { requireTlsDatabaseUrl } from './client.js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+import { seedPrdV06Demo } from './prd-v06-demo.js';
 
 async function run() {
   const ref = 'pkamenfnwmoeisccnrnk';
@@ -27,6 +29,7 @@ async function run() {
       await tx.unsafe("SET LOCAL statement_timeout='30s'");
       await tx.unsafe(seed);
     });
+    await drizzle(sql).transaction(async (tx) => seedPrdV06Demo(tx));
     const counts = await sql.unsafe(`SELECT
     (SELECT count(*)::int FROM levels WHERE subchapter_id='03000000-0000-4000-8000-000000000101') AS levels,
     count(*)::int AS packages,

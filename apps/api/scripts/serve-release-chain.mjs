@@ -19,6 +19,13 @@ Object.assign(process.env, {
   TEACHER_TOKEN_PEPPER: 'job06-fixture-only-pepper-not-for-deployment',
   CORS_ORIGINS: 'http://localhost:3400',
   IRT_ENABLED: 'false',
+  CONTENT_IMPORT_PREVIEW_ENABLED: 'true',
+  R2_MEDIA_UPLOADS_ENABLED: 'true',
+  R2_ACCOUNT_ID: '0'.repeat(32),
+  R2_ACCESS_KEY_ID: 'TEST_ONLY_ACCESS_KEY',
+  R2_SECRET_ACCESS_KEY: 'TEST_ONLY_STORAGE_SECRET',
+  R2_BUCKET: 'numora-bucket',
+  R2_TEST_ENDPOINT: 'http://localhost:3402/r2',
 });
 const {
   getDatabase,
@@ -35,6 +42,11 @@ const {
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { db, client } = getDatabase();
 await seedDemoLearning(db);
+const policies = await client`select id,policy_code from scoring_policy_versions
+  where policy_code in ('DRILL_PRD_V06','TRYOUT_PRD_V06') and version=1 and status='PUBLISHED'`;
+const drillPolicy = policies.find((p) => p.policy_code === 'DRILL_PRD_V06')?.id;
+const tryoutPolicy = policies.find((p) => p.policy_code === 'TRYOUT_PRD_V06')?.id;
+if (!drillPolicy || !tryoutPolicy) throw new Error('PRD v0.6 fixture policies are required.');
 
 // Explicit TEST-ONLY DEMO continuation; not a Curriculum approval or shared seed mutation.
 const levelTwo = '00000000-0000-4000-8000-000000000103';
@@ -49,7 +61,7 @@ await db.insert(assessmentPackages).values({
   chapterId: '00000000-0000-4000-8000-000000000100',
   variantIndex: 1,
   isDemo: true,
-  scoringPolicyVersionId: '00000000-0000-4000-8000-000000000901',
+  scoringPolicyVersionId: drillPolicy,
   releaseAt: new Date(),
   status: 'PUBLISHED',
 });
@@ -96,6 +108,7 @@ for (const [alias, role] of [
     .values({
       authUserId: id,
       role,
+      adminRole: role === 'ADMIN' ? 'SUPER_ADMIN' : null,
       displayName: user.user_metadata.name,
       email: user.email,
       status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
@@ -114,7 +127,7 @@ for (const [alias, role] of [
   };
 }
 
-// TEST ONLY access/release fixture: two PG items, not an approved 35-item package or IRT model.
+// TEST ONLY access/release fixture: two PG items, not an approved 30-item package or IRT model.
 // Archive only prior fixtures created by this guarded harness so reruns cannot select stale packages.
 await client`update assessment_packages set status = 'ARCHIVED'
   where family_code like 'JOB06-TRYOUT-TEST-%' and is_demo = true and status = 'PUBLISHED'`;
@@ -130,7 +143,7 @@ await db.insert(assessmentPackages).values({
   assessmentType: 'TRYOUT',
   isDemo: true,
   chapterId: '00000000-0000-4000-8000-000000000100',
-  scoringPolicyVersionId: '00000000-0000-4000-8000-000000000901',
+  scoringPolicyVersionId: tryoutPolicy,
   releaseAt: new Date(local.getTime() - 7 * 3600_000),
   closeAt: new Date(Date.now() + 24 * 3600_000),
   durationSeconds: 3600,
@@ -183,6 +196,7 @@ await db.insert(packageItems).values(
   })),
 );
 
+const testStorage = new Map();
 const authServer = createServer(async (req, res) => {
   // SDK auth boundary only. Every product request uses real Nest services/guards/transactions.
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3400');
@@ -196,6 +210,35 @@ const authServer = createServer(async (req, res) => {
     res.end(JSON.stringify(value));
   };
   if (req.method === 'OPTIONS') return send(200, {});
+  // TEST ONLY S3 transport: real SDK presigning, bounded verification and final publish run in API.
+  if (req.url?.startsWith('/r2/')) {
+    const key = decodeURIComponent(req.url.split('?')[0]);
+    if (req.method === 'PUT') {
+      const chunks = [];
+      let size = 0;
+      for await (const chunk of req) {
+        size += chunk.length;
+        if (size > 5242880) return send(413, {});
+        chunks.push(chunk);
+      }
+      testStorage.set(key, {
+        bytes: Buffer.concat(chunks),
+        contentType: req.headers['content-type'],
+      });
+      res.writeHead(200);
+      return res.end();
+    }
+    const object = testStorage.get(key);
+    if (!object) {
+      res.writeHead(404, { 'Content-Type': 'application/xml' });
+      return res.end('<Error><Code>NoSuchKey</Code></Error>');
+    }
+    res.writeHead(200, {
+      'Content-Type': object.contentType,
+      'Content-Length': object.bytes.length,
+    });
+    return res.end(object.bytes);
+  }
   if (req.url === '/auth/v1/user') {
     const actor = Object.values(actors).find(
       (a) => `Bearer ${a.session.access_token}` === req.headers.authorization,
@@ -249,24 +292,28 @@ const authServer = createServer(async (req, res) => {
   }
   if (req.url === '/tryout-fixture/persistence' && req.method === 'GET') {
     const attempts =
-      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100, tryout_xp_policy_version
       from assessment_attempts where package_id = ${tryoutId}`;
     const events = await client`select o.entity_id, o.event_name from analytics_outbox o
       join assessment_attempts a on a.id = o.entity_id where a.package_id = ${tryoutId}
       and o.event_name in ('tryout_started', 'tryout_completed')`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.package_id = ${tryoutId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select x.attempt_id, x.xp_amount, x.policy_code, x.policy_version
+      from xp_ledger x join assessment_attempts a on a.id=x.attempt_id where a.package_id=${tryoutId}`;
+    return send(200, { attempts, events, pins, rewards });
   }
   if (req.url === '/persistence') {
     const attempts =
-      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100, drill_policy_version, stars
       from assessment_attempts where student_id = ${actors.student.profileId} order by started_at, id`;
     const events = await client`select entity_id, event_name from analytics_outbox
       where actor_user_id = ${actors.student.profileId} and event_name = 'drill_completed'`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.student_id = ${actors.student.profileId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select attempt_id, xp_amount, base_xp, bonus_xp, duration_seconds, policy_version
+      from xp_ledger where student_id = ${actors.student.profileId} order by occurred_at, attempt_id`;
+    return send(200, { attempts, events, pins, rewards });
   }
   send(404, { message: 'Unknown fixture request' });
 });

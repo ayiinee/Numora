@@ -45,7 +45,12 @@ integration('onboarding compatibility and collision transactions', () => {
       ids[name] = row!.id;
     }
     const identity = {
-      me: async (name: string) => ({ id: ids[name], role: roles[name], teacherVerified: true }),
+      me: async (name: string) => ({
+        id: ids[name],
+        role: roles[name],
+        adminRole: name === 'admin' ? 'SUPER_ADMIN' : null,
+        teacherVerified: true,
+      }),
     } as unknown as IdentityService;
     const schools = new SchoolsService(identity);
     const classes = new ClassesService(identity);
@@ -137,7 +142,7 @@ integration('onboarding compatibility and collision transactions', () => {
       f.schools.verifyTeacher('teacher', f.school.id, replacement.token.toLowerCase()),
     ).resolves.toEqual({ verified: true });
   });
-  it('keeps shared class codes reusable, supports legacy codes, and allows only one winning class in a race', async () => {
+  it('keeps shared class codes reusable, supports legacy codes, and permits concurrent joins below the five-class cap', async () => {
     const f = await fixture();
     const issued = await f.schools.issueToken('admin', f.school.id);
     await f.schools.verifyTeacher('teacher', f.school.id, issued.token);
@@ -155,14 +160,13 @@ integration('onboarding compatibility and collision transactions', () => {
       f.classes.join('studentC', first.joinCode),
       f.classes.join('studentC', legacyCode.toLowerCase()),
     ]);
-    expect(race.filter((r) => r.status === 'fulfilled')).toHaveLength(1);
-    expect(race.find((r) => r.status === 'rejected')).toMatchObject({ reason: { status: 409 } });
+    expect(race.filter((r) => r.status === 'fulfilled')).toHaveLength(2);
     expect(
       await f.db
         .select()
         .from(classMemberships)
         .where(and(eq(classMemberships.studentUserId, f.ids.studentC!))),
-    ).toHaveLength(1);
+    ).toHaveLength(2);
     const other = codes.generateClassJoinCode();
     const generate = vi
       .spyOn(codes, 'generateClassJoinCode')

@@ -27,6 +27,12 @@ export class StudentDashboardDto {
   @ApiProperty() displayName!: string;
   @ApiProperty({ enum: ['MANDIRI', 'SCHOOL'] }) affiliation!: 'MANDIRI' | 'SCHOOL';
   @ApiProperty({ type: DashboardClassDto, nullable: true }) class!: DashboardClassDto | null;
+  @ApiProperty({
+    type: [DashboardClassDto],
+    required: false,
+    description: 'All active classes, up to five. Legacy class is the latest joined class.',
+  })
+  classes?: DashboardClassDto[];
   @ApiProperty() completedLevels!: number;
   @ApiProperty() availableLevels!: number;
   @ApiProperty({ type: Number, nullable: true }) latestDrillScore!: number | null;

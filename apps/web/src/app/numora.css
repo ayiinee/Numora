@@ -763,6 +763,54 @@ a.settings-row:hover {
   display: grid;
   gap: 12px;
 }
+.pretest-card {
+  display: flex;
+  align-items: center;
+  gap: 16px;
+  --card-padding: 20px;
+}
+.pretest-card__icon {
+  display: grid;
+  place-items: center;
+  width: 48px;
+  height: 48px;
+  flex: 0 0 auto;
+  border-radius: var(--radius-lg);
+  color: var(--color-primary-strong);
+  background: var(--color-primary-light);
+}
+.pretest-card__copy {
+  min-width: 0;
+  flex: 1;
+}
+.pretest-card__heading {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.pretest-card__heading h3 {
+  font-size: 16px;
+}
+.pretest-card__copy p {
+  margin-top: 4px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.pretest-card__meta {
+  display: block;
+  margin-top: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.pretest-info-list {
+  display: grid;
+  gap: 12px;
+  padding-left: 22px;
+  line-height: 1.55;
+}
+.pretest-info-list li::marker {
+  color: var(--color-primary-strong);
+}
 .subchapter-row {
   display: flex;
   align-items: center;
@@ -3591,6 +3639,17 @@ a.settings-row:hover {
   .learning-catalog .catalog-intro {
     padding: 20px;
   }
+  .pretest-card {
+    align-items: flex-start;
+    flex-wrap: wrap;
+  }
+  .pretest-card__copy {
+    flex: 1 1 calc(100% - 64px);
+  }
+  .pretest-card > .numora-button {
+    flex: 1 1 calc(100% - 64px);
+    margin-left: 64px;
+  }
   .level-path {
     padding-top: 12px;
   }
@@ -3708,12 +3767,18 @@ a.settings-row:hover {
   background: var(--color-secondary-light);
   padding: 12px;
 }
-.drill-rewards__stats span {
+.drill-rewards__stats span,
+.drill-rewards__stats dt {
   font-size: 12px;
   color: var(--color-text-muted);
 }
 .drill-rewards__stats strong {
   font-size: 16px;
+}
+.drill-rewards__stats dd {
+  margin: 0;
+  font-size: 16px;
+  font-weight: 700;
 }
 .drill-rewards p {
   font-size: 12px;
@@ -6879,6 +6944,7 @@ a.settings-row:hover {
 }
 
 /* Teacher foundation/page styles: teacher.css. */
+
 /* Phase 8 — Auth: Student-derived visual language; Google/session logic unchanged. */
 .auth-redesign-shell {
   min-height: 100dvh;
@@ -7615,6 +7681,38 @@ a.settings-row:hover {
   grid-template-columns: minmax(0, 1fr);
   gap: 20px;
 }
+.admin-home-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 260px), 1fr));
+  gap: 20px;
+}
+.admin-home-intro,
+.admin-home-module {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-home-module > svg {
+  color: var(--color-primary-strong);
+}
+.admin-home-module h2,
+.admin-home-intro h2 {
+  font-size: 18px;
+  overflow-wrap: anywhere;
+}
+.admin-home-module a {
+  display: flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--color-primary-strong);
+  text-decoration: underline;
+  text-underline-offset: 4px;
+}
+.admin-home-module p,
+.admin-home-intro p {
+  color: var(--color-text-muted);
+  line-height: 1.6;
+}
 .admin-context-note {
   font-size: 12px;
   line-height: 1.7;
@@ -7829,6 +7927,84 @@ a.settings-row:hover {
 .admin-redesign-shell .admin-content textarea:disabled {
   opacity: 0.6;
 }
+.admin-operations-grid {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+.admin-operations-grid > section {
+  min-width: 0;
+}
+.admin-operations-grid > section > p {
+  margin: 0 0 16px;
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 1.7;
+}
+.admin-redesign-shell .admin-operations-filters {
+  display: grid;
+  gap: 12px;
+  margin-bottom: 16px;
+}
+.admin-operations-filters .admin-content-field {
+  display: grid;
+  gap: 6px;
+}
+.admin-operations-filters .admin-content-actions {
+  margin-top: 0;
+}
+.admin-operation-row-heading {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  gap: 12px;
+  min-width: 0;
+}
+.admin-operation-row-heading > strong,
+.admin-operation-row-heading > h3 {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-operation-detail {
+  display: grid;
+  gap: 16px;
+}
+.admin-operation-detail dl {
+  display: grid;
+  gap: 12px;
+  margin: 0;
+}
+.admin-operation-detail dl > div {
+  display: grid;
+  gap: 4px;
+  padding-bottom: 10px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-operation-detail dt {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.admin-operation-detail dd {
+  min-width: 0;
+  margin: 0;
+  overflow-wrap: anywhere;
+  font-size: 14px;
+}
+.admin-operation-readonly-note {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  line-height: 1.6;
+}
+.admin-operation-detail-placeholder {
+  min-height: 180px;
+  display: grid;
+  place-items: center;
+}
+.admin-redesign-shell .admin-operations-pagination {
+  max-width: none;
+  margin-top: 16px;
+}
 @media (min-width: 700px) {
   .admin-page-header {
     padding: 24px;
@@ -7865,6 +8041,14 @@ a.settings-row:hover {
   }
 }
 @media (min-width: 1200px) {
+  .admin-operations-grid {
+    grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
+    align-items: start;
+  }
+  .admin-operations-grid > section:nth-child(2) {
+    position: sticky;
+    top: 20px;
+  }
   .admin-content-view:has(> .admin-content-form),
   .admin-content-view > section:has(> .admin-content-form) {
     display: grid;
@@ -8732,3 +8916,12 @@ a.settings-row:hover {
 .notification-item--tryout_opened .notification-item__icon {
   background: var(--numora-gold-100);
 }
+/* Internal content tools reuse Admin surfaces and assessment controls. */
+.content-import-card, .content-preview-card { padding: var(--space-6, 24px); margin-block: 16px; }
+.content-import-card label { display: grid; gap: 8px; margin-block: 16px; }
+.content-import-card input { min-height: 44px; max-width: 100%; }
+.content-rich-text { white-space: pre-wrap; overflow-wrap: anywhere; }
+.content-preview-stem { margin-block: 20px; }
+.content-preview-image { max-width: 100%; height: auto; vertical-align: middle; }
+.content-rich-text .katex-display { overflow-x: auto; max-width: 100%; }
+.content-preview-card .admin-content-actions { flex-wrap: wrap; gap: 12px; margin-block: 16px; }

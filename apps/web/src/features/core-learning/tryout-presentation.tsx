@@ -292,10 +292,12 @@ export function TryoutWaiting({
   submitted = false,
   fetching = false,
   onCheck,
+  xp,
 }: {
   submitted?: boolean;
   fetching?: boolean;
   onCheck?: () => void;
+  xp?: number | null;
 }) {
   return (
     <Card fullWidth className="tryout-waiting">
@@ -304,6 +306,7 @@ export function TryoutWaiting({
       </span>
       <Badge variant="success">Jawaban tersimpan</Badge>
       <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil IRT'}</h2>
+      {xp != null && <p><strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.</p>}
       <p>
         Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
         selesai belum berarti hasil telah dirilis.
@@ -355,8 +358,8 @@ export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
         <Card fullWidth className="tryout-result-note">
           <Icon name="info" />
           <p>
-            Nilai yang telah dirilis mengikuti hasil server. XP belum tersedia; tidak ada bonus
-            kecepatan Tryout.
+            {result.xp != null ? `${result.xp} XP sudah tercatat.` : 'XP attempt versi lama tidak tersedia.'}
+            {' '}Tidak ada bonus kecepatan Tryout. Nilai mengikuti hasil server.
           </p>
         </Card>
       </aside>

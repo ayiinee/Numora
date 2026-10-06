@@ -140,5 +140,7 @@ it('offers list retry after a load error and conceals cached administrative deta
   fireEvent.click(screen.getByRole('button', { name: 'Terbitkan token' }));
   await screen.findByText('Akses ditolak.');
   expect(screen.queryByLabelText(/Ubah nama/)).toBeNull();
-  expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe('/');
+  expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe(
+    '/admin/login',
+  );
 });

@@ -87,9 +87,16 @@ export class IdentityService {
     return {
       id: profile.id,
       role: profile.role,
+      profilePhotoObjectKey: profile.profilePhotoObjectKey ?? null,
       status: profile.status,
       displayName: profile.displayName,
       email: profile.email,
+      adminRole: profile.adminRole,
+      capabilities:
+        profile.role === 'ADMIN' &&
+        ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(profile.adminRole ?? '')
+          ? ['CONTENT_MANAGE']
+          : [],
       teacherVerified,
       studentAffiliation,
     };

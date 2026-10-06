@@ -34,6 +34,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
       .values({
         authUserId: randomUUID(),
         role: 'ADMIN',
+        adminRole: 'SUPER_ADMIN',
         displayName: 'Dashboard fixture admin',
         email: `${randomUUID()}@example.invalid`,
       })
@@ -48,7 +49,13 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
               : header === 'other'
                 ? fixture.students[2]!
                 : fixture.students[0]!;
-        return { id: user.id, role: user.role, displayName: user.displayName, status: user.status };
+        return {
+          id: user.id,
+          role: user.role,
+          adminRole: user.adminRole,
+          displayName: user.displayName,
+          status: user.status,
+        };
       },
     } as unknown as IdentityService;
     const schools = new SchoolsService(identity);
@@ -177,7 +184,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
     const joined = await service.dashboard('other');
     expect(joined.features.tryout).toBe(true);
     expect(joined.affiliation).toBe('SCHOOL');
-    expect((await leaderboards.class('other')).policyPending).toBe(true);
+    expect((await leaderboards.class('other')).policyPending).toBe(false);
     await expect(service.dashboard('teacher')).rejects.toMatchObject({ status: 403 });
   }, 30_000);
 });

@@ -6,7 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import type postgres from 'postgres';
 
-/** Preserve published fork hashes while recovering only their known skipped DDL. */
+/** Preserve the two published IRT fork hashes while recovering skipped Core Learning DDL. */
 export async function migrateIntegratedDatabase(
   client: ReturnType<typeof postgres>,
   migrationsFolder: string,
@@ -22,18 +22,6 @@ export async function migrateIntegratedDatabase(
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
-      // The generated local file could have Windows line endings before Git enforced LF.
-      const notificationSql = await readFile(
-        resolve(migrationsFolder, '0022_amusing_quasar.sql'),
-        'utf8',
-      );
-      const notificationLf = notificationSql.replaceAll('\r\n', '\n');
-      if (
-        [notificationLf, notificationLf.replaceAll('\n', '\r\n')].some((sql) =>
-          hashes.has(createHash('sha256').update(sql).digest('hex')),
-        )
-      )
-        hashes.add(migrations[22]!.hash);
       // The audited Staging bridge retains alternate 0000-0002 history. 0003 is shared.
       const skipped = migrations
         .slice(4)
@@ -50,24 +38,16 @@ export async function migrateIntegratedDatabase(
             .digest('hex'),
         ),
       );
-      const irtFork =
-        hashes.has(migrations[3]!.hash) &&
-        irtHashes.some((hash) => hashes.has(hash)) &&
-        skipped.every((entry) => entry.folderMillis <= migrations[8]!.folderMillis);
-      // Local 0018 notifications became 0022; its SQL hash and original cursor are unchanged.
-      const notificationFork =
-        hashes.has(migrations[22]!.hash) &&
-        cursor === migrations[22]!.folderMillis &&
-        migrations.slice(0, 18).every((entry) => hashes.has(entry.hash)) &&
-        skipped.every((entry) =>
-          migrations.slice(18, 22).some((remote) => remote.hash === entry.hash),
-        );
-      if (!irtFork && !notificationFork) {
+      if (
+        !hashes.has(migrations[3]!.hash) ||
+        !irtHashes.some((hash) => hashes.has(hash)) ||
+        skipped.some((entry) => entry.folderMillis > migrations[8]!.folderMillis)
+      ) {
         throw new Error(
           'Migration history would skip unapplied migrations. Reconcile the database before migrating.',
         );
       }
-      // Only the known forks may replay their unchanged, skipped migrations.
+      // Only the known IRT fork may replay the unchanged Core Learning migrations.
       // DDL, backfill and history inserts all roll back if the schema is inconsistent.
       for (const entry of skipped) {
         for (const statement of entry.sql) {

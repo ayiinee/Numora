@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Button, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
@@ -21,11 +22,12 @@ export function AssessmentScreen() {
   );
 }
 function AssessmentContent({ token }: { token: string }) {
+  const levelId = useSearchParams().get('levelId') ?? undefined;
   const progress = useQuery({
     queryKey: ['student-progress'],
     queryFn: () => learningApi.progress(token),
   });
-  const query = useAssessmentHistory(token);
+  const query = useAssessmentHistory(token, true, levelId);
   const records = query.data?.pages.flatMap((page) => page.records) ?? [];
   return (
     <div className="assessment-history-layout">
@@ -41,7 +43,8 @@ function AssessmentContent({ token }: { token: string }) {
         )}
       </aside>
       <section className="assessment-history-records">
-        <SectionHeader title="Riwayat aktivitas" subtitle="Hasil terbaru tampil paling atas." />
+        <SectionHeader title={levelId ? 'Riwayat level' : 'Riwayat aktivitas'} subtitle="Hasil terbaru tampil paling atas." />
+        {levelId && <Link href="/student/assessment">Lihat seluruh aktivitas</Link>}
         {query.isPending || (query.isError && !query.data) ? (
           <DataState
             pending={query.isPending}

@@ -125,6 +125,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
                   ? 'TEACHER'
                   : 'STUDENT',
             status: 'ACTIVE',
+            adminRole: 'CONTENT_DATA_MODERATION',
           };
         },
       })
@@ -169,7 +170,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
   it('validates inputs, writes taxonomy transactionally, and rejects duplicate and forged actor IDs', async () => {
     const body = {
       code: `TEST-${suffix}`,
-      name: 'TEST chapter',
+      name: `TEST chapter ${suffix}`,
       displayOrder: (parseInt(suffix, 16) % 2_000_000_000) + 1,
     };
     // UI is intentionally capped to 100k order; choose an unused positive slot in that range.
@@ -242,7 +243,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     await expect(
       new ContentService().createChapter(randomUUID(), {
         code: rollbackCode,
-        name: 'TEST rollback',
+        name: `TEST rollback ${suffix}`,
         displayOrder: body.displayOrder + 1,
       }),
     ).rejects.toMatchObject({ status: 400 });
@@ -447,10 +448,8 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         await getDatabase().db.select().from(auditLogs).where(eq(auditLogs.entityId, report!.id))
       )[0]!.actorUserId,
     ).toBe(admin);
-    const logs = (await (await request('admin/audit-logs?limit=100')).json()) as {
-      items: object[];
-    };
-    expect(logs.items.every((r) => !('metadata' in r))).toBe(true);
+    // General audit can include user identifiers; Content Admin gets only scoped content audit.
+    expect((await request('admin/audit-logs?limit=100')).status).toBe(403);
     expect((await request('admin/reports?limit=0')).status).toBe(400);
     expect((await request('admin/irt?offset=-1')).status).toBe(400);
     expect((await request('admin/content/videos?limit=100000')).status).toBe(400);

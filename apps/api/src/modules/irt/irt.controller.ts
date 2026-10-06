@@ -21,6 +21,7 @@ import {
 } from '@nestjs/swagger';
 import { IrtService } from './irt.service';
 import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
+import { AdminAccess } from '../identity/admin-permissions';
 import { IrtRequestsService } from './irt-requests.service';
 import { IrtRequestDto, IrtRequestsDto, PrepareIrtRequestDto } from './irt-requests.dto';
 import { ContentPageDto } from '../content/content.dto';
@@ -59,6 +60,7 @@ export class AdminIrtBatchesDto {
 @ApiTags('admin-irt')
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
+@AdminAccess('content')
 @Controller('admin/irt')
 export class IrtController {
   constructor(

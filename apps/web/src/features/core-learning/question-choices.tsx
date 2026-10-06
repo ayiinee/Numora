@@ -1,5 +1,6 @@
 'use client';
 import { MathText } from './ui';
+import type { ReactNode } from 'react';
 
 /** Presentation-only controls. API DTO/answer mapping waits for Aini's generated PGK contract. */
 export function QuestionChoices({
@@ -12,10 +13,12 @@ export function QuestionChoices({
   statements = [],
   categories = [],
   selectedHint,
+  renderContent,
 }: {
   kind: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CATEGORY';
   name: string;
   selectedHint?: string;
+  renderContent?: (text: string, itemId: string) => ReactNode;
   options: { id: string; text: string }[];
   value: string | string[] | Record<string, string> | null;
   onChange: (value: string | string[] | Record<string, string> | null) => void;
@@ -36,7 +39,11 @@ export function QuestionChoices({
             </legend>
             <div className="practice-statement__copy" aria-hidden="true">
               <span>{index + 1}</span>
-              <MathText value={statement.text} />
+              {renderContent ? (
+                renderContent(statement.text, statement.id)
+              ) : (
+                <MathText value={statement.text} />
+              )}
             </div>
             <div className="practice-statement__options">
               {categories.map((category) => (
@@ -93,7 +100,11 @@ export function QuestionChoices({
             <span className="sr-only">.</span>
           </span>
           <span className="practice-option__text">
-            <MathText value={option.text} />
+            {renderContent ? (
+              renderContent(option.text, option.id)
+            ) : (
+              <MathText value={option.text} />
+            )}
             {value === option.id && selectedHint && <small>{selectedHint}</small>}
           </span>
           {!multiple && (

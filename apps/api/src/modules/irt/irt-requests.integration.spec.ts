@@ -111,7 +111,8 @@ describe.skipIf(!databaseUrl)(
           me: async (auth?: string) => {
             const id = auth?.replace(/^Bearer /, '');
             if (!id || !/^[0-9a-f-]{36}$/i.test(id)) throw new UnauthorizedException();
-            const [user] = await owner`SELECT id,role,status FROM users WHERE id=${id}`;
+            const [user] =
+              await owner`SELECT id,role,status,admin_role AS "adminRole" FROM users WHERE id=${id}`;
             if (!user) throw new UnauthorizedException();
             return user;
           },

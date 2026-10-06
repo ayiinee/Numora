@@ -70,7 +70,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
             worker?.close(force),
             irtQueue?.close(),
             (async () => {
-              while (outboxBusy || leaderboardBusy || tryoutBusy || notificationBusy || irtBusy) {
+              while (outboxBusy || leaderboardBusy || tryoutBusy || irtBusy || notificationBusy) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),

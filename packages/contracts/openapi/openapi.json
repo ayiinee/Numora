@@ -187,6 +187,163 @@
         ]
       }
     },
+    "/api/v1/classes/takeover": {
+      "post": {
+        "operationId": "ClassesController_takeover",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinClassDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/leave": {
+      "post": {
+        "operationId": "ClassesController_leave",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/ban": {
+      "post": {
+        "operationId": "ClassesController_ban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/unban": {
+      "post": {
+        "operationId": "ClassesController_unban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
     "/api/v1/classes/join": {
       "post": {
         "operationId": "ClassesController_join",
@@ -1076,6 +1233,41 @@
           },
           "503": {
             "description": "Attempt limiter unavailable."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
+    "/api/v1/schools/{schoolId}/leave": {
+      "post": {
+        "operationId": "SchoolsController_leave",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftSchoolDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -2586,6 +2778,378 @@
         ]
       }
     },
+    "/api/v1/admin/content/import-validations": {
+      "post": {
+        "operationId": "ContentPreviewController_validate",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/imports": {
+      "post": {
+        "operationId": "ContentPreviewController_import",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ImportBodyDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/imports/{id}": {
+      "get": {
+        "operationId": "ContentPreviewController_report",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ImportReportDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions": {
+      "post": {
+        "operationId": "ContentPreviewController_create",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreatePreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}": {
+      "get": {
+        "operationId": "ContentPreviewController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/answers/{instanceId}": {
+      "patch": {
+        "operationId": "ContentPreviewController_save",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SavePreviewAnswerDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewAckDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/submit": {
+      "post": {
+        "operationId": "ContentPreviewController_submit",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/result": {
+      "get": {
+        "operationId": "ContentPreviewController_result",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/PreviewSessionDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/preview-sessions/{id}/media-links": {
+      "post": {
+        "operationId": "ContentPreviewController_media",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/MediaLinkRequestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLinksDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -3633,6 +4197,42 @@
         "operationId": "LeaderboardsController_class",
         "parameters": [
           {
+            "name": "classId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/activity": {
+      "get": {
+        "operationId": "LeaderboardsController_activity",
+        "parameters": [
+          {
             "name": "authorization",
             "required": true,
             "in": "header",
@@ -4129,6 +4729,24 @@
       "IdentityProfileDto": {
         "type": "object",
         "properties": {
+          "adminRole": {
+            "type": "string",
+            "enum": [
+              "SUPER_ADMIN",
+              "OPERATIONS",
+              "CONTENT_DATA_MODERATION"
+            ],
+            "nullable": true
+          },
+          "capabilities": {
+            "type": "array",
+            "items": {
+              "type": "string",
+              "enum": [
+                "CONTENT_MANAGE"
+              ]
+            }
+          },
           "id": {
             "type": "string",
             "format": "uuid"
@@ -4140,6 +4758,11 @@
               "TEACHER",
               "ADMIN"
             ]
+          },
+          "profilePhotoObjectKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "Storage object key; never a stored signed URL."
           },
           "status": {
             "type": "string",
@@ -4228,6 +4851,10 @@
       "CreateClassDto": {
         "type": "object",
         "properties": {
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -4270,6 +4897,28 @@
         },
         "required": [
           "joinCode"
+        ]
+      },
+      "LeftClassDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
+        ]
+      },
+      "ClassBanDto": {
+        "type": "object",
+        "properties": {
+          "banned": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "banned"
         ]
       },
       "JoinedClassDto": {
@@ -4394,18 +5043,37 @@
           "xpState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
             ],
-            "description": "Numeric XP policy/posting is pending JOB-11; Pretest never awards XP."
+            "description": "Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP."
           },
           "starsState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
-            ],
-            "description": "Drill star thresholds are OPEN; other assessment types do not award Drill stars."
+            ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "stars": {
+            "type": "number",
+            "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
+          "tryoutXpPolicyVersion": {
+            "type": "number",
+            "nullable": true
           },
           "submittedAt": {
             "type": "string",
@@ -4509,6 +5177,13 @@
                 "$ref": "#/components/schemas/DashboardClassDto"
               }
             ]
+          },
+          "classes": {
+            "description": "All active classes, up to five. Legacy class is the latest joined class.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardClassDto"
+            }
           },
           "completedLevels": {
             "type": "number"
@@ -4782,6 +5457,13 @@
           "bestScore": {
             "type": "number",
             "nullable": true
+          },
+          "latestStars": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Stars from the latest completed attempt, not best stars."
           }
         },
         "required": [
@@ -4931,6 +5613,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Database time for count-up display; server timestamps own reward duration."
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -4979,6 +5666,39 @@
         "required": [
           "questionInstanceId",
           "selectedOptionId"
+        ]
+      },
+      "DrillRewardDto": {
+        "type": "object",
+        "properties": {
+          "policyCode": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "number"
+          },
+          "baseXp": {
+            "type": "number"
+          },
+          "bonusXp": {
+            "type": "number",
+            "description": "Unrounded speed bonus stored at submission."
+          },
+          "totalXp": {
+            "type": "number",
+            "description": "Once-rounded final XP, including bonus and cap."
+          },
+          "durationSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "policyCode",
+          "policyVersion",
+          "baseXp",
+          "bonusXp",
+          "totalXp",
+          "durationSeconds"
         ]
       },
       "ReviewedQuestionDto": {
@@ -5045,6 +5765,10 @@
       "DrillResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"
@@ -5074,6 +5798,21 @@
           "stars": {
             "type": "number",
             "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true,
+            "description": "Pinned at start. Null identifies the historical Drill policy."
+          },
+          "reward": {
+            "nullable": true,
+            "description": "Persisted ledger details; null for legacy attempts without this reward policy.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillRewardDto"
+              }
+            ]
           },
           "unlockedLevelId": {
             "type": "string",
@@ -5182,6 +5921,15 @@
       "TryoutAttemptDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Persisted XP available after completion, independently of IRT release; null for active/legacy attempts."
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "serverTime": {
             "type": "string",
             "format": "date-time"
@@ -5228,11 +5976,20 @@
       "TryoutSubmitDto": {
         "type": "object",
         "properties": {
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "state": {
             "type": "string",
             "enum": [
               "waitingIrt"
             ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Immediate XP, independent of later IRT result release; null for legacy policy attempts."
           }
         },
         "required": [
@@ -5271,6 +6028,14 @@
       "TryoutResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"
@@ -5461,6 +6226,17 @@
         },
         "required": [
           "verified"
+        ]
+      },
+      "LeftSchoolDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
         ]
       },
       "AdminSchoolDto": {
@@ -5661,7 +6437,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -5713,7 +6490,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -5769,7 +6547,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -5809,7 +6588,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -5849,7 +6629,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           }
@@ -5873,7 +6654,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -5897,7 +6679,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -5910,7 +6693,9 @@
             "format": "uuid"
           },
           "levelNumber": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
           },
           "description": {
             "type": "string"
@@ -5920,7 +6705,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -5940,7 +6726,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -5967,6 +6754,9 @@
       "AdminVersionDto": {
         "type": "object",
         "properties": {
+          "imported": {
+            "type": "boolean"
+          },
           "id": {
             "type": "string"
           },
@@ -6020,14 +6810,16 @@
             "type": "string"
           },
           "difficulty": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "contentStatus": {
             "type": "string",
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "questionStatus": {
@@ -6035,7 +6827,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "reviewedByUserId": {
@@ -6180,7 +6973,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6249,7 +7043,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6302,7 +7097,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6338,7 +7134,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6527,7 +7324,10 @@
             "format": "uuid"
           },
           "variantIndex": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1,
+            "description": "PRD v0.6 MVP uses one variant per level."
           },
           "scoringPolicyVersionId": {
             "type": "string",
@@ -6751,6 +7551,562 @@
           "verifiedAt"
         ]
       },
+      "ImportBodyDto": {
+        "type": "object",
+        "properties": {
+          "sourceNamespace": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$"
+          },
+          "questions": {
+            "minItems": 1,
+            "maxItems": 100,
+            "description": "Question import v2 JSON Schema; runtime and semantic validation apply.",
+            "type": "array",
+            "items": {
+              "type": "object"
+            }
+          }
+        },
+        "required": [
+          "sourceNamespace",
+          "questions"
+        ]
+      },
+      "ImportItemDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "canPreview": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "VALIDATED",
+              "CREATED",
+              "CREATED_REVISION",
+              "SKIPPED_UNCHANGED",
+              "INVALID"
+            ]
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "externalId",
+          "canImportDraft",
+          "canPreview",
+          "blockers",
+          "outcome",
+          "questionVersionId"
+        ]
+      },
+      "ImportReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportItemDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "sourceNamespace",
+          "canImportDraft",
+          "items"
+        ]
+      },
+      "CreatePreviewDto": {
+        "type": "object",
+        "properties": {
+          "questionVersionIds": {
+            "minItems": 1,
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "questionVersionIds"
+        ]
+      },
+      "RichContentDto": {
+        "type": "object",
+        "properties": {
+          "text": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "text"
+        ]
+      },
+      "PreviewOptionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "content": {
+            "$ref": "#/components/schemas/RichContentDto"
+          }
+        },
+        "required": [
+          "id",
+          "content"
+        ]
+      },
+      "PreviewCategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "PreviewItemDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "revision": {
+            "type": "number"
+          },
+          "serverSavedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "answerKey": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "instanceId",
+          "answer",
+          "revision",
+          "serverSavedAt",
+          "questionVersionId",
+          "externalId",
+          "type",
+          "stem",
+          "options",
+          "categories",
+          "score"
+        ]
+      },
+      "PreviewMediaDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "assetId",
+          "altText",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "PreviewSessionDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "state": {
+            "type": "string",
+            "enum": [
+              "IN_PROGRESS",
+              "SUBMITTED"
+            ]
+          },
+          "scoringStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_SCORED"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewItemDto"
+            }
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "state",
+          "scoringStatus",
+          "score",
+          "items",
+          "media"
+        ]
+      },
+      "SavePreviewAnswerDto": {
+        "type": "object",
+        "properties": {
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "expectedRevision": {
+            "type": "number",
+            "minimum": 0
+          }
+        },
+        "required": [
+          "answer",
+          "expectedRevision"
+        ]
+      },
+      "PreviewAckDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "answer": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "revision": {
+            "type": "number"
+          },
+          "serverSavedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "answer",
+          "revision",
+          "serverSavedAt"
+        ]
+      },
+      "MediaLinkRequestDto": {
+        "type": "object",
+        "properties": {
+          "phase": {
+            "type": "string",
+            "enum": [
+              "WORK",
+              "REVIEW"
+            ]
+          },
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetIds": {
+            "maxItems": 100,
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "phase",
+          "instanceId",
+          "assetIds"
+        ]
+      },
+      "MediaLinksDto": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "media"
+        ]
+      },
       "AdminDashboardDto": {
         "type": "object",
         "properties": {
@@ -6901,10 +8257,12 @@
           },
           "teacherId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "teacherName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "studentCount": {
             "type": "number"
@@ -7807,6 +9165,11 @@
           },
           "className": {
             "type": "string",
+            "nullable": true
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           },
           "unit": {

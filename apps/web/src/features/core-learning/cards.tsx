@@ -86,6 +86,9 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
             timeZone: 'Asia/Jakarta',
           }).format(new Date(item.submittedAt))}
         </time>
+        {item.xpState === 'ready' && item.xp != null && <p>{item.xp} XP</p>}
+        {item.starsState === 'ready' && item.stars != null && <p>Bintang: {item.stars} / 3</p>}
+        {item.xpState === 'legacy' && <p className="muted">XP tidak tercatat pada hasil versi lama</p>}
         {(item.xpState === 'pending' || item.starsState === 'pending') && (
           <p className="muted">
             {item.xpState === 'pending' && item.starsState === 'pending'

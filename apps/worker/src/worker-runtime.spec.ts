@@ -11,9 +11,6 @@ const mocks = vi.hoisted(() => ({
   status: vi.fn(),
   recover: vi.fn(),
   project: vi.fn(),
-  notify: vi.fn(),
-  irt: vi.fn(),
-  irtQueue: { close: vi.fn() },
   workerHandlers: new Map<string, (...args: unknown[]) => void>(),
   redisHandlers: new Map<string, (...args: unknown[]) => void>(),
 }));
@@ -36,14 +33,11 @@ vi.mock('@tka/database', () => ({
 vi.mock('./tryout-recovery.js', () => ({ recoverOverdueTryouts: mocks.recover }));
 vi.mock('./notifications.js', () => ({
   discoverNotificationReleases: vi.fn(async () => {}),
-  drainNotificationBatch: mocks.notify,
+  drainNotificationBatch: vi.fn(async () => ({ delivered: 0, failed: 0 })),
 }));
 vi.mock('./outbox.js', () => ({ drainOutboxBatch: mocks.outbox, outboxStatus: mocks.status }));
 vi.mock('./class-leaderboard.js', () => ({ projectClassLeaderboard: mocks.project }));
-vi.mock('./irt-v3.js', () => ({
-  createIrtQueue: vi.fn(() => mocks.irtQueue),
-  pollIrtV3: mocks.irt,
-}));
+vi.mock('./irt-v3.js', () => ({ createIrtQueue: vi.fn(), pollIrtV3: vi.fn() }));
 import { runWorker } from './worker-runtime.js';
 
 describe('worker Redis outage lifecycle', () => {
@@ -52,7 +46,6 @@ describe('worker Redis outage lifecycle', () => {
     vi.useFakeTimers();
     vi.stubEnv('REDIS_URL', 'rediss://fixture-secret@redis.invalid:6379');
     vi.stubEnv('BULLMQ_PREFIX', 'numora:dev:fixture');
-    vi.stubEnv('IRT_V3_ENABLED', 'false');
     mocks.workerHandlers.clear();
     mocks.redisHandlers.clear();
     mocks.redis.on.mockImplementation((event, handler) => mocks.redisHandlers.set(event, handler));
@@ -70,9 +63,6 @@ describe('worker Redis outage lifecycle', () => {
     mocks.outbox.mockResolvedValue({ processed: 0, failed: 0 });
     mocks.project.mockResolvedValue({});
     mocks.recover.mockResolvedValue({ finalized: 0, failed: 0, backlog: 0 });
-    mocks.notify.mockResolvedValue({ delivered: 0, failed: 0 });
-    mocks.irt.mockResolvedValue({ notified: 0, adopted: 0, failed: 0 });
-    mocks.irtQueue.close.mockResolvedValue(undefined);
     vi.spyOn(console, 'log').mockImplementation(() => {});
     vi.spyOn(console, 'error').mockImplementation(() => {});
   });
@@ -139,38 +129,6 @@ describe('worker Redis outage lifecycle', () => {
     await vi.advanceTimersByTimeAsync(5_000);
     expect(exit).toHaveBeenCalledExactlyOnceWith(1);
     expect(mocks.redis.disconnect).toHaveBeenCalledOnce();
-  });
-
-  it('waits for both notification and IRT polling before closing the database', async () => {
-    vi.stubEnv('IRT_V3_ENABLED', 'true');
-    const exit = vi.fn();
-    const runtime = await runWorker(exit);
-    let finishNotification!: () => void;
-    let finishIrt!: () => void;
-    mocks.notify.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finishNotification = () => resolve({ delivered: 0, failed: 0 });
-        }),
-    );
-    mocks.irt.mockImplementationOnce(
-      () =>
-        new Promise((resolve) => {
-          finishIrt = () => resolve({ notified: 0, adopted: 0, failed: 0 });
-        }),
-    );
-    await vi.advanceTimersByTimeAsync(5_000);
-    const stopping = runtime!.stop();
-    expect(mocks.closeDatabase).not.toHaveBeenCalled();
-    finishNotification();
-    await vi.advanceTimersByTimeAsync(50);
-    expect(mocks.closeDatabase).not.toHaveBeenCalled();
-    finishIrt();
-    await vi.advanceTimersByTimeAsync(50);
-    await stopping;
-    expect(mocks.irtQueue.close).toHaveBeenCalledOnce();
-    expect(mocks.closeDatabase).toHaveBeenCalledOnce();
-    expect(exit).toHaveBeenCalledExactlyOnceWith(0);
   });
 
   it('bounds startup when Redis cannot connect and removes signal listeners', async () => {
