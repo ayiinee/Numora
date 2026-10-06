@@ -997,6 +997,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await admin.goto('/admin/content/imports');
     await admin.getByLabel('Tujuan unggah').selectOption('TRYOUT');
     await admin.getByLabel('Paket tujuan').selectOption(targetPackage.id);
+    await expect(
+      admin.getByRole('heading', { name: /TEST ONLY mixed-format DRAFT preview/ }),
+    ).toBeVisible();
     await admin.getByLabel('File soal JSON').setInputFiles({
       name: 'questions.json',
       mimeType: 'application/json',
