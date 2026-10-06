@@ -1612,7 +1612,7 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
     await page.getByLabel('Versi paket', { exact: true }).fill('1');
     await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
-    await expect(page.getByLabel('Indeks varian', { exact: true })).toHaveValue('1');
+    await expect(page.getByRole('spinbutton', { name: /^Indeks varian/ })).toHaveValue('1');
     await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture baru');
     await page
       .getByRole('combobox', { name: 'Versi kebijakan penilaian', exact: true })
