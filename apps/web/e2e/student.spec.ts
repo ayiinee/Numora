@@ -1019,10 +1019,14 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
     await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
-    await page.goto('/student');
-    await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
     await expect(
-      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+      page
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText('IX fixture', { exact: true }),
+    ).toBeVisible();
+    await page.goto('/student');
+    await expect(
+      page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
     ).toBeVisible();
     for (const path of ['/demo/student', '/demo/pvp', '/demo/leaderboards']) {
       const response = await page.goto(path);
@@ -1217,7 +1221,7 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page).toHaveURL('http://localhost:3300/student');
   await expect(
-    page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+    page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
   await expect(
@@ -1259,7 +1263,7 @@ for (const width of [320, 390, 1440])
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
     await expect(
-      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+      page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
     ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -1998,7 +2002,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await capture('result');
     // Explicit server fixture; no star formula is inferred from the score.
     resultStars = 3;
-    await page.reload();
+    await page.goto(`/student/drill/${attemptId}/result`);
     await expect(page.getByText('Bintang: 3', { exact: true })).toBeVisible();
     await expect(page.locator('.result-stars svg')).toHaveCount(3);
     await expect(page.locator('.result-stars svg').first()).toHaveCSS('width', '40px');
