@@ -266,6 +266,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     version = (
       await mutation('questions', {
         ...content,
+        usageType: 'TRYOUT',
         primaryCompetencyId: competency,
         variantCode: `ORIG-${suffix}`,
       })

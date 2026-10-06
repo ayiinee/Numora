@@ -337,6 +337,7 @@ describe('Admin content UI', () => {
     fireEvent.change(await screen.findByLabelText('Kompetensi'), {
       target: { value: 'competency-test' },
     });
+    fireEvent.change(screen.getByLabelText('Tujuan soal permanen'), { target: { value: 'DRILL' } });
     fireEvent.change(screen.getByLabelText('Kode varian unik'), { target: { value: 'ORIG-TEST' } });
     fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
       target: { value: 'TEST 1 + 1' },

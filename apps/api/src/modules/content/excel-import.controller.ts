@@ -6,6 +6,7 @@ import {
   HttpCode,
   Inject,
   Post,
+  Query,
   StreamableFile,
   UploadedFile,
   UseGuards,
@@ -18,6 +19,7 @@ import {
   ApiConsumes,
   ApiOkResponse,
   ApiProduces,
+  ApiQuery,
   ApiTags,
 } from '@nestjs/swagger';
 import { ContentAdminGuard } from '../identity/content-admin.guard';
@@ -40,13 +42,14 @@ export class ExcelImportController {
       properties: {
         file: { type: 'string', format: 'binary' },
         sourceNamespace: { type: 'string', pattern: '^[A-Za-z0-9_-]{1,128}$' },
+        packageId: { type: 'string', format: 'uuid' },
       },
     },
   })
   @ApiOkResponse({ type: ExcelParseDto })
   @UseInterceptors(
     FileInterceptor('file', {
-      limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 1, fieldSize: 128 },
+      limits: { fileSize: 10 * 1024 * 1024, files: 1, fields: 2, fieldSize: 128 },
     }),
   )
   parse(
@@ -58,15 +61,21 @@ export class ExcelImportController {
         code: 'EXCEL_FILE_REQUIRED',
         detail: 'Pilih satu file .xlsx.',
       });
-    return this.excel.parse(file.buffer, body.sourceNamespace);
+    return this.excel.parse(file.buffer, body.sourceNamespace, body.packageId, file.originalname);
   }
   @Get('excel-template')
+  @ApiQuery({ name: 'packageId', required: false, type: String, format: 'uuid' })
+  @ApiQuery({ name: 'examples', required: false, type: Boolean })
   @ApiProduces('application/vnd.openxmlformats-officedocument.spreadsheetml.sheet')
   @ApiOkResponse({ schema: { type: 'string', format: 'binary' } })
-  async template() {
-    return new StreamableFile(await this.excel.template(), {
+  async template(@Query('packageId') packageId?: string, @Query('examples') examples?: string) {
+    if (packageId && !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(packageId))
+      throw new BadRequestException({ code: 'PACKAGE_ID_INVALID' });
+    if (examples !== undefined && !['true', 'false'].includes(examples))
+      throw new BadRequestException({ code: 'EXAMPLES_INVALID' });
+    return new StreamableFile(await this.excel.template(packageId, examples === 'true'), {
       type: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
-      disposition: 'attachment; filename="NUMORA_EXCEL_V3.xlsx"',
+      disposition: `attachment; filename="NUMORA_EXCEL_${packageId ? 'V4' : 'V3'}.xlsx"`,
     });
   }
 }

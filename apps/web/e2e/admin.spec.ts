@@ -3,7 +3,53 @@ import { mkdir, readFile, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { loadAdminWorkbench } from '../src/features/admin/content-api';
 import type { AdminSchool, TeacherTokenSummary } from '../src/lib/api';
-import type { ExcelParseDto } from '../src/features/admin/generated-types';
+import type { ExcelParseDto, ContentPackageDetailDto } from '../src/features/admin/generated-types';
+
+function directedPackage(
+  usage: ContentPackageDetailDto['assessmentType'] = 'DRILL',
+): ContentPackageDetailDto {
+  return {
+    id: id(950),
+    familyCode: `TEST-${usage}`,
+    packageVersion: 1,
+    name: `TEST ONLY ${usage}`,
+    assessmentType: usage,
+    contentRevision: 0,
+    status: 'DRAFT',
+    isDemo: true,
+    source: {
+      sourceNamespace: 'TEST',
+      sourceName: 'TEST ONLY Curriculum',
+      sourceReference: 'TEST ONLY reference',
+    },
+    chapterId: usage === 'TRYOUT' ? null : id(1),
+    levelId: usage === 'DRILL' ? id(4) : null,
+    chapterCode: usage === 'TRYOUT' ? null : 'BAB-02',
+    chapterName: usage === 'TRYOUT' ? null : 'Persamaan & Fungsi Kuadrat',
+    subchapterCode: usage === 'DRILL' ? 'SUB-21' : null,
+    subchapterName: usage === 'DRILL' ? 'Faktorisasi & Bentuk Kuadrat' : null,
+    levelNumber: usage === 'DRILL' ? 1 : null,
+    items: [],
+    distribution: [],
+    readiness: {
+      packageId: id(950),
+      contentRevision: 0,
+      canSaveDraft: false,
+      canPublish: false,
+      actualCount: 0,
+      expectedCount: usage === 'DRILL' ? 10 : usage === 'PRETEST' ? 20 : 30,
+      blockers: ['COUNT', 'REVIEW', 'BLUEPRINT', 'PUBLICATION'],
+      removedVersionIds: [],
+      checks: [
+        {
+          code: 'PUBLICATION',
+          passed: false,
+          detail: 'TEST ONLY: publikasi tertahan oleh blueprint/runtime.',
+        },
+      ],
+    },
+  };
+}
 
 // Synthetic browser fixtures: real AuthProvider/REST clients, no database writes or auth bypass.
 const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
@@ -430,7 +476,7 @@ for (const width of [390, 1280]) {
         await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
       } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
       if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
-        const link = main.getByRole('link', { name: 'Impor JSON' });
+        const link = main.getByRole('link', { name: 'Impor soal' });
         await expect(link).toBeVisible();
         await capture(page, `portal-${role}`, width);
         await link.focus();
@@ -442,7 +488,7 @@ for (const width of [390, 1280]) {
           width < 960
             ? page.locator('#mobile-menu')
             : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
-        await expect(nav.getByRole('link', { name: 'Impor JSON' })).toHaveAttribute(
+        await expect(nav.getByRole('link', { name: 'Impor soal' })).toHaveAttribute(
           'aria-current',
           'page',
         );
@@ -451,7 +497,7 @@ for (const width of [390, 1280]) {
           'page',
         );
       } else {
-        await expect(main.getByRole('link', { name: 'Impor JSON' })).toHaveCount(0);
+        await expect(main.getByRole('link', { name: 'Impor soal' })).toHaveCount(0);
         if (role === null) await expect(main.getByText(/Belum ada modul/)).toBeVisible();
         await capture(page, `portal-${role ?? 'unassigned'}`, width);
       }
@@ -749,9 +795,12 @@ test('Excel local preview, failed R2 PUT, retry and permanent JSON references', 
     imports = 0;
   const reserveKeys: string[] = [];
   const objectKey = 'question-media/TEST-EXCEL/v1/x-test-image.png';
+  const pack = directedPackage();
   await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
     const request = route.request(),
       path = new URL(request.url()).pathname;
+    if (path.endsWith('/packages')) return route.fulfill({ json: { items: [pack] } });
+    if (path.endsWith(`/packages/${pack.id}`)) return route.fulfill({ json: pack });
     if (path.endsWith('/excel-parses')) {
       expect(request.headers()['content-type']).toContain('multipart/form-data; boundary=');
       return route.fulfill({ json: parsed });
@@ -814,11 +863,24 @@ test('Excel local preview, failed R2 PUT, retry and permanent JSON references', 
     });
   });
   await page.goto('/admin/content/imports');
-  await page.getByLabel('Namespace sumber').fill('TEST');
+  await page.getByLabel('Paket tujuan').selectOption(pack.id);
   await page
     .getByLabel('File soal Excel')
     .setInputFiles(resolve('../api/src/modules/content/fixtures/excel-v3-mixed.xlsx'));
   await expect(page.getByAltText('TEST Excel diagram')).toBeVisible();
+  await page.getByRole('button', { name: 'Konversi ke paket terpilih' }).click();
+  // Before upload, validation reports readable local media rather than a verified receipt.
+  await page.route(
+    'http://localhost:3301/api/v1/admin/content/import-validations',
+    async (route) => {
+      const body = route.request().postDataJSON();
+      if (!body.questions[0].metadata.assetManifest[0].objectKey)
+        return route.fulfill({ json: parsed.report });
+      return route.fallback();
+    },
+  );
+  await page.getByRole('button', { name: 'Validasi JSON' }).click();
+  await expect(page.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
   expect(imports).toBe(0);
   await page.getByRole('button', { name: 'Impor sebagai DRAFT' }).click();
   await expect(page.getByText(/Unggah gambar gagal/)).toBeVisible();
@@ -837,3 +899,187 @@ test('Excel local preview, failed R2 PUT, retry and permanent JSON references', 
   expect(json).not.toContain('base64');
   expect(errors).toEqual([]);
 });
+
+for (const usage of ['DRILL', 'PRETEST', 'TRYOUT'] as const)
+  test(`Directed ${usage}: create source-bound draft, import and review checklist`, async ({
+    page,
+  }) => {
+    const { errors } = await setup(page);
+    const pack = directedPackage(usage);
+    let created = false,
+      imported = false;
+    const rows: ExcelParseDto['envelope']['questions'] = Array.from(
+      { length: pack.readiness.expectedCount },
+      (_, i) => ({
+        externalId: `TEST-${usage}-${i + 1}`,
+        type: 'SINGLE_CHOICE',
+        chapterCode: 'BAB-02',
+        subchapterCode: 'SUB-21',
+        competencyCode: 'ALG-01',
+        difficulty: 'EASY',
+        stem: { text: `TEST ONLY $${i + 1}+1$` },
+        options: [
+          { id: 'A', content: { text: String(i + 2) } },
+          { id: 'B', content: { text: String(i + 3) } },
+        ],
+        answer: { optionId: 'A' },
+        explanation: { text: `$${i + 1}+1=${i + 2}$` },
+        metadata: {
+          sourceLevelNumber: 1,
+          sourceOrder: i + 1,
+          sourceSheet: 'PG',
+          sourceRowNumber: i + 2,
+          assetManifest: [],
+        },
+      }),
+    );
+    const report = () => ({
+      id: imported ? id(951) : null,
+      sourceNamespace: 'TEST',
+      canImportDraft: true,
+      items: rows.map((q, i) => ({
+        externalId: q.externalId,
+        canImportDraft: true,
+        canPreview: true,
+        blockers: [],
+        outcome: imported ? 'CREATED' : 'VALIDATED',
+        questionVersionId: imported ? id(960 + i) : null,
+        change: 'ADD',
+      })),
+      package: {
+        ...pack.readiness,
+        contentRevision: pack.contentRevision,
+        canSaveDraft: true,
+        actualCount: rows.length,
+        checks: [
+          { code: 'COUNT', passed: true, detail: `${rows.length}/${rows.length} soal.` },
+          { code: 'PUBLICATION', passed: false, detail: 'TEST ONLY: publikasi tertahan.' },
+        ],
+      },
+    });
+    await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
+      const req = route.request(),
+        path = new URL(req.url()).pathname;
+      if (path.endsWith('/packages')) {
+        if (req.method() === 'POST') {
+          const body = req.postDataJSON();
+          expect(body.assessmentType).toBe(usage);
+          expect(body.source).toEqual(pack.source);
+          expect(body.isDemo).toBe(true);
+          if (usage === 'DRILL') expect(body.levelId).toBe(id(4));
+          if (usage === 'PRETEST') expect(body.chapterId).toBe(id(1));
+          created = true;
+          return route.fulfill({ status: 201, json: { id: pack.id } });
+        }
+        return route.fulfill({ json: { items: created ? [pack] : [] } });
+      }
+      if (path.endsWith(`/packages/${pack.id}`)) return route.fulfill({ json: pack });
+      if (path.endsWith('/excel-template'))
+        return route.fulfill({
+          contentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          body: Buffer.from('TEST ONLY browser download fixture'),
+        });
+      if (path.endsWith('/excel-parses'))
+        return route.fulfill({
+          json: {
+            envelope: {
+              schemaVersion: 2,
+              sourceNamespace: 'TEST',
+              binding: {
+                packageId: pack.id,
+                familyCode: pack.familyCode,
+                packageVersion: 1,
+                assessmentType: usage,
+                chapterCode: pack.chapterCode,
+                subchapterCode: pack.subchapterCode,
+                levelNumber: pack.levelNumber,
+                ...pack.source,
+                isDemo: true,
+              },
+              questions: rows,
+            },
+            media: [],
+            issues: [],
+            report: report(),
+          },
+        });
+      if (path.endsWith('/import-validations') || path.endsWith('/imports')) {
+        const body = req.postDataJSON();
+        expect(body.target).toMatchObject({ packageId: pack.id, expectedRevision: 0 });
+        expect(body.sourceNamespace).toBe('TEST');
+        expect(body.questions).toHaveLength(rows.length);
+        if (path.endsWith('/imports')) {
+          expect(req.headers()['idempotency-key']).toBeTruthy();
+          imported = true;
+          pack.contentRevision = 1;
+          pack.readiness.actualCount = rows.length;
+          pack.items = rows.map((question, i) => ({
+            questionVersionId: id(960 + i),
+            questionId: id(1000 + i),
+            displayOrder: i + 1,
+            usageType: usage,
+            contentStatus: 'DRAFT',
+            reviewedAt: null,
+            reviewedByUserId: null,
+            question,
+          }));
+        }
+        return route.fulfill({ status: path.endsWith('/imports') ? 201 : 200, json: report() });
+      }
+      if (path.endsWith('/review')) {
+        const body = req.postDataJSON();
+        expect(body).toMatchObject({
+          packageId: pack.id,
+          confirmed: true,
+          notes: 'TEST ONLY academic review',
+        });
+        const item = pack.items.find((i) => path.includes(i.questionVersionId))!;
+        item.reviewedAt = '2026-10-06T04:00:00Z';
+        item.reviewedByUserId = id(100);
+        return route.fulfill({ json: { id: item.questionVersionId } });
+      }
+      return route.fallback();
+    });
+    await page.goto('/admin/content/imports');
+    await page.getByLabel('Tujuan unggah').selectOption(usage);
+    await page.getByRole('button', { name: 'Buat paket DRAFT', exact: true }).click();
+    await page.getByLabel('Judul paket').fill(pack.name);
+    await page.getByLabel('Kode keluarga paket').fill(pack.familyCode);
+    if (usage === 'DRILL') await page.getByLabel('Subbab dan level paket').selectOption(id(4));
+    if (usage === 'PRETEST') await page.getByLabel('Bab Pretest').selectOption(id(1));
+    await page.getByLabel('Kode sumber stabil').fill('TEST');
+    await page.getByLabel('Nama penyusun / tim / buku').fill(pack.source!.sourceName);
+    await page.getByLabel('Referensi sumber').fill(pack.source!.sourceReference);
+    await page.getByLabel('Konten DEMO / contoh pengujian').check();
+    await page.getByRole('button', { name: 'Simpan paket DRAFT' }).click();
+    await expect(page.getByLabel('Namespace sumber')).toHaveValue('TEST');
+    await expect(page.getByLabel('Namespace sumber')).toBeDisabled();
+    const download = page.waitForEvent('download');
+    await page.getByRole('button', { name: 'Unduh contoh penuh DEMO' }).click();
+    expect((await download).suggestedFilename()).toContain(usage);
+    await page
+      .getByLabel('File soal Excel')
+      .setInputFiles(resolve('../api/src/modules/content/fixtures/excel-v3-mixed.xlsx'));
+    await expect(page.getByRole('table')).toBeVisible();
+    await expect(page.locator('.katex').first()).toBeVisible();
+    await expect(page.getByText(`${rows.length} soal dipilih.`, { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Impor sebagai DRAFT' }).click();
+    await expect(page.getByRole('heading', { name: 'Laporan impor' })).toBeVisible();
+    expect(imported).toBe(true);
+    await expect(
+      page.getByRole('heading', {
+        name: `Checklist kesiapan · ${rows.length}/${rows.length} soal`,
+      }),
+    ).toBeVisible();
+    await page
+      .getByLabel('Catatan tinjauan materi, kunci dan pembahasan')
+      .fill('TEST ONLY academic review');
+    await page.getByRole('button', { name: 'Catat review 1', exact: true }).click();
+    await expect(page.getByText(/Review tercatat/).first()).toBeVisible();
+    await expect(
+      page.getByText('TEST ONLY: publikasi tertahan oleh blueprint/runtime.'),
+    ).toBeVisible();
+    expect(pack.items[0]!.contentStatus).toBe('DRAFT');
+    expect(pack.readiness.canPublish).toBe(false);
+    expect(errors).toEqual([]);
+  });

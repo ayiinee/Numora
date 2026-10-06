@@ -8919,3 +8919,46 @@ a.settings-row:hover {
 .content-preview-image { max-width: 100%; height: auto; vertical-align: middle; }
 .content-rich-text .katex-display { overflow-x: auto; max-width: 100%; }
 .content-preview-card .admin-content-actions { flex-wrap: wrap; gap: 12px; margin-block: 16px; }
+.excel-preview-card { min-width: 0; }
+.excel-preview-heading, .excel-preview-summary { display: flex; flex-wrap: wrap; align-items: center; justify-content: space-between; gap: var(--space-3); margin-bottom: var(--space-4); }
+.excel-preview-heading h2 { margin-bottom: var(--space-2); }
+.excel-preview-heading p, .excel-preview-summary > span:last-child { color: var(--color-text-muted); }
+.excel-preview-summary { justify-content: flex-start; }
+.excel-preview-scroll { max-width: 100%; overflow-x: auto; border: 1px solid var(--color-border); border-radius: var(--radius-lg); }
+.excel-preview-table { width: 100%; min-width: 1080px; border-collapse: collapse; table-layout: fixed; font-size: var(--text-sm); line-height: 1.65; }
+.excel-preview-table caption { padding: var(--space-3) var(--space-4); text-align: left; color: var(--color-text-muted); background: var(--color-surface); }
+.excel-preview-table th, .excel-preview-table td { padding: var(--space-4); vertical-align: top; text-align: left; border-bottom: 1px solid var(--color-border); overflow-wrap: anywhere; }
+.excel-preview-table thead th { background: var(--numora-purple-50); color: var(--color-text); font-weight: var(--font-semibold); }
+.excel-preview-table thead th:nth-child(1) { width: 52px; }
+.excel-preview-table thead th:nth-child(2) { width: 170px; }
+.excel-preview-table thead th:nth-child(3) { width: 330px; }
+.excel-preview-table thead th:nth-child(4) { width: 100px; }
+.excel-preview-table thead th:nth-child(5) { width: 250px; }
+.excel-preview-table thead th:nth-child(6) { width: 170px; }
+.excel-preview-table tbody tr:nth-child(even) { background: var(--color-surface); }
+.excel-preview-table th[scope="row"] > * { display: block; margin-bottom: var(--space-2); }
+.excel-preview-table th[scope="row"] > span:not(.numora-badge) { font-weight: normal; color: var(--color-text-muted); }
+.excel-preview-table input[type="checkbox"], .excel-preview-table input[type="radio"] { width: 20px; height: 20px; min-height: 20px; accent-color: var(--color-primary); }
+.excel-preview-table th:first-child, .excel-preview-table td:first-child { padding-inline: 4px; }
+.excel-preview-table label.excel-select-control { display: flex; align-items: center; justify-content: center; min-width: 44px; min-height: 44px; margin: 0; }
+.excel-row-unselected { background: var(--color-surface); }
+.excel-preview-stem { font-weight: var(--font-medium); margin-bottom: var(--space-4); }
+.excel-preview-options, .excel-category-keys { list-style: none; padding: 0; margin: 0; }
+.excel-preview-options li { display: flex; align-items: start; gap: var(--space-2); padding-block: var(--space-2); }
+.excel-preview-options li > div { min-width: 0; }
+.excel-preview-table .content-preview-image { display: block; max-height: 160px; width: auto; max-width: 100%; object-fit: contain; margin-block: var(--space-2); border-radius: var(--radius-md); }
+.excel-answer-options { display: flex; flex-wrap: wrap; gap: var(--space-2); }
+.excel-row-actions { display: grid; justify-items: start; gap: var(--space-3); }
+.excel-row-actions > span:not(.numora-badge) { color: var(--color-text-muted); }
+.excel-issues { background: var(--color-warning-light); padding: var(--space-4); border-radius: var(--radius-lg); margin-bottom: var(--space-4); }
+.excel-issues li { margin-block: var(--space-3); }
+.excel-issues li > * { display: block; }
+.excel-question-editor { max-width: 960px; padding: var(--space-4); }
+.excel-question-editor textarea, .excel-question-editor input:not([type="radio"]):not([type="checkbox"]), .excel-question-editor select { width: 100%; min-width: 0; padding: var(--space-3); border: 1px solid var(--color-border); border-radius: var(--radius-md); font: inherit; background: var(--color-surface-strong); }
+.excel-editor-options { display: grid; grid-template-columns: repeat(2, minmax(0, 1fr)); gap: var(--space-4); }
+.excel-question-editor .excel-choice { display: flex; align-items: center; gap: var(--space-2); min-height: 44px; }
+@media (max-width: 640px) {
+  .excel-preview-card { padding: var(--space-4); }
+  .excel-editor-options { grid-template-columns: 1fr; }
+  .excel-question-editor { max-width: min(900px, calc(100vw - 96px)); padding: 0; }
+}

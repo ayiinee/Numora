@@ -3,10 +3,12 @@
 > **ENGINEERING DECISION:** importer/preview rollout imports DRAFT only, with all preview scores null. No production publication, PGK grading, XP, or IRT is enabled by preview.
 
 **ENGINEERING DECISION — 5 October 2026:** PRD v0.6 §3.2–3.3/§23.7 maps to a unified `/admin` entry, provisioned internal login at `/admin/login`, shared role-aware navigation and removal of the development mock. Content import/preview remains under `/admin/content`; operational subrole enforcement and limited view DTOs remain outstanding. [Scope and verification](../development/ADMIN_PORTAL_2026-10-05.md).
->
+
 > **OPEN / dependency:** Curriculum still supplies approved taxonomy, blueprint, difficulty and PGK rubric; Data/AI supplies IRT details. TryOut XP conflicts between section 12 (x10) and AC-15 (x100), requiring PO correction before implementation. Full admin permission matrix and Ready/Revision/Archive workflow are tracked separately; content-only capability is not full RBAC acceptance.
 
 # PRD → Engineering Mapping
+
+**ENGINEERING DECISION — owner approved, 6 October 2026:** [directed package pipeline](../content/CONTENT_PACKAGE_PIPELINE.md) maps Excel/JSON intake to versioned questions and canonical assessment packages. PRD v0.6 counts are Drill 10, Pretest 20 and Tryout 30. Admin review/readiness is separate from publication and student runtime compatibility.
 
 **USER CLARIFICATION — 3 Oktober 2026:** indikator kurikulum menggunakan `competencies`. Level/progres berada di subbab; nomor level kurikulum pada bank soal menentukan pool lintas indikator untuk level subbab yang sama. Ini tidak menetapkan kuota indikator, rubrik, atau jumlah level. [Rincian data dan migrasi](../data/CURRICULUM_SLUG_LEVEL_MIGRATIONS_2026-10-03.md).
 

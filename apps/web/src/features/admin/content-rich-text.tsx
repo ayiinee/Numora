@@ -34,12 +34,19 @@ export function ContentRichText({
   text,
   media,
   retry,
+  renderBareMath = false,
 }: {
   text: string;
   media: PreviewMediaDto[];
   retry: () => void;
+  renderBareMath?: boolean;
 }) {
-  const parts = text.split(/(\[\[asset:[A-Za-z0-9_-]+\]\]|\$\$[\s\S]*?\$\$|\$[^$\n]+\$)/g);
+  const delimiters =
+    /\[\[asset:[A-Za-z0-9_-]+\]\]|\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/;
+  const power = /(?:[A-Za-z0-9]+|\([^()\n]+\))\^(?:\{[^{}\n]+\}|-?\d+|[A-Za-z])/;
+  const parts = text.split(
+    new RegExp(`(${delimiters.source}${renderBareMath ? `|${power.source}` : ''})`, 'g'),
+  );
   return (
     <span className="content-rich-text">
       {parts.map((part, i) => {
@@ -52,10 +59,14 @@ export function ContentRichText({
               onRetry={retry}
             />
           );
-        if (part.startsWith('$') && part.endsWith('$')) {
-          const display = part.startsWith('$$');
+        const dollar = part.startsWith('$') && part.endsWith('$');
+        const bracket = part.startsWith('\\(') || part.startsWith('\\[');
+        const bare = renderBareMath && new RegExp(`^${power.source}$`).test(part);
+        if (dollar || bracket || bare) {
+          const display = part.startsWith('$$') || part.startsWith('\\[');
+          const trim = bracket || display ? 2 : 1;
           // Only KaTeX output becomes HTML. trust:false rejects HTML/URL commands.
-          const html = katex.renderToString(part.slice(display ? 2 : 1, display ? -2 : -1), {
+          const html = katex.renderToString(bare ? part : part.slice(trim, -trim), {
             displayMode: display,
             throwOnError: false,
             trust: false,

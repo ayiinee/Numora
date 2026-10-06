@@ -22,12 +22,59 @@ import {
   contentImports,
   contentImportIdentities,
   contentImportVersions,
+  assessmentPackages,
+  packageItems,
   getDatabase,
   type ImportQuestion,
 } from '@tka/database';
 import type { AdminTransaction } from '../audit/admin-mutation';
 import type { ImportBodyDto, ImportItemDto, ImportReportDto } from './content-preview.dto';
 import { digest, snapshot, structuralErrors } from './content-import.validation';
+import {
+  packageContext,
+  placementErrors,
+  assertDraftRevision,
+  packageCounts,
+} from './content-package.rules';
+import type { ContentPackageDto } from './content-packages.dto';
+
+const validationDetails: Record<string, string> = {
+  INVALID_SCHEMA: 'Struktur, format teks, pilihan, kunci atau metadata tidak sesuai kontrak soal.',
+  CONTENT_EMPTY: 'Teks soal, pilihan dan pembahasan wajib diisi.',
+  DUPLICATE_EXTERNAL_ID: 'Identitas soal berulang dalam satu file.',
+  DUPLICATE_OPTION: 'ID pilihan/pernyataan harus unik.',
+  DUPLICATE_CATEGORY: 'ID kategori harus unik.',
+  CATEGORIES_REQUIRED: 'Soal Kategori memerlukan sedikitnya dua kategori.',
+  UNEXPECTED_CATEGORIES: 'Kategori hanya berlaku untuk format Kategori.',
+  INVALID_KEY: 'Kunci harus mengacu pada ID pilihan/kategori yang tersedia.',
+  INCOMPLETE_KEY: 'Setiap pernyataan memerlukan kunci kategori.',
+  MASTER_SCOPE_NOT_FOUND:
+    'Hubungan bab, subbab, indikator dan level tidak ada atau diarsipkan pada master.',
+  UNSUPPORTED_LEVEL_CODE: 'Gunakan sourceLevelNumber dari master, bukan levelCode bebas.',
+  DRILL_SCOPE_MISMATCH: 'Bab, subbab dan level soal harus sama dengan paket Drill.',
+  PRETEST_CHAPTER_MISMATCH: 'Bab soal harus sama dengan paket Pretest.',
+  QUESTION_UNCLASSIFIED:
+    'Klasifikasikan tujuan keluarga soal lama sebelum menggunakannya dalam paket.',
+  QUESTION_USAGE_MISMATCH:
+    'Tujuan keluarga soal berbeda dari paket; buat salinan beridentitas baru.',
+  PACKAGE_TARGET_REQUIRED:
+    'Soal terklasifikasi harus diimpor melalui paket dengan tujuan yang sesuai.',
+  SOURCE_QUESTION_INVALID: 'ID soal asal harus berupa UUID keluarga soal yang ada.',
+  SOURCE_QUESTION_IMMUTABLE: 'Identitas asal salinan tidak dapat diganti melalui revisi.',
+  NEEDS_REVIEW:
+    'Perubahan format, indikator atau level memerlukan identitas baru agar histori tetap utuh.',
+  MEDIA_RECEIPT_INVALID: 'Referensi gambar tidak cocok dengan receipt R2 terverifikasi.',
+  MEDIA_NOT_READY: 'Gambar terbaca tetapi belum diunggah dan diverifikasi pada R2.',
+  DUPLICATE_ASSET: 'ID gambar harus unik dalam soal.',
+  INVALID_ASSET_MARKER: 'Penanda gambar tidak cocok dengan posisi soal/pilihan/pembahasan.',
+  INVALID_ASSET_REFERENCE: 'Referensi gambar tidak cocok dengan manifest dan posisi teks.',
+  INVALID_ASSET_MANIFEST: 'Manifest gambar harus cocok dengan ID soal dan penanda pada teks.',
+  PACKAGE_IMMUTABLE: 'Paket terbit/arsip tidak dapat ditimpa; buat versi paket baru.',
+  PACKAGE_REVISION_CONFLICT: 'Paket diubah admin lain; muat ulang dan validasi preview kembali.',
+  PACKAGE_SOURCE_MISMATCH: 'Namespace impor harus sama dengan sumber paket.',
+  QUESTION_ORDER_REQUIRED: 'Setiap soal memerlukan nomor positif dalam batas integer PostgreSQL.',
+  QUESTION_ORDER_DUPLICATE: 'Nomor soal harus unik lintas seluruh sheet.',
+};
 
 export function operationKey(key: string | undefined) {
   if (!key || !/^[A-Za-z0-9_-]{1,128}$/.test(key))
@@ -54,7 +101,7 @@ export class ContentImportService {
       });
   }
 
-  private async inspect(tx: AdminTransaction, body: ImportBodyDto) {
+  private async inspect(tx: AdminTransaction, body: ImportBodyDto, target?: ContentPackageDto) {
     const records = [];
     const duplicate = new Set<string>();
     for (const input of body.questions) {
@@ -93,6 +140,23 @@ export class ContentImportService {
         .for('share');
       if (!level) errors.push('MASTER_SCOPE_NOT_FOUND');
       if (q.levelCode != null) errors.push('UNSUPPORTED_LEVEL_CODE');
+      if (target) errors.push(...placementErrors(q, target));
+      if (q.metadata.sourceQuestionId !== undefined) {
+        if (
+          typeof q.metadata.sourceQuestionId !== 'string' ||
+          !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(q.metadata.sourceQuestionId)
+        )
+          errors.push('SOURCE_QUESTION_INVALID');
+        else if (
+          !(
+            await tx
+              .select({ id: questions.id })
+              .from(questions)
+              .where(eq(questions.id, q.metadata.sourceQuestionId))
+          )[0]
+        )
+          errors.push('SOURCE_QUESTION_INVALID');
+      }
       let ready = true;
       for (const asset of q.metadata.assetManifest ?? []) {
         if (!asset.objectKey) {
@@ -142,7 +206,18 @@ export class ContentImportService {
         const [family] = await tx
           .select()
           .from(questions)
-          .where(eq(questions.id, identity.questionId));
+          .where(eq(questions.id, identity.questionId))
+          .for('share');
+        if (target && family?.usageType === null) errors.push('QUESTION_UNCLASSIFIED');
+        else if (target && family?.usageType !== target.assessmentType)
+          errors.push('QUESTION_USAGE_MISMATCH');
+        else if (!target && family?.usageType) errors.push('PACKAGE_TARGET_REQUIRED');
+        if (
+          q.metadata.sourceQuestionId &&
+          (q.metadata.sourceQuestionId === identity.questionId ||
+            q.metadata.sourceQuestionId !== family?.sourceQuestionId)
+        )
+          errors.push('SOURCE_QUESTION_IMMUTABLE');
         if (
           family?.primaryCompetencyId !== level?.competencyId ||
           family?.curriculumLevelNumber !== q.metadata.sourceLevelNumber ||
@@ -183,17 +258,109 @@ export class ContentImportService {
         canImportDraft: !r.errors.length,
         canPreview: !r.errors.length && r.ready,
         blockers: [...new Set([...r.errors, ...(!r.ready ? ['MEDIA_NOT_READY'] : [])])],
+        issues: [...new Set([...r.errors, ...(!r.ready ? ['MEDIA_NOT_READY'] : [])])].map(
+          (code) => ({
+            code,
+            detail: validationDetails[code] ?? code,
+            sheet: typeof r.q.metadata?.sourceSheet === 'string' ? r.q.metadata.sourceSheet : null,
+            row:
+              typeof r.q.metadata?.sourceRowNumber === 'number'
+                ? r.q.metadata.sourceRowNumber
+                : null,
+          }),
+        ),
         outcome: r.errors.length ? 'INVALID' : 'VALIDATED',
         questionVersionId: null,
       })),
     };
   }
+  async validateWithin(tx: AdminTransaction, body: ImportBodyDto, lock = false) {
+    const target = body.target ? await packageContext(tx, body.target.packageId, lock) : undefined;
+    const records = await this.inspect(tx, body, target);
+    const report = this.report(body, records);
+    if (target) {
+      const blockers: string[] = [];
+      if (target.status !== 'DRAFT') blockers.push('PACKAGE_IMMUTABLE');
+      if (target.contentRevision !== body.target!.expectedRevision)
+        blockers.push('PACKAGE_REVISION_CONFLICT');
+      if (!target.source || target.source.sourceNamespace !== body.sourceNamespace)
+        blockers.push('PACKAGE_SOURCE_MISMATCH');
+      const orders = records.map((r) => r.q.metadata?.sourceOrder);
+      if (
+        orders.some(
+          (n) => !Number.isSafeInteger(n) || (n as number) < 1 || (n as number) > 2147483647,
+        )
+      )
+        blockers.push('QUESTION_ORDER_REQUIRED');
+      if (new Set(orders).size !== orders.length) blockers.push('QUESTION_ORDER_DUPLICATE');
+      const old = await tx
+        .select({ id: packageItems.questionVersionId, questionId: questionVariants.questionId })
+        .from(packageItems)
+        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+        .where(eq(packageItems.packageId, target.id));
+      for (const [i, r] of records.entries()) {
+        const previous = old.find((item) => item.questionId === r.identity?.questionId);
+        report.items[i]!.change = r.errors.length
+          ? 'INVALID'
+          : previous
+            ? previous.id === r.latest?.version.id && r.latest.hash === r.hash
+              ? 'KEEP'
+              : 'REVISE'
+            : r.identity
+              ? 'REUSE'
+              : 'ADD';
+      }
+      report.canImportDraft = report.canImportDraft && !blockers.length;
+      report.package = {
+        packageId: target.id,
+        contentRevision: target.contentRevision,
+        canSaveDraft: report.canImportDraft && records.every((r) => r.ready),
+        canPublish: false,
+        expectedCount: packageCounts[target.assessmentType],
+        actualCount: records.length,
+        blockers,
+        removedVersionIds: old
+          .filter((item) => !records.some((r) => r.identity?.questionId === item.questionId))
+          .map((item) => item.id),
+        checks: [
+          {
+            code: 'STRUCTURE',
+            passed: records.every((r) => !r.errors.length),
+            detail: 'Struktur, kunci, master kurikulum dan tujuan soal.',
+          },
+          {
+            code: 'MEDIA',
+            passed: records.every((r) => r.ready && !r.errors.includes('MEDIA_RECEIPT_INVALID')),
+            detail: 'Setiap gambar memiliki receipt R2 terverifikasi.',
+          },
+          {
+            code: 'PACKAGE_CONTEXT',
+            passed: !blockers.length,
+            detail:
+              blockers.map((code) => validationDetails[code] ?? code).join(' ') ||
+              'Identitas, namespace dan revisi paket sesuai.',
+          },
+          {
+            code: 'COUNT',
+            passed: records.length === packageCounts[target.assessmentType],
+            detail: `${records.length}/${packageCounts[target.assessmentType]} soal. DRAFT boleh belum lengkap.`,
+          },
+          {
+            code: 'PUBLICATION',
+            passed: false,
+            detail:
+              'Impor tetap DRAFT. Review dan checklist publikasi diperiksa setelah tersimpan.',
+          },
+        ],
+      };
+    }
+    return { records, report, target };
+  }
   async validate(body: ImportBodyDto): Promise<ImportReportDto> {
     this.enabled();
     this.size(body);
-    return getDatabase().db.transaction(async (tx) =>
-      this.report(body, await this.inspect(tx, body)),
-    );
+    return getDatabase().db.transaction(async (tx) => (await this.validateWithin(tx, body)).report);
   }
   private size(body: ImportBodyDto) {
     if (Buffer.byteLength(JSON.stringify(body)) > 2 * 1024 * 1024)
@@ -222,6 +389,11 @@ export class ContentImportService {
           throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
         return existing.report as ImportReportDto;
       }
+      // Lock the package before identities; all package writers take this row lock.
+      const target = body.target
+        ? await packageContext(tx, body.target.packageId, true)
+        : undefined;
+      if (target) assertDraftRevision(target, body.target!.expectedRevision);
       for (const id of [
         ...new Set(
           body.questions.map((q) =>
@@ -232,8 +404,12 @@ export class ContentImportService {
         ),
       ].sort())
         await operationLock(tx, `content-identity:${body.sourceNamespace}:${id}`);
-      const records = await this.inspect(tx, body);
-      const report = this.report(body, records);
+      const { records, report } = await this.validateWithin(tx, body);
+      if (target && records.some((r) => !r.ready))
+        throw new HttpException(
+          { code: 'MEDIA_NOT_READY', detail: 'Verifikasi seluruh gambar sebelum menyimpan paket.' },
+          422,
+        );
       if (!report.canImportDraft)
         throw new HttpException(
           { code: 'IMPORT_VALIDATION_FAILED', detail: 'Import rejected atomically.', report },
@@ -268,6 +444,8 @@ export class ContentImportService {
               primaryCompetencyId: r.level!.competencyId,
               curriculumLevelNumber: r.q.metadata.sourceLevelNumber,
               sourceRef: r.q.externalId,
+              usageType: target?.assessmentType ?? null,
+              sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
               status: 'DRAFT',
             })
             .returning();
@@ -315,7 +493,17 @@ export class ContentImportService {
           identityId: identity!.id,
           importId: id,
           contentHash: r.hash,
-          provenance: r.q.metadata,
+          provenance: {
+            ...r.q.metadata,
+            ...(target
+              ? {
+                  packageId: target.id,
+                  usageType: target.assessmentType,
+                  packageSource: target.source,
+                  fileName: body.target?.fileName ?? null,
+                }
+              : {}),
+          },
         });
         items.push({
           ...report.items[i]!,
@@ -324,6 +512,27 @@ export class ContentImportService {
         });
       }
       report.items = items;
+      if (target) {
+        const ordered = items
+          .map((item, index) => ({ item, order: records[index]!.q.metadata.sourceOrder! }))
+          .sort((a, b) => a.order - b.order);
+        await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
+        await tx
+          .insert(packageItems)
+          .values(
+            ordered.map(({ item }, index) => ({
+              packageId: target.id,
+              questionVersionId: item.questionVersionId!,
+              displayOrder: index + 1,
+              maxPoints: '1',
+            })),
+          );
+        await tx
+          .update(assessmentPackages)
+          .set({ contentRevision: target.contentRevision + 1 })
+          .where(eq(assessmentPackages.id, target.id));
+        report.package!.contentRevision = target.contentRevision + 1;
+      }
       // The row is invisible until this transaction commits with its complete report.
       await tx.update(contentImports).set({ report }).where(eq(contentImports.id, id));
       await tx.insert(auditLogs).values({
@@ -331,7 +540,12 @@ export class ContentImportService {
         action: 'CONTENT_IMPORTED',
         entityType: 'content_import',
         entityId: id,
-        metadata: { count: items.length },
+        metadata: {
+          count: items.length,
+          packageId: target?.id ?? null,
+          usageType: target?.assessmentType ?? null,
+          fileName: body.target?.fileName ?? null,
+        },
       });
       return report;
     });

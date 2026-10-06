@@ -1,4 +1,10 @@
 export type ContentKind = 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CATEGORY';
+export type QuestionUsage = 'DRILL' | 'PRETEST' | 'TRYOUT';
+export interface PackageSource {
+  sourceNamespace: string;
+  sourceName: string;
+  sourceReference: string;
+}
 export interface RichContent {
   text: string;
   assetKeys?: string[];
@@ -44,6 +50,8 @@ export interface ImportQuestion {
   explanation: RichContent;
   metadata: Record<string, unknown> & {
     sourceLevelNumber: number;
+    sourceOrder?: number;
+    sourceQuestionId?: string;
     assetManifest?: ContentAsset[];
     categories?: ContentCategory[];
   };

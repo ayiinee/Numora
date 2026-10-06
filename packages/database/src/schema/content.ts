@@ -16,6 +16,7 @@ import {
 import { users } from './identity.js';
 import { scoringRubricVersions, validationState } from './measurement-foundation.js';
 import { contentValidationDecisions } from './measurement.js';
+import type { QuestionUsage } from '../content-import-contract.js';
 
 export const contentStatus = pgEnum('content_status', ['DRAFT', 'READY', 'ARCHIVED']);
 export const questionType = pgEnum('question_type', [
@@ -116,11 +117,24 @@ export const questions = pgTable(
     // Source level within an indicator; learner progress remains scoped to subchapter levels.
     curriculumLevelNumber: integer('curriculum_level_number'),
     sourceRef: text('source_ref'),
+    usageType: text('usage_type').$type<QuestionUsage>(),
+    sourceQuestionId: uuid('source_question_id').references((): AnyPgColumn => questions.id, {
+      onDelete: 'restrict',
+    }),
     status: contentStatus('status').notNull().default('DRAFT'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
     index('questions_competency_idx').on(table.primaryCompetencyId),
+    index('questions_usage_competency_idx').on(table.usageType, table.primaryCompetencyId),
+    check(
+      'questions_usage_ck',
+      sql`${table.usageType} is null or ${table.usageType} in ('DRILL','PRETEST','TRYOUT')`,
+    ),
+    check(
+      'questions_source_question_ck',
+      sql`${table.sourceQuestionId} is null or ${table.sourceQuestionId} <> ${table.id}`,
+    ),
     index('questions_competency_level_idx').on(
       table.primaryCompetencyId,
       table.curriculumLevelNumber,

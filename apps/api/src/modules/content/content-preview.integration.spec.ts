@@ -16,6 +16,9 @@ import { configureApplication } from '../../bootstrap';
 import { R2MediaStorage, matchesImageSignature } from './r2-media.storage';
 import type { MediaUpload } from './media-uploads.repository';
 import type { ImportReportDto, PreviewSessionDto, PreviewAckDto } from './content-preview.dto';
+import type { ContentPackageDetailDto, CreateContentPackageDto } from './content-packages.dto';
+import { ContentImportService } from './content-import.service';
+import type { ExcelParseDto } from './excel-import.dto';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 describe.skipIf(!testUrl)(
@@ -601,6 +604,393 @@ describe.skipIf(!testUrl)(
       expect((await request('admin/content/import-validations', 'POST', body())).status).toBe(503);
       enabled = true;
       expect((await owner`SELECT count(*)::int AS n FROM content_preview_sessions`)[0]!.n).toBe(1);
+    });
+    it('directs three purposes, binds templates, replaces membership atomically and protects review/history', async () => {
+      const q = structuredClone(samples.find((q) => !q.metadata.assetManifest?.length)!);
+      q.externalId = 'TEST-DIRECTED';
+      q.metadata.sourceOrder = 1;
+      const [scope] =
+        await owner`SELECT c.id AS chapter_id,l.id AS level_id FROM chapters c JOIN subchapters s ON s.chapter_id=c.id JOIN levels l ON l.subchapter_id=s.id WHERE c.code=${q.chapterCode} AND s.code=${q.subchapterCode} AND l.level_number=${q.metadata.sourceLevelNumber}`;
+      const source = {
+        sourceNamespace: namespace + '_directed',
+        sourceName: 'TEST ONLY Curriculum',
+        sourceReference: 'TEST ONLY fixture reference',
+      };
+      const create = async (usage: CreateContentPackageDto['assessmentType'], version = 1) =>
+        ok<{ id: string }>('admin/content/packages', 'POST', {
+          familyCode: `TEST-${usage}-${suffix.slice(0, 12)}`,
+          packageVersion: version,
+          name: `TEST ONLY ${usage}`,
+          assessmentType: usage,
+          isDemo: true,
+          source,
+          ...(usage === 'DRILL'
+            ? { levelId: scope!.level_id }
+            : usage === 'PRETEST'
+              ? { chapterId: scope!.chapter_id }
+              : {}),
+        });
+      const drill = await create('DRILL'),
+        pretest = await create('PRETEST'),
+        tryout = await create('TRYOUT');
+      for (const token of ['', 'operations', 'student', 'teacher', 'unassigned']) {
+        for (const [path, method, input] of [
+          ['admin/content/packages', 'GET', undefined],
+          ['admin/content/packages', 'POST', { assessmentType: 'PRETEST' }],
+          [`admin/content/packages/${drill.id}`, 'PATCH', {}],
+          [
+            `admin/content/versions/${randomUUID()}/review`,
+            'POST',
+            { confirmed: true, notes: 'TEST ONLY' },
+          ],
+          [`admin/content/questions/${randomUUID()}/usage`, 'PATCH', { usageType: 'DRILL' }],
+        ] as const)
+          expect((await request(path, method, input, token)).status).toBe(token ? 403 : 401);
+      }
+      const directed = (id: string, revision: number, rows: ImportQuestion[] = [q]) => ({
+        sourceNamespace: source.sourceNamespace,
+        target: { packageId: id, expectedRevision: revision, fileName: 'TEST_ONLY.xlsx' },
+        questions: rows,
+      });
+      const duplicate = await ok<ImportReportDto>(
+        'admin/content/import-validations',
+        'POST',
+        directed(drill.id, 0, [q, { ...q, externalId: 'TEST-DUPLICATE' }]),
+      );
+      expect(duplicate.package?.blockers).toContain('QUESTION_ORDER_DUPLICATE');
+      expect(duplicate.canImportDraft).toBe(false);
+      const wrongScope = structuredClone(q);
+      wrongScope.metadata.sourceLevelNumber++;
+      expect(
+        (
+          await ok<ImportReportDto>(
+            'admin/content/import-validations',
+            'POST',
+            directed(drill.id, 0, [wrongScope]),
+          )
+        ).items[0]!.blockers,
+      ).toContain('DRILL_SCOPE_MISMATCH');
+      const changedChapter = structuredClone(q);
+      changedChapter.chapterCode = 'FOREIGN';
+      expect(
+        (
+          await ok<ImportReportDto>(
+            'admin/content/import-validations',
+            'POST',
+            directed(pretest.id, 0, [changedChapter]),
+          )
+        ).items[0]!.blockers,
+      ).toContain('PRETEST_CHAPTER_MISMATCH');
+      const key = randomUUID();
+      const first = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        directed(drill.id, 0),
+        'admin',
+        key,
+      );
+      expect(first.package).toMatchObject({
+        contentRevision: 1,
+        expectedCount: 10,
+        actualCount: 1,
+        canPublish: false,
+      });
+      expect(
+        (
+          await ok<ImportReportDto>(
+            'admin/content/imports',
+            'POST',
+            directed(drill.id, 0),
+            'admin',
+            key,
+          )
+        ).id,
+      ).toBe(first.id);
+      expect(
+        (
+          await request(
+            'admin/content/imports',
+            'POST',
+            directed(drill.id, 0),
+            'admin',
+            randomUUID(),
+          )
+        ).status,
+      ).toBe(409);
+      const version = first.items[0]!.questionVersionId!;
+      const family = (
+        await owner`SELECT question_id FROM question_variants v JOIN question_versions qv ON qv.variant_id=v.id WHERE qv.id=${version}`
+      )[0]!.question_id as string;
+      const mixed = await ok<ImportReportDto>(
+        'admin/content/import-validations',
+        'POST',
+        directed(pretest.id, 0),
+      );
+      expect(mixed.items[0]!.blockers).toContain('QUESTION_USAGE_MISMATCH');
+      expect(
+        (
+          await request('admin/content/tryout-packages', 'POST', {
+            familyCode: 'TEST-BYPASS',
+            packageVersion: 1,
+            name: 'TEST',
+            questionVersionIds: [version],
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (await request(`admin/content/questions/${family}/usage`, 'PATCH', { usageType: 'TRYOUT' }))
+          .status,
+      ).toBe(409);
+      const copy = structuredClone(q);
+      copy.externalId = 'TEST-PRETEST-COPY';
+      copy.metadata.sourceQuestionId = family;
+      const pre = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        directed(pretest.id, 0, [copy]),
+        'admin',
+        randomUUID(),
+      );
+      expect(
+        (
+          await request('admin/content/drill-packages', 'POST', {
+            familyCode: 'TEST-DRILL-BYPASS',
+            packageVersion: 1,
+            name: 'TEST ONLY',
+            levelId: scope!.level_id,
+            variantIndex: 1,
+            scoringPolicyVersionId: randomUUID(),
+            questionVersionIds: [pre.items[0]!.questionVersionId],
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await owner`SELECT source_question_id FROM questions WHERE source_ref=${copy.externalId}`
+        )[0]!.source_question_id,
+      ).toBe(family);
+      expect(
+        (
+          await request(
+            `admin/content/versions/${pre.items[0]!.questionVersionId}/review`,
+            'POST',
+            { confirmed: false, notes: 'TEST' },
+          )
+        ).status,
+      ).toBe(400);
+      await ok(`admin/content/versions/${pre.items[0]!.questionVersionId}/review`, 'POST', {
+        packageId: pretest.id,
+        confirmed: true,
+        notes: 'TEST ONLY: reviewed metadata, question, key and explanation',
+      });
+      const reviewed = await ok<ContentPackageDetailDto>(`admin/content/packages/${pretest.id}`);
+      expect(reviewed.items[0]!.reviewedByUserId).toBe(actor);
+      expect(reviewed.items[0]!.contentStatus).toBe('DRAFT');
+      expect(reviewed.readiness.checks.find((c) => c.code === 'REVIEW')!.passed).toBe(true);
+      expect(reviewed.readiness.canPublish).toBe(false);
+      expect(
+        (
+          await owner`SELECT metadata->>'notes' AS notes FROM audit_logs WHERE action='imported_question_reviewed' AND entity_id=${pre.items[0]!.questionVersionId}`
+        )[0]!.notes,
+      ).toContain('TEST ONLY');
+      for (const [pack, expectedCount] of [
+        [drill, 10],
+        [pretest, 20],
+        [tryout, 30],
+      ] as const) {
+        const template = await fetch(
+          `${base}/admin/content/excel-template?packageId=${pack.id}&examples=true`,
+          { headers: { Authorization: 'Bearer admin' } },
+        );
+        expect(template.status).toBe(200);
+        const bytes = await template.arrayBuffer();
+        const form = new FormData();
+        form.append('file', new Blob([bytes]), 'TEST_ONLY.xlsx');
+        form.append('sourceNamespace', source.sourceNamespace);
+        form.append('packageId', pack.id);
+        const parsedResponse = await fetch(`${base}/admin/content/excel-parses`, {
+          method: 'POST',
+          headers: { Authorization: 'Bearer admin' },
+          body: form,
+        });
+        expect(parsedResponse.status).toBe(200);
+        const parsed = (await parsedResponse.json()) as ExcelParseDto;
+        expect(parsed.issues).toEqual([]);
+        expect(parsed.envelope.questions).toHaveLength(expectedCount);
+        expect(new Set(parsed.envelope.questions.map((q) => q.metadata.sourceOrder)).size).toBe(
+          expectedCount,
+        );
+        const formWrong = new FormData();
+        formWrong.append('file', new Blob([bytes]), 'TEST_ONLY.xlsx');
+        formWrong.append('sourceNamespace', source.sourceNamespace);
+        formWrong.append('packageId', pack.id === drill.id ? pretest.id : drill.id);
+        const wrong = (await (
+          await fetch(`${base}/admin/content/excel-parses`, {
+            method: 'POST',
+            headers: { Authorization: 'Bearer admin' },
+            body: formWrong,
+          })
+        ).json()) as ExcelParseDto;
+        expect(wrong.issues.map((i) => i.code)).toContain('PACKAGE_BINDING_MISMATCH');
+        if (pack.id === tryout.id) {
+          await ok(
+            'admin/content/imports',
+            'POST',
+            directed(pack.id, 0, parsed.envelope.questions),
+            'admin',
+            randomUUID(),
+          );
+          expect(
+            (
+              await ok<ContentPackageDetailDto>(`admin/content/packages/${pack.id}`)
+            ).readiness.checks.find((c) => c.code === 'COUNT')!.passed,
+          ).toBe(true);
+        } else {
+          const completePackage = await create(pack.id === drill.id ? 'DRILL' : 'PRETEST', 2);
+          await ok(
+            'admin/content/imports',
+            'POST',
+            directed(completePackage.id, 0, parsed.envelope.questions),
+            'admin',
+            randomUUID(),
+          );
+          expect(
+            (
+              await ok<ContentPackageDetailDto>(`admin/content/packages/${completePackage.id}`)
+            ).readiness.checks.find((c) => c.code === 'COUNT')!.passed,
+          ).toBe(true);
+        }
+      }
+      const revised = structuredClone(q);
+      revised.stem.text += ' TEST revised';
+      await expect(
+        owner`UPDATE questions SET usage_type='TRYOUT' WHERE id=${family}`,
+      ).rejects.toMatchObject({ code: '23514' });
+      const foreignChapter = structuredClone(
+        samples.find((row) => row.chapterCode !== q.chapterCode)!,
+      );
+      foreignChapter.metadata.assetManifest = [];
+      for (const text of [
+        foreignChapter.stem,
+        foreignChapter.explanation,
+        ...foreignChapter.options.map((o) => o.content),
+      ])
+        text.text = text.text.replace(/\[\[asset:[^\]]+\]\]/g, 'TEST diagram');
+      foreignChapter.externalId = 'TEST-CROSS-CHAPTER';
+      foreignChapter.metadata.sourceOrder = 2;
+      const cross = await ok<ImportReportDto>(
+        'admin/content/import-validations',
+        'POST',
+        directed(tryout.id, 1, [{ ...q, externalId: 'TEST-TRYOUT-ORIGINAL' }, foreignChapter]),
+      );
+      expect(cross.canImportDraft).toBe(true);
+      const filtered = await ok<{ items: Array<{ usageType: string; sourceName: string }> }>(
+        'admin/content/versions?usageType=PRETEST&status=DRAFT&source=Curriculum',
+      );
+      expect(filtered.items.length).toBeGreaterThan(0);
+      expect(
+        filtered.items.every(
+          (i) => i.usageType === 'PRETEST' && i.sourceName === source.sourceName,
+        ),
+      ).toBe(true);
+      const diff = await ok<ImportReportDto>(
+        'admin/content/import-validations',
+        'POST',
+        directed(drill.id, 1, [revised]),
+      );
+      expect(diff.items[0]!.change).toBe('REVISE');
+      const concurrent = await Promise.all([
+        request(
+          'admin/content/imports',
+          'POST',
+          directed(drill.id, 1, [revised]),
+          'admin',
+          randomUUID(),
+        ),
+        request(
+          'admin/content/imports',
+          'POST',
+          directed(drill.id, 1, [revised]),
+          'admin',
+          randomUUID(),
+        ),
+      ]);
+      expect(concurrent.map((r) => r.status).sort()).toEqual([201, 409]);
+      const latestVersion = (
+        await owner`SELECT qv.id FROM question_versions qv JOIN question_variants v ON v.id=qv.variant_id WHERE v.question_id=${family} ORDER BY qv.version_number DESC LIMIT 1`
+      )[0]!.id;
+      const duplicateFamily = await request(`admin/content/packages/${drill.id}`, 'PATCH', {
+        name: 'TEST ONLY',
+        expectedRevision: 2,
+        questionVersionIds: [version, latestVersion],
+      });
+      expect(duplicateFamily.status).toBe(400);
+      expect((await duplicateFamily.json()).code).toBe('QUESTION_FAMILY_DUPLICATE');
+      expect(
+        (await owner`SELECT stem->>'text' AS text FROM question_versions WHERE id=${version}`)[0]!
+          .text,
+      ).toBe(q.stem.text);
+      const replacement = structuredClone(q);
+      replacement.externalId = 'TEST-REPLACEMENT';
+      const removed = await ok<ImportReportDto>(
+        'admin/content/import-validations',
+        'POST',
+        directed(drill.id, 2, [replacement]),
+      );
+      expect(removed.package!.removedVersionIds).toHaveLength(1);
+      await expect(
+        app
+          .get(ContentImportService)
+          .import(randomUUID(), randomUUID(), directed(drill.id, 2, [replacement])),
+      ).rejects.toBeDefined();
+      expect(
+        (await owner`SELECT content_revision FROM assessment_packages WHERE id=${drill.id}`)[0]!
+          .content_revision,
+      ).toBe(2);
+      expect(
+        (
+          await owner`SELECT count(*)::int AS n FROM questions WHERE source_ref=${replacement.externalId}`
+        )[0]!.n,
+      ).toBe(0);
+      const legacy = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        {
+          sourceNamespace: source.sourceNamespace,
+          questions: [{ ...q, externalId: 'TEST-UNCLASSIFIED' }],
+        },
+        'admin',
+        randomUUID(),
+      );
+      const rejection = await request(`admin/content/packages/${drill.id}`, 'PATCH', {
+        name: 'TEST',
+        expectedRevision: 2,
+        questionVersionIds: [legacy.items[0]!.questionVersionId],
+      });
+      expect(rejection.status).toBe(400);
+      const legacyFamily = (
+        await owner`SELECT question_id FROM question_variants v JOIN question_versions qv ON qv.variant_id=v.id WHERE qv.id=${legacy.items[0]!.questionVersionId!}`
+      )[0]!.question_id;
+      enabled = false;
+      try {
+        await ok(`admin/content/questions/${legacyFamily}/usage`, 'PATCH', { usageType: 'DRILL' });
+      } finally {
+        enabled = true;
+      }
+      expect(
+        (
+          await request(`admin/content/questions/${legacyFamily}/usage`, 'PATCH', {
+            usageType: 'TRYOUT',
+          })
+        ).status,
+      ).toBe(409);
+      expect(
+        (await request(`admin/content/drill-packages/${drill.id}/publish`, 'POST', {})).status,
+      ).toBe(409);
+      const listed = await ok<{ items: ContentPackageDetailDto[] }>(
+        'admin/content/packages?usageType=PRETEST&source=Curriculum',
+      );
+      expect(listed.items.map((p) => p.id)).toContain(pretest.id);
     });
     it('enforces main/compute/Data API boundaries and leaves every production learning table empty', async () => {
       for (const table of [

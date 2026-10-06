@@ -31,6 +31,7 @@ import type {
   CreateDrillPackageDto,
   UpdateDrillPackageDto,
 } from './drill-packages.dto';
+import { assertPackageUsage } from './content-package.rules';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 function playable(version: typeof questionVersions.$inferSelect) {
@@ -138,6 +139,7 @@ export class DrillPackagesService {
     ids: string[],
     publishing: boolean,
   ) {
+    await assertPackageUsage(tx, ids, 'DRILL');
     const [scope] = await tx
       .select({ level: levels, subchapter: subchapters, chapter: chapters })
       .from(levels)
@@ -271,6 +273,11 @@ export class DrillPackagesService {
   update(actor: string, id: string, body: UpdateDrillPackageDto) {
     return adminMutation(actor, 'drill_package_updated', 'assessment_package', async (tx) => {
       const row = await this.lock(tx, id);
+      if (row.importSource)
+        throw new ConflictException({
+          code: 'DIRECTED_PACKAGE_ENDPOINT_REQUIRED',
+          detail: 'Gunakan editor paket terarah dengan nomor revisi.',
+        });
       if (row.status !== 'DRAFT')
         throw new ConflictException('Paket terbit tidak dapat diedit; buat versi baru.');
       await this.validate(
@@ -282,7 +289,11 @@ export class DrillPackagesService {
       );
       await tx
         .update(assessmentPackages)
-        .set({ name: body.name, scoringPolicyVersionId: body.scoringPolicyVersionId })
+        .set({
+          name: body.name,
+          scoringPolicyVersionId: body.scoringPolicyVersionId,
+          contentRevision: row.contentRevision + 1,
+        })
         .where(eq(assessmentPackages.id, id));
       await tx.delete(packageItems).where(eq(packageItems.packageId, id));
       await this.items(tx, id, body.questionVersionIds);

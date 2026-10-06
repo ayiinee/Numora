@@ -13,7 +13,33 @@ import {
   validateImport,
 } from './content-preview-api';
 import type { PreviewSessionDto, ExcelQuestionDto } from './generated-types';
-import { parseExcelFile, uploadExcelMedia } from './content-excel-api';
+import { downloadFile, parseExcelFile, uploadExcelMedia } from './content-excel-api';
+vi.mock('./content-package-workspace', () => ({
+  ContentPackageWorkspace: ({ onSelect }: { onSelect: (p: unknown) => void }) => (
+    <button
+      onClick={() =>
+        onSelect({
+          id: 'TEST-package',
+          assessmentType: 'DRILL',
+          contentRevision: 0,
+          status: 'DRAFT',
+          isDemo: true,
+          source: {
+            sourceNamespace: 'CURRICULUM_SHEETS_SAMPLE',
+            sourceName: 'TEST source',
+            sourceReference: 'TEST reference',
+          },
+        })
+      }
+    >
+      Pilih paket TEST
+    </button>
+  ),
+}));
+function renderImporter() {
+  render(<ContentImportScreen />);
+  fireEvent.click(screen.getByRole('button', { name: 'Pilih paket TEST' }));
+}
 vi.mock('./content-excel-api', () => ({
   parseExcelFile: vi.fn(),
   uploadExcelMedia: vi.fn(),
@@ -80,6 +106,148 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe('internal content preview and importer', () => {
+  it('rejects a JSON bound to another package before conversion or save', async () => {
+    renderImporter();
+    const file = new File(['TEST'], 'wrong-package.json');
+    Object.defineProperty(file, 'text', {
+      value: async () =>
+        JSON.stringify({
+          schemaVersion: 2,
+          sourceNamespace: 'CURRICULUM_SHEETS_SAMPLE',
+          target: { packageId: 'FOREIGN-package' },
+          questions: [{ externalId: 'TEST' }],
+        }),
+    });
+    fireEvent.change(screen.getByLabelText('File soal JSON'), { target: { files: [file] } });
+    await screen.findByText(/Identitas paket JSON berbeda/);
+    expect(importContent).not.toHaveBeenCalled();
+    expect(validateImport).not.toHaveBeenCalled();
+    expect(
+      (screen.getByRole('button', { name: 'Impor sebagai DRAFT' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+  });
+  it('renders a math/image table, edits category keys, and validates/imports only selected questions', async () => {
+    const first: ExcelQuestionDto = {
+      externalId: 'TEST-FIRST',
+      type: 'SINGLE_CHOICE',
+      chapterCode: 'TEST',
+      subchapterCode: 'TEST',
+      competencyCode: 'TEST',
+      difficulty: null,
+      stem: { text: 'Soal x^2 dan \\(\\frac{1}{2}\\) [[asset:image]]' },
+      options: [
+        { id: 'A', content: { text: '$x^2$' } },
+        { id: 'B', content: { text: 'Tiga' } },
+      ],
+      answer: { optionId: 'A' },
+      explanation: { text: '\\[x^2 + 1\\]' },
+      metadata: {
+        sourceSheet: 'PG',
+        sourceRowNumber: 2,
+        sourceLevelNumber: 1,
+        assetManifest: [
+          {
+            externalId: 'TEST-FIRST',
+            assetId: 'image',
+            textMarker: '[[asset:image]]',
+            placement: 'STEM',
+            itemId: null,
+            assetOrder: 1,
+            altText: 'Diagram pertama',
+            objectKey: null,
+            sha256: 'a'.repeat(64),
+            byteLength: 3,
+            contentType: 'image/png',
+            bucket: 'TEST',
+          },
+        ],
+      },
+    };
+    const second: ExcelQuestionDto = {
+      ...first,
+      externalId: 'TEST-SECOND',
+      type: 'CATEGORY',
+      stem: { text: 'Pernyataan awal' },
+      explanation: { text: 'Pembahasan awal' },
+      answer: { categoryByStatementId: { A: 'C1', B: 'C2' } },
+      metadata: {
+        ...first.metadata,
+        sourceSheet: 'Kategori',
+        assetManifest: [],
+        categories: [
+          { id: 'C1', label: 'Benar' },
+          { id: 'C2', label: 'Salah' },
+        ],
+      },
+    };
+    const item = {
+      externalId: second.externalId,
+      canImportDraft: true,
+      canPreview: true,
+      blockers: [],
+      outcome: 'VALIDATED' as const,
+      questionVersionId: null,
+    };
+    const report = { id: null, sourceNamespace: 'TEST', canImportDraft: true, items: [item] };
+    vi.mocked(parseExcelFile).mockResolvedValue({
+      envelope: { schemaVersion: 2, sourceNamespace: 'TEST', questions: [first, second] },
+      media: [{ externalId: first.externalId, assetId: 'image', base64: 'AQID' }],
+      issues: [],
+      report,
+    });
+    vi.mocked(validateImport).mockResolvedValue(report);
+    vi.mocked(uploadExcelMedia).mockImplementation(async (_token, envelope) => envelope);
+    vi.mocked(importContent).mockResolvedValue({
+      ...report,
+      id: 'import',
+      items: [{ ...item, outcome: 'CREATED', questionVersionId: 'version' }],
+    });
+    renderImporter();
+    fireEvent.change(screen.getByLabelText('File soal Excel'), {
+      target: { files: [new File(['TEST'], 'test.xlsx')] },
+    });
+    await screen.findByRole('table');
+    fireEvent.click(screen.getByRole('button', { name: 'Konversi ke paket terpilih' }));
+    expect(screen.getByAltText('Diagram pertama').getAttribute('src')).toBe(
+      'data:image/png;base64,AQID',
+    );
+    expect(document.querySelectorAll('.katex').length).toBeGreaterThanOrEqual(4);
+    expect(screen.getByText('Tanpa gambar', { exact: true })).toBeTruthy();
+    fireEvent.click(screen.getByLabelText('Pilih soal TEST-FIRST'));
+    expect(
+      (screen.getByRole('button', { name: 'Impor sebagai DRAFT' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Edit soal TEST-SECOND' }));
+    expect(
+      (screen.getByRole('button', { name: 'Validasi JSON' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    fireEvent.change(screen.getByLabelText('Teks soal'), {
+      target: { value: 'Pernyataan baru $x^2$' },
+    });
+    fireEvent.change(screen.getByLabelText('Label kategori C1'), { target: { value: 'Sesuai' } });
+    fireEvent.change(screen.getByLabelText('Kunci B'), { target: { value: 'C1' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan perubahan preview' }));
+    expect(
+      (screen.getByRole('button', { name: 'Impor sebagai DRAFT' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Ekspor JSON' }));
+    const exported = JSON.parse(await vi.mocked(downloadFile).mock.calls[0]![0].text());
+    expect(exported.questions).toHaveLength(1);
+    expect(exported.questions[0].stem.text).toBe('Pernyataan baru $x^2$');
+    expect(exported.questions[0].answer.categoryByStatementId).toEqual({ A: 'C1', B: 'C1' });
+    fireEvent.click(screen.getByRole('button', { name: 'Validasi JSON' }));
+    await screen.findByText('Laporan validasi');
+    expect(vi.mocked(validateImport).mock.calls[0]![1].questions).toHaveLength(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Impor sebagai DRAFT' }));
+    await screen.findByText('Laporan impor');
+    expect(
+      vi.mocked(uploadExcelMedia).mock.calls[0]![1].questions.map((q) => q.externalId),
+    ).toEqual(['TEST-SECOND']);
+    expect(vi.mocked(importContent).mock.calls[0]![1].questions).toEqual(exported.questions);
+    expect((screen.getByLabelText('Pilih soal TEST-FIRST') as HTMLInputElement).disabled).toBe(
+      true,
+    );
+  });
   it('previews Excel images before save and refuses to import when media upload fails', async () => {
     const question: ExcelQuestionDto = {
       externalId: 'TEST-EXCEL',
@@ -143,11 +311,15 @@ describe('internal content preview and importer', () => {
       report,
     });
     vi.mocked(uploadExcelMedia).mockRejectedValue(Error('Upload failed; soal belum disimpan.'));
-    render(<ContentImportScreen />);
+    vi.mocked(validateImport).mockResolvedValue(report);
+    renderImporter();
     fireEvent.change(screen.getByLabelText('File soal Excel'), {
       target: { files: [new File(['TEST ONLY'], 'test.xlsx')] },
     });
     await screen.findByAltText('TEST Excel diagram');
+    fireEvent.click(await screen.findByRole('button', { name: 'Konversi ke paket terpilih' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Validasi JSON' }));
+    await screen.findByText('Laporan validasi');
     expect(importContent).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Impor sebagai DRAFT' }));
     await screen.findByText('Upload failed; soal belum disimpan.');
@@ -168,6 +340,32 @@ describe('internal content preview and importer', () => {
     await screen.findByText('Laporan impor');
     expect(importContent).toHaveBeenCalledOnce();
     expect(createPreview).not.toHaveBeenCalled();
+    const parsed = await vi.mocked(parseExcelFile).mock.results[0]!.value;
+    vi.mocked(parseExcelFile).mockResolvedValue({
+      ...parsed,
+      issues: [
+        {
+          sheet: 'MCMA',
+          row: 5,
+          cell: 'H5',
+          code: 'IMAGE_UNMAPPED',
+          detail: 'Gambar berada di kolom teks.',
+        },
+      ],
+    });
+    fireEvent.change(screen.getByLabelText('File soal Excel'), {
+      target: { files: [new File(['TEST'], 'invalid.xlsx')] },
+    });
+    await screen.findByText('MCMA · H5');
+    fireEvent.click(screen.getByLabelText('Pilih soal TEST-EXCEL'));
+    fireEvent.click(screen.getByLabelText('Pilih soal TEST-EXCEL'));
+    expect(
+      (screen.getByRole('button', { name: 'Impor sebagai DRAFT' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(
+      (screen.getByRole('button', { name: 'Validasi JSON' }) as HTMLButtonElement).disabled,
+    ).toBe(true);
+    expect(importContent).toHaveBeenCalledOnce();
   });
   it('denies Operations without issuing content requests', () => {
     auth.state = {
@@ -367,7 +565,7 @@ describe('internal content preview and importer', () => {
         id: 'import',
         items: [{ ...report.items[0]!, questionVersionId: 'version', outcome: 'CREATED' }],
       });
-    render(<ContentImportScreen />);
+    renderImporter();
     expect(screen.getByText(/Belum ada file/)).toBeTruthy();
     const file = new File(['[]'], 'questions.json', { type: 'application/json' });
     Object.defineProperty(file, 'text', {
@@ -375,6 +573,7 @@ describe('internal content preview and importer', () => {
     });
     fireEvent.change(screen.getByLabelText('File soal JSON'), { target: { files: [file] } });
     await screen.findByText('1 soal dipilih.');
+    fireEvent.click(screen.getByRole('button', { name: 'Konversi ke paket terpilih' }));
     fireEvent.click(screen.getByRole('button', { name: 'Validasi JSON' }));
     await screen.findByText('MEDIA_NOT_READY');
     fireEvent.click(screen.getByRole('button', { name: 'Impor sebagai DRAFT' }));

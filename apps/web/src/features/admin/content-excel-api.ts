@@ -8,14 +8,25 @@ import type {
   MediaUploadReservationDto,
 } from './generated-types';
 
-export function parseExcelFile(token: string, file: File, sourceNamespace: string) {
+export function parseExcelFile(
+  token: string,
+  file: File,
+  sourceNamespace: string,
+  packageId?: string,
+) {
   const body = new FormData();
   body.append('file', file);
   body.append('sourceNamespace', sourceNamespace);
+  if (packageId) body.append('packageId', packageId);
   return apiRequest<ExcelParseDto>('admin/content/excel-parses', token, { method: 'POST', body });
 }
-export const downloadExcelTemplate = (token: string) =>
-  apiRequest<Blob>('admin/content/excel-template', token, undefined, 'blob');
+export const downloadExcelTemplate = (token: string, packageId?: string, examples = false) =>
+  apiRequest<Blob>(
+    `admin/content/excel-template${packageId ? `?packageId=${encodeURIComponent(packageId)}&examples=${examples}` : ''}`,
+    token,
+    undefined,
+    'blob',
+  );
 export function downloadFile(blob: Blob, name: string) {
   const url = URL.createObjectURL(blob);
   const link = document.createElement('a');

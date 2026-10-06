@@ -27,7 +27,7 @@ import type {
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
-export async function loadAdminWorkbench(token: string, offset: number) {
+export async function loadAdminWorkbench(token: string, offset: number, versionQuery = '') {
   const page = `?limit=20&offset=${offset}`;
   const [
     curriculum,
@@ -42,7 +42,10 @@ export async function loadAdminWorkbench(token: string, offset: number) {
     drillPackages,
   ] = await Promise.all([
     apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
-    apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token),
+    apiRequest<AdminVersionsDto>(
+      `admin/content/versions${page}${versionQuery ? `&${versionQuery}` : ''}`,
+      token,
+    ),
     apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
     apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
     apiRequest<AdminIrtDto>(`admin/irt${page}`, token),

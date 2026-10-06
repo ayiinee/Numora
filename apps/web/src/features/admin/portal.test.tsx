@@ -62,7 +62,7 @@ describe('Admin portal navigation', () => {
     render(<AdminHomeScreen />);
     const main = within(screen.getByRole('main'));
     expect(!!main.queryByRole('link', { name: 'Sekolah & credential' })).toBe(operations);
-    expect(!!main.queryByRole('link', { name: 'Impor JSON' })).toBe(content);
+    expect(!!main.queryByRole('link', { name: 'Impor soal' })).toBe(content);
     if (role === null) expect(main.getByText(/Belum ada modul/)).toBeTruthy();
     expect(mocks.signIn).not.toHaveBeenCalled();
   });
@@ -71,7 +71,7 @@ describe('Admin portal navigation', () => {
     mocks.pathname = '/admin/content/imports';
     const view = render(<AppShell area="admin">Konten</AppShell>);
     const navigation = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
-    expect(navigation.getByRole('link', { name: 'Impor JSON' }).getAttribute('aria-current')).toBe(
+    expect(navigation.getByRole('link', { name: 'Impor soal' }).getAttribute('aria-current')).toBe(
       'page',
     );
     expect(
@@ -82,7 +82,7 @@ describe('Admin portal navigation', () => {
     ).toBeNull();
     ready('OPERATIONS');
     view.rerender(<AppShell area="admin">Konten</AppShell>);
-    expect(navigation.queryByRole('link', { name: 'Impor JSON' })).toBeNull();
+    expect(navigation.queryByRole('link', { name: 'Impor soal' })).toBeNull();
   });
   it('sends signed-out users to internal login and Teachers to their own area', async () => {
     const view = render(<AdminHomeScreen />);

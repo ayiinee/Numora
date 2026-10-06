@@ -6,6 +6,8 @@
 
 # Open Decisions Register
 
+**ENGINEERING DECISION — owner approved, 6 October 2026:** implement [directed package import](../content/CONTENT_PACKAGE_PIPELINE.md): single-purpose question families; one file/package; bound V4 templates; required source name/reference; explicit admin review; partial DRAFTs; replacement preview and concurrency control. Blueprint, rubric and publication dependencies remain OPEN.
+
 **ENGINEERING DECISION — Aini, 5 October 2026:** consolidate Admin entry/navigation in `/admin` and remove the development-only mock `/admin/preview`. Internal login uses provisioned Supabase Auth accounts; no Admin signup or browser assignment. PRD v0.6 §3.2–3.3 defines the three subroles; navigation follows identity assignment, while full server permission enforcement/limited operational DTOs remain an implementation gap. See [portal scope](../development/ADMIN_PORTAL_2026-10-05.md). Real unscored content preview is retained.
 
 **Product source:** [Drill v1.2](sources/PRD_01_Drill_Latihan_Soal.docx.md) §18 dan [TryOut v1.1](sources/PRD_02_Core_Learning_TryOut.docx.md) §16, diberikan 2 Oktober 2026; PRD v0.5 §13 tetap baseline lintas fitur. [Rekonsiliasi](CORE_LEARNING_PRD_UPDATE_2026-10-02.md) menjelaskan supersession. The PDF still bears its prior “draft for review” label; the team approval was confirmed by the Software Engineering coordinator on 28 September 2026.

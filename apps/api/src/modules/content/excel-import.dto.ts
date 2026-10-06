@@ -1,5 +1,6 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Matches } from 'class-validator';
+import { Matches, IsOptional, IsUUID } from 'class-validator';
+import { WorkbookBindingDto } from './package-context.dto';
 import type { ContentAnswer, ContentAsset, ContentKind, ImportQuestion } from '@tka/database';
 import {
   answerSchema,
@@ -10,6 +11,7 @@ import {
 } from './content-preview.dto';
 
 export class ExcelParseInputDto {
+  @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() packageId?: string;
   @ApiProperty({ pattern: '^[A-Za-z0-9_-]{1,128}$' })
   @Matches(/^[A-Za-z0-9_-]{1,128}$/)
   sourceNamespace!: string;
@@ -32,6 +34,8 @@ export class ExcelAssetDto implements ContentAsset {
 export class ExcelMetadataDto {
   [key: string]: unknown;
   @ApiProperty() sourceLevelNumber!: number;
+  @ApiPropertyOptional() sourceOrder?: number;
+  @ApiPropertyOptional() sourceQuestionId?: string;
   @ApiProperty() sourceSheet!: string;
   @ApiProperty() sourceRowNumber!: number;
   @ApiProperty({ type: [ExcelAssetDto] }) assetManifest!: ExcelAssetDto[];
@@ -53,6 +57,7 @@ export class ExcelQuestionDto implements ImportQuestion {
   @ApiProperty({ type: ExcelMetadataDto }) metadata!: ExcelMetadataDto;
 }
 export class ExcelEnvelopeDto {
+  @ApiPropertyOptional({ type: WorkbookBindingDto }) binding?: WorkbookBindingDto;
   @ApiProperty({ enum: [2] }) schemaVersion!: 2;
   @ApiProperty() sourceNamespace!: string;
   @ApiProperty({ type: [ExcelQuestionDto] }) questions!: ExcelQuestionDto[];

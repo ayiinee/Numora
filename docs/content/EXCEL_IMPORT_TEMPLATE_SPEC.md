@@ -1,4 +1,12 @@
-# Excel import V3
+# Excel import V4 with V3 compatibility
+
+**ENGINEERING DECISION — owner approved, 6 October 2026:** V4 extends V3 with a `Paket` key/value sheet and `source_question_id`. Authenticated template GET accepts `packageId` and optional `examples=true` (DEMO only). Binding contains templateVersion=4, package UUID/family/version/assessmentType, chapter/subchapter/source level, source namespace/name/reference and isDemo. It is checked against server metadata; mismatches block import. `no` is a positive integer unique across PG/MCMA/Kategori. Examples contain 10/20/30 globally ordered rows with empty image columns. They demonstrate syntax only, not an approved blueprint.
+
+Multipart parsing optionally accepts `packageId`; V3 remains previewable. Directed saving requires sourceNamespace/questions plus target `{packageId, expectedRevision, fileName?}`. Conversion of legacy files is explicit in the UI. Validation exposes canSaveDraft, canPublish=false, checks, membership diff and removed version IDs. Missing/excess count permits DRAFT persistence. Verified media is mandatory at commit. Package membership, question versions, provenance, import report and audit commit atomically. Retry keys are actor-scoped; revision conflicts require refreshing preview.
+
+Content endpoints: GET/POST `/admin/content/packages`, GET/PATCH `/admin/content/packages/:id`, PATCH `/admin/content/questions/:id/usage`, POST `/admin/content/versions/:id/review` with packageId/confirmed=true/notes. Package and version lists filter purpose, chapter, status and source. Review records actor/time/notes but imported content stays immutable DRAFT. Pretest management uses the same package endpoints. Runtime, blueprint/scoring and publication protections remain in force. See [pipeline specification](CONTENT_PACKAGE_PIPELINE.md).
+
+The V3 layout and historical verification below remain the compatibility reference; V4 adds directed context rather than a second question/media bank.
 
 **ENGINEERING DECISION — approved scope, 5 October 2026.** Excel adapts the existing question import v2 contract. NestJS controls access, validation and persistence; Supabase in the browser remains authentication-only. No additional Excel-specific database tables are required.
 

@@ -1,8 +1,11 @@
 import { createHash } from 'node:crypto';
-import { Inject, Injectable } from '@nestjs/common';
+import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
 import ExcelJS from 'exceljs';
-import type { ContentAsset, ContentKind, RichContent } from '@tka/database';
+import { getDatabase, type ContentAsset, type ContentKind, type RichContent } from '@tka/database';
+import { packageContext, packageCounts } from './content-package.rules';
+import type { ContentPackageDto } from './content-packages.dto';
+import type { WorkbookBindingDto } from './package-context.dto';
 import { ContentImportService } from './content-import.service';
 import { ContentService } from './content.service';
 import type { AdminCurriculumDto } from './content.dto';
@@ -28,6 +31,7 @@ const kinds: Record<string, ContentKind> = {
 };
 const aliases: Record<string, string> = {
   no: 'no',
+  sourcequestionid: 'source_question_id',
   externalid: 'external_id',
   chapter: 'chapter_code',
   chaptercode: 'chapter_code',
@@ -92,10 +96,58 @@ export async function parseExcel(
     issues: [],
     report: null,
   };
+  const paket = workbook.getWorksheet('Paket');
+  if (paket) {
+    const fields = new Map<string, string>();
+    paket.eachRow((row, index) => {
+      if (index > 1) fields.set(text(row.getCell(1)), text(row.getCell(2)));
+    });
+    if (fields.get('templateVersion') !== '4')
+      result.issues.push({
+        sheet: 'Paket',
+        row: 2,
+        cell: 'B2',
+        code: 'TEMPLATE_VERSION_UNSUPPORTED',
+        detail: 'Gunakan template paket V4.',
+      });
+    const get = (name: string) => fields.get(name) ?? '';
+    result.envelope.binding = {
+      packageId: get('packageId'),
+      familyCode: get('familyCode'),
+      packageVersion: Number(get('packageVersion')),
+      assessmentType: get('assessmentType') as WorkbookBindingDto['assessmentType'],
+      chapterCode: get('chapterCode') || null,
+      subchapterCode: get('subchapterCode') || null,
+      levelNumber: get('levelNumber') ? Number(get('levelNumber')) : null,
+      sourceNamespace: get('sourceNamespace'),
+      sourceName: get('sourceName'),
+      sourceReference: get('sourceReference'),
+      isDemo: get('isDemo') === 'TRUE',
+    };
+    const requiredBinding = [
+      'packageId',
+      'familyCode',
+      'packageVersion',
+      'assessmentType',
+      'sourceNamespace',
+      'sourceName',
+      'sourceReference',
+      'isDemo',
+    ];
+    if (requiredBinding.some((key) => !get(key)) || !['TRUE', 'FALSE'].includes(get('isDemo')))
+      result.issues.push({
+        sheet: 'Paket',
+        row: 1,
+        cell: 'A1',
+        code: 'PACKAGE_BINDING_INVALID',
+        detail: 'Identitas paket tidak lengkap. Unduh ulang template.',
+      });
+  }
   const locations = relationships(parts, 'xl/workbook.xml');
   let mediaBytes = 0,
     questionRows = 0;
   const identities = new Set<string>();
+  const orders = new Set<number>();
   for (const sheetInfo of descendants(xml(parts.get('xl/workbook.xml')!), 'sheet')) {
     const sheet = workbook.getWorksheet(sheetInfo.attrs.name!);
     const type = kinds[sheetInfo.attrs.name!];
@@ -199,6 +251,21 @@ export async function parseExcel(
           'Level sumber harus bilangan bulat positif dari master kurikulum.',
         );
       const no = get('no');
+      if (paket) {
+        if (!/^[1-9]\d*$/.test(no) || !Number.isSafeInteger(Number(no)) || Number(no) > 2147483647)
+          cellIssue(
+            'no',
+            'QUESTION_ORDER_REQUIRED',
+            'No wajib bilangan bulat positif lintas sheet.',
+          );
+        else if (orders.has(Number(no)))
+          cellIssue(
+            'no',
+            'QUESTION_ORDER_DUPLICATE',
+            'No berulang dalam paket, termasuk pada sheet lain.',
+          );
+        orders.add(Number(no));
+      }
       const externalId =
         get('external_id') ||
         [
@@ -266,6 +333,8 @@ export async function parseExcel(
                 },
         metadata: {
           sourceLevelNumber: level,
+          ...(/^[1-9]\d*$/.test(no) ? { sourceOrder: Number(no) } : {}),
+          ...(get('source_question_id') ? { sourceQuestionId: get('source_question_id') } : {}),
           sourceSheet: sheet.name,
           sourceRowNumber: rowNum,
           categories:
@@ -380,11 +449,40 @@ export async function parseExcel(
   return result;
 }
 
-export async function excelTemplate(curriculum: AdminCurriculumDto): Promise<Buffer> {
+export function workbookBinding(p: ContentPackageDto): WorkbookBindingDto {
+  if (!p.source)
+    throw new BadRequestException({
+      code: 'PACKAGE_SOURCE_REQUIRED',
+      detail: 'Buat paket terarah dengan nama dan referensi sumber.',
+    });
+  return {
+    packageId: p.id,
+    familyCode: p.familyCode,
+    packageVersion: p.packageVersion,
+    assessmentType: p.assessmentType,
+    chapterCode: p.chapterCode,
+    subchapterCode: p.subchapterCode,
+    levelNumber: p.levelNumber,
+    ...p.source,
+    isDemo: p.isDemo,
+  };
+}
+export async function excelTemplate(
+  curriculum: AdminCurriculumDto,
+  target?: ContentPackageDto,
+  examples = false,
+): Promise<Buffer> {
   const workbook = new ExcelJS.Workbook();
   const guide = workbook.addWorksheet('Panduan');
   for (const line of [
-    'NUMORA Excel V3 — maksimal 100 soal, .xlsx 10 MiB',
+    `NUMORA Excel ${target ? 'V4 — satu paket, satu tujuan' : 'V3'} — maksimal 100 soal, .xlsx 10 MiB`,
+    ...(target
+      ? [
+          'Jangan ubah identitas pada sheet Paket. No positif wajib unik lintas PG/MCMA/Kategori.',
+          'Simpan DRAFT → review admin → checklist kesiapan. Validasi teknis bukan izin publikasi.',
+          'source_question_id opsional: UUID keluarga soal asal jika membuat salinan lintas tujuan.',
+        ]
+      : []),
     'Satu baris satu soal. Isi external_id stabil, kode master dan source_level.',
     'Teks wajib pada stem, pilihan/pernyataan dan explanation. Gambar melengkapi teks.',
     'Gambar PNG/JPEG/WebP: Place in Cell atau floating di img_*. Sudut kiri atas harus di sel tujuan. Isi alt_*.',
@@ -397,11 +495,21 @@ export async function excelTemplate(curriculum: AdminCurriculumDto): Promise<Buf
   ])
     guide.addRow([line]);
   guide.getColumn(1).width = 120;
+  if (target) {
+    const paket = workbook.addWorksheet('Paket');
+    paket.addRow(['field', 'value']);
+    paket.addRow(['templateVersion', '4']);
+    for (const [key, value] of Object.entries(workbookBinding(target)))
+      paket.addRow([key, typeof value === 'boolean' ? (value ? 'TRUE' : 'FALSE') : (value ?? '')]);
+    paket.getColumn(1).width = 28;
+    paket.getColumn(2).width = 75;
+  }
   for (const name of ['PG', 'MCMA', 'Kategori']) {
     const sheet = workbook.addWorksheet(name);
     const headers = [
       'external_id',
       'no',
+      ...(target ? ['source_question_id'] : []),
       'chapter_code',
       'subchapter_code',
       'competency_code',
@@ -434,7 +542,7 @@ export async function excelTemplate(curriculum: AdminCurriculumDto): Promise<Buf
       for (let row = 2; row <= 101; row++) {
         const target = sheet.getRow(row).getCell(i + 1);
         target.alignment = { vertical: 'top', wrapText: true };
-        if (h === 'source_level')
+        if (h === 'source_level' || h === 'no')
           target.dataValidation = {
             type: 'whole',
             operator: 'greaterThan',
@@ -476,6 +584,100 @@ export async function excelTemplate(curriculum: AdminCurriculumDto): Promise<Buf
   master.columns.forEach((c) => {
     c.width = 28;
   });
+  if (examples && target) {
+    if (!target.isDemo)
+      throw new BadRequestException({
+        code: 'EXAMPLES_DEMO_ONLY',
+        detail: 'Contoh hanya boleh diunduh untuk paket berlabel DEMO.',
+      });
+    const competency = curriculum.items.find(
+      (item) =>
+        item.kind === 'COMPETENCY' &&
+        item.status !== 'ARCHIVED' &&
+        (() => {
+          const sub = curriculum.items.find((s) => s.id === item.parentId);
+          const chapter = curriculum.items.find((c) => c.id === sub?.parentId);
+          return (
+            sub?.status !== 'ARCHIVED' &&
+            chapter?.status !== 'ARCHIVED' &&
+            !!curriculum.items.find(
+              (l) => l.kind === 'LEVEL' && l.parentId === sub?.id && l.status !== 'ARCHIVED',
+            ) &&
+            (target.assessmentType === 'TRYOUT' || chapter?.code === target.chapterCode) &&
+            (target.assessmentType !== 'DRILL' || sub?.code === target.subchapterCode)
+          );
+        })(),
+    );
+    const sub = curriculum.items.find((s) => s.id === competency?.parentId);
+    const chapter = curriculum.items.find((c) => c.id === sub?.parentId);
+    const level =
+      target.levelNumber ??
+      Number(
+        curriculum.items.find(
+          (l) => l.kind === 'LEVEL' && l.parentId === sub?.id && l.status !== 'ARCHIVED',
+        )?.code,
+      );
+    if (!competency || !sub || !chapter || !level)
+      throw new BadRequestException({ code: 'EXAMPLE_MASTER_REQUIRED' });
+    guide.addRow([
+      'DEMO: contoh aritmetika untuk pengujian pipeline, belum ditinjau Curriculum. Gambar sengaja kosong.',
+    ]);
+    const exampleRows = new Map<string, number>();
+    for (let no = 1; no <= packageCounts[target.assessmentType]; no++) {
+      const sheet = workbook.getWorksheet(['PG', 'MCMA', 'Kategori'][(no - 1) % 3]!)!;
+      const values: Record<string, string | number> = {
+        external_id: `DEMO-${target.assessmentType}-${target.id.slice(0, 8)}-${String(no).padStart(3, '0')}`,
+        no,
+        chapter_code: chapter.code,
+        subchapter_code: sub.code,
+        competency_code: competency.code,
+        source_level: level,
+        difficulty: 'EASY',
+      };
+      if (sheet.name === 'PG')
+        Object.assign(values, {
+          stem: `DEMO: hasil $${no}+${no}$ adalah ....`,
+          opt_A: String(no * 2),
+          opt_B: String(no * 2 + 1),
+          opt_C: String(no * 2 + 2),
+          opt_D: String(no * 2 + 3),
+          answer: 'A',
+          explanation: `$${no}+${no}=${no * 2}$. Jawaban A.`,
+        });
+      else if (sheet.name === 'MCMA')
+        Object.assign(values, {
+          stem: 'DEMO: pilih semua bilangan genap berikut.',
+          opt_A: String(no * 2),
+          opt_B: String(no * 2 + 1),
+          opt_C: String(no * 2 + 2),
+          opt_D: String(no * 2 + 3),
+          answer: 'A,C',
+          explanation: `Bilangan genap habis dibagi 2. $${no * 2}=2\\times ${no}$ dan $${no * 2 + 2}=2\\times ${no + 1}$. Jawaban A dan C.`,
+        });
+      else
+        Object.assign(values, {
+          stem: 'DEMO: tentukan benar atau salah setiap pernyataan.',
+          statement_A: `$${no}+0=${no}$`,
+          statement_B: `$${no}\\times1=${no}$`,
+          statement_C: `$${no}+1=${no}$`,
+          statement_D: `$0\\times${no}=${no}$`,
+          category_1: 'Benar',
+          category_2: 'Salah',
+          key_A: 'C1',
+          key_B: 'C1',
+          key_C: 'C2',
+          key_D: 'C2',
+          explanation:
+            'Menambah nol dan mengalikan satu tidak mengubah bilangan. Menambah satu mengubah bilangan; perkalian dengan nol menghasilkan nol.',
+        });
+      const cells = (sheet.getRow(1).values as ExcelJS.CellValue[])
+        .slice(1)
+        .map((h) => values[String(h)] ?? '');
+      const row = (exampleRows.get(sheet.name) ?? 1) + 1;
+      sheet.getRow(row).values = cells;
+      exampleRows.set(sheet.name, row);
+    }
+  }
   return Buffer.from(await workbook.xlsx.writeBuffer());
 }
 @Injectable()
@@ -485,13 +687,60 @@ export class ExcelImportService {
     @Inject(ContentService) private readonly content: ContentService,
     @Inject(ConfigService) private readonly config: ConfigService,
   ) {}
-  async parse(buffer: Buffer, sourceNamespace: string) {
+  async parse(buffer: Buffer, sourceNamespace: string, packageId?: string, fileName?: string) {
     this.importer.enabled();
     const result = await parseExcel(
       buffer,
       sourceNamespace,
       this.config.get<string>('R2_BUCKET') || 'numora-bucket',
     );
+    if (result.envelope.binding || packageId) {
+      const binding = result.envelope.binding;
+      const id = packageId ?? binding?.packageId;
+      if (!id || !/^[0-9a-f]{8}(-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i.test(id))
+        throw new BadRequestException({ code: 'PACKAGE_BINDING_INVALID' });
+      const p = await getDatabase().db.transaction((tx) => packageContext(tx, id));
+      const expected = workbookBinding(p);
+      if (
+        binding &&
+        (binding.packageId !== id ||
+          Object.entries(expected).some(
+            ([key, value]) => binding[key as keyof WorkbookBindingDto] !== value,
+          ))
+      )
+        result.issues.push({
+          sheet: 'Paket',
+          row: 1,
+          cell: 'A1',
+          code: 'PACKAGE_BINDING_MISMATCH',
+          detail:
+            'Template berbeda dari identitas, tujuan, cakupan atau sumber paket server. Unduh template paket yang benar.',
+        });
+      if (sourceNamespace !== expected.sourceNamespace)
+        result.issues.push({
+          sheet: 'Paket',
+          row: 1,
+          cell: 'A1',
+          code: 'PACKAGE_SOURCE_MISMATCH',
+          detail: 'Namespace berbeda dari sumber paket.',
+        });
+      for (const q of result.envelope.questions)
+        Object.assign(q.metadata, {
+          sourceFileName: fileName ?? null,
+          sourceFileSha256: createHash('sha256').update(buffer).digest('hex'),
+        });
+      if (!result.issues.length && binding && result.envelope.questions.length)
+        result.report = await this.importer.validate({
+          sourceNamespace,
+          questions: result.envelope.questions,
+          target: {
+            packageId: id,
+            expectedRevision: p.contentRevision,
+            ...(fileName ? { fileName } : {}),
+          },
+        });
+      return result;
+    }
     if (!result.issues.length) {
       result.report = await this.importer.validate(result.envelope);
       result.report.items.forEach((item, index) => {
@@ -507,8 +756,11 @@ export class ExcelImportService {
     }
     return result;
   }
-  async template() {
+  async template(packageId?: string, examples = false) {
     this.importer.enabled();
-    return excelTemplate(await this.content.curriculum());
+    const target = packageId
+      ? await getDatabase().db.transaction((tx) => packageContext(tx, packageId))
+      : undefined;
+    return excelTemplate(await this.content.curriculum(), target, examples);
   }
 }
