@@ -4,11 +4,12 @@ import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
+import { inArray } from 'drizzle-orm';
 const database = new URL(process.env.TEST_DATABASE_URL ?? '');
 const redis = new URL(process.env.TEST_REDIS_URL ?? '');
 if (
   !['localhost', '127.0.0.1'].includes(database.hostname) ||
-  database.pathname !== '/numora_test_job16_e2e' ||
+  !/^\/numora_test_job16_e2e(?:_[a-z0-9_]+)?$/.test(database.pathname) ||
   !['localhost', '127.0.0.1'].includes(redis.hostname) ||
   redis.protocol !== 'redis:'
 )
@@ -20,7 +21,6 @@ Object.assign(process.env, {
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
   ALLOW_DEMO_SEED: 'true',
-  ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
   SUPABASE_PUBLISHABLE_KEY: 'job16-test-only-public-key',
   TEACHER_TOKEN_PEPPER: 'job16-isolated-test-only-pepper',
@@ -28,13 +28,38 @@ Object.assign(process.env, {
   IRT_ENABLED: 'false',
   R2_MEDIA_UPLOADS_ENABLED: 'false',
 });
-const { getDatabase, closeDatabaseConnection, users, schools, classes, classMemberships } =
-  await import('@tka/database');
-const { seedPvpTestScenarios } = await import('@tka/database/testing');
+const {
+  getDatabase,
+  closeDatabaseConnection,
+  seedPvpDemo,
+  pvpDemoId,
+  questions,
+  questionVersions,
+  users,
+  schools,
+  classes,
+  classMemberships,
+} = await import('@tka/database');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { projectClassLeaderboard } = await import('../../worker/dist/class-leaderboard.js');
 const { db, client } = getDatabase();
-await seedPvpTestScenarios();
+await seedPvpDemo();
+// Isolated localhost TEST ONLY bank: review synthetic items as READY Drill families.
+// No runtime or cloud seed imports this harness; production content is never reclassified.
+const [reviewer] = await db.insert(users).values({
+  authUserId: randomUUID(), role: 'ADMIN', adminRole: 'SUPER_ADMIN',
+  email: `${randomUUID()}@example.test`, displayName: 'TEST ONLY content reviewer',
+}).returning();
+await db.update(questions).set({ usageType: 'DRILL' }).where(inArray(questions.id,
+  ['easy', 'medium', 'hard'].flatMap((difficulty) => Array.from({ length: 10 }, (_, i) =>
+    pvpDemoId(`question:${difficulty}:${i + 1}`))),
+));
+await db.update(questionVersions).set({
+  contentStatus: 'READY', reviewedByUserId: reviewer.id, reviewedAt: new Date(),
+}).where(inArray(questionVersions.id,
+  ['easy', 'medium', 'hard'].flatMap((difficulty) => Array.from({ length: 10 }, (_, i) =>
+    pvpDemoId(`version:${difficulty}:${i + 1}`))),
+));
 await seedDemoLearning(db);
 const actors = {};
 for (const alias of ['mandiri', 'school']) {
@@ -111,8 +136,15 @@ const authServer = createServer(async (req, res) => {
     return send(200, await projectClassLeaderboard());
   if (req.url === '/persistence') {
     const matches =
-      await client`select m.id,m.data_mode,m.status,m.end_reason,m.record_eligible,count(q.id)::int as questions
-      from pvp_matches m join pvp_match_questions q on q.match_id=m.id where m.creator_student_id=${actors.mandiri.profileId} group by m.id`;
+      await client`select m.id,m.data_mode,m.status,m.end_reason,m.record_eligible,count(q.id)::int as questions,
+      count(distinct f.id)::int as families,
+      bool_and(f.usage_type='DRILL' and f.status='READY' and v.content_status='READY'
+        and lower(v.difficulty)=m.difficulty) as ready_drill,
+      bool_and(p.frozen_at is not null and p.manifest_digest is not null) as frozen
+      from pvp_matches m join pvp_match_questions q on q.match_id=m.id
+      join question_versions v on v.id=q.question_version_id join question_variants variant on variant.id=v.variant_id
+      join questions f on f.id=variant.question_id join assessment_packages p on p.id=m.package_id
+      where m.creator_student_id=${actors.mandiri.profileId} group by m.id`;
     const rewards =
       await client`select xp_amount from xp_ledger where student_id=${actors.school.profileId}`;
     return send(200, { matches, rewards });

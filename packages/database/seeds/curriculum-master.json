@@ -1,0 +1,130 @@
+{
+  "schemaVersion": 1,
+  "status": "DRAFT",
+  "source": {
+    "documentId": "1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg",
+    "title": "Blueprint Draft Soal Drill",
+    "revisionId": "ANLCKQlJVqtWU0irA_HHdl-BjP6g1UcF57uA53EV781jri-_1hZ0dYmG65oUPcClF3PLNGgwjWV_Ju-x1b598DoTcoIaVzhwZjVisnBR2ws",
+    "url": "https://docs.google.com/document/d/1xqdU-DLVW3dlscxKOCb1H1MNPqIPgQFtgpGc-1Jbexg/edit",
+    "tabId": "t.0",
+    "tabTitle": "Main Draft Soal",
+    "extractedAt": "2026-10-06",
+    "prdVersion": "0.6"
+  },
+  "chapters": [
+    {
+      "code": "CH-BIL",
+      "slug": "bilangan",
+      "name": "Bilangan",
+      "materialCategory": "numbers",
+      "sourceOrder": 1,
+      "sourceTableRow": 4
+    },
+    {
+      "code": "CH-ALG",
+      "slug": "aljabar",
+      "name": "Aljabar",
+      "materialCategory": "algebra",
+      "sourceOrder": 2,
+      "sourceTableRow": 38
+    },
+    {
+      "code": "CH-GP",
+      "slug": "geometri-pengukuran",
+      "name": "Geometri dan Pengukuran",
+      "materialCategory": "geometry",
+      "sourceOrder": 3,
+      "sourceTableRow": 80
+    },
+    {
+      "code": "CH-DP",
+      "slug": "data-peluang",
+      "name": "Data & Peluang",
+      "materialCategory": "statistics",
+      "sourceOrder": 4,
+      "sourceTableRow": 117
+    }
+  ],
+  "subchapters": [
+    {
+      "chapterCode": "CH-BIL",
+      "code": "SC-BR",
+      "slug": "bilangan-real",
+      "name": "Bilangan Real",
+      "sourceOrder": 1,
+      "sourceTableRow": 4
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-PPL",
+      "slug": "persamaan-pertidaksamaan-linier",
+      "name": "Persamaan dan Pertidaksamaan Linier",
+      "sourceOrder": 1,
+      "sourceTableRow": 38
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-BA",
+      "slug": "bentuk-aljabar",
+      "name": "Bentuk Aljabar",
+      "sourceOrder": 2,
+      "sourceTableRow": 56
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-FUNGSI",
+      "slug": "fungsi",
+      "name": "Fungsi",
+      "sourceOrder": 3,
+      "sourceTableRow": 62
+    },
+    {
+      "chapterCode": "CH-ALG",
+      "code": "SC-BD",
+      "slug": "barisan-deret",
+      "name": "Barisan dan Deret",
+      "sourceOrder": 4,
+      "sourceTableRow": 68
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-OG",
+      "slug": "objek-geometri",
+      "name": "Objek Geometri",
+      "sourceOrder": 1,
+      "sourceTableRow": 80
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-TG",
+      "slug": "transformasi-geometri",
+      "name": "Transformasi Geometri",
+      "sourceOrder": 2,
+      "sourceTableRow": 98
+    },
+    {
+      "chapterCode": "CH-GP",
+      "code": "SC-PENG",
+      "slug": "pengukuran",
+      "name": "Pengukuran",
+      "sourceOrder": 3,
+      "sourceTableRow": 104
+    },
+    {
+      "chapterCode": "CH-DP",
+      "code": "SC-DATA",
+      "slug": "data",
+      "name": "Data",
+      "sourceOrder": 1,
+      "sourceTableRow": 117
+    },
+    {
+      "chapterCode": "CH-DP",
+      "code": "SC-PELUANG",
+      "slug": "peluang",
+      "name": "Peluang",
+      "sourceOrder": 2,
+      "sourceTableRow": 134
+    }
+  ]
+}

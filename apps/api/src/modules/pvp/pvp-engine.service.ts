@@ -1,4 +1,3 @@
-import { presentFixtureText } from '@tka/database';
 import {
   ConflictException,
   ForbiddenException,
@@ -11,7 +10,6 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import {
   analyticsOutbox,
   assessmentPackages,
-  packageRuntimeEligibility,
   classMemberships,
   getDatabase,
   enqueueNotification,
@@ -23,8 +21,6 @@ import {
   pvpPlayers,
   pvpActiveRooms,
   questionVersions,
-  questions,
-  questionVariants,
   classes,
   scoringPolicyVersions,
   users,
@@ -40,6 +36,7 @@ import {
   type PvpPolicy,
 } from './pvp.policy';
 import type { PvpSnapshotDto } from './pvp.dto';
+import { PvpDrillBank, sampleDrillFamilies, unavailableDrillBank } from './pvp-drill-bank';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -51,6 +48,7 @@ export class PvpEngineService {
   /** Injectable clock is supplied directly by fixture tests, never from a request. */
   readonly now: () => Date = () => new Date();
   private schedulerReady = false;
+  private readonly drillBank = new PvpDrillBank();
   constructor(@Inject(PVP_POLICY) private readonly policy: PvpPolicy | null) {}
 
   setSchedulerReady(ready: boolean) {
@@ -77,7 +75,9 @@ export class PvpEngineService {
               : null;
         if (!reasonCode) {
           try {
-            await this.selectPackage(getDatabase().db, difficulty);
+            await this.scoringVersion(getDatabase().db);
+            if ((await this.drillBank.families(getDatabase().db, difficulty)).length < 10)
+              throw unavailableDrillBank();
           } catch (error) {
             if (!(
               error instanceof ConflictException || error instanceof ServiceUnavailableException
@@ -94,7 +94,11 @@ export class PvpEngineService {
     return {
       available,
       reasonCode: available ? null : difficulties[0]!.reasonCode,
-      message: available ? 'PvP tersedia.' : 'PvP belum tersedia.',
+      message: available
+        ? this.dataMode === 'demo'
+          ? 'PvP DEMO tersedia.'
+          : 'PvP tersedia.'
+        : 'PvP belum tersedia.',
       dataMode: this.dataMode,
       difficulties,
       activeMatchId: studentId ? await this.activeRoom(studentId) : null,
@@ -110,79 +114,48 @@ export class PvpEngineService {
     return room?.matchId ?? null;
   }
 
-  private async selectPackage(tx: Database | Transaction, difficulty: Difficulty) {
+  private async scoringVersion(tx: Database | Transaction, lock = false) {
     const policy = requirePvpPolicy(this.policy);
-    const [version] = await tx
-      .select()
-      .from(scoringPolicyVersions)
-      .where(
-        and(
-          eq(scoringPolicyVersions.id, policy.policyVersionId),
-          eq(scoringPolicyVersions.status, 'PUBLISHED'),
-        ),
-      );
-    if (!version)
-      throw new ServiceUnavailableException({
-        code: 'PVP_POLICY_UNAVAILABLE',
-        detail: 'Kebijakan pertandingan belum tersedia.',
-      });
-    const candidates = await tx
-      .select()
-      .from(assessmentPackages)
-      .where(
-        and(
-          eq(assessmentPackages.assessmentType, 'PVP'),
-          eq(assessmentPackages.status, 'PUBLISHED'),
-          packageRuntimeEligibility(),
-          eq(assessmentPackages.isDemo, this.dataMode === 'demo'),
-          eq(assessmentPackages.scoringPolicyVersionId, policy.policyVersionId),
-          lte(assessmentPackages.releaseAt, this.now()),
-          sql`(${assessmentPackages.closeAt} is null or ${assessmentPackages.closeAt} > ${this.now().toISOString()})`,
-        ),
-      )
-      .orderBy(desc(assessmentPackages.releaseAt), asc(assessmentPackages.id));
-    for (const pack of candidates) {
-      if (policy.mode && (!pack.frozenAt || !pack.manifestDigest)) continue;
-      if (
-        this.dataMode === 'official' &&
-        (!pack.frozenAt ||
-          !pack.manifestDigest ||
-          !pack.curriculumApproval?.reference?.trim() ||
-          !Number.isFinite(Date.parse(pack.curriculumApproval.approvedAt)) ||
-          pack.curriculumApproval.manifestDigest !== pack.manifestDigest)
-      )
-        continue;
-      const items = await tx
-        .select({ item: packageItems, version: questionVersions, contentStatus: questions.status })
-        .from(packageItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
-        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
-        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-        .where(eq(packageItems.packageId, pack.id))
-        .orderBy(asc(packageItems.displayOrder));
-      if (
-        items.length !== 10 ||
-        items.some(
-          ({ item, version: v, contentStatus }, i) =>
-            item.displayOrder !== i + 1 ||
-            v.difficulty?.toLowerCase() !== difficulty ||
-            contentStatus !== 'READY' ||
-            v.contentStatus !== 'READY',
-        )
-      )
-        continue;
-      try {
-        items.forEach(({ version: v }) => decodeSingleChoice(v));
-      } catch (error) {
-        if (error instanceof ServiceUnavailableException) continue;
-        throw error;
-      }
-      return { pack, items, version };
-    }
-    throw new ServiceUnavailableException({
-      code: 'PVP_CONTENT_UNAVAILABLE',
-      detail: 'Paket PvP valid untuk kesulitan ini belum tersedia.',
+    const query = tx.select().from(scoringPolicyVersions).where(and(
+      eq(scoringPolicyVersions.id, policy.policyVersionId),
+      eq(scoringPolicyVersions.status, 'PUBLISHED'),
+    ));
+    const [version] = await (lock ? query.for('share') : query);
+    if (!version) throw new ServiceUnavailableException({
+      code: 'PVP_POLICY_UNAVAILABLE',
+      detail: 'Kebijakan pertandingan belum tersedia.',
     });
+    return version;
+  }
+
+  private async freezeDrillPackage(tx: Transaction, difficulty: Difficulty) {
+    const version = await this.scoringVersion(tx, true);
+    const sampled = sampleDrillFamilies(await this.drillBank.families(tx, difficulty));
+    const selected = await this.drillBank.lockSelection(tx, difficulty, sampled);
+    const now = this.now();
+    const [draft] = await tx.insert(assessmentPackages).values({
+      familyCode: `PVP_ROOM_${randomUUID()}`,
+      packageVersion: 1,
+      name: 'PvP',
+      assessmentType: 'PVP',
+      status: 'DRAFT',
+      isDemo: this.dataMode === 'demo',
+      scoringPolicyVersionId: version.id,
+      releaseAt: now,
+    }).returning();
+    const savedItems = await tx.insert(packageItems).values(selected.map((c, i) => ({
+      packageId: draft!.id,
+      questionVersionId: c.version.id,
+      displayOrder: i + 1,
+      maxPoints: '150',
+    }))).returning();
+    // Existing DB trigger computes the canonical digest and seals item composition.
+    const [pack] = await tx.update(assessmentPackages)
+      .set({ status: 'PUBLISHED', frozenAt: now })
+      .where(eq(assessmentPackages.id, draft!.id)).returning();
+    const items = savedItems.sort((a, b) => a.displayOrder - b.displayOrder)
+      .map((item) => ({ item }));
+    return { pack: pack!, items, version };
   }
 
   private async assertRoomAvailable(tx: Transaction, studentId: string, matchId?: string) {
@@ -285,7 +258,7 @@ export class PvpEngineService {
       if (!this.newRoomsEnabled)
         throw failure('PVP_NEW_MATCHES_DISABLED', 'Pembuatan room baru sedang dinonaktifkan.');
       await this.assertRoomAvailable(tx, studentId);
-      const { pack, items, version } = await this.selectPackage(tx, difficulty);
+      const { pack, items, version } = await this.freezeDrillPackage(tx, difficulty);
       const now = this.now();
       const [match] = await tx
         .insert(pvpMatches)
@@ -1024,7 +997,7 @@ export class PvpEngineService {
             ? {
                 id: active.question.id,
                 order: active.question.displayOrder,
-                stem: presentFixtureText(active.version.id, 'stem', content.stem),
+                stem: content.stem,
                 options: content.options,
                 deadlineAt: active.question.deadlineAt!.toISOString(),
                 durationSeconds: this.pinnedDuration(match),

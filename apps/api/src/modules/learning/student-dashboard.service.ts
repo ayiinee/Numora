@@ -7,6 +7,7 @@ import {
   classMemberships,
   classes,
   schools,
+  xpLedger,
   getDatabase,
 } from '@tka/database';
 import { and, desc, eq, isNull, sql } from 'drizzle-orm';
@@ -32,7 +33,7 @@ export class StudentDashboardService {
         detail: 'Akses Student diperlukan.',
       });
     const { db } = getDatabase();
-    const [progress, history, memberships, best, active] = await Promise.all([
+    const [progress, history, memberships, best, active, xp] = await Promise.all([
       this.catalog.progressForStudent(user.id),
       this.history.listForStudent(user.id),
       db
@@ -72,11 +73,16 @@ export class StudentDashboardService {
         )
         .orderBy(desc(assessmentAttempts.startedAt), desc(assessmentAttempts.id))
         .limit(1),
+      db
+        .select({ total: sql<string>`coalesce(sum(${xpLedger.xpAmount}), 0)` })
+        .from(xpLedger)
+        .where(eq(xpLedger.studentId, user.id)),
     ]);
     const membership = memberships[0] ?? null;
     const pvpAvailable = this.pvp ? (await this.pvp.engine.availability()).available : false;
     return {
       displayName: user.displayName,
+      totalXp: Number(xp[0]?.total ?? 0),
       affiliation: membership ? 'SCHOOL' : 'MANDIRI',
       class: membership,
       classes: memberships,

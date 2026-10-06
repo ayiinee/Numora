@@ -1,5 +1,7 @@
 # Portal Admin terpadu — 5 Oktober 2026
 
+**ENGINEERING FIX — 7 October 2026:** the content workbench requests global audit logs only for `SUPER_ADMIN`, matching the existing server guard. Content Admin skips that request and the Audit/history UI, so a forbidden audit endpoint cannot block otherwise permitted content modules. Missing audit access is represented as `null`, not an empty audit result. No server permission or account assignment is changed.
+
 **PRD RULE:** PRD v0.6 §3.2–3.3, §18–19 dan §23.7 menetapkan login internal Admin, tiga subrole (`SUPER_ADMIN`, `OPERATIONS`, `CONTENT_DATA_MODERATION`), akses modul sesuai permission, dan audit tindakan penting. Admin Operasional tidak mengubah konten/hasil akademik; Content/Data/Moderation hanya mendapat view operasional terbatas.
 
 **ENGINEERING DECISION — instruksi Aini:** hapus mock `/admin/preview` dan tautannya, gunakan satu portal `/admin` serta shell bersama. Login internal berada di `/admin/login`; autentikasi tetap melalui Supabase Auth dan identitas/assignment tetap dari NestJS. Tidak menyediakan registrasi Admin atau assignment dari browser. Tidak melakukan backfill atau mengubah assignment Cloud.

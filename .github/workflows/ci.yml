@@ -13,7 +13,7 @@ jobs:
     env:
       TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
     runs-on: ubuntu-latest
-    timeout-minutes: 20
+    timeout-minutes: 25
     services:
       redis:
         image: redis:7

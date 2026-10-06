@@ -159,7 +159,7 @@ function PretestForm({
     mutationFn: () => learningApi.skipPretest(token, attempt.chapterId),
     onSuccess: async () => {
       await invalidate();
-      router.push(`/student/learn?chapter=${attempt.chapterId}`);
+      router.push(`/student/learn/${attempt.chapterId}`);
     },
   });
   return (
@@ -276,7 +276,7 @@ export function PretestResult({ result }: { result: PretestResultDto }) {
         Unlock Pretest tidak menandai level Drill sebagai selesai dan tidak mengurangi progres
         sebelumnya.
       </p>
-      <Link className="button-link" href={`/student/learn?chapter=${result.chapterId}`}>
+      <Link className="button-link" href={`/student/learn/${result.chapterId}`}>
         Lanjut Drill
       </Link>
     </Card>

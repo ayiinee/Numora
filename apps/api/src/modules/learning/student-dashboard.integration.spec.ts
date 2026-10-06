@@ -9,6 +9,7 @@ import {
   getDatabase,
   levels,
   levelProgress,
+  xpLedger,
   users,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
@@ -71,6 +72,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
     expect(initial.affiliation).toBe('MANDIRI');
     expect(initial.features.tryout).toBe(true);
     expect(initial.class).toBeNull();
+    expect(initial.totalXp).toBe(0);
     expect(initial.latestDrillScore).toBeNull();
     expect(initial.bestDrillScore).toBeNull();
     expect(initial.activities).toEqual([]);
@@ -123,6 +125,14 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
         })),
       )
       .returning();
+    await db.insert(xpLedger).values(
+      attempts.map((attempt, index) => ({
+        studentId: fixture.students[0]!.id,
+        attemptId: attempt.id,
+        sourceType: 'DRILL' as const,
+        xpAmount: index === 0 ? 12.125 : 7.5,
+      })),
+    );
     await db.insert(levelProgress).values({
       studentId: fixture.students[0]!.id,
       levelId: level!.id,
@@ -143,14 +153,23 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
         status: 'DRAFT',
       })
       .returning();
-    await db.insert(assessmentAttempts).values({
+    const [tryoutAttempt] = await db
+      .insert(assessmentAttempts)
+      .values({
+        studentId: fixture.students[0]!.id,
+        packageId: tryout!.id,
+        assessmentType: 'TRYOUT',
+        status: 'GRADED',
+        score0To100: '99',
+        startedAt: new Date('2026-09-30T01:00:00Z'),
+        finishedAt: new Date('2026-09-30T02:00:00Z'),
+      })
+      .returning();
+    await db.insert(xpLedger).values({
       studentId: fixture.students[0]!.id,
-      packageId: tryout!.id,
-      assessmentType: 'TRYOUT',
-      status: 'GRADED',
-      score0To100: '99',
-      startedAt: new Date('2026-09-30T01:00:00Z'),
-      finishedAt: new Date('2026-09-30T02:00:00Z'),
+      attemptId: tryoutAttempt!.id,
+      sourceType: 'TRYOUT',
+      xpAmount: 10.5,
     });
     const active = await db
       .insert(assessmentAttempts)
@@ -167,6 +186,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
     expect(dashboard.class?.name).toBe(fixture.schoolClass.name);
     expect(dashboard.latestDrillScore).toBe(80);
     expect(dashboard.bestDrillScore).toBe(80);
+    expect(dashboard.totalXp).toBe(30.125);
     expect(dashboard.activeDrill?.attemptId).toBe(active[0]!.id);
     expect(dashboard.activities.find((a) => a.activity === 'tryout')).toMatchObject({
       resultState: 'waitingIrt',
@@ -175,6 +195,7 @@ integration('Student dashboard ownership, affiliation and IRT privacy', () => {
     expect(dashboard.activities.filter((a) => a.score === 99)).toEqual([]);
     expect(dashboard.completedLevels).toBe(1);
     expect((await service.dashboard('other')).activities).toEqual([]);
+    expect((await service.dashboard('other')).totalXp).toBe(0);
     const leaderboards = new LeaderboardsService(identity);
     await expect(leaderboards.class('other')).rejects.toMatchObject({
       status: 403,

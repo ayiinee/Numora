@@ -7,6 +7,7 @@ import type {
   ContentPackageDetailDto,
   UploadDetailDto,
 } from '../src/features/admin/generated-types';
+import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generated-types';
 
 function directedPackage(
   usage: ContentPackageDetailDto['assessmentType'] = 'DRILL',
@@ -99,6 +100,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     versions: {
+      hasNext: false,
       items: [
         {
           id: id(10),
@@ -128,6 +130,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     videos: {
+      hasNext: false,
       items: [
         {
           id: id(13),
@@ -142,6 +145,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     reports: {
+      hasNext: false,
       items: [
         {
           id: id(15),
@@ -156,6 +160,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     irt: {
+      hasNext: false,
       items: [
         {
           id: id(22),
@@ -172,6 +177,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     irtBatches: {
+      hasNext: false,
       items: [
         {
           id: id(16),
@@ -187,6 +193,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     audit: {
+      hasNext: false,
       items: [
         {
           id: id(17),
@@ -200,6 +207,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     dashboard: { schools: 3, chapters: 1, questions: 1, readyVersions: 1, openReports: 1 },
     packages: {
+      hasNext: false,
       items: [
         {
           id: id(18),
@@ -212,6 +220,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     drillPackages: {
+      hasNext: false,
       items: [
         {
           id: id(19),
@@ -292,6 +301,24 @@ async function setup(page: Page) {
       },
       { id: id(112), expiresAt: '2026-01-01T00:00:00Z', usedAt: null, revokedAt: null },
     ] as TeacherTokenSummary[],
+    users: Array.from({ length: 6 }, (_, n) => ({
+      id: id(600 + n),
+      displayName: `Pengguna TEST ${n + 1}`,
+      role: 'STUDENT',
+      status: 'ACTIVE',
+      createdAt: '2026-10-01T00:00:00Z',
+    })) as AdminUserDto[],
+    classes: Array.from({ length: 6 }, (_, n) => ({
+      id: id(700 + n),
+      name: `Kelas TEST ${n + 1}`,
+      schoolId: id(101),
+      schoolName: 'Sekolah TEST',
+      teacherId: id(800),
+      teacherName: 'Guru TEST',
+      studentCount: 6,
+      createdAt: '2026-10-01T00:00:00Z',
+      archivedAt: null,
+    })) as AdminClassDto[],
     data: workbench(),
     failPath: '',
     failStatus: 503,
@@ -391,7 +418,19 @@ async function setup(page: Page) {
     let data: unknown = { items: [] };
     if (path === '/admin/schools') data = { items: state.schools };
     else if (path.endsWith('/teacher-tokens')) data = { items: state.tokens };
-    else {
+    else if (path === '/admin/users' || path === '/admin/classes') {
+      const term = (url.searchParams.get('search') ?? '').toLowerCase();
+      const rows =
+        path === '/admin/users'
+          ? state.users.filter((u) => u.displayName.toLowerCase().includes(term))
+          : state.classes.filter((c) => c.name.toLowerCase().includes(term));
+      const offset = Number(url.searchParams.get('offset') ?? 0);
+      const limit = Number(url.searchParams.get('limit') ?? 20);
+      data = {
+        items: rows.slice(offset, offset + limit),
+        nextOffset: offset + limit < rows.length ? offset + limit : null,
+      };
+    } else {
       const mapping: Record<string, unknown> = {
         '/admin/content/curriculum': state.data.curriculum,
         '/admin/content/versions': state.data.versions,
@@ -407,6 +446,11 @@ async function setup(page: Page) {
       if (path === '/admin/content/versions')
         state.offsets.push(url.searchParams.get('offset') ?? '0');
       data = mapping[path] ?? data;
+      const limit = Number(url.searchParams.get('limit') ?? 0);
+      if (limit && typeof data === 'object' && data !== null && 'items' in data) {
+        const offset = Number(url.searchParams.get('offset') ?? 0);
+        data = { items: (data.items as unknown[]).slice(offset, offset + limit) };
+      }
     }
     await route.fulfill({ json: data });
   });
@@ -467,6 +511,80 @@ const panels = [
   ['IRT', 'irt'],
   ['Audit', 'audit'],
 ] as const;
+
+for (const width of [390, 1280]) {
+  test(`Admin five-row pagination and horizontal filters at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const { state, errors } = await setup(page);
+    await page.goto('/admin/operations');
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    const nextRequest = page.waitForRequest(
+      (r) =>
+        r.url().includes('/admin/users?') && new URL(r.url()).searchParams.get('offset') === '5',
+    );
+    await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+    expect(new URL((await nextRequest).url()).searchParams.get('limit')).toBe('5');
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
+    await expect(page.getByRole('button', { name: 'Berikutnya', exact: true })).toBeDisabled();
+    await page.getByLabel('Nama pengguna').fill('TEST 1');
+    await page.getByRole('button', { name: /Terapkan filter/ }).click();
+    await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    if (width === 1280) {
+      const name = await page.getByLabel('Nama pengguna').boundingBox();
+      const role = await page.getByRole('combobox', { name: 'Role', exact: true }).boundingBox();
+      expect(Math.abs(name!.y - role!.y)).toBeLessThan(2);
+      expect(name!.width).toBeGreaterThan(role!.width);
+    }
+    await capture(page, 'pagination-users', width);
+    await page.getByRole('button', { name: 'Kelas', exact: true }).click();
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
+    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    await capture(page, 'pagination-classes', width);
+
+    state.data.versions.items = Array.from({ length: 6 }, (_, n) => ({
+      ...state.data.versions.items[0]!,
+      id: id(300 + n),
+      stem: `Soal TEST ${n + 1}`,
+    }));
+    await page.goto('/admin/content');
+    await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(5);
+    await page
+      .getByLabel('Teks soal (LaTeX inline diperbolehkan)')
+      .fill('Draf TEST belum disimpan');
+    await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+    await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(1);
+    await expect(page.getByLabel('Teks soal (LaTeX inline diperbolehkan)')).toHaveValue(
+      'Draf TEST belum disimpan',
+    );
+    if (width === 1280) {
+      const toolbar = await page
+        .locator('.admin-content-view > .admin-search-toolbar')
+        .boundingBox();
+      const area = await page.locator('.admin-content-view').boundingBox();
+      expect(toolbar!.width).toBeGreaterThan(area!.width * 0.95);
+    }
+    await capture(page, 'pagination-questions', width);
+
+    state.schools = Array.from({ length: 6 }, (_, n) => ({
+      ...state.schools[0]!,
+      id: id(101 + n),
+      name: `Sekolah TEST ${n + 1}`,
+    }));
+    await page.goto('/admin/schools');
+    await expect(page.locator('.admin-school-rows > li')).toHaveCount(5);
+    const schoolsNav = page.getByRole('navigation', { name: 'Halaman sekolah' });
+    await schoolsNav.getByRole('button', { name: 'Berikutnya' }).click();
+    await expect(page.locator('.admin-school-rows > li')).toHaveCount(1);
+    await expect(schoolsNav.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
+    await capture(page, 'pagination-schools', width);
+    expect(errors).toEqual([]);
+  });
+}
 for (const width of [390, 1280]) {
   for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null] as const) {
     test(`Unified Admin portal ${role ?? 'unassigned'} at ${width}px uses assignment and shared navigation`, async ({
@@ -687,7 +805,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   await page.goto('/admin/content');
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
-  expect(state.offsets).toContain('20');
+  expect(state.offsets).toContain('5');
   await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
   for (const list of [
@@ -701,7 +819,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
     state.data.irtBatches,
     state.data.audit,
   ])
-    list.items = [];
+    if (list) list.items = [];
   await page.goto('/admin/content');
   await expect(page.getByRole('link', { name: 'Upload soal dari template Excel' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toHaveCount(0);

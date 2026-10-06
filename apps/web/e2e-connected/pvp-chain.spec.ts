@@ -41,9 +41,14 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
   const api = 'http://localhost:3451/api/v1';
   const checks: string[] = [];
   try {
+    const availability = await (await request.get(`${api}/pvp/availability`, {
+      headers: headers('mandiri'),
+    })).json();
+    expect(availability.difficulties.every((d: { available: boolean }) => d.available)).toBe(true);
     for (const difficulty of ['easy', 'medium', 'hard']) {
       await Promise.all([host.goto('/student/pvp'), guest.goto('/student/pvp')]);
-      await expect(host.getByText('PvP DEMO', { exact: true })).toBeVisible();
+      await expect(host.getByRole('button', { name: 'Buat room', exact: true })).toBeVisible();
+      await expect(host.getByText('PvP DEMO', { exact: true })).toHaveCount(0);
       const label = { easy: 'Mudah', medium: 'Sedang', hard: 'Sulit' }[difficulty]!;
       await host.getByRole('radio', { name: new RegExp(label) }).click();
       await host.getByRole('button', { name: 'Buat room', exact: true }).click();
@@ -52,7 +57,7 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
       const snapshot = (await (
         await request.get(`${api}/pvp/matches/${matchId}`, { headers: headers('mandiri') })
       ).json()) as PvpSnapshotDto;
-      await guest.getByRole('tab', { name: 'Gabung via Kode / QR' }).click();
+      await guest.getByRole('tab', { name: /Gabung via Kode/ }).click();
       await guest.getByLabel('Kode room').fill(snapshot.roomCode);
       await guest.getByRole('button', { name: 'Gabung room', exact: true }).click();
       await expect(guest).toHaveURL(new RegExp(matchId));
@@ -61,6 +66,21 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
         guest.getByRole('button', { name: 'Saya siap', exact: true }).click(),
       ]);
       for (let round = 1; round <= 10; round++) {
+        await Promise.all([host, guest].map((page) =>
+          expect(page.getByText(`Ronde ${round}/10`, { exact: true })).toBeVisible()));
+        const states = await Promise.all(['mandiri', 'school'].map(async (alias) =>
+          (await (await request.get(`${api}/pvp/matches/${matchId}`, { headers: headers(alias) })).json()) as PvpSnapshotDto));
+        expect(states[0]!.question).toEqual(states[1]!.question);
+        expect(JSON.stringify(states)).not.toMatch(/answerKey|correctOptionId|explanation/);
+        if (round === 1) {
+          await host.reload();
+          await expect(host.getByText('Ronde 1/10', { exact: true })).toBeVisible();
+          const resumed = (await (await request.get(`${api}/pvp/matches/${matchId}`, {
+            headers: headers('mandiri'),
+          })).json()) as PvpSnapshotDto;
+          expect(resumed.question!.id).toBe(states[0]!.question!.id);
+          expect(resumed.question!.stem).toBe(states[0]!.question!.stem);
+        }
         await Promise.all(
           [host, guest].map(async (page) => {
             await expect(page.getByText(`Ronde ${round}/10`, { exact: true })).toBeVisible();
@@ -142,6 +162,9 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
     expect(activity.ownEntry?.points).toBe(xp);
     expect(cls.ownEntry?.points).toBe(xp);
     expect(persistence.matches.every((m: { questions: number }) => m.questions === 10)).toBe(true);
+    expect(persistence.matches.every((m: { families: number; ready_drill: boolean; frozen: boolean }) =>
+      m.families === 10 && m.ready_drill && m.frozen)).toBe(true);
+    checks.push('random READY Drill bank: ten unique families/difficulty, equal questions/order, browser reload reconnect, frozen snapshots');
     checks.push('actual Drill submit â†’ immutable XP ledger â†’ identical class/global account XP');
     const folder = resolve(__dirname, '../../../.tmp/job16-acceptance');
     mkdirSync(folder, { recursive: true });

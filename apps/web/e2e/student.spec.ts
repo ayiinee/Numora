@@ -99,6 +99,7 @@ async function fixtures(
     } else if (path === '/students/me/dashboard')
       data = {
         displayName: 'Siswa fixture',
+        totalXp: completed ? 80 : 0,
         affiliation: school ? 'SCHOOL' : 'MANDIRI',
         class: school ? { id: chapterId, name: 'IX fixture', schoolName: 'Sekolah fixture' } : null,
         completedLevels: completed ? 1 : 0,
@@ -159,6 +160,17 @@ async function fixtures(
             ],
           },
         ],
+      };
+    else if (path === `/pretest/chapters/${chapterId}`)
+      data = {
+        chapterId,
+        chapterTitle: 'Aljabar fixture',
+        state: 'unavailable',
+        canStart: false,
+        canSkip: false,
+        attemptId: null,
+        skipped: false,
+        isDemo: true,
       };
     else if (path === '/chapters')
       data = { chapters: [{ id: chapterId, title: 'Aljabar fixture', order: 1 }] };
@@ -342,6 +354,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         json: {
           displayName: 'Kirino S.',
           affiliation: 'SCHOOL',
+          totalXp: 1450,
           class: { id: chapterId, name: 'IX-A', schoolName: 'SMPN 1 Jakarta' },
           completedLevels: 14,
           availableLevels: 20,
@@ -429,23 +442,59 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByText('1.890 XP')).toBeVisible();
     await expect(page.getByText('Bu Ratna, M.Pd.')).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
+    const imageSlots = [
+      '.sh-identity__pattern',
+      '.sh-identity__bell img',
+      '.sh-identity__announcement img',
+      '.sh-shortcut__icon img',
+      '.sh-class__trophy',
+      '.sh-feedback__icon img',
+    ];
+    for (const slot of imageSlots) {
+      await expect
+        .poll(
+          () =>
+            page.locator(slot).evaluateAll(
+              (nodes) =>
+                nodes.length > 0 &&
+                nodes.every((node) => {
+                  const image = node as HTMLImageElement;
+                  return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+                }),
+            ),
+          { message: slot },
+        )
+        .toBe(true);
+    }
+    for (const [slide, asset] of [
+      ['drill', 'drill-owl-background.png'],
+      ['tryout', 'tryout-exam-background.png'],
+    ]) {
+      const background = await page
+        .locator(`.sh-carousel__slide--${slide} .sh-hero`)
+        .evaluate((hero) => getComputedStyle(hero).backgroundImage);
+      expect(background).toContain(asset);
+      expect(
+        await page.evaluate(async (filename) => {
+          const picture = new Image();
+          picture.src = `/illustrations/student-home/${filename}`;
+          await picture.decode();
+          return picture.naturalWidth > 0 && picture.naturalHeight > 0;
+        }, asset),
+      ).toBe(true);
+    }
     await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
     const bounds = await page.evaluate(() => {
       const selectors = [
-        '.student-identity',
-        '.student-home-hero',
-        '.home-features',
-        '.home-activities',
-        '.home-podium',
-        '.home-feedback',
+        '.sh-identity',
+        '.sh-carousel',
+        '.sh-shortcuts',
+        '.sh-activities',
+        '.sh-class',
+        '.sh-feedback',
         '.student-bottom-nav',
-        '.home-activity-entry',
-        '.home-activity',
-        '.home-activity__meta',
-        '.home-activity h3',
-        '.home-activity__status',
-        '.home-activity__pending',
-        '.home-resume',
+        '.sh-activity-entry',
+        '.sh-activity',
       ];
       return {
         width: innerWidth,
@@ -471,26 +520,28 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     if (width < 700) {
       const cards = bounds.cards.filter((card) =>
         [
-          '.student-home-hero',
-          '.home-features',
-          '.home-activities',
-          '.home-podium',
-          '.home-feedback',
+          '.sh-identity',
+          '.sh-carousel',
+          '.sh-shortcuts',
+          '.sh-activities',
+          '.sh-class',
+          '.sh-feedback',
         ].includes(card.selector),
       );
       expect(cards.map((card) => card.selector)).toEqual([
-        '.student-home-hero',
-        '.home-features',
-        '.home-activities',
-        '.home-podium',
-        '.home-feedback',
+        '.sh-identity',
+        '.sh-carousel',
+        '.sh-shortcuts',
+        '.sh-activities',
+        '.sh-class',
+        '.sh-feedback',
       ]);
       for (let index = 1; index < cards.length; index++)
         expect(cards[index]!.y).toBeGreaterThanOrEqual(
           cards[index - 1]!.y + cards[index - 1]!.height,
         );
-      expect(cards[0]!.x).toBe(16);
-      expect(cards[0]!.width).toBe(width - 32);
+      expect(cards[0]!.x).toBe(0);
+      expect(cards[0]!.width).toBe(width);
     }
     await writeFile(
       testInfo.outputPath(`home-geometry-${width}.json`),
@@ -500,21 +551,136 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       body: JSON.stringify(bounds, null, 2),
       contentType: 'application/json',
     });
+    if (width < 960) {
+      const fullHeight = await page.evaluate(() => document.documentElement.scrollHeight);
+      await page.setViewportSize({ width, height: Math.max(1374, fullHeight) });
+    }
     await page.screenshot({
       path: testInfo.outputPath(`home-reference-${width}.png`),
       fullPage: true,
     });
+    if (width < 960) await page.setViewportSize({ width, height: width < 700 ? 1374 : 1000 });
     expect(mutations).toEqual([]);
     await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toHaveCount(0);
-    await expect(page.locator('.home-feature-grid > a')).toHaveCount(3);
+    await expect(page.locator('.sh-shortcuts__grid > a')).toHaveCount(3);
+    await expect(page.locator('.sh-shortcuts .sh-section__heading a')).toHaveCount(0);
+    await expect(page.locator('.sh-shortcut__arrow')).toHaveCount(0);
+    await expect(page.locator('.sh-carousel__arrow, .sh-carousel__pause')).toHaveCount(0);
+    await expect(page.locator('.sh-identity__xp:visible svg')).toHaveCount(1);
     await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
     await expect(
       page.getByRole('link', { name: 'Lanjutkan latihan', exact: true }),
     ).toHaveAttribute('href', `/student/drill/${attemptId}`);
-    await page
-      .getByRole('link', { name: width >= 960 ? 'Notifikasi' : 'Lihat notifikasi', exact: true })
-      .filter({ visible: true })
-      .click();
+    expect(
+      await page.locator('.sh-carousel__slide--tryout a').evaluate((link) => {
+        (link as HTMLElement).focus();
+        return document.activeElement === link;
+      }),
+    ).toBe(false);
+    await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.locator('.sh-carousel__slide--tryout')).toHaveAttribute(
+      'aria-hidden',
+      'false',
+    );
+    await expect(page.getByRole('link', { name: 'Lihat aturan' })).toHaveAttribute(
+      'href',
+      '/student/tryout',
+    );
+    await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).evaluate((button) => {
+      (button as HTMLButtonElement).blur();
+    });
+    if ([320, 390, 1440].includes(width)) {
+      await expect
+        .poll(() =>
+          page.locator('.sh-carousel__viewport').evaluate((viewport) => {
+            const track = viewport.querySelector<HTMLElement>('.sh-carousel__track');
+            const tryout = viewport.querySelector<HTMLElement>('.sh-carousel__slide--tryout');
+            const nextDrill = track?.children[3] as HTMLElement | undefined;
+            if (!track || !nextDrill || !tryout || track.dataset.phase !== 'hold') return false;
+            const viewportBox = viewport.getBoundingClientRect();
+            const activeBox = tryout.getBoundingClientRect();
+            const nextBox = nextDrill.getBoundingClientRect();
+            return (
+              Math.abs(activeBox.left - viewportBox.left) <= 2 &&
+              nextBox.left > activeBox.right &&
+              nextBox.left < viewportBox.right - 12
+            );
+          }),
+        )
+        .toBe(true);
+    }
+    const tryoutActionFits = await page
+      .locator('.sh-carousel__slide--tryout .sh-hero__action')
+      .evaluate((action) => {
+        const card = action.closest('.sh-hero');
+        return (
+          card != null &&
+          action.getBoundingClientRect().bottom <= card.getBoundingClientRect().bottom
+        );
+      });
+    expect(tryoutActionFits).toBe(true);
+    if ([320, 390, 1440].includes(width))
+      await page.screenshot({
+        path: testInfo.outputPath(`home-tryout-${width}.png`),
+        fullPage: true,
+      });
+    if ([320, 390, 1440].includes(width)) {
+      await page.getByRole('button', { name: 'Tampilkan slide Drill' }).click();
+      await expect(page.locator('.sh-carousel__slide--drill')).toHaveAttribute(
+        'aria-hidden',
+        'false',
+      );
+      await expect
+        .poll(() =>
+          page.locator('.sh-carousel__viewport').evaluate((viewport) => {
+            const track = viewport.querySelector<HTMLElement>('.sh-carousel__track');
+            const drill = viewport.querySelector<HTMLElement>('.sh-carousel__slide--drill');
+            const tryout = viewport.querySelector<HTMLElement>('.sh-carousel__slide--tryout');
+            if (!track || !drill || !tryout || track.dataset.phase !== 'hold') return false;
+            const viewportBox = viewport.getBoundingClientRect();
+            const activeBox = drill.getBoundingClientRect();
+            const nextBox = tryout.getBoundingClientRect();
+            return (
+              Math.abs(activeBox.left - viewportBox.left) <= 2 &&
+              nextBox.left > activeBox.right &&
+              nextBox.left < viewportBox.right - 12
+            );
+          }),
+        )
+        .toBe(true);
+      await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).click();
+      await expect(page.locator('.sh-carousel__slide--tryout')).toHaveAttribute(
+        'aria-hidden',
+        'false',
+      );
+    }
+    await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
+    await page.getByRole('button', { name: 'Tampilkan slide Drill' }).click();
+    await expect(page.locator('.sh-carousel__slide--drill')).toHaveAttribute(
+      'aria-hidden',
+      'false',
+    );
+    if (width === 390) {
+      const viewport = page.locator('.sh-carousel__viewport');
+      await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
+      const box = await viewport.boundingBox();
+      expect(box).not.toBeNull();
+      const startX = box!.x + box!.width * 0.68;
+      const startY = box!.y + 30;
+      for (const nextSlide of ['tryout', 'drill']) {
+        await page.mouse.move(startX, startY);
+        await page.mouse.down();
+        await page.mouse.move(startX - 110, startY, { steps: 8 });
+        await page.mouse.up();
+        await expect(page.locator(`.sh-carousel__slide--${nextSlide}`)).toHaveAttribute(
+          'aria-hidden',
+          'false',
+        );
+        await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
+      }
+    }
+    await page.locator('.sh-identity__bell:visible').click();
     await expect(page).toHaveURL('/student/notifications');
     expect(mutations).toEqual([]);
   });
@@ -527,10 +693,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
     await page.setViewportSize({ width, height: 900 });
     await fixtures(page);
     await page.goto('/student');
-    await expect(page.getByRole('heading', { name: /Halo, Siswa/ })).toBeVisible();
-    await expect(
-      page.locator('.student-identity:visible').getByText('User Mandiri', { exact: true }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Siswa fixture' })).toBeVisible();
+    await expect(page.getByText('Belajar mandiri', { exact: true })).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
     await expect(page.locator('body')).toHaveCSS('font-family', /jakarta/i);
     // Hide the development toolbar only in visual evidence; it is absent in production.
@@ -543,7 +707,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
     if (width <= 959) {
       await expect(nav.getByRole('link')).toHaveText([
         'Belajar',
-        'Materi',
+        'Latihan',
         'Tryout',
         'PvP',
         'Profil',
@@ -553,12 +717,13 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
         'page',
       );
     }
-    await nav.getByRole('link', { name: 'Materi', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Materi Belajar' })).toBeVisible();
-    await expect(nav.getByRole('link', { name: 'Materi', exact: true })).toHaveAttribute(
+    await nav.getByRole('link', { name: 'Latihan', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Latihan Soal' })).toBeVisible();
+    await expect(nav.getByRole('link', { name: 'Latihan', exact: true })).toHaveAttribute(
       'aria-current',
       'page',
     );
+    await page.locator(`a[href="/student/learn/${chapterId}"]`).click();
     await page.getByRole('link', { name: /Persamaan fixture/ }).click();
     await page
       .locator('.adventure-focus')
@@ -590,7 +755,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
         await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
       ).toBe(true);
     }
-    await nav.getByRole('link', { name: 'Materi', exact: true }).focus();
+    await nav.getByRole('link', { name: 'Latihan', exact: true }).focus();
     await page.keyboard.press('Tab');
     await expect(nav.getByRole('link', { name: 'Tryout', exact: true })).toBeFocused();
   });
@@ -600,8 +765,9 @@ test('home loading and independent Tryout errors preserve learning and pending c
   await page.setViewportSize({ width: 390, height: 1000 });
   await fixtures(page);
   await page.goto('/student');
-  await expect(page.getByText('Guru fixture', { exact: true })).toBeVisible();
-  await expect(page.getByRole('region', { name: 'Paket Tryout Mingguan' })).toBeVisible();
+  await expect(page.getByText(/Catatan persisted fixture/)).toBeVisible();
+  await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).click();
+  await expect(page.getByRole('heading', { name: 'Tryout Matematika' })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
   await page.screenshot({ path: testInfo.outputPath('home-mandiri-390.png'), fullPage: true });
@@ -622,6 +788,7 @@ test('home loading and independent Tryout errors preserve learning and pending c
     route.fulfill({
       json: {
         displayName: 'Siswa fixture',
+        totalXp: 80,
         affiliation: 'SCHOOL',
         class: { id: chapterId, name: 'IX fixture', schoolName: 'Sekolah fixture' },
         completedLevels: 1,
@@ -668,24 +835,35 @@ test('home loading and independent Tryout errors preserve learning and pending c
   });
   await page.goto('/student');
   try {
+    await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).click();
     await expect(page.getByRole('status', { name: 'Memuat Tryout' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: /Fitur Belajar/ })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Shortcut Belajar' })).toBeVisible();
     await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
     await page.screenshot({ path: testInfo.outputPath('home-loading-390.png'), fullPage: true });
   } finally {
     release();
   }
-  const tryoutError = page.getByLabel('Status Tryout');
-  await expect(tryoutError.getByRole('heading', { name: 'Gagal memuat' })).toBeVisible();
+  const tryoutError = page.locator('.sh-carousel__slide--tryout');
+  await expect(
+    tryoutError.getByRole('heading', { name: 'Tryout belum dapat dimuat' }),
+  ).toBeVisible();
+  const retryTryout = tryoutError.getByRole('button', { name: 'Coba lagi' });
+  await expect(retryTryout).toBeVisible();
+  expect(
+    await retryTryout.evaluate((button) => {
+      const hero = button.closest('.sh-hero')!.getBoundingClientRect();
+      return button.getBoundingClientRect().bottom <= hero.bottom;
+    }),
+  ).toBe(true);
   await expect(page.getByText('Peringkat belum tersedia', { exact: true })).toBeVisible();
-  await expect(page.getByText('Guru fixture', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Catatan persisted fixture/)).toBeVisible();
   await page.screenshot({
     path: testInfo.outputPath('home-error-pending-390.png'),
     fullPage: true,
   });
   fail = false;
   await tryoutError.getByRole('button', { name: 'Coba lagi' }).click();
-  await expect(page.getByRole('region', { name: 'Paket pulih' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Paket pulih' })).toBeVisible();
   expect(classRequests).toBe(0);
   expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
 });
@@ -758,7 +936,7 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
     return route.fallback();
   });
   await page.goto('/student/tryout');
-  await expect(page.getByText(/TryOut gratis untuk seluruh siswa/)).toBeVisible();
+  await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
   await page.getByLabel('Saya memahami aturan pengerjaan.').check();
   await page.getByRole('button', { name: 'Mulai TryOut' }).click();
@@ -898,10 +1076,14 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
     await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
-    await page.goto('/student');
-    await expect(page.getByRole('heading', { name: 'IX fixture', exact: true })).toBeVisible();
     await expect(
-      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+      page
+        .getByRole('region', { name: 'Profil dan progres' })
+        .getByText('IX fixture', { exact: true }),
+    ).toBeVisible();
+    await page.goto('/student');
+    await expect(
+      page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
     ).toBeVisible();
     for (const path of ['/demo/student', '/demo/pvp', '/demo/leaderboards']) {
       const response = await page.goto(path);
@@ -1096,7 +1278,7 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page).toHaveURL('http://localhost:3300/student');
   await expect(
-    page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+    page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
   ).toBeVisible();
   await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
   await expect(
@@ -1138,7 +1320,7 @@ for (const width of [320, 390, 1440])
     await page.keyboard.press('Enter');
     await expect(page).toHaveURL('http://localhost:3300/student');
     await expect(
-      page.locator('.student-identity:visible').getByText('Sekolah fixture', { exact: true }),
+      page.locator('.sh-identity:visible').getByText('Sekolah fixture', { exact: true }),
     ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
@@ -1667,6 +1849,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       route.fulfill({
         json: {
           displayName: 'Kirino S.',
+          totalXp: 320,
           affiliation: 'SCHOOL',
           class: { id: chapterId, name: 'IX-A', schoolName: 'SMPN 1 Jakarta' },
           completedLevels: 2,
@@ -1837,7 +2020,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       });
     };
     await page.goto('/student/learn');
-    await expect(page.getByRole('heading', { name: 'Materi Belajar' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Latihan Soal' })).toBeVisible();
     await capture('catalog');
     await page.goto(`/student/learn/${chapterId}`);
     await expect(page.getByRole('link', { name: /Persamaan fixture/ })).toBeVisible();
@@ -1876,7 +2059,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await capture('result');
     // Explicit server fixture; no star formula is inferred from the score.
     resultStars = 3;
-    await page.reload();
+    await page.goto(`/student/drill/${attemptId}/result`);
     await expect(page.getByText('Bintang: 3', { exact: true })).toBeVisible();
     await expect(page.locator('.result-stars svg')).toHaveCount(3);
     await expect(page.locator('.result-stars svg').first()).toHaveCSS('width', '40px');
@@ -2064,7 +2247,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto('/student/tryout');
     await expect(page.getByRole('heading', { name: title })).toBeVisible();
     await capture('catalog');
-    await page.getByRole('tab', { name: 'Tryout Saya', exact: true }).click();
+    await page.getByRole('tab', { name: 'Riwayat', exact: true }).click();
     await expect(page.getByRole('link', { name: /Tryout Mingguan #03/ })).toBeVisible();
     await expect(page.getByRole('link', { name: /Tryout Mingguan #04/ })).toHaveCount(0);
     await expect(page.getByText('Faktorisasi Aljabar Kuadrat', { exact: true })).toHaveCount(0);

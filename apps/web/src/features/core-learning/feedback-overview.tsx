@@ -1,72 +1,71 @@
 'use client';
 
 import Link from 'next/link';
-import { Avatar, Card, Icon } from '@tka/ui';
+import { Icon } from '@tka/ui';
 import { useFeedbackSummary } from './feedback-queries';
 
 export function FeedbackOverview({ token }: { token: string }) {
   const query = useFeedbackSummary(token);
+  const latest = query.data?.latest[0];
   return (
-    <Card
+    <section
       id="catatan-guru"
-      className="student-home-card home-feedback"
-      aria-labelledby="home-feedback-title"
+      className="sh-section sh-feedback"
+      aria-labelledby="sh-feedback-title"
     >
-      <div className="home-card-heading">
-        <h2 id="home-feedback-title">
-          <Icon name="chat" width={18} height={18} />
-          Feedback dari Guru
-        </h2>
-        {query.data?.unreadCount === 0 && Boolean(query.data.latest.length) && (
-          <span className="home-feedback__read">
-            <Icon name="check" width={12} height={12} />
-            Sudah Dibaca
-          </span>
-        )}
+      <div className="sh-section__heading">
+        <h2 id="sh-feedback-title">Feedback</h2>
+        <Link href="/student/feedback">
+          Inbox <Icon name="chevron" width={16} height={16} />
+        </Link>
       </div>
       {query.isPending ? (
-        <p role="status">Memuat catatan Guru…</p>
+        <div className="sh-feedback__card" role="status">
+          Memuat catatan Guru…
+        </div>
       ) : query.isError ? (
-        <div>
+        <div className="sh-feedback__card">
           <p role="alert">Catatan belum dapat dimuat. Aktivitas belajar tetap tersedia.</p>
-          <button className="min-h-11 font-semibold underline" onClick={() => void query.refetch()}>
+          <button type="button" onClick={() => void query.refetch()}>
             Coba muat catatan lagi
           </button>
         </div>
+      ) : latest ? (
+        <Link className="sh-feedback__card sh-feedback__card--linked" href="/student/feedback">
+          <span className="sh-feedback__icon">
+            <img
+              src="/illustrations/student-home/reference-feedback.png"
+              width="79"
+              height="64"
+              alt=""
+            />
+          </span>
+          <span className="sh-feedback__body">
+            <strong>{latest.teacherName}</strong>
+            <span>{latest.body}</span>
+            <small>{latest.readAt === null ? 'Belum dibaca' : 'Sudah dibaca'}</small>
+          </span>
+          <span className="sh-feedback__aside">
+            {query.data.unreadCount > 0 && (
+              <b aria-label={`${query.data.unreadCount} catatan belum dibaca`}>
+                {query.data.unreadCount > 99 ? '99+' : query.data.unreadCount}
+              </b>
+            )}
+            <time dateTime={latest.sentAt}>
+              {new Intl.DateTimeFormat('id-ID', {
+                timeZone: 'Asia/Jakarta',
+                dateStyle: 'medium',
+              }).format(new Date(latest.sentAt))}
+            </time>
+          </span>
+          <Icon name="chevron" width={16} height={16} />
+        </Link>
       ) : (
-        <>
-          {(query.data.unreadCount > 0 || !query.data.latest.length) && (
-            <p className="home-feedback__count">{query.data.unreadCount} catatan belum dibaca.</p>
-          )}
-          {!query.data.latest.length ? (
-            <p className="mt-2 text-sm text-slate-700">Belum ada catatan dari Guru.</p>
-          ) : (
-            <ul className="home-feedback__list">
-              {query.data.latest.map((item) => (
-                <li key={item.id}>
-                  <div className="home-feedback__author">
-                    <Avatar name={item.teacherName} size="sm" />
-                    <div>
-                      <strong>{item.teacherName}</strong>
-                      <small>{item.readAt === null ? 'Belum dibaca' : 'Sudah dibaca'}</small>
-                    </div>
-                    <time dateTime={item.sentAt}>
-                      {new Intl.DateTimeFormat('id-ID', {
-                        timeZone: 'Asia/Jakarta',
-                        dateStyle: 'medium',
-                      }).format(new Date(item.sentAt))}
-                    </time>
-                  </div>
-                  <p className="home-feedback__quote">{item.body}</p>
-                </li>
-              ))}
-            </ul>
-          )}
-        </>
+        <div className="sh-feedback__card sh-feedback__empty">
+          <Icon name="chat" width={25} height={25} />
+          <p>Belum ada catatan dari Guru.</p>
+        </div>
       )}
-      <Link href="/student/feedback" className="home-feedback__inbox">
-        Lihat semua catatan <Icon name="arrow" width={16} height={16} />
-      </Link>
-    </Card>
+    </section>
   );
 }

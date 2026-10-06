@@ -1,0 +1,20 @@
+[
+  {
+    "asset": "apps/web/public/illustrations/student-home/drill-owl.svg",
+    "type": "original-svg",
+    "source": "Numora internal original illustration",
+    "license": "Numora project asset",
+    "attribution": "Numora",
+    "purpose": "Student Home Drill hero illustration, derived from the geometric owl in apps/web/public/figma/numora-owl-source.png",
+    "prompt": ""
+  },
+  {
+    "asset": "apps/web/public/illustrations/student-home/tryout-owl.svg",
+    "type": "original-svg",
+    "source": "Numora internal original illustration",
+    "license": "Numora project asset",
+    "attribution": "Numora",
+    "purpose": "Student Home Tryout hero illustration, derived from the geometric owl in apps/web/public/figma/numora-owl-source.png",
+    "prompt": ""
+  }
+]

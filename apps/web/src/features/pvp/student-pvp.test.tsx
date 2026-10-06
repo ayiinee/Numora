@@ -100,6 +100,9 @@ it('reuses a timed-out create request ID on explicit retry instead of creating a
       <PvpScreen />
     </StudentAccess>,
   );
+  expect(document.querySelector('.app-mobile-header .materials-header')?.textContent).toBe(
+    'PvP Duel',
+  );
   const create = await screen.findByRole('button', { name: 'Buat room' });
   await waitFor(() => expect(create.hasAttribute('disabled')).toBe(false));
   fireEvent.click(create);

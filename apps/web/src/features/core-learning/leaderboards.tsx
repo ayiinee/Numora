@@ -10,6 +10,7 @@ import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
 import { LeaderboardPodium, formatLeaderboardPoints } from './leaderboard-podium';
 import { difficultyLabels, PvpHeader, type Difficulty } from '@/features/pvp/pvp-presentation';
+import './leaderboards.css';
 
 const themes = {
   easy: {
@@ -78,7 +79,7 @@ export function LeaderboardsScreen() {
   return (
     <LearningFrame
       title="Leaderboard"
-      className={`pvp-ranking-shell pvp-ranking-shell--${difficulty}`}
+      className={`pvp-ranking-shell pvp-ranking-shell--${difficulty}${tab === 'pvp' ? ' pvp-ranking-shell--compact' : ''}`}
     >
       <PvpHeader
         title={

@@ -1,6 +1,7 @@
 'use client';
 
 import { useEffect, useState, type FormEvent } from 'react';
+import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { Brand, Button } from '@tka/ui';
 import { getSupabase } from '@/lib/supabase';
@@ -36,7 +37,11 @@ export function QaLogin() {
   return (
     <main className="onboarding-shell">
       <div className="onboarding-frame">
-        <header className="brand"><Brand /></header>
+        <header className="brand">
+          <Link href="/" className="auth-home-link" aria-label="Kembali ke halaman utama NUMORA">
+            <Brand />
+          </Link>
+        </header>
         <section className="panel form-panel" aria-label="Login QA Development">
           <span className="eyebrow">Development · QA</span>
           <h1>Masuk akun QA</h1>

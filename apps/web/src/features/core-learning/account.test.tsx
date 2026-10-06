@@ -51,6 +51,7 @@ beforeEach(() => {
   auth.state = { status: 'ready', profile, session: { access_token: 'token-a' } };
   vi.mocked(learningApi.dashboard).mockResolvedValue({
     displayName: 'Kirino S.',
+    totalXp: 0,
     affiliation: 'MANDIRI',
     class: null,
     completedLevels: 0,
@@ -98,7 +99,7 @@ describe('Student account and feedback', () => {
     expect(readCalls()).toHaveLength(0);
     expect(document.querySelector('blockquote script')).toBeNull();
     expect(screen.getAllByText(note.body).length).toBeGreaterThan(0);
-    expect(screen.getByRole('link', { name: 'Lihat semua catatan' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Inbox' }).getAttribute('href')).toBe(
       '/student/feedback',
     );
   });

@@ -65,7 +65,9 @@ export function AdminLoginScreen() {
     <main className="onboarding-shell">
       <div className="onboarding-frame">
         <header className="brand">
-          <Brand />
+          <Link href="/" className="auth-home-link" aria-label="Kembali ke halaman utama NUMORA">
+            <Brand />
+          </Link>
         </header>
         <section className="panel form-panel" aria-label="Login internal Admin">
           <span className="eyebrow">Ruang Admin</span>
