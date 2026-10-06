@@ -14,14 +14,21 @@ export function LearningFrame({
   children,
   focus = false,
   className,
+  mobileHeader,
 }: {
   title: string;
   children: ReactNode;
   focus?: boolean;
   className?: string;
+  mobileHeader?: ReactNode;
 }) {
   return (
-    <StudentLayout title={title} hideBottomNav={focus} className={className}>
+    <StudentLayout
+      title={title}
+      hideBottomNav={focus}
+      className={className}
+      mobileHeader={mobileHeader}
+    >
       {children}
     </StudentLayout>
   );

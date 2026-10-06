@@ -1,0 +1,147 @@
+/* Compact PvP contents; keep controls at least 44px and other scopes unchanged. */
+.pvp-ranking-shell--compact .pvp-ranking-content,
+.pvp-ranking-shell--compact .pvp-ranking-layout,
+.pvp-ranking-shell--compact .pvp-ranking-main,
+.pvp-ranking-shell--compact .pvp-ranking-context {
+  gap: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-content > label {
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-content > label select {
+  min-height: 44px;
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-tabs {
+  padding: 4px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-hero {
+  padding: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-hero h2 {
+  font-size: 18px;
+  margin-top: 8px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-hero__rule {
+  padding: 8px;
+  margin-top: 8px;
+}
+
+.pvp-ranking-shell--compact :is(.pvp-ranking-podium, .pvp-own-rank, .pvp-ranking-period) {
+  --card-padding: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-section-heading {
+  gap: 8px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-section-heading h2 {
+  font-size: 16px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-section-heading h2 svg {
+  width: 18px;
+  height: 18px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium {
+  max-width: 480px;
+  margin: 12px auto 0;
+}
+
+.pvp-ranking-shell--compact
+  .pvp-ranking-podium
+  .leaderboard-podium__place:not(.leaderboard-podium__place--1)
+  .numora-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: 18px !important;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-podium .leaderboard-podium__place--1 .numora-avatar {
+  width: 56px !important;
+  height: 56px !important;
+  font-size: 22px !important;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__rank {
+  width: 22px;
+  height: 22px;
+  font-size: 10px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__place > strong {
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__pedestal {
+  height: 48px;
+  padding: 6px 4px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__place--1 .leaderboard-podium__pedestal {
+  height: 64px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__record {
+  font-size: 16px;
+}
+
+.pvp-ranking-shell--compact .leaderboard-podium__vacant {
+  min-height: 100px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-list ol {
+  gap: 6px;
+  margin-top: 8px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-list li {
+  gap: 8px;
+  padding: 10px 12px;
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-list .numora-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 13px !important;
+}
+
+.pvp-ranking-shell--compact .pvp-ranking-list li > div:not(.numora-avatar),
+.pvp-ranking-shell--compact .pvp-own-rank__summary > div {
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact :is(.pvp-rank-points, .pvp-rank-number) {
+  font-size: 14px;
+}
+
+.pvp-ranking-shell--compact .pvp-own-rank__position {
+  min-width: 36px;
+  height: 36px;
+  font-size: 16px;
+}
+
+.pvp-ranking-shell--compact .pvp-own-rank > p {
+  font-size: 12px;
+}
+
+.pvp-ranking-shell--compact .numora-empty-state {
+  --text-xl: 14px;
+  --text-base: 12px;
+  --space-6: 12px;
+  padding: 24px 12px !important;
+}
+
+@media (min-width: 960px) {
+  .pvp-ranking-shell--compact .pvp-ranking-layout {
+    gap: 16px;
+  }
+}

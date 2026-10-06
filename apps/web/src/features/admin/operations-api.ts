@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api';
+import { ADMIN_PAGE_SIZE } from './pagination';
 import type {
   AdminClassDto,
   AdminClassListDto,
@@ -6,11 +7,9 @@ import type {
   AdminUserListDto,
 } from './generated-types';
 
-const PAGE_SIZE = 20;
-
 function queryString(values: Record<string, string | number | undefined>) {
   const query = new URLSearchParams();
-  query.set('limit', String(PAGE_SIZE));
+  query.set('limit', String(ADMIN_PAGE_SIZE));
   for (const [key, value] of Object.entries(values)) {
     if (value !== undefined && value !== '') query.set(key, String(value));
   }

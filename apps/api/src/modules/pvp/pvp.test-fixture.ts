@@ -17,7 +17,7 @@ import {
   users,
 } from '@tka/database';
 import type { PvpPolicy } from './pvp.policy';
-export async function pvpFixture() {
+export async function pvpFixture(count = 10) {
   const { db } = getDatabase();
   const suffix = randomUUID();
   const students = await db
@@ -40,6 +40,10 @@ export async function pvpFixture() {
       email: `${suffix}-teacher@example.test`,
     })
     .returning();
+  const [contentAdmin] = await db.insert(users).values({
+    authUserId: randomUUID(), role: 'ADMIN', adminRole: 'SUPER_ADMIN',
+    displayName: 'Fixture content admin', email: `${suffix}-admin@example.test`,
+  }).returning();
   const [school] = await db
     .insert(schools)
     .values({ code: suffix, name: 'Fixture school' })
@@ -106,10 +110,10 @@ export async function pvpFixture() {
       scoringPolicyVersionId: policy!.id,
     })
     .returning();
-  for (let order = 1; order <= 10; order++) {
+  for (let order = 1; order <= count; order++) {
     const [q] = await db
       .insert(questions)
-      .values({ primaryCompetencyId: competency!.id, sourceRef: suffix, status: 'READY' })
+      .values({ primaryCompetencyId: competency!.id, sourceRef: suffix, usageType: 'DRILL', status: 'READY' })
       .returning();
     const [variant] = await db
       .insert(questionVariants)
@@ -134,6 +138,7 @@ export async function pvpFixture() {
         answerKey: { optionId: 'A' },
         explanation: { text: 'Test explanation' },
         difficulty: 'EASY',
+        contentStatus: 'READY', reviewedByUserId: contentAdmin!.id, reviewedAt: new Date(),
       })
       .returning();
     await db
@@ -153,6 +158,10 @@ export async function pvpFixture() {
   };
   return {
     students,
+    chapter: chapter!,
+    subchapter: subchapter!,
+    competency: competency!,
+    contentAdmin: contentAdmin!,
     teacher: teacher!,
     schoolClass: schoolClass!,
     pack: pack!,

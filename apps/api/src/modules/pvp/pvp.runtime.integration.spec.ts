@@ -7,21 +7,41 @@ import {
   pvpDemoId,
   seedPvpDemo,
   packageItems,
+  questionVersions,
+  questionVariants,
+  questions,
 } from '@tka/database';
-import { eq, sql } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import { pvpFixture } from './pvp.test-fixture';
 import { resolvePvpPolicy } from './pvp-runtime.policy';
 import { PvpEngineService } from './pvp-engine.service';
 import { pvpMode } from './pvp.policy';
 
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
-integration('owner-approved runtime policy and DEMO publication boundary', () => {
+integration('runtime policy and READY Drill publication boundary', () => {
   let fixture: Awaited<ReturnType<typeof pvpFixture>>;
   const testPackages: string[] = [];
   beforeAll(async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
     process.env.ALLOW_DEMO_SEED = 'true';
     fixture = await pvpFixture();
+    for (const difficulty of ['MEDIUM', 'HARD']) {
+      for (let i = 0; i < 10; i++) {
+        const [q] = await getDatabase().db.insert(questions).values({
+          primaryCompetencyId: fixture.competency.id, usageType: 'DRILL', status: 'READY',
+        }).returning();
+        const [variant] = await getDatabase().db.insert(questionVariants).values({
+          questionId: q!.id, variantCode: randomUUID(), kind: 'ORIGINAL', origin: 'TEST',
+        }).returning();
+        await getDatabase().db.insert(questionVersions).values({
+          variantId: variant!.id, versionNumber: 1, questionType: 'SINGLE_CHOICE',
+          stem: { text: 'TEST ONLY: 1 + 1?' },
+          optionsOrStatements: [{ id: 'A', content: { text: '2' } }, { id: 'B', content: { text: '3' } }],
+          answerKey: { optionId: 'A' }, explanation: { text: 'TEST ONLY: 2' },
+          difficulty, contentStatus: 'READY', reviewedByUserId: fixture.contentAdmin.id, reviewedAt: new Date(),
+        });
+      }
+    }
   });
   afterAll(async () => {
     for (const id of testPackages)
@@ -47,7 +67,7 @@ integration('owner-approved runtime policy and DEMO publication boundary', () =>
       expect(rows).toHaveLength(10);
     }
   });
-  it('requires live scheduling and skips malformed candidates without blocking valid later packages', async () => {
+  it('requires live scheduling and ignores prebuilt PvP packages when selecting READY Drill content', async () => {
     process.env.PVP_MODE = 'demo';
     const policy = await resolvePvpPolicy();
     const engine = new PvpEngineService(policy);
@@ -81,91 +101,21 @@ integration('owner-approved runtime policy and DEMO publication boundary', () =>
       .set({ status: 'ARCHIVED' })
       .where(eq(assessmentPackages.id, invalid!.id));
   });
-  it('official mode rejects DEMO and unsigned packages and accepts manifest-bound Curriculum evidence', async () => {
+  it('official mode uses the READY Drill bank without separate PvP package approval', async () => {
     process.env.PVP_MODE = 'official';
-    const policy = await resolvePvpPolicy();
-    const engine = new PvpEngineService(policy);
+    const engine = new PvpEngineService(await resolvePvpPolicy());
     engine.setSchedulerReady(true);
-    expect((await engine.availability()).available).toBe(false);
-    const { db } = getDatabase();
-    const [demo] = await db
-      .select()
-      .from(assessmentPackages)
-      .where(eq(assessmentPackages.id, pvpDemoId('package:easy')));
-    const [pack] = await db
-      .insert(assessmentPackages)
-      .values({
-        familyCode: randomUUID(),
-        packageVersion: 1,
-        name: 'TEST ONLY approval boundary',
-        assessmentType: 'PVP',
-        isDemo: false,
-        status: 'DRAFT',
-        releaseAt: new Date('2026-01-01T00:00:00Z'),
-        manifestDigest: demo!.manifestDigest,
-        scoringPolicyVersionId: policy!.policyVersionId,
-      })
-      .returning();
-    const items = await db.select().from(packageItems).where(eq(packageItems.packageId, demo!.id));
-    await db.insert(packageItems).values(
-      items.map((i) => ({
-        packageId: pack!.id,
-        questionVersionId: i.questionVersionId,
-        displayOrder: i.displayOrder,
-        maxPoints: i.maxPoints,
-      })),
-    );
-    await db
-      .update(assessmentPackages)
-      .set({ status: 'PUBLISHED', frozenAt: new Date() })
-      .where(eq(assessmentPackages.id, pack!.id));
-    expect((await engine.availability()).available).toBe(false);
-    testPackages.push(pack!.id);
-    await db
-      .update(assessmentPackages)
-      .set({ status: 'ARCHIVED' })
-      .where(eq(assessmentPackages.id, pack!.id));
-    const [approved] = await db
-      .insert(assessmentPackages)
-      .values({
-        familyCode: randomUUID(),
-        packageVersion: 1,
-        name: 'TEST ONLY approved boundary',
-        assessmentType: 'PVP',
-        isDemo: false,
-        status: 'DRAFT',
-        releaseAt: new Date('2026-01-01T00:00:00Z'),
-        scoringPolicyVersionId: policy!.policyVersionId,
-      })
-      .returning();
-    testPackages.push(approved!.id);
-    await db.insert(packageItems).values(
-      items.map((i) => ({
-        packageId: approved!.id,
-        questionVersionId: i.questionVersionId,
-        displayOrder: i.displayOrder,
-        maxPoints: i.maxPoints,
-      })),
-    );
-    const [manifest] = await db.execute<{ digest: string }>(
-      sql`select irt_compute.payload_digest(jsonb_build_object('packageId',p.id,'blueprintVersionId',p.blueprint_version_id,'scoringPolicyVersionId',p.scoring_policy_version_id,'items',(select jsonb_agg(to_jsonb(i) order by i.display_order,i.id) from public.package_items i where i.package_id=p.id))) as digest from public.assessment_packages p where p.id=${approved!.id}`,
-    );
-    await db
-      .update(assessmentPackages)
-      .set({
-        status: 'PUBLISHED',
-        frozenAt: new Date(),
-        curriculumApproval: {
-          reference: 'TEST ONLY — not an actual academic approval',
-          approvedAt: new Date().toISOString(),
-          manifestDigest: manifest!.digest,
-        },
-      })
-      .where(eq(assessmentPackages.id, approved!.id));
     const state = await engine.availability();
-    expect(state.difficulties.map((d) => d.available)).toEqual([true, false, false]);
+    expect(state.difficulties.every((d) => d.available)).toBe(true);
     const room = await engine.create(fixture.students[0]!.id, 'easy', randomUUID());
     expect(room.isDemo).toBe(false);
+    const [match] = await getDatabase().client`select package_id from pvp_matches where id=${room.matchId}`;
+    const [pack] = await getDatabase().db.select().from(assessmentPackages)
+      .where(eq(assessmentPackages.id, match!.package_id));
+    expect(pack!.curriculumApproval).toBeNull();
+    expect(pack!.frozenAt).not.toBeNull();
+    expect(pack!.manifestDigest).toBeTruthy();
+    expect(pack!.isDemo).toBe(false);
     await engine.leave(fixture.students[0]!.id, room.matchId);
   });
   it('disables new rooms while keeping an active match and retries recoverable', async () => {

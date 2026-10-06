@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api';
+import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import type {
   AdminAuditListDto,
   AdminCurriculumDto,
@@ -33,7 +34,7 @@ export async function loadAdminWorkbench(
   versionQuery = '',
   includeAudit = false,
 ) {
-  const page = `?limit=20&offset=${offset}`;
+  const page = `?limit=${ADMIN_PAGE_SIZE + 1}&offset=${offset}`;
   const [
     curriculum,
     versions,
@@ -57,22 +58,22 @@ export async function loadAdminWorkbench(
     apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
     includeAudit
       ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
-      : Promise.resolve(null),
+      : Promise.resolve({ items: [] } satisfies AdminAuditListDto),
     apiRequest<AdminDashboardDto>('admin/dashboard', token),
     apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
     apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
   ]);
   return {
     curriculum,
-    versions,
-    videos,
-    reports,
-    irt,
-    irtBatches,
-    audit,
+    versions: adminPage(versions.items),
+    videos: adminPage(videos.items),
+    reports: adminPage(reports.items),
+    irt: adminPage(irt.items),
+    irtBatches: adminPage(irtBatches.items),
+    audit: adminPage(audit.items),
     dashboard,
-    packages,
-    drillPackages,
+    packages: adminPage(packages.items),
+    drillPackages: adminPage(drillPackages.items),
   };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {

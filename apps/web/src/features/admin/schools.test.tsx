@@ -44,6 +44,42 @@ beforeEach(() => {
   vi.mocked(listTeacherTokens).mockResolvedValue({ items: [] });
 });
 afterEach(cleanup);
+it('shows five schools and tokens per page, and resets token pagination when changing schools', async () => {
+  vi.mocked(listAdminSchools).mockResolvedValue({
+    items: Array.from({ length: 6 }, (_, i) => ({
+      ...school,
+      id: `school-${i}`,
+      name: `Sekolah ${i}`,
+    })),
+  });
+  vi.mocked(listTeacherTokens).mockResolvedValue({
+    items: Array.from({ length: 6 }, (_, i) => ({
+      id: `token-${i}`,
+      usedAt: null,
+      revokedAt: null,
+      expiresAt: '2099-01-01T00:00:00Z',
+    })),
+  });
+  render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah 0/ }));
+  await screen.findByText('token-0');
+  expect(document.querySelectorAll('.admin-school-rows > li')).toHaveLength(5);
+  expect(document.querySelectorAll('.admin-token-list > li')).toHaveLength(5);
+  const tokenNav = screen.getByRole('navigation', { name: 'Halaman token Guru' });
+  fireEvent.click(within(tokenNav).getByRole('button', { name: 'Berikutnya' }));
+  expect(screen.getByText('token-5')).toBeTruthy();
+  expect(screen.queryByText('token-0')).toBeNull();
+
+  const schoolNav = screen.getByRole('navigation', { name: 'Halaman sekolah' });
+  fireEvent.click(within(schoolNav).getByRole('button', { name: 'Berikutnya' }));
+  expect(document.querySelectorAll('.admin-school-rows > li')).toHaveLength(1);
+  fireEvent.click(screen.getByRole('button', { name: /Sekolah 5/ }));
+  await screen.findByText('token-0');
+  expect(screen.queryByText('token-5')).toBeNull();
+  expect(
+    (within(schoolNav).getByRole('button', { name: 'Berikutnya' }) as HTMLButtonElement).disabled,
+  ).toBe(true);
+});
 it('preserves code case and failed creation input, then selects the server-created school', async () => {
   vi.mocked(createSchool)
     .mockRejectedValueOnce(new Error('Kode sudah digunakan.'))

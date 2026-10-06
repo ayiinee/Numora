@@ -19,7 +19,19 @@ describe.skipIf(!testUrl)('TEST ONLY curriculum master persistence', () => {
     const database = `numora_test_master_${randomUUID().replaceAll('-', '')}`;
     const admin = postgres(testUrl!, { max: 1, onnotice: () => {} });
     url.pathname = '/' + database;
-    const client = postgres(url.toString(), { max: 2, onnotice: () => {} });
+    const client = postgres(url.toString(), {
+      max: 2,
+      onnotice: () => {},
+      // Exercise the JSON wire codec that previously double-encoded serialized seed arrays.
+      types: {
+        json: {
+          to: 114,
+          from: [114, 3802],
+          serialize: JSON.stringify,
+          parse: JSON.parse,
+        },
+      },
+    });
     try {
       await admin.unsafe(`CREATE DATABASE "${database}"`);
       await migrateIntegratedDatabase(client, resolve('drizzle'));

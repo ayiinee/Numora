@@ -1,5 +1,5 @@
 import { afterEach, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ContentPackageWorkspace } from './content-package-workspace';
 import { getContentPackage, listContentPackages } from './content-package-api';
 import { createPreview, submitPreview } from './content-preview-api';
@@ -15,6 +15,57 @@ vi.mock('./content-package-api', () => ({
 }));
 vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
 afterEach(cleanup);
+it('loads package choices five at a time and disables next on the final full page', async () => {
+  const pack = {
+    id: 'TEST',
+    familyCode: 'TEST',
+    packageVersion: 1,
+    name: 'TEST',
+    assessmentType: 'DRILL' as const,
+    contentRevision: 1,
+    status: 'DRAFT' as const,
+    isDemo: true,
+    source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
+    chapterId: null,
+    levelId: null,
+    chapterCode: null,
+    chapterName: null,
+    subchapterCode: null,
+    subchapterName: null,
+    levelNumber: null,
+  };
+  vi.mocked(listContentPackages)
+    .mockResolvedValueOnce({
+      items: Array.from({ length: 6 }, (_, i) => ({
+        ...pack,
+        id: `TEST-${i}`,
+        name: `Paket TEST ${i}`,
+      })),
+    })
+    .mockResolvedValueOnce({
+      items: Array.from({ length: 5 }, (_, i) => ({
+        ...pack,
+        id: `TEST-${i + 5}`,
+        name: `Paket TEST ${i + 5}`,
+      })),
+    });
+  render(
+    <ContentPackageWorkspace token="TEST" disabled={false} onSelect={vi.fn()} refreshKey={0} />,
+  );
+  await screen.findByLabelText('Paket tujuan');
+  expect(screen.queryByRole('option', { name: /Paket TEST 5/ })).toBeNull();
+  fireEvent.click(screen.getByRole('button', { name: 'Paket berikutnya' }));
+  await waitFor(() =>
+    expect(listContentPackages).toHaveBeenLastCalledWith(
+      'TEST',
+      'usageType=DRILL&status=DRAFT&limit=6&offset=5',
+    ),
+  );
+  await screen.findByRole('option', { name: /Paket TEST 5/ });
+  expect(
+    (screen.getByRole('button', { name: 'Paket berikutnya' }) as HTMLButtonElement).disabled,
+  ).toBe(true);
+});
 it('uses unscored REVIEW media so imported explanation pictures are visible to the reviewer', async () => {
   const id = '00000000-0000-4000-8000-000000000001';
   const assets = ['stem', 'explanation'].map((assetId, index) => ({

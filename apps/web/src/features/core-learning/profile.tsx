@@ -195,8 +195,8 @@ function ProfileContent({ token }: { token: string }) {
             />
             <ProfileSetting
               icon="book"
-              title="Materi Belajar"
-              description="Jelajahi bab, subbab, dan level."
+              title="Latihan Soal"
+              description="Pilih bab dan subbab untuk berlatih."
               href="/student/learn"
             />
           </Card>

@@ -57,6 +57,7 @@ const data = {
     ],
   },
   versions: {
+    hasNext: false,
     items: [
       {
         id: 'version-test',
@@ -81,6 +82,7 @@ const data = {
     ],
   },
   videos: {
+    hasNext: false,
     items: [
       {
         id: 'video-test',
@@ -95,6 +97,7 @@ const data = {
     ],
   },
   reports: {
+    hasNext: false,
     items: [
       {
         id: 'question-report-test',
@@ -118,8 +121,9 @@ const data = {
       },
     ],
   },
-  irt: { items: [] },
+  irt: { items: [], hasNext: false },
   irtBatches: {
+    hasNext: false,
     items: [
       {
         id: 'batch-test',
@@ -135,6 +139,7 @@ const data = {
     ],
   },
   audit: {
+    hasNext: false,
     items: [
       {
         id: 'audit-test',
@@ -148,6 +153,7 @@ const data = {
   },
   dashboard: { schools: 0, chapters: 0, questions: 0, readyVersions: 0, openReports: 0 },
   packages: {
+    hasNext: false,
     items: [
       {
         id: 'package-test',
@@ -160,6 +166,7 @@ const data = {
     ],
   },
   drillPackages: {
+    hasNext: false,
     items: [
       {
         id: 'drill-package-test',
@@ -204,6 +211,31 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Admin content UI', () => {
+  it('changes question pages without clearing the unsaved editor', async () => {
+    const versions = Array.from({ length: 6 }, (_, i) => ({
+      ...data.versions.items[0]!,
+      id: `version-${i}`,
+      stem: `Soal halaman ${i}`,
+    }));
+    vi.mocked(loadAdminWorkbench).mockImplementation(async (_token, offset) => ({
+      ...data,
+      versions: { items: versions.slice(offset, offset + 5), hasNext: offset === 0 },
+    }));
+    render(<AdminContentScreen />);
+    await screen.findByText('Soal halaman 0');
+    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
+    fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
+      target: { value: 'Draf belum disimpan' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
+    await screen.findByText('Soal halaman 5');
+    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(1);
+    expect(
+      (screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)') as HTMLTextAreaElement)
+        .value,
+    ).toBe('Draf belum disimpan');
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, '', true);
+  });
   it('loads Content Admin workbench without audit access or audit controls', async () => {
     context.state.profile = {
       id: 'admin-test',
@@ -213,7 +245,10 @@ describe('Admin content UI', () => {
       capabilities: ['CONTENT_MANAGE'],
       displayName: 'Admin test',
     };
-    vi.mocked(loadAdminWorkbench).mockResolvedValue({ ...data, audit: null });
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({
+      ...data,
+      audit: { items: [], hasNext: false },
+    });
     render(<AdminContentScreen />);
     await screen.findByRole('button', { name: 'Verifikasi & riwayat' });
     expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
@@ -288,6 +323,7 @@ describe('Admin content UI', () => {
     vi.mocked(loadAdminWorkbench).mockResolvedValue({
       ...data,
       drillPackages: {
+        hasNext: false,
         items: [
           {
             ...original,
@@ -397,11 +433,24 @@ describe('Admin content UI', () => {
       }),
     );
   });
-  it('shows verification metadata and read-only audit history', async () => {
+  it('keeps general audit hidden from Content Admin', async () => {
+    const ready = context.state as { profile: { adminRole: string } };
+    ready.profile.adminRole = 'CONTENT_DATA_MODERATION';
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
     expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
-    expect(screen.getByText('drill_package_published')).toBeTruthy();
+    expect(screen.queryByText('drill_package_published')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Audit' })).toBeNull();
+    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
+  });
+  it('shows general audit to Super Admin', async () => {
+    const ready = context.state as { profile: { adminRole: string } };
+    ready.profile.adminRole = 'SUPER_ADMIN';
+    render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
+    expect(await screen.findByText('drill_package_published')).toBeTruthy();
+    expect(screen.getByRole('button', { name: 'Audit' })).toBeTruthy();
+    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', true);
   });
   it('publishes a Drill draft through the existing Admin endpoint', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);

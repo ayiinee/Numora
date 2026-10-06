@@ -25,6 +25,7 @@ export class StudentFeaturesDto {
 }
 export class StudentDashboardDto {
   @ApiProperty() displayName!: string;
+  @ApiProperty({ description: 'Account XP total from the immutable XP ledger.' }) totalXp!: number;
   @ApiProperty({ enum: ['MANDIRI', 'SCHOOL'] }) affiliation!: 'MANDIRI' | 'SCHOOL';
   @ApiProperty({ type: DashboardClassDto, nullable: true }) class!: DashboardClassDto | null;
   @ApiProperty({

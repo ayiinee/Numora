@@ -1,5 +1,7 @@
 **ENGINEERING DECISION — instruksi pemilik proyek, 7 Oktober 2026:** penerimaan langsung khusus 120 original Drill Bab 3 indikator 16–19, Paket 1 level 1–3; 12 paket PUBLISHED dengan policy allowlist. Review impor lainnya tetap berlaku; tidak mengklaim pengesahan Curriculum/IRT. [Scope dan verifikasi](../development/DRILL_CHAPTER3_OWNER_EXCEPTION.md).
 
+**ENGINEERING DECISION - owner approved, 7 October 2026:** new PvP rooms randomly draw ten distinct READY Drill question families across all chapters at the difficulty selected in PvP. Admin review or existing CONTENT_VALID evidence, valid difficulty/content and READY hierarchy replace separate PvP-package approval for both DEMO and official modes. No additional question marker/UI choice or automatic content publication is introduced. Per-room immutable packages preserve retry/reconnect and history. [Source, compatibility and QA](../development/PVP_RANDOM_DRILL_BANK.md).
+
 **ENGINEERING DECISION — Aini, 6 October 2026:** Student result pages expose a Lihat pembahasan action leading to dedicated read-only question-layout pages. Typed PGK save/resume, server-derived review states, expandable reward details and Info nilai reuse the Student design system. This does not approve a PGK rubric or create an IRT/fallback publication policy. [Implementation boundary](../development/STUDENT_PGK_RESULT_UI.md).
 
 > **PRD RULE - 4 October 2026:** [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied by the project owner, supersedes conflicting earlier product rules. Relevant content rules: Admin content access requires Super Admin or Content/Data/Moderation; initial JSON import and R2 media; 5 levels per subchapter and 10 Drill items per level; one Drill variant per level for MVP; TryOut has 30 items. Historical decisions below remain evidence, not overriding policy.
@@ -14,11 +16,17 @@
 
 **ENGINEERING DECISION — owner request, 6 October 2026:** mock question packages are available on the development sandbox for Pretest/Tryout testing. The synthetic bank is explicitly DEMO; it does not resolve content/blueprint approval, OPEN-04 PGK rubrics, or IRT/fallback computation. [QA keys, scope and evidence](../data/ASSESSMENT_MOCK_TESTING.md).
 
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** [Latihan Soal navigation revision](../design/LATIHAN_SOAL_NAVIGATION_2026-10-07.md) places Pretest on each chapter detail page. This is a UI placement decision and does not close Pretest distribution or placement OPEN items.
+
 **ENGINEERING DECISION — owner approved, 6 October 2026:** JOB-16/17 resolves room/readiness/dual-disconnect behavior and ties: room/invite 600 seconds (PRD v0.6), one active room/account, replaceable waiting guest, earliest expired reconnect forfeits, equal deadlines cancel, dense rank 1,1,2. Labelled DEMO staging is approved; official content/difficulty remains Curriculum-dependent. Activity includes all posted Drill/Tryout XP; DEMO PvP stays separate. Thursday 00:00 WIB boundary and UI archives are approved. [Specification](../development/PVP_LEADERBOARDS_JOB16_17.md). Historical OPEN-07/tie proposals below are superseded; runtime/staging acceptance still requires evidence.
 
 **ENGINEERING UPDATE — owner instruction, 6 October 2026:** use the currently configured Development cloud environment for JOB-16/17 migration and DEMO activation. Migration/replay, additive seed/replay and authenticated QA availability/leaderboard checks now pass. [Evidence](../operations/PVP_CLOUD_ACTIVATION_2026-10-06.md). This resolves target selection for this Development operation; two Google-identity acceptance, public staging hosting and Curriculum approval remain separate dependencies.
 
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** remove the standalone `PvP DEMO` lobby card now that new rooms use the connected READY Drill bank. Server mode, historical record separation and the in-match demo notice remain as implemented. [UI scope](../development/PVP_RANDOM_DRILL_BANK.md#qa-and-rollout).
+
 # Open Decisions Register
+
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents at mobile, tablet and desktop widths while retaining 44px interactive targets and existing ranking rules. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** implement [directed package import](../content/CONTENT_PACKAGE_PIPELINE.md): single-purpose question families; one file/package; bound V4 templates; required source name/reference; explicit admin review; partial DRAFTs; replacement preview and concurrency control. Blueprint, rubric and publication dependencies remain OPEN.
 

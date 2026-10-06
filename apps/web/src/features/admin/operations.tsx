@@ -8,9 +8,9 @@ import { useAuth } from '@/features/onboarding/auth';
 import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
 import type { AdminClassDto, AdminUserDto } from './generated-types';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { AdminPagination } from './admin-pagination';
 
 type OperationsTab = 'users' | 'classes';
-const PAGE_SIZE = 20;
 const dateTime = new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
   timeStyle: 'short',
@@ -217,11 +217,11 @@ function UsersPanel({
 
   return (
     <div className="admin-operations-grid">
-      <section aria-labelledby="admin-users-title">
+      <section className="admin-operations-search" aria-labelledby="admin-users-title">
         <h2 id="admin-users-title">Daftar pengguna</h2>
         <p>Cari berdasarkan nama tampilan dan batasi daftar berdasarkan role atau status.</p>
-        <form className="admin-content-form admin-operations-filters" onSubmit={applyFilters}>
-          <label className="admin-content-field">
+        <form className="admin-content-form admin-search-toolbar" onSubmit={applyFilters}>
+          <label className="admin-content-field admin-search-primary">
             <span>Nama pengguna</span>
             <Input
               value={search}
@@ -253,6 +253,8 @@ function UsersPanel({
             </Button>
           </div>
         </form>
+      </section>
+      <section aria-label="Hasil pencarian pengguna">
         <ResultsState
           loading={loading}
           error={error}
@@ -283,17 +285,18 @@ function UsersPanel({
                 </li>
               ))}
             </ul>
-            <Pagination
-              offset={offset}
-              nextOffset={nextOffset}
-              loading={loading}
-              onPrevious={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-              onNext={() => {
-                if (nextOffset !== null) setOffset(nextOffset);
-              }}
-            />
           </>
         ) : null}
+        {items && !loading && !error && (
+          <AdminPagination
+            offset={offset}
+            hasNext={nextOffset !== null}
+            onChange={(next) => {
+              setSelectedId('');
+              setOffset(next < offset ? next : (nextOffset ?? offset));
+            }}
+          />
+        )}
       </section>
       <UserDetail
         detail={detail}
@@ -453,11 +456,11 @@ function ClassesPanel({
 
   return (
     <div className="admin-operations-grid">
-      <section aria-labelledby="admin-classes-title">
+      <section className="admin-operations-search" aria-labelledby="admin-classes-title">
         <h2 id="admin-classes-title">Daftar kelas</h2>
         <p>Filter kelas berdasarkan nama, sekolah, Guru, atau status arsip.</p>
-        <form className="admin-content-form admin-operations-filters" onSubmit={applyFilters}>
-          <label className="admin-content-field">
+        <form className="admin-content-form admin-search-toolbar" onSubmit={applyFilters}>
+          <label className="admin-content-field admin-search-primary">
             <span>Nama kelas</span>
             <Input
               value={search}
@@ -498,6 +501,8 @@ function ClassesPanel({
             </Button>
           </div>
         </form>
+      </section>
+      <section aria-label="Hasil pencarian kelas">
         <ResultsState
           loading={loading}
           error={error}
@@ -530,17 +535,18 @@ function ClassesPanel({
                 </li>
               ))}
             </ul>
-            <Pagination
-              offset={offset}
-              nextOffset={nextOffset}
-              loading={loading}
-              onPrevious={() => setOffset(Math.max(0, offset - PAGE_SIZE))}
-              onNext={() => {
-                if (nextOffset !== null) setOffset(nextOffset);
-              }}
-            />
           </>
         ) : null}
+        {items && !loading && !error && (
+          <AdminPagination
+            offset={offset}
+            hasNext={nextOffset !== null}
+            onChange={(next) => {
+              setSelectedId('');
+              setOffset(next < offset ? next : (nextOffset ?? offset));
+            }}
+          />
+        )}
       </section>
       <ClassDetail
         detail={detail}
@@ -657,30 +663,4 @@ function ResultsState({
       </Card>
     );
   return null;
-}
-
-function Pagination({
-  offset,
-  nextOffset,
-  loading,
-  onPrevious,
-  onNext,
-}: {
-  offset: number;
-  nextOffset: number | null;
-  loading: boolean;
-  onPrevious: () => void;
-  onNext: () => void;
-}) {
-  return (
-    <nav className="admin-content-actions admin-operations-pagination" aria-label="Halaman data">
-      <Button variant="secondary" disabled={offset === 0 || loading} onClick={onPrevious}>
-        Sebelumnya
-      </Button>
-      <span>Halaman {Math.floor(offset / PAGE_SIZE) + 1}</span>
-      <Button variant="secondary" disabled={nextOffset === null || loading} onClick={onNext}>
-        Berikutnya
-      </Button>
-    </nav>
-  );
 }

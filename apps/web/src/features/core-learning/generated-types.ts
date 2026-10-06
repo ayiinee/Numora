@@ -95,7 +95,7 @@ export type DashboardDrillDto = { "attemptId": string; "levelId": string | null;
 
 export type StudentFeaturesDto = { "drill": boolean; "tryout": boolean; "pretest": boolean; "pvp": boolean; "classLeaderboard": boolean; "pendingPolicies": (string)[]; };
 
-export type StudentDashboardDto = { "displayName": string; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "classes"?: (DashboardClassDto)[]; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
+export type StudentDashboardDto = { "displayName": string; "totalXp": number; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "classes"?: (DashboardClassDto)[]; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
 
 export type PvpAvailabilityDto = { "available": boolean; "reasonCode": string | null; "message": string; "dataMode"?: "demo" | "official"; "activeMatchId"?: string | null; "difficulties"?: (PvpDifficultyAvailabilityDto)[]; };
 
