@@ -45,6 +45,7 @@ export class AdminController {
     @Inject(AdminAnalyticsService) private readonly analytics: AdminAnalyticsService,
   ) {}
   @Get('analytics')
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
   @ApiOkResponse({ type: AdminAnalyticsDto })
   summary(@Req() request: AdminRequest) {
     return this.analytics.summary(request.adminRole);
