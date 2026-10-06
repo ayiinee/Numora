@@ -15,6 +15,8 @@ import { IrtService } from '../irt/irt.service';
 import { IrtRequestsService } from '../irt/irt-requests.service';
 import { SchoolsService } from '../schools/schools.service';
 import { adminCapabilities } from './admin-capabilities';
+import { AdminAccountsController } from '../admin/accounts.controller';
+import { AdminAccountsService } from '../admin/accounts.service';
 
 describe('Admin v0.6 authorization through direct HTTP', () => {
   let app: INestApplication;
@@ -33,12 +35,18 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
   };
   beforeAll(async () => {
     const module = await Test.createTestingModule({
-      controllers: [AdminOperationsController, ReportsController, IrtController],
+      controllers: [
+        AdminOperationsController,
+        ReportsController,
+        IrtController,
+        AdminAccountsController,
+      ],
       providers: [
         AdminGuard,
         ContentAdminGuard,
         { provide: IdentityService, useValue: identity },
         { provide: AdminOperationsService, useValue: { users } },
+        { provide: AdminAccountsService, useValue: { accounts: users } },
         { provide: ReportsService, useValue: { list: reports } },
         { provide: IrtService, useValue: { list: reports } },
         { provide: IrtRequestsService, useValue: { prepare } },
@@ -70,6 +78,10 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     expect(
       (await fetch(base + '/admin/irt', { headers: { Authorization: 'Bearer unchanged' } })).status,
     ).toBe(content);
+    expect(
+      (await fetch(base + '/admin/accounts', { headers: { Authorization: 'Bearer unchanged' } }))
+        .status,
+    ).toBe(role === 'SUPER_ADMIN' ? 200 : 403);
   });
   it('rechecks assignment on the next request with an unchanged token', async () => {
     assignment = 'SUPER_ADMIN';

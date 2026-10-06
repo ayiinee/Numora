@@ -35,7 +35,7 @@ export class IdentityService {
     return this.supabase;
   }
 
-  private async authenticate(authorization?: string): Promise<User> {
+  async authenticate(authorization?: string): Promise<User> {
     const token = /^Bearer ([^\s]+)$/.exec(authorization ?? '')?.[1];
     if (!token) throw new UnauthorizedException('Bearer token is required.');
     const { data, error } = await this.authClient().auth.getUser(token);

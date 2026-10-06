@@ -197,6 +197,20 @@
       "when": 1791216584721,
       "tag": "0027_materials_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 28,
+      "version": "7",
+      "when": 1791245263806,
+      "tag": "0028_admin_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 29,
+      "version": "7",
+      "when": 1791245270006,
+      "tag": "0029_admin_recovery_operations",
+      "breakpoints": true
     }
   ]
 }

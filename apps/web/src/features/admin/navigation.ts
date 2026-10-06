@@ -32,6 +32,13 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
     },
   ];
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE') return items;
+  if (profile.capabilities?.includes('ADMIN_ACCOUNTS_MANAGE'))
+    items.push({
+      href: '/admin/accounts',
+      label: 'Akun Admin',
+      description: 'Invite internal dan kelola assignment serta status akun.',
+      icon: 'users',
+    });
   if (profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'OPERATIONS') {
     items.push(
       {
