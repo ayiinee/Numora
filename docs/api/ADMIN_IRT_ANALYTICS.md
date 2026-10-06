@@ -24,11 +24,11 @@ New response snapshots pin `job10-operational-v2`. The effective end of collecti
 
 ## Publication and historical readers
 
-Production package availability uses `tryout_result_finalizations.published_at`, and participant result/history use the corresponding `tryout_attempt_results` row. They copy the persisted mapped score and final mode/version; raw attempt score and compute SUCCEEDED cannot unlock production keys or values. UNSCORABLE remains null and is rendered unavailable, never zero. Signed explanation media follows the same release gate. Explicit `is_demo` fixtures alone retain the legacy item-coverage release reader.
+The API and notification release discovery share the same predicate. Production package availability uses `tryout_result_finalizations.published_at`, and participant result/history use the corresponding `tryout_attempt_results` row. They copy the persisted mapped score and final mode/version; raw attempt score and compute SUCCEEDED cannot unlock production keys or values. UNSCORABLE remains null and is rendered unavailable, never zero. Signed explanation media follows the same release gate. Explicit `is_demo` fixtures alone retain the legacy item-coverage release reader.
 
 The existing 0016 finalization guards already require a closed batch, release policy, complete participant/common-item coverage, adopted artifact for IRT and exact copied respondent score/theta/error/mapping. Published finalizations and child rows are immutable and publication emits its own outbox event. M6 reuses these models/guards; no schema addition or compute-namespace mutation is needed for its readers.
 
-History exposes persisted ledger XP and per-attempt stars separately from result release. Missing policy/ledger/star facts remain pending; real zero values remain visible. Academic scores remain hidden until their publication gate passes.
+History exposes persisted ledger XP and per-attempt stars separately from result release. Ongoing attempts remain pending; legacy missing ledger/star facts are explicitly legacy, never guessed or backfilled; real zero values remain visible. Academic scores remain hidden until their publication gate passes.
 
 ## OPEN: producer contract and acceptance
 
