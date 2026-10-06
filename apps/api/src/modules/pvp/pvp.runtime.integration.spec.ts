@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   assessmentPackages,
   closeDatabaseConnection,
@@ -22,6 +22,7 @@ integration('runtime policy and READY Drill publication boundary', () => {
   const testPackages: string[] = [];
   beforeAll(async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     process.env.ALLOW_DEMO_SEED = 'true';
     fixture = await pvpFixture();
     for (const difficulty of ['MEDIUM', 'HARD']) {
@@ -51,6 +52,7 @@ integration('runtime policy and READY Drill publication boundary', () => {
     delete process.env.PVP_MODE;
     delete process.env.ALLOW_DEMO_SEED;
     await closeDatabaseConnection();
+    vi.unstubAllEnvs();
   });
   it('defaults off, rejects invalid modes and seeds three immutable replay-safe DEMO packages', async () => {
     delete process.env.PVP_MODE;
