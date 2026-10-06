@@ -518,7 +518,8 @@ describe('responsive learning composition', () => {
     renderStudent(<NewStudentDashboard />);
     await screen.findByRole('heading', { name: 'Latihan matematika!' });
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
-    await screen.findByText('Tryout offline', {}, { timeout: 5000 });
+    const tryoutSlide = within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!);
+    await tryoutSlide.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: 'Shortcut Belajar' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Aktivitas' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Feedback' })).toBeTruthy();
@@ -659,7 +660,11 @@ describe('responsive learning composition', () => {
     await screen.findByRole('heading', { name: 'Latihan matematika!' });
     expect(screen.getAllByText('Materi sedang disiapkan').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
-    expect(await screen.findByText('Tryout Matematika')).toBeTruthy();
+    expect(
+      await within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!).findByText(
+        'Tryout Matematika',
+      ),
+    ).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Pretest belum tersedia' })).toBeNull();
     expect(document.querySelectorAll('.sh-shortcuts__grid > a')).toHaveLength(3);
     expect(screen.getByRole('link', { name: /Latihan Soal/ })).toBeTruthy();

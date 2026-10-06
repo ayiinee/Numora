@@ -234,7 +234,7 @@ describe('Admin content UI', () => {
       (screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)') as HTMLTextAreaElement)
         .value,
     ).toBe('Draf belum disimpan');
-    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, '', false);
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, '', true);
   });
   it('loads Content Admin workbench without audit access or audit controls', async () => {
     context.state.profile = {
@@ -245,7 +245,10 @@ describe('Admin content UI', () => {
       capabilities: ['CONTENT_MANAGE'],
       displayName: 'Admin test',
     };
-    vi.mocked(loadAdminWorkbench).mockResolvedValue({ ...data, audit: { items: [], hasNext: false } });
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({
+      ...data,
+      audit: { items: [], hasNext: false },
+    });
     render(<AdminContentScreen />);
     await screen.findByRole('button', { name: 'Verifikasi & riwayat' });
     expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
@@ -431,6 +434,8 @@ describe('Admin content UI', () => {
     );
   });
   it('keeps general audit hidden from Content Admin', async () => {
+    const ready = context.state as { profile: { adminRole: string } };
+    ready.profile.adminRole = 'CONTENT_DATA_MODERATION';
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
     expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
