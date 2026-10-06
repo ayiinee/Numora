@@ -85,3 +85,9 @@ Historical pre-PR #77 local serial CI checks passed: 169 API tests, 15 worker te
 See [independent QA scenarios and owner handoffs](ADMIN_QA_HANDOFF_2026-10-06.md). M5 is draft [#78](https://github.com/ayiinee/Numora/pull/78), stacked on M4; all milestones remain unmerged.
 
 M6 is draft [#79](https://github.com/ayiinee/Numora/pull/79), stacked on M5. The [QA handoff](ADMIN_QA_HANDOFF_2026-10-06.md) records concrete independent scenarios and external owners.
+
+### Integrated local verification after PR #77
+
+The implementation tree at `0a560c8` passed serial connected tests: 192 API, 16 worker, 26 database, 231 web, 11 assessment-engine and two IRT-orchestration tests, plus 68 script checks. The nine direct HTTP permission scenarios include fresh assignments, disabled accounts and scoped analytics. QA Admin provisioning, canonical upgrade and the historical Staging-bridge fixture passed on disposable localhost databases. Fresh migrations through 0036 and the full snapshot chain were verified; canonical 0024-0027 are unchanged. Contract validation/freshness, lint and typecheck passed. The six stale fixture expectations encountered during integration were corrected to current authorization, scoped audit and published item pins; assertions and server guards were retained.
+
+This documentation commit does not change runtime behavior. Final clean-SHA built API/worker, browser and CI evidence is recorded separately in ignored `.tmp/admin-final-evidence.json` and connected artifacts, which must match the tested commit. Earlier interrupted or pre-integration browser evidence is historical. SMTP/email, private R2, Curriculum approval, respondent producer/mapping, Pretest Student consumer and independent sandbox QA remain concrete release gates. No Cloud schema, accounts, email or media were changed.
