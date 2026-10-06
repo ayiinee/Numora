@@ -225,6 +225,20 @@ describe.skipIf(!testUrl)(
         200,
       );
     });
+    it('rejects incomplete, mixed and unknown review payloads before changing a version', async () => {
+      const id = '00000000-0000-4000-8000-000000000001';
+      for (const payload of [
+        {},
+        { status: 'READY', expectedStatus: 'DRAFT' },
+        { packageId: id, status: 'READY', expectedStatus: 'DRAFT', reason: 'TEST mixed intent' },
+        { status: 'READY', expectedStatus: 'DRAFT', reason: 'TEST', unknown: true },
+        { packageId: 'invalid' },
+      ]) {
+        const response = await request(`admin/content/versions/${id}/review`, 'POST', payload);
+        expect(response.status).toBe(400);
+        expect((await response.json()).code).toBe('CONTENT_REVIEW_INVALID');
+      }
+    });
     it('validates ten samples without creating import records; media may be held', async () => {
       const r = await ok<ImportReportDto>('admin/content/import-validations', 'POST', body());
       expect(r.canImportDraft).toBe(true);

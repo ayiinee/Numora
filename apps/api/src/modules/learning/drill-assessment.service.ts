@@ -57,7 +57,6 @@ import {
   drillReward,
   explanationAvailable,
   scoreDrill,
-  selectedOptionId,
   selectDrillPackage,
 } from './drill.policy';
 

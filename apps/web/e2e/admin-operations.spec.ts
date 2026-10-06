@@ -255,7 +255,7 @@ test('Operations roster retries, filters and pages without losing the class deta
             leftAt: former ? '2026-10-06T00:00:00Z' : null,
           },
         ],
-        nextOffset: !offset && !former && !searching ? 20 : null,
+        nextOffset: !offset && !former && !searching ? 5 : null,
       },
     });
   });
@@ -269,7 +269,7 @@ test('Operations roster retries, filters and pages without losing the class deta
   const roster = page.getByRole('heading', { name: 'Roster kelas' }).locator('..');
   await roster.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(page.getByText('Anggota Halaman 2', { exact: true })).toBeVisible();
-  expect(queries.at(-1)?.get('offset')).toBe('20');
+  expect(queries.at(-1)?.get('offset')).toBe('5');
   await roster.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByText('Anggota Halaman 1', { exact: true })).toBeVisible();
   await page.getByLabel('Status membership').selectOption('former');
