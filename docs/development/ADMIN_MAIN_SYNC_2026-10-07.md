@@ -1,6 +1,6 @@
 # Admin Content and Operations - main synchronization
 
-**ENGINEERING UPDATE - 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72-#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `038e1ce` (PR #91), including the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
+**ENGINEERING UPDATE - 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72-#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `fe01103` (PR #93), including compact Student empty cards and the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
 
 ## Integration decisions
 
@@ -38,7 +38,7 @@ For an isolated Development rollout: verify environment identity, take a databas
 
 ## Verification and acceptance
 
-PR #92 consolidates this work against main `038e1ce`. Verification below distinguishes local checks, connected CI and environment acceptance. Local database checks use a disposable localhost database, never the existing Cloud environment. Browser E2E uses a fixture API/Auth provider; it is separate from connected integration and Cloud acceptance. Tests and builds certify engineering compatibility, not final academic or environment acceptance.
+PR #92 consolidates this work against main `fe01103`. Verification below distinguishes local checks, connected CI and environment acceptance. Local database checks use a disposable localhost database, never the existing Cloud environment. Browser E2E uses a fixture API/Auth provider; it is separate from connected integration and Cloud acceptance. Tests and builds certify engineering compatibility, not final academic or environment acceptance.
 
 The Pretest Student consumer now exists in main; remaining Pretest gates concern approved blueprint/rubric pins and consumer/environment acceptance, not an absent frontend. Curriculum approvals, Data/AI respondent producer/mapping/fallback evidence, real SMTP/invite delivery, R2/CORS and independent sandbox QA remain external gates. No demo reseeding, credential rotation or live email/media write is included.
 
@@ -48,7 +48,7 @@ The Pretest Student consumer now exists in main; remaining Pretest gates concern
 - PostgreSQL: 52/52 database tests, including 18 migration/history scenarios; schema check 112 expected tables/columns and RLS; normal upgrade and historical Staging bridge checks pass. No additional DDL generated from the merged snapshots.
 - API: 256 tests discovered, seven Redis-dependent scenarios skipped locally. Initial full run: 248 passed, one 5-second broadcast timeout. Notification suite rerun with CLI `--testTimeout=30000`: 9/9 passed, unchanged assertions. Publisher/content-preview/Chapter 3 regression: 28/28 passed. Connected CI supplies PostgreSQL and Redis coverage.
 - Worker: 17/17 tests passed. Assessment engine: 21/21 tests passed. Script checks: 68/68 passed; eight JSON schemas validate; OpenAPI and generated types fresh.
-- Root lint/typecheck passed; production web, API and worker builds passed. Web/read-only explanation and browser fixtures were rerun after aligning the main contracts; final counts are recorded in the PR evidence.
+- Root lint/typecheck passed; production web, API and worker builds passed. Web: 321/321 tests passed after aligning the main contracts. Browser: 63/64 Admin scenarios passed initially; one Excel hydration timeout requires an isolated rerun before final acceptance. Final counts are recorded in the PR evidence.
 - First combined browser runs exposed stale fixture menu/capability names, the old 20-row roster cursor and unbound JSON import; these fixtures now follow server capabilities and main's five-row/directed import contracts. A cold development hydration timeout passed in the isolated rerun without changing the expectation. Fixture browser success is not Cloud Auth/R2/email acceptance.
 
 Code baseline for these checks: `9291f530a8274dc856c6e7b32dadd1c16c1a5e4d`. Subsequent evidence-only documentation commits do not change runtime code. CI and final browser results for the PR head must be checked on GitHub; do not infer approval or deployment from this ledger.

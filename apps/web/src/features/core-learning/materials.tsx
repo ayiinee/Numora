@@ -106,8 +106,10 @@ function MaterialsContent() {
               )}
             </Card>
           ) : (
-            <Card>
+            <Card padding="sm">
               <EmptyState
+                compact
+                icon={<Icon name="clock" />}
                 title="Belum ada aktivitas"
                 description="Pilih bab untuk memulai latihan pertamamu."
               />

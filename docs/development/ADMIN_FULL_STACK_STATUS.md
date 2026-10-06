@@ -6,7 +6,7 @@
 
 **ENGINEERING EVIDENCE — 7 October 2026:** the owner requested deletion of persisted Content demos from the isolated Development database. Materials/question readers are now empty; related demo packages and test attempts were removed after backup and rehearsal. Three non-fixture drafts, six unrelated upload sessions and all accounts/schools/classes/memberships remain. This environment cleanup does not change milestone acceptance or product rules. See [cleanup evidence](ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md).
 
-Initial audit baseline: main f3f75b3. Current integration baseline: main 038e1ce after PR #91, verified 7 October 2026. See [main synchronization evidence](ADMIN_MAIN_SYNC_2026-10-07.md). Earlier verification paragraphs retain their historical SHA and do not certify this merge. User authorization: implement Admin full stack and its required engine dependencies; fixed three subroles; internal email invitation; milestone delivery without a fixed date. Earlier division/ownership assignments do not restrict this authorized work. Academic approval and environment acceptance remain separate.
+Initial audit baseline: main f3f75b3. Current integration baseline: main fe01103 after PR #93, verified 7 October 2026. See [main synchronization evidence](ADMIN_MAIN_SYNC_2026-10-07.md). Earlier verification paragraphs retain their historical SHA and do not certify this merge. User authorization: implement Admin full stack and its required engine dependencies; fixed three subroles; internal email invitation; milestone delivery without a fixed date. Earlier division/ownership assignments do not restrict this authorized work. Academic approval and environment acceptance remain separate.
 
 ## Product and engineering boundaries
 
