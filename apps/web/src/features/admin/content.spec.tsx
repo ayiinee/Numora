@@ -191,6 +191,7 @@ beforeEach(() => {
       id: 'admin-test',
       role: 'ADMIN',
       status: 'ACTIVE',
+      adminRole: 'SUPER_ADMIN',
       capabilities: ['CONTENT_MANAGE'],
       displayName: 'Admin test',
     },
@@ -234,6 +235,24 @@ describe('Admin content UI', () => {
         .value,
     ).toBe('Draf belum disimpan');
     expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, '', false);
+  });
+  it('loads Content Admin workbench without audit access or audit controls', async () => {
+    context.state.profile = {
+      id: 'admin-test',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      adminRole: 'CONTENT_DATA_MODERATION',
+      capabilities: ['CONTENT_MANAGE'],
+      displayName: 'Admin test',
+    };
+    vi.mocked(loadAdminWorkbench).mockResolvedValue({ ...data, audit: { items: [], hasNext: false } });
+    render(<AdminContentScreen />);
+    await screen.findByRole('button', { name: 'Verifikasi & riwayat' });
+    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
+    expect(screen.queryByRole('button', { name: 'Audit' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Verifikasi & riwayat' }));
+    expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
+    expect(screen.queryByText('Riwayat perubahan Admin')).toBeNull();
   });
   it('does not fetch administrative data for a disabled Admin', () => {
     context.state = {

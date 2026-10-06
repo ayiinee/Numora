@@ -76,7 +76,10 @@ type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
 export function AdminContentScreen() {
   const { state } = useAuth();
-  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  const accountKey =
+    state.status === 'ready'
+      ? `${state.profile.id}:${state.profile.adminRole ?? 'unassigned'}`
+      : state.status;
   return <AdminContentScreenContent key={accountKey} />;
 }
 
@@ -218,10 +221,6 @@ function AdminContentScreenContent() {
       icon="book"
     >
       <div className="monitoring-frame admin-content">
-        <p className="admin-context-note">
-          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
-          tetap dipertahankan.
-        </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
           {views
             .filter((item) => canReadAudit || item.id !== 'audit')
