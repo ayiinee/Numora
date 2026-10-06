@@ -436,6 +436,8 @@ PageHeader.displayName = 'PageHeader';
  * ============================================ */
 
 export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
+  /** Smaller inline layout for empty cards and supporting sections */
+  compact?: boolean;
   /** Icon or illustration */
   icon?: string | ReactNode;
   /** Title */
@@ -462,6 +464,7 @@ export interface EmptyStateProps extends HTMLAttributes<HTMLDivElement> {
  * ```
  */
 export function EmptyState({
+  compact = false,
   icon = '📭',
   title,
   description,
@@ -472,22 +475,25 @@ export function EmptyState({
 }: EmptyStateProps) {
   return (
     <div
-      className={`numora-empty-state ${className}`}
+      className={`numora-empty-state ${compact ? 'numora-empty-state--compact' : ''} ${className}`}
       style={{
-        display: 'flex',
+        display: compact ? 'grid' : 'flex',
+        gridTemplateColumns: compact ? '24px minmax(0, 1fr)' : undefined,
+        gap: compact ? 'var(--space-1) var(--space-3)' : undefined,
         flexDirection: 'column',
-        alignItems: 'center',
+        alignItems: compact ? 'start' : 'center',
         justifyContent: 'center',
-        padding: 'var(--space-12) var(--space-4)',
-        textAlign: 'center',
+        padding: compact ? 'var(--space-2)' : 'var(--space-12) var(--space-4)',
+        textAlign: compact ? 'left' : 'center',
         ...style,
       }}
       {...props}
     >
       <div
         style={{
-          fontSize: 64,
-          marginBottom: 'var(--space-4)',
+          fontSize: compact ? 24 : 64,
+          gridRow: compact ? '1 / span 3' : undefined,
+          marginBottom: compact ? 0 : 'var(--space-4)',
           lineHeight: 1,
         }}
       >
@@ -495,10 +501,12 @@ export function EmptyState({
       </div>
       <h3
         style={{
-          fontSize: 'var(--text-xl)',
+          gridColumn: compact ? 2 : undefined,
+          fontSize: compact ? 'var(--text-base)' : 'var(--text-xl)',
           fontWeight: 'var(--font-bold)',
           color: 'var(--color-text)',
-          margin: '0 0 var(--space-2) 0',
+          margin: compact ? 0 : '0 0 var(--space-2) 0',
+          overflowWrap: 'anywhere',
         }}
       >
         {title}
@@ -506,16 +514,18 @@ export function EmptyState({
       {description && (
         <p
           style={{
-            fontSize: 'var(--text-base)',
+            gridColumn: compact ? 2 : undefined,
+            fontSize: compact ? 'var(--text-sm)' : 'var(--text-base)',
             color: 'var(--color-text-muted)',
-            margin: '0 0 var(--space-6) 0',
-            maxWidth: 300,
+            margin: compact ? 0 : '0 0 var(--space-6) 0',
+            maxWidth: compact ? undefined : 300,
+            overflowWrap: 'anywhere',
           }}
         >
           {description}
         </p>
       )}
-      {action && <div>{action}</div>}
+      {action && <div style={compact ? { gridColumn: 2, minWidth: 0 } : undefined}>{action}</div>}
     </div>
   );
 }

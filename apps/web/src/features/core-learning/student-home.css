@@ -464,6 +464,16 @@
   border-radius: var(--radius-lg);
   padding: 16px;
 }
+.student-home-shell .sh-activities__empty {
+  padding: var(--space-3);
+}
+.student-home-shell .sh-class__card .section-link {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 44px;
+  font-size: var(--text-sm);
+}
 .student-home-shell .sh-class__card {
   min-width: 0;
   padding: 14px;
@@ -534,20 +544,6 @@
   flex: none;
   text-align: center;
   font-weight: var(--font-extrabold);
-}
-.student-home-shell .sh-class__state {
-  display: grid;
-  justify-items: center;
-  gap: 8px;
-  text-align: center;
-  padding: 24px 10px;
-  color: var(--color-text-muted);
-}
-.student-home-shell .sh-class__state svg {
-  color: var(--numora-gold-700);
-}
-.student-home-shell .sh-class__state strong {
-  color: var(--color-text-strong);
 }
 .student-home-shell .sh-feedback__card {
   display: flex;

@@ -908,6 +908,8 @@ Do not rely on toast alone for critical errors that require user action.
 
 ## 9.12 EmptyState / ErrorState / LockedState
 
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** Student Home Activity and Class cards, including unavailable/empty class rankings, and Latihan Soal's Aktivitas Terakhir use the shared `EmptyState compact` layout: a 24 px leading icon, left-aligned copy and reduced padding. Height follows the content; optional class actions retain a minimum 44 px target. Full-page empty views keep the default layout.
+
 Every significant data view must have states for:
 
 - loading;
