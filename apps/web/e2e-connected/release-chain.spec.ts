@@ -747,7 +747,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
-    await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
+    await mandiri.getByRole('button', { name: /^Soal 30,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
       .getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?', exact: true })
