@@ -1,5 +1,7 @@
 # Learning redesign DEMO seed
 
+**ENGINEERING EVIDENCE — 7 October 2026:** the owner requested removal of the persisted Content demos from Development so the team can create its own. [Cleanup evidence](../../../docs/development/ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md) records the deleted data and retained records. The seed below remains an opt-in test tool; do not rerun it on the cleared shared Development sandbox as part of normal startup.
+
 **ENGINEERING DECISION — 3 October 2026:** the project owner explicitly authorized additive Supabase testing content during Phase 3. This is separate from the presentation changes; it does not approve new product rules or schema changes.
 
 `redesign-learning.sql` creates one separate `DEMO-UI-ALJABAR` chapter, one subchapter, one competency, five levels, 50 question families, two equivalent variants per family, and ten DEMO Drill packages. Each package contains ten single-answer questions. The 100 question versions include four distinct options, a rotating correct option and a mathematical explanation. Questions exercise perfect-square constants and difference-of-squares identities.

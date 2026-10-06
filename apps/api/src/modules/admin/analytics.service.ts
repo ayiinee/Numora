@@ -40,7 +40,7 @@ export class AdminAnalyticsService {
       SELECT (SELECT count(*) FROM schools) AS schools,
       (SELECT count(*) FROM classes WHERE archived_at IS NULL) AS classes,
       (SELECT count(*) FROM class_memberships m JOIN classes c ON c.id=m.class_id WHERE m.left_at IS NULL AND c.archived_at IS NULL) AS memberships,
-      (SELECT count(DISTINCT m.student_user_id) FROM class_memberships m JOIN classes c ON c.id=m.class_id JOIN users u ON u.id=m.student_user_id WHERE m.left_at IS NULL AND c.archived_at IS NULL AND u.status='ACTIVE') AS "schoolStudents"`,
+      (SELECT count(*) FROM users u WHERE u.role='STUDENT' AND u.status='ACTIVE' AND EXISTS (SELECT 1 FROM class_memberships m WHERE m.student_user_id=u.id AND m.left_at IS NULL)) AS "schoolStudents"`,
     );
     if (capabilities.includes('ANALYTICS_OPERATIONS'))
       await group(
@@ -49,21 +49,32 @@ export class AdminAnalyticsService {
           ['verifiedTeachers', 'Guru aktif terverifikasi'],
           ['verifiedSchools', 'Sekolah dengan Guru terverifikasi'],
           ['unusedCredentials', 'Credential belum dipakai dan masih berlaku'],
-          ['drillStarted', 'Drill dimulai (kumulatif)'],
-          ['drillCompleted', 'Drill selesai (kumulatif)'],
-          ['tryoutStarted', 'Tryout dimulai (kumulatif)'],
-          ['tryoutCompleted', 'Tryout selesai (kumulatif)'],
         ],
         () => client`
       SELECT (SELECT count(DISTINCT m.teacher_user_id) FROM teacher_school_memberships m JOIN users u ON u.id=m.teacher_user_id WHERE m.ended_at IS NULL AND u.status='ACTIVE') AS "verifiedTeachers",
       (SELECT count(DISTINCT m.school_id) FROM teacher_school_memberships m JOIN users u ON u.id=m.teacher_user_id WHERE m.ended_at IS NULL AND u.status='ACTIVE') AS "verifiedSchools",
-      (SELECT count(*) FROM teacher_verification_tokens WHERE used_at IS NULL AND revoked_at IS NULL AND expires_at>clock_timestamp()) AS "unusedCredentials",
+      (SELECT count(*) FROM teacher_verification_tokens WHERE used_at IS NULL AND revoked_at IS NULL AND expires_at>clock_timestamp()) AS "unusedCredentials"`,
+      );
+    // Both subroles may read student aggregates; only Operations/Super read individuals.
+    await group(
+      'STUDENTS',
+      [
+        ['students', 'Akun siswa aktif'],
+        ['mandiriStudents', 'Siswa Mandiri aktif'],
+        ['drillStarted', 'Drill dimulai (kumulatif)'],
+        ['drillCompleted', 'Drill selesai (kumulatif)'],
+        ['tryoutStarted', 'Tryout dimulai (kumulatif)'],
+        ['tryoutCompleted', 'Tryout selesai (kumulatif)'],
+      ],
+      () => client`
+      SELECT (SELECT count(*) FROM users WHERE role='STUDENT' AND status='ACTIVE') AS students,
+      (SELECT count(*) FROM users u WHERE u.role='STUDENT' AND u.status='ACTIVE' AND NOT EXISTS (SELECT 1 FROM class_memberships m WHERE m.student_user_id=u.id AND m.left_at IS NULL)) AS "mandiriStudents",
       count(*) FILTER (WHERE assessment_type='DRILL') AS "drillStarted",
       count(*) FILTER (WHERE assessment_type='DRILL' AND status='GRADED') AS "drillCompleted",
       count(*) FILTER (WHERE assessment_type='TRYOUT') AS "tryoutStarted",
       count(*) FILTER (WHERE assessment_type='TRYOUT' AND status='GRADED') AS "tryoutCompleted"
       FROM assessment_attempts WHERE purpose='REGULAR'`,
-      );
+    );
     if (capabilities.includes('ANALYTICS_CONTENT')) {
       await group(
         'CONTENT',
@@ -89,14 +100,19 @@ export class AdminAnalyticsService {
           ['closedUnpublishedBatches', 'Batch tutup belum dipublikasikan'],
           ['overdueReleases', 'Rilis melewati SLA 72 jam'],
           ['publishedBatches', 'Batch dengan finalisasi dipublikasikan'],
-          ['failedIrtRequests', 'Request IRT gagal'],
         ],
         () => client`
       SELECT count(*) FILTER (WHERE b.closes_at<=clock_timestamp() AND f.id IS NULL) AS "closedUnpublishedBatches",
       count(*) FILTER (WHERE b.result_due_at<clock_timestamp() AND f.id IS NULL) AS "overdueReleases",
-      count(*) FILTER (WHERE f.id IS NOT NULL) AS "publishedBatches",
-      (SELECT count(*) FROM analysis_requests WHERE request_type='CALIBRATE_TRYOUT' AND status='FAILED') AS "failedIrtRequests"
+      count(*) FILTER (WHERE f.id IS NOT NULL) AS "publishedBatches"
       FROM tryout_batches b LEFT JOIN tryout_result_finalizations f ON f.batch_id=b.id AND f.published_at<=clock_timestamp()`,
+      );
+    if (capabilities.includes('ANALYTICS_CONTENT'))
+      await group(
+        'RELEASE',
+        [['failedIrtRequests', 'Request IRT gagal']],
+        () =>
+          client`SELECT count(*) AS "failedIrtRequests" FROM analysis_requests WHERE request_type='CALIBRATE_TRYOUT' AND status='FAILED'`,
       );
     return { generatedAt: new Date().toISOString(), source: 'POSTGRESQL', metrics };
   }

@@ -1,5 +1,9 @@
 # Admin full stack — implementation and acceptance
 
+**ENGINEERING UPDATE — 7 October 2026:** Content functional fixes cover independent Tryout question pagination, Pretest edit/create state and reference retry, JSON envelope namespaces, retained server filters and clearing cached detail on target/access changes. See [functional audit](ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md) for page coverage and test evidence. External gates in the ledger remain open.
+
+**ENGINEERING EVIDENCE — 7 October 2026:** the owner requested deletion of persisted Content demos from the isolated Development database. Materials/question readers are now empty; related demo packages and test attempts were removed after backup and rehearsal. Three non-fixture drafts, six unrelated upload sessions and all accounts/schools/classes/memberships remain. This environment cleanup does not change milestone acceptance or product rules. See [cleanup evidence](ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md).
+
 Initial audit baseline: main f3f75b3. Current integration baseline: main fbb031b after PR #77, verified 6 October 2026. User authorization: implement Admin full stack and its required engine dependencies; fixed three subroles; internal email invitation; milestone delivery without a fixed date. Earlier division/ownership assignments do not restrict this authorized work. Academic approval and environment acceptance remain separate.
 
 ## Product and engineering boundaries
@@ -11,6 +15,8 @@ Initial audit baseline: main f3f75b3. Current integration baseline: main fbb031b
 **PRD RULE:** students may have up to five active classes; leave/ban/takeover and nullable active teachers preserve history. Pretest uses 20 items and placement 0–7 → L1, 8–18 → L2, 19–20 → L3, without XP. Drill uses one variant, 10 items, >=80 unlock, latest stars (including zero), and final XP formula. Tryout uses 30 items, Monday 00:00–Sunday 23:59 WIB, batch-close auto-submit, one attempt, immediate XP and immutable result/explanation <=72 hours. PvP leaderboard is Top 10 plus self. These are rules, not evidence of implementation.
 
 ## Acceptance ledger
+
+**ENGINEERING UPDATE — 6 October:** the owner requested a Content-role UI/UX iteration after the permission correction. Task guidance, readable review, deep links and responsive presentation are documented in the [Content UX report](../design/ADMIN_CONTENT_UX_2026-10-06.md). This presentation update does not close the external gates below.
 
 | Milestone | Engineering gate                                                                                         | External gate                                                   | Status                                                                   |
 | --------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |
@@ -91,3 +97,11 @@ M6 is draft [#79](https://github.com/ayiinee/Numora/pull/79), stacked on M5. The
 The implementation tree at `0a560c8` passed serial connected tests: 192 API, 16 worker, 26 database, 231 web, 11 assessment-engine and two IRT-orchestration tests, plus 68 script checks. The nine direct HTTP permission scenarios include fresh assignments, disabled accounts and scoped analytics. QA Admin provisioning, canonical upgrade and the historical Staging-bridge fixture passed on disposable localhost databases. Fresh migrations through 0036 and the full snapshot chain were verified; canonical 0024-0027 are unchanged. Contract validation/freshness, lint and typecheck passed. The six stale fixture expectations encountered during integration were corrected to current authorization, scoped audit and published item pins; assertions and server guards were retained.
 
 This documentation commit does not change runtime behavior. Final clean-SHA built API/worker, browser and CI evidence is recorded separately in ignored `.tmp/admin-final-evidence.json` and connected artifacts, which must match the tested commit. Earlier interrupted or pre-integration browser evidence is historical. SMTP/email, private R2, Curriculum approval, respondent producer/mapping, Pretest Student consumer and independent sandbox QA remain concrete release gates. No Cloud schema, accounts, email or media were changed.
+
+### Permission correction — 6 October 2026
+
+**PRD RULE:** Content/Data/Moderation retains limited school/class views and aggregate Student data under §3.3. Operational management and individual rosters belong to Operations/Super; all Admin subroles remain denied Teacher ban/unban. See the [current permission matrix](../api/ADMIN_PERMISSION_MATRIX.md).
+
+**ENGINEERING DECISION:** the Content view is explicitly labelled “baca saja”, with credential status counts and no management actions. All roles receive Student affiliation/activity aggregates; Operations no longer queries or receives IRT request failure diagnostics. Content audit masks non-Admin actor identifiers, including actor filters. School affiliation counts use the same active-membership predicate as identity. Existing subrole assignments were verified read-only; none were changed.
+
+Local regression evidence: 27 focused API tests including real isolated PostgreSQL operational/audit/aggregate readers, 236 web tests, five Chromium scenarios with direct-route denial and 320/1440 px checks, contract validation/generated-type freshness, lint, workspace typecheck and production build. Browser Auth/API remain synthetic fixtures. The immediate membership-exit fixture now uses database timestamps to avoid JavaScript millisecond truncation violating PostgreSQL microsecond chronology; constraints remain enforced. No migration, Cloud data mutation or academic-policy change is part of this correction. Independent review and external acceptance remain separate gates.

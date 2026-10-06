@@ -43,8 +43,14 @@ export async function loadAdminWorkbench(
   offset: number,
   view: AdminWorkbenchView = 'questions',
   filters: Record<string, string> = {},
+  compactDemos = false,
 ) {
-  const parameters = new URLSearchParams({ limit: '20', offset: String(offset), ...filters });
+  const parameters = new URLSearchParams({
+    limit: compactDemos && view === 'questions' ? '5' : '20',
+    offset: String(offset),
+    ...filters,
+  });
+  if (compactDemos && view === 'questions') parameters.set('catalog', 'COMPACT_DEMO');
   const page = `?${parameters}`;
   const empty = { items: [] };
   const [
@@ -64,9 +70,9 @@ export async function loadAdminWorkbench(
     )
       ? apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
       : Promise.resolve({ items: [] } as AdminCurriculumDto),
-    ['questions', 'verification', 'packages', 'drillPackages'].includes(view)
+    ['questions', 'verification', 'drillPackages'].includes(view)
       ? apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token)
-      : empty,
+      : { ...empty, nextOffset: null },
     view === 'videos' ? apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token) : empty,
     view === 'reports'
       ? apiRequest<AdminReportsDto>(`admin/reports${page}`, token)

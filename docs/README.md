@@ -53,6 +53,8 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `development/GIT_WORKFLOW.md`
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
+- `development/ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md` — pembersihan fixture Content pada Development, backup, data yang dipertahankan dan verifikasi reader kosong.
+- `development/ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan seluruh halaman Content, perbaikan form/pagination/retry/akses, bukti tes dan gate eksternal.
 - `development/OWNERSHIP.md`
 
 ## Testing

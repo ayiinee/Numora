@@ -1,10 +1,10 @@
 'use client';
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
-import { useOperationalQuery } from './operational-query';
+import { adminAccessDenied, useOperationalQuery } from './operational-query';
 import type {
   IrtRequestDto,
   IrtRequestsDto,
@@ -31,11 +31,12 @@ export function AdminIrtScreen() {
   const allowed =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
     state.profile.capabilities?.includes('CONTENT_MANAGE');
   return (
     <AdminFrame
       title="Request IRT & publikasi"
-      description="Pantau execution, evidence ilmiah, adoption, dan rilis peserta secara terpisah."
+      description="Pantau analisis Tryout, penerimaan hasil ilmiah, dan kesiapan rilis nilai serta pembahasan."
       icon="chart"
     >
       {state.status === 'loading' ? (
@@ -52,6 +53,8 @@ export function AdminIrtScreen() {
   );
 }
 function IrtPanel({ token }: { token: string }) {
+  const { refresh } = useAuth();
+  const [denied, setDenied] = useState(false);
   const [requestOffset, setRequestOffset] = useState(0),
     [batchOffset, setBatchOffset] = useState(0),
     [contextId, setContextId] = useState(''),
@@ -68,9 +71,14 @@ function IrtPanel({ token }: { token: string }) {
     token,
   );
   const options = useOperationalQuery<IrtOperationalOptionsDto>('admin/irt/options', token);
+  const accessLost = denied || requests.denied || batches.denied || options.denied;
+  useEffect(() => {
+    if (accessLost) setSelected(null);
+  }, [accessLost]);
   const configurations =
     options.data?.configurations.filter((c) => !c.contextId || c.contextId === contextId) ?? [];
   async function mutation(path: string, body?: object) {
+    if (busy) return;
     setBusy(true);
     setError('');
     const fingerprint = path + JSON.stringify(body ?? null);
@@ -90,6 +98,7 @@ function IrtPanel({ token }: { token: string }) {
       requests.retry();
       batches.retry();
     } catch (e) {
+      if (adminAccessDenied(e)) setDenied(true);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
     } finally {
       setBusy(false);
@@ -111,19 +120,55 @@ function IrtPanel({ token }: { token: string }) {
     });
   }
   async function detail(id: string) {
+    if (busy) return;
+    setSelected(null);
     setError('');
     setBusy(true);
     try {
       setSelected(await apiRequest<IrtRequestDto>(`admin/irt/requests/${id}`, token));
     } catch (e) {
+      if (adminAccessDenied(e)) setDenied(true);
       setError(e instanceof Error ? e.message : 'Detail gagal dimuat.');
     } finally {
       setBusy(false);
     }
   }
+  if (accessLost)
+    return (
+      <AdminMessage
+        error
+        message="Akses IRT telah berubah. Periksa kembali akun."
+        retry={() => {
+          setDenied(false);
+          requests.retry();
+          batches.retry();
+          options.retry();
+          void refresh();
+        }}
+      />
+    );
   return (
     <div className="admin-content page-stack">
-      <p>
+      <ol className="content-workflow" aria-label="Alur analisis dan rilis">
+        {[
+          ['Siapkan analisis', 'Pilih batch dan konfigurasi yang sudah disahkan.'],
+          ['Jalankan compute', 'Pantau execution, kegagalan, dan percobaan ulang.'],
+          ['Terima hasil ilmiah', 'Adopsi memerlukan evidence yang lolos pemeriksaan.'],
+          [
+            'Rilis ke peserta',
+            'Nilai dan pembahasan dibuka bersama setelah seluruh syarat terpenuhi.',
+          ],
+        ].map(([title, description], index) => (
+          <li key={title}>
+            <span className="content-step-number" aria-hidden="true">
+              0{index + 1}
+            </span>
+            <h3>{title}</h3>
+            <p>{description}</p>
+          </li>
+        ))}
+      </ol>
+      <p className="admin-context-note">
         Nilai dan pembahasan hanya terbuka setelah finalisasi hasil dipublikasikan. Execution
         SUCCEEDED belum berarti rilis peserta.
       </p>
@@ -300,7 +345,7 @@ function IrtPanel({ token }: { token: string }) {
                     ? `Published ${b.publicationMode} v${b.publicationVersion} pada ${time(b.publishedAt)}`
                     : 'Hasil peserta belum dipublikasikan.'}
                 </p>
-                <details>
+                <details open={b.prepareBlockers.length > 0 || b.publicationBlockers.length > 0}>
                   <summary>Blocker persiapan dan publikasi</summary>
                   <h4>Persiapan request</h4>
                   <ul>

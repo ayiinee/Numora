@@ -16,6 +16,7 @@ beforeEach(() => {
     profile: {
       id: 'content',
       role: 'ADMIN',
+      status: 'ACTIVE',
       adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['OPERATIONS_LIMITED_READ'],
     },
@@ -35,6 +36,10 @@ it('Content navigates school counts to limited classes without requesting indivi
               status: 'ACTIVE',
               classCount: 1,
               activeTeacherCount: 0,
+              availableCredentialCount: 2,
+              usedCredentialCount: 1,
+              expiredCredentialCount: 3,
+              revokedCredentialCount: 0,
               studentCount: 5,
             },
           ],
@@ -57,6 +62,9 @@ it('Content navigates school counts to limited classes without requesting indivi
         },
   );
   render(<AdminStructuresScreen />);
+  expect((await screen.findByRole('note')).textContent).toContain('Akses baca saja');
+  expect((await screen.findByText(/Credential: 2 tersedia/)).textContent).toContain('1 terpakai');
+  expect(screen.queryByRole('button', { name: /buat|edit|generate|regenerate|ban/i })).toBeNull();
   fireEvent.click(await screen.findByRole('button', { name: 'Lihat kelas sekolah' }));
   await screen.findByText(/Tanpa Guru aktif/);
   expect(mocks.api.mock.calls.every(([path]) => String(path).startsWith('admin/structures/'))).toBe(

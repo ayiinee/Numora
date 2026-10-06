@@ -25,6 +25,13 @@ import { AdminAccountsController } from '../admin/accounts.controller';
 import { AdminAccountsService } from '../admin/accounts.service';
 import { AdminStructuresController } from '../admin/structures.controller';
 import { AdminStructuresService } from '../admin/structures.service';
+import { AdminSchoolsController } from '../schools/admin-schools.controller';
+import { ContentController } from '../content/content.controller';
+import { ContentService } from '../content/content.service';
+import { AssessmentPoliciesService } from '../content/assessment-policies.service';
+import { MediaUploadsController } from '../content/media-uploads.controller';
+import { MediaUploadsService } from '../content/media-uploads.service';
+import { ClassesService } from '../classes/classes.service';
 
 describe('Admin v0.6 authorization through direct HTTP', () => {
   let app: INestApplication;
@@ -52,6 +59,9 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
         IrtController,
         AdminAccountsController,
         AdminStructuresController,
+        AdminSchoolsController,
+        ContentController,
+        MediaUploadsController,
       ],
       providers: [
         AdminGuard,
@@ -60,7 +70,11 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
         ContentAdminGuard,
         { provide: PretestService, useValue: { list: reports, blueprints: reports } },
         { provide: IdentityService, useValue: identity },
-        { provide: AdminOperationsService, useValue: { users } },
+        { provide: AdminOperationsService, useValue: { users, roster: users, memberships: users } },
+        { provide: SchoolsService, useValue: { listForAdmin: users, listTokens: users } },
+        { provide: ContentService, useValue: { curriculum: reports } },
+        { provide: AssessmentPoliciesService, useValue: { list: reports } },
+        { provide: MediaUploadsService, useValue: { reserve: prepare } },
         { provide: AdminAccountsService, useValue: { accounts: users } },
         { provide: AdminStructuresService, useValue: { schools: users, classes: users } },
         { provide: ReportsService, useValue: { list: reports } },
@@ -92,6 +106,16 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       (await fetch(base + '/admin/users', { headers: { Authorization: 'Bearer unchanged' } }))
         .status,
     ).toBe(operations);
+    const id = '00000000-0000-4000-8000-000000000001';
+    for (const path of [
+      '/admin/schools',
+      `/admin/schools/${id}/teacher-tokens`,
+      `/admin/classes/${id}/roster`,
+      `/admin/users/${id}/memberships`,
+    ])
+      expect(
+        (await fetch(base + path, { headers: { Authorization: 'Bearer unchanged' } })).status,
+      ).toBe(operations);
     expect(
       (await fetch(base + '/admin/reports', { headers: { Authorization: 'Bearer unchanged' } }))
         .status,
@@ -101,6 +125,8 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       '/admin/content/pretest-packages/blueprints',
       '/admin/irt/options',
       '/admin/irt/batch-health',
+      '/admin/content/curriculum',
+      '/admin/content/assessment-policies',
     ])
       expect(
         (await fetch(base + path, { headers: { Authorization: 'Bearer unchanged' } })).status,
@@ -150,6 +176,37 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
       status: 403,
     });
   });
+  it.each(['CONTENT_DATA_MODERATION', 'OPERATIONS', null])(
+    'denies mutations outside the assignment for %s before service execution',
+    async (role) => {
+      assignment = role;
+      const paths =
+        role === 'CONTENT_DATA_MODERATION'
+          ? ['/admin/schools', '/admin/schools/00000000-0000-4000-8000-000000000001/teacher-tokens']
+          : ['/admin/content/chapters', '/admin/content/media/uploads'];
+      for (const path of [...paths, '/admin/invitations'])
+        expect(
+          (
+            await fetch(base + path, {
+              method: 'POST',
+              headers: { Authorization: 'Bearer unchanged', 'Content-Type': 'application/json' },
+              body: '{}',
+            })
+          ).status,
+        ).toBe(403);
+    },
+  );
+  it.each(['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as const)(
+    'never grants ban/unban to %s, including the Teacher endpoint',
+    async (role) => {
+      assignment = role;
+      const service = new ClassesService(identity as unknown as IdentityService);
+      for (const banned of [true, false])
+        await expect(
+          service.setBan('Bearer unchanged', 'class', 'student', banned),
+        ).rejects.toMatchObject({ status: 403 });
+    },
+  );
   it('rejects a disabled admin with a still-valid token', async () => {
     assignment = 'SUPER_ADMIN';
     status = 'DISABLED';

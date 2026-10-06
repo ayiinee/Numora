@@ -59,6 +59,18 @@ Respons pengerjaan tidak membawa kunci, pembahasan atau URL aset pembahasan. Res
 
 UI nyata: `/admin/content/imports` dan `/admin/content/preview-sessions/:id`, dengan posisi `?item=` yang dapat dilanjutkan. UI menunggu ack save sebelum submit. Rich text mendukung newline, LaTeX inline/display dan marker gambar. HTML masukan ditampilkan sebagai teks; renderer KaTeX memakai `trust: false`. Semua sesi berlabel **DRAFT — preview internal**. `/admin/preview` mock bukan jalur fitur.
 
+## Daftar demo Admin Content — 6 Oktober 2026
+
+**ENGINEERING DECISION — permintaan owner:** daftar Materi Content merangkum fixture menjadi 6 entri dengan 3 entri per halaman. Seluruh taxonomy tetap dimuat untuk dropdown authoring; checkbox membuka fixture lain dengan pagination yang sama. Materi non-demo tidak dibatasi oleh angka 6. Ini merupakan preferensi tampilan, bukan batas konten akademik dari PRD.
+
+Bank soal Content memakai `GET /admin/content/versions?catalog=COMPACT_DEMO&limit=5&offset=0`. Mode opsional ini merangkum demo menjadi maksimal 10 contoh unik sebelum pagination server. Penanda fixture adalah origin `DEMO`/`DEMO_QA_NOT_CURRICULUM_APPROVED`, provenance impor dengan `packageSource.sourceReference` tepat `Synthetic QA smoke, not Curriculum content`, atau fixture upload legacy terverifikasi dengan namespace `UPLOAD_` diikuti 32 digit hex dan sourceName tepat `TEST_ONLY_V5.xlsx`. Nama/stem saja tidak menjadikan konten fixture. Deduplication memeriksa tipe, stem, opsi/pernyataan, kunci, pembahasan, media dan difficulty; contoh berbeda tidak digabung hanya karena stem sama. Sampel diambil bergiliran dari format soal yang tersedia. Konten non-demo tetap muncul.
+
+Fixture teknis upload/R2 smoke tidak dipilih sebagai contoh bank: sampel 10 diambil dari kedua origin demo seed di atas. Fixture teknis tetap bisa dibuka melalui `ALL`/Verifikasi & riwayat. Kartu PGK menyertakan cuplikan pernyataan agar soal dengan prompt umum yang sama dapat dibedakan berdasarkan isinya.
+
+Respons menyertakan `nextOffset` nullable dengan lookahead satu baris, sehingga halaman terakhir yang tepat berisi 5 tidak membuka halaman kosong. Mode default `ALL`, Verifikasi & riwayat, serta pemilihan soal paket tetap membaca semua versi. Tidak ada payload, paket, attempt, impor atau snapshot yang dihapus/ditimpa; API tetap memakai ContentAdminGuard dan kontrak generated.
+
+**PRD RULE:** §3.2–3.3/§18 menyatakan kemampuan konten, bukan jumlah fixture atau susunan sembilan tab. §18.2/NFR-07 mewajibkan penelusuran perubahan, dan §10/§13 memberi konteks video/report/IRT. Susunan menu dan label tab merupakan keputusan UX engineering.
+
 ## Persistence dan batas lanjutan
 
 Migrasi `0023_content_import_preview` menambah subrole nullable tanpa backfill, nullable difficulty, tiga tabel impor dan tiga tabel preview. Tabel baru mempunyai RLS dan grant main eksplisit, tanpa akses compute atau Supabase Data API. Audit tidak membawa jawaban/kunci/token.

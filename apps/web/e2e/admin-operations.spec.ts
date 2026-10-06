@@ -102,6 +102,10 @@ async function fixture(page: Page, role: 'OPERATIONS' | 'CONTENT_DATA_MODERATION
             status: 'ACTIVE',
             classCount: 1,
             activeTeacherCount: 0,
+            availableCredentialCount: 2,
+            usedCredentialCount: 1,
+            expiredCredentialCount: 0,
+            revokedCredentialCount: 0,
             studentCount: 1,
           },
         ],
@@ -151,6 +155,13 @@ test('Content only loads limited structure with counts and no individual records
 }) => {
   const requests = await fixture(page, 'CONTENT_DATA_MODERATION');
   await page.goto('/admin/structures');
+  await expect(page.getByRole('heading', { name: 'Sekolah dan kelas — baca saja' })).toBeVisible();
+  await expect(page.getByRole('note')).toContainText('Akses baca saja');
+  await expect(page.getByText(/Credential: 2 tersedia/)).toBeVisible();
+  await expect(
+    page.getByRole('button', { name: /buat|edit|generate|regenerate|ban/i }),
+  ).toHaveCount(0);
+  await page.screenshot({ path: '../../.tmp/admin-content-permissions.png', fullPage: true });
   await page.getByRole('button', { name: 'Lihat kelas sekolah' }).click();
   await expect(page.getByText(/Tanpa Guru aktif/)).toBeVisible();
   expect(
@@ -164,4 +175,16 @@ test('Content only loads limited structure with counts and no individual records
       true,
     );
   }
+  await page.goto('/admin/operations');
+  await expect(
+    page.getByText('Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.'),
+  ).toBeVisible();
+  expect(
+    requests.some((path) => path.startsWith('admin/users') || path.startsWith('admin/classes')),
+  ).toBe(false);
+  await page.goto('/admin/schools');
+  await expect(
+    page.getByText('Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.'),
+  ).toBeVisible();
+  expect(requests.some((path) => path.startsWith('admin/schools'))).toBe(false);
 });

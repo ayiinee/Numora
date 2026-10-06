@@ -17,6 +17,14 @@ export function AdminHomeScreen() {
     if (state.status === 'ready' && state.profile.role !== 'ADMIN') {
       router.replace(destination(state.profile));
     }
+    if (
+      state.status === 'ready' &&
+      state.profile.role === 'ADMIN' &&
+      state.profile.status === 'ACTIVE' &&
+      state.profile.adminRole === 'CONTENT_DATA_MODERATION'
+    ) {
+      router.replace('/admin/content');
+    }
   }, [router, state]);
 
   const profile =
@@ -24,6 +32,7 @@ export function AdminHomeScreen() {
       ? state.profile
       : null;
   const modules = adminNavigation(profile).filter(({ href }) => href !== '/admin');
+  if (profile?.adminRole === 'CONTENT_DATA_MODERATION') return null;
   return (
     <AdminFrame
       title="Ringkasan Admin"

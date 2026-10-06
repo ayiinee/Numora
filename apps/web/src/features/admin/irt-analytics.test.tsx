@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, ApiProblem } from '@/lib/api';
 import { AdminIrtScreen } from './irt-requests';
 import { AdminAnalyticsScreen } from './analytics';
 const mocks = vi.hoisted(() => ({
@@ -9,14 +9,16 @@ const mocks = vi.hoisted(() => ({
     profile: {
       id: 'TEST',
       role: 'ADMIN',
+      status: 'ACTIVE',
       adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['CONTENT_MANAGE', 'ANALYTICS_CONTENT'],
     },
     session: { access_token: 'TEST ONLY' },
   },
 }));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock('@/features/onboarding/auth', () => ({ useAuth: () => ({ state: mocks.state }) }));
-vi.mock('@/lib/api', () => ({ apiRequest: vi.fn() }));
+vi.mock('@/lib/api', async (load) => ({ ...(await load<object>()), apiRequest: vi.fn() }));
 vi.mock('./admin-presentation', () => ({
   AdminFrame: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
   AdminLoading: ({ message }: { message: string }) => <p role="status">{message}</p>,
@@ -64,8 +66,25 @@ const batch = {
 beforeEach(() => {
   vi.resetAllMocks();
   mocks.state.profile.capabilities = ['CONTENT_MANAGE', 'ANALYTICS_CONTENT'];
+  mocks.state.profile.adminRole = 'CONTENT_DATA_MODERATION';
 });
 afterEach(cleanup);
+it('clears selected request and every queue after server access is revoked', async () => {
+  vi.mocked(apiRequest).mockImplementation(async (path) => {
+    if (path === 'admin/irt/options') return { enabled: true, configurations: [], contexts: [] };
+    if (path.startsWith('admin/irt/batch-health')) return { items: [batch] };
+    if (path === 'admin/irt/requests/request') return request;
+    if (path.endsWith('/retry')) throw new ApiProblem(403, 'FORBIDDEN', 'IRT access revoked');
+    return { items: [request] };
+  });
+  render(<AdminIrtScreen />);
+  fireEvent.click(await screen.findByText('Detail request request'));
+  await screen.findByRole('button', { name: 'Retry request' });
+  fireEvent.click(screen.getByRole('button', { name: 'Retry request' }));
+  await screen.findByText('Akses IRT telah berubah. Periksa kembali akun.');
+  expect(screen.queryByRole('button', { name: 'Retry request' })).toBeNull();
+  expect(screen.queryByText('TEST weekly package')).toBeNull();
+});
 it('keeps request/detail and batch health usable when the independent configuration loader fails', async () => {
   vi.mocked(apiRequest).mockImplementation(async (path) => {
     if (path === 'admin/irt/options') throw new Error('TEST config outage');
@@ -105,6 +124,8 @@ it('retains the retry operation key after failure and refreshes durable request 
   expect(calls[0]?.[2]?.headers).toEqual(calls[1]?.[2]?.headers);
 });
 it('clears analytics on access revocation and renders unavailable distinctly from a valid zero', async () => {
+  mocks.state.profile.adminRole = 'OPERATIONS';
+  mocks.state.profile.capabilities = ['ANALYTICS_OPERATIONS'];
   vi.mocked(apiRequest).mockResolvedValue({
     generatedAt: '2026-10-06T00:00:00Z',
     source: 'POSTGRESQL',

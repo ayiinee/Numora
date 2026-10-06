@@ -3,6 +3,26 @@ import { loadAdminWorkbench } from './content-api';
 
 afterEach(() => vi.unstubAllGlobals());
 describe('Admin independent workbench loading', () => {
+  it('paginates the compact Content question catalog on the server, without narrowing other tabs', async () => {
+    const paths: string[] = [];
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async (input: string) => {
+        paths.push(input);
+        return new Response(JSON.stringify({ items: [], nextOffset: null }));
+      }),
+    );
+    await loadAdminWorkbench('TEST ONLY', 5, 'questions', {}, true);
+    const bank = new URL(paths.find((p) => p.includes('/content/versions'))!);
+    expect(bank.searchParams.get('limit')).toBe('5');
+    expect(bank.searchParams.get('offset')).toBe('5');
+    expect(bank.searchParams.get('catalog')).toBe('COMPACT_DEMO');
+    paths.length = 0;
+    await loadAdminWorkbench('TEST ONLY', 20, 'verification', {}, true);
+    const history = new URL(paths.find((p) => p.includes('/content/versions'))!);
+    expect(history.searchParams.get('limit')).toBe('20');
+    expect(history.searchParams.has('catalog')).toBe(false);
+  });
   it('keeps the question editor usable when optional metrics fail and never requests unrelated queues', async () => {
     const paths: string[] = [];
     vi.stubGlobal(

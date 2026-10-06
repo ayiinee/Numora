@@ -36,7 +36,13 @@ export function putMedia(
     xhr.send(file);
   });
 }
-export function MediaUpload({ token }: { token: string }) {
+export function MediaUpload({
+  token,
+  onAccessDenied,
+}: {
+  token: string;
+  onAccessDenied?: () => void;
+}) {
   const [file, setFile] = useState<File | null>(null),
     [externalId, setExternalId] = useState(''),
     [assetId, setAssetId] = useState(''),
@@ -112,6 +118,11 @@ export function MediaUpload({ token }: { token: string }) {
       setReceipt(verified);
       setProgress(100);
     } catch (e) {
+      if (e instanceof ApiProblem && [401, 403].includes(e.status)) {
+        reset();
+        setFile(null);
+        onAccessDenied?.();
+      }
       if (e instanceof ApiProblem && e.status === 410) {
         op.current = null;
         reservation.current = null;

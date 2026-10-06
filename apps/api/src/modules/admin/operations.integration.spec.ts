@@ -7,11 +7,14 @@ import {
   getDatabase,
   teacherSchoolMemberships,
   users,
+  auditLogs,
 } from '@tka/database';
-import { eq } from 'drizzle-orm';
+import { eq, sql } from 'drizzle-orm';
 import { AdminOperationsService } from './operations.service';
 import { AdminStructuresService } from './structures.service';
 import { SchoolsService } from '../schools/schools.service';
+import { AdminService } from './admin.service';
+import { AdminAnalyticsService } from './analytics.service';
 import type { IdentityService } from '../identity/identity.service';
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('admin operations readers and limited structure in PostgreSQL', () => {
@@ -109,7 +112,7 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
     expect((await operations.class(classroom!.id)).teacherActive).toBe(true);
     await db
       .update(teacherSchoolMemberships)
-      .set({ endedAt: new Date() })
+      .set({ endedAt: sql`clock_timestamp()` })
       .where(eq(teacherSchoolMemberships.teacherUserId, teacher!.id));
     expect(await operations.class(classroom!.id)).toMatchObject({
       id: classroom!.id,
@@ -120,6 +123,39 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
       teacherVerified: false,
     });
     const limitedClasses = await limited.classes({ limit: 20, offset: 0, schoolId: school.id });
+    const action = `test-report-${suffix}`;
+    await db.insert(auditLogs).values([
+      { actorUserId: student!.id, action, entityType: 'question_report', entityId: randomUUID() },
+      { actorUserId: teacher!.id, action, entityType: 'video_report', entityId: randomUUID() },
+      { actorUserId: admin!.id, action, entityType: 'question_report', entityId: randomUUID() },
+    ]);
+    const adminService = new AdminService();
+    const contentAudit = await adminService.audit(
+      { limit: 20, offset: 0, action },
+      'CONTENT_DATA_MODERATION',
+    );
+    expect(contentAudit.items).toHaveLength(3);
+    expect(contentAudit.items.filter((row) => row.actorUserId === null)).toHaveLength(2);
+    expect(contentAudit.items.some((row) => row.actorUserId === admin!.id)).toBe(true);
+    expect(
+      (
+        await adminService.audit(
+          { limit: 20, offset: 0, action, actorId: student!.id },
+          'CONTENT_DATA_MODERATION',
+        )
+      ).items,
+    ).toEqual([]);
+    expect(
+      (
+        await adminService.audit(
+          { limit: 20, offset: 0, action, actorId: student!.id },
+          'SUPER_ADMIN',
+        )
+      ).items,
+    ).toHaveLength(1);
+    expect(
+      (await adminService.audit({ limit: 20, offset: 0, action }, 'OPERATIONS')).items,
+    ).toEqual([]);
     expect(limitedClasses.items).toHaveLength(1);
     expect(Object.keys(limitedClasses.items[0]!).sort()).toEqual(
       [
@@ -137,10 +173,53 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
     expect(limitedSchools.items[0]).toMatchObject({
       id: school.id,
       activeTeacherCount: 0,
+      availableCredentialCount: 0,
+      usedCredentialCount: 1,
+      expiredCredentialCount: 0,
+      revokedCredentialCount: 0,
       studentCount: 1,
     });
+    expect(Object.keys(limitedSchools.items[0]!).sort()).toEqual(
+      [
+        'id',
+        'code',
+        'name',
+        'status',
+        'classCount',
+        'activeTeacherCount',
+        'availableCredentialCount',
+        'usedCredentialCount',
+        'expiredCredentialCount',
+        'revokedCredentialCount',
+        'studentCount',
+      ].sort(),
+    );
     expect(JSON.stringify({ limitedClasses, limitedSchools })).not.toContain(student!.id);
     expect(JSON.stringify({ limitedClasses, limitedSchools })).not.toContain(teacher!.id);
+    expect(JSON.stringify(limitedSchools)).not.toContain(credential.token);
+    for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as const) {
+      const aggregate = await new AdminAnalyticsService().summary(role);
+      expect(aggregate.metrics.every((metric) => metric.unavailableReason === null)).toBe(true);
+      expect(
+        aggregate.metrics.find((metric) => metric.key === 'students')!.value,
+      ).toBeGreaterThanOrEqual(1);
+      expect(aggregate.metrics.some((metric) => metric.key === 'failedIrtRequests')).toBe(
+        role !== 'OPERATIONS',
+      );
+    }
+    const available = await schoolService.issueToken('ops', school.id);
+    const revoked = await schoolService.issueToken('ops', school.id);
+    await schoolService.revokeToken('ops', school.id, revoked.id);
+    expect(
+      (await limited.schools({ limit: 20, offset: 0, search: suffix })).items[0],
+    ).toMatchObject({
+      availableCredentialCount: 1,
+      usedCredentialCount: 1,
+      revokedCredentialCount: 1,
+    });
+    expect(
+      JSON.stringify(await limited.schools({ limit: 20, offset: 0, search: suffix })),
+    ).not.toContain(available.token);
     const [unownedClass] = await db
       .insert(classes)
       .values({
@@ -166,14 +245,14 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
     ).toHaveLength(2);
     await db
       .update(classMemberships)
-      .set({ leftAt: new Date() })
+      .set({ leftAt: sql`clock_timestamp()` })
       .where(eq(classMemberships.id, membership!.id));
     expect(await operations.user(student!.id, 'OPERATIONS')).toMatchObject({
       affiliation: 'SCHOOL',
     });
     await db
       .update(classMemberships)
-      .set({ leftAt: new Date() })
+      .set({ leftAt: sql`clock_timestamp()` })
       .where(eq(classMemberships.id, secondMembership!.id));
     expect(await operations.user(student!.id, 'OPERATIONS')).toMatchObject({
       affiliation: 'MANDIRI',

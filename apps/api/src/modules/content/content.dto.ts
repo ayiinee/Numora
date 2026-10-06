@@ -41,6 +41,18 @@ export class ContentPageDto {
   limit = 20;
 }
 
+export class ContentVersionsPageDto extends ContentPageDto {
+  @ApiPropertyOptional({
+    enum: ['ALL', 'COMPACT_DEMO'],
+    default: 'ALL',
+    description:
+      'COMPACT_DEMO limits explicitly identified fixtures to ten distinct examples; historical versions remain available with ALL.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(['ALL', 'COMPACT_DEMO'])
+  catalog: 'ALL' | 'COMPACT_DEMO' = 'ALL';
+}
+
 export class TaxonomyBaseDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
   @ApiPropertyOptional({
@@ -224,6 +236,7 @@ export class AdminVersionDto {
 }
 export class AdminVersionsDto {
   @ApiProperty({ type: [AdminVersionDto] }) items!: AdminVersionDto[];
+  @ApiPropertyOptional({ type: Number, nullable: true }) nextOffset?: number | null;
 }
 export class AdminVideoDto {
   @ApiProperty() id!: string;

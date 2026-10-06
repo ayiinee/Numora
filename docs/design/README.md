@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING UPDATE — 6 October 2026:** Admin Content, Data & Moderation uses the owner-supplied AdminLTE reference: white sidebar/topbar, purple accent, grey canvas, compact cards, deep-linked workbench tabs and readable version/report review. Content opens the bank; Ringkasan, Analytics and the large page banner remain removed. [UX scope and acceptance](ADMIN_CONTENT_UX_2026-10-06.md), [portable browser gallery](screenshots/admin-content/README.md). Operations/Super visual iterations and external release gates remain separate.
+
 **ENGINEERING DECISION — Aini, 5 October 2026:** remove the standalone development Admin mock and use the shared portal at `/admin`, internal login at `/admin/login`, and content tools under `/admin/content`. The `/admin/preview` frame mapping below is historical; that route no longer exists. Real unscored question preview remains part of the importer workflow. [Portal scope and validation](../development/ADMIN_PORTAL_2026-10-05.md).
 
 **ENGINEERING VERIFICATION — 4 October 2026:** the Phase 0 Teacher dataset is ready and the supported Teacher frontend phases have passed real development Auth/API browser QA. See the [connected QA report](TEACHER_CONNECTED_QA_2026-10-04.md) and [22-screen real-data gallery](screenshots/teacher-connected/README.md). This follow-up supersedes earlier connected-QA-pending statements; missing backend capabilities and OPEN product policies remain unresolved.

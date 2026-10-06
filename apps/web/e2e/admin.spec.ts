@@ -291,7 +291,12 @@ async function setup(page: Page) {
                 : state.adminRole === 'OPERATIONS'
                   ? ['OPERATIONS_MANAGE', 'OPERATIONS_LIMITED_READ']
                   : state.adminRole === 'CONTENT_DATA_MODERATION'
-                    ? ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ']
+                    ? [
+                        'CONTENT_MANAGE',
+                        'OPERATIONS_LIMITED_READ',
+                        'ANALYTICS_CONTENT',
+                        'AUDIT_READ',
+                      ]
                     : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
@@ -345,7 +350,10 @@ async function setup(page: Page) {
         Object.assign(school, body);
         result = school;
       } else if (path.startsWith('/admin/content/chapters/')) {
-        Object.assign(state.data.curriculum.items.find((chapter) => path.endsWith(chapter.id))!, body);
+        Object.assign(
+          state.data.curriculum.items.find((chapter) => path.endsWith(chapter.id))!,
+          body,
+        );
       } else if (path.startsWith('/admin/content/tryout-packages/')) {
         Object.assign(state.data.packages.items[0]!, body);
         result = { id: id(18) };
@@ -376,6 +384,14 @@ async function setup(page: Page) {
       if (path === '/admin/content/versions')
         state.offsets.push(url.searchParams.get('offset') ?? '0');
       data = mapping[path] ?? data;
+      if (path === '/admin/content/versions') {
+        const offset = Number(url.searchParams.get('offset') ?? 0);
+        const limit = Number(url.searchParams.get('limit') ?? 20);
+        data = {
+          items: state.data.versions.items.slice(offset, offset + limit),
+          nextOffset: state.data.versions.items.length > offset + limit ? offset + limit : null,
+        };
+      }
     }
     await route.fulfill({ json: data });
   });
@@ -436,6 +452,134 @@ const panels = [
   ['IRT', 'irt'],
   ['Audit', 'audit'],
 ] as const;
+for (const width of [320, 375, 768, 1440]) {
+  test(`Content catalog pagination at ${width}px shows six materials and five questions per page`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 960 });
+    const { state, errors } = await setup(page);
+    state.adminRole = 'CONTENT_DATA_MODERATION';
+    state.data.curriculum.items = Array.from({ length: 8 }, (_, i) => ({
+      id: id(700 + i),
+      kind: 'CHAPTER',
+      parentId: null,
+      code: `DEMO-MATERIAL-${i + 1}`,
+      name: `Materi demo ${i + 1}`,
+      displayOrder: i + 1,
+      status: 'DRAFT',
+    }));
+    state.data.versions.items = Array.from({ length: 10 }, (_, i) => ({
+      ...state.data.versions.items[0]!,
+      id: id(800 + i),
+      questionId: id(820 + i),
+      variantId: id(840 + i),
+      variantCode: `DEMO-Q${i + 1}`,
+      stem: `DEMO: Contoh soal ${i + 1}`,
+    }));
+    state.data.dashboard = { ...state.data.dashboard!, questions: 10, readyVersions: 10 };
+    const bankRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/admin/content/versions?')) bankRequests.push(request.url());
+    });
+    await page.goto('/admin/content?view=curriculum');
+    const materials = page.getByRole('list', { name: 'Daftar materi' });
+    const materialPages = page.getByRole('navigation', { name: 'Halaman materi' });
+    await expect(materials.getByRole('listitem')).toHaveCount(3);
+    await expect(page.getByText(/6 entri materi/)).toBeVisible();
+    await expect(materials.getByText('Materi demo 1', { exact: true })).toBeVisible();
+    await capture(page, 'content-catalog-materials-page1', width);
+    await materialPages.getByRole('button', { name: 'Berikutnya' }).click();
+    await expect(materials.getByRole('listitem')).toHaveCount(3);
+    await expect(materials.getByText('Materi demo 4', { exact: true })).toBeVisible();
+    await expect(materialPages.getByText('Halaman 2 dari 2')).toBeVisible();
+    await expect(materialPages.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
+    await materialPages.getByRole('button', { name: 'Sebelumnya' }).click();
+    await expect(materials.getByText('Materi demo 1', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Soal', exact: true }).click();
+    const questions = page.getByRole('list', { name: 'Daftar soal' });
+    const questionPages = page.getByRole('navigation', { name: 'Halaman data' });
+    await expect(questions.getByRole('listitem')).toHaveCount(5);
+    await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toBeVisible();
+    const firstRequest = new URL(bankRequests[0]!);
+    expect(firstRequest.searchParams.get('catalog')).toBe('COMPACT_DEMO');
+    expect(firstRequest.searchParams.get('limit')).toBe('5');
+    await capture(page, 'content-catalog-questions-page1', width);
+    await questionPages.getByRole('button', { name: 'Berikutnya' }).focus();
+    await page.keyboard.press('Enter');
+    await expect(questions.getByRole('listitem')).toHaveCount(5);
+    await expect(questions.getByText('DEMO: Contoh soal 6', { exact: true })).toBeVisible();
+    await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toHaveCount(0);
+    await expect(questionPages.getByText('Halaman 2', { exact: true })).toBeVisible();
+    await expect(questionPages.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
+    expect(new URL(bankRequests.at(-1)!).searchParams.get('offset')).toBe('5');
+    await questionPages.getByRole('button', { name: 'Sebelumnya' }).click();
+    await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toBeVisible();
+    expect(errors).toEqual([]);
+    expect(state.mutations).toEqual([]);
+  });
+}
+for (const width of [320, 375, 768, 1440]) {
+  test(`Content workspace UX at ${width}px keeps task links, deep links, history and role boundary`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 960 });
+    const { state, errors } = await setup(page);
+    state.adminRole = 'CONTENT_DATA_MODERATION';
+    const analyticsRequests: string[] = [];
+    page.on('request', (request) => {
+      if (request.url().includes('/api/v1/admin/analytics')) analyticsRequests.push(request.url());
+    });
+    await page.goto('/admin');
+    await expect(page).toHaveURL(/\/admin\/content$/);
+    await expect(page.locator('.admin-content-shell')).toBeVisible();
+    await expect(page.locator('.admin-page-header')).toHaveCount(0);
+    if (width < 960) {
+      const toggle = page.getByRole('button', { name: 'Menu navigasi', exact: true });
+      await toggle.focus();
+      await page.keyboard.press('Enter');
+      await expect(toggle).toHaveAttribute('aria-expanded', 'true');
+      const menu = page.locator('#mobile-menu');
+      await expect(menu).toBeVisible();
+      await menu.getByRole('link', { name: 'Impor JSON', exact: true }).focus();
+      await page.keyboard.press('Escape');
+      await expect(menu).toHaveCount(0);
+      await expect(toggle).toBeFocused();
+    }
+    await expect(page.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: 'Analytics', exact: true })).toHaveCount(0);
+    await page.goto('/admin/analytics');
+    await expect(page).toHaveURL(/\/admin\/content$/);
+    expect(analyticsRequests).toEqual([]);
+    await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).not.toBeVisible();
+    await capture(page, 'content-ux-questions', width);
+    await page.getByText('Tambah soal PG manual', { exact: true }).focus();
+    await page.keyboard.press('Enter');
+    await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await expect(page).toHaveURL(/view=reports/);
+    await page.reload();
+    await expect(page.getByRole('heading', { name: 'Antrian moderasi' })).toBeVisible();
+    await page.goBack();
+    await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+    for (const [label] of panels) {
+      await page.getByRole('button', { name: label, exact: true }).click();
+      await expect(page.locator('.admin-content-view')).toHaveAttribute('aria-label', label);
+      await expect(page.locator('.admin-page-header')).toHaveCount(0);
+      await capture(page, `content-ux-${label.replaceAll(/[^A-Za-z]/g, '-')}`, width);
+    }
+    await page.goto('/admin/content/imports');
+    await expect(page.getByRole('list', { name: 'Tahapan impor' })).toBeVisible();
+    await expect(page.locator('.admin-page-header')).toHaveCount(0);
+    await expect(page.getByLabel('File soal JSON')).toBeVisible();
+    await expect(page.getByLabel('ID asset', { exact: true })).not.toBeVisible();
+    await capture(page, 'content-ux-import', width);
+    await page.getByText('Unggah gambar pendukung (opsional)', { exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Upload media soal' })).toBeVisible();
+    expect(state.mutations).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}
 for (const width of [390, 1280]) {
   for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null] as const) {
     test(`Unified Admin portal ${role ?? 'unassigned'} at ${width}px uses assignment and shared navigation`, async ({
@@ -445,15 +589,20 @@ for (const width of [390, 1280]) {
       const { state, errors } = await setup(page);
       state.adminRole = role;
       await page.goto('/admin');
-      await expect(
-        page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
-      ).toBeVisible();
+      if (role === 'CONTENT_DATA_MODERATION') {
+        await expect(page).toHaveURL(/\/admin\/content$/);
+        await expect(page.locator('.admin-page-header')).toHaveCount(0);
+        await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+      } else
+        await expect(
+          page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
+        ).toBeVisible();
       const main = page.getByRole('main');
       if (role === 'SUPER_ADMIN' || role === 'OPERATIONS') {
         await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
       } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
       if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
-        const link = main.getByRole('link', { name: 'Impor JSON' });
+        const link = main.getByRole('link', { name: 'Impor JSON', exact: true });
         await expect(link).toBeVisible();
         await capture(page, `portal-${role}`, width);
         await link.focus();
@@ -575,11 +724,16 @@ test('Removed Admin mock returns 404 and QA login remains gated for the fixture 
   expect(response?.status()).toBe(404);
   expect(errors).toEqual([]);
 });
-test('Admin category changes preserve the server value on failure and allow a null reset', async ({ page }) => {
+test('Admin category changes preserve the server value on failure and allow a null reset', async ({
+  page,
+}) => {
   const { state } = await setup(page);
   await page.goto('/admin/content');
   await page.getByRole('button', { name: 'Materi', exact: true }).click();
-  const category = page.getByRole('combobox', { name: 'Kategori bab: Persamaan & Fungsi Kuadrat', exact: true });
+  const category = page.getByRole('combobox', {
+    name: 'Kategori bab: Persamaan & Fungsi Kuadrat',
+    exact: true,
+  });
   await expect(category).toHaveValue('');
   state.failMutation = true;
   await category.selectOption('algebra');
@@ -591,7 +745,9 @@ test('Admin category changes preserve the server value on failure and allow a nu
   await category.selectOption('');
   await expect(category).toHaveValue('');
   expect(state.mutations.map((mutation) => mutation.body)).toEqual([
-    { materialCategory: 'algebra' }, { materialCategory: 'geometry' }, { materialCategory: null },
+    { materialCategory: 'algebra' },
+    { materialCategory: 'geometry' },
+    { materialCategory: null },
   ]);
 });
 test('Admin list/token errors, empty schools and expired access provide recovery', async ({
@@ -646,7 +802,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   await expect(
     page.getByText('a: Belum tersedia · b: Belum tersedia · c: Belum tersedia', { exact: true }),
   ).toBeVisible();
-  state.data.versions.items = Array.from({ length: 20 }, (_, n) => ({
+  state.data.versions.items = Array.from({ length: 21 }, (_, n) => ({
     ...state.data.versions.items[0]!,
     id: id(300 + n),
   }));
@@ -682,6 +838,158 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   await capture(page, 'content-forbidden', 390);
   expect(errors).toEqual([]);
 });
+test('Content can assemble thirty Tryout questions across selector pages on mobile', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.adminRole = 'CONTENT_DATA_MODERATION';
+  const original = state.data.versions.items[0]!;
+  state.data.versions.items = Array.from({ length: 30 }, (_, i) => ({
+    ...original,
+    id: id(400 + i),
+    stem: `TEST ready question ${i + 1}`,
+    contentStatus: 'READY',
+    questionStatus: 'READY',
+  }));
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto('/admin/content');
+  await page.getByRole('button', { name: 'Draf Tryout', exact: true }).click();
+  await expect(page.getByRole('checkbox')).toHaveCount(20);
+  for (const box of await page.getByRole('checkbox').all()) await box.check();
+  await page.getByRole('button', { name: 'Soal berikutnya', exact: true }).click();
+  await expect(page.getByRole('checkbox')).toHaveCount(10);
+  for (const box of await page.getByRole('checkbox').all()) await box.check();
+  await expect(page.getByText('Versi READY (30 versi dipilih)', { exact: true })).toBeVisible();
+  await page.setViewportSize({ width: 320, height: 900 });
+  await page.getByText('Kelola versi yang dipilih', { exact: true }).click();
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  await page.getByText('Kelola versi yang dipilih', { exact: true }).click();
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.getByRole('button', { name: 'Soal sebelumnya', exact: true }).click();
+  await expect(page.getByLabel(/TEST ready question 1$/)).toBeChecked();
+  await page.getByLabel('Kode keluarga paket', { exact: true }).fill('TEST-THIRTY');
+  await page.getByLabel('Versi paket', { exact: true }).fill('1');
+  await page.getByLabel('Nama paket', { exact: true }).fill('TEST thirty questions');
+  await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
+  await expect(
+    page.getByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.'),
+  ).toBeVisible();
+  expect(state.mutations.at(-1)?.body.questionVersionIds).toEqual(
+    state.data.versions.items.map((v) => v.id),
+  );
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
+test('Content imports the envelope namespace and completes a durable unscored preview', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.adminRole = 'CONTENT_DATA_MODERATION';
+  const item = {
+    instanceId: id(501),
+    questionVersionId: id(502),
+    externalId: 'TEAM-1',
+    type: 'SINGLE_CHOICE',
+    stem: { text: 'TEST preview question' },
+    options: [
+      { id: 'A', content: { text: 'Alpha' } },
+      { id: 'B', content: { text: 'Beta' } },
+    ],
+    categories: [],
+    answer: null as unknown,
+    revision: 0,
+    serverSavedAt: new Date().toISOString(),
+    score: null,
+  };
+  let submitted = false;
+  const snapshot = () => ({
+    id: id(503),
+    state: submitted ? 'SUBMITTED' : 'IN_PROGRESS',
+    scoringStatus: 'NOT_SCORED',
+    score: null,
+    media: [],
+    items: [
+      {
+        ...item,
+        ...(submitted
+          ? { answerKey: { optionId: 'A' }, explanation: { text: 'TEST explanation after submit' } }
+          : {}),
+      },
+    ],
+  });
+  const bodies: Record<string, unknown>[] = [];
+  await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
+    const path = new URL(route.request().url()).pathname;
+    if (/\/(import-validations|imports)$/.test(path)) {
+      bodies.push(route.request().postDataJSON());
+      return route.fulfill({
+        json: {
+          id: path.endsWith('/imports') ? id(504) : null,
+          sourceNamespace: 'TEAM-BANK',
+          canImportDraft: true,
+          items: [
+            {
+              externalId: 'TEAM-1',
+              canImportDraft: true,
+              canPreview: true,
+              questionVersionId: path.endsWith('/imports') ? id(502) : null,
+              outcome: path.endsWith('/imports') ? 'CREATED' : 'VALIDATED',
+              blockers: [],
+            },
+          ],
+        },
+      });
+    }
+    if (path.includes('/preview-sessions')) {
+      if (path.includes('/answers/')) {
+        item.answer = route.request().postDataJSON().answer;
+        item.revision++;
+        return route.fulfill({
+          json: {
+            instanceId: item.instanceId,
+            answer: item.answer,
+            revision: item.revision,
+            serverSavedAt: item.serverSavedAt,
+          },
+        });
+      }
+      if (path.endsWith('/submit')) submitted = true;
+      return route.fulfill({ json: snapshot() });
+    }
+    return route.fallback();
+  });
+  await page.setViewportSize({ width: 375, height: 900 });
+  await page.goto('/admin/content/imports');
+  await page.getByLabel('File soal JSON').setInputFiles({
+    name: 'team-bank.json',
+    mimeType: 'application/json',
+    buffer: Buffer.from(
+      JSON.stringify({ sourceNamespace: 'TEAM-BANK', questions: [{ externalId: 'TEAM-1' }] }),
+    ),
+  });
+  await expect(page.getByLabel('Namespace sumber')).toHaveValue('TEAM-BANK');
+  await page.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
+  await page.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
+  await page.getByRole('button', { name: 'Preview soal siap (1)', exact: true }).click();
+  await page.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+  await expect(page.getByText('TEST preview question', { exact: true })).toBeVisible();
+  await expect(page.getByText('TEST explanation after submit')).toHaveCount(0);
+  await page.getByRole('radio', { name: /Alpha/ }).check();
+  await page.getByRole('button', { name: 'Simpan jawaban', exact: true }).click();
+  await expect(page.getByText(/Tersimpan di server.*revisi 1/)).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('radio', { name: /Alpha/ })).toBeChecked();
+  await page.getByRole('button', { name: 'Submit & review', exact: true }).click();
+  await expect(page.getByText('TEST explanation after submit', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Review tanpa scoring', exact: true }),
+  ).toBeVisible();
+  expect(bodies.map((body) => body.sourceNamespace)).toEqual(['TEAM-BANK', 'TEAM-BANK']);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
+  expect(errors).toEqual([]);
+});
+
 test('Admin loading, pinned Tryout edits, report follow-up and logout remain explicit', async ({
   page,
 }) => {

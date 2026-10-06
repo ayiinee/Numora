@@ -19,24 +19,35 @@ export function AdminFrame({
   children: ReactNode;
 }) {
   const { state } = useAuth();
+  const contentRole =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.adminRole === 'CONTENT_DATA_MODERATION';
   return (
-    <AppShell area="admin" className="admin-redesign-shell">
+    <AppShell
+      area="admin"
+      className={`admin-redesign-shell${contentRole ? ' admin-content-shell' : ''}`}
+    >
       <div className="admin-redesign-frame">
-        <header className="admin-page-header">
-          <span className="admin-header-icon">
-            <Icon name={icon} />
-          </span>
-          <div>
-            <span className="admin-eyebrow">Ruang Admin</span>
-            <h1>{title}</h1>
-            <p>{description}</p>
-          </div>
-          <Badge variant="default" className="admin-header-badge">
-            {state.status === 'ready' && state.profile.role === 'ADMIN'
-              ? adminRoleLabel(state.profile.adminRole)
-              : 'Admin'}
-          </Badge>
-        </header>
+        {contentRole ? (
+          <h1 className="sr-only">{title}</h1>
+        ) : (
+          <header className="admin-page-header">
+            <span className="admin-header-icon">
+              <Icon name={icon} />
+            </span>
+            <div>
+              <span className="admin-eyebrow">Ruang Admin</span>
+              <h1>{title}</h1>
+              <p>{description}</p>
+            </div>
+            <Badge variant="default" className="admin-header-badge">
+              {state.status === 'ready' && state.profile.role === 'ADMIN'
+                ? adminRoleLabel(state.profile.adminRole)
+                : 'Admin'}
+            </Badge>
+          </header>
+        )}
         {children}
       </div>
     </AppShell>

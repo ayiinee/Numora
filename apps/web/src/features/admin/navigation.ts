@@ -61,8 +61,8 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
   )
     items.push({
       href: '/admin/structures',
-      label: 'Struktur sekolah & kelas',
-      description: 'Lihat struktur serta aggregate anggota tanpa data individual.',
+      label: 'Sekolah & kelas (baca saja)',
+      description: 'View terbatas: struktur, status credential, dan jumlah anggota.',
       icon: 'school',
     });
   if (profile.capabilities?.includes('CONTENT_MANAGE')) {
@@ -70,13 +70,13 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       {
         href: '/admin/content',
         label: 'Konten & assessment',
-        description: 'Kelola kurikulum, soal, paket, video, laporan, IRT, dan riwayat.',
+        description: 'Bank soal, materi, video, paket Drill/Tryout, dan tindak lanjut laporan.',
         icon: 'book',
       },
       {
         href: '/admin/content/pretest',
         label: 'Pretest authoring',
-        description: 'Draf, review, dan versi paket sebelum consumer Student tersedia.',
+        description: 'Siapkan dan review paket 20 soal. Publikasi ke siswa masih dibatasi.',
         icon: 'book',
       },
       {
@@ -95,16 +95,32 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
     items.push({
       href: '/admin/analytics',
       label: 'Analytics',
-      description: 'Aggregate operasional dan kesehatan rilis dari PostgreSQL.',
+      description:
+        'Lihat ringkasan aktivitas siswa, cakupan konten, dan kesehatan rilis sesuai akses.',
       icon: 'chart',
     });
   if (profile.capabilities?.includes('CONTENT_MANAGE'))
     items.push({
       href: '/admin/irt',
       label: 'Request IRT & publikasi',
-      description: 'Siapkan request, pantau execution, adoption dan SLA rilis.',
+      description:
+        'Pantau analisis Tryout, penerimaan hasil ilmiah, hambatan, dan batas rilis 72 jam.',
       icon: 'chart',
     });
+  if (profile.adminRole === 'CONTENT_DATA_MODERATION') {
+    // Content opens the bank directly; these pages are temporarily out of its portal.
+    const contentItems = items.filter(
+      ({ href }) => href !== '/admin' && href !== '/admin/analytics',
+    );
+    const order = [
+      '/admin/content',
+      '/admin/content/imports',
+      '/admin/content/pretest',
+      '/admin/irt',
+      '/admin/structures',
+    ];
+    return contentItems.sort((a, b) => order.indexOf(a.href) - order.indexOf(b.href));
+  }
   return items;
 }
 

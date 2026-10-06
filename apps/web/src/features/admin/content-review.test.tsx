@@ -2,6 +2,7 @@ import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/re
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ContentReviewScreen } from './content-review';
 import { ReportDetailScreen } from './report-detail';
+import { ApiProblem } from '@/lib/api';
 const mock = vi.hoisted(() => ({ api: vi.fn(), state: {} as Record<string, unknown> }));
 vi.mock('@/features/onboarding/auth', () => ({ useAuth: () => ({ state: mock.state }) }));
 vi.mock('@/lib/api', async (original) => ({ ...(await original<object>()), apiRequest: mock.api }));
@@ -17,6 +18,7 @@ beforeEach(() => {
     profile: {
       id: 'admin',
       role: 'ADMIN',
+      status: 'ACTIVE',
       adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['CONTENT_MANAGE'],
     },
@@ -24,6 +26,41 @@ beforeEach(() => {
   };
 });
 afterEach(cleanup);
+it('discards the previous report target when navigation to another report fails', async () => {
+  mock.api.mockResolvedValueOnce({
+    category: 'Old target',
+    details: '',
+    status: 'OPEN',
+    reportedAt: '2026-10-05T00:00:00Z',
+    followUp: null,
+    question: null,
+    video: null,
+  });
+  const view = render(<ReportDetailScreen kind="QUESTION" id="old" />);
+  await screen.findByText('Old target');
+  mock.api.mockRejectedValueOnce(Error('New report unavailable'));
+  view.rerender(<ReportDetailScreen kind="VIDEO" id="new" />);
+  await screen.findByText('New report unavailable');
+  expect(screen.queryByText('Old target')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Simpan resolution' })).toBeNull();
+});
+it('clears a loaded report and its mutation form when server access is revoked', async () => {
+  mock.api.mockResolvedValueOnce({
+    category: 'Protected target',
+    details: '',
+    status: 'OPEN',
+    reportedAt: '2026-10-05T00:00:00Z',
+    followUp: null,
+    question: null,
+    video: null,
+  });
+  render(<ReportDetailScreen kind="QUESTION" id="report" />);
+  await screen.findByText('Protected target');
+  mock.api.mockRejectedValueOnce(new ApiProblem(403, 'FORBIDDEN', 'Role revoked'));
+  fireEvent.submit(screen.getByRole('button', { name: 'Simpan resolution' }).closest('form')!);
+  await screen.findByText('Role revoked');
+  expect(screen.queryByText('Protected target')).toBeNull();
+});
 it('separates rich review from approved rubric publication and clears payload after revocation', async () => {
   mock.api.mockResolvedValue({
     id: 'v2',

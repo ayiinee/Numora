@@ -1,8 +1,11 @@
 import { useEffect, useState } from 'react';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, ApiProblem } from '@/lib/api';
+export function adminAccessDenied(error: unknown) {
+  return error instanceof ApiProblem && [401, 403].includes(error.status);
+}
 // Each queue owns its failure/retry. Parent identity keys discard revoked access data.
 export function useOperationalQuery<T>(path: string, token: string) {
-  const [state, setState] = useState<{ data?: T; error?: string }>({});
+  const [state, setState] = useState<{ data?: T; error?: string; denied?: boolean }>({});
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
     let active = true;
@@ -13,7 +16,10 @@ export function useOperationalQuery<T>(path: string, token: string) {
       },
       (error: unknown) => {
         if (active)
-          setState({ error: error instanceof Error ? error.message : 'Permintaan gagal.' });
+          setState({
+            error: error instanceof Error ? error.message : 'Permintaan gagal.',
+            denied: adminAccessDenied(error),
+          });
       },
     );
     return () => {

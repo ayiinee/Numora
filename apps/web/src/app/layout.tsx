@@ -3,6 +3,7 @@ import localFont from 'next/font/local';
 import './globals.css';
 import './numora.css';
 import './teacher.css';
+import './admin-content.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 
