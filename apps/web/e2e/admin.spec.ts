@@ -377,9 +377,17 @@ async function setup(page: Page) {
                     'OPERATIONS_MANAGE',
                     'OPERATIONS_LIMITED_READ',
                     'ADMIN_ACCOUNTS_MANAGE',
+                    'AUDIT_READ',
+                    'ANALYTICS_CONTENT',
+                    'ANALYTICS_OPERATIONS',
                   ]
                 : state.adminRole === 'OPERATIONS'
-                  ? ['OPERATIONS_MANAGE', 'OPERATIONS_LIMITED_READ']
+                  ? [
+                      'OPERATIONS_MANAGE',
+                      'OPERATIONS_LIMITED_READ',
+                      'ANALYTICS_OPERATIONS',
+                      'AUDIT_READ',
+                    ]
                   : state.adminRole === 'CONTENT_DATA_MODERATION'
                     ? [
                         'CONTENT_MANAGE',
