@@ -1200,7 +1200,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
     ],
   });
   const pack = directedPackage();
-  pack.source = { ...pack.source, sourceNamespace: 'TEAM-BANK' };
+  pack.source = { ...pack.source!, sourceNamespace: 'TEAM-BANK' };
   const bodies: Record<string, unknown>[] = [];
   await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
