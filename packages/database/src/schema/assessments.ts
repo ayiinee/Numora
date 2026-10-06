@@ -44,10 +44,19 @@ export const scoringPolicyVersions = pgTable(
     configuration: jsonb('configuration').notNull(),
     effectiveAt: timestamp('effective_at', { withTimezone: true }),
     status: packageStatus('status').notNull().default('DRAFT'),
+    approvedByUserId: uuid('approved_by_user_id').references(() => users.id, {
+      onDelete: 'restrict',
+    }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    approvalReference: text('approval_reference'),
   },
   (table) => [
     uniqueIndex('scoring_policy_versions_code_version_uq').on(table.policyCode, table.version),
     check('scoring_policy_versions_version_ck', sql`${table.version} > 0`),
+    check(
+      'scoring_policy_versions_approval_ck',
+      sql`(${table.approvedByUserId} is null and ${table.approvedAt} is null and ${table.approvalReference} is null) or (${table.approvedByUserId} is not null and ${table.approvedAt} is not null and ${table.approvalReference} is not null and length(trim(${table.approvalReference})) > 0)`,
+    ),
   ],
 ).enableRLS();
 

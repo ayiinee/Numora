@@ -21,7 +21,7 @@ export type ChapterDto = { "id": string; "slug"?: string; "title": string; "orde
 
 export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };
 
-export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; };
+export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; "bestStars"?: number | null; };
 
 export type CatalogDto = { "chapters": (ChapterDto)[]; };
 
@@ -33,13 +33,23 @@ export type StudentProgressDto = { "completedLevels": number; "totalLevels": num
 
 export type OptionDto = { "id": string; "text": string; };
 
-export type DrillQuestionDto = { "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
+export type RichContentDto = { "text": string; };
+
+export type PreviewOptionDto = { "id": string; "content": RichContentDto; };
+
+export type PreviewCategoryDto = { "id": string; "label": string; };
+
+export type PreviewMediaDto = { "instanceId": string; "assetId": string; "altText": string; "url": string; "expiresAt": string; };
+
+export type MediaLinksDto = { "media": (PreviewMediaDto)[]; };
+
+export type DrillQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "categories"?: (PreviewCategoryDto)[]; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
 
 export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "serverTime"?: string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
 
-export type SavedAnswerDto = { "questionInstanceId": string; "selectedOptionId": string | null; };
+export type SavedAnswerDto = { "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "questionInstanceId": string; "selectedOptionId": string | null; };
 
-export type ReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
+export type ReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "categories"?: (PreviewCategoryDto)[]; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "correctOptionId": string | null; "explanation": string; "richExplanation"?: RichContentDto; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "fullyCorrect"?: boolean; };
 
 export type RecommendedVideoDto = { "id": string; "title": string; "url": string; "source": string; };
 
@@ -57,7 +67,7 @@ export type TryoutAttemptDto = { "xp"?: number | null; "xpPolicyVersion"?: numbe
 
 export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "waitingIrt"; "xp"?: number | null; };
 
-export type TryoutReviewedQuestionDto = { "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string; "explanation": string; };
+export type TryoutReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "richOptions"?: (PreviewOptionDto)[]; "categories"?: (PreviewCategoryDto)[]; "richStem"?: RichContentDto; "richExplanation"?: RichContentDto; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "fullyCorrect"?: boolean; "questionInstanceId": string; "stem": string; "selectedOptionId": string | null; "correctOptionId": string | null; "explanation": string; };
 
 export type TryoutResultDto = { "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
 

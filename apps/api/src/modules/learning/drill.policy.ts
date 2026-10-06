@@ -46,7 +46,7 @@ export function drillReward(
 ) {
   if (
     questionCount !== DRILL_QUESTION_COUNT ||
-    !Number.isInteger(correctCount) ||
+    !Number.isFinite(correctCount) ||
     correctCount < 0 ||
     correctCount > questionCount
   )

@@ -1526,6 +1526,19 @@ for (const width of [390, 1440]) {
         return route.fulfill({ json: { id: path.includes('/reports/') ? questionId : packageId } });
       }
       const responses: Record<string, unknown> = {
+        'admin/content/assessment-policies': {
+          items: [
+            {
+              id: policyId,
+              code: 'TEST-ONLY-DRILL',
+              version: 1,
+              assessmentType: 'DRILL',
+              approvedByUserId: studentId,
+              approvedAt: '2026-10-01T00:00:00Z',
+              approvalReference: 'TEST ONLY browser fixture; no academic approval',
+            },
+          ],
+        },
         'admin/content/curriculum': {
           items: [
             {
@@ -1599,9 +1612,11 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
     await page.getByLabel('Versi paket', { exact: true }).fill('1');
     await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
-    await page.getByLabel('Indeks varian', { exact: true }).fill('1');
+    await expect(page.getByRole('spinbutton', { name: /^Indeks varian/ })).toHaveValue('1');
     await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture baru');
-    await page.getByLabel('ID versi kebijakan penilaian', { exact: true }).fill(policyId);
+    await page
+      .getByRole('combobox', { name: 'Versi kebijakan penilaian', exact: true })
+      .selectOption(policyId);
     await page
       .getByLabel('ID versi soal (pisahkan dengan baris baru atau koma)', { exact: true })
       .fill(ids.join('\n'));

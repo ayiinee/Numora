@@ -24,7 +24,10 @@ export class TryoutController {
 
   @Post('attempts')
   @ApiCreatedResponse({ type: TryoutAttemptDto })
-  start(@Headers('authorization') authorization: string | undefined, @Body() input: StartTryoutDto) {
+  start(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() input: StartTryoutDto,
+  ) {
     return this.tryout.start(authorization, input.packageId);
   }
 
@@ -45,7 +48,13 @@ export class TryoutController {
     @Param('questionInstanceId', ParseUUIDPipe) questionInstanceId: string,
     @Body() input: SaveDrillAnswerDto,
   ) {
-    return this.tryout.saveAnswer(authorization, attemptId, questionInstanceId, input.optionId);
+    return this.tryout.saveAnswer(
+      authorization,
+      attemptId,
+      questionInstanceId,
+      input.optionId,
+      input.answer,
+    );
   }
 
   @Post('attempts/:attemptId/submit')

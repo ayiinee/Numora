@@ -74,6 +74,12 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
         icon: 'book',
       },
       {
+        href: '/admin/content/pretest',
+        label: 'Pretest authoring',
+        description: 'Draf, review, dan versi paket sebelum consumer Student tersedia.',
+        icon: 'book',
+      },
+      {
         href: '/admin/content/imports',
         label: 'Impor JSON',
         description: 'Validasi JSON, impor DRAFT, lalu tinjau soal dalam sesi internal.',

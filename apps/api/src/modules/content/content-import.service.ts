@@ -22,6 +22,7 @@ import {
   contentImports,
   contentImportIdentities,
   contentImportVersions,
+  scoringRubricVersions,
   getDatabase,
   type ImportQuestion,
 } from '@tka/database';
@@ -117,6 +118,31 @@ export class ContentImportService {
           .limit(1);
         if (!receipt) errors.push('MEDIA_RECEIPT_INVALID');
       }
+      if (q.metadata.scoringRubricVersionId !== undefined) {
+        const rubricId = q.metadata.scoringRubricVersionId;
+        if (
+          typeof rubricId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            rubricId,
+          )
+        )
+          errors.push('RUBRIC_ID_INVALID');
+        else {
+          const [rubric] = await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(eq(scoringRubricVersions.id, rubricId))
+            .for('share');
+          if (
+            !rubric ||
+            rubric.status !== 'SEALED' ||
+            !rubric.approvedAt ||
+            !rubric.approvedByUserId ||
+            rubric.questionType !== q.type
+          )
+            errors.push('APPROVED_PGK_RUBRIC_REQUIRED');
+        }
+      }
       const [identity] = await tx
         .select()
         .from(contentImportIdentities)
@@ -157,6 +183,9 @@ export class ContentImportService {
         competencyCode: q.competencyCode,
         sourceLevelNumber: q.metadata.sourceLevelNumber,
         difficulty: q.difficulty ?? null,
+        ...(q.metadata.scoringRubricVersionId
+          ? { scoringRubricVersionId: q.metadata.scoringRubricVersionId }
+          : {}),
       });
       records.push({
         q,
@@ -313,6 +342,10 @@ export class ContentImportService {
             media: data.assets,
             difficulty: r.q.difficulty ?? null,
             levelId: r.level!.id,
+            scoringRubricVersionId:
+              typeof r.q.metadata.scoringRubricVersionId === 'string'
+                ? r.q.metadata.scoringRubricVersionId
+                : null,
             contentStatus: 'DRAFT',
             validationState: 'DRAFT',
             revisedFromQuestionVersionId: r.latest?.version!.id,

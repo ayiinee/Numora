@@ -4,6 +4,7 @@ import Link from 'next/link';
 import { Badge, Button, Card, Icon } from '@tka/ui';
 import { useState, type Ref } from 'react';
 import type { TryoutPackage, TryoutResult } from './types';
+import { RichQuestionReview } from './rich-question-review';
 import { MathText } from './ui';
 import { AnswerMatrix } from './drill-review';
 
@@ -340,7 +341,13 @@ export function TryoutWaiting({
   );
 }
 
-export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
+export function TryoutReleasedResult({
+  result,
+  token,
+}: {
+  result: TryoutResult;
+  token?: string | undefined;
+}) {
   const [selected, setSelected] = useState(0);
   const item = result.explanation[selected];
   return (
@@ -370,23 +377,29 @@ export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
         {item ? (
           <article className="drill-review__question">
             <strong>Soal #{selected + 1}</strong>
-            <h3>
-              <MathText value={item.stem} />
-            </h3>
-            <div
-              className={`drill-review__answer ${item.selectedOptionId === item.correctOptionId ? 'drill-review__answer--correct' : 'drill-review__answer--wrong'}`}
-            >
-              Jawabanmu: {item.selectedOptionId ?? 'Tidak dijawab'}
-            </div>
-            <div className="drill-review__answer drill-review__answer--correct">
-              Jawaban benar: {item.correctOptionId}
-            </div>
-            <div className="drill-review__explanation">
-              <strong>Pembahasan Numora</strong>
-              <p>
-                <MathText value={item.explanation} />
-              </p>
-            </div>
+            {item.richStem ? (
+              <RichQuestionReview question={item} token={token} attemptId={result.attemptId} />
+            ) : (
+              <>
+                <h3>
+                  <MathText value={item.stem} />
+                </h3>
+                <div
+                  className={`drill-review__answer ${item.selectedOptionId === item.correctOptionId ? 'drill-review__answer--correct' : 'drill-review__answer--wrong'}`}
+                >
+                  Jawabanmu: {item.selectedOptionId ?? 'Tidak dijawab'}
+                </div>
+                <div className="drill-review__answer drill-review__answer--correct">
+                  Jawaban benar: {item.correctOptionId}
+                </div>
+                <div className="drill-review__explanation">
+                  <strong>Pembahasan Numora</strong>
+                  <p>
+                    <MathText value={item.explanation} />
+                  </p>
+                </div>
+              </>
+            )}
           </article>
         ) : (
           <p>Pembahasan soal belum tersedia.</p>

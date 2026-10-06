@@ -140,6 +140,7 @@ export class LearningController {
       attemptId,
       questionInstanceId,
       input.optionId,
+      input.answer,
     );
   }
 

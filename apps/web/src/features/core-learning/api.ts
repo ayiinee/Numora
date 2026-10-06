@@ -12,6 +12,8 @@ import type {
 } from './types';
 import type {
   StudentDashboardDto,
+  SavedAnswerDto,
+  MediaLinksDto,
   StudentQuestionReportDto,
   StudentVideoReportDto,
   StudentVideosDto,
@@ -66,6 +68,29 @@ export async function request<T>(token: string, path: string, init?: RequestInit
 const id = encodeURIComponent;
 
 export const learningApi = {
+  saveContentAnswer: (
+    token: string,
+    attemptId: string,
+    questionInstanceId: string,
+    answer: SavedAnswerDto['answer'],
+    kind: 'drill' | 'tryout',
+  ) =>
+    request<SavedAnswerDto>(
+      token,
+      `${kind === 'drill' ? '/assessment-attempts' : '/tryout/attempts'}/${id(attemptId)}/answers/${id(questionInstanceId)}`,
+      { method: 'PATCH', body: JSON.stringify({ answer }) },
+    ),
+  media: (
+    token: string,
+    attemptId: string,
+    instanceId: string,
+    phase: 'WORK' | 'REVIEW',
+    assetIds: string[],
+  ) =>
+    request<MediaLinksDto>(token, `/assessment-attempts/${id(attemptId)}/media`, {
+      method: 'POST',
+      body: JSON.stringify({ instanceId, phase, assetIds }),
+    }),
   dashboard: (token: string) => request<StudentDashboardDto>(token, '/students/me/dashboard'),
   catalog: (token: string) => request<Catalog>(token, '/chapters'),
   chapter: (token: string, chapterId: string) =>

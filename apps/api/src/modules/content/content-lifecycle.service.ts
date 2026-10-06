@@ -29,6 +29,9 @@ import type { ContentVersionDetailDto, ReviewContentDto } from './content-lifecy
 
 @Injectable()
 export class ContentLifecycleService {
+  async readiness(tx: AdminTransaction, id: string) {
+    return (await this.detail(tx, id)).readiness;
+  }
   private async load(tx: AdminTransaction, id: string) {
     const [row] = await tx
       .select({
@@ -220,19 +223,17 @@ export class ContentLifecycleService {
         .set({ contentStatus: body.status, reviewedByUserId: actor, reviewedAt: new Date() })
         .where(eq(questionVersions.id, id));
       // Review reasons contain editorial context, never learner answers or credentials.
-      await tx
-        .insert(auditLogs)
-        .values({
-          actorUserId: actor,
-          action: 'content_review_decision',
-          entityType: 'question_version',
-          entityId: id,
-          metadata: {
-            previousStatus: v.contentStatus,
-            status: body.status,
-            reason: body.reason.trim(),
-          },
-        });
+      await tx.insert(auditLogs).values({
+        actorUserId: actor,
+        action: 'content_review_decision',
+        entityType: 'question_version',
+        entityId: id,
+        metadata: {
+          previousStatus: v.contentStatus,
+          status: body.status,
+          reason: body.reason.trim(),
+        },
+      });
       return { id };
     });
   }

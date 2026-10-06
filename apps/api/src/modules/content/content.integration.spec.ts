@@ -1,3 +1,6 @@
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import { ContentLifecycleService } from './content-lifecycle.service';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
@@ -241,7 +244,10 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     expect(logs[0]!.actorUserId).toBe(admin);
     const rollbackCode = `ROLLBACK-${suffix}`;
     await expect(
-      new ContentService().createChapter(randomUUID(), {
+      new ContentService(
+        new AssessmentPoliciesService(),
+        new AssessmentReadinessService(new ContentLifecycleService()),
+      ).createChapter(randomUUID(), {
         code: rollbackCode,
         name: `TEST rollback ${suffix}`,
         displayOrder: body.displayOrder + 1,
@@ -350,9 +356,13 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       .from(packageItems)
       .where(eq(packageItems.packageId, p.id));
     expect(rows[0]!.questionVersionId).toBe(version);
-    const publish = await request(`admin/content/tryout-packages/${p.id}/publish`, 'POST');
+    const publish = await request(`admin/content/tryout-packages/${p.id}/publish`, 'POST', {
+      scoringPolicyVersionId: randomUUID(),
+      releaseAt: '2099-01-04T17:00:00.000Z',
+      durationSeconds: 3600,
+    });
     expect(publish.status).toBe(409);
-    expect(await publish.json()).toMatchObject({ code: 'TRYOUT_POLICY_OPEN' });
+    expect(await publish.json()).toMatchObject({ code: 'ASSESSMENT_POLICY_APPROVAL_REQUIRED' });
     expect(
       (
         await request('admin/content/tryout-packages', 'POST', {
