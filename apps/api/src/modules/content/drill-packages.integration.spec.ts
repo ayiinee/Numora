@@ -138,7 +138,9 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         packageItemId: packageItem!.id,
         questionVersionId: packageItem!.questionVersionId,
         displayOrder: 1,
-        maxPoints: '1',
+        maxPoints: packageItem!.maxPoints,
+        rubricVersionId: packageItem!.rubricVersionId,
+        maximumScoreCategory: packageItem!.maximumScoreCategory,
       })
       .returning();
     const [source] = await db
