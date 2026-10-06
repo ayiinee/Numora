@@ -87,6 +87,11 @@ it('disables editing and selection during pending token issuance and removes its
   );
   finish({ id: 'token-test', token: 'SYNTHETIC-ONLY', expiresAt: '2099-01-01T00:00:00Z' });
   await screen.findByText('SYNTHETIC-ONLY');
+  await waitFor(() =>
+    expect(
+      (screen.getByRole('button', { name: /Sekolah lain/ }) as HTMLButtonElement).disabled,
+    ).toBe(false),
+  );
   fireEvent.click(screen.getByRole('button', { name: /Sekolah lain/ }));
   expect(screen.queryByText('SYNTHETIC-ONLY')).toBeNull();
 });
