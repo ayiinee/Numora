@@ -1,12 +1,14 @@
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { closeDatabaseConnection, getDatabase } from './client.js';
 import { seedDemoLearning } from './demo-learning.js';
 
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('learning-only demo fixtures', () => {
   afterAll(closeDatabaseConnection);
+  afterEach(() => vi.unstubAllEnvs());
   it('seeds equivalent version-pinned packages idempotently without fake Auth profiles', async () => {
-    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    vi.stubEnv('DATABASE_URL', process.env.TEST_DATABASE_URL!);
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const { db, client } = getDatabase();
     for (let run = 0; run < 2; run++) await db.transaction(async (tx) => seedDemoLearning(tx));
     const [state] = await client<{ packages: number; items: number; profiles: number }[]>`
