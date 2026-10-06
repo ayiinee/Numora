@@ -2,6 +2,7 @@
 import { Fragment, useState } from 'react';
 import { Badge, Button, Card } from '@tka/ui';
 import { ContentRichText } from './content-rich-text';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import type {
   ExcelParseDto,
   IntakeQuestionDto,
@@ -229,6 +230,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
     editingChanged(id !== null);
   };
   const questions = excel.envelope.questions;
+  const questionPage = useAdminPagination(questions);
   const imageCount = questions.reduce((total, q) => total + q.metadata.assetManifest.length, 0);
   const imageIssues = excel.issues.filter((i) => i.code.startsWith('IMAGE_'));
   const toggle = (id: string) => {
@@ -322,7 +324,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
               </tr>
             </thead>
             <tbody>
-              {questions.map((q, number) => {
+              {questionPage.items.map((q) => {
                 const media = q.metadata.assetManifest.flatMap((a) => {
                   const source = excel.media.find(
                     (m) => m.externalId === q.externalId && m.assetId === a.assetId,
@@ -357,7 +359,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
                             onChange={() => toggle(q.externalId)}
                           />
                         </label>
-                        <span>{number + 1}</span>
+                        <span>{questions.indexOf(q) + 1}</span>
                       </td>
                       <th scope="row">
                         <div className="excel-preview-stem">{rich(q.stem.text)}</div>
@@ -527,6 +529,11 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
           </table>
         </div>
       )}
+      <AdminPagination
+        {...questionPage.pagination}
+        disabled={disabled || editing !== null}
+        label="Halaman preview soal Excel"
+      />
     </Card>
   );
 }

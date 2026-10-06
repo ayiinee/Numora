@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -50,6 +50,7 @@ function currentMondayWib() {
 }
 
 integration('Tryout lifecycle against PostgreSQL', () => {
+  afterEach(() => vi.unstubAllEnvs());
   let app: INestApplication | undefined;
   afterAll(async () => {
     await app?.close();
@@ -65,7 +66,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       throw new Error(
         'Tryout integration requires isolated localhost PostgreSQL and NODE_ENV=test.',
       );
-    process.env.DATABASE_URL = testUrl;
+    vi.stubEnv('DATABASE_URL', testUrl);
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
     const [student, independent, teacher, admin] = await db
