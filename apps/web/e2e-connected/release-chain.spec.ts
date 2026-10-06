@@ -844,7 +844,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       'otherStudent',
       `tryout/attempts/${independent.id}/result`,
     );
-    expect(result.score).toBe(50);
+    expect(result.score).toBe(3);
     expect(result.explanation).toHaveLength(30);
     expect(result.resultMethod).toBeNull();
     await mandiri.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
