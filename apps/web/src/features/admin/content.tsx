@@ -94,6 +94,7 @@ function AdminContentScreenContent() {
   const [revision, setRevision] = useState(0);
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState<View>('questions');
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
@@ -103,7 +104,7 @@ function AdminContentScreenContent() {
       return;
     }
     let active = true;
-    loadAdminWorkbench(token, offset, view).then(
+    loadAdminWorkbench(token, offset, view, filters).then(
       (result) => {
         if (active) {
           setData(result);
@@ -122,7 +123,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, view]);
+  }, [token, offset, revision, view, filters]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -150,6 +151,7 @@ function AdminContentScreenContent() {
     setData(null);
     setLoading(true);
     setView(next);
+    setFilters({});
     setOffset(0);
     setError('');
   }
@@ -291,8 +293,13 @@ function AdminContentScreenContent() {
                             </small>
                           )}
                           <div className="admin-content-actions">
+                            <Link href={`/admin/content/versions/${v.id}`}>
+                              Detail, review & kesiapan
+                            </Link>
                             {v.imported && (
-                              <span>Konten impor hanya dibaca; revisi melalui JSON.</span>
+                              <span>
+                                Payload versi immutable; review dan revisi tersedia pada detail.
+                              </span>
                             )}
                             {!v.imported && v.questionType === 'SINGLE_CHOICE' && (
                               <Button
@@ -401,7 +408,19 @@ function AdminContentScreenContent() {
                 />
               )}
               {view === 'reports' && (
-                <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
+                <Reports
+                  data={current}
+                  token={token}
+                  busy={busy}
+                  run={run}
+                  navigate={navigate}
+                  filters={filters}
+                  onFilter={(next) => {
+                    setLoading(true);
+                    setOffset(0);
+                    setFilters(next);
+                  }}
+                />
               )}
               {view === 'irt' && (
                 <section>
@@ -464,6 +483,14 @@ function AdminContentScreenContent() {
               {view === 'audit' && (
                 <section>
                   <h2>Audit perubahan</h2>
+                  <ServerFilters
+                    audit
+                    onApply={(next) => {
+                      setLoading(true);
+                      setOffset(0);
+                      setFilters(next);
+                    }}
+                  />
                   {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
                   <ul className="monitoring-list">
                     {current.audit.items.map((r) => (
@@ -495,7 +522,7 @@ function AdminContentScreenContent() {
                 </Button>
                 <span>Halaman {offset / 20 + 1}</span>
                 <Button
-                  disabled={pageLength < 20 || busy}
+                  disabled={(view === 'reports' ? current.reports.nextOffset === null : pageLength < 20) || busy}
                   onClick={() => {
                     setLoading(true);
                     setOffset(offset + 20);
@@ -522,16 +549,78 @@ function Field({ label, name, children }: { label: string; name: string; childre
 }
 type EditorProps = { data: Workbench; token: string; busy: boolean; run: Run };
 
+function ServerFilters({
+  audit = false,
+  onApply,
+}: {
+  audit?: boolean;
+  onApply: (filters: Record<string, string>) => void;
+}) {
+  return (
+    <form
+      className="admin-content-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const f = new FormData(e.currentTarget);
+        const next: Record<string, string> = {};
+        for (const [key, value] of f)
+          if (String(value).trim())
+            next[key] = ['from', 'to'].includes(key)
+              ? new Date(String(value)).toISOString()
+              : String(value).trim();
+        onApply(next);
+      }}
+    >
+      {audit ? (
+        <>
+          <label>
+            Aktor (UUID)
+            <input name="actorId" />
+          </label>
+          <label>
+            Aksi
+            <input name="action" maxLength={120} />
+          </label>
+          <label>
+            Jenis entitas
+            <input name="entityType" maxLength={120} />
+          </label>
+        </>
+      ) : (
+        <label>
+          Kategori laporan
+          <input name="category" maxLength={100} />
+        </label>
+      )}
+      <label>
+        Dari waktu
+        <input type="datetime-local" name="from" />
+      </label>
+      <label>
+        Sampai waktu
+        <input type="datetime-local" name="to" />
+      </label>
+      <Button>Terapkan filter server</Button>
+    </form>
+  );
+}
+
 function Reports({
   data,
   token,
   busy,
   run,
   navigate,
-}: EditorProps & { navigate: (view: View) => void }) {
+  onFilter,
+  filters,
+}: EditorProps & {
+  filters: Record<string, string>;
+  navigate: (view: View) => void;
+  onFilter: (filters: Record<string, string>) => void;
+}) {
   type Report = Workbench['reports']['items'][number];
-  const [kind, setKind] = useState<Report['kind'] | 'ALL'>('ALL');
-  const [status, setStatus] = useState<Report['status'] | 'ALL'>('ALL');
+  const kind = (filters.kind ?? 'ALL') as Report['kind'] | 'ALL';
+  const status = (filters.status ?? 'ALL') as Report['status'] | 'ALL';
   const visible = data.reports.items.filter(
     (report) =>
       (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
@@ -540,7 +629,8 @@ function Reports({
     <section>
       <h2>Laporan soal dan video</h2>
       <p>
-        Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.
+        Filter diterapkan server ke seluruh antrean. Detail target tidak bergantung pada halaman
+        metadata.
       </p>
       <div className="admin-content-actions">
         <label>
@@ -548,7 +638,16 @@ function Reports({
           <select
             aria-label="Jenis laporan"
             value={kind}
-            onChange={(event) => setKind(event.target.value as typeof kind)}
+            onChange={(event) => {
+              const next = event.target.value as typeof kind;
+              const rest = { ...filters };
+              delete rest.kind;
+              onFilter({
+                ...rest,
+                ...(next !== 'ALL' ? { kind: next } : {}),
+                ...(status !== 'ALL' ? { status } : {}),
+              });
+            }}
           >
             <option value="ALL">Semua jenis</option>
             <option value="QUESTION">Soal</option>
@@ -560,7 +659,16 @@ function Reports({
           <select
             aria-label="Filter status laporan"
             value={status}
-            onChange={(event) => setStatus(event.target.value as typeof status)}
+            onChange={(event) => {
+              const next = event.target.value as typeof status;
+              const rest = { ...filters };
+              delete rest.status;
+              onFilter({
+                ...rest,
+                ...(kind !== 'ALL' ? { kind } : {}),
+                ...(next !== 'ALL' ? { status: next } : {}),
+              });
+            }}
           >
             <option value="ALL">Semua status</option>
             {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
@@ -572,6 +680,15 @@ function Reports({
         </label>
         <span role="status">{visible.length} laporan ditampilkan</span>
       </div>
+      <ServerFilters
+        onApply={(next) =>
+          onFilter({
+            ...next,
+            ...(kind !== 'ALL' ? { kind } : {}),
+            ...(status !== 'ALL' ? { status } : {}),
+          })
+        }
+      />
       {!data.reports.items.length ? (
         <p>Belum ada laporan pada halaman ini.</p>
       ) : !visible.length ? (
@@ -579,13 +696,6 @@ function Reports({
       ) : (
         <ul className="monitoring-list">
           {visible.map((report) => {
-            const video =
-              report.kind === 'VIDEO'
-                ? data.videos.items.find((item) => item.mappingId === report.referenceId)
-                : undefined;
-            const subchapter = video
-              ? data.curriculum.items.find((item) => item.id === video.subchapterId)
-              : undefined;
             return (
               <li
                 key={`${report.kind}-${report.id}`}
@@ -612,36 +722,16 @@ function Reports({
                 <p>Kategori: {report.category}</p>
                 <p>{report.details || 'Pelapor tidak menambahkan rincian.'}</p>
                 <small>Diterima {new Date(report.reportedAt).toLocaleString('id-ID')}</small>
-                {report.kind === 'VIDEO' ? (
-                  video ? (
-                    <div>
-                      <p>
-                        Mapping: {video.title} · {video.source} · subbab{' '}
-                        {subchapter?.name ?? video.subchapterId} · urutan{' '}
-                        {video.recommendationOrder}
-                      </p>
-                      {video.url.startsWith('https://') ? (
-                        <a href={video.url} target="_blank" rel="noreferrer">
-                          Buka video terkait
-                        </a>
-                      ) : (
-                        <p>URL mapping video belum menggunakan HTTPS.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p>Mapping video tidak ada pada halaman metadata yang sedang dimuat.</p>
-                  )
-                ) : (
-                  <p>
-                    Referensi jawaban/attempt: <code>{report.referenceId}</code>
-                  </p>
-                )}
+                <p>Buka detail untuk melihat target historis dan bukti snapshot.</p>
                 {report.followUp && (
                   <p>
                     <strong>Tindak lanjut tersimpan:</strong> {report.followUp}
                   </p>
                 )}
                 <div className="admin-content-actions">
+                  <Link href={`/admin/reports/${report.kind}/${report.id}`}>
+                    Detail target & resolution
+                  </Link>
                   <Button
                     type="button"
                     className="secondary-button"

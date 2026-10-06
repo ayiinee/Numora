@@ -1643,6 +1643,86 @@
         ]
       }
     },
+    "/api/v1/admin/content/versions/{id}": {
+      "get": {
+        "operationId": "ContentLifecycleController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentVersionDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/versions/{id}/review": {
+      "post": {
+        "operationId": "ContentLifecycleController_review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewContentDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content"
+        ]
+      }
+    },
     "/api/v1/admin/content/curriculum": {
       "get": {
         "operationId": "ContentController_curriculum",
@@ -4393,6 +4473,58 @@
                 }
               ]
             }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "QUESTION",
+                "VIDEO"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "IN_REVIEW",
+                "RESOLVED",
+                "REJECTED"
+              ]
+            }
+          },
+          {
+            "name": "category",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "from",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
+          },
+          {
+            "name": "to",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "date-time",
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -4418,6 +4550,47 @@
       }
     },
     "/api/v1/admin/reports/{kind}/{id}": {
+      "get": {
+        "operationId": "ReportsController_detail",
+        "parameters": [
+          {
+            "name": "kind",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminReportDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-reports"
+        ]
+      },
       "patch": {
         "operationId": "ReportsController_update",
         "parameters": [
@@ -7333,6 +7506,165 @@
           "revoked"
         ]
       },
+      "ContentReviewEventDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "actorId": {
+            "type": "string",
+            "nullable": true
+          },
+          "at": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "actorId",
+          "at",
+          "status",
+          "reason"
+        ]
+      },
+      "ContentReadinessDto": {
+        "type": "object",
+        "properties": {
+          "canReviewReady": {
+            "type": "boolean"
+          },
+          "contentBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publicationBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "canReviewReady",
+          "contentBlockers",
+          "publicationBlockers"
+        ]
+      },
+      "ContentVersionDetailDto": {
+        "type": "object",
+        "properties": {
+          "reviews": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentReviewEventDto"
+            }
+          },
+          "id": {
+            "type": "string"
+          },
+          "questionId": {
+            "type": "string"
+          },
+          "versionNumber": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED",
+              "REVISION"
+            ]
+          },
+          "revisedFromId": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceNamespace": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "payload": {
+            "type": "object",
+            "description": "Question import v2 payload, including key and durable asset references. Admin only."
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/ContentReadinessDto"
+          }
+        },
+        "required": [
+          "reviews",
+          "id",
+          "questionId",
+          "versionNumber",
+          "status",
+          "revisedFromId",
+          "sourceNamespace",
+          "reviewedByUserId",
+          "reviewedAt",
+          "payload",
+          "readiness"
+        ]
+      },
+      "ReviewContentDto": {
+        "type": "object",
+        "properties": {
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "REVISION",
+              "ARCHIVED"
+            ]
+          },
+          "expectedStatus": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "READY",
+              "ARCHIVED",
+              "REVISION"
+            ]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "status",
+          "expectedStatus",
+          "reason"
+        ]
+      },
+      "ContentMutationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
       "AdminTaxonDto": {
         "type": "object",
         "properties": {
@@ -7453,17 +7785,6 @@
           "code",
           "name",
           "displayOrder"
-        ]
-      },
-      "ContentMutationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
         ]
       },
       "UpdateChapterDto": {
@@ -8326,7 +8647,7 @@
             "example": "bahas-1"
           },
           "contentVersion": {
-            "type": "object",
+            "type": "number",
             "default": 1,
             "minimum": 1
           },
@@ -8411,6 +8732,9 @@
           },
           "headers": {
             "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            },
             "nullable": true
           },
           "expiresAt": {
@@ -8493,6 +8817,14 @@
       "ImportBodyDto": {
         "type": "object",
         "properties": {
+          "expectedSourceVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "description": "For one-item editorial revision, reject a stale source version."
+          },
+          "revisionReason": {
+            "type": "string"
+          },
           "sourceNamespace": {
             "type": "string",
             "pattern": "^[A-Za-z0-9_-]{1,128}$"
@@ -9834,15 +10166,139 @@
             "items": {
               "$ref": "#/components/schemas/AdminReportDto"
             }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextOffset"
+        ]
+      },
+      "AdminVideoReportTargetDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "source": {
+            "type": "string"
+          },
+          "videoId": {
+            "type": "string"
+          },
+          "subchapterId": {
+            "type": "string"
+          },
+          "recommendationOrder": {
+            "type": "number"
+          },
+          "evidence": {
+            "type": "string",
+            "enum": [
+              "REPORT_SNAPSHOT",
+              "CURRENT_METADATA"
+            ]
+          }
+        },
+        "required": [
+          "title",
+          "url",
+          "source",
+          "videoId",
+          "subchapterId",
+          "recommendationOrder",
+          "evidence"
+        ]
+      },
+      "AdminReportDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "kind": {
+            "type": "string",
+            "enum": [
+              "QUESTION",
+              "VIDEO"
+            ]
+          },
+          "referenceId": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "RESOLVED",
+              "REJECTED"
+            ]
+          },
+          "followUp": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportedAt": {
+            "type": "string"
+          },
+          "question": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentVersionDetailDto"
+              }
+            ]
+          },
+          "video": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/AdminVideoReportTargetDto"
+              }
+            ]
+          },
+          "revisionQuestionVersionId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "kind",
+          "referenceId",
+          "category",
+          "details",
+          "status",
+          "followUp",
+          "reportedAt",
+          "question",
+          "video",
+          "revisionQuestionVersionId"
         ]
       },
       "ResolveReportDto": {
         "type": "object",
         "properties": {
+          "revisionQuestionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "status": {
             "type": "string",
             "enum": [

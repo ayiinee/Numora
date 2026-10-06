@@ -956,7 +956,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
     await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
     await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
-    await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
+    await expect(admin.getByText(/Preview internal.*tanpa scoring/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
     for (let i = 0; i < 10; i++) {
       await expect(admin.getByText(new RegExp(`Soal ${i + 1}/10`))).toBeVisible();

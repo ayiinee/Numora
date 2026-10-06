@@ -8,7 +8,7 @@ export class CreateMediaUploadDto {
   @ApiProperty({ example: 'bahas-1' })
   @Matches(/^[a-z0-9][a-z0-9-]{0,63}$/)
   assetId!: string;
-  @ApiPropertyOptional({ default: 1, minimum: 1 })
+  @ApiPropertyOptional({ type: Number, default: 1, minimum: 1 })
   @IsInt()
   @Min(1)
   @Max(100_000)
@@ -48,6 +48,7 @@ export class MediaUploadReservationDto extends MediaUploadReceiptDto {
   })
   uploadUrl!: string | null;
   @ApiProperty({ type: String, nullable: true, enum: ['PUT'] }) method!: 'PUT' | null;
-  @ApiProperty({ type: Object, nullable: true }) headers!: Record<string, string> | null;
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'string' }, nullable: true })
+  headers!: Record<string, string> | null;
   @ApiProperty({ format: 'date-time' }) expiresAt!: string;
 }

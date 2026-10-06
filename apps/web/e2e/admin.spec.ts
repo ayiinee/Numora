@@ -92,6 +92,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     reports: {
+      nextOffset: null,
       items: [
         {
           id: id(15),

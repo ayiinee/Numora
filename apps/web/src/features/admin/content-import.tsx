@@ -6,10 +6,17 @@ import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { validateImport, importContent, createPreview } from './content-preview-api';
 import type { ImportReportDto, ImportBodyDto } from './generated-types';
+import { MediaUpload } from './media-upload';
 
 export function ContentImportScreen() {
   const { state } = useAuth();
-  return <ContentImportContent key={state.status === 'ready' ? state.profile.id : state.status} />;
+  return (
+    <ContentImportContent
+      key={
+        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+      }
+    />
+  );
 }
 function ContentImportContent() {
   const { state, refresh } = useAuth();
@@ -90,6 +97,7 @@ function ContentImportContent() {
         />
       ) : (
         <>
+          <MediaUpload token={token} />
           <Card className="content-import-card">
             <label>
               Namespace sumber

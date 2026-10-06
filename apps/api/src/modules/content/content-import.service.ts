@@ -233,6 +233,14 @@ export class ContentImportService {
       ].sort())
         await operationLock(tx, `content-identity:${body.sourceNamespace}:${id}`);
       const records = await this.inspect(tx, body);
+      if (
+        body.expectedSourceVersionId &&
+        (records.length !== 1 || records[0]?.latest?.version.id !== body.expectedSourceVersionId)
+      )
+        throw new ConflictException({
+          code: 'CONTENT_REVISION_CONFLICT',
+          detail: 'Reload the latest imported version before revising.',
+        });
       const report = this.report(body, records);
       if (!report.canImportDraft)
         throw new HttpException(
@@ -331,7 +339,12 @@ export class ContentImportService {
         action: 'CONTENT_IMPORTED',
         entityType: 'content_import',
         entityId: id,
-        metadata: { count: items.length },
+        metadata: {
+          count: items.length,
+          ...(body.expectedSourceVersionId
+            ? { revisedFromId: body.expectedSourceVersionId, reason: body.revisionReason }
+            : {}),
+        },
       });
       return report;
     });

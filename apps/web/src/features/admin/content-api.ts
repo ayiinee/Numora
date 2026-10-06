@@ -41,8 +41,10 @@ export async function loadAdminWorkbench(
   token: string,
   offset: number,
   view: AdminWorkbenchView = 'questions',
+  filters: Record<string, string> = {},
 ) {
-  const page = `?limit=20&offset=${offset}`;
+  const parameters = new URLSearchParams({ limit: '20', offset: String(offset), ...filters });
+  const page = `?${parameters}`;
   const empty = { items: [] };
   const [
     curriculum,
@@ -65,7 +67,9 @@ export async function loadAdminWorkbench(
       ? apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token)
       : empty,
     view === 'videos' ? apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token) : empty,
-    view === 'reports' ? apiRequest<AdminReportsDto>(`admin/reports${page}`, token) : empty,
+    view === 'reports'
+      ? apiRequest<AdminReportsDto>(`admin/reports${page}`, token)
+      : { ...empty, nextOffset: null },
     view === 'irt' ? apiRequest<AdminIrtDto>(`admin/irt${page}`, token) : empty,
     view === 'irt' ? apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token) : empty,
     ['audit', 'verification'].includes(view)

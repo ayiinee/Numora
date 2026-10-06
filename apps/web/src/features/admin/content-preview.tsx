@@ -150,7 +150,7 @@ function PreviewContent({ id }: { id: string }) {
       description="Sesi internal tersimpan; tidak menghasilkan nilai, XP, progres, atau evidence IRT."
       icon="book"
     >
-      <Badge>DRAFT — preview internal</Badge>
+      <Badge>Preview internal — tanpa scoring</Badge>
       {!token ? (
         <AdminMessage
           message="Akses memerlukan Admin konten yang berwenang."
