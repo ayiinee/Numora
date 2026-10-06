@@ -127,26 +127,46 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     await fixture(26, async (client, folder) => {
       const [student] = await client`INSERT INTO users(auth_user_id,role,display_name,email)
         VALUES(gen_random_uuid(),'STUDENT','TEST upgrade','upgrade@test.invalid') RETURNING id`;
-      const [chapter] = await client`INSERT INTO chapters(code,name,slug,display_order) VALUES('TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
-      const [sub] = await client`INSERT INTO subchapters(chapter_id,code,name,slug,display_order) VALUES(${chapter!.id},'TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
-      const [level] = await client`INSERT INTO levels(subchapter_id,level_number) VALUES(${sub!.id},1) RETURNING id`;
-      const [pack] = await client`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,is_demo,chapter_id,level_id)
+      const [chapter] =
+        await client`INSERT INTO chapters(code,name,slug,display_order) VALUES('TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
+      const [sub] =
+        await client`INSERT INTO subchapters(chapter_id,code,name,slug,display_order) VALUES(${chapter!.id},'TEST-UPGRADE','TEST','test-upgrade',1) RETURNING id`;
+      const [level] =
+        await client`INSERT INTO levels(subchapter_id,level_number) VALUES(${sub!.id},1) RETURNING id`;
+      const [pack] =
+        await client`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,is_demo,chapter_id,level_id)
         VALUES('TEST-UPGRADE',1,'TEST upgrade','DRILL',true,${chapter!.id},${level!.id}) RETURNING id`;
-      const [attempt] = await client`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,chapter_id_at_start,level_id_at_start,status,finished_at,score_0_100,raw_points,stars)
+      const [attempt] =
+        await client`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,chapter_id_at_start,level_id_at_start,status,finished_at,score_0_100,raw_points,stars)
         VALUES(${student!.id},${pack!.id},'DRILL',${chapter!.id},${level!.id},'GRADED',clock_timestamp(),80,8,2) RETURNING *`;
-      const [reward] = await client`INSERT INTO xp_ledger(student_id,attempt_id,source_type,xp_amount)
+      const [reward] =
+        await client`INSERT INTO xp_ledger(student_id,attempt_id,source_type,xp_amount)
         VALUES(${student!.id},${attempt!.id},'DRILL',80) RETURNING *`;
-      const oldHistory = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      const oldHistory =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       await migrateIntegratedDatabase(client, folder);
-      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toEqual(attempt);
+      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toEqual(
+        attempt,
+      );
       const [preserved] = await client`SELECT * FROM xp_ledger WHERE id=${reward!.id}`;
-      expect({ ...preserved, xp_amount: Number(preserved!.xp_amount) }).toEqual({ ...reward, xp_amount: 80 });
-      const history = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      expect({ ...preserved, xp_amount: Number(preserved!.xp_amount) }).toEqual({
+        ...reward,
+        xp_amount: 80,
+      });
+      const history =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
-      expect(history).toHaveLength(oldHistory.length + 2);
-      await expect(client`UPDATE xp_ledger SET xp_amount=81 WHERE id=${reward!.id}`).rejects.toThrow();
+      const canonicalJournal = JSON.parse(
+        await readFile(join(folder, 'meta/_journal.json'), 'utf8'),
+      ) as { entries: unknown[] };
+      expect(history).toHaveLength(canonicalJournal.entries.length);
+      await expect(
+        client`UPDATE xp_ledger SET xp_amount=81 WHERE id=${reward!.id}`,
+      ).rejects.toThrow();
       await migrateIntegratedDatabase(client, folder);
-      expect(await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`).toEqual(history);
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(history);
     });
   });
 
