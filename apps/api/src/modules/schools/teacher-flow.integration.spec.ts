@@ -56,7 +56,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     const identity = {
       me: async (authorization?: string) => {
         const key = authorization as keyof typeof profiles;
-        return { id: identities[key], ...profiles[key] };
+        return { id: identities[key], ...profiles[key], status: 'ACTIVE' };
       },
     } as unknown as IdentityService;
     const schools = new SchoolsService(identity);

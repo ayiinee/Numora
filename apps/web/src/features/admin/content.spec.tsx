@@ -238,7 +238,9 @@ describe('Admin content UI', () => {
     });
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.change(screen.getByLabelText('Kode keluarga'), { target: { value: 'DEMO-L1' } });
+    fireEvent.change(await screen.findByLabelText('Kode keluarga'), {
+      target: { value: 'DEMO-L1' },
+    });
     fireEvent.change(screen.getByLabelText('Versi paket'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Level'), { target: { value: 'level-test' } });
     fireEvent.change(screen.getByLabelText('Indeks varian'), { target: { value: '2' } });
@@ -282,7 +284,7 @@ describe('Admin content UI', () => {
     );
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Revisi draf' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
     await screen.findByText('TEST package rejection');
@@ -304,9 +306,9 @@ describe('Admin content UI', () => {
       .mockReturnValueOnce(true);
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arsipkan paket' }));
     expect(archiveDrillPackage).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arsipkan paket' }));
     await waitFor(() =>
       expect(archiveDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
     );
@@ -365,7 +367,7 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     await screen.findByLabelText('Kompetensi');
     fireEvent.click(screen.getByRole('button', { name: 'Draf Tryout' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), {
       target: { value: 'TEST revised package' },
     });
