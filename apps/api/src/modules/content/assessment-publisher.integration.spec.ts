@@ -621,9 +621,14 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
         ).status,
       ).toBe(200);
     }
-    const result = await (
-      await fixture.request(`assessment-attempts/${a.id}/submit`, 'POST', undefined, 'student')
-    ).json();
+    const submitted = await fixture.request(
+      `assessment-attempts/${a.id}/submit`,
+      'POST',
+      undefined,
+      'student',
+    );
+    const result = await submitted.json();
+    expect(submitted.status, JSON.stringify(result)).toBe(201);
     expect(result).toMatchObject({
       rawPoints: 19,
       score: 86,

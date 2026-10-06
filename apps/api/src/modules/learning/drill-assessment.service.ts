@@ -650,6 +650,9 @@ export class DrillAssessmentService {
             target: attemptAnswers.attemptItemId,
             set: {
               awardedPoints: String(item.awardedPoints),
+              scoreCategory: item.scoreCategory,
+              fullyCorrect: item.fullyCorrect,
+              responseState: item.responseState,
               gradedAt: now,
             },
           });

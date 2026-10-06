@@ -795,7 +795,10 @@ for (const width of [390, 1280]) {
         await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
       } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
       if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
-        const link = main.getByRole('link', { name: 'Impor JSON', exact: true });
+        const link = main.getByRole('link', {
+          name: role === 'SUPER_ADMIN' ? 'Impor soal' : 'Impor JSON',
+          exact: true,
+        });
         await expect(link).toBeVisible();
         await capture(page, `portal-${role}`, width);
         await link.focus();
