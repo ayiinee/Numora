@@ -6950,6 +6950,12 @@ a.settings-row:hover {
   min-height: 100dvh;
   background: var(--color-bg);
 }
+.auth-home-link {
+  display: inline-flex;
+  align-items: center;
+  min-height: var(--touch-target-min);
+  border-radius: var(--radius-sm);
+}
 .auth-brand-header {
   display: flex;
   align-items: center;
@@ -7126,15 +7132,19 @@ a.settings-row:hover {
 }
 .auth-status-loading {
   position: relative;
+  background: transparent;
+}
+.auth-status-loading > svg {
+  visibility: hidden;
 }
 .auth-status-loading::after {
   content: '';
   position: absolute;
-  inset: -3px;
+  inset: 8px;
   border: 2px solid var(--color-primary-light);
   border-top-color: var(--color-primary);
-  border-radius: inherit;
-  animation: auth-loading 1.5s linear infinite;
+  border-radius: var(--radius-full);
+  animation: auth-loading 0.8s linear infinite;
 }
 @keyframes auth-loading {
   to {

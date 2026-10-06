@@ -1,6 +1,7 @@
 'use client';
 
 import type { ReactNode } from 'react';
+import Link from 'next/link';
 import { Brand, Button, Icon } from '@tka/ui';
 
 /** Presentation only: session, registration and redirects stay in screens/AuthProvider. */
@@ -14,7 +15,9 @@ export function AuthFrame({
   return (
     <main className="auth-redesign-shell">
       <header className="auth-brand-header">
-        <Brand />
+        <Link href="/" className="auth-home-link" aria-label="Kembali ke halaman utama NUMORA">
+          <Brand />
+        </Link>
         <span>TKA Matematika SMP</span>
       </header>
       <div className="auth-redesign-layout">
@@ -26,19 +29,12 @@ export function AuthFrame({
             Matematika jadi lebih <em>terarah.</em>
           </h1>
           <p>Latihan bertahap, kenali progresmu, dan siapkan diri untuk TKA Matematika.</p>
-          <div className="auth-welcome-art" aria-hidden="true">
-            <span>x² + y²</span>
-            <img src="/figma/numora-owl-source.png" alt="" width="96" height="134" />
-            <Icon name="spark" width="32" height="32" />
-          </div>
-          <div className="auth-welcome-note">
-            <Icon name={onboarding ? 'user' : 'book'} />
-            <p>
-              {onboarding
-                ? 'Satu akun Google untuk perjalananmu di NUMORA.'
-                : 'Untuk siswa mandiri, siswa sekolah, dan guru pendamping.'}
-            </p>
-          </div>
+          {onboarding && (
+            <div className="auth-welcome-note">
+              <Icon name="user" />
+              <p>Satu akun Google untuk perjalananmu di NUMORA.</p>
+            </div>
+          )}
         </section>
         <div className="auth-content">{children}</div>
       </div>

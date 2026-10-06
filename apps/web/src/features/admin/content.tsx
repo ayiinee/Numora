@@ -75,12 +75,16 @@ type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
 export function AdminContentScreen() {
   const { state } = useAuth();
-  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  const accountKey =
+    state.status === 'ready'
+      ? `${state.profile.id}:${state.profile.adminRole ?? 'unassigned'}`
+      : state.status;
   return <AdminContentScreenContent key={accountKey} />;
 }
 
 function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
+  const canReadAudit = state.status === 'ready' && state.profile.adminRole === 'SUPER_ADMIN';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -113,7 +117,7 @@ function AdminContentScreenContent() {
   useEffect(() => {
     if (!token) return;
     let active = true;
-    loadAdminWorkbench(token, offset, versionQuery).then(
+    loadAdminWorkbench(token, offset, versionQuery, canReadAudit).then(
       (result) => {
         if (active) {
           setData(result);
@@ -132,7 +136,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, versionQuery]);
+  }, [token, offset, revision, versionQuery, canReadAudit]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -197,14 +201,14 @@ function AdminContentScreenContent() {
     ? {
         curriculum: 0,
         questions: current.versions.items.length,
-        verification: Math.max(current.versions.items.length, current.audit.items.length),
+        verification: Math.max(current.versions.items.length, current.audit?.items.length ?? 0),
         videos: current.videos.items.length,
         packages: current.packages.items.length,
         drillPackages: current.drillPackages.items.length,
         directedPackages: 0,
         reports: current.reports.items.length,
         irt: Math.max(current.irt.items.length, current.irtBatches.items.length),
-        audit: current.audit.items.length,
+        audit: current.audit?.items.length ?? 0,
       }[view]
     : 0;
   return (
@@ -214,23 +218,21 @@ function AdminContentScreenContent() {
       icon="book"
     >
       <div className="monitoring-frame admin-content">
-        <p className="admin-context-note">
-          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
-          tetap dipertahankan.
-        </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
-          {views.map((item) => (
-            <Button
-              key={item.id}
-              disabled={busy}
-              variant={view === item.id ? 'primary' : 'secondary'}
-              className="admin-view-button"
-              aria-current={view === item.id ? 'page' : undefined}
-              onClick={() => navigate(item.id)}
-            >
-              {item.label}
-            </Button>
-          ))}
+          {views
+            .filter((item) => item.id !== 'audit' || canReadAudit)
+            .map((item) => (
+              <Button
+                key={item.id}
+                disabled={busy}
+                variant={view === item.id ? 'primary' : 'secondary'}
+                className="admin-view-button"
+                aria-current={view === item.id ? 'page' : undefined}
+                onClick={() => navigate(item.id)}
+              >
+                {item.label}
+              </Button>
+            ))}
         </nav>
         {notice && <AdminMessage message={notice} />}
         {error && (
@@ -582,7 +584,7 @@ function AdminContentScreenContent() {
                   </ul>
                 </section>
               )}
-              {view === 'audit' && (
+              {view === 'audit' && canReadAudit && current.audit && (
                 <section>
                   <h2>Audit perubahan</h2>
                   {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
@@ -858,24 +860,26 @@ function VerificationHistory({ data }: { data: Workbench }) {
           ))}
         </ul>
       </section>
-      <section>
-        <h2>Riwayat perubahan Admin</h2>
-        {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
-        <ul className="monitoring-list">
-          {data.audit.items.map((entry) => (
-            <li className="monitoring-notice admin-content-row" key={entry.id}>
-              <strong>{entry.action}</strong>
-              <p>
-                {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
-              </p>
-              <small>
-                Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
-                {entry.actorUserId ?? 'Tidak tersedia'}
-              </small>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {data.audit && (
+        <section>
+          <h2>Riwayat perubahan Admin</h2>
+          {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
+          <ul className="monitoring-list">
+            {data.audit.items.map((entry) => (
+              <li className="monitoring-notice admin-content-row" key={entry.id}>
+                <strong>{entry.action}</strong>
+                <p>
+                  {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
+                </p>
+                <small>
+                  Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
+                  {entry.actorUserId ?? 'Tidak tersedia'}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }

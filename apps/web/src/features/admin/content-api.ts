@@ -27,7 +27,12 @@ import type {
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
-export async function loadAdminWorkbench(token: string, offset: number, versionQuery = '') {
+export async function loadAdminWorkbench(
+  token: string,
+  offset: number,
+  versionQuery = '',
+  includeAudit = false,
+) {
   const page = `?limit=20&offset=${offset}`;
   const [
     curriculum,
@@ -50,7 +55,9 @@ export async function loadAdminWorkbench(token: string, offset: number, versionQ
     apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
     apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
     apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
-    apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
+    includeAudit
+      ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
+      : Promise.resolve(null),
     apiRequest<AdminDashboardDto>('admin/dashboard', token),
     apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
     apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),

@@ -688,7 +688,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
     state.data.irtBatches,
     state.data.audit,
   ])
-    list.items = [];
+    if (list) list.items = [];
   await page.goto('/admin/content');
   await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toBeDisabled();
   for (const [label, name] of panels) {
