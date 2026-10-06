@@ -1,5 +1,13 @@
 # UI redesign — Phase 8: Auth, callback and onboarding
 
+**ENGINEERING DECISION — final owner instruction, 7 October 2026:** remove the entire `auth-welcome-art` block (formula, owl and spark) from the shared AuthFrame at all widths, including login, callback and onboarding. Keep the owl in the header. This supersedes the initial mobile-only hiding request.
+
+**ENGINEERING DECISION — owner follow-up, 7 October 2026:** the login card starts with “Mulai bersama NUMORA”; remove its graduation icon, “Selamat datang” eyebrow, audience note and one-time-role note. Keep the onboarding account note. These are presentation changes only.
+
+**ENGINEERING DECISION — owner follow-up, 7 October 2026:** Google authentication loading uses a compact circular spinner instead of the rotating rounded-square outline. Hide the decorative lock while loading; retain status text and reduced-motion support.
+
+**ENGINEERING DECISION — owner follow-up, 7 October 2026:** NUMORA header branding on authentication screens, including Admin/QA login, links to `/` as the public home/login entry. Use Next.js Link with an accessible label, existing focus styles and the shared minimum touch target. Navigation retains the existing session-based destination resolver.
+
 **ENGINEERING DECISION — 4 October 2026:** the owner approved continuing from Phase 7 to Phase 8. Login, callback and first-time role selection now use the approved Student visual language. None of the 21 supplied screenshots covers Auth; this is a derived design, not a verified match to an unavailable Auth Figma frame. Phase 9 Admin remains a separate review gate.
 
 ## 1. Files changed

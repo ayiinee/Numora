@@ -15,7 +15,9 @@ function Shell({ children }: { children: React.ReactNode }) {
     <main className="onboarding-shell">
       <div className="onboarding-frame">
         <header className="brand">
-          <Brand />
+          <Link href="/" className="auth-home-link" aria-label="Kembali ke halaman utama NUMORA">
+            <Brand />
+          </Link>
         </header>
         {children}
         <p className="page-footer">Belajar matematika, satu langkah setiap hari.</p>
@@ -126,10 +128,6 @@ export function LoginScreen() {
   return (
     <AuthFrame>
       <section className="auth-card" aria-labelledby="login-title">
-        <span className="auth-card-icon">
-          <Icon name="graduation" />
-        </span>
-        <span className="auth-eyebrow">Selamat datang</span>
         <h2 id="login-title">Mulai bersama NUMORA</h2>
         <p className="auth-card-description">
           Gunakan akun Google untuk melanjutkan belajar atau mendampingi siswa.
@@ -191,9 +189,6 @@ export function LoginScreen() {
             )}
           </div>
         )}
-        <p className="auth-account-note">
-          <Icon name="lock" width="16" height="16" /> Role dipilih sekali setelah login pertama.
-        </p>
       </section>
     </AuthFrame>
   );
