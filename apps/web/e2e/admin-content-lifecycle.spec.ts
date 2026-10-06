@@ -115,6 +115,7 @@ test('Content reviews rich versions and sees academic publication blocker at nar
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/admin/content/versions/${versionId}`);
     await expect(page.getByText('APPROVED_PGK_RUBRIC_REQUIRED')).toBeVisible();
+    await page.getByText('Identitas versi & riwayat review', { exact: true }).click();
     await expect(page.getByRole('link', { name: userId })).toHaveAttribute(
       'href',
       `/admin/content/versions/${userId}`,
@@ -127,6 +128,13 @@ test('Content reviews rich versions and sees academic publication blocker at nar
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     ).toBe(true);
+    if (width === 1440)
+      await page.screenshot({
+        path: '../../.tmp/admin-content-ux-review.png',
+        fullPage: true,
+        animations: 'disabled',
+        style: 'nextjs-portal {visibility:hidden !important;}',
+      });
   }
   expect(decisions[0]).toMatchObject({ status: 'READY', expectedStatus: 'DRAFT' });
   expect(decisions[1]).toMatchObject({ status: 'READY', expectedStatus: 'READY' });

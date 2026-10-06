@@ -1,4 +1,5 @@
 import { editorialPackageDigest } from './editorial-package-digest';
+import { compactDemoVersionIds, demoCatalogVersion } from './content-demo-catalog';
 import {
   BadRequestException,
   ConflictException,
@@ -37,6 +38,7 @@ import type {
   AdminVersionsDto,
   AdminVideosDto,
   ContentPageDto,
+  ContentVersionsPageDto,
   ContentState,
   CreateChapterDto,
   CreateCompetencyDto,
@@ -260,7 +262,9 @@ export class ContentService {
     );
   }
 
-  async versions(page: ContentPageDto): Promise<AdminVersionsDto> {
+  async versions(
+    page: ContentPageDto & Partial<ContentVersionsPageDto>,
+  ): Promise<AdminVersionsDto> {
     const rows = await getDatabase()
       .db.select({
         version: questionVersions,
@@ -275,38 +279,46 @@ export class ContentService {
         contentImportVersions,
         eq(contentImportVersions.questionVersionId, questionVersions.id),
       )
+      .where(
+        page.catalog === 'COMPACT_DEMO'
+          ? sql`not ${demoCatalogVersion} or ${questionVersions.id} in (${compactDemoVersionIds})`
+          : undefined,
+      )
       .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
-      .limit(page.limit)
+      .limit(page.limit + 1)
       .offset(page.offset);
     return {
-      items: rows.map(({ version: v, variant, question: q, imported }): AdminVersionDto => ({
-        id: v.id,
-        questionId: q.id,
-        primaryCompetencyId: q.primaryCompetencyId,
-        curriculumLevelNumber: q.curriculumLevelNumber,
-        variantId: variant.id,
-        variantCode: variant.variantCode,
-        versionNumber: v.versionNumber,
-        questionType: v.questionType,
-        stem: text(v.stem),
-        imported: imported !== null,
-        variantKind: variant.kind,
-        originalVariantId: variant.originalVariantId,
-        options: optionsFrom(v.optionsOrStatements),
-        answerOptionId:
-          v.answerKey !== null &&
-          typeof v.answerKey === 'object' &&
-          'optionId' in v.answerKey &&
-          typeof v.answerKey.optionId === 'string'
-            ? v.answerKey.optionId
-            : null,
-        explanation: text(v.explanation),
-        difficulty: v.difficulty,
-        contentStatus: v.contentStatus,
-        questionStatus: q.status,
-        reviewedByUserId: v.reviewedByUserId,
-        reviewedAt: v.reviewedAt?.toISOString() ?? null,
-      })),
+      nextOffset: rows.length > page.limit ? page.offset + page.limit : null,
+      items: rows
+        .slice(0, page.limit)
+        .map(({ version: v, variant, question: q, imported }): AdminVersionDto => ({
+          id: v.id,
+          questionId: q.id,
+          primaryCompetencyId: q.primaryCompetencyId,
+          curriculumLevelNumber: q.curriculumLevelNumber,
+          variantId: variant.id,
+          variantCode: variant.variantCode,
+          versionNumber: v.versionNumber,
+          questionType: v.questionType,
+          stem: text(v.stem),
+          imported: imported !== null,
+          variantKind: variant.kind,
+          originalVariantId: variant.originalVariantId,
+          options: optionsFrom(v.optionsOrStatements),
+          answerOptionId:
+            v.answerKey !== null &&
+            typeof v.answerKey === 'object' &&
+            'optionId' in v.answerKey &&
+            typeof v.answerKey.optionId === 'string'
+              ? v.answerKey.optionId
+              : null,
+          explanation: text(v.explanation),
+          difficulty: v.difficulty,
+          contentStatus: v.contentStatus,
+          questionStatus: q.status,
+          reviewedByUserId: v.reviewedByUserId,
+          reviewedAt: v.reviewedAt?.toISOString() ?? null,
+        })),
     };
   }
   createQuestion(actor: string, body: CreateQuestionDto) {

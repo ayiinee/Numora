@@ -1,4 +1,6 @@
 'use client';
+import { useEffect } from 'react';
+import { useRouter } from 'next/navigation';
 import { Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
@@ -6,12 +8,22 @@ import { useOperationalQuery } from './operational-query';
 import type { AdminAnalyticsDto } from './generated-types';
 export function AdminAnalyticsScreen() {
   const { state } = useAuth();
+  const router = useRouter();
+  const contentRole =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  useEffect(() => {
+    if (contentRole) router.replace('/admin/content');
+  }, [contentRole, router]);
   const allowed =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.capabilities?.some(
       (cap) => cap === 'ANALYTICS_CONTENT' || cap === 'ANALYTICS_OPERATIONS',
     );
+  if (contentRole) return null;
   return (
     <AdminFrame
       title="Analytics operasional"
@@ -26,13 +38,37 @@ export function AdminAnalyticsScreen() {
         <AnalyticsPanel
           key={state.profile.id + state.profile.adminRole}
           token={state.session.access_token}
+          contentRole={state.profile.adminRole === 'CONTENT_DATA_MODERATION'}
         />
       )}
     </AdminFrame>
   );
 }
-function AnalyticsPanel({ token }: { token: string }) {
+const domains: Record<string, { title: string; description: string }> = {
+  STRUCTURE: {
+    title: 'Sekolah & kelas',
+    description: 'Struktur dan jumlah keanggotaan, tanpa identitas siswa individual.',
+  },
+  STUDENTS: {
+    title: 'Aktivitas belajar',
+    description: 'Jumlah akun dan pengerjaan tercatat. Start dan completion bersifat kumulatif.',
+  },
+  CONTENT: {
+    title: 'Cakupan konten & moderasi',
+    description: 'Kesiapan bank soal dan laporan yang perlu ditindaklanjuti.',
+  },
+  RELEASE: {
+    title: 'Kesehatan rilis Tryout',
+    description: 'Pantau batch belum dirilis, analisis yang gagal, dan keterlambatan.',
+  },
+};
+function AnalyticsPanel({ token, contentRole }: { token: string; contentRole: boolean }) {
   const query = useOperationalQuery<AdminAnalyticsDto>('admin/analytics', token);
+  const groups = query.data
+    ? contentRole
+      ? [...new Set(query.data.metrics.map((m) => m.domain))]
+      : ['ALL']
+    : [];
   return (
     <div className="page-stack">
       <Button onClick={query.retry}>Perbarui analytics</Button>
@@ -43,23 +79,37 @@ function AnalyticsPanel({ token }: { token: string }) {
       ) : (
         <>
           <p>
-            Sumber PostgreSQL - diperbarui{' '}
-            {new Date(query.data.generatedAt).toLocaleString('id-ID')}. Angka kumulatif mengikuti
-            catatan durable.
+            Data tersimpan · diperbarui {new Date(query.data.generatedAt).toLocaleString('id-ID')}.
+            Angka kumulatif mengikuti catatan aktivitas. Data yang tidak tersedia tidak ditampilkan
+            sebagai nol.
           </p>
-          <div className="admin-home-grid">
-            {query.data.metrics.map((metric) => (
-              <Card key={metric.key}>
-                <p>{metric.label}</p>
-                <strong>
-                  {metric.value == null ? 'Tidak tersedia' : metric.value.toLocaleString('id-ID')}
-                </strong>
-                {metric.unavailableReason && (
-                  <p role="status">Sumber belum dapat dibaca. Perbarui untuk mencoba lagi.</p>
-                )}
-              </Card>
-            ))}
-          </div>
+          {groups.map((domain) => (
+            <section key={domain}>
+              {domain !== 'ALL' && (
+                <div className="content-section-title">
+                  <h2>{domains[domain]?.title ?? domain}</h2>
+                  <p>{domains[domain]?.description}</p>
+                </div>
+              )}
+              <div className="admin-home-grid">
+                {query
+                  .data!.metrics.filter((metric) => domain === 'ALL' || metric.domain === domain)
+                  .map((metric) => (
+                    <Card key={metric.key} className="content-metric">
+                      <p>{metric.label}</p>
+                      <strong>
+                        {metric.value == null
+                          ? 'Tidak tersedia'
+                          : metric.value.toLocaleString('id-ID')}
+                      </strong>
+                      {metric.unavailableReason && (
+                        <p role="status">Sumber belum dapat dibaca. Perbarui untuk mencoba lagi.</p>
+                      )}
+                    </Card>
+                  ))}
+              </div>
+            </section>
+          ))}
         </>
       )}
     </div>

@@ -7,6 +7,8 @@ import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { validateImport, importContent, createPreview } from './content-preview-api';
 import type { ImportReportDto, ImportBodyDto } from './generated-types';
 import { MediaUpload } from './media-upload';
+import { ContentBlockers } from './content-blockers';
+import { adminAccessDenied } from './operational-query';
 
 export function ContentImportScreen() {
   const { state } = useAuth();
@@ -23,6 +25,7 @@ function ContentImportContent() {
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
     state.profile.capabilities?.includes('CONTENT_MANAGE')
       ? state.session.access_token
       : null;
@@ -32,6 +35,8 @@ function ContentImportContent() {
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [busy, setBusy] = useState(false);
+  const [denied, setDenied] = useState(false);
+  const selection = useRef(0);
   const importKey = useRef<string | null>(null),
     previewKey = useRef<string | null>(null);
   const reset = () => {
@@ -41,13 +46,28 @@ function ContentImportContent() {
     previewKey.current = null;
   };
   async function choose(file?: File) {
+    const current = ++selection.current;
     reset();
     setQuestions([]);
     setError('');
-    if (!file) return;
+    if (!file) {
+      setBusy(false);
+      return;
+    }
+    setBusy(true);
     try {
       if (file.size > 2 * 1024 * 1024) throw Error('Batas file JSON adalah 2 MiB.');
       const parsed: unknown = JSON.parse(await file.text());
+      if (current !== selection.current) return;
+      if (parsed && typeof parsed === 'object' && 'sourceNamespace' in parsed) {
+        if (
+          typeof parsed.sourceNamespace !== 'string' ||
+          !parsed.sourceNamespace.trim() ||
+          parsed.sourceNamespace.trim().length > 128
+        )
+          throw Error('Namespace sumber pada envelope harus berisi 1–128 karakter.');
+        setNamespace(parsed.sourceNamespace.trim());
+      }
       const rows = Array.isArray(parsed)
         ? parsed
         : parsed && typeof parsed === 'object' && 'questions' in parsed
@@ -62,15 +82,24 @@ function ContentImportContent() {
         throw Error('Pilih JSON berisi 1–100 objek soal.');
       setQuestions(rows as ImportBodyDto['questions']);
     } catch (e) {
-      setError(e instanceof Error ? e.message : 'File tidak dapat dibaca.');
+      if (current === selection.current)
+        setError(e instanceof Error ? e.message : 'File tidak dapat dibaca.');
+    } finally {
+      if (current === selection.current) setBusy(false);
     }
   }
   async function run(action: () => Promise<void>) {
+    if (busy) return;
     setBusy(true);
     setError('');
     try {
       await action();
     } catch (e) {
+      if (adminAccessDenied(e)) {
+        reset();
+        setQuestions([]);
+        setDenied(true);
+      }
       setError(e instanceof Error ? e.message : 'Permintaan gagal. Coba lagi.');
     } finally {
       setBusy(false);
@@ -83,22 +112,55 @@ function ContentImportContent() {
   return (
     <AdminFrame
       title="Impor & preview soal"
-      description="Validasi konten, simpan DRAFT, lalu coba tiga format tanpa scoring."
+      description="Masukkan bank soal dari Curriculum. Cek isinya sebelum disimpan dan direview."
       icon="book"
     >
       <Badge>DRAFT — preview internal</Badge>
       {state.status === 'loading' ? (
         <AdminLoading message="Memeriksa akses konten…" />
-      ) : !token ? (
+      ) : !token || denied ? (
         <AdminMessage
           message="Akses memerlukan Super Admin atau Admin Content, Data & Moderation."
           login={state.status === 'signed_out'}
-          {...(state.status === 'ready' ? { retry: () => void refresh() } : {})}
+          {...(state.status === 'ready'
+            ? {
+                retry: () => {
+                  setDenied(false);
+                  void refresh();
+                },
+              }
+            : {})}
         />
       ) : (
         <>
-          <MediaUpload token={token} />
+          <ol className="content-workflow content-import-steps" aria-label="Tahapan impor">
+            {[
+              ['Pilih file', 'JSON berisi 1–100 soal, maksimal 2 MiB.'],
+              ['Validasi isi', 'Periksa format, taxonomy, dan referensi media.'],
+              ['Simpan draf', 'Konten masuk bank soal sebagai DRAFT.'],
+              ['Coba & review', 'Preview internal tidak menghitung nilai siswa.'],
+            ].map(([title, description], index) => (
+              <li
+                key={title}
+                aria-current={
+                  index === (sessionId ? 3 : report?.id ? 3 : report ? 2 : questions.length ? 1 : 0)
+                    ? 'step'
+                    : undefined
+                }
+              >
+                <span className="content-step-number" aria-hidden="true">
+                  0{index + 1}
+                </span>
+                <h3>{title}</h3>
+                <p>{description}</p>
+              </li>
+            ))}
+          </ol>
           <Card className="content-import-card">
+            <h2>File sumber soal</h2>
+            <p>
+              Gunakan nama sumber yang konsisten untuk melacak impor dan revisi dari bank yang sama.
+            </p>
             <label>
               Namespace sumber
               <input
@@ -127,7 +189,7 @@ function ContentImportContent() {
             </p>
             <div className="admin-content-actions">
               <Button
-                disabled={busy || !questions.length || !namespace}
+                disabled={busy || !questions.length || !namespace.trim()}
                 onClick={() =>
                   void run(async () =>
                     setReport(
@@ -195,15 +257,35 @@ function ContentImportContent() {
                       {item.canImportDraft ? 'Dapat diimpor DRAFT' : 'Impor ditolak'} ·{' '}
                       {item.canPreview ? 'Media siap' : 'Preview tertahan'}
                     </p>
-                    <p>
-                      {item.blockers.join(', ') ||
-                        'Tidak ada blocker teknis. Approval akademik belum diberikan.'}
-                    </p>
+                    {item.questionVersionId && (
+                      <Link href={`/admin/content/versions/${item.questionVersionId}`}>
+                        Buka detail & review versi
+                      </Link>
+                    )}
+                    <ContentBlockers
+                      codes={item.blockers}
+                      empty="Tidak ada hambatan teknis. Persetujuan akademik belum diberikan."
+                    />
                   </li>
                 ))}
               </ul>
             </Card>
           )}
+          <details className="content-media-disclosure">
+            <summary>Unggah gambar pendukung (opsional)</summary>
+            <p>
+              Unggah gambar yang dirujuk di dalam JSON. Gunakan referensi aset yang sudah
+              diverifikasi, lalu validasi ulang file soal.
+            </p>
+            <MediaUpload
+              token={token}
+              onAccessDenied={() => {
+                reset();
+                setQuestions([]);
+                setDenied(true);
+              }}
+            />
+          </details>
         </>
       )}
     </AdminFrame>

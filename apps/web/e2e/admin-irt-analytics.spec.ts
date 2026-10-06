@@ -183,7 +183,9 @@ for (const width of [320, 1440])
     await expect(page.getByText('Scientific decision: PASS', { exact: false })).toBeVisible();
     await expect(page.getByText('Adoption: belum diterima.', { exact: false })).toBeVisible();
     await expect(page.getByText('SLA 72 jam terlewati; hasil belum dipublikasikan.')).toBeVisible();
-    await page.getByText('Blocker persiapan dan publikasi', { exact: true }).click();
+    await expect(
+      page.getByText('Blocker persiapan dan publikasi', { exact: true }).locator('..'),
+    ).toHaveAttribute('open', '');
     await expect(
       page.getByText('Kontrak hasil peserta dan mapping menunggu pengesahan Data.'),
     ).toBeVisible();

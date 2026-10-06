@@ -3,7 +3,9 @@ import { useEffect, useState, type FormEvent } from 'react';
 import { Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { AdminFrame, AdminLoading, AdminMessage, AdminEditorForm } from './admin-presentation';
+import { adminAccessDenied } from './operational-query';
+import { ContentBlockers } from './content-blockers';
 import type {
   PretestDto,
   PretestsDto,
@@ -15,13 +17,14 @@ export function AdminPretestScreen() {
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
     state.profile.capabilities?.includes('CONTENT_MANAGE')
       ? state.session.access_token
       : null;
   return (
     <AdminFrame
       title="Pretest"
-      description="Authoring dan review paket 20 soal. Publikasi menunggu blueprint dan consumer Student."
+      description="Susun dan review paket 20 soal. Penggunaan oleh siswa masih menunggu blueprint final dan alur Pretest Student."
       icon="book"
     >
       {state.status === 'loading' ? (
@@ -38,6 +41,7 @@ export function AdminPretestScreen() {
   );
 }
 function PretestPanel({ token }: { token: string }) {
+  const { refresh } = useAuth();
   const [items, setItems] = useState<PretestDto[] | null>(null),
     [error, setError] = useState(''),
     [busy, setBusy] = useState(false),
@@ -45,6 +49,8 @@ function PretestPanel({ token }: { token: string }) {
     [editing, setEditing] = useState(false),
     [offset, setOffset] = useState(0),
     [generation, setGeneration] = useState(0);
+  const [denied, setDenied] = useState(false),
+    [referenceError, setReferenceError] = useState('');
   const [blueprints, setBlueprints] = useState<PretestBlueprintsDto['items']>([]),
     [chapters, setChapters] = useState<AdminCurriculumDto['items']>([]);
   useEffect(() => {
@@ -56,7 +62,10 @@ function PretestPanel({ token }: { token: string }) {
         if (current) setItems(d.items);
       })
       .catch((e) => {
-        if (current) setError(e.message);
+        if (current) {
+          if (adminAccessDenied(e)) setDenied(true);
+          setError(e.message);
+        }
       });
     return () => {
       current = false;
@@ -64,6 +73,7 @@ function PretestPanel({ token }: { token: string }) {
   }, [token, offset, generation]);
   useEffect(() => {
     let current = true;
+    setReferenceError('');
     Promise.allSettled([
       apiRequest<PretestBlueprintsDto>('admin/content/pretest-packages/blueprints', token),
       apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
@@ -71,10 +81,16 @@ function PretestPanel({ token }: { token: string }) {
       .then(([b, c]) => {
         if (current) {
           if (b.status === 'fulfilled') setBlueprints(b.value.items);
-          else setError('Blueprint belum bisa dimuat. Authoring draf tetap tersedia.');
+          else {
+            if (adminAccessDenied(b.reason)) setDenied(true);
+            setReferenceError('Blueprint belum bisa dimuat. Authoring draf tetap tersedia.');
+          }
           if (c.status === 'fulfilled')
             setChapters(c.value.items.filter((i) => i.kind === 'CHAPTER'));
-          else setError('Bab belum bisa dimuat. Muat ulang halaman untuk mencoba lagi.');
+          else {
+            if (adminAccessDenied(c.reason)) setDenied(true);
+            setReferenceError('Bab belum bisa dimuat. Gunakan Muat ulang untuk mencoba lagi.');
+          }
         }
       })
       .catch((e) => {
@@ -83,23 +99,29 @@ function PretestPanel({ token }: { token: string }) {
     return () => {
       current = false;
     };
-  }, [token]);
+  }, [token, generation]);
   async function mutate(path: string, method: string, body?: object) {
+    if (busy) return false;
     setBusy(true);
     setError('');
     try {
       await apiRequest(path, token, { method, ...(body ? { body: JSON.stringify(body) } : {}) });
       setGeneration((n) => n + 1);
       setRevision(null);
+      setEditing(false);
+      return true;
     } catch (e) {
+      if (adminAccessDenied(e)) setDenied(true);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
+      return false;
     } finally {
       setBusy(false);
     }
   }
-  function save(e: FormEvent<HTMLFormElement>) {
+  async function save(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const v = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const v = new FormData(form);
     const common = {
       name: String(v.get('name')),
       blueprintVersionId: String(v.get('blueprintVersionId') ?? '') || null,
@@ -108,11 +130,11 @@ function PretestPanel({ token }: { token: string }) {
         .map((v) => v.trim())
         .filter(Boolean),
     };
-    void mutate(
+    const saved = await mutate(
       revision
         ? `admin/content/pretest-packages/${revision.id}${editing ? '' : '/revisions'}`
         : 'admin/content/pretest-packages',
-      editing ? 'PUT' : 'POST',
+      revision && editing ? 'PUT' : 'POST',
       revision
         ? common
         : {
@@ -122,13 +144,36 @@ function PretestPanel({ token }: { token: string }) {
             chapterId: String(v.get('chapterId')),
           },
     );
+    if (saved) form.reset();
   }
+  if (denied)
+    return (
+      <AdminMessage
+        error
+        message="Akses Content telah berubah. Periksa kembali akun."
+        retry={() => {
+          setDenied(false);
+          setItems(null);
+          setRevision(null);
+          setEditing(false);
+          setGeneration((n) => n + 1);
+          void refresh();
+        }}
+      />
+    );
   return (
     <div className="admin-panel space-y-5">
       {error && <AdminMessage error message={error} />}
+      {referenceError && (
+        <AdminMessage error message={referenceError} retry={() => setGeneration((n) => n + 1)} />
+      )}
       <Card>
         <h2>{revision ? (editing ? 'Edit draf' : 'Buat revisi paket') : 'Buat draf Pretest'}</h2>
-        <form key={revision?.id ?? 'new'} onSubmit={save} className="admin-form">
+        <AdminEditorForm
+          key={revision?.id ?? 'new'}
+          busy={busy}
+          onSubmit={(event) => void save(event)}
+        >
           {!revision && (
             <>
               <label>
@@ -173,6 +218,12 @@ function PretestPanel({ token }: { token: string }) {
             Blueprint yang disahkan
             <select name="blueprintVersionId" defaultValue={revision?.blueprintVersionId ?? ''}>
               <option value="">Belum tersedia ? authoring internal</option>
+              {revision?.blueprintVersionId &&
+                !blueprints.some((b) => b.id === revision.blueprintVersionId) && (
+                  <option value={revision.blueprintVersionId}>
+                    Blueprint versi asal ({revision.blueprintVersionId})
+                  </option>
+                )}
               {blueprints.map((b) => (
                 <option key={b.id} value={b.id}>
                   {b.code} v{b.version} ? {b.approvalReference}
@@ -194,21 +245,32 @@ function PretestPanel({ token }: { token: string }) {
           </small>
           <Button disabled={busy}>Simpan draf</Button>
           {revision && (
-            <Button type="button" variant="secondary" onClick={() => setRevision(null)}>
+            <Button
+              type="button"
+              variant="secondary"
+              onClick={() => {
+                setRevision(null);
+                setEditing(false);
+              }}
+            >
               Batal revisi
             </Button>
           )}
-        </form>
+        </AdminEditorForm>
       </Card>
-      {items === null && !error && <AdminLoading message="Memuat paket?" />}
+      {items === null && !error && <AdminLoading message="Memuat paket…" />}
       {items?.length === 0 && <p>Belum ada paket pada halaman ini.</p>}
       {items?.map((p) => (
         <Card key={p.id}>
           <h2>{p.name}</h2>
           <p>
-            {p.familyCode} v{p.packageVersion} ? {p.state} ? {p.questionVersionIds.length}/20 soal
+            {p.familyCode} v{p.packageVersion} · {p.state} · {p.questionVersionIds.length}/20 soal
           </p>
-          <p>Publikasi terblokir: {p.publicationBlockers.join(', ')}</p>
+          <h3>Kesiapan publikasi</h3>
+          <ContentBlockers
+            codes={p.publicationBlockers}
+            empty="Tidak ada hambatan tambahan yang dilaporkan. Publikasi tetap diperiksa server."
+          />
           <details>
             <summary>Versi soal yang dipin</summary>
             <ul>
@@ -235,9 +297,7 @@ function PretestPanel({ token }: { token: string }) {
               <Button disabled={busy || p.reviewBlockers.length > 0}>
                 Sahkan review editorial
               </Button>
-              {p.reviewBlockers.length > 0 && (
-                <p>Perlu diperbaiki: {p.reviewBlockers.join(', ')}</p>
-              )}
+              {p.reviewBlockers.length > 0 && <ContentBlockers codes={p.reviewBlockers} empty="" />}
             </form>
           )}
           {p.state === 'DRAFT' && (

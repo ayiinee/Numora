@@ -10,6 +10,7 @@ export function AdminStructuresScreen() {
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
     state.profile.capabilities?.includes('OPERATIONS_LIMITED_READ')
       ? state.session.access_token
       : null;

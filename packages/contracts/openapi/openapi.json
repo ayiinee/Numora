@@ -2508,6 +2508,20 @@
                 }
               ]
             }
+          },
+          {
+            "name": "catalog",
+            "required": false,
+            "in": "query",
+            "description": "COMPACT_DEMO limits explicitly identified fixtures to ten distinct examples; historical versions remain available with ALL.",
+            "schema": {
+              "default": "ALL",
+              "type": "string",
+              "enum": [
+                "ALL",
+                "COMPACT_DEMO"
+              ]
+            }
           }
         ],
         "responses": {
@@ -9481,6 +9495,10 @@
             "items": {
               "$ref": "#/components/schemas/AdminVersionDto"
             }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [

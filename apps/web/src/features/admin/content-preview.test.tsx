@@ -3,6 +3,7 @@ import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/re
 import { ContentPreviewScreen } from './content-preview';
 import { ContentImportScreen } from './content-import';
 import { ContentRichText } from './content-rich-text';
+import { ApiProblem } from '@/lib/api';
 import {
   createPreview,
   getPreview,
@@ -180,6 +181,44 @@ describe('internal content preview and importer', () => {
       fireEvent.click(screen.getByRole('button', { name: 'Simpan jawaban' }));
       await screen.findByText(/revisi 1/);
     }
+  });
+  it('clears the preview payload after a server access rejection on save', async () => {
+    vi.mocked(savePreview).mockRejectedValueOnce(
+      new ApiProblem(403, 'FORBIDDEN', 'Preview access revoked'),
+    );
+    render(<ContentPreviewScreen id="session" />);
+    await screen.findByText('Dua');
+    fireEvent.click(screen.getByRole('radio', { name: /Dua/ }));
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan jawaban' }));
+    await screen.findByText('Preview access revoked');
+    expect(screen.queryByText('Dua')).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Submit & review' })).toBeNull();
+  });
+  it('uses the namespace supplied by the JSON envelope instead of the form default', async () => {
+    vi.mocked(validateImport).mockResolvedValue({
+      id: null,
+      sourceNamespace: 'TEAM-BANK-V1',
+      canImportDraft: false,
+      items: [],
+    });
+    render(<ContentImportScreen />);
+    const file = new File(['{}'], 'envelope.json', { type: 'application/json' });
+    Object.defineProperty(file, 'text', {
+      value: async () =>
+        JSON.stringify({ sourceNamespace: 'TEAM-BANK-V1', questions: [{ externalId: 'TEAM-1' }] }),
+    });
+    fireEvent.change(screen.getByLabelText('File soal JSON'), { target: { files: [file] } });
+    await screen.findByText('1 soal dipilih.');
+    expect((screen.getByLabelText('Namespace sumber') as HTMLInputElement).value).toBe(
+      'TEAM-BANK-V1',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Validasi JSON' }));
+    await waitFor(() =>
+      expect(validateImport).toHaveBeenCalledWith('TEST ONLY TOKEN', {
+        sourceNamespace: 'TEAM-BANK-V1',
+        questions: [{ externalId: 'TEAM-1' }],
+      }),
+    );
   });
   it('shows load failure and can retry the same session', async () => {
     vi.mocked(getPreview).mockRejectedValueOnce(Error('Network error'));

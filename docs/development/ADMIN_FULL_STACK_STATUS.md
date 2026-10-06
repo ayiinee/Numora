@@ -1,5 +1,9 @@
 # Admin full stack — implementation and acceptance
 
+**ENGINEERING UPDATE — 7 October 2026:** Content functional fixes cover independent Tryout question pagination, Pretest edit/create state and reference retry, JSON envelope namespaces, retained server filters and clearing cached detail on target/access changes. See [functional audit](ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md) for page coverage and test evidence. External gates in the ledger remain open.
+
+**ENGINEERING EVIDENCE — 7 October 2026:** the owner requested deletion of persisted Content demos from the isolated Development database. Materials/question readers are now empty; related demo packages and test attempts were removed after backup and rehearsal. Three non-fixture drafts, six unrelated upload sessions and all accounts/schools/classes/memberships remain. This environment cleanup does not change milestone acceptance or product rules. See [cleanup evidence](ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md).
+
 Initial audit baseline: main f3f75b3. Current integration baseline: main fbb031b after PR #77, verified 6 October 2026. User authorization: implement Admin full stack and its required engine dependencies; fixed three subroles; internal email invitation; milestone delivery without a fixed date. Earlier division/ownership assignments do not restrict this authorized work. Academic approval and environment acceptance remain separate.
 
 ## Product and engineering boundaries
@@ -11,6 +15,8 @@ Initial audit baseline: main f3f75b3. Current integration baseline: main fbb031b
 **PRD RULE:** students may have up to five active classes; leave/ban/takeover and nullable active teachers preserve history. Pretest uses 20 items and placement 0–7 → L1, 8–18 → L2, 19–20 → L3, without XP. Drill uses one variant, 10 items, >=80 unlock, latest stars (including zero), and final XP formula. Tryout uses 30 items, Monday 00:00–Sunday 23:59 WIB, batch-close auto-submit, one attempt, immediate XP and immutable result/explanation <=72 hours. PvP leaderboard is Top 10 plus self. These are rules, not evidence of implementation.
 
 ## Acceptance ledger
+
+**ENGINEERING UPDATE — 6 October:** the owner requested a Content-role UI/UX iteration after the permission correction. Task guidance, readable review, deep links and responsive presentation are documented in the [Content UX report](../design/ADMIN_CONTENT_UX_2026-10-06.md). This presentation update does not close the external gates below.
 
 | Milestone | Engineering gate                                                                                         | External gate                                                   | Status                                                                   |
 | --------- | -------------------------------------------------------------------------------------------------------- | --------------------------------------------------------------- | ------------------------------------------------------------------------ |

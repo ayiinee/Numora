@@ -23,6 +23,7 @@ import {
   AdminVideosDto,
   ContentMutationDto,
   ContentPageDto,
+  ContentVersionsPageDto,
   ContentStatusDto,
   CreateChapterDto,
   CreateCompetencyDto,
@@ -118,7 +119,7 @@ export class ContentController {
   }
   @Get('versions')
   @ApiOkResponse({ type: AdminVersionsDto })
-  versions(@Query() q: ContentPageDto) {
+  versions(@Query() q: ContentVersionsPageDto) {
     return this.content.versions(q);
   }
   @Post('questions')

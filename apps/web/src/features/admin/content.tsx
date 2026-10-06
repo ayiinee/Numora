@@ -2,8 +2,10 @@
 
 import Link from 'next/link';
 import { AssessmentPolicySelector } from './assessment-policy-selector';
+import { useOperationalQuery } from './operational-query';
+import { ContentText } from './content-payload';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Badge, Button } from '@tka/ui';
+import { Badge, Button, Icon, type IconName } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import {
@@ -34,6 +36,7 @@ import type {
   AdminDrillPackageDto,
   AdminTryoutDraftDto,
   AdminVersionDto,
+  AdminVersionsDto,
   QuestionContentDto,
 } from './generated-types';
 import {
@@ -45,7 +48,11 @@ import {
 } from './admin-presentation';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
-type View =
+function QuestionSummary({ compact, children }: { compact: boolean; children: ReactNode }) {
+  return compact ? <div className="content-question-summary">{children}</div> : <>{children}</>;
+}
+
+export type ContentView =
   | 'curriculum'
   | 'questions'
   | 'verification'
@@ -55,6 +62,7 @@ type View =
   | 'reports'
   | 'irt'
   | 'audit';
+type View = ContentView;
 const views: { id: View; label: string }[] = [
   { id: 'curriculum', label: 'Materi' },
   { id: 'questions', label: 'Soal' },
@@ -66,20 +74,83 @@ const views: { id: View; label: string }[] = [
   { id: 'irt', label: 'IRT' },
   { id: 'audit', label: 'Audit' },
 ];
+const viewIcons: Record<View, IconName> = {
+  curriculum: 'book',
+  questions: 'clipboard',
+  verification: 'verified',
+  videos: 'play-circle',
+  packages: 'clock',
+  drillPackages: 'target',
+  reports: 'chat',
+  irt: 'chart',
+  audit: 'lock',
+};
+const viewGuidance: Record<View, { title: string; description: string }> = {
+  curriculum: {
+    title: 'Struktur materi',
+    description:
+      'Atur bab, subbab, kompetensi, dan level agar setiap soal memiliki tempat yang jelas dalam kurikulum.',
+  },
+  questions: {
+    title: 'Bank soal',
+    description:
+      'Buka detail versi untuk memeriksa isi, kunci, pembahasan, media, dan kesiapan. Tambahkan PG manual atau impor JSON untuk PG, MCMA, dan Kategori.',
+  },
+  verification: {
+    title: 'Riwayat verifikasi konten',
+    description:
+      'Telusuri keputusan review dan perubahan versi. Ini adalah review konten, bukan verifikasi Guru.',
+  },
+  videos: {
+    title: 'Video pembelajaran',
+    description:
+      'Hubungkan video ke subbab dan atur urutan rekomendasinya. Periksa tautan dan materi sebelum menjadikannya READY.',
+  },
+  packages: {
+    title: 'Paket Tryout mingguan',
+    description:
+      'Susun 30 versi soal, lalu pilih policy yang disahkan dan jadwal batch. Rilis nilai serta pembahasan dipantau terpisah di halaman IRT.',
+  },
+  drillPackages: {
+    title: 'Paket Drill per level',
+    description:
+      'Susun 10 versi soal untuk satu level. Publikasi pengganti mempertahankan versi yang digunakan pada pengerjaan lama.',
+  },
+  reports: {
+    title: 'Antrian moderasi',
+    description:
+      'Buka detail laporan untuk melihat versi soal atau video yang dilaporkan. Catat tindak lanjut dan hubungkan revisi jika diperlukan.',
+  },
+  irt: {
+    title: 'Riwayat IRT',
+    description:
+      'Lihat catatan batch dan konfigurasi terdahulu. Gunakan halaman Request IRT & publikasi untuk menyiapkan analisis dan memantau rilis saat ini.',
+  },
+  audit: {
+    title: 'Jejak aktivitas',
+    description:
+      'Telusuri tindakan pada konten, moderasi, dan IRT menurut pelaku, aksi, target, atau periode.',
+  },
+};
+export function contentView(value: string | null | undefined): View {
+  return views.find((item) => item.id === value)?.id ?? 'questions';
+}
 const field = (form: FormData, name: string) => String(form.get(name) ?? '').trim();
 const message = (error: unknown) =>
   error instanceof Error ? error.message : 'Permintaan gagal. Coba lagi.';
 type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
-export function AdminContentScreen() {
+export function AdminContentScreen({ initialView = 'questions' }: { initialView?: View }) {
   const { state } = useAuth();
   const accountKey =
     state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status;
-  return <AdminContentScreenContent key={accountKey} />;
+  return <AdminContentScreenContent key={accountKey} initialView={initialView} />;
 }
 
-function AdminContentScreenContent() {
+function AdminContentScreenContent({ initialView }: { initialView: View }) {
   const { state, refresh } = useAuth();
+  const contentRole =
+    state.status === 'ready' && state.profile.adminRole === 'CONTENT_DATA_MODERATION';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -95,7 +166,8 @@ function AdminContentScreenContent() {
   const [denied, setDenied] = useState(false);
   const [revision, setRevision] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [view, setView] = useState<View>('questions');
+  const [view, setView] = useState<View>(initialView);
+  const pageSize = contentRole && view === 'questions' ? 5 : 20;
   const [filters, setFilters] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
@@ -106,7 +178,8 @@ function AdminContentScreenContent() {
       return;
     }
     let active = true;
-    loadAdminWorkbench(token, offset, view, filters).then(
+    setError('');
+    loadAdminWorkbench(token, offset, view, filters, contentRole).then(
       (result) => {
         if (active) {
           setData(result);
@@ -125,15 +198,15 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, view, filters]);
+  }, [token, offset, revision, view, filters, contentRole]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const result = await action();
-      setNotice(`Perubahan tersimpan. ID: ${result.id}`);
+      await action();
+      setNotice('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
       setRevision((value) => value + 1);
       return true;
     } catch (cause) {
@@ -150,13 +223,30 @@ function AdminContentScreenContent() {
     setRevision((value) => value + 1);
   }
   function navigate(next: View) {
+    if (view === next) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', next);
+    window.history.pushState(null, '', url);
+    resetView(next);
+  }
+  function resetView(next: View) {
     setData(null);
     setLoading(true);
     setView(next);
     setFilters({});
     setOffset(0);
     setError('');
+    setNotice('');
+    setEditing(null);
+    setDraft(null);
+    setDrillDraft(null);
   }
+  useEffect(() => {
+    const restore = () =>
+      resetView(contentView(new URLSearchParams(window.location.search).get('view')));
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
+  }, []);
   const profileId = state.status === 'ready' ? state.profile.id : null;
   // Data cached in React must never be shown after logout or an account change.
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
@@ -189,6 +279,17 @@ function AdminContentScreenContent() {
       </AdminFrame>
     );
   const current = loadedFor === profileId ? data : null;
+  const questionEditor = current && (
+    <QuestionEditor
+      key={editing?.id ?? 'new'}
+      version={editing}
+      data={current}
+      token={token}
+      busy={busy}
+      run={run}
+      close={() => setEditing(null)}
+    />
+  );
   const pageLength = current
     ? {
         curriculum: 0,
@@ -209,10 +310,6 @@ function AdminContentScreenContent() {
       icon="book"
     >
       <div className="monitoring-frame admin-content">
-        <p className="admin-context-note">
-          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
-          tetap dipertahankan.
-        </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
           {views.map((item) => (
             <Button
@@ -220,6 +317,9 @@ function AdminContentScreenContent() {
               disabled={busy}
               variant={view === item.id ? 'primary' : 'secondary'}
               className="admin-view-button"
+              leftIcon={
+                contentRole ? <Icon name={viewIcons[item.id]} width={18} height={18} /> : undefined
+              }
               aria-current={view === item.id ? 'page' : undefined}
               onClick={() => navigate(item.id)}
             >
@@ -227,6 +327,23 @@ function AdminContentScreenContent() {
             </Button>
           ))}
         </nav>
+        <section className="content-view-intro" aria-labelledby="content-view-title">
+          <div>
+            <span className="content-kicker">Konten & assessment</span>
+            <h2 id="content-view-title">{viewGuidance[view].title}</h2>
+            <p>{viewGuidance[view].description}</p>
+          </div>
+          {view === 'questions' && (
+            <Link className="content-primary-link" href="/admin/content/imports">
+              Impor JSON
+            </Link>
+          )}
+          {(view === 'irt' || view === 'packages') && (
+            <Link className="content-primary-link" href="/admin/irt">
+              Request IRT & publikasi
+            </Link>
+          )}
+        </section>
         {notice && <AdminMessage message={notice} />}
         {error && (
           <div role="alert" className="form-error">
@@ -255,6 +372,7 @@ function AdminContentScreenContent() {
             />
             <div
               className="admin-content-view"
+              data-view={view}
               aria-label={views.find((item) => item.id === view)?.label}
             >
               {view === 'curriculum' && (
@@ -262,38 +380,65 @@ function AdminContentScreenContent() {
               )}
               {view === 'questions' && (
                 <>
-                  <QuestionEditor
-                    key={editing?.id ?? 'new'}
-                    version={editing}
-                    data={current}
-                    token={token}
-                    busy={busy}
-                    run={run}
-                    close={() => setEditing(null)}
-                  />
                   <section>
                     <h2>Versi soal</h2>
+                    {contentRole && (
+                      <p>
+                        5 soal per halaman. Contoh demo diringkas menjadi maksimal 10 soal unik;
+                        semua versi tetap tersedia pada tab Verifikasi &amp; riwayat. Statistik di
+                        atas mencakup seluruh bank soal.
+                      </p>
+                    )}
                     <Link href="/admin/content/imports">Impor JSON & preview internal</Link>
                     {!current.versions.items.length && (
                       <p>Belum ada versi soal pada halaman ini.</p>
                     )}
-                    <ul className="monitoring-list">
+                    <ul className="monitoring-list" aria-label="Daftar soal">
                       {current.versions.items.map((v) => (
                         <li className="monitoring-notice admin-content-row" key={v.id}>
-                          <strong>{v.stem || `Konten ${v.questionType}`}</strong>
-                          <small>
-                            {v.variantCode} · v{v.versionNumber} · {v.questionType}
-                          </small>
-                          <p>
-                            Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
-                          </p>
-                          {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
-                          <small>ID versi: {v.id}</small>
-                          {v.reviewedAt && (
+                          <QuestionSummary compact={contentRole}>
+                            <strong>
+                              <ContentText value={v.stem || `Konten ${v.questionType}`} />
+                            </strong>
                             <small>
-                              Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
+                              {v.variantCode} · v{v.versionNumber} · {v.questionType}
                             </small>
-                          )}
+                            {v.questionType !== 'SINGLE_CHOICE' && v.options.length > 0 && (
+                              <ul aria-label="Cuplikan pernyataan soal">
+                                {v.options.slice(0, 2).map((option) => (
+                                  <li key={option.id}>
+                                    <ContentText value={option.text} />
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            <p className={contentRole ? 'content-status-pair' : undefined}>
+                              {contentRole ? (
+                                <>
+                                  <span>Keluarga: {v.questionStatus}</span>
+                                  <span data-status={v.contentStatus}>
+                                    Versi: {v.contentStatus}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
+                                </>
+                              )}
+                            </p>
+                            <details className="content-version-meta">
+                              <summary>Identitas versi & reviewer</summary>
+                              {v.reviewedByUserId && (
+                                <small>Direview oleh: {v.reviewedByUserId}</small>
+                              )}
+                              <small>ID versi: {v.id}</small>
+                            </details>
+                            {v.reviewedAt && (
+                              <small>
+                                Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
+                              </small>
+                            )}
+                          </QuestionSummary>
                           <div className="admin-content-actions">
                             <Link href={`/admin/content/versions/${v.id}`}>
                               Detail, review & kesiapan
@@ -364,6 +509,23 @@ function AdminContentScreenContent() {
                       ))}
                     </ul>
                   </section>
+                  {contentRole ? (
+                    <details
+                      className="content-editor-disclosure"
+                      open={editing ? true : undefined}
+                    >
+                      <summary>
+                        {editing ? 'Revisi / varian soal' : 'Tambah soal PG manual'}
+                      </summary>
+                      <p>
+                        Buat satu soal dengan empat pilihan. Untuk bank soal dalam jumlah banyak
+                        atau format PGK, gunakan impor JSON.
+                      </p>
+                      {questionEditor}
+                    </details>
+                  ) : (
+                    questionEditor
+                  )}
                 </>
               )}
               {view === 'verification' && <VerificationHistory data={current} />}
@@ -530,6 +692,7 @@ function AdminContentScreenContent() {
                   <h2>Audit perubahan</h2>
                   <ServerFilters
                     audit
+                    filters={filters}
                     onApply={(next) => {
                       setLoading(true);
                       setOffset(0);
@@ -560,20 +723,23 @@ function AdminContentScreenContent() {
                   disabled={offset === 0 || busy}
                   onClick={() => {
                     setLoading(true);
-                    setOffset(Math.max(0, offset - 20));
+                    setOffset(Math.max(0, offset - pageSize));
                   }}
                 >
                   Sebelumnya
                 </Button>
-                <span>Halaman {offset / 20 + 1}</span>
+                <span aria-live="polite">Halaman {offset / pageSize + 1}</span>
                 <Button
                   disabled={
-                    (view === 'reports' ? current.reports.nextOffset === null : pageLength < 20) ||
-                    busy
+                    (view === 'reports'
+                      ? current.reports.nextOffset === null
+                      : view === 'questions' && current.versions.nextOffset !== undefined
+                        ? current.versions.nextOffset === null
+                        : pageLength < pageSize) || busy
                   }
                   onClick={() => {
                     setLoading(true);
-                    setOffset(offset + 20);
+                    setOffset(offset + pageSize);
                   }}
                 >
                   Berikutnya
@@ -599,11 +765,20 @@ type EditorProps = { data: Workbench; token: string; busy: boolean; run: Run };
 
 function ServerFilters({
   audit = false,
+  filters,
   onApply,
 }: {
   audit?: boolean;
+  filters: Record<string, string>;
   onApply: (filters: Record<string, string>) => void;
 }) {
+  function localDate(value?: string) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+      ? new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+      : '';
+  }
   return (
     <form
       className="admin-content-form"
@@ -623,30 +798,30 @@ function ServerFilters({
         <>
           <label>
             Aktor (UUID)
-            <input name="actorId" />
+            <input name="actorId" defaultValue={filters.actorId ?? ''} />
           </label>
           <label>
             Aksi
-            <input name="action" maxLength={120} />
+            <input name="action" maxLength={120} defaultValue={filters.action ?? ''} />
           </label>
           <label>
             Jenis entitas
-            <input name="entityType" maxLength={120} />
+            <input name="entityType" maxLength={120} defaultValue={filters.entityType ?? ''} />
           </label>
         </>
       ) : (
         <label>
           Kategori laporan
-          <input name="category" maxLength={100} />
+          <input name="category" maxLength={100} defaultValue={filters.category ?? ''} />
         </label>
       )}
       <label>
         Dari waktu
-        <input type="datetime-local" name="from" />
+        <input type="datetime-local" name="from" defaultValue={localDate(filters.from)} />
       </label>
       <label>
         Sampai waktu
-        <input type="datetime-local" name="to" />
+        <input type="datetime-local" name="to" defaultValue={localDate(filters.to)} />
       </label>
       <Button>Terapkan filter server</Button>
     </form>
@@ -729,6 +904,7 @@ function Reports({
         <span role="status">{visible.length} laporan ditampilkan</span>
       </div>
       <ServerFilters
+        filters={filters}
         onApply={(next) =>
           onFilter({
             ...next,
@@ -871,6 +1047,7 @@ function VerificationHistory({ data }: { data: Workbench }) {
                   : 'Belum ditinjau'}
               </small>
               <small>ID versi: {version.id}</small>
+              <Link href={`/admin/content/versions/${version.id}`}>Detail &amp; review versi</Link>
             </li>
           ))}
         </ul>
@@ -1114,7 +1291,31 @@ function DrillPackageEditor({
 }
 
 function Curriculum({ data, token, busy, run }: EditorProps) {
+  const { state } = useAuth();
+  const contentRole =
+    state.status === 'ready' && state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const [showAllDemos, setShowAllDemos] = useState(false);
+  const [page, setPage] = useState(0);
   const [kind, setKind] = useState<AdminTaxonDto['kind']>('CHAPTER');
+  const demoIds = new Set(
+    data.curriculum.items
+      .filter((r) => r.code.startsWith('DEMO-') || r.code === 'NUMORA-PVP-DEMO-V1')
+      .map((r) => r.id),
+  );
+  // Level codes are numbers; inherit the fixture marker from their parent taxonomy.
+  for (let depth = 0; depth < 3; depth++) {
+    for (const r of data.curriculum.items)
+      if (r.parentId && demoIds.has(r.parentId)) demoIds.add(r.id);
+  }
+  let demoCount = 0;
+  const visibleItems = data.curriculum.items.filter(
+    (r) => !contentRole || showAllDemos || !demoIds.has(r.id) || ++demoCount <= 6,
+  );
+  const totalPages = Math.max(1, Math.ceil(visibleItems.length / 3));
+  const currentPage = Math.min(page, totalPages - 1);
+  const pageItems = contentRole
+    ? visibleItems.slice(currentPage * 3, currentPage * 3 + 3)
+    : visibleItems;
   const parents = data.curriculum.items.filter(
     (r) => r.kind === (kind === 'SUBCHAPTER' ? 'CHAPTER' : 'SUBCHAPTER'),
   );
@@ -1199,7 +1400,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
               name="order"
               type="number"
               min={1}
-              max={kind === 'LEVEL' ? 1000 : 100000}
+              max={kind === 'LEVEL' ? 5 : 100000}
               required
             />
           </Field>
@@ -1208,13 +1409,38 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
           Simpan draf materi
         </Button>
       </AdminEditorForm>
+      {contentRole && demoIds.size > 6 && (
+        <label className="admin-content-actions">
+          <input
+            type="checkbox"
+            checked={showAllDemos}
+            onChange={(e) => {
+              setShowAllDemos(e.target.checked);
+              setPage(0);
+            }}
+          />
+          Tampilkan seluruh materi demo ({demoIds.size} entri)
+        </label>
+      )}
+      {contentRole && (
+        <p role="status">
+          {visibleItems.length} entri materi · 3 per halaman
+          {!showAllDemos && demoIds.size > 6 ? ' · Demo diringkas menjadi 6 entri.' : ''}
+        </p>
+      )}
       {!data.curriculum.items.length && <p>Belum ada materi. Mulai dengan Bab.</p>}
-      <ul className="monitoring-list">
-        {data.curriculum.items.map((r) => (
+      <ul className="monitoring-list" aria-label="Daftar materi">
+        {pageItems.map((r) => (
           <li key={r.id} className="monitoring-notice admin-content-row">
             <strong>{r.name}</strong>
+            {contentRole && (
+              <span className="content-item-status" data-status={r.status}>
+                {r.status}
+              </span>
+            )}
             <small>
-              {r.kind} · {r.code} · {r.status} · Induk:{' '}
+              {r.kind} · {r.code}
+              {!contentRole && ` · ${r.status}`} · Induk:{' '}
               {data.curriculum.items.find((p) => p.id === r.parentId)?.name ?? '—'}
             </small>
             {r.kind === 'CHAPTER' && (
@@ -1270,6 +1496,22 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
           </li>
         ))}
       </ul>
+      {contentRole && visibleItems.length > 0 && (
+        <nav className="admin-content-actions" aria-label="Halaman materi">
+          <Button disabled={busy || currentPage === 0} onClick={() => setPage(currentPage - 1)}>
+            Sebelumnya
+          </Button>
+          <span aria-live="polite">
+            Halaman {currentPage + 1} dari {totalPages}
+          </span>
+          <Button
+            disabled={busy || currentPage + 1 >= totalPages}
+            onClick={() => setPage(currentPage + 1)}
+          >
+            Berikutnya
+          </Button>
+        </nav>
+      )}
     </section>
   );
 }
@@ -1320,7 +1562,8 @@ function QuestionEditor({
         {version ? `Revisi ${version.variantCode} v${version.versionNumber}` : 'Buat soal PG'}
       </h2>
       <p>
-        Editor awal mendukung empat opsi A–D. Soal tersimpan sebagai DRAFT. PGK menunggu OPEN-04.
+        Tambahkan soal PG dengan empat opsi A–D sebagai DRAFT. Untuk MCMA atau Kategori, gunakan
+        impor JSON; scoring PGK tetap memerlukan rubric yang disahkan.
       </p>
       {version ? (
         <>
@@ -1512,7 +1755,6 @@ function Videos({ data, token, busy, run }: EditorProps) {
 
 function TryoutEditor({
   draft,
-  data,
   token,
   busy,
   run,
@@ -1520,8 +1762,17 @@ function TryoutEditor({
 }: EditorProps & { draft: AdminTryoutDraftDto | null; close: () => void }) {
   // Preserve pinned IDs outside the current question page while editing a package.
   const [selected, setSelected] = useState<string[]>(draft?.questionVersionIds ?? []);
+  const [questionOffset, setQuestionOffset] = useState(0);
+  const versions = useOperationalQuery<AdminVersionsDto>(
+    `admin/content/versions?limit=20&offset=${questionOffset}`,
+    token,
+  );
+  useEffect(() => {
+    if (versions.denied) setSelected([]);
+  }, [versions.denied]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy || versions.denied) return;
     const form = e.currentTarget;
     const f = new FormData(form);
     const body = { name: field(f, 'name'), questionVersionIds: selected };
@@ -1542,12 +1793,15 @@ function TryoutEditor({
       }
     }
   }
+  if (versions.denied)
+    return <AdminMessage error message="Akses bank soal dicabut. Muat ulang akses admin." />;
   return (
     <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
       <h2>{draft ? 'Edit draf Tryout' : 'Susun draf Tryout'}</h2>
       <p>
-        Belum diterbitkan ke Siswa. Konfigurasi resmi Tryout, scoring, dan release IRT masih OPEN;
-        parameter produk tidak dapat diubah di sini.
+        Simpan susunan soal sebagai draf terlebih dahulu. Publikasi memerlukan 30 versi soal yang
+        siap dan policy yang disahkan. Nilai serta pembahasan dirilis melalui proses IRT; parameter
+        produk tetap mengikuti aturan MVP.
       </p>
       {draft ? (
         <Button variant="secondary" type="button" onClick={close}>
@@ -1572,8 +1826,40 @@ function TryoutEditor({
         <input name="name" required maxLength={160} defaultValue={draft?.name ?? ''} />
       </Field>
       <fieldset>
-        <legend>Versi READY pada halaman soal saat ini ({selected.length} versi dipilih)</legend>
-        {data.versions.items
+        <legend>Versi READY ({selected.length} versi dipilih)</legend>
+        <p>Pilihan tetap tersimpan saat berpindah halaman soal.</p>
+        {!!selected.length && (
+          <details>
+            <summary>Kelola versi yang dipilih</summary>
+            <p>
+              Versi dari halaman lain atau yang sudah diarsipkan tetap tercatat di sini sampai
+              dikeluarkan dari draf.
+            </p>
+            <ul>
+              {selected.map((id) => (
+                <li key={id}>
+                  <Link href={`/admin/content/versions/${id}`} target="_blank" rel="noreferrer">
+                    Detail versi {id}
+                  </Link>{' '}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    aria-label={`Keluarkan versi ${id}`}
+                    onClick={() => setSelected((ids) => ids.filter((value) => value !== id))}
+                  >
+                    Keluarkan
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        {versions.error ? (
+          <AdminMessage error message={versions.error} retry={versions.retry} />
+        ) : !versions.data ? (
+          <AdminLoading message="Memuat pemilih soal Tryout…" />
+        ) : null}
+        {versions.data?.items
           .filter((v) => v.contentStatus === 'READY' && v.questionStatus === 'READY')
           .map((v) => (
             <label key={v.id}>
@@ -1589,9 +1875,29 @@ function TryoutEditor({
               {v.variantCode} v{v.versionNumber}: {v.stem}
             </label>
           ))}
-        {!data.versions.items.some(
-          (v) => v.contentStatus === 'READY' && v.questionStatus === 'READY',
-        ) && <p>Belum ada versi READY pada halaman ini. Draf kosong boleh disimpan.</p>}
+        {versions.data &&
+          !versions.data.items.some(
+            (v) => v.contentStatus === 'READY' && v.questionStatus === 'READY',
+          ) && <p>Belum ada versi READY pada halaman ini. Draf kosong boleh disimpan.</p>}
+        <nav aria-label="Halaman pemilih soal Tryout" className="admin-content-actions">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy || !versions.data || questionOffset === 0}
+            onClick={() => setQuestionOffset((n) => Math.max(0, n - 20))}
+          >
+            Soal sebelumnya
+          </Button>
+          <span>Halaman {Math.floor(questionOffset / 20) + 1}</span>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy || !versions.data || versions.data.nextOffset == null}
+            onClick={() => setQuestionOffset(versions.data!.nextOffset!)}
+          >
+            Soal berikutnya
+          </Button>
+        </nav>
       </fieldset>
       <Button type="submit" disabled={busy}>
         Simpan draf paket

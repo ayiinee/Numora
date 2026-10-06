@@ -1,12 +1,28 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, expect, it, vi } from 'vitest';
 import { MediaUpload, putMedia } from './media-upload';
+import { ApiProblem } from '@/lib/api';
 const api = vi.hoisted(() => vi.fn());
 vi.mock('@/lib/api', async (original) => ({ ...(await original<object>()), apiRequest: api }));
 afterEach(() => {
   cleanup();
   vi.unstubAllGlobals();
   vi.resetAllMocks();
+});
+it('notifies the importer and clears its reservation when the server revokes upload access', async () => {
+  const denied = vi.fn();
+  api.mockRejectedValueOnce(new ApiProblem(403, 'FORBIDDEN', 'Upload access revoked'));
+  const file = new File(['TEST'], 'test.png', { type: 'image/png' });
+  Object.defineProperty(file, 'arrayBuffer', {
+    value: async () => new TextEncoder().encode('TEST').buffer,
+  });
+  render(<MediaUpload token="TEST_ONLY" onAccessDenied={denied} />);
+  fireEvent.change(screen.getByLabelText('ID soal sumber'), { target: { value: 'Q1' } });
+  fireEvent.change(screen.getByLabelText('ID asset'), { target: { value: 'stem-1' } });
+  fireEvent.change(screen.getByLabelText('File gambar'), { target: { files: [file] } });
+  fireEvent.click(screen.getByRole('button', { name: 'Upload dan verifikasi' }));
+  await screen.findByText('Upload access revoked');
+  expect(denied).toHaveBeenCalledTimes(1);
 });
 it('puts exact bytes without API credentials and excludes browser-owned Content-Length', async () => {
   const headers: Record<string, string> = {};

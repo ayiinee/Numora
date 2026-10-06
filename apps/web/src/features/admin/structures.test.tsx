@@ -16,6 +16,7 @@ beforeEach(() => {
     profile: {
       id: 'content',
       role: 'ADMIN',
+      status: 'ACTIVE',
       adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['OPERATIONS_LIMITED_READ'],
     },

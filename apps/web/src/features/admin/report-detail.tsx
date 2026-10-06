@@ -1,18 +1,26 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
+import { adminAccessDenied } from './operational-query';
 import { Button, Card } from '@tka/ui';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { resolveReport } from './content-api';
+import { ContentPayload } from './content-payload';
 import type { AdminReportDetailDto, ResolveReportDto } from './generated-types';
 export function ReportDetailScreen({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
   const { state } = useAuth();
   return (
     <Detail
       key={
-        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+        (state.status === 'ready'
+          ? state.profile.id + ':' + state.profile.adminRole
+          : state.status) +
+        ':' +
+        kind +
+        ':' +
+        id
       }
       kind={kind}
       id={id}
@@ -22,7 +30,10 @@ export function ReportDetailScreen({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; i
 function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
   const { state } = useAuth();
   const token =
-    state.status === 'ready' && state.profile.capabilities?.includes('CONTENT_MANAGE')
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    state.profile.capabilities?.includes('CONTENT_MANAGE')
       ? state.session.access_token
       : null;
   const [data, setData] = useState<AdminReportDetailDto | null>(null),
@@ -33,6 +44,8 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
   useEffect(() => {
     if (!token) return;
     let active = true;
+    setData(null);
+    setError('');
     setLoading(true);
     apiRequest<AdminReportDetailDto>(`admin/reports/${kind}/${encodeURIComponent(id)}`, token).then(
       (d) => {
@@ -58,7 +71,7 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
       description="Target berdasarkan versi atau snapshot saat dilaporkan."
       icon="chat"
     >
-      <Link href="/admin/content">Kembali ke workbench</Link>
+      <Link href="/admin/content?view=reports">Kembali ke daftar laporan</Link>
       {!token ? (
         <AdminMessage message="Akses moderasi diperlukan." login />
       ) : (
@@ -80,9 +93,7 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                       Buka versi yang dilaporkan (v{data.question.versionNumber},{' '}
                       {data.question.status})
                     </Link>
-                    <pre style={{ whiteSpace: 'pre-wrap', overflowWrap: 'anywhere' }}>
-                      {JSON.stringify(data.question.payload, null, 2)}
-                    </pre>
+                    <ContentPayload payload={data.question.payload} />
                   </>
                 )}
                 {data.video && (
@@ -125,11 +136,19 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                     resolveReport(token, kind, id, body)
                       .then(
                         () => setRevision((r) => r + 1),
-                        (e) => setError(e.message),
+                        (e: unknown) => {
+                          if (adminAccessDenied(e)) setData(null);
+                          setError(e instanceof Error ? e.message : 'Permintaan gagal.');
+                        },
                       )
                       .finally(() => setBusy(false));
                   }}
                 >
+                  <h3>Tindak lanjut laporan</h3>
+                  <p>
+                    Catat pemeriksaan dan keputusan. Jika soal diperbaiki, hubungkan versi revisinya
+                    agar penyelesaian dapat ditelusuri.
+                  </p>
                   <label>
                     Status tindak lanjut
                     <select name="status" defaultValue={data.status}>

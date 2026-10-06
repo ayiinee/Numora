@@ -58,6 +58,10 @@ export function AppShell({
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
+  const contentAdmin =
+    area === 'admin' &&
+    profile?.role === 'ADMIN' &&
+    profile.adminRole === 'CONTENT_DATA_MODERATION';
   const adminItems = adminNavigation(profile);
   const adminActive = activeAdminHref(pathname, adminItems);
   const areaName =
@@ -98,7 +102,7 @@ export function AppShell({
           <Link href={`/${area}`} className="app-brand">
             <Brand />
           </Link>
-          <p className="nav-caption">{areaName}</p>
+          <p className="nav-caption">{contentAdmin ? 'Content workspace' : areaName}</p>
           <nav aria-label={`Navigasi ${areaName}`}>{links()}</nav>
           {area === 'student' && (
             <div className="sidebar-note">
@@ -135,19 +139,47 @@ export function AppShell({
           variant={headerVariant ?? (focus ? 'assessment' : 'context')}
           logo={
             <>
+              {contentAdmin && (
+                <button
+                  ref={menuButton}
+                  type="button"
+                  className="menu-toggle content-menu-toggle"
+                  aria-label="Menu navigasi"
+                  aria-expanded={menuOpen}
+                  aria-controls="mobile-menu"
+                  onClick={() => setMenuOpen(!menuOpen)}
+                >
+                  <Icon name={menuOpen ? 'close' : 'menu'} />
+                </button>
+              )}
               <Link className="mobile-brand" href={`/${area}`}>
                 <Brand />
               </Link>
               <span className="desktop-context">
                 {areaName}
                 <span>/</span>
-                {title || navigation[area].find((item) => active(item.href))?.label || 'Beranda'}
+                {title ||
+                  (area === 'admin' ? adminItems : navigation[area]).find((item) =>
+                    active(item.href),
+                  )?.label ||
+                  'Beranda'}
               </span>
             </>
           }
           right={
             <div className="topbar-actions">
               {actions}
+              {contentAdmin && (
+                <div className="content-topbar-account" aria-label="Akun Admin Content">
+                  <span className="account-avatar" aria-hidden="true">
+                    {profile.displayName.slice(0, 1).toUpperCase() || 'N'}
+                  </span>
+                  <div>
+                    <strong>{profile.displayName}</strong>
+                    <small>Content, Data & Moderation</small>
+                  </div>
+                </div>
+              )}
               {area !== 'admin' ? (
                 <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
                   <span className="account-avatar">
@@ -174,7 +206,7 @@ export function AppShell({
                   <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
                 </button>
               )}
-              {area !== 'student' && (
+              {area !== 'student' && !contentAdmin && (
                 <button
                   ref={menuButton}
                   type="button"
