@@ -448,8 +448,24 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         await getDatabase().db.select().from(auditLogs).where(eq(auditLogs.entityId, report!.id))
       )[0]!.actorUserId,
     ).toBe(admin);
-    // General audit can include user identifiers; Content Admin gets only scoped content audit.
-    expect((await request('admin/audit-logs?limit=100')).status).toBe(403);
+    // Content sees only its domains, including when operational events exist.
+    const operationalId = randomUUID();
+    await getDatabase()
+      .db.insert(auditLogs)
+      .values({
+        actorUserId: admin,
+        action: 'TEST_SCHOOL_EVENT',
+        entityType: 'school',
+        entityId: operationalId,
+        metadata: {},
+      });
+    const auditResponse = await request('admin/audit-logs?limit=100');
+    expect(auditResponse.status).toBe(200);
+    const scopedAudit = await auditResponse.json();
+    expect(JSON.stringify(scopedAudit)).not.toContain(operationalId);
+    expect(
+      scopedAudit.items.some((item: { entityId: string }) => item.entityId === report!.id),
+    ).toBe(true);
     expect((await request('admin/reports?limit=0')).status).toBe(400);
     expect((await request('admin/irt?offset=-1')).status).toBe(400);
     expect((await request('admin/content/videos?limit=100000')).status).toBe(400);

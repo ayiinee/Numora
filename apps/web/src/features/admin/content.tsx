@@ -71,7 +71,8 @@ type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
 export function AdminContentScreen() {
   const { state } = useAuth();
-  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  const accountKey =
+    state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status;
   return <AdminContentScreenContent key={accountKey} />;
 }
 
@@ -97,9 +98,12 @@ function AdminContentScreenContent() {
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setData(null);
+      return;
+    }
     let active = true;
-    loadAdminWorkbench(token, offset).then(
+    loadAdminWorkbench(token, offset, view).then(
       (result) => {
         if (active) {
           setData(result);
@@ -118,7 +122,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision]);
+  }, [token, offset, revision, view]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -143,6 +147,8 @@ function AdminContentScreenContent() {
     setRevision((value) => value + 1);
   }
   function navigate(next: View) {
+    setData(null);
+    setLoading(true);
     setView(next);
     setOffset(0);
     setError('');
@@ -238,9 +244,9 @@ function AdminContentScreenContent() {
           <>
             <AdminStats
               items={[
-                { label: 'Keluarga soal', value: current.dashboard.questions, icon: 'book' },
-                { label: 'Versi READY', value: current.dashboard.readyVersions, icon: 'check' },
-                { label: 'Laporan terbuka', value: current.dashboard.openReports, icon: 'chat' },
+                { label: 'Keluarga soal', value: current.dashboard?.questions, icon: 'book' },
+                { label: 'Versi READY', value: current.dashboard?.readyVersions, icon: 'check' },
+                { label: 'Laporan terbuka', value: current.dashboard?.openReports, icon: 'chat' },
               ]}
             />
             <div

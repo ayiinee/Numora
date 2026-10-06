@@ -22,7 +22,8 @@ import {
 
 export function AdminSchoolsScreen() {
   const { state } = useAuth();
-  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  const accountKey =
+    state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status;
   return <AdminSchoolsScreenContent key={accountKey} />;
 }
 
@@ -30,7 +31,12 @@ function AdminSchoolsScreenContent() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const token =
-    state.status === 'ready' && state.profile.role === 'ADMIN' ? state.session.access_token : null;
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    ['SUPER_ADMIN', 'OPERATIONS'].includes(state.profile.adminRole ?? '')
+      ? state.session.access_token
+      : null;
   const [schools, setSchools] = useState<AdminSchool[] | null>(null);
   const [selected, setSelected] = useState('');
   const [tokens, setTokens] = useState<TeacherTokenSummary[] | null>(null);

@@ -14,7 +14,7 @@ import {
   teacherVerificationTokens,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
-import { adminAllows } from '../identity/admin-permissions';
+import { adminCapabilities } from '../identity/admin-capabilities';
 import { generateTeacherToken, hashTeacherToken, teacherTokenHashes } from './teacher-token';
 
 const isUniqueViolation = (error: unknown): boolean => {
@@ -44,7 +44,8 @@ export class SchoolsService {
     const profile = await this.identity.me(authorization);
     if (
       profile.role !== role ||
-      (role === 'ADMIN' && !adminAllows(profile.adminRole, 'operations'))
+      profile.status !== 'ACTIVE' ||
+      (role === 'ADMIN' && !adminCapabilities(profile.adminRole).includes('OPERATIONS_MANAGE'))
     )
       throw new ForbiddenException({ code: 'ROLE_FORBIDDEN', detail: 'Akses ditolak.' });
     return profile.id;
@@ -76,14 +77,12 @@ export class SchoolsService {
         )
         .returning({ id: teacherSchoolMemberships.id });
       if (ended.length)
-        await tx
-          .insert(auditLogs)
-          .values({
-            actorUserId: teacherId,
-            action: 'teacher_left_school',
-            entityType: 'school',
-            entityId: schoolId,
-          });
+        await tx.insert(auditLogs).values({
+          actorUserId: teacherId,
+          action: 'teacher_left_school',
+          entityType: 'school',
+          entityId: schoolId,
+        });
       return { left: true };
     });
   }

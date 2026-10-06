@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("CONTENT_MANAGE")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
+export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("ADMIN_ACCOUNTS_MANAGE" | "OPERATIONS_MANAGE" | "OPERATIONS_LIMITED_READ" | "CONTENT_MANAGE" | "ANALYTICS_OPERATIONS" | "ANALYTICS_CONTENT" | "AUDIT_READ")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
 
 export type RegisterProfileDto = { "role": "STUDENT" | "TEACHER"; };
 

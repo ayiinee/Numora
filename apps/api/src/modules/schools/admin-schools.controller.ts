@@ -1,7 +1,25 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
 import { SchoolsService } from './schools.service';
+import { AdminGuard } from '../identity/admin.guard';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
 
 class AdminSchoolDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -58,6 +76,8 @@ class RevokedDto {
 
 @ApiTags('admin-schools')
 @ApiBearerAuth()
+@UseGuards(AdminGuard)
+@RequireAdminCapability('OPERATIONS_MANAGE')
 @Controller('admin/schools')
 export class AdminSchoolsController {
   constructor(private readonly schools: SchoolsService) {}
@@ -70,7 +90,10 @@ export class AdminSchoolsController {
 
   @Post()
   @ApiCreatedResponse({ type: AdminSchoolDto })
-  create(@Headers('authorization') authorization: string | undefined, @Body() body: CreateSchoolDto) {
+  create(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: CreateSchoolDto,
+  ) {
     return this.schools.createSchool(authorization, body.code, body.name);
   }
 

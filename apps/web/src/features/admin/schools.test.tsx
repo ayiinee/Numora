@@ -37,7 +37,13 @@ beforeEach(() => {
   vi.resetAllMocks();
   auth.state = {
     status: 'ready',
-    profile: { id: 'admin-one', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
+    profile: {
+      id: 'admin-one',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS',
+      status: 'ACTIVE',
+      displayName: 'Admin TEST',
+    },
     session: { access_token: 'test-admin' },
   };
   vi.mocked(listAdminSchools).mockResolvedValue({ items: [school] });
@@ -81,6 +87,11 @@ it('disables editing and selection during pending token issuance and removes its
   );
   finish({ id: 'token-test', token: 'SYNTHETIC-ONLY', expiresAt: '2099-01-01T00:00:00Z' });
   await screen.findByText('SYNTHETIC-ONLY');
+  await waitFor(() =>
+    expect(
+      (screen.getByRole('button', { name: /Sekolah lain/ }) as HTMLButtonElement).disabled,
+    ).toBe(false),
+  );
   fireEvent.click(screen.getByRole('button', { name: /Sekolah lain/ }));
   expect(screen.queryByText('SYNTHETIC-ONLY')).toBeNull();
 });

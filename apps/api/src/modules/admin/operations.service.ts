@@ -1,5 +1,6 @@
-import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, ilike, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import type { AdminRole } from '../identity/admin-capabilities';
+import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
+import { and, desc, eq, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import { classes, classMemberships, getDatabase, schools, users } from '@tka/database';
 import type {
   AdminClassDto,
@@ -34,15 +35,20 @@ function userDto(
 
 @Injectable()
 export class AdminOperationsService {
-  async users(query: AdminUserQueryDto, includeAdminAccounts = false) {
+  async users(query: AdminUserQueryDto, role: AdminRole) {
+    if (role !== 'SUPER_ADMIN' && query.role === 'ADMIN')
+      throw new ForbiddenException({
+        code: 'ADMIN_PERMISSION_REQUIRED',
+        detail: 'Data akun Admin hanya tersedia untuk Super Admin.',
+      });
     const term = search(query.search);
     const rows = await getDatabase()
       .db.select(userFields)
       .from(users)
       .where(
         and(
-          includeAdminAccounts ? undefined : ne(users.role, 'ADMIN'),
           term ? ilike(users.displayName, term) : undefined,
+          role === 'SUPER_ADMIN' ? undefined : inArray(users.role, ['STUDENT', 'TEACHER']),
           query.role ? eq(users.role, query.role) : undefined,
           query.status ? eq(users.status, query.status) : undefined,
         ),
@@ -55,12 +61,10 @@ export class AdminOperationsService {
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
     };
   }
-  async user(id: string, includeAdminAccounts = false) {
-    const [row] = await getDatabase()
-      .db.select(userFields)
-      .from(users)
-      .where(and(eq(users.id, id), includeAdminAccounts ? undefined : ne(users.role, 'ADMIN')));
-    if (!row) throw new NotFoundException('Pengguna tidak ditemukan.');
+  async user(id: string, role: AdminRole) {
+    const [row] = await getDatabase().db.select(userFields).from(users).where(eq(users.id, id));
+    if (!row || (role !== 'SUPER_ADMIN' && row.role === 'ADMIN'))
+      throw new NotFoundException('Pengguna tidak ditemukan.');
     return userDto(row);
   }
   private classQuery() {
