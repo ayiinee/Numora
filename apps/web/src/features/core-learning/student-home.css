@@ -1,0 +1,1447 @@
+/* Student Home only. Shared shell, tokens, and other Student routes retain their styles. */
+.student-home-shell {
+  background: var(--color-bg);
+}
+.student-home-shell .app-content {
+  max-width: 1260px;
+}
+.student-home-shell .sh-layout {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(285px, 330px);
+  gap: var(--space-6);
+  align-items: start;
+}
+.student-home-shell .sh-main,
+.student-home-shell .sh-aside {
+  display: grid;
+  min-width: 0;
+  gap: var(--space-6);
+}
+.student-home-shell .sh-desktop-identity {
+  margin-bottom: 2px;
+}
+.student-home-shell .sh-identity {
+  display: grid;
+  gap: var(--space-4);
+  color: var(--color-text-strong);
+}
+.student-home-shell .sh-identity__top {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-width: 0;
+}
+.student-home-shell .sh-identity__avatar {
+  display: flex;
+  border-radius: var(--radius-full);
+  flex: none;
+}
+.student-home-shell .sh-identity__avatar .numora-avatar {
+  background: var(--numora-peach-100) !important;
+  color: var(--numora-purple-800) !important;
+}
+.student-home-shell .sh-identity__greeting {
+  min-width: 0;
+  flex: 1;
+}
+.student-home-shell .sh-identity__greeting h1 {
+  font-size: var(--text-3xl);
+  font-weight: var(--font-extrabold);
+  line-height: var(--leading-tight);
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-identity__greeting p {
+  margin-top: 4px;
+  font-size: var(--text-base);
+  color: var(--color-text-muted);
+}
+.student-home-shell .sh-identity__bell {
+  position: relative;
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  flex: none;
+  color: var(--color-text-strong);
+}
+.student-home-shell .sh-identity__bell:hover {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .student-notification-count {
+  position: absolute;
+  top: 0;
+  right: 0;
+  min-width: 16px;
+  height: 16px;
+  padding: 1px 3px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  font-size: 9px;
+  font-weight: 800;
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+}
+.student-home-shell .sh-progress {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  min-height: 76px;
+  padding: 12px 16px;
+  border-radius: var(--radius-xl);
+  background: var(--numora-purple-50);
+  color: var(--color-text-strong);
+}
+.student-home-shell .sh-progress:hover {
+  background: var(--numora-purple-100);
+}
+.student-home-shell .sh-progress__icon {
+  width: 48px;
+  height: 48px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-full);
+  background: var(--numora-purple-200);
+  color: var(--numora-purple-700);
+  flex: none;
+}
+.student-home-shell .sh-progress__body {
+  flex: 1;
+  min-width: 0;
+  display: grid;
+  gap: 7px;
+}
+.student-home-shell .sh-progress__labels {
+  display: flex;
+  align-items: baseline;
+  justify-content: space-between;
+  gap: 8px;
+  font-size: var(--text-sm);
+}
+.student-home-shell .sh-progress__labels strong {
+  font-weight: var(--font-bold);
+}
+.student-home-shell .sh-progress__labels > span {
+  white-space: nowrap;
+}
+.student-home-shell .sh-progress small {
+  color: var(--color-text-muted);
+}
+.student-home-shell .sh-progress > svg {
+  color: var(--color-text-light);
+  flex: none;
+}
+.student-home-shell .sh-carousel {
+  min-width: 0;
+}
+.student-home-shell .sh-carousel__viewport {
+  position: relative;
+  height: 330px;
+  overflow: hidden;
+  border-radius: var(--radius-xl);
+}
+.student-home-shell .sh-carousel__slide {
+  position: absolute;
+  top: 0;
+  bottom: 0;
+  left: 0;
+  width: calc(100% - 24px);
+  transition: transform var(--transition-slow);
+}
+.student-home-shell .sh-carousel__slide.is-active {
+  transform: translateX(0);
+}
+.student-home-shell .sh-hero.student-home-hero {
+  width: 100%;
+  height: 100%;
+  min-height: 0;
+  padding: 24px;
+  border-radius: var(--radius-xl);
+  display: flex;
+  align-items: flex-start;
+  background: linear-gradient(
+    115deg,
+    var(--numora-purple-700),
+    var(--numora-purple),
+    var(--numora-purple-400)
+  );
+  box-shadow: var(--shadow-sm);
+}
+.student-home-shell .sh-hero.student-home-hero::before,
+.student-home-shell .sh-hero.student-home-hero::after {
+  content: none;
+}
+.student-home-shell .sh-hero--tryout.student-home-hero {
+  color: var(--color-text-strong);
+  background: linear-gradient(120deg, var(--numora-peach-100), var(--numora-ivory-50));
+}
+.student-home-shell .sh-hero__eyebrow {
+  position: relative;
+  z-index: 2;
+  display: inline-flex;
+  align-items: center;
+  min-height: 28px;
+  padding: 3px 13px;
+  border-radius: var(--radius-full);
+  color: inherit;
+  background: rgb(255 255 255 / 18%);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  letter-spacing: 0.03em;
+}
+.student-home-shell .sh-hero--tryout .sh-hero__eyebrow {
+  background: var(--numora-peach-200);
+}
+.student-home-shell .sh-hero__copy {
+  position: relative;
+  z-index: 2;
+  width: min(60%, 350px);
+  margin-top: 15px;
+  display: grid;
+  justify-items: start;
+  gap: 10px;
+}
+.student-home-shell .sh-hero h2 {
+  margin: 0;
+  font-size: clamp(25px, 2.4vw, 33px);
+  line-height: 1.14;
+  font-weight: var(--font-extrabold);
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-hero p {
+  max-width: 32ch;
+  margin: 0;
+  font-size: var(--text-base);
+  line-height: var(--leading-normal);
+}
+.student-home-shell .sh-hero__state {
+  font-size: var(--text-xs);
+  color: var(--numora-purple-800);
+  font-weight: var(--font-bold);
+}
+.student-home-shell .sh-hero__meta {
+  font-weight: var(--font-semibold);
+}
+.student-home-shell .sh-hero__action {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 8px;
+  min-height: 48px;
+  padding: 10px 18px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--numora-purple-800);
+  font-weight: var(--font-bold);
+  font-size: var(--text-base);
+  white-space: nowrap;
+  box-shadow: var(--shadow-xs);
+}
+.student-home-shell .sh-hero__action:hover {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .sh-hero__illustration {
+  position: absolute;
+  z-index: 1;
+  object-fit: contain;
+  object-position: bottom right;
+  pointer-events: none;
+  user-select: none;
+}
+.student-home-shell .sh-hero__illustration--drill {
+  width: 58%;
+  height: auto;
+  max-height: 100%;
+  right: -7px;
+  bottom: -3px;
+}
+.student-home-shell .sh-hero__illustration--tryout {
+  width: 52%;
+  height: auto;
+  max-height: 95%;
+  right: -8px;
+  bottom: 0;
+}
+.student-home-shell .sh-carousel__controls {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  margin-top: 6px;
+}
+.student-home-shell .sh-carousel__indicators button {
+  border: 0;
+  background: transparent;
+  color: var(--numora-purple-800);
+  cursor: pointer;
+}
+.student-home-shell .sh-carousel__indicators {
+  display: flex;
+  align-items: center;
+  gap: 3px;
+}
+.student-home-shell .sh-carousel__indicators button {
+  width: 44px;
+  height: 44px;
+  display: grid;
+  place-items: center;
+  font-size: 0;
+}
+.student-home-shell .sh-carousel__indicators button::before {
+  content: '';
+  width: 9px;
+  height: 9px;
+  display: block;
+  border-radius: var(--radius-full);
+  background: var(--numora-purple-100);
+  transition: width var(--transition-base);
+}
+.student-home-shell .sh-carousel__indicators button.is-active::before {
+  width: 21px;
+  background: var(--numora-purple);
+}
+.student-home-shell .sh-section {
+  min-width: 0;
+}
+.student-home-shell .sh-section__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 8px;
+  margin-bottom: 12px;
+}
+.student-home-shell .sh-section__heading h2 {
+  font-size: var(--text-2xl);
+  line-height: var(--leading-tight);
+  font-weight: var(--font-extrabold);
+}
+.student-home-shell .sh-section__heading a {
+  display: inline-flex;
+  align-items: center;
+  gap: 3px;
+  min-height: 44px;
+  color: var(--color-text-light);
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+.student-home-shell .sh-section__heading a:hover {
+  color: var(--numora-purple-700);
+}
+.student-home-shell .sh-shortcuts__grid {
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: 12px;
+}
+.student-home-shell .sh-shortcut {
+  position: relative;
+  display: flex;
+  flex-direction: column;
+  min-width: 0;
+  min-height: 140px;
+  padding: 16px;
+  border-radius: var(--radius-lg);
+  color: var(--color-text-strong);
+}
+.student-home-shell .sh-shortcut--peach {
+  background: var(--numora-peach-50);
+}
+.student-home-shell .sh-shortcut--purple {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .sh-shortcut--cool {
+  background: var(--color-info-light);
+}
+.student-home-shell .sh-shortcut__icon {
+  width: 50px;
+  height: 50px;
+  display: grid;
+  place-items: center;
+  border-radius: 16px;
+  background: rgb(255 255 255 / 65%);
+  color: var(--numora-purple-700);
+}
+.student-home-shell .sh-shortcut--peach .sh-shortcut__icon {
+  color: var(--numora-peach-700);
+}
+.student-home-shell .sh-shortcut--cool .sh-shortcut__icon {
+  color: var(--color-info);
+}
+.student-home-shell .sh-shortcut strong {
+  margin-top: auto;
+  font-size: var(--text-lg);
+  line-height: var(--leading-tight);
+}
+.student-home-shell .sh-shortcut small {
+  margin-top: 3px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.35;
+}
+.student-home-shell .sh-catalog-state {
+  margin-top: calc(-1 * var(--space-4));
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.student-home-shell .sh-activities__list {
+  display: grid;
+  gap: 8px;
+}
+.student-home-shell .sh-activity-entry {
+  min-width: 0;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+.student-home-shell .sh-activity {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  min-height: 78px;
+  padding: 12px;
+}
+.student-home-shell a.sh-activity:hover {
+  background: var(--numora-purple-50);
+  border-radius: inherit;
+}
+.student-home-shell .sh-activity__icon {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--numora-peach-100);
+  color: var(--numora-peach-700);
+}
+.student-home-shell .sh-activity__icon--tryout {
+  background: var(--numora-purple-100);
+  color: var(--numora-purple-700);
+}
+.student-home-shell .sh-activity__body {
+  min-width: 0;
+  flex: 1;
+  display: grid;
+  gap: 3px;
+}
+.student-home-shell .sh-activity__body > strong {
+  font-size: var(--text-base);
+  line-height: 1.3;
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-activity__detail {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-activity__status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 4px 8px;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
+.student-home-shell .sh-activity__status > span {
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-activity__xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  border-radius: var(--radius-full);
+  background: var(--numora-gold-100);
+  padding: 2px 6px;
+  color: var(--numora-gold-900);
+  font-weight: var(--font-bold);
+}
+.student-home-shell .sh-activity__demo {
+  border-radius: var(--radius-full);
+  background: var(--numora-purple-50);
+  color: var(--numora-purple-800);
+  padding: 2px 6px;
+}
+.student-home-shell .sh-activity__pending {
+  color: var(--color-warning);
+}
+.student-home-shell .sh-activity time {
+  flex: none;
+  color: var(--color-text-light);
+  font-size: var(--text-xs);
+  text-align: right;
+}
+.student-home-shell .sh-activity > svg {
+  flex: none;
+  color: var(--color-text-light);
+}
+.student-home-shell .sh-activities__empty,
+.student-home-shell .sh-feedback__card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+  padding: 16px;
+}
+.student-home-shell .sh-class__card {
+  min-width: 0;
+  padding: 14px;
+  border-radius: var(--radius-xl);
+  background: var(--numora-gold-50);
+}
+.student-home-shell .sh-class__list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: grid;
+}
+.student-home-shell .sh-class__list li,
+.student-home-shell .sh-class__own {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-width: 0;
+  min-height: 48px;
+  padding: 5px;
+}
+.student-home-shell .sh-class__list li + li {
+  border-top: 1px solid var(--color-border-light);
+}
+.student-home-shell .sh-class__rank {
+  width: 30px;
+  height: 30px;
+  display: grid;
+  place-items: center;
+  flex: none;
+  border-radius: var(--radius-full);
+  color: var(--color-text-strong);
+  background: var(--color-surface-muted);
+  font-weight: var(--font-extrabold);
+}
+.student-home-shell .sh-class__rank--1 {
+  background: var(--numora-gold-400);
+}
+.student-home-shell .sh-class__rank--2 {
+  background: var(--color-surface-cool);
+}
+.student-home-shell .sh-class__rank--3 {
+  background: var(--numora-peach-300);
+}
+.student-home-shell .sh-class__list strong,
+.student-home-shell .sh-class__own strong {
+  flex: 1;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-class__list li > span:last-child,
+.student-home-shell .sh-class__own > span:last-child {
+  flex: none;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+.student-home-shell .sh-class__own {
+  margin-top: 8px;
+  padding: 7px;
+  border-radius: var(--radius-lg);
+  background: var(--numora-purple-50);
+  color: var(--numora-purple-800);
+}
+.student-home-shell .sh-class__own > span:first-child {
+  width: 30px;
+  flex: none;
+  text-align: center;
+  font-weight: var(--font-extrabold);
+}
+.student-home-shell .sh-class__state {
+  display: grid;
+  justify-items: center;
+  gap: 8px;
+  text-align: center;
+  padding: 24px 10px;
+  color: var(--color-text-muted);
+}
+.student-home-shell .sh-class__state svg {
+  color: var(--numora-gold-700);
+}
+.student-home-shell .sh-class__state strong {
+  color: var(--color-text-strong);
+}
+.student-home-shell .sh-feedback__card {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 80px;
+  box-shadow: var(--shadow-xs);
+}
+.student-home-shell .sh-feedback__card--linked:hover {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .sh-feedback__icon {
+  width: 46px;
+  height: 46px;
+  flex: none;
+  display: grid;
+  place-items: center;
+  border-radius: 14px;
+  background: var(--numora-peach-100);
+  color: var(--numora-peach-700);
+}
+.student-home-shell .sh-feedback__body {
+  display: grid;
+  gap: 3px;
+  flex: 1;
+  min-width: 0;
+}
+.student-home-shell .sh-feedback__body strong {
+  font-size: var(--text-sm);
+}
+.student-home-shell .sh-feedback__body > span {
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  line-height: 1.4;
+  overflow-wrap: anywhere;
+}
+.student-home-shell .sh-feedback__body small {
+  font-size: var(--text-xs);
+  color: var(--numora-purple-700);
+}
+.student-home-shell .sh-feedback__aside {
+  display: grid;
+  gap: 5px;
+  justify-items: end;
+  align-self: center;
+  flex: none;
+}
+.student-home-shell .sh-feedback__aside b {
+  display: grid;
+  place-items: center;
+  min-width: 20px;
+  height: 20px;
+  padding: 2px;
+  border-radius: var(--radius-full);
+  background: var(--color-danger);
+  color: var(--color-text-inverse);
+  font-size: var(--text-xs);
+}
+.student-home-shell .sh-feedback__aside time {
+  color: var(--color-text-light);
+  font-size: 10px;
+  white-space: nowrap;
+}
+.student-home-shell .sh-feedback__card > svg {
+  flex: none;
+  color: var(--color-text-light);
+}
+.student-home-shell .sh-feedback__empty {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+.student-home-shell .sh-feedback__card button {
+  min-height: 44px;
+  color: var(--numora-purple-700);
+  text-decoration: underline;
+}
+.student-home-shell .sh-hero--tryout .sh-hero__copy [role='alert'] {
+  color: var(--color-danger);
+}
+.student-home-shell .sh-hero--tryout .sh-hero__copy button {
+  min-height: 44px;
+  font-weight: var(--font-bold);
+  text-decoration: underline;
+}
+@media (max-width: 959px) {
+  .student-home-shell .app-mobile-header {
+    max-width: 760px;
+    margin: auto;
+    padding: 20px 24px 0;
+  }
+  .student-home-shell .app-content {
+    max-width: 760px;
+    padding-top: var(--space-5);
+  }
+  .student-home-shell .sh-layout {
+    display: flex;
+    flex-direction: column;
+    gap: var(--space-6);
+  }
+  .student-home-shell .sh-main,
+  .student-home-shell .sh-aside {
+    width: 100%;
+  }
+  .student-home-shell .sh-desktop-identity {
+    display: none;
+  }
+}
+@media (max-width: 699px) {
+  .student-home-shell .app-mobile-header {
+    padding: 16px 16px 0;
+  }
+  .student-home-shell .app-content {
+    padding: 18px 16px 32px;
+  }
+  .student-home-shell .sh-main,
+  .student-home-shell .sh-aside {
+    gap: var(--space-6);
+  }
+  .student-home-shell .sh-carousel__viewport {
+    height: 340px;
+  }
+  .student-home-shell .sh-hero.student-home-hero {
+    padding: 20px;
+  }
+  .student-home-shell .sh-hero__copy {
+    width: 65%;
+    gap: 9px;
+  }
+  .student-home-shell .sh-hero h2 {
+    font-size: clamp(26px, 7.2vw, 32px);
+  }
+  .student-home-shell .sh-hero p {
+    font-size: var(--text-sm);
+  }
+  .student-home-shell .sh-hero__illustration--drill {
+    width: 70%;
+    right: -23px;
+  }
+  .student-home-shell .sh-hero__illustration--tryout {
+    width: 66%;
+    right: -30px;
+  }
+  .student-home-shell .sh-shortcut {
+    min-height: 136px;
+    padding: 12px;
+  }
+  .student-home-shell .sh-shortcut strong {
+    font-size: var(--text-base);
+  }
+}
+@media (max-width: 359px) {
+  .student-home-shell .sh-section__heading h2 {
+    font-size: var(--text-xl);
+  }
+  .student-home-shell .sh-identity__greeting h1 {
+    font-size: var(--text-2xl);
+  }
+  .student-home-shell .sh-identity__greeting p {
+    font-size: var(--text-xs);
+  }
+  .student-home-shell .sh-progress {
+    padding: 10px;
+    gap: 8px;
+  }
+  .student-home-shell .sh-progress__icon {
+    width: 42px;
+    height: 42px;
+  }
+  .student-home-shell .sh-carousel__viewport {
+    height: 360px;
+  }
+  .student-home-shell .sh-hero__copy {
+    width: 72%;
+  }
+  .student-home-shell .sh-hero h2 {
+    font-size: 26px;
+  }
+  .student-home-shell .sh-hero__illustration--drill {
+    width: 75%;
+    right: -35px;
+  }
+  .student-home-shell .sh-hero__illustration--tryout {
+    width: 71%;
+    right: -35px;
+  }
+  .student-home-shell .sh-shortcuts__grid {
+    gap: 6px;
+  }
+  .student-home-shell .sh-shortcut {
+    padding: 9px;
+    min-height: 130px;
+  }
+  .student-home-shell .sh-shortcut__icon {
+    width: 38px;
+    height: 38px;
+  }
+  .student-home-shell .sh-shortcut strong {
+    font-size: var(--text-sm);
+  }
+  .student-home-shell .sh-shortcut small {
+    font-size: 10px;
+  }
+  .student-home-shell .sh-activity time,
+  .student-home-shell .sh-feedback__aside time {
+    display: none;
+  }
+}
+@media (prefers-reduced-motion: reduce) {
+  .student-home-shell .sh-carousel__slide,
+  .student-home-shell .sh-carousel__indicators button::before {
+    transition: none;
+  }
+}
+
+/* Home reference: compact cards from Numora (3).html, with the Figma purple header. */
+.student-home-shell {
+  background: var(--color-bg);
+}
+.student-home-shell .app-content {
+  width: 100%;
+  max-width: 910px;
+  padding: 26px 26px 120px;
+}
+.student-home-shell .sh-layout,
+.student-home-shell .sh-main,
+.student-home-shell .sh-aside {
+  display: flex;
+  flex-direction: column;
+  width: 100%;
+  gap: 22px;
+}
+.student-home-shell .sh-identity {
+  position: relative;
+  isolation: isolate;
+  overflow: hidden;
+  gap: 7px;
+  padding: 11px 16px;
+  border-radius: 22px;
+  background: var(--numora-purple-700);
+  color: var(--color-text-inverse);
+  box-shadow: var(--shadow-sm);
+}
+.student-home-shell .sh-identity::before {
+  content: '';
+  position: absolute;
+  z-index: 1;
+  inset: 0;
+  background: rgb(106 30 205 / 18%);
+  pointer-events: none;
+}
+.student-home-shell .sh-identity__pattern {
+  position: absolute;
+  z-index: 0;
+  top: 0;
+  right: 0;
+  width: 55%;
+  height: 100%;
+  max-width: none;
+  object-fit: cover;
+  object-position: center;
+  opacity: 0.24;
+  pointer-events: none;
+}
+.student-home-shell .sh-identity__top,
+.student-home-shell .sh-progress,
+.student-home-shell .sh-identity__announcement {
+  position: relative;
+  z-index: 2;
+}
+.student-home-shell .sh-identity__top {
+  gap: 8px;
+  flex-wrap: wrap;
+}
+.student-home-shell .sh-identity__avatar {
+  width: 40px;
+  height: 40px;
+  padding: 3px;
+  border: 1px solid rgb(255 255 255 / 40%);
+  background: rgb(255 255 255 / 20%);
+}
+.student-home-shell .sh-identity__avatar .numora-avatar {
+  width: 32px !important;
+  height: 32px !important;
+  font-size: 13px !important;
+}
+.student-home-shell .sh-identity__greeting h1 {
+  color: inherit;
+  font-size: 12px;
+  line-height: 1.25;
+  font-weight: var(--font-bold);
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.student-home-shell .sh-identity__greeting p {
+  margin-top: 2px;
+  color: rgb(255 255 255 / 75%);
+  font-size: 10px;
+  line-height: 1.25;
+  white-space: nowrap;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+.student-home-shell .sh-identity__xp {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+  flex: none;
+  min-height: 32px;
+  padding: 5px 9px;
+  border: 1px solid rgb(255 255 255 / 20%);
+  border-radius: var(--radius-full);
+  background: rgb(255 255 255 / 15%);
+  color: inherit;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.student-home-shell .sh-identity__xp svg {
+  flex: none;
+  color: var(--numora-gold-400);
+  stroke: var(--numora-gold-200);
+}
+.student-home-shell .sh-identity__bell {
+  width: 36px;
+  height: 36px;
+  background: rgb(255 255 255 / 15%);
+  color: inherit;
+}
+.student-home-shell .sh-identity__bell:hover,
+.student-home-shell .sh-identity__xp:hover {
+  background: rgb(255 255 255 / 25%);
+}
+.student-home-shell .student-notification-count {
+  top: 3px;
+  right: 2px;
+  background: var(--numora-peach-500);
+}
+.student-home-shell .sh-progress {
+  display: block;
+  min-height: 0;
+  padding: 0;
+  border-radius: 0;
+  background: transparent;
+  color: inherit;
+}
+.student-home-shell .sh-progress:hover {
+  background: transparent;
+}
+.student-home-shell .sh-progress__body {
+  gap: 4px;
+}
+.student-home-shell .sh-progress__labels {
+  font-size: 11px;
+}
+.student-home-shell .sh-progress__labels > span {
+  color: rgb(255 255 255 / 80%);
+  font-size: 10px;
+}
+.student-home-shell .sh-progress .numora-progress [role='progressbar'] {
+  height: 8px !important;
+  background: rgb(0 0 0 / 25%) !important;
+}
+.student-home-shell .sh-progress small {
+  color: rgb(255 255 255 / 80%);
+}
+.student-home-shell .sh-identity__announcement {
+  display: flex;
+  align-items: center;
+  gap: 7px;
+  min-height: 34px;
+  padding: 7px 10px;
+  border-radius: 12px;
+  background: var(--numora-gold-200);
+  color: var(--numora-gold-900);
+  font-size: 11px;
+}
+.student-home-shell .sh-identity__announcement img {
+  flex: none;
+}
+.student-home-shell .sh-identity__announcement span {
+  flex: 1;
+  min-width: 0;
+  overflow: hidden;
+  white-space: nowrap;
+  text-overflow: ellipsis;
+}
+.student-home-shell .sh-identity__announcement strong {
+  flex: none;
+  color: var(--numora-purple-800);
+  white-space: nowrap;
+}
+.student-home-shell .sh-carousel {
+  margin-right: -26px;
+}
+.student-home-shell .sh-carousel__viewport {
+  height: 207px;
+  border-radius: 0;
+}
+.student-home-shell .sh-carousel__slide {
+  top: 5px;
+  bottom: auto;
+  width: 86%;
+  height: 180px;
+  transform-origin: 20% 50%;
+  transition:
+    left 460ms cubic-bezier(0.22, 0.7, 0.22, 1),
+    transform 460ms cubic-bezier(0.22, 0.7, 0.22, 1);
+}
+.student-home-shell .sh-carousel__slide:not(.is-active) {
+  left: calc(86% + 14px);
+  transform: rotate(2deg) scale(0.98);
+}
+.student-home-shell .sh-carousel__slide.is-active {
+  left: 0;
+  transform: rotate(-0.55deg);
+}
+.student-home-shell .sh-hero.student-home-hero,
+.student-home-shell .sh-hero--tryout.student-home-hero {
+  display: block;
+  padding: 0;
+  border-radius: 27px 54px 21px 42px / 26px 30px 37px 33px;
+  overflow: hidden;
+  box-shadow: 0 8px 24px rgb(45 27 80 / 7%);
+}
+.student-home-shell .sh-hero.student-home-hero {
+  background:
+    radial-gradient(circle at 20% 112%, rgb(255 255 255 / 12%) 0 19%, transparent 20%),
+    radial-gradient(circle at 72% -34%, rgb(255 255 255 / 13%) 0 31%, transparent 32%),
+    linear-gradient(125deg, #8052b1, #ab73d3);
+}
+.student-home-shell .sh-hero--tryout.student-home-hero {
+  background: linear-gradient(135deg, var(--numora-peach-100), var(--numora-ivory-50));
+}
+.student-home-shell .sh-hero__eyebrow {
+  position: absolute;
+  top: 12px;
+  left: 20px;
+  min-height: 0;
+  padding: 3px 9px;
+  font-size: 10px;
+}
+.student-home-shell .sh-hero__copy {
+  width: 64%;
+  margin: 40px 0 0;
+  padding-left: 20px;
+  gap: 4px;
+}
+.student-home-shell .sh-hero h2 {
+  font-size: clamp(19px, 2vw, 24px);
+  line-height: 1.08;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.student-home-shell .sh-hero p {
+  font-size: 12px;
+  line-height: 1.2;
+  display: -webkit-box;
+  -webkit-box-orient: vertical;
+  -webkit-line-clamp: 2;
+  overflow: hidden;
+}
+.student-home-shell .sh-hero p.sh-hero__meta {
+  display: none;
+}
+.student-home-shell .sh-hero__action {
+  position: relative;
+  isolation: isolate;
+  min-height: 44px;
+  padding: 9px 10px;
+  background: transparent;
+  box-shadow: none;
+  font-size: 12px;
+}
+.student-home-shell .sh-hero__action::before {
+  content: '';
+  position: absolute;
+  z-index: -1;
+  inset: 5px 0;
+  border-radius: inherit;
+  background: var(--color-surface);
+  box-shadow: var(--shadow-xs);
+}
+.student-home-shell .sh-hero__action:hover {
+  background: transparent;
+}
+.student-home-shell .sh-hero__action:hover::before {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .sh-hero__action svg {
+  width: 14px;
+  height: 14px;
+}
+.student-home-shell .sh-hero__illustration--drill {
+  width: auto;
+  height: 100%;
+  max-height: none;
+  right: 0;
+  top: 0;
+  bottom: auto;
+  object-position: center;
+}
+.student-home-shell .sh-hero__illustration--tryout {
+  width: auto;
+  height: 46%;
+  max-height: none;
+  right: 10%;
+  bottom: auto;
+  top: 28%;
+  transform: rotate(8deg);
+}
+.student-home-shell .sh-carousel__controls {
+  margin: -15px 0 0 -26px;
+  position: relative;
+}
+.student-home-shell .sh-carousel__indicators button {
+  width: 44px;
+  height: 44px;
+}
+.student-home-shell .sh-carousel__indicators button::before {
+  width: 8px;
+  height: 8px;
+}
+.student-home-shell .sh-carousel__indicators button.is-active::before {
+  width: 19px;
+}
+.student-home-shell .sh-section__heading {
+  margin-bottom: 9px;
+}
+.student-home-shell .sh-section__heading h2 {
+  font-size: 23px;
+}
+.student-home-shell .sh-section__heading a {
+  color: var(--color-text-muted);
+  font-size: 14px;
+}
+.student-home-shell .sh-shortcuts__grid {
+  gap: 12px;
+}
+.student-home-shell .sh-shortcut {
+  justify-content: center;
+  min-height: 132px;
+  padding: 14px;
+  border-radius: 19px;
+}
+.student-home-shell .sh-shortcut--peach {
+  background: #fff0e4;
+}
+.student-home-shell .sh-shortcut--purple {
+  background: var(--numora-purple-50);
+}
+.student-home-shell .sh-shortcut--cool {
+  background: #e2f2fd;
+}
+.student-home-shell .sh-shortcut__icon {
+  display: block;
+  width: 62px;
+  height: 62px;
+  background: transparent;
+}
+.student-home-shell .sh-shortcut__icon img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.student-home-shell .sh-shortcut strong {
+  margin-top: 6px;
+  font-size: 17px;
+}
+.student-home-shell .sh-shortcut small {
+  font-size: 10px;
+}
+.student-home-shell .sh-activities__list {
+  gap: 8px;
+}
+.student-home-shell .sh-activity-entry {
+  border-radius: 17px;
+  box-shadow: none;
+}
+.student-home-shell .sh-activity {
+  min-height: 63px;
+  padding: 8px 11px;
+  gap: 9px;
+}
+.student-home-shell .sh-activity__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: transparent;
+}
+.student-home-shell .sh-activity__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.student-home-shell .sh-activity__body > strong {
+  font-size: 15px;
+}
+.student-home-shell .sh-activity__detail {
+  font-size: 11px;
+}
+.student-home-shell .sh-activity__status {
+  flex: none;
+  justify-content: flex-end;
+  max-width: 42%;
+}
+.student-home-shell .sh-activity__xp {
+  gap: 3px;
+  padding: 5px 7px;
+  background: var(--numora-gold-50);
+  color: var(--color-text-strong);
+  white-space: nowrap;
+}
+.student-home-shell .sh-activity__xp img {
+  width: 17px;
+  height: auto;
+}
+.student-home-shell .sh-activity__demo,
+.student-home-shell .sh-activity__pending {
+  border-radius: var(--radius-full);
+  padding: 5px 8px;
+  background: var(--numora-purple-100);
+  color: var(--numora-purple-800);
+  white-space: nowrap;
+}
+.student-home-shell .sh-activity__pending {
+  background: var(--numora-gold-100);
+  color: var(--numora-gold-900);
+}
+.student-home-shell .sh-class__card {
+  position: relative;
+  overflow: hidden;
+  padding: 10px 12px;
+  border-radius: 20px;
+  background: #fff6e7;
+}
+.student-home-shell .sh-class__list {
+  position: relative;
+  z-index: 1;
+  width: 78%;
+}
+.student-home-shell .sh-class__list li {
+  min-height: 42px;
+  gap: 8px;
+  padding: 4px 2px;
+}
+.student-home-shell .sh-class__rank {
+  width: 30px;
+  height: 30px;
+}
+.student-home-shell .sh-class__list .numora-avatar,
+.student-home-shell .sh-class__own .numora-avatar {
+  width: 30px !important;
+  height: 30px !important;
+  font-size: 12px !important;
+}
+.student-home-shell .sh-class__list strong,
+.student-home-shell .sh-class__own strong {
+  font-size: 13px;
+}
+.student-home-shell .sh-class__list li > span:last-child,
+.student-home-shell .sh-class__own > span:last-child {
+  font-size: 12px;
+}
+.student-home-shell .sh-class__trophy {
+  position: absolute;
+  width: 19%;
+  height: auto;
+  right: 1%;
+  top: 17%;
+  pointer-events: none;
+}
+.student-home-shell .sh-class__own {
+  position: relative;
+  z-index: 1;
+  min-height: 43px;
+  margin-top: 6px;
+  padding: 5px 9px;
+  background: var(--numora-purple-100);
+}
+.student-home-shell .sh-feedback__card {
+  min-height: 73px;
+  padding: 10px 12px;
+  border-radius: 18px;
+  box-shadow: none;
+}
+.student-home-shell .sh-feedback__icon {
+  width: 46px;
+  height: 46px;
+  border-radius: 12px;
+  background: transparent;
+}
+.student-home-shell .sh-feedback__icon img {
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
+.student-home-shell .sh-feedback__body > span {
+  -webkit-line-clamp: 1;
+}
+.student-home-shell .sh-feedback__body small {
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .student-home-shell .app-mobile-header {
+    max-width: none;
+    margin: 0;
+    padding: 0;
+  }
+  .student-home-shell .app-mobile-header .sh-identity {
+    border-radius: 0 0 18px 18px;
+  }
+  .student-home-shell .sh-desktop-identity {
+    display: none;
+  }
+}
+@media (max-width: 699px) {
+  .student-home-shell .app-content {
+    padding: 16px 15px 100px;
+  }
+  .student-home-shell .sh-layout,
+  .student-home-shell .sh-main,
+  .student-home-shell .sh-aside {
+    gap: 18px;
+  }
+  .student-home-shell .sh-carousel {
+    margin-right: -15px;
+  }
+  .student-home-shell .sh-carousel__viewport {
+    height: 185px;
+  }
+  .student-home-shell .sh-carousel__slide {
+    width: calc(100% - 58px);
+    height: 160px;
+  }
+  .student-home-shell .sh-carousel__slide:not(.is-active) {
+    left: calc(100% - 44px);
+  }
+  .student-home-shell .sh-hero.student-home-hero,
+  .student-home-shell .sh-hero--tryout.student-home-hero {
+    border-radius: 25px 46px 20px 38px / 24px 29px 34px 30px;
+  }
+  .student-home-shell .sh-hero__eyebrow {
+    top: 10px;
+    left: 14px;
+    padding: 3px 8px;
+    font-size: 10px;
+  }
+  .student-home-shell .sh-hero__copy {
+    width: 52%;
+    margin-top: 37px;
+    padding-left: 14px;
+    gap: 3px;
+  }
+  .student-home-shell .sh-hero h2 {
+    font-size: clamp(16px, 4.5vw, 19px);
+  }
+  .student-home-shell .sh-hero p {
+    font-size: 10px;
+    line-height: 1.2;
+  }
+  .student-home-shell .sh-hero--tryout .sh-hero__copy > p:not(.sh-hero__meta) {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    padding: 0;
+    margin: -1px;
+    overflow: hidden;
+    clip: rect(0, 0, 0, 0);
+    white-space: nowrap;
+    border: 0;
+  }
+  .student-home-shell .sh-hero__action {
+    min-height: 44px;
+    padding: 7px 8px;
+    font-size: 11px;
+  }
+  .student-home-shell .sh-hero__illustration--tryout {
+    height: 43%;
+    top: 32%;
+  }
+  .student-home-shell .sh-carousel__controls {
+    margin-left: -15px;
+  }
+  .student-home-shell .sh-section__heading h2 {
+    font-size: 16px;
+  }
+  .student-home-shell .sh-section__heading a {
+    font-size: 12px;
+  }
+  .student-home-shell .sh-shortcuts__grid {
+    gap: 8px;
+  }
+  .student-home-shell .sh-shortcut {
+    min-height: 104px;
+    padding: 10px;
+    border-radius: 16px;
+  }
+  .student-home-shell .sh-shortcut__icon {
+    width: 43px;
+    height: 43px;
+  }
+  .student-home-shell .sh-shortcut strong {
+    font-size: 14px;
+  }
+  .student-home-shell .sh-activity__body > strong {
+    font-size: 13px;
+  }
+  .student-home-shell .sh-activity__icon {
+    width: 39px;
+    height: 39px;
+  }
+  .student-home-shell .sh-activity__detail,
+  .student-home-shell .sh-activity__status {
+    font-size: 10px;
+  }
+  .student-home-shell .sh-activity time {
+    display: none;
+  }
+  .student-home-shell .sh-class__list li {
+    min-height: 35px;
+  }
+  .student-home-shell .sh-class__rank,
+  .student-home-shell .sh-class__list .numora-avatar {
+    width: 26px !important;
+    height: 26px !important;
+  }
+  .student-home-shell .sh-class__list strong,
+  .student-home-shell .sh-class__own strong,
+  .student-home-shell .sh-class__list li > span:last-child,
+  .student-home-shell .sh-class__own > span:last-child {
+    font-size: 11px;
+  }
+}
+@media (max-width: 359px) {
+  .student-home-shell .sh-identity__announcement {
+    font-size: 10px;
+  }
+  .student-home-shell .sh-carousel__slide {
+    width: calc(100% - 52px);
+    height: 156px;
+  }
+  .student-home-shell .sh-carousel__slide:not(.is-active) {
+    left: calc(100% - 38px);
+  }
+  .student-home-shell .sh-carousel__viewport {
+    height: 181px;
+  }
+  .student-home-shell .sh-hero__copy {
+    width: 55%;
+    padding-left: 12px;
+  }
+  .student-home-shell .sh-hero h2 {
+    font-size: 16px;
+  }
+  .student-home-shell .sh-hero p {
+    font-size: 10px;
+    -webkit-line-clamp: 1;
+  }
+  .student-home-shell .sh-hero__action {
+    padding: 7px;
+    font-size: 10px;
+  }
+  .student-home-shell .sh-class__trophy {
+    display: none;
+  }
+  .student-home-shell .sh-class__list {
+    width: 100%;
+  }
+}

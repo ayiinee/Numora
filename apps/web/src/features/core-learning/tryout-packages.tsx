@@ -33,14 +33,14 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   return (
-    <section aria-label="Paket Tryout lampau">
-      <h2>Paket lampau</h2>
+    <section aria-label="Paket Tryout terlewat">
+      <h2>Terlewat</h2>
       <p>
-        Paket lampau tetap terlihat dan tidak dapat dimulai. Paket yang sudah dikerjakan hanya
+        Paket terlewat tetap terlihat dan tidak dapat dimulai. Paket yang sudah dikerjakan hanya
         menyediakan status hasil serta pembahasan setelah rilis.
       </p>
       {!packages.length && (
-        <Status title="Belum ada paket lampau">
+        <Status title="Belum ada paket terlewat">
           Paket yang telah ditutup akan muncul di sini.
         </Status>
       )}
@@ -127,8 +127,8 @@ export function TryoutPackageScreen() {
             <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>
           )}
           {query.data.periodState === 'past' && (
-            <Status title="Paket lampau">
-              Paket ditutup {wib(query.data.closeAt)}. Pengerjaan paket lampau terkunci.
+            <Status title="Paket terlewat">
+              Paket ditutup {wib(query.data.closeAt)}. Pengerjaan paket terlewat terkunci.
               {query.data.attemptId && (
                 <Link
                   className="button-link"

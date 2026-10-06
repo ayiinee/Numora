@@ -282,6 +282,17 @@ async function fixtures(page: Page) {
           },
         ],
       };
+    else if (path === `/pretest/chapters/${chapter}`)
+      data = {
+        chapterId: chapter,
+        chapterTitle: 'Persamaan & Fungsi Kuadrat',
+        state: 'unavailable',
+        canStart: false,
+        canSkip: false,
+        attemptId: null,
+        skipped: false,
+        isDemo: true,
+      };
     else if (path === `/subchapters/${sub}`)
       data = {
         subchapter: { id: sub, chapterId: chapter, title: 'Faktorisasi Kuadrat', order: 1 },
@@ -360,36 +371,65 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await page.setViewportSize(viewport);
     }
     await page.goto('/student/learn');
-    await expect(page.getByRole('heading', { name: 'Materi Belajar', exact: true })).toBeVisible();
-    const accordion = page.getByRole('button', { name: /BAB 2 Aljabar/ });
-    await expect(accordion).toHaveAttribute('aria-expanded', 'true');
+    await expect(page.getByRole('heading', { name: 'Latihan Soal', exact: true })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Latihan', exact: true }).first()).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
+    await expect(
+      page.locator(
+        '.materials-categories, .materials-pretest, .materials-section-title:has(#materials-chapters)',
+      ),
+    ).toHaveCount(0);
+    await expect(page.locator('.pretest-card')).toHaveCount(0);
+    expect(
+      await page.evaluate(() => {
+        const activity = document.querySelector('.materials-activity');
+        const chapters = document.querySelector('.materials-chapters');
+        return Boolean(
+          activity &&
+          chapters &&
+          activity.compareDocumentPosition(chapters) & Node.DOCUMENT_POSITION_FOLLOWING,
+        );
+      }),
+    ).toBe(true);
+    if (width <= 959) {
+      const header = page.locator('.materials-header');
+      const title = header.getByRole('heading', { name: 'Latihan Soal' });
+      await expect(title).toBeVisible();
+      await expect(header.getByRole('link')).toHaveCount(0);
+      await expect(header.locator('.notification-header__profile')).toHaveCount(0);
+      await expect(header).toHaveCSS('background-image', /header-pattern\.png/);
+      const headerBox = await header.boundingBox();
+      const titleBox = await title.boundingBox();
+      expect(
+        Math.abs(titleBox!.x + titleBox!.width / 2 - (headerBox!.x + headerBox!.width / 2)),
+      ).toBeLessThan(1);
+    }
+    if (width < 700) {
+      await expect(page.locator('.material-chapter__toggle').first()).toBeVisible();
+      for (const selector of ['.materials-search input', '.material-chapter__toggle']) {
+        const box = await page.locator(selector).first().boundingBox();
+        expect(box?.height, selector).toBeGreaterThanOrEqual(44);
+      }
+    }
     await capture('materials');
-    await accordion.focus();
-    await page.keyboard.press('Enter');
-    await expect(accordion).toHaveAttribute('aria-expanded', 'false');
-    await page.keyboard.press('Enter');
-    await expect(accordion).toHaveAttribute('aria-expanded', 'true');
-    await page.getByLabel('Cari materi, bab, atau subbab', { exact: true }).fill('Diskriminan');
+    await page.getByLabel('Cari bab atau subbab', { exact: true }).fill('Diskriminan');
     await expect(page).toHaveURL(/q=Diskriminan/);
     await expect(page.locator('.material-chapter')).toHaveCount(1);
-    await expect(page.getByRole('link', { name: /Rumus abc/ })).toBeVisible();
-    await page.getByLabel('Cari materi, bab, atau subbab', { exact: true }).fill('');
-    await page.getByRole('button', { name: /1 Bab Geometri/ }).click();
-    expect(new URL(page.url()).searchParams.has('q')).toBe(false);
-    await expect(page.locator('.material-chapter')).toHaveCount(1);
-    await page.getByRole('button', { name: /Lihat semua kategori/ }).click();
-    expect(new URL(page.url()).searchParams.has('category')).toBe(false);
+    await page.getByRole('link', { name: /BAB 2 Aljabar/ }).click();
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
+    await expect(page.locator('.materials-header .notification-header__profile')).toHaveCount(0);
+    await expect(
+      page.getByRole('region', { name: 'Pretest Persamaan & Fungsi Kuadrat' }),
+    ).toBeVisible();
     await page.getByRole('link', { name: /2.1 Faktorisasi Kuadrat/ }).click();
     await expect(page).toHaveURL(`/student/learn/${chapter}/${sub}`);
-    await page.goto(`/student/learn/${chapter}`);
-    await expect(page).toHaveURL(`/student/learn?chapter=${chapter}`);
+    await page.goto(`/student/learn?chapter=${chapter}`);
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
     await expect(page.getByRole('link', { name: /2.1 Faktorisasi Kuadrat/ })).toBeVisible();
-    await page
-      .getByRole('link', {
-        name: width >= 960 ? 'Notifikasi' : /Lihat notifikasi/,
-        exact: width >= 960,
-      })
-      .click();
+    await capture('materials-detail');
+    await page.goto('/student/notifications');
     await expect(page.getByRole('heading', { name: 'Pusat Notifikasi' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Semua (5)', exact: true })).toHaveAttribute(
       'aria-pressed',
@@ -455,10 +495,9 @@ test('materials shows empty published content without manufacturing locked chapt
     route.fulfill({ json: { chapters: [], recentChapterId: null } }),
   );
   await page.goto('/student/learn');
-  await expect(page.getByText('Materi sedang disiapkan', { exact: true })).toBeVisible();
+  await expect(page.getByText('Latihan sedang disiapkan', { exact: true })).toBeVisible();
   await expect(page.locator('.material-chapter')).toHaveCount(0);
-  for (const button of await page.locator('.material-category').all())
-    await expect(button).toBeDisabled();
+  await expect(page.locator('.materials-categories')).toHaveCount(0);
 });
 
 test('notification invitation retry preserves its request identifier and refreshes the actual status', async ({

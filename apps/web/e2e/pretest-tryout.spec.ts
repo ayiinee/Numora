@@ -353,6 +353,9 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 850 });
     await fixture(page);
     await page.goto('/student/learn');
+    await expect(page.locator('.pretest-card')).toHaveCount(0);
+    await page.locator(`a[href="/student/learn/${chapter}"]`).click();
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
     await page.getByRole('button', { name: 'Lihat informasi' }).click();
     await page.getByRole('button', { name: 'Skip Pretest', exact: true }).click();
     await expect(page.getByText('Dilewati', { exact: true })).toBeVisible();
@@ -368,7 +371,7 @@ for (const width of [390, 1280]) {
     await screenshot(page, `pretest-attempt-${width}`);
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Skip untuk sekarang', exact: true }).click();
-    await expect(page).toHaveURL(/student\/learn/);
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
     await page.getByRole('button', { name: 'Lanjutkan', exact: true }).click();
     await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();
     await page.getByRole('button', { name: 'Soal 20, kosong', exact: true }).click();
@@ -380,6 +383,7 @@ for (const width of [390, 1280]) {
     ).toBeVisible();
     await screenshot(page, `pretest-result-${width}`);
     await page.getByRole('link', { name: 'Lanjut Drill', exact: true }).click();
+    await expect(page).toHaveURL(`/student/learn/${chapter}`);
     await expect(
       page.getByText('Pretest bab ini sudah selesai dan tidak dapat diulang.'),
     ).toBeVisible();
@@ -389,14 +393,14 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 850 });
     await fixture(page);
     await page.goto('/student/tryout');
-    await page.getByRole('tab', { name: 'Paket Lampau' }).click();
+    await page.getByRole('tab', { name: 'Terlewat' }).click();
     await expect(
       page.getByRole('heading', { name: 'DEMO Paket lampau belum dikerjakan' }),
     ).toBeVisible();
     await expect(page.getByText('Terkunci · Belum dikerjakan', { exact: true })).toBeVisible();
     await screenshot(page, `tryout-past-${width}`);
     await page.getByRole('link', { name: 'Lihat detail paket' }).click();
-    await expect(page.getByRole('heading', { name: 'Paket lampau', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Paket terlewat', exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: /^Mulai/ })).toHaveCount(0);
     await expect(page.getByRole('button', { name: /beli|bayar|checkout/i })).toHaveCount(0);
     await screenshot(page, `tryout-past-detail-${width}`);

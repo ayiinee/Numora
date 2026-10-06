@@ -6012,6 +6012,10 @@
           "displayName": {
             "type": "string"
           },
+          "totalXp": {
+            "type": "number",
+            "description": "Account XP total from the immutable XP ledger."
+          },
           "affiliation": {
             "type": "string",
             "enum": [
@@ -6070,6 +6074,7 @@
         },
         "required": [
           "displayName",
+          "totalXp",
           "affiliation",
           "class",
           "completedLevels",

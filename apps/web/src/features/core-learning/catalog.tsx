@@ -1,23 +1,74 @@
 'use client';
 
-import { useRef, useEffect } from 'react';
+import { useRef } from 'react';
+import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { EmptyState, Icon } from '@tka/ui';
+import { Card, EmptyState, Icon } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
-import { learningApi } from './api';
+import { learningApi, request } from './api';
 import { DataState, StudentGate } from './ui';
 import { LevelPath } from './level-path';
 import { StudentIdentityHeader } from './dashboard-presentation';
+import { useStudentToken } from './student-session';
+import { ChapterPretest } from './pretest-screens';
+import { MaterialsHeader, MaterialSubchapterList } from './materials';
+import type { StudentMaterialsDto } from './generated-types';
 
 export { MaterialsScreen as CatalogScreen } from './materials';
 export function ChapterScreen() {
   const { chapterId } = useParams<{ chapterId: string }>();
-  const router = useRouter();
-  useEffect(() => {
-    router.replace(`/student/learn?chapter=${encodeURIComponent(chapterId)}`);
-  }, [router, chapterId]);
-  return <DataState pending />;
+  const token = useStudentToken();
+  const query = useQuery({
+    queryKey: ['student-materials'],
+    queryFn: () => request<StudentMaterialsDto>(token, '/students/me/materials'),
+  });
+  const chapter = query.data?.chapters.find((item) => item.id === chapterId);
+  return (
+    <StudentLayout
+      title="Latihan Soal"
+      className="materials-shell materials-detail-shell"
+      mobileHeader={<MaterialsHeader />}
+    >
+      <div className="materials-page materials-detail">
+        <Link className="materials-detail__back" href="/student/learn">
+          <Icon name="back" width={18} /> Semua bab
+        </Link>
+        {query.isPending || query.isError ? (
+          <DataState
+            pending={query.isPending}
+            error={query.error}
+            retry={() => void query.refetch()}
+          />
+        ) : chapter ? (
+          <>
+            <div className="materials-detail__heading">
+              <small>BAB {chapter.order}</small>
+              <h1>{chapter.title}</h1>
+              <p>
+                {chapter.completedLevels} dari {chapter.totalLevels} level selesai
+              </p>
+            </div>
+            <ChapterPretest chapterId={chapter.id} chapterTitle={chapter.title} />
+            <section aria-label={`Subbab ${chapter.title}`}>
+              <h2 className="materials-detail__section-title">Pilih Subbab</h2>
+              <Card className="material-chapter materials-detail__subchapters" padding="none">
+                <MaterialSubchapterList chapter={chapter} />
+              </Card>
+            </section>
+          </>
+        ) : (
+          <Card>
+            <EmptyState
+              icon={<Icon name="book" />}
+              title="Bab tidak tersedia"
+              description="Bab ini belum diterbitkan atau tidak lagi tersedia."
+            />
+          </Card>
+        )}
+      </div>
+    </StudentLayout>
+  );
 }
 
 export function SubchapterScreen() {
@@ -50,7 +101,7 @@ function SubchapterLayout({
   return (
     <StudentLayout
       title="Langkah belajarmu"
-      backHref={`/student/learn?chapter=${chapterId}`}
+      backHref={`/student/learn/${chapterId}`}
       className="learning-map-shell"
       mobileHeader={
         dashboard.data && <StudentIdentityHeader data={dashboard.data} tryout={tryout.data} />

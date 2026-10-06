@@ -8,7 +8,7 @@ import { usePvpSocket } from './use-pvp-socket';
 import QRCode from 'qrcode';
 import { Avatar, Button, Card, Dialog, Icon, Tabs } from '@tka/ui';
 import { AppShell } from '@/components/shell';
-import { StudentIdentityHeader } from '@/features/core-learning/dashboard-presentation';
+import { StudentSectionHeader } from '@/features/core-learning/student-section-header';
 import { LeaderboardPodium } from '@/features/core-learning/leaderboard-podium';
 import { learningApi } from '@/features/core-learning/api';
 import type { LeaderboardDto } from '@/features/core-learning/generated-types';
@@ -36,7 +36,6 @@ import type {
 
 export function PvpScreen() {
   const token = useStudentToken();
-  const { state: auth } = useAuth();
   const availability = useQuery({
     queryKey: ['pvp-availability'],
     queryFn: () => request<PvpAvailabilityDto>(token, '/pvp/availability'),
@@ -66,19 +65,16 @@ export function PvpScreen() {
     queryFn: () => request<LeaderboardDto>(token, `/leaderboards/pvp?difficulty=${difficulty}`),
     enabled: availability.data?.available === true,
   });
-  const avatar = auth.status === 'ready' ? auth.session.user?.user_metadata?.avatar_url : undefined;
-  const header = dashboard.data ? (
-    <StudentIdentityHeader
-      data={dashboard.data}
-      avatarUrl={typeof avatar === 'string' ? avatar : undefined}
-    />
-  ) : undefined;
   const disabled = socket.busy || socket.uncertain || !socket.connected;
   const selectedAvailable =
     availability.data?.difficulties?.find((item) => item.difficulty === difficulty)?.available !==
     false;
   return (
-    <AppShell title="PvP Duel" className="pvp-lobby-shell" mobileHeader={header}>
+    <AppShell
+      title="PvP Duel"
+      className="pvp-lobby-shell"
+      mobileHeader={<StudentSectionHeader title="PvP Duel" />}
+    >
       <div className="pvp-lobby-layout">
         <div className="pvp-lobby-main">
           <div className="pvp-lobby-meta" aria-label="Informasi duel">
