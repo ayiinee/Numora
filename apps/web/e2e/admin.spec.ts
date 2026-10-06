@@ -1191,9 +1191,13 @@ test('Content imports the envelope namespace and completes a durable unscored pr
       },
     ],
   });
+  const pack = directedPackage();
+  pack.source = { ...pack.source, sourceNamespace: 'TEAM-BANK' };
   const bodies: Record<string, unknown>[] = [];
   await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
+    if (path.endsWith('/packages')) return route.fulfill({ json: { items: [pack] } });
+    if (path.endsWith(`/packages/${pack.id}`)) return route.fulfill({ json: pack });
     if (/\/(import-validations|imports)$/.test(path)) {
       bodies.push(route.request().postDataJSON());
       return route.fulfill({
@@ -1234,6 +1238,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
   });
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content/imports');
+  await page.getByLabel('Paket tujuan').selectOption(pack.id);
   await page.getByLabel('File soal JSON').setInputFiles({
     name: 'team-bank.json',
     mimeType: 'application/json',
@@ -1242,6 +1247,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
     ),
   });
   await expect(page.getByLabel('Namespace sumber')).toHaveValue('TEAM-BANK');
+  await page.getByRole('button', { name: 'Konversi ke paket terpilih', exact: true }).click();
   await page.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
   await page.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
   await page.getByRole('button', { name: 'Preview soal siap (1)', exact: true }).click();
@@ -1259,6 +1265,9 @@ test('Content imports the envelope namespace and completes a durable unscored pr
     page.getByRole('heading', { name: 'Review tanpa scoring', exact: true }),
   ).toBeVisible();
   expect(bodies.map((body) => body.sourceNamespace)).toEqual(['TEAM-BANK', 'TEAM-BANK']);
+  expect(bodies.every((body) => (body.target as { packageId: string }).packageId === pack.id)).toBe(
+    true,
+  );
   expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
   expect(errors).toEqual([]);
 });

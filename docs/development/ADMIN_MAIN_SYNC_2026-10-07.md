@@ -1,6 +1,6 @@
-# Admin Content and Operations ? main synchronization
+# Admin Content and Operations - main synchronization
 
-**ENGINEERING UPDATE ? 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72?#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `038e1ce` (PR #91), including the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
+**ENGINEERING UPDATE - 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72-#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `038e1ce` (PR #91), including the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
 
 ## Integration decisions
 
@@ -18,7 +18,7 @@
 
 ## Migration compatibility
 
-The canonical main migration prefix `0000`?`0030` is unchanged. Admin branch migrations are appended as follows; SQL bytes/hashes remain identical to the original branch.
+The canonical main migration prefix `0000`-`0030` is unchanged. Admin branch migrations are appended as follows; SQL bytes/hashes remain identical to the original branch.
 
 | Published Admin branch tag                  | Canonical appended tag                      |
 | ------------------------------------------- | ------------------------------------------- |
