@@ -15,8 +15,8 @@ export function AdminStructuresScreen() {
       : null;
   return (
     <AdminFrame
-      title="Struktur sekolah dan kelas"
-      description="Struktur operasional dan aggregate anggota untuk perencanaan konten."
+      title="Sekolah dan kelas — baca saja"
+      description="View terbatas sesuai PRD: struktur dan jumlah anggota untuk perencanaan konten."
       icon="school"
     >
       {state.status === 'loading' ? (
@@ -63,6 +63,10 @@ function StructurePanel({ token }: { token: string }) {
   }, [token, tab, offset, filter, schoolId, revision]);
   return (
     <div className="page-stack">
+      <p role="note">
+        Akses baca saja. Pengelolaan sekolah, Guru, credential, dan data individual siswa tersedia
+        untuk Admin Operasional dan Super Admin.
+      </p>
       <nav aria-label="Jenis struktur" className="admin-content-actions">
         <Button
           variant={tab === 'schools' ? 'primary' : 'secondary'}
@@ -123,6 +127,11 @@ function StructurePanel({ token }: { token: string }) {
                     <p>
                       {item.classCount} kelas aktif · {item.activeTeacherCount} Guru aktif dan
                       terverifikasi
+                    </p>
+                    <p>
+                      Credential: {item.availableCredentialCount} tersedia ·{' '}
+                      {item.usedCredentialCount} terpakai · {item.expiredCredentialCount}{' '}
+                      kedaluwarsa · {item.revokedCredentialCount} dicabut
                     </p>
                     <Button
                       variant="secondary"

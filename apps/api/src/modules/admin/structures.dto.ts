@@ -23,6 +23,10 @@ export class AdminStructureSchoolDto {
   @ApiProperty({ enum: ['ACTIVE', 'INACTIVE'] }) status!: string;
   @ApiProperty() classCount!: number;
   @ApiProperty() activeTeacherCount!: number;
+  @ApiProperty() availableCredentialCount!: number;
+  @ApiProperty() usedCredentialCount!: number;
+  @ApiProperty() expiredCredentialCount!: number;
+  @ApiProperty() revokedCredentialCount!: number;
   @ApiProperty() studentCount!: number;
 }
 export class AdminStructureSchoolsDto {

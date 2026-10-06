@@ -197,7 +197,7 @@ function AdminSchoolsScreenContent() {
                 ? error || schoolError || tokenError || 'Akses Admin belum tersedia.'
                 : state.status === 'error'
                   ? (state.message ?? 'Akun belum dapat diperiksa.')
-                  : 'Halaman ini hanya tersedia untuk Admin yang aktif.'
+                  : 'Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.'
             }
             login
             retry={() => {

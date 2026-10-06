@@ -19,6 +19,10 @@ export class AdminStructuresService {
         status: schools.status,
         classCount: sql<number>`(select count(*)::int from classes c where c.school_id=schools.id and c.archived_at is null)`,
         activeTeacherCount: sql<number>`(select count(distinct m.teacher_user_id)::int from teacher_school_memberships m join users u on u.id=m.teacher_user_id where m.school_id=schools.id and m.ended_at is null and u.status='ACTIVE' and schools.status='ACTIVE')`,
+        availableCredentialCount: sql<number>`(select count(*)::int from teacher_verification_tokens t where t.school_id=schools.id and t.used_at is null and t.revoked_at is null and t.expires_at>statement_timestamp())`,
+        usedCredentialCount: sql<number>`(select count(*)::int from teacher_verification_tokens t where t.school_id=schools.id and t.used_at is not null)`,
+        expiredCredentialCount: sql<number>`(select count(*)::int from teacher_verification_tokens t where t.school_id=schools.id and t.used_at is null and t.revoked_at is null and t.expires_at<=statement_timestamp())`,
+        revokedCredentialCount: sql<number>`(select count(*)::int from teacher_verification_tokens t where t.school_id=schools.id and t.used_at is null and t.revoked_at is not null)`,
         studentCount: sql<number>`(select count(distinct m.student_user_id)::int from class_memberships m join classes c on c.id=m.class_id where c.school_id=schools.id and m.left_at is null)`,
       })
       .from(schools)

@@ -83,7 +83,7 @@ export type AdminRosterMemberDto = { "id": string; "displayName": string; "role"
 
 export type AdminRosterDto = { "items": (AdminRosterMemberDto)[]; "nextOffset": number | null; };
 
-export type AdminStructureSchoolDto = { "id": string; "name": string; "code": string; "status": "ACTIVE" | "INACTIVE"; "classCount": number; "activeTeacherCount": number; "studentCount": number; };
+export type AdminStructureSchoolDto = { "id": string; "name": string; "code": string; "status": "ACTIVE" | "INACTIVE"; "classCount": number; "activeTeacherCount": number; "availableCredentialCount": number; "usedCredentialCount": number; "expiredCredentialCount": number; "revokedCredentialCount": number; "studentCount": number; };
 
 export type AdminStructureSchoolsDto = { "items": (AdminStructureSchoolDto)[]; "nextOffset": number | null; };
 
@@ -155,7 +155,7 @@ export type AdminReportsDto = { "items": (AdminReportDto)[]; "nextOffset": numbe
 
 export type ResolveReportDto = { "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
 
-export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
+export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "STUDENTS" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
 
 export type AdminAnalyticsDto = { "generatedAt": string; "source": "POSTGRESQL"; "metrics": (AdminAnalyticsMetricDto)[]; };
 

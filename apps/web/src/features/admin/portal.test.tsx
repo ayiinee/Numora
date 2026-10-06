@@ -84,6 +84,21 @@ describe('Admin portal navigation', () => {
     view.rerender(<AppShell area="admin">Konten</AppShell>);
     expect(navigation.queryByRole('link', { name: 'Impor JSON' })).toBeNull();
   });
+  it('Content sees only the read-only operational view and never the management modules', () => {
+    ready('CONTENT_DATA_MODERATION', [
+      'CONTENT_MANAGE',
+      'OPERATIONS_LIMITED_READ',
+      'ANALYTICS_CONTENT',
+      'AUDIT_READ',
+    ]);
+    render(<AdminHomeScreen />);
+    const main = within(screen.getByRole('main'));
+    expect(
+      main.getByRole('link', { name: 'Sekolah & kelas (baca saja)' }).getAttribute('href'),
+    ).toBe('/admin/structures');
+    for (const name of ['Pengguna & kelas', 'Sekolah & credential', 'Akun Admin'])
+      expect(main.queryByRole('link', { name })).toBeNull();
+  });
   it('sends signed-out users to internal login and Teachers to their own area', async () => {
     const view = render(<AdminHomeScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));

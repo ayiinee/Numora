@@ -1,5 +1,5 @@
 import { Injectable } from '@nestjs/common';
-import { and, count, desc, eq, gte, inArray, lte } from 'drizzle-orm';
+import { and, count, desc, eq, gte, inArray, lte, sql } from 'drizzle-orm';
 import {
   auditLogs,
   chapters,
@@ -51,10 +51,16 @@ export class AdminService {
     };
   }
   async audit(page: AdminAuditQueryDto, role: AdminRole): Promise<AdminAuditListDto> {
+    const actor =
+      role === 'CONTENT_DATA_MODERATION'
+        ? sql<
+            string | null
+          >`case when exists (select 1 from users u where u.id=audit_logs.actor_user_id and u.role='ADMIN') then audit_logs.actor_user_id else null end`
+        : sql<string | null>`${auditLogs.actorUserId}`;
     const rows = await getDatabase()
       .db.select({
         id: auditLogs.id,
-        actorUserId: auditLogs.actorUserId,
+        actorUserId: actor,
         action: auditLogs.action,
         entityType: auditLogs.entityType,
         entityId: auditLogs.entityId,
@@ -101,7 +107,7 @@ export class AdminService {
               ),
           page.action ? eq(auditLogs.action, page.action) : undefined,
           page.entityType ? eq(auditLogs.entityType, page.entityType) : undefined,
-          page.actorId ? eq(auditLogs.actorUserId, page.actorId) : undefined,
+          page.actorId ? eq(actor, page.actorId) : undefined,
           page.from ? gte(auditLogs.createdAt, new Date(page.from)) : undefined,
           page.to ? lte(auditLogs.createdAt, new Date(page.to)) : undefined,
         ),

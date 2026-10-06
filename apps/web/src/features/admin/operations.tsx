@@ -93,7 +93,7 @@ function AdminOperationsScreenContent() {
               deniedError ||
               (state.status === 'error'
                 ? (state.message ?? 'Akun belum dapat diperiksa.')
-                : 'Halaman ini hanya tersedia untuk Admin aktif.')
+                : 'Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.')
             }
             login
             retry={() => {

@@ -14,6 +14,8 @@ Current rules: three fixed Admin subroles and action-level permissions; maximum 
 
 ## Current engineering mapping
 
+**PRD RULE — Admin permissions:** §3.2–3.3 grants Content limited school/class views and aggregate Student data, without operational management; ban/unban remains Teacher-only even for Super Admin. **ENGINEERING DECISION:** the [three-subrole API and portal matrix](../api/ADMIN_PERMISSION_MATRIX.md) implements credential status counts, scoped IRT diagnostics and masked non-Admin audit actors.
+
 | Domain            | v0.6 implementation target                                                              | Gate                                   |
 | ----------------- | --------------------------------------------------------------------------------------- | -------------------------------------- |
 | Admin permissions | Per-action server guard, limited structure DTO, scoped audit                            | Direct HTTP + browser matrix           |

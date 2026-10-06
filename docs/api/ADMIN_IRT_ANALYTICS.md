@@ -6,15 +6,17 @@
 
 ## API and role boundary
 
-| API                                                    | Permission            | Behavior                                                                                                                                                                             |
-| ------------------------------------------------------ | --------------------- | ------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------ |
-| GET `/api/v1/admin/analytics`                          | Assigned active Admin | Structure/release aggregate; Operations gets operational metrics, Content gets content metrics, Super gets both. No individual identities or responses.                              |
-| GET `/api/v1/admin/irt/options`                        | Content/Super         | Non-revoked approvals of sealed IRT_MODEL/QUALITY_GATE versions with matching digest and TRYOUT/context scope. No editable configuration payload.                                    |
-| GET `/api/v1/admin/irt/batch-health`                   | Content/Super         | Server pagination, cutoff/finalization blockers, participant counts, 72-hour overdue, published mode/version/time.                                                                   |
-| POST/GET `/api/v1/admin/irt/requests` and detail/retry | Content/Super         | Existing orchestration contract; prepare/retry preserve actor-bound idempotency and generation. Detail includes immutable configuration pins.                                        |
-| POST `/api/v1/admin/irt/requests/:id/adopt`            | Content/Super         | Existing locked/idempotent artifact adoption; checks current execution, provenance, dataset, scientific evidence and policy pins. Audits the verified actor. No participant release. |
+| API                                                    | Permission            | Behavior                                                                                                                                                                                                        |
+| ------------------------------------------------------ | --------------------- | --------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| GET `/api/v1/admin/analytics`                          | Assigned active Admin | Structure, student activity and release aggregates; Operations adds operational verification metrics, Content adds content/moderation and IRT failures, Super gets both. No individual identities or responses. |
+| GET `/api/v1/admin/irt/options`                        | Content/Super         | Non-revoked approvals of sealed IRT_MODEL/QUALITY_GATE versions with matching digest and TRYOUT/context scope. No editable configuration payload.                                                               |
+| GET `/api/v1/admin/irt/batch-health`                   | Content/Super         | Server pagination, cutoff/finalization blockers, participant counts, 72-hour overdue, published mode/version/time.                                                                                              |
+| POST/GET `/api/v1/admin/irt/requests` and detail/retry | Content/Super         | Existing orchestration contract; prepare/retry preserve actor-bound idempotency and generation. Detail includes immutable configuration pins.                                                                   |
+| POST `/api/v1/admin/irt/requests/:id/adopt`            | Content/Super         | Existing locked/idempotent artifact adoption; checks current execution, provenance, dataset, scientific evidence and policy pins. Audits the verified actor. No participant release.                            |
 
 Every endpoint rechecks the database assignment/status. Operations cannot prepare/adopt/read IRT details. Analytics errors retain valid zeroes and return `value:null` plus `unavailableReason` for unreadable sources. Counts are cumulative durable records, not a new BI pipeline or inference about absent data.
+
+The [complete permission matrix](ADMIN_PERMISSION_MATRIX.md) records the read-only Content school/class/credential projection and the separation of student aggregates from operational individuals. Operations receives batch publication/SLA counts but no IRT request failure diagnostics.
 
 ## Durable batch and input boundary
 

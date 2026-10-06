@@ -61,8 +61,8 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
   )
     items.push({
       href: '/admin/structures',
-      label: 'Struktur sekolah & kelas',
-      description: 'Lihat struktur serta aggregate anggota tanpa data individual.',
+      label: 'Sekolah & kelas (baca saja)',
+      description: 'View terbatas: struktur, status credential, dan jumlah anggota.',
       icon: 'school',
     });
   if (profile.capabilities?.includes('CONTENT_MANAGE')) {

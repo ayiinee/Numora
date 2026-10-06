@@ -10652,6 +10652,7 @@
             "type": "string",
             "enum": [
               "STRUCTURE",
+              "STUDENTS",
               "OPERATIONS",
               "CONTENT",
               "RELEASE"
@@ -11335,6 +11336,18 @@
           "activeTeacherCount": {
             "type": "number"
           },
+          "availableCredentialCount": {
+            "type": "number"
+          },
+          "usedCredentialCount": {
+            "type": "number"
+          },
+          "expiredCredentialCount": {
+            "type": "number"
+          },
+          "revokedCredentialCount": {
+            "type": "number"
+          },
           "studentCount": {
             "type": "number"
           }
@@ -11346,6 +11359,10 @@
           "status",
           "classCount",
           "activeTeacherCount",
+          "availableCredentialCount",
+          "usedCredentialCount",
+          "expiredCredentialCount",
+          "revokedCredentialCount",
           "studentCount"
         ]
       },
