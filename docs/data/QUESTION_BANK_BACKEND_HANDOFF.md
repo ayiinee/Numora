@@ -55,15 +55,15 @@ Label berikut harus dipertahankan saat handoff:
 
 ## 3. Usulan kode master dan tabel pemetaan
 
-**PROPOSED:** kode berikut hanya untuk scope sampel. Bukan daftar bab/subbab/indikator final seluruh kurikulum. Jangan menimpa master yang sudah dimasukkan tim lain; bila ada, gunakan kode existing dan revisi pemetaan. Nama berasal dari metadata ekstraksi kurikulum, bukan nama baru yang diarang.
+**ENGINEERING DECISION — disetujui Reyhan, 6 Oktober 2026:** acuan identitas bab/subbab untuk spreadsheet, JSON, dan seeder adalah [master kurikulum empat bab/sepuluh subbab](CURRICULUM_MASTER_SEED.md), dengan manifest `packages/database/seeds/curriculum-master.json`. Tabel bab/subbab di bawah adalah subset untuk sepuluh soal sampel. Kode indikator di bagian berikut tetap **PROPOSED**; persetujuan master bab/subbab tidak mencakup seluruh indikator/level atau status READY. Nama berasal dari metadata ekstraksi kurikulum. Konflik identitas existing harus direview, bukan menimpa master atau mengganti kode acuan diam-diam.
 
 ### Bab dan subbab
 
-| chapterCode | Nama bab              | chapters.slug       | subchapterCode | Nama subbab           | subchapters.slug      |
-| ----------- | --------------------- | ------------------- | -------------- | --------------------- | --------------------- |
-| CH-DP       | Data & Peluang        | data-peluang        | SC-DATA        | Data                  | data                  |
-| CH-GP       | Geometri & Pengukuran | geometri-pengukuran | SC-OG          | Objek Geometri        | objek-geometri        |
-| CH-GP       | Geometri & Pengukuran | geometri-pengukuran | SC-TG          | Transformasi Geometri | transformasi-geometri |
+| chapterCode | Nama bab                | chapters.slug       | subchapterCode | Nama subbab           | subchapters.slug      |
+| ----------- | ----------------------- | ------------------- | -------------- | --------------------- | --------------------- |
+| CH-DP       | Data & Peluang          | data-peluang        | SC-DATA        | Data                  | data                  |
+| CH-GP       | Geometri dan Pengukuran | geometri-pengukuran | SC-OG          | Objek Geometri        | objek-geometri        |
+| CH-GP       | Geometri dan Pengukuran | geometri-pengukuran | SC-TG          | Transformasi Geometri | transformasi-geometri |
 
 ### Indikator
 
@@ -103,7 +103,7 @@ Sampel berisi 7 PG, 2 MCMA, 1 Category; 8 soal Data, 1 Objek Geometri, 1 Transfo
 
 `levelCode` dapat tetap null: schema impor sekarang mengizinkannya dan tabel `levels` tidak mempunyai kolom code. Bila legacy payload mengirim levelCode non-null, importer harus mempunyai resolver terdokumentasi dan memeriksa kecocokannya dengan subbab/nomor level; jangan mengabaikan konflik.
 
-Nomor urut bab/subbab, jumlah level lengkap, dan status READY master belum disetujui. Saat seeding nanti, tentukan display_order sesuai urutan Curriculum dan data existing; jangan menganggap urutan tiga baris tabel ini sebagai urutan resmi.
+Urutan sumber bab/subbab tercatat pada `sourceOrder` manifest master yang ditetapkan. Seeder menambahkan display_order setelah urutan existing untuk menghindari konflik. Jumlah level lengkap dan status READY belum ditetapkan oleh persetujuan ini; jangan menganggap urutan tiga baris sampel sebagai urutan seluruh kurikulum. Spreadsheet mengisi kode; importer menyelesaikannya menjadi UUID database setelah master tersedia.
 
 ## 4. Pisahkan level kurikulum dari kategori PvP
 

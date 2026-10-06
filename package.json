@@ -29,6 +29,7 @@
     "db:seed:learning": "dotenv -e .env -- pnpm --filter @tka/database db:seed:learning",
     "db:seed:qa": "dotenv -e .env -- pnpm --filter @tka/database db:seed:qa",
     "db:seed:redesign": "dotenv -e .env -- pnpm --filter @tka/database db:seed:redesign",
+    "db:seed:curriculum": "dotenv -e .env.cloud.local -- corepack pnpm --filter @tka/database db:seed:curriculum",
     "qa:accounts": "dotenv -e .env -- pnpm --filter @tka/api qa:accounts",
     "qa:admins": "dotenv -e .env -- pnpm --filter @tka/api qa:admins",
     "test:qa-admins": "node --test scripts/qa-admins.integration.test.mjs",
