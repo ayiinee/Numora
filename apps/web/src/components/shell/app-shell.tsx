@@ -11,7 +11,7 @@ type Area = 'student' | 'teacher' | 'admin';
 const navigation: Record<Area, { href: string; label: string; icon: IconName }[]> = {
   student: [
     { href: '/student', label: 'Belajar', icon: 'graduation' },
-    { href: '/student/learn', label: 'Materi', icon: 'book' },
+    { href: '/student/learn', label: 'Latihan', icon: 'book' },
     { href: '/student/tryout', label: 'Tryout', icon: 'clipboard' },
     { href: '/student/pvp', label: 'PvP', icon: 'gamepad' },
     { href: '/student/profile', label: 'Profil', icon: 'user' },

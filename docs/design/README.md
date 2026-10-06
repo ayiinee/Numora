@@ -1,5 +1,9 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — owner UI request, 7 October 2026:** all web pages use `#F3ECCB` as their outer page background through the shared `--color-bg` token. Cards, headers, hero panels, and state surfaces retain their semantic colors.
+
+**ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.
+
 **ENGINEERING DECISION — Aini, 5 October 2026:** remove the standalone development Admin mock and use the shared portal at `/admin`, internal login at `/admin/login`, and content tools under `/admin/content`. The `/admin/preview` frame mapping below is historical; that route no longer exists. Real unscored question preview remains part of the importer workflow. [Portal scope and validation](../development/ADMIN_PORTAL_2026-10-05.md).
 
 **ENGINEERING VERIFICATION — 4 October 2026:** the Phase 0 Teacher dataset is ready and the supported Teacher frontend phases have passed real development Auth/API browser QA. See the [connected QA report](TEACHER_CONNECTED_QA_2026-10-04.md) and [22-screen real-data gallery](screenshots/teacher-connected/README.md). This follow-up supersedes earlier connected-QA-pending statements; missing backend capabilities and OPEN product policies remain unresolved.
@@ -44,6 +48,8 @@ PRD feature inventories take precedence over old frame copy/feature assumptions.
 The owner authorized committing/publishing all redesign phases on 4 October 2026. The [tracked screenshot gallery](screenshots/redesign/README.md) contains 41 synthetic mobile/desktop screen pairs that are available in another checkout. Earlier phase reports preserve local `.tmp` artifact links as historical evidence; use this gallery for team review. See [Phase 10](UI_REDESIGN_PHASE_10_2026-10-04.md) for final regression, running the branch and remaining connected QA/CI gates.
 
 Materi accordion and durable Student notifications: [5 October handoff](MATERIALS_NOTIFICATIONS_REDESIGN_2026-10-05.md), with [mobile/desktop evidence](screenshots/materials-notifications/README.md).
+
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** the [Latihan Soal navigation revision](LATIHAN_SOAL_NAVIGATION_2026-10-07.md) supersedes the Materi screen layout and chapter accordion in that handoff. Pretest is on the chapter detail route; notification behavior is unchanged.
 
 ## UI feedback revision — 5 October 2026
 

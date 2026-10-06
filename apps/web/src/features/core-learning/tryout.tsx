@@ -12,10 +12,10 @@ import { useAssessmentHistory } from './assessment-queries';
 import { ActivityRow } from './cards';
 import { useLearningView } from './learning-interactions';
 import { PastTryoutPackages } from './tryout-packages';
+import { StudentSectionHeader } from './student-section-header';
 import { DataState, LearningFrame, Status, StudentGate } from './ui';
 import {
   TryoutDetail,
-  TryoutHero,
   TryoutPackageCard,
   TryoutReleasedResult,
   TryoutWaiting,
@@ -64,6 +64,7 @@ function CurrentTryout({ token }: { token: string }) {
       title={details ? 'Detail Tryout' : 'Tryout TKA'}
       className={`tryout-shell ${details && available ? 'tryout-shell--detail' : 'tryout-shell--catalog'}`}
       focus={details && !!available}
+      mobileHeader={!details ? <StudentSectionHeader title="Tryout TKA" /> : undefined}
     >
       <div ref={detailTitle} tabIndex={-1}>
         {details && available ? (
@@ -93,7 +94,6 @@ function CurrentTryout({ token }: { token: string }) {
           />
         ) : (
           <>
-            <TryoutHero onHistory={() => setTab('history')} />
             <div className="tryout-catalog-content">
               <Tabs
                 value={tab}
@@ -135,12 +135,12 @@ function CurrentTryout({ token }: { token: string }) {
                   },
                   {
                     value: 'past',
-                    label: 'Paket Lampau',
+                    label: 'Terlewat',
                     content: <PastTryoutPackages enabled={tab === 'past'} />,
                   },
                   {
                     value: 'history',
-                    label: 'Tryout Saya',
+                    label: 'Riwayat',
                     content: (
                       <section aria-label="Riwayat Tryout">
                         <h2>Riwayat Tryout</h2>

@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ProgressBar } from '@tka/ui';
 import { AppShell } from '@/components/shell';
@@ -16,6 +16,7 @@ import { FeedbackOverview } from './feedback-overview';
 import { LeaderboardsScreen } from './leaderboards';
 import { HomeClassPodium } from './home-class-podium';
 import { HomeActivity, HomeTryoutHero } from './dashboard-presentation';
+import { StudentHomeCarousel } from './student-home-carousel';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
 
@@ -76,6 +77,7 @@ beforeEach(() => {
   context.state = { status: 'ready', profile, session: { access_token: 'test-token' } };
   vi.mocked(learningApi.dashboard).mockResolvedValue({
     displayName: profile.displayName,
+    totalXp: 0,
     affiliation: 'MANDIRI',
     class: null,
     completedLevels: 0,
@@ -103,7 +105,133 @@ beforeEach(() => {
   vi.mocked(learningApi.currentTryout).mockResolvedValue({ state: 'unavailable' });
   vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
 });
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  vi.useRealTimers();
+  vi.unstubAllGlobals();
+});
+
+describe('Student Home carousel and server-driven actions', () => {
+  const carousel = (
+    activeDrill: { attemptId: string; levelId: string; title: string } | null = null,
+  ) =>
+    render(
+      <StudentHomeCarousel
+        activeDrill={activeDrill}
+        tryout={{ state: 'open', eligible: true, title: 'Paket server' }}
+        tryoutPending={false}
+        tryoutError={null}
+        retryTryout={vi.fn()}
+      />,
+    );
+  const visibleSlide = () => document.querySelector('.sh-carousel__slide[aria-hidden="false"]');
+
+  it('starts with Drill, switches with indicators and swipes, and keeps the other CTA inert', () => {
+    carousel();
+    expect(screen.queryByRole('button', { name: 'Slide berikutnya' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Slide sebelumnya' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Jeda carousel' })).toBeNull();
+    expect(screen.queryByRole('button', { name: 'Putar carousel' })).toBeNull();
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    expect(document.querySelector('.sh-carousel__slide--tryout')?.hasAttribute('inert')).toBe(true);
+    expect(screen.getByRole('link', { name: 'Pilih materi' }).getAttribute('href')).toBe(
+      '/student/learn',
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
+    expect(document.querySelector('.sh-carousel__slide--drill')?.hasAttribute('inert')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    fireEvent.touchStart(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
+      touches: [{ clientX: 230, clientY: 100 }],
+    });
+    fireEvent.touchEnd(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
+      changedTouches: [{ clientX: 100, clientY: 104 }],
+    });
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
+    fireEvent.touchStart(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
+      touches: [{ clientX: 100, clientY: 100 }],
+    });
+    fireEvent.touchEnd(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
+      changedTouches: [{ clientX: 230, clientY: 104 }],
+    });
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+  });
+
+  it('uses the existing Drill attempt link without starting a new attempt', () => {
+    carousel({ attemptId: 'active-test', levelId: 'level-test', title: 'Materi aktif' });
+    expect(screen.getByText(/Lanjutkan Materi aktif/)).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Lanjutkan latihan' }).getAttribute('href')).toBe(
+      '/student/drill/active-test',
+    );
+  });
+
+  it('autoplays after six seconds, wraps, resets after selection, and pauses on hover and focus', () => {
+    vi.useFakeTimers();
+    carousel();
+    act(() => vi.advanceTimersByTime(6_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
+    act(() => vi.advanceTimersByTime(6_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
+    act(() => vi.advanceTimersByTime(5_999));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    const region = screen.getByRole('region', { name: 'Pilihan belajar utama' });
+    fireEvent.mouseEnter(region);
+    act(() => vi.advanceTimersByTime(6_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    fireEvent.mouseLeave(region);
+    fireEvent.focus(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
+    act(() => vi.advanceTimersByTime(6_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    fireEvent.blur(screen.getByRole('button', { name: 'Tampilkan slide Drill' }), {
+      relatedTarget: null,
+    });
+    act(() => vi.advanceTimersByTime(6_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
+  });
+
+  it('pauses for a hidden document and disables autoplay for reduced motion', () => {
+    vi.useFakeTimers();
+    const hidden = vi.spyOn(document, 'hidden', 'get').mockReturnValue(false);
+    const media = { matches: false, addEventListener: vi.fn(), removeEventListener: vi.fn() };
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => media),
+    );
+    carousel();
+    hidden.mockReturnValue(true);
+    fireEvent(document, new Event('visibilitychange'));
+    act(() => vi.advanceTimersByTime(7_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    hidden.mockReturnValue(false);
+    fireEvent(document, new Event('visibilitychange'));
+    media.matches = true;
+    act(() => media.addEventListener.mock.calls[0]?.[1]?.());
+    act(() => vi.advanceTimersByTime(7_000));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
+    expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
+    hidden.mockRestore();
+  });
+
+  it.each([
+    ['unavailable', undefined, 'Lihat Tryout', '/student/tryout'],
+    ['open', undefined, 'Lihat aturan', '/student/tryout'],
+    ['inProgress', 'attempt-1', 'Lanjutkan Tryout', '/student/tryout/attempt-1'],
+    ['waitingIrt', 'attempt-1', 'Lihat status', '/student/tryout'],
+    ['resultReady', 'attempt-1', 'Lihat hasil', '/student/tryout/attempt-1/result'],
+  ] as const)(
+    'maps %s to an existing route without starting an assessment',
+    (state, attemptId, label, href) => {
+      render(
+        <HomeTryoutHero data={{ state, eligible: true, ...(attemptId ? { attemptId } : {}) }} />,
+      );
+      expect(screen.getByRole('link', { name: label }).getAttribute('href')).toBe(href);
+      expect(learningApi.startTryout).not.toHaveBeenCalled();
+    },
+  );
+});
 function renderStudent(children: React.ReactNode) {
   return render(<StudentAccess>{children}</StudentAccess>);
 }
@@ -331,7 +459,7 @@ describe('responsive learning composition', () => {
     expect(screen.getByText('#37')).toBeTruthy();
     expect(screen.getByText('0 PTS')).toBeTruthy();
     expect(screen.getByText('50 PTS')).toBeTruthy();
-    expect(screen.getAllByText('Belum ada peserta')).toHaveLength(2);
+    expect(screen.queryByText('Belum ada peserta')).toBeNull();
     expect(screen.queryByLabelText('Peringkat 1')).toBeNull();
   });
   it('does not request class ranks until the School feature is available', async () => {
@@ -354,17 +482,40 @@ describe('responsive learning composition', () => {
       unit: 'points',
     });
     renderStudent(<HomeClassPodium token="test-token" data={data} />);
-    await screen.findByText('Podium masih kosong');
+    await screen.findByText('Peringkat masih kosong');
     expect(screen.getByText('#37')).toBeTruthy();
     expect(screen.getByText('0 PTS')).toBeTruthy();
+  });
+  it('keeps a Mandiri class invitation read-only and retries a class leaderboard error', async () => {
+    const data = await learningApi.dashboard('test-token');
+    renderStudent(<HomeClassPodium token="test-token" data={data} />);
+    expect(screen.getByText('Belajar mandiri')).toBeTruthy();
+    expect(request).not.toHaveBeenCalled();
+    cleanup();
+    data.class = { id: 'class-test', name: 'IX', schoolName: 'Sekolah fixture' };
+    data.affiliation = 'SCHOOL';
+    data.features.classLeaderboard = true;
+    vi.mocked(request).mockRejectedValue(new Error('Leaderboard offline'));
+    renderStudent(<HomeClassPodium token="test-token" data={data} />);
+    await screen.findByText('Leaderboard offline', {}, { timeout: 5000 });
+    vi.mocked(request).mockResolvedValue({
+      policyPending: false,
+      entries: [],
+      ownEntry: null,
+      unit: 'xp',
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+    expect(await screen.findByText('Peringkat masih kosong')).toBeTruthy();
   });
   it('keeps learning and feedback visible during a Tryout failure and can retry its query', async () => {
     vi.mocked(learningApi.currentTryout).mockRejectedValue(new Error('Tryout offline'));
     renderStudent(<NewStudentDashboard />);
+    await screen.findByRole('heading', { name: 'Latihan matematika!' });
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
     await screen.findByText('Tryout offline', {}, { timeout: 5000 });
-    expect(screen.getByRole('heading', { name: /Fitur Belajar/ })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Aktivitas Terakhir' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Feedback dari Guru' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Shortcut Belajar' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Aktivitas' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Feedback' })).toBeTruthy();
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
       state: 'open',
       eligible: true,
@@ -373,7 +524,7 @@ describe('responsive learning composition', () => {
       durationSeconds: 4800,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
-    expect(await screen.findByRole('region', { name: 'Paket pulih' })).toBeTruthy();
+    expect((await screen.findAllByText('Paket pulih')).length).toBeGreaterThan(0);
     expect(learningApi.startTryout).not.toHaveBeenCalled();
   });
   it('resumes the server-provided active attempt without creating a new Drill', async () => {
@@ -403,7 +554,7 @@ describe('responsive learning composition', () => {
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
     view.rerender(<HomeActivity item={{ ...record, resultState: 'ready', score: 0 }} />);
-    expect(screen.getByText('Nilai: 0%')).toBeTruthy();
+    expect(screen.getByText(/Nilai 0%/)).toBeTruthy();
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       '/student/tryout/home-attempt/result',
     );
@@ -421,8 +572,8 @@ describe('responsive learning composition', () => {
         }}
       />,
     );
-    expect(screen.getByText('35 Soal • 80 Menit')).toBeTruthy();
-    expect(screen.getByRole('link', { name: 'Mulai Tryout' }).getAttribute('href')).toBe(
+    expect(screen.getByText('35 soal · 80 menit')).toBeTruthy();
+    expect(screen.getByRole('link', { name: 'Lihat aturan' }).getAttribute('href')).toBe(
       '/student/tryout',
     );
     expect(screen.queryByText(/tiket|premium|Memerlukan kelas/i)).toBeNull();
@@ -441,11 +592,29 @@ describe('responsive learning composition', () => {
       ],
     });
     renderStudent(<FeedbackOverview token="test-token" />);
-    expect(await screen.findByText('1 catatan belum dibaca.')).toBeTruthy();
+    expect(await screen.findByLabelText('1 catatan belum dibaca')).toBeTruthy();
     expect(screen.getByText('<script>Pesan Guru</script>')).toBeTruthy();
     expect(document.querySelector('script')).toBeNull();
     expect(request).toHaveBeenCalledOnce();
     expect(request).toHaveBeenCalledWith('test-token', '/students/me/feedback/summary');
+  });
+  it('shows a compact empty feedback state and retries summary errors without marking read', async () => {
+    renderStudent(<FeedbackOverview token="test-token" />);
+    expect(await screen.findByText('Belum ada catatan dari Guru.')).toBeTruthy();
+    cleanup();
+    vi.mocked(request).mockRejectedValue(new Error('Feedback offline'));
+    renderStudent(<FeedbackOverview token="test-token" />);
+    expect(
+      await screen.findByText(
+        'Catatan belum dapat dimuat. Aktivitas belajar tetap tersedia.',
+        {},
+        { timeout: 5000 },
+      ),
+    ).toBeTruthy();
+    vi.mocked(request).mockResolvedValue({ unreadCount: 0, latest: [] });
+    fireEvent.click(screen.getByRole('button', { name: 'Coba muat catatan lagi' }));
+    expect(await screen.findByText('Belum ada catatan dari Guru.')).toBeTruthy();
+    expect(vi.mocked(request).mock.calls.every(([, path]) => !path.endsWith('/read'))).toBe(true);
   });
   it('keeps ranks hidden when policy is pending, even if provisional rows are returned', async () => {
     vi.mocked(request).mockResolvedValue({
@@ -481,40 +650,48 @@ describe('responsive learning composition', () => {
   });
   it('mounts Home with its query provider and truthful empty states, including a zero score', async () => {
     renderStudent(<NewStudentDashboard />);
-    await screen.findByText('0 / 100');
-    expect(
-      within(screen.getByRole('region', { name: 'Status materi' })).getByText(
-        'Materi sedang disiapkan',
-      ),
-    ).toBeTruthy();
-    expect(await screen.findByRole('region', { name: 'Paket Tryout Mingguan' })).toBeTruthy();
+    await screen.findByRole('heading', { name: 'Latihan matematika!' });
+    expect(screen.getAllByText('Materi sedang disiapkan').length).toBeGreaterThan(0);
+    fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
+    expect(await screen.findByText('Tryout Matematika')).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Pretest belum tersedia' })).toBeNull();
-    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(3);
+    expect(document.querySelectorAll('.sh-shortcuts__grid > a')).toHaveLength(3);
     expect(screen.getByRole('link', { name: /Latihan Soal/ })).toBeTruthy();
-    expect(screen.getAllByText('Progres level Drill').length).toBeGreaterThan(0);
+    expect(screen.getAllByText('Progres Drill').length).toBeGreaterThan(0);
     expect(request).not.toHaveBeenCalledWith('test-token', '/leaderboards/class');
-    expect(screen.getByRole('link', { name: 'Lihat Leaderboard' }).getAttribute('href')).toBe(
-      '/student/leaderboards',
-    );
+    expect(screen.getByRole('heading', { name: 'Kelas' })).toBeTruthy();
     expect(screen.queryByText('Memerlukan kelas')).toBeNull();
     expect(screen.queryByRole('progressbar')).toBeNull();
-    expect(screen.queryByText('XP')).toBeNull();
+    expect(screen.getAllByText('0 XP').length).toBeGreaterThan(0);
     expect(document.querySelector('a[href^="/demo"]')).toBeNull();
   });
-  it('keeps three Home shortcuts when Pretest is enabled in Materi', async () => {
+  it('shows fractional account XP with Drill progress and no invented gamification level', async () => {
+    const data = await learningApi.dashboard('test-token');
+    vi.mocked(learningApi.dashboard).mockResolvedValue({
+      ...data,
+      totalXp: 1234.125,
+      completedLevels: 3,
+      availableLevels: 5,
+    });
+    renderStudent(<NewStudentDashboard />);
+    expect((await screen.findAllByText('1.234,125 XP')).length).toBeGreaterThan(0);
+    expect(screen.getAllByText('3/5 level').length).toBeGreaterThan(0);
+    expect(screen.queryByText(/gem|level 9/i)).toBeNull();
+  });
+  it('keeps three Home shortcuts when Pretest is available per chapter', async () => {
     const data = await learningApi.dashboard('test-token');
     data.features.pretest = true;
     vi.mocked(learningApi.dashboard).mockResolvedValue(data);
     renderStudent(<NewStudentDashboard />);
     expect(await screen.findByRole('link', { name: /Latihan Soal/ })).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Pretest/ })).toBeNull();
-    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(3);
+    expect(document.querySelectorAll('.sh-shortcuts__grid > a')).toHaveLength(3);
   });
   it('marks the learning destination on nested Drill routes and removes navigation during an attempt', () => {
     context.pathname = '/student/drill/attempt-test';
     const view = render(<AppShell>Soal</AppShell>);
     const nav = screen.getByRole('navigation', { name: 'Navigasi Ruang belajar' });
-    expect(within(nav).getByRole('link', { name: 'Materi' }).getAttribute('aria-current')).toBe(
+    expect(within(nav).getByRole('link', { name: 'Latihan' }).getAttribute('aria-current')).toBe(
       'page',
     );
     expect(within(nav).getAllByRole('link')).toHaveLength(9);
@@ -682,7 +859,12 @@ describe('responsive learning composition', () => {
         nextCursor: null,
       });
     renderStudent(<TryoutScreen />);
-    fireEvent.click(screen.getByRole('tab', { name: 'Tryout Saya' }));
+    expect(document.querySelector('.app-mobile-header .materials-header')?.textContent).toBe(
+      'Tryout TKA',
+    );
+    expect(screen.queryByRole('button', { name: 'Tryout Saya' })).toBeNull();
+    expect(screen.getByRole('tab', { name: 'Terlewat' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('tab', { name: 'Riwayat' }));
     await screen.findByText(/Belum ada Tryout pada aktivitas yang dimuat/);
     expect(screen.queryByText('Drill only fixture')).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Muat riwayat lainnya' }));

@@ -308,7 +308,7 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     );
     await expect(page.locator('.teacher-redesign-shell')).toHaveCSS(
       'background-color',
-      'rgb(249, 249, 255)',
+      'rgb(243, 236, 203)',
     );
     await expect(page.getByRole('link', { name: 'Pusat Notifikasi' })).toHaveCount(0);
     const primaryNav = page.locator(width < 960 ? '.teacher-bottom-nav' : '.teacher-sidebar__nav');

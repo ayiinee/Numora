@@ -12,15 +12,15 @@ describe('shared redesign foundation', () => {
         pathname="/student/learn/chapter"
         items={[
           { label: 'Belajar', href: '/student', icon: 'H' },
-          { label: 'Materi', href: '/student/learn', icon: 'M' },
+          { label: 'Latihan', href: '/student/learn', icon: 'M' },
           { label: 'PvP', href: '/student/pvp', icon: 'P' },
         ]}
       />,
     );
-    expect(screen.getByRole('link', { name: 'Materi' }).getAttribute('href')).toBe(
+    expect(screen.getByRole('link', { name: 'Latihan' }).getAttribute('href')).toBe(
       '/student/learn',
     );
-    expect(screen.getByRole('link', { name: 'Materi' }).getAttribute('aria-current')).toBe('page');
+    expect(screen.getByRole('link', { name: 'Latihan' }).getAttribute('aria-current')).toBe('page');
     expect(screen.getByRole('link', { name: 'Belajar' }).hasAttribute('aria-current')).toBe(false);
   });
 

@@ -185,43 +185,41 @@ export function PvpRules() {
   return (
     <Card className="pvp-rules">
       <details open>
-        <summary>
-          <Icon name="info" />
-          Aturan &amp; Ketentuan Duel Matematika
-          <Icon name="chevron" width={18} height={18} />
-        </summary>
-        <ul>
-          <li>
-            <Icon name="check" />
-            <span>
-              <strong>Soal Sinkron &amp; Adil:</strong> Kedua pemain menerima 10 soal dan urutan
-              yang identik dari server Numora.
-            </span>
-          </li>
-          <li>
-            <Icon name="clock" />
-            <span>
-              <strong>Kalkulasi Kecepatan:</strong> Jawaban benar mendapat 100 poin dasar dan bonus
-              hingga 50 poin. Jawaban salah atau kosong bernilai 0.
-            </span>
-          </li>
-          <li>
-            <Icon name="trophy" />
-            <span>
-              <strong>Peringkat PvP:</strong> Rekor poin terbaik dicatat pada leaderboard global
-              PvP, terpisah dari XP kelas. Pertandingan forfeit atau dibatalkan tidak memperbarui
-              rekor.
-            </span>
-          </li>
-          <li>
-            <Icon name="lock" />
-            <span>
-              <strong>Jawaban Terkunci:</strong> Setelah dikirim dan diterima server, jawaban tidak
-              dapat diganti. Waktu terus berjalan saat koneksi terputus; kesempatan reconnect 20
-              detik.
-            </span>
-          </li>
-        </ul>
+      <summary>
+        <Icon name="info" />
+        Aturan Duel
+        <Icon name="chevron" width={18} height={18} />
+      </summary>
+
+      <ul>
+        <li>
+          <Icon name="check" />
+          <span>
+            <strong>Soal Sama:</strong> 10 soal identik untuk kedua pemain.
+          </span>
+        </li>
+
+        <li>
+          <Icon name="clock" />
+          <span>
+            <strong>Poin:</strong> Benar +100, bonus cepat hingga +50.
+          </span>
+        </li>
+
+        <li>
+          <Icon name="trophy" />
+          <span>
+            <strong>Peringkat:</strong> Skor terbaik masuk leaderboard PvP.
+          </span>
+        </li>
+
+        <li>
+          <Icon name="lock" />
+          <span>
+            <strong>Terkunci:</strong> Jawaban tidak bisa diubah setelah dikirim.
+          </span>
+        </li>
+      </ul>
       </details>
     </Card>
   );

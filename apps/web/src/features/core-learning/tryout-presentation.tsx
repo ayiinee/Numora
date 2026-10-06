@@ -19,40 +19,6 @@ function releaseDate(value?: string) {
     : 'Jadwal belum tersedia';
 }
 
-export function TryoutHero({ onHistory }: { onHistory: () => void }) {
-  return (
-    <section className="tryout-catalog-hero" aria-label="Tentang Tryout">
-      <div className="tryout-catalog-hero__nav">
-        <Link href="/student" aria-label="Kembali ke beranda">
-          <Icon name="back" />
-        </Link>
-        <Button variant="ghost" onClick={onHistory}>
-          <Icon name="clock" width={16} height={16} />
-          Tryout Saya
-        </Button>
-      </div>
-      <div className="tryout-catalog-hero__body">
-        <div className="tryout-catalog-hero__symbol" aria-hidden="true">
-          <Icon name="clipboard" width={48} height={48} />
-          <span>TKA SMP</span>
-        </div>
-        <div>
-          <span className="tryout-catalog-hero__pill">Gratis untuk siswa</span>
-          <h1>Tryout TKA</h1>
-          <p>
-            Simulasi matematika SMP.
-            <br />
-            Hasil setelah rilis IRT.
-          </p>
-        </div>
-      </div>
-      <p className="tryout-catalog-hero__access">
-        TryOut gratis untuk seluruh siswa, Mandiri maupun Sekolah.
-      </p>
-    </section>
-  );
-}
-
 export function TryoutPackageCard({
   current,
   onDetails,
