@@ -1,6 +1,10 @@
+**ENGINEERING UPDATE — 6 Oktober 2026:** [Student PGK/result UI](STUDENT_PGK_RESULT_UI.md) menambahkan kontrak jawaban tiga tipe, save/resume, review berdasarkan grading tersimpan, reward dashboard, rincian XP dan Info nilai. Pembahasan berpindah ke halaman khusus melalui tombol hasil. PGK start/grading dan publikasi baru tetap menunggu rubrik/policy owner; tidak ada migrasi atau perubahan hasil historis. Bukti JOB-06 sebelumnya dipertahankan. Validasi perubahan ini dicatat pada dokumen tersebut.
+
 **ENGINEERING UPDATE - 4 Oktober 2026:** lanjutan PR #56 tersedia dalam [PR #65](https://github.com/ayiinee/Numora/pull/65): fondasi importer v2 dan preview DRAFT tiga format tanpa skor berdasarkan PRD v0.6. Pengujian lokal/connected lulus, migrasi Cloud dan Content Admin QA diprovision; acceptance sandbox penuh tertahan pada scoped R2 credential. [Bukti dan next step](../testing/CONTENT_IMPORT_PREVIEW_ACCEPTANCE_2026-10-04.md). Bukan penutupan JOB-07 penuh: rubric PGK, publication/lifecycle, Curriculum approval, XP/IRT serta QA independen tetap tersisa. Master sandbox belum dibuat dan tetap PROPOSED.
 
 # Joblist MVP — rekonsiliasi pekerjaan lama dan urutan pelaksanaan
+
+**ENGINEERING UPDATE — 6 Oktober 2026:** JOB-13 serta lanjutan JOB-07/09 kini mempunyai backend/UI lifecycle Pretest, Paket Lampau Tryout, delivery DEMO 30 item, raw-answer save/resume dan finalizer dengan deadline batch. [Scope, migrasi 0028 dan validasi](PRETEST_TRYOUT_LIFECYCLE.md). Sesuai instruksi pemilik, blueprint/konten approved, rubrik PGK produksi dan rumus/validasi IRT/fallback ditunda. Pengujian fixture lokal tidak menutup dependency akademik atau acceptance produksi.
 
 **Tanggal:** 2 Oktober 2026, WIB. **Status:** PROPOSED rincian backlog engineering; **ENGINEERING DECISION:** klarifikasi pengguna pada tanggal ini menetapkan sembilan pekerjaan dalam gambar sebagai pekerjaan aktif Farel. Penugasan sembilan pekerjaan itu berlaku menggantikan pembagian yang bertumpang tindih pada versi sebelumnya. Keputusan produk/akademik yang OPEN tetap memerlukan owner terkait.
 
@@ -271,6 +275,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-16 — Aktifkan PvP policy final dan pertandingan nyata
 
+- **ENGINEERING UPDATE — 6 October 2026:** [Approved JOB-16/17 specification](PVP_LEADERBOARDS_JOB16_17.md) implemented with published server policy, opt-in DEMO seed, durable single-room participation, guest replacement and chronological reconnect handling. Local connected two-browser DEMO matches pass all difficulties. Staging identity acceptance remains pending; [rollout](../operations/PVP_LEADERBOARDS_ROLLOUT.md) records the boundary.
+
 - **Owner:** Aini engine/gateway/policy; Ferdi PvP UI; PO/Software/QA edge decision; Curriculum paket; Salim multiplayer QA. **Asal:** LAMA-12.
 - **Kerjakan:** reuse existing engine, pin production policy approved, menyediakan 10 soal urutan sama, authoritative waktu/skor serta batas waktu 30/45/60 detik dan reconnect 20 detik, room/share/classmate invite access, disconnect/readiness/expiry/cancellation sesuai keputusan. Aktivasi tidak memakai fixture policy produksi.
 - **Output:** availability yang benar, durable match/result/outbox dan frontend recovery states. Mandiri dan Sekolah boleh match; invite teman kelas tetap memerlukan kelas.
@@ -280,7 +286,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 ### JOB-17 — Sajikan leaderboard kelas/PvP dari sumber valid
 
 - **Owner:** Aini projection/API; Ferdi UI; PO/Data tie-policy; Salim period/access QA. **Asal:** LAMA-13.
-- **Kerjakan:** reuse projection/archive; class endpoint menyajikan ranks ketika XP policy siap, PvP best per difficulty valid, top 20/self dan privacy minimum. Hourly update dan period Rabu 23:59 WIB archive sesuai semantics yang tercatat.
+- **Kerjakan:** reuse projection/archive; class endpoint menyajikan ranks ketika XP policy siap, PvP best per difficulty valid, Top 10/self (PRD v0.6) dan privacy minimum. Hourly update dan period Rabu 23:59 WIB archive sesuai semantics yang tercatat.
+- **ENGINEERING UPDATE — 6 October 2026:** account Drill/Tryout ledger projection, zero-XP/multi-class entries, dense rank, DEMO/official isolation, current member filtering, period metadata and authorized archive UI/API implemented. Existing archives retain legacy provenance and stored ranks. Local integration/connected evidence is separate from staging acceptance.
 - **Output:** availability/stale/update timestamp, ranks/current/archive contract dan UI non-fixture. Data XP JOB-11 dan PvP JOB-16 menjadi dependency masing-masing papan.
 - **Bukti selesai:** class hanya anggotanya, Drill+TryOut saja; PvP/Pretest/forfeit excluded dari kelas/best sesuai rule; reproject tidak menggandakan, ties sesuai policy approved, batas minggu Asia/Jakarta benar. Redis restart tidak menghapus truth.
 - **Batas terhadap task Farel:** Farel menangani verifikasi visibility/access existing, account switch dan afiliasi pada JOB-06. Ferdi/Aini mengerjakan ranks/projection/UI data final pada JOB ini, memakai findings Farel. Perubahan route/navigation existing menunggu handoff; Salim menguji sumber data/policy baru dan acceptance akhir setelah merge, dengan otorisasi API tetap wajib.

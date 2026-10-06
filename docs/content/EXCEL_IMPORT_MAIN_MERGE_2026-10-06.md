@@ -1,16 +1,16 @@
 # Rekonsiliasi branch impor Excel dengan main — 6 Oktober 2026
 
-**ENGINEERING DECISION — permintaan pemilik:** menyelesaikan merge `origin/main` (`fbb031b`) ke `feat/excel-parser`, mempertahankan impor tujuan/paket, pembaruan reward PRD v0.6, permission Admin, materi dan notifikasi. Tidak mengubah keputusan akademik atau membuka publikasi konten impor.
+**ENGINEERING DECISION — permintaan pemilik:** menyelesaikan merge `origin/main` ke `feat/excel-parser`, pertama `fbb031b` lalu pembaruan `53e7857`, mempertahankan impor tujuan/paket, reward PRD v0.6, permission Admin, materi/notifikasi serta lifecycle Pretest/Tryout dan PvP. Tidak mengubah keputusan akademik atau membuka publikasi konten impor.
 
 ## Migrasi
 
-- SQL dan snapshot canonical `main` 0000–0027 dipertahankan. Impor terarah ditambahkan sebagai `0028_question_package_imports`; snapshot baru dihasilkan oleh Drizzle dari schema gabungan.
-- SQL 0028 sama persis dengan migrasi purpose/package yang sebelumnya bernama `0025_magical_phil_sheldon`. Timestamp journal juga dipertahankan agar database yang sudah memakainya tidak menjalankan ulang DDL.
+- SQL dan snapshot canonical `main` 0000–0029 dipertahankan. Impor terarah ditambahkan sebagai `0030_question_package_imports`; snapshot baru dihasilkan oleh Drizzle dari schema gabungan. Nomor 0028 pada merge awal bergeser karena main menambahkan lifecycle/PvP pada nomor 0028/0029.
+- SQL 0030 sama persis dengan migrasi purpose/package yang sebelumnya bernama `0025_magical_phil_sheldon`. Timestamp baru mengikuti main. Recovery mencatat cursor canonical untuk hash yang sudah ada tanpa menjalankan ulang DDL; baris histori asal dipertahankan.
 - Empat file SQL/journal fork Excel disimpan tanpa perubahan di `packages/database/staging/fixtures/excel-import-branch`. Runner mengenali hash yang pernah dipakai, termasuk line ending LF/CRLF notifikasi lama. Histori yang sudah ada tidak diubah/dihapus.
 - Recovery hanya menerima hash fork yang dikenal dengan baseline bersama yang sesuai. Migrasi reward/data yang belum diterapkan dijalankan dalam urutan canonical, secara transaksional. Notifikasi yang sudah ada tidak dibuat ulang; pembatasan akses tambahan dari main diterapkan dan dicatat.
 - Git merge ini tidak menjalankan migrasi pada database bersama. Jalur upgrade diuji pada PostgreSQL lokal terisolasi. Database dengan data yang melanggar constraint baru dari main tetap ditolak, bukan diperbaiki atau dilonggarkan diam-diam. Fixture lama dengan beberapa paket Drill resmi terbit pada satu level termasuk data yang harus direkonsiliasi sebelum upgrade.
 
-## Pemeriksaan
+## Pemeriksaan merge awal (`fbb031b`)
 
 - Tidak ada entry Git unmerged atau marker konflik tersisa.
 - Tes migration/journal/lockdown: 16 lolos, mencakup canonical upgrade, fork IRT, fork notifikasi, fork Excel sebelum/sesudah purpose, retry dan histori tetap utuh.

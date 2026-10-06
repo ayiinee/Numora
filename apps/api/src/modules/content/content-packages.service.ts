@@ -292,11 +292,11 @@ export class ContentPackagesService {
       });
       checks.push({
         code: 'RUNTIME',
-        passed: p.assessmentType === 'DRILL' && rows.length > 0 && compatible,
+        passed: (p.assessmentType !== 'PRETEST' || p.isDemo) && rows.length > 0 && compatible,
         detail:
           p.assessmentType === 'PRETEST'
-            ? 'Runtime Pretest belum tersedia.'
-            : 'Runtime saat ini PG A–D; format impor/rich media belum dapat diterbitkan.',
+            ? 'Runtime Pretest mendukung PG demo; publikasi konten impor tetap diproteksi.'
+            : 'Runtime PG tanpa media tersedia; PGK/media impor belum dapat diterbitkan.',
       });
       checks.push({
         code: 'PUBLICATION',

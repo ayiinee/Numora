@@ -1,6 +1,6 @@
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsUUID } from 'class-validator';
-import { DrillQuestionDto } from './learning.dto';
+import { DrillQuestionDto, ReviewedQuestionDto, AssessmentXpDetailDto } from './learning.dto';
 
 export class StartTryoutDto {
   @ApiProperty({ format: 'uuid' })
@@ -9,6 +9,11 @@ export class StartTryoutDto {
 }
 
 export class CurrentTryoutDto {
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) closeAt?:
+    string | null;
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) resultDueAt?:
+    string | null;
+  @ApiPropertyOptional() isDemo?: boolean;
   @ApiProperty({ type: String, format: 'uuid', required: false }) id?: string;
   @ApiProperty({ required: false }) title?: string;
   @ApiProperty({ type: String, format: 'date-time', required: false }) releaseAt?: string;
@@ -31,7 +36,19 @@ export class CurrentTryoutDto {
 }
 
 export class TryoutAttemptDto {
-  @ApiProperty({ type: Number, nullable: true, required: false, description: 'Persisted XP available after completion, independently of IRT release; null for active/legacy attempts.' }) xp?: number | null;
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) closeAt?:
+    string | null;
+  @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) resultDueAt?:
+    string | null;
+  @ApiPropertyOptional() isDemo?: boolean;
+  @ApiProperty({
+    type: Number,
+    nullable: true,
+    required: false,
+    description:
+      'Persisted XP available after completion, independently of IRT release; null for active/legacy attempts.',
+  })
+  xp?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ type: String, format: 'date-time', required: false }) serverTime?: string;
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -40,6 +57,15 @@ export class TryoutAttemptDto {
   @ApiProperty({ enum: ['inProgress', 'submitted'] }) status!: string;
   @ApiProperty({ type: String, format: 'date-time', nullable: true }) deadlineAt!: string | null;
   @ApiProperty({ type: [DrillQuestionDto] }) questions!: DrillQuestionDto[];
+}
+
+export class TryoutPackageDto extends CurrentTryoutDto {
+  @ApiProperty({ enum: ['ongoing', 'past', 'unavailable'] }) periodState!:
+    'ongoing' | 'past' | 'unavailable';
+}
+export class TryoutPackagesDto {
+  @ApiProperty({ type: [TryoutPackageDto] }) packages!: TryoutPackageDto[];
+  @ApiProperty({ type: String, nullable: true }) nextCursor!: string | null;
 }
 
 export class TryoutSubmitDto {
@@ -55,15 +81,24 @@ export class TryoutSubmitDto {
   xp?: number | null;
 }
 
-export class TryoutReviewedQuestionDto {
-  @ApiProperty({ format: 'uuid' }) questionInstanceId!: string;
-  @ApiProperty() stem!: string;
-  @ApiProperty({ type: String, nullable: true }) selectedOptionId!: string | null;
-  @ApiProperty() correctOptionId!: string;
-  @ApiProperty() explanation!: string;
-}
+export class TryoutReviewedQuestionDto extends ReviewedQuestionDto {}
 
 export class TryoutResultDto {
+  @ApiPropertyOptional({
+    enum: ['IRT', 'STANDARD'],
+    nullable: true,
+    description:
+      'Published canonical method for this attempt; null for legacy scores without provenance.',
+  })
+  resultMethod?: 'IRT' | 'STANDARD' | null;
+  @ApiPropertyOptional({
+    type: String,
+    nullable: true,
+    description: 'Public-safe reason from approved result provenance.',
+  })
+  resultMethodReason?: string | null;
+  @ApiPropertyOptional({ type: AssessmentXpDetailDto, nullable: true })
+  xpDetail?: AssessmentXpDetailDto | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) xp?: number | null;
   @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ format: 'uuid' }) attemptId!: string;

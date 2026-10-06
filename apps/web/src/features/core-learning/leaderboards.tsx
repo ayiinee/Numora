@@ -4,11 +4,11 @@ import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, Button, Card, EmptyState, Icon } from '@tka/ui';
-import { request } from './api';
-import type { LeaderboardDto } from './generated-types';
+import { learningApi, request } from './api';
+import type { LeaderboardDto, LeaderboardPeriodsDto } from './generated-types';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
-import { LeaderboardPodium } from './leaderboard-podium';
+import { LeaderboardPodium, formatLeaderboardPoints } from './leaderboard-podium';
 import { difficultyLabels, PvpHeader, type Difficulty } from '@/features/pvp/pvp-presentation';
 
 const themes = {
@@ -40,45 +40,140 @@ const periodDate = (value: string) =>
 
 export function LeaderboardsScreen() {
   const token = useStudentToken();
-  const [tab, setTab] = useState<'pvp' | 'class'>('pvp');
+  const [tab, setTab] = useState<'pvp' | 'class' | 'activity'>('pvp');
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
+  const [classId, setClassId] = useState('');
+  const [periodId, setPeriodId] = useState('');
+  const dashboard = useQuery({
+    queryKey: ['student-dashboard'],
+    queryFn: () => learningApi.dashboard(token),
+  });
+  const selectedClass =
+    classId || dashboard.data?.classes?.[0]?.id || dashboard.data?.class?.id || '';
   useEffect(() => {
     const params = new URLSearchParams(window.location.search);
     if (params.get('tab') === 'class') setTab('class');
+    if (params.get('tab') === 'activity') setTab('activity');
     const selected = params.get('difficulty');
     if (selected === 'easy' || selected === 'medium' || selected === 'hard')
       setDifficulty(selected);
   }, []);
+  const params = new URLSearchParams();
+  if (tab === 'pvp') params.set('difficulty', difficulty);
+  if (tab === 'class' && selectedClass) params.set('classId', selectedClass);
+  const periodsParams = new URLSearchParams({
+    ...Object.fromEntries(params),
+    scope: tab,
+  }).toString();
+  const periods = useQuery({
+    queryKey: ['leaderboard-periods', tab, difficulty, selectedClass],
+    queryFn: () => request<LeaderboardPeriodsDto>(token, `/leaderboards/periods?${periodsParams}`),
+    enabled: tab !== 'class' || !!selectedClass,
+  });
+  if (periodId) params.set('periodId', periodId);
   const query = useQuery({
-    queryKey: ['student-leaderboard', tab, difficulty],
-    queryFn: () =>
-      request<LeaderboardDto>(
-        token,
-        tab === 'class' ? '/leaderboards/class' : `/leaderboards/pvp?difficulty=${difficulty}`,
-      ),
+    queryKey: ['student-leaderboard', tab, difficulty, selectedClass, periodId],
+    queryFn: () => request<LeaderboardDto>(token, `/leaderboards/${tab}?${params}`),
   });
   return (
     <LearningFrame
       title="Leaderboard"
       className={`pvp-ranking-shell pvp-ranking-shell--${difficulty}`}
     >
-      <PvpHeader title={tab === 'class' ? 'Leaderboard Kelas' : 'Leaderboard PvP'} />
+      <PvpHeader
+        title={
+          tab === 'class'
+            ? 'Leaderboard Kelas'
+            : tab === 'activity'
+              ? 'Leaderboard Aktivitas'
+              : 'Leaderboard PvP'
+        }
+      />
       <div className="pvp-ranking-content">
         <div className="pvp-ranking-scope" role="group" aria-label="Jenis peringkat">
-          <button aria-pressed={tab === 'pvp'} onClick={() => setTab('pvp')}>
+          <button
+            aria-pressed={tab === 'pvp'}
+            onClick={() => {
+              setTab('pvp');
+              setPeriodId('');
+            }}
+          >
             Global PvP
           </button>
-          <button aria-pressed={tab === 'class'} onClick={() => setTab('class')}>
+          <button
+            aria-pressed={tab === 'class'}
+            onClick={() => {
+              setTab('class');
+              setPeriodId('');
+            }}
+          >
             Kelas
           </button>
+          <button
+            aria-pressed={tab === 'activity'}
+            onClick={() => {
+              setTab('activity');
+              setPeriodId('');
+            }}
+          >
+            Aktivitas Global
+          </button>
         </div>
+        {tab === 'class' && !!dashboard.data?.classes?.length && (
+          <label>
+            Kelas
+            <select
+              aria-label="Kelas leaderboard"
+              value={selectedClass}
+              onChange={(e) => {
+                setClassId(e.target.value);
+                setPeriodId('');
+              }}
+            >
+              {dashboard.data.classes.map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.name}
+                </option>
+              ))}
+            </select>
+          </label>
+        )}
+        <label>
+          Periode
+          <select
+            aria-label="Periode leaderboard"
+            value={periodId}
+            onChange={(e) => setPeriodId(e.target.value)}
+            disabled={periods.isPending}
+          >
+            <option value="">Minggu berjalan</option>
+            {periods.data?.periods
+              .filter((p) => p.status === 'ARCHIVED' && p.id)
+              .map((p) => (
+                <option key={p.id} value={p.id!}>
+                  {periodDate(p.startsAt)} –{' '}
+                  {periodDate(new Date(Date.parse(p.endsAt) - 1).toISOString())} WIB
+                </option>
+              ))}
+          </select>
+        </label>
+        {periods.isError && (
+          <Status title="Arsip belum dapat dimuat">
+            <Button variant="secondary" onClick={() => void periods.refetch()}>
+              Coba muat arsip lagi
+            </Button>
+          </Status>
+        )}
         {tab === 'pvp' && (
           <div className="pvp-ranking-tabs" role="group" aria-label="Kesulitan PvP">
             {(['easy', 'medium', 'hard'] as const).map((value) => (
               <button
                 key={value}
                 aria-pressed={difficulty === value}
-                onClick={() => setDifficulty(value)}
+                onClick={() => {
+                  setDifficulty(value);
+                  setPeriodId('');
+                }}
               >
                 {difficultyLabels[value]}
               </button>
@@ -133,7 +228,7 @@ function RankingData({
   onRefresh,
 }: {
   data: LeaderboardDto;
-  tab: 'pvp' | 'class';
+  tab: 'pvp' | 'class' | 'activity';
   difficulty: Difficulty;
   fetching: boolean;
   onRefresh: () => void;
@@ -149,13 +244,37 @@ function RankingData({
             : 'Pertandingan PvP belum dibuka. Rekor akan tampil setelah fitur tersedia.'}
         </Status>
       )}
+      {data.dataMode === 'demo' && (
+        <Status title="Leaderboard PvP DEMO">
+          Rekor dari konten DEMO. Terpisah dari rekor pertandingan resmi.
+        </Status>
+      )}
+      {data.available === false && !data.policyPending && (
+        <Status title="Menunggu pembaruan peringkat">
+          Proyeksi periode ini belum tersedia. Coba perbarui setelah worker selesai.
+        </Status>
+      )}
+      {data.stale && data.updatedAt && (
+        <Status title="Data belum diperbarui">
+          Peringkat menampilkan pembaruan terakhir yang berhasil.
+        </Status>
+      )}
+      {data.rankPolicyVersion?.startsWith('legacy') && (
+        <Status title="Arsip kebijakan lama">
+          Peringkat arsip dipertahankan sesuai aturan saat periode tersebut ditutup.
+        </Status>
+      )}
       <div className="pvp-ranking-layout">
         <div className="pvp-ranking-main">
           <Card className="pvp-ranking-podium">
             <div className="pvp-ranking-section-heading">
               <h2>
                 <Icon name="trophy" width={20} height={20} />
-                {tab === 'class' ? (data.className ?? 'Podium Kelas') : themes[difficulty].title}
+                {tab === 'class'
+                  ? (data.className ?? 'Podium Kelas')
+                  : tab === 'activity'
+                    ? 'Aktivitas Global'
+                    : themes[difficulty].title}
               </h2>
               <span>
                 {periodDate(data.period.startsAt)} –{' '}
@@ -170,7 +289,13 @@ function RankingData({
                 entries={data.entries}
                 ownEntry={own}
                 unit={data.unit}
-                label={tab === 'class' ? 'Podium teratas kelas' : 'Podium Global PvP'}
+                label={
+                  tab === 'class'
+                    ? 'Podium teratas kelas'
+                    : tab === 'activity'
+                      ? 'Peringkat Aktivitas Global'
+                      : 'Podium Global PvP'
+                }
               />
             ) : (
               <EmptyState
@@ -183,8 +308,14 @@ function RankingData({
           {!data.policyPending && data.entries.length > 3 && (
             <section className="pvp-ranking-list">
               <div className="pvp-ranking-section-heading">
-                <h2>{tab === 'class' ? 'Peringkat Kelas' : 'Papan Peringkat PvP'}</h2>
-                <span>{tab === 'class' ? 'XP Kelas' : 'Top 20 • Poin terbaik'}</span>
+                <h2>
+                  {tab === 'class'
+                    ? 'Peringkat Kelas'
+                    : tab === 'activity'
+                      ? 'Peringkat Aktivitas Global'
+                      : 'Papan Peringkat PvP'}
+                </h2>
+                <span>{tab === 'pvp' ? 'Top 10 • Poin terbaik' : 'Top 10 • XP aktivitas'}</span>
               </div>
               <ol>
                 {data.entries.slice(3).map((entry) => (
@@ -201,7 +332,7 @@ function RankingData({
                       {entry.studentId === own?.studentId && <small>KAMU</small>}
                     </div>
                     <span className="pvp-rank-points">
-                      <strong>{entry.points.toLocaleString('id-ID')}</strong>
+                      <strong>{formatLeaderboardPoints(entry.points, data.unit)}</strong>
                       <small>{unit}</small>
                     </span>
                   </li>
@@ -224,7 +355,7 @@ function RankingData({
                     <small>KAMU</small>
                   </div>
                   <span className="pvp-rank-points">
-                    <strong>{own.points.toLocaleString('id-ID')}</strong>
+                    <strong>{formatLeaderboardPoints(own.points, data.unit)}</strong>
                     <small>{unit}</small>
                   </span>
                 </div>
@@ -244,7 +375,11 @@ function RankingData({
               <Icon name="clock" width={18} height={18} />
               Periode Mingguan
             </h2>
-            <p>Reset Rabu 23:59 WIB. Peringkat diperbarui setiap jam.</p>
+            <p>
+              {data.period.status === 'ARCHIVED'
+                ? 'Arsip periode ini sudah ditutup.'
+                : 'Reset setelah Rabu 23:59 WIB. Peringkat diperbarui setiap jam.'}
+            </p>
             <p>
               {data.updatedAt
                 ? `Diperbarui ${new Intl.DateTimeFormat('id-ID', { timeZone: 'Asia/Jakarta', dateStyle: 'medium', timeStyle: 'short' }).format(new Date(data.updatedAt))} WIB`

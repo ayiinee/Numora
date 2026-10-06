@@ -19,10 +19,10 @@ export function PretestCard({
 }: {
   chapterTitle: string;
   state: PretestChapterState;
-  onStart?: PretestAction;
-  onSkip?: PretestAction;
-  onResume?: PretestAction;
-  onViewResult?: PretestAction;
+  onStart?: PretestAction | undefined;
+  onSkip?: PretestAction | undefined;
+  onResume?: PretestAction | undefined;
+  onViewResult?: PretestAction | undefined;
 }) {
   const [dialogOpen, setDialogOpen] = useState(false);
   const [pending, setPending] = useState<PendingAction | null>(null);
@@ -63,6 +63,7 @@ export function PretestCard({
     setError(null);
     try {
       await callback();
+      setDialogOpen(false);
     } catch (reason) {
       setError(reason instanceof Error ? reason.message : 'Tindakan belum berhasil. Coba lagi.');
     } finally {
@@ -84,7 +85,7 @@ export function PretestCard({
           <p>{status.description}</p>
           <span className="pretest-card__meta">20 soal · Opsional · Tanpa XP</span>
         </div>
-        {state === 'available' && (
+        {(state === 'available' || state === 'skipped' || (state === 'unavailable' && onSkip)) && (
           <Button variant="secondary" onClick={() => setDialogOpen(true)}>
             Lihat informasi
           </Button>
@@ -106,6 +107,15 @@ export function PretestCard({
             {pending === 'result' ? 'Membuka hasil…' : 'Lihat hasil'}
           </Button>
         )}
+        {state === 'inProgress' && onSkip && (
+          <Button
+            variant="secondary"
+            disabled={pending !== null}
+            onClick={() => void runAction('skip', onSkip)}
+          >
+            {pending === 'skip' ? 'Melewati…' : 'Skip untuk sekarang'}
+          </Button>
+        )}
       </Card>
       {error && state !== 'available' && (
         <p className="form-error" role="alert">
@@ -113,7 +123,7 @@ export function PretestCard({
         </p>
       )}
 
-      {state === 'available' && (
+      {(state === 'available' || state === 'skipped' || (state === 'unavailable' && onSkip)) && (
         <Dialog
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
@@ -145,7 +155,18 @@ export function PretestCard({
             <li>Pretest berisi 20 soal dan bersifat opsional.</li>
             <li>Pretest yang selesai tidak dapat diulang dan tidak memberikan XP.</li>
             <li>Jika memilih Skip, Level 1 pada semua subbab bab ini akan terbuka.</li>
-            <li>Pemetaan skor ke level masih menunggu keputusan Curriculum dan Product.</li>
+            <li>
+              Skip tidak menghabiskan kesempatan. Jawaban yang sudah tersimpan tetap bisa
+              dilanjutkan.
+            </li>
+            <li>
+              0–7 benar membuka Level 1; 8–18 Level 2; 19–20 Level 3, sesuai blueprint bab. Progres
+              Drill yang sudah ada dipertahankan.
+            </li>
+            <li>
+              Jawaban yang tersimpan di server dapat dilanjutkan tanpa batas waktu sebelum Pretest
+              selesai.
+            </li>
           </ul>
           {error && (
             <p className="form-error" role="alert">

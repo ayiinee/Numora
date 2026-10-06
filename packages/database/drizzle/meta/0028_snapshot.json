@@ -1,5 +1,5 @@
 {
-  "id": "a1ed9dff-c7d1-4eaa-837f-5338bfc2b47b",
+  "id": "6d4112db-6188-4bcd-9912-1273439cbb78",
   "prevId": "f8cbadff-92d8-40b0-b7cc-261fcfe41925",
   "version": "7",
   "dialect": "postgresql",
@@ -2068,18 +2068,6 @@
           "primaryKey": false,
           "notNull": false
         },
-        "usage_type": {
-          "name": "usage_type",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "source_question_id": {
-          "name": "source_question_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
         "status": {
           "name": "status",
           "type": "content_status",
@@ -2100,27 +2088,6 @@
         "questions_competency_idx": {
           "name": "questions_competency_idx",
           "columns": [
-            {
-              "expression": "primary_competency_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "questions_usage_competency_idx": {
-          "name": "questions_usage_competency_idx",
-          "columns": [
-            {
-              "expression": "usage_type",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
             {
               "expression": "primary_competency_id",
               "isExpression": false,
@@ -2168,33 +2135,12 @@
           ],
           "onDelete": "restrict",
           "onUpdate": "no action"
-        },
-        "questions_source_question_id_questions_id_fk": {
-          "name": "questions_source_question_id_questions_id_fk",
-          "tableFrom": "questions",
-          "tableTo": "questions",
-          "columnsFrom": [
-            "source_question_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
         }
       },
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "questions_usage_ck": {
-          "name": "questions_usage_ck",
-          "value": "\"questions\".\"usage_type\" is null or \"questions\".\"usage_type\" in ('DRILL','PRETEST','TRYOUT')"
-        },
-        "questions_source_question_ck": {
-          "name": "questions_source_question_ck",
-          "value": "\"questions\".\"source_question_id\" is null or \"questions\".\"source_question_id\" <> \"questions\".\"id\""
-        },
         "questions_curriculum_level_ck": {
           "name": "questions_curriculum_level_ck",
           "value": "\"questions\".\"curriculum_level_number\" is null or \"questions\".\"curriculum_level_number\" > 0"
@@ -3237,9 +3183,37 @@
           "type": "integer",
           "primaryKey": false,
           "notNull": false
+        },
+        "pretest_result": {
+          "name": "pretest_result",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
         }
       },
       "indexes": {
+        "assessment_attempts_pretest_active_uq": {
+          "name": "assessment_attempts_pretest_active_uq",
+          "columns": [
+            {
+              "expression": "student_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "chapter_id_at_start",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "where": "\"assessment_attempts\".\"assessment_type\" = 'PRETEST' and \"assessment_attempts\".\"status\" = 'IN_PROGRESS'",
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
         "assessment_attempts_pretest_once_uq": {
           "name": "assessment_attempts_pretest_once_uq",
           "columns": [
@@ -3700,19 +3674,6 @@
           "primaryKey": false,
           "notNull": true
         },
-        "import_source": {
-          "name": "import_source",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "content_revision": {
-          "name": "content_revision",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
         "assessment_type": {
           "name": "assessment_type",
           "type": "assessment_type",
@@ -4005,10 +3966,6 @@
           "name": "assessment_packages_version_ck",
           "value": "\"assessment_packages\".\"package_version\" > 0"
         },
-        "assessment_packages_content_revision_ck": {
-          "name": "assessment_packages_content_revision_ck",
-          "value": "\"assessment_packages\".\"content_revision\" >= 0"
-        },
         "assessment_packages_purpose_ck": {
           "name": "assessment_packages_purpose_ck",
           "value": "\"assessment_packages\".\"purpose\" = 'REGULAR' or (\"assessment_packages\".\"assessment_type\" = 'DRILL' and \"assessment_packages\".\"blueprint_version_id\" is not null)"
@@ -4065,6 +4022,13 @@
           "primaryKey": false,
           "notNull": true,
           "default": "now()"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
         },
         "awarded_points": {
           "name": "awarded_points",
@@ -4134,6 +4098,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "attempt_answers_revision_ck": {
+          "name": "attempt_answers_revision_ck",
+          "value": "\"attempt_answers\".\"revision\" >= 0"
+        },
         "attempt_answers_points_ck": {
           "name": "attempt_answers_points_ck",
           "value": "\"attempt_answers\".\"awarded_points\" is null or \"attempt_answers\".\"awarded_points\" >= 0"
@@ -4768,6 +4736,87 @@
           "value": "\"package_items\".\"item_role\" in ('REGULAR','ORIGINAL','FOCAL','REFERENCE')"
         }
       },
+      "isRLSEnabled": true
+    },
+    "public.pretest_chapter_states": {
+      "name": "pretest_chapter_states",
+      "schema": "",
+      "columns": {
+        "student_id": {
+          "name": "student_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chapter_id": {
+          "name": "chapter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "skipped_at": {
+          "name": "skipped_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "pretest_chapter_states_student_chapter_uq": {
+          "name": "pretest_chapter_states_student_chapter_uq",
+          "columns": [
+            {
+              "expression": "student_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "chapter_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "pretest_chapter_states_student_id_users_id_fk": {
+          "name": "pretest_chapter_states_student_id_users_id_fk",
+          "tableFrom": "pretest_chapter_states",
+          "tableTo": "users",
+          "columnsFrom": [
+            "student_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "pretest_chapter_states_chapter_id_chapters_id_fk": {
+          "name": "pretest_chapter_states_chapter_id_chapters_id_fk",
+          "tableFrom": "pretest_chapter_states",
+          "tableTo": "chapters",
+          "columnsFrom": [
+            "chapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": true
     },
     "public.scoring_policy_versions": {

@@ -22,7 +22,7 @@ export async function migrateIntegratedDatabase(
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
-      // Published Excel branch DDL is archived unchanged; canonical main stays 0000–0027.
+      // Published Excel branch DDL is archived unchanged; canonical main remains intact.
       const forkFolder = resolve(
         migrationsFolder,
         '..',
@@ -41,18 +41,51 @@ export async function migrateIntegratedDatabase(
         (sql) => createHash('sha256').update(sql).digest('hex'),
       );
       const canonicalHashes = new Set(migrations.map((entry) => entry.hash));
-      const branchHashes = new Set([...fork.map((entry) => entry.hash), ...notificationHashes]);
-      const notificationFork =
-        notificationHashes.some((hash) => hashes.has(hash)) &&
+      const irtHashes = await Promise.all(
+        ['0004_flimsy_korg', '0005_irt_metadata_cursor_recovery'].map(async (tag) =>
+          createHash('sha256')
+            .update(
+              await readFile(
+                resolve(migrationsFolder, '..', 'staging', 'fixtures', 'irt-branch', `${tag}.sql`),
+              ),
+            )
+            .digest('hex'),
+        ),
+      );
+      const branchHashes = new Set([
+        ...fork.map((entry) => entry.hash),
+        ...notificationHashes,
+        ...irtHashes,
+      ]);
+      const excelFork =
+        (notificationHashes.some((hash) => hashes.has(hash)) ||
+          history.some(
+            (row) =>
+              row.hash === fork[3]!.hash &&
+              Number(row.created_at) !==
+                migrations.find((entry) => entry.hash === row.hash)?.folderMillis,
+          )) &&
         migrations.slice(3, 18).every((entry) => hashes.has(entry.hash)) &&
         history
           .filter((row) => Number(row.created_at) >= migrations[3]!.folderMillis)
           .every((row) => canonicalHashes.has(row.hash) || branchHashes.has(row.hash));
-      if (notificationFork) {
+      if (excelFork) {
         // A later branch cursor must not skip main's rewards/data migrations. Apply only
         // absent hashes, in canonical order, preserving every original history row.
         for (const [index, entry] of migrations.entries()) {
-          if (index < 4 || hashes.has(entry.hash)) continue;
+          if (index < 4) continue;
+          if (hashes.has(entry.hash)) {
+            // A published branch hash can move after newer main migrations. Record
+            // its canonical cursor without replaying DDL or rewriting old history.
+            if (
+              !history.some(
+                (row) => row.hash === entry.hash && Number(row.created_at) === entry.folderMillis,
+              )
+            )
+              await tx`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+                VALUES(${entry.hash},${entry.folderMillis})`;
+            continue;
+          }
           if (index === 27) {
             // Tables/data are identical; main additionally revokes service_role access.
             const revoke = entry.sql.find((statement) => statement.includes("'service_role'"));
@@ -71,17 +104,6 @@ export async function migrateIntegratedDatabase(
         .slice(4)
         .filter((entry) => entry.folderMillis <= cursor && !hashes.has(entry.hash));
       if (!skipped.length) return;
-      const irtHashes = await Promise.all(
-        ['0004_flimsy_korg', '0005_irt_metadata_cursor_recovery'].map(async (tag) =>
-          createHash('sha256')
-            .update(
-              await readFile(
-                resolve(migrationsFolder, '..', 'staging', 'fixtures', 'irt-branch', `${tag}.sql`),
-              ),
-            )
-            .digest('hex'),
-        ),
-      );
       const irtFork =
         hashes.has(migrations[3]!.hash) &&
         irtHashes.some((hash) => hashes.has(hash)) &&

@@ -237,9 +237,9 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       const oldHistory =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       await migrateIntegratedDatabase(client, folder);
-      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toEqual(
-        attempt,
-      );
+      expect(
+        (await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0],
+      ).toMatchObject(attempt!);
       const [preserved] = await client`SELECT * FROM xp_ledger WHERE id=${reward!.id}`;
       expect({ ...preserved, xp_amount: Number(preserved!.xp_amount) }).toEqual({
         ...reward,
@@ -248,7 +248,10 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       const history =
         await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
-      expect(history).toHaveLength(oldHistory.length + 3);
+      const journal = JSON.parse(await readFile(join(folder, 'meta/_journal.json'), 'utf8')) as {
+        entries: unknown[];
+      };
+      expect(history).toHaveLength(journal.entries.length);
       await expect(
         client`UPDATE xp_ledger SET xp_amount=81 WHERE id=${reward!.id}`,
       ).rejects.toThrow();
@@ -259,10 +262,23 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     });
   });
 
-  it.each([3, 4])(
-    'upgrades the published Excel fork through %i entries without replaying existing tables or purpose DDL',
-    async (count) => {
+  it.each([
+    [3, false],
+    [4, false],
+    [4, true],
+  ] as const)(
+    'upgrades the published Excel fork through %i entries (retained IRT history=%s) without replaying existing tables or purpose DDL',
+    async (count, retainedIrt) => {
       await fixture(22, async (client, folder) => {
+        if (retainedIrt) {
+          // The shared schema already includes IRT DDL; preserve its original fork
+          // history rows, as on the actual development database after recovery.
+          const irt = readMigrationFiles({
+            migrationsFolder: resolve('staging/fixtures/irt-branch'),
+          });
+          for (const entry of irt.slice(4))
+            await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+        }
         const fork = readMigrationFiles({
           migrationsFolder: resolve('staging/fixtures/excel-import-branch'),
         });
@@ -308,6 +324,31 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
       });
     },
   );
+
+  it('upgrades the first merged main with an earlier purpose cursor without replaying its DDL', async () => {
+    await fixture(28, async (client, folder) => {
+      const purpose = readMigrationFiles({
+        migrationsFolder: resolve('staging/fixtures/excel-import-branch'),
+      })[3]!;
+      for (const statement of purpose.sql) if (statement.trim()) await client.unsafe(statement);
+      await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${purpose.hash},${purpose.folderMillis})`;
+      const before =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await migrateIntegratedDatabase(client, folder);
+      const after =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      expect(after.slice(0, before.length)).toEqual(before);
+      const canonical = readMigrationFiles({ migrationsFolder: folder }).at(-1)!;
+      expect(after).toContainEqual({
+        hash: canonical.hash,
+        created_at: String(canonical.folderMillis),
+      });
+      await migrateIntegratedDatabase(client, folder);
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(after);
+    });
+  });
 
   it('rolls back replayed DDL and history if the known fork schema has diverged', async () => {
     await fixture(4, async (client, folder) => {

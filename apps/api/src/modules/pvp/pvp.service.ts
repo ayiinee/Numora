@@ -20,8 +20,8 @@ export class PvpService {
     return user;
   }
   async availability(authorization?: string) {
-    await this.student(authorization);
-    return this.engine.availability();
+    const student = await this.student(authorization);
+    return this.engine.availability(student.id);
   }
   async classmates(authorization?: string) {
     const student = await this.student(authorization);

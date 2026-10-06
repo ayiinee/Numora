@@ -6,7 +6,7 @@ import { Card, EmptyState, Icon, Skeleton } from '@tka/ui';
 import type { LeaderboardDto, StudentDashboardDto } from './generated-types';
 import { request } from './api';
 import { DataState } from './ui';
-import { LeaderboardPodium } from './leaderboard-podium';
+import { LeaderboardPodium, formatLeaderboardPoints } from './leaderboard-podium';
 
 export function HomeClassPodium({ token, data }: { token: string; data: StudentDashboardDto }) {
   const ranking = useQuery({
@@ -85,7 +85,7 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
           <p className="home-podium-own">
             Peringkat kamu <strong>#{ranking.data.ownEntry.rank}</strong>
             <span>
-              {ranking.data.ownEntry.points.toLocaleString('id-ID')}{' '}
+              {formatLeaderboardPoints(ranking.data.ownEntry.points, ranking.data.unit)}{' '}
               {ranking.data.unit === 'xp' ? 'XP' : 'PTS'}
             </span>
           </p>

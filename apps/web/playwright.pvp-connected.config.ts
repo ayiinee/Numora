@@ -1,0 +1,45 @@
+import { defineConfig } from '@playwright/test';
+export default defineConfig({
+  testDir: './e2e-connected',
+  testMatch: 'pvp-chain.spec.ts',
+  outputDir: '../../.tmp/job16-playwright',
+  workers: 1,
+  fullyParallel: false,
+  retries: 0,
+  reporter: 'line',
+  timeout: 180_000,
+  globalTimeout: 600_000,
+  expect: { timeout: 20_000 },
+  use: {
+    baseURL: 'http://localhost:3450',
+    browserName: 'chromium',
+    channel: 'chromium',
+    trace: 'off',
+    screenshot: 'off',
+    video: 'off',
+  },
+  webServer: [
+    {
+      command: 'node ../api/scripts/serve-pvp-chain.mjs',
+      url: 'http://localhost:3451/api/v1/health',
+      reuseExistingServer: false,
+      timeout: 60_000,
+      gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
+    },
+    {
+      command: 'node node_modules/next/dist/bin/next start -p 3450',
+      url: 'http://localhost:3450',
+      reuseExistingServer: false,
+      timeout: 120_000,
+      gracefulShutdown: { signal: 'SIGTERM', timeout: 5000 },
+      env: {
+        NODE_ENV: 'production',
+        NUMORA_WEB_DIST_DIR: '.next-job16',
+        NEXT_PUBLIC_API_URL: 'http://localhost:3451/api/v1',
+        API_INTERNAL_URL: 'http://localhost:3451/api/v1',
+        NEXT_PUBLIC_SUPABASE_URL: 'http://localhost:3452',
+        NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY: 'job16-test-only-public-key',
+      },
+    },
+  ],
+});

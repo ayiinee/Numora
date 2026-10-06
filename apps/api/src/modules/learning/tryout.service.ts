@@ -8,6 +8,8 @@ import {
 } from '@nestjs/common';
 import {
   currentTryoutPackage,
+  tryoutBatchCloseAt,
+  publishedTryoutAttemptResults,
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
@@ -26,15 +28,18 @@ import {
   AssessmentFinalizationError,
   databaseTime,
   finalizeTryout,
-  saveChoiceWithEvent,
+  saveAssessmentAnswerWithEvent,
+  decodeAssessmentContent,
+  normalizeAssessmentAnswer,
+  presentAssessmentQuestion,
+  presentAssessmentReview,
   TRYOUT_XP_POLICY,
   TRYOUT_REWARD_POLICY,
 } from '@tka/assessment-engine';
-import { and, asc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
-import { selectedOptionId } from './drill.policy';
-import { decodeSingleChoice } from './single-choice.policy';
 import { TryoutReleaseService } from './tryout-release.service';
+import { tryoutAttemptDeadline } from './tryout.policy';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 
@@ -99,7 +104,142 @@ export class TryoutService {
       attemptId: attempt?.id ?? null,
       questionCount: count?.total ?? 0,
       durationSeconds: current.durationSeconds,
+      isDemo: current.isDemo,
+      closeAt: current.closeAt?.toISOString() ?? null,
+      resultDueAt: current.closeAt
+        ? new Date(current.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+        : null,
     };
+  }
+
+  private async packageMetadata(studentId: string, pack: typeof assessmentPackages.$inferSelect) {
+    const db = getDatabase().db;
+    const now = await databaseTime(db);
+    const current = await this.currentPackage();
+    let [attempt] = await db
+      .select()
+      .from(assessmentAttempts)
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.packageId, pack.id),
+          eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+        ),
+      )
+      .limit(1);
+    if (attempt?.status === 'IN_PROGRESS') {
+      await this.finalizeForStudent(studentId, attempt.id, 'automatic');
+      [attempt] = await db
+        .select()
+        .from(assessmentAttempts)
+        .where(eq(assessmentAttempts.id, attempt.id));
+    }
+    const past =
+      pack.status === 'CLOSED' ||
+      pack.status === 'ARCHIVED' ||
+      (pack.closeAt ?? tryoutBatchCloseAt(pack.releaseAt!)) <= now;
+    const ongoing = !past && current?.id === pack.id;
+    const released =
+      attempt?.status === 'GRADED' &&
+      (await this.releases.releasedPackageIds([pack.id])).has(pack.id);
+    const [count] = await db
+      .select({ total: sql<number>`count(*)::integer` })
+      .from(packageItems)
+      .where(eq(packageItems.packageId, pack.id));
+    return {
+      id: pack.id,
+      title: pack.name,
+      releaseAt: pack.releaseAt!.toISOString(),
+      closeAt: pack.closeAt?.toISOString() ?? null,
+      resultDueAt: pack.closeAt
+        ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+        : null,
+      questionCount: count?.total ?? 0,
+      durationSeconds: pack.durationSeconds,
+      isDemo: pack.isDemo,
+      attemptId: attempt?.id ?? null,
+      periodState: past
+        ? ('past' as const)
+        : ongoing
+          ? ('ongoing' as const)
+          : ('unavailable' as const),
+      state: attempt
+        ? attempt.status === 'IN_PROGRESS' && ongoing
+          ? ('inProgress' as const)
+          : released
+            ? ('resultReady' as const)
+            : ('waitingIrt' as const)
+        : ongoing
+          ? ('open' as const)
+          : ('unavailable' as const),
+      eligible: ongoing && !attempt,
+    };
+  }
+  async packages(authorization?: string, cursor?: string) {
+    const studentId = await this.student(authorization);
+    const db = getDatabase().db;
+    const now = await databaseTime(db);
+    let cursorClause;
+    if (cursor) {
+      if (!/^[0-9a-f]{8}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{4}-[0-9a-f]{12}$/i.test(cursor))
+        throw new BadRequestException(problem('CURSOR_INVALID', 'Cursor paket tidak valid.'));
+      const [anchor] = await db
+        .select({ id: assessmentPackages.id, releaseAt: assessmentPackages.releaseAt })
+        .from(assessmentPackages)
+        .where(
+          and(
+            eq(assessmentPackages.id, cursor),
+            eq(assessmentPackages.assessmentType, 'TRYOUT'),
+            eq(assessmentPackages.purpose, 'REGULAR'),
+            sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+            sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
+          ),
+        );
+      if (!anchor?.releaseAt)
+        throw new BadRequestException(problem('CURSOR_INVALID', 'Cursor paket tidak tersedia.'));
+      cursorClause = sql`(${assessmentPackages.releaseAt}, ${assessmentPackages.id}) < (${anchor.releaseAt.toISOString()}::timestamptz, ${anchor.id}::uuid)`;
+    }
+    const rows = await db
+      .select()
+      .from(assessmentPackages)
+      .where(
+        and(
+          eq(assessmentPackages.assessmentType, 'TRYOUT'),
+          eq(assessmentPackages.purpose, 'REGULAR'),
+          sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+          sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
+          cursorClause,
+        ),
+      )
+      .orderBy(desc(assessmentPackages.releaseAt), desc(assessmentPackages.id))
+      .limit(21);
+    const page = rows.slice(0, 20);
+    return {
+      packages: await Promise.all(page.map((row) => this.packageMetadata(studentId, row))),
+      nextCursor: rows.length > 20 ? page.at(-1)!.id : null,
+    };
+  }
+  async packageDetail(authorization: string | undefined, packageId: string) {
+    const studentId = await this.student(authorization);
+    const db = getDatabase().db;
+    const now = await databaseTime(db);
+    const [pack] = await db
+      .select()
+      .from(assessmentPackages)
+      .where(
+        and(
+          eq(assessmentPackages.id, packageId),
+          eq(assessmentPackages.assessmentType, 'TRYOUT'),
+          eq(assessmentPackages.purpose, 'REGULAR'),
+          sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+          sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
+        ),
+      );
+    if (!pack)
+      throw new NotFoundException(
+        problem('TRYOUT_PACKAGE_NOT_FOUND', 'Paket Tryout tidak ditemukan.'),
+      );
+    return this.packageMetadata(studentId, pack);
   }
 
   private async questionRows(attemptId: string) {
@@ -133,6 +273,8 @@ export class TryoutService {
         status: assessmentAttempts.status,
         packageId: assessmentAttempts.packageId,
         title: assessmentPackages.name,
+        closeAt: assessmentPackages.closeAt,
+        isDemo: assessmentPackages.isDemo,
         deadlineAt: assessmentAttempts.deadlineAt,
         xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
       })
@@ -160,20 +302,19 @@ export class TryoutService {
       id: attempt.id,
       packageId: attempt.packageId,
       packageTitle: attempt.title,
+      closeAt: attempt.closeAt?.toISOString() ?? null,
+      resultDueAt: attempt.closeAt
+        ? new Date(attempt.closeAt.getTime() + 72 * 3600_000).toISOString()
+        : null,
+      isDemo: attempt.isDemo,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
       serverTime: (await databaseTime(getDatabase().db)).toISOString(),
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
-      questions: rows.map((row) => {
-        const content = decodeSingleChoice(row);
-        return {
-          questionInstanceId: row.id,
-          stem: content.stem,
-          options: content.options,
-          selectedOptionId: selectedOptionId(row.answer),
-        };
-      }),
+      questions: rows.map((row) =>
+        presentAssessmentQuestion(decodeAssessmentContent(row), row.id, row.answer),
+      ),
     };
   }
 
@@ -251,16 +392,17 @@ export class TryoutService {
         throw new ServiceUnavailableException(
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
-      items.forEach(decodeSingleChoice);
+      if (!current.isDemo && items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
+        throw new ServiceUnavailableException(
+          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
+        );
+      items.forEach(decodeAssessmentContent);
       const now = await databaseTime(tx);
-      const deadlineAt = current.durationSeconds
-        ? new Date(
-            Math.min(
-              now.getTime() + current.durationSeconds * 1000,
-              current.closeAt?.getTime() ?? Infinity,
-            ),
-          )
-        : current.closeAt;
+      if (current.closeAt && current.closeAt <= now)
+        throw new ConflictException(
+          problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Batch Tryout sudah ditutup.'),
+        );
+      const deadlineAt = tryoutAttemptDeadline(now, current.durationSeconds, current.closeAt);
       if (!deadlineAt)
         throw new ServiceUnavailableException(
           problem('TRYOUT_DEADLINE_MISSING', 'Durasi atau akhir batch wajib ditentukan.'),
@@ -271,7 +413,9 @@ export class TryoutService {
           studentId,
           packageId,
           assessmentType: 'TRYOUT',
-          tryoutXpPolicyVersion: TRYOUT_XP_POLICY.version,
+          tryoutXpPolicyVersion: items.some((item) => item.questionType !== 'SINGLE_CHOICE')
+            ? null
+            : TRYOUT_XP_POLICY.version,
           classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
@@ -311,10 +455,8 @@ export class TryoutService {
     authorization: string | undefined,
     attemptId: string,
     questionInstanceId: string,
-    optionId: string | null,
+    input: unknown,
   ) {
-    if (optionId !== null && (typeof optionId !== 'string' || !optionId.trim()))
-      throw new BadRequestException(problem('OPTION_INVALID', 'optionId tidak valid.'));
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
@@ -347,19 +489,27 @@ export class TryoutService {
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Tryout ini.'),
         );
-      if (
-        optionId !== null &&
-        !decodeSingleChoice(item).options.some((option) => option.id === optionId)
-      )
-        throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
+      const content = decodeAssessmentContent(item);
+      let answer;
+      try {
+        answer = normalizeAssessmentAnswer(
+          content,
+          typeof input === 'string' ? { optionId: input } : input,
+        );
+      } catch (error) {
+        if (error instanceof AssessmentFinalizationError)
+          throw new BadRequestException(problem(error.code, error.message));
+        throw error;
+      }
       const now = await databaseTime(tx);
       if (attempt.deadlineAt && attempt.deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
-        await saveChoiceWithEvent(tx, {
+        await saveAssessmentAnswerWithEvent(tx, {
           attemptId,
           questionInstanceId: item.id,
-          optionId,
+          answer,
+          questionFormat: content.type,
           now,
           deadlineAt: attempt.deadlineAt,
         });
@@ -368,7 +518,11 @@ export class TryoutService {
           throw new ConflictException(problem(error.code, error.message));
         throw error;
       }
-      return { questionInstanceId, selectedOptionId: optionId };
+      return {
+        questionInstanceId,
+        answer,
+        selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
+      };
     });
   }
 
@@ -426,27 +580,46 @@ export class TryoutService {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
+    const canonical = (await publishedTryoutAttemptResults([attemptId])).get(attemptId);
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
+    const xp = await this.storedXp(attemptId);
     return {
       attemptId,
       packageTitle: attempt.title,
-      xp: await this.storedXp(attemptId),
+      xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
-      score: Number(score?.score ?? 0),
-      correctCount: rows.filter((row) => Number(row.awardedPoints) > 0).length,
+      score: canonical?.score ?? Number(score?.score ?? 0),
+      correctCount: rows.filter(
+        (row) => row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints),
+      ).length,
       questionCount: rows.length,
-      explanation: rows.map((row) => {
-        const content = decodeSingleChoice(row);
-        return {
-          questionInstanceId: row.id,
-          stem: content.stem,
-          selectedOptionId: selectedOptionId(row.answer),
-          correctOptionId: content.correctOptionId,
-          explanation: content.explanation,
-        };
-      }),
+      resultMethod: canonical?.resultMethod ?? null,
+      resultMethodReason: canonical?.reason ?? null,
+      xpDetail:
+        xp === null || rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
+          ? null
+          : {
+              calculationMode: 'FULL_CORRECT_ONLY' as const,
+              fullCorrectCount: rows.filter(
+                (row) => Number(row.awardedPoints) === Number(row.maxPoints),
+              ).length,
+              partialCorrectEquivalent: 0,
+              correctEquivalent: rows.filter(
+                (row) => Number(row.awardedPoints) === Number(row.maxPoints),
+              ).length,
+              fallbackReason: null,
+            },
+      explanation: rows.map((row) =>
+        presentAssessmentReview(
+          decodeAssessmentContent(row),
+          row.id,
+          row.answer,
+          row.awardedPoints,
+          row.maxPoints,
+        ),
+      ),
     };
   }
 }

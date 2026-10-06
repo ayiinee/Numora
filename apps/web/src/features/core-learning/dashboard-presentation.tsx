@@ -182,6 +182,17 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
       badge: data.availableLevels ? `${data.availableLevels} Lvl` : 'Latihan',
       href: '/student/learn',
     },
+    ...(data.features.pretest
+      ? [
+          {
+            title: 'Pretest',
+            subtitle: 'Kenali level awal',
+            icon: 'rocket' as const,
+            badge: 'Opsional',
+            href: '/student/learn',
+          },
+        ]
+      : []),
     {
       title: 'Tryout',
       subtitle: 'Simulasi TKA',
@@ -278,9 +289,23 @@ export function HomeActivity({
           ) : (
             <span>Nilai belum tersedia</span>
           )}
+          {item.xpState === 'ready' && item.xp != null && <span>{item.xp} XP</span>}
+          {item.starsState === 'ready' && item.stars != null && (
+            <span>Bintang: {item.stars} / 3</span>
+          )}
+          {item.xpState === 'legacy' && <small>XP tidak tercatat pada hasil versi lama</small>}
+          {item.starsState === 'legacy' && (
+            <small>Bintang tidak tercatat pada hasil versi lama</small>
+          )}
           {item.isDemo && <span>Demo</span>}
           {(item.xpState === 'pending' || item.starsState === 'pending') && (
-            <small className="home-activity__pending">XP dan bintang belum tersedia</small>
+            <small className="home-activity__pending">
+              {item.xpState === 'pending' && item.starsState === 'pending'
+                ? 'XP dan bintang belum tersedia'
+                : item.xpState === 'pending'
+                  ? 'XP belum tersedia'
+                  : 'Bintang belum tersedia'}
+            </small>
           )}
         </div>
       </div>

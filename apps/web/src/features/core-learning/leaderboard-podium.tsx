@@ -3,6 +3,9 @@
 import { Avatar, Icon } from '@tka/ui';
 import type { LeaderboardDto } from './generated-types';
 
+export const formatLeaderboardPoints = (points: number, unit: LeaderboardDto['unit']) =>
+  points.toLocaleString('id-ID', { maximumFractionDigits: unit === 'xp' ? 6 : 2 });
+
 /** Presentation only: positions, points and unit come from the server. */
 export function LeaderboardPodium({
   entries,
@@ -14,6 +17,28 @@ export function LeaderboardPodium({
   label?: string;
   pointsOnPedestal?: boolean;
 }) {
+  const leaders = entries.slice(0, 3);
+  if (leaders.some((leader) => entries.filter((entry) => entry.rank === leader.rank).length > 1)) {
+    return (
+      <div className="pvp-ranking-list">
+        <ol aria-label={label}>
+          {leaders.map((entry) => (
+            <li
+              key={entry.studentId}
+              className={entry.studentId === ownEntry?.studentId ? 'is-self' : ''}
+            >
+              <span aria-label={`Peringkat ${entry.rank}`}>{entry.rank}</span>
+              <Avatar name={entry.displayName} />
+              <strong>{entry.displayName}</strong>
+              <span>
+                {formatLeaderboardPoints(entry.points, unit)} {unit === 'xp' ? 'XP' : 'PTS'}
+              </span>
+            </li>
+          ))}
+        </ol>
+      </div>
+    );
+  }
   return (
     <ol className="leaderboard-podium" aria-label={label}>
       {[1, 0, 2].map((position) => {
@@ -37,14 +62,14 @@ export function LeaderboardPodium({
                 )}
                 {!pointsOnPedestal && (
                   <span className="leaderboard-podium__points">
-                    {entry.points.toLocaleString('id-ID')} {unit === 'xp' ? 'XP' : 'PTS'}
+                    {formatLeaderboardPoints(entry.points, unit)} {unit === 'xp' ? 'XP' : 'PTS'}
                   </span>
                 )}
                 <div className="leaderboard-podium__pedestal">
                   {pointsOnPedestal ? (
                     <>
                       <strong className="leaderboard-podium__record">
-                        {entry.points.toLocaleString('id-ID')}
+                        {formatLeaderboardPoints(entry.points, unit)}
                       </strong>
                       <span>{unit === 'xp' ? 'XP' : 'PTS'}</span>
                     </>

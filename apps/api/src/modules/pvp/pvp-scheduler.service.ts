@@ -43,10 +43,25 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       lazyConnect: true,
       enableOfflineQueue: false,
     });
-    this.redis.on('error', () => this.logger.warn('PvP cache connection unavailable.'));
-    await this.redis.connect();
-    await this.redis.ping();
+    this.redis.on('error', () => {
+      this.engine.setSchedulerReady(false);
+      this.logger.warn('PvP cache connection unavailable.');
+    });
+    this.redis.on('close', () => this.engine.setSchedulerReady(false));
+    this.redis.on('ready', () => {
+      if (this.queue && this.worker) this.engine.setSchedulerReady(true);
+    });
+    try {
+      await this.redis.connect();
+      await this.redis.ping();
+    } catch {
+      this.logger.warn('PvP scheduler initialization failed; waiting for reconnection.');
+    }
     this.queue = new Queue('pvp-deadlines', { connection: this.redis, prefix });
+    this.queue.on('error', () => {
+      this.engine.setSchedulerReady(false);
+      this.logger.warn('PvP queue unavailable.');
+    });
     this.worker = new Worker(
       'pvp-deadlines',
       async (job) => {
@@ -56,7 +71,11 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       },
       { connection: this.redis, prefix },
     );
-    this.worker.on('error', () => this.logger.warn('PvP scheduler unavailable.'));
+    this.worker.on('error', () => {
+      this.engine.setSchedulerReady(false);
+      this.logger.warn('PvP scheduler unavailable.');
+    });
+    this.engine.setSchedulerReady(this.redis.status === 'ready');
     // PostgreSQL sweep repairs missed transient jobs; Redis never owns match truth.
     this.timer = setInterval(() => {
       if (this.busy) return;
@@ -104,8 +123,13 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
         ),
       );
       const deadlines = [
+        snapshot.status !== 'RUNNING' ? snapshot.expiresAt : null,
         snapshot.question?.deadlineAt,
-        ...snapshot.players.map((p) => p.reconnectDeadlineAt),
+        ...snapshot.players.map((p) =>
+          p.reconnectDeadlineAt
+            ? new Date(Date.parse(p.reconnectDeadlineAt) + 1).toISOString()
+            : null,
+        ),
       ].filter((x): x is string => !!x);
       for (const deadline of deadlines)
         await this.bounded(
@@ -123,6 +147,7 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
           ),
         );
     } catch {
+      this.engine.setSchedulerReady(false);
       await this.engine.cancelUnavailable(matchId);
       await this.notify(matchId);
     }
@@ -141,6 +166,7 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     }
   }
   async onModuleDestroy() {
+    this.engine.setSchedulerReady(false);
     if (this.timer) clearInterval(this.timer);
     await this.busy;
     await this.worker?.close();

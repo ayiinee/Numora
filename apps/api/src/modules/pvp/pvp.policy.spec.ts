@@ -7,7 +7,7 @@ import { validateCommand } from './pvp.protocol';
 describe('PvP policy and boundaries', () => {
   it('keeps real accounts gated without an approved policy', async () => {
     const engine = new PvpEngineService(null);
-    expect(engine.availability().available).toBe(false);
+    expect((await engine.availability()).available).toBe(false);
     for (const action of [
       engine.create(randomUUID(), 'easy', randomUUID()),
       engine.ready(randomUUID(), randomUUID()),

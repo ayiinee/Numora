@@ -29,7 +29,12 @@ import {
 import {
   databaseTime,
   recordDomainEvent,
-  saveChoiceWithEvent,
+  saveAssessmentAnswerWithEvent,
+  decodeAssessmentContent,
+  normalizeAssessmentAnswer,
+  presentAssessmentQuestion,
+  presentAssessmentReview,
+  AssessmentFinalizationError,
 } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
@@ -43,7 +48,6 @@ import {
   DRILL_REWARD_POLICY_VERSION,
   drillReward,
   explanationAvailable,
-  presentActiveQuestion,
   scoreDrill,
   selectedOptionId,
   selectDrillPackage,
@@ -145,7 +149,8 @@ export class DrillAssessmentService {
         .orderBy(asc(assessmentPackages.variantIndex), asc(assessmentPackages.id));
       const packages = availablePackages.filter(
         (item) =>
-          item.isDemo || (item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION),
+          item.isDemo ||
+          (item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION),
       );
       if (!packages.length)
         throw new ServiceUnavailableException(
@@ -197,6 +202,10 @@ export class DrillAssessmentService {
       )
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill harus berisi 10 soal bernilai satu poin.'),
+        );
+      if (items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
+        throw new ServiceUnavailableException(
+          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
       items.forEach(decodeSingleChoiceVersion);
       if (
@@ -331,11 +340,7 @@ export class DrillAssessmentService {
       serverTime: (await databaseTime(db)).toISOString(),
       isDemo: attempt.isDemo,
       questions: rows.map((row) =>
-        presentActiveQuestion({
-          id: row.id,
-          ...decodeSingleChoiceVersion(row),
-          selectedOptionId: selectedOptionId(row.answer),
-        }),
+        presentAssessmentQuestion(decodeAssessmentContent(row), row.id, row.answer),
       ),
     };
   }
@@ -348,14 +353,8 @@ export class DrillAssessmentService {
     authorization: string | undefined,
     attemptId: string,
     questionInstanceId: string,
-    optionId: string | null,
+    input: unknown,
   ) {
-    if (
-      optionId !== null &&
-      (typeof optionId !== 'string' || !['A', 'B', 'C', 'D'].includes(optionId))
-    ) {
-      throw new BadRequestException(problem('OPTION_INVALID', 'optionId harus A-D atau null.'));
-    }
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
@@ -396,16 +395,30 @@ export class DrillAssessmentService {
         throw new NotFoundException(
           problem('QUESTION_NOT_FOUND', 'Soal tidak ditemukan pada Drill ini.'),
         );
-      const content = decodeSingleChoiceVersion(item);
-      if (optionId !== null && !content.options.some((option) => option.id === optionId))
-        throw new ConflictException(problem('OPTION_INVALID', 'Pilihan jawaban tidak tersedia.'));
-      await saveChoiceWithEvent(tx, {
+      const content = decodeAssessmentContent(item);
+      let answer;
+      try {
+        answer = normalizeAssessmentAnswer(
+          content,
+          typeof input === 'string' ? { optionId: input } : input,
+        );
+      } catch (error) {
+        if (error instanceof AssessmentFinalizationError)
+          throw new BadRequestException(problem(error.code, error.message));
+        throw error;
+      }
+      await saveAssessmentAnswerWithEvent(tx, {
         attemptId,
         questionInstanceId: item.id,
-        optionId,
+        answer,
+        questionFormat: content.type,
         now: await databaseTime(tx),
       });
-      return { questionInstanceId, selectedOptionId: optionId };
+      return {
+        questionInstanceId,
+        answer,
+        selectedOptionId: answer && 'optionId' in answer ? answer.optionId : null,
+      };
     });
   }
 
@@ -450,6 +463,10 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill tidak lengkap.'),
         );
+      if (rows.some((row) => row.questionType !== 'SINGLE_CHOICE'))
+        throw new ServiceUnavailableException(
+          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
+        );
       const graded = rows.map((row) => {
         const content = decodeSingleChoiceVersion(row);
         const correct = selectedOptionId(row.answer) === content.correctOptionId;
@@ -477,8 +494,10 @@ export class DrillAssessmentService {
             .limit(1)
         : [];
       const now = await databaseTime(tx);
-      const reward = attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION
-        ? drillReward(correctCount, graded.length, attempt.startedAt, now) : null;
+      const reward =
+        attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION
+          ? drillReward(correctCount, graded.length, attempt.startedAt, now)
+          : null;
       for (const item of graded) {
         await tx
           .insert(attemptAnswers)
@@ -557,33 +576,66 @@ export class DrillAssessmentService {
               unlockingAttemptId: sql`coalesce(${levelProgress.unlockingAttemptId}, ${attemptId}::uuid)`,
             },
             setWhere: isNull(levelProgress.unlockedAt),
-          }).returning({ id: levelProgress.id });
-        if (unlocked.length) await enqueueNotification(tx, { kind: 'LEVEL_UNLOCKED', sourceId: unlocked[0]!.id, recipientId: studentId, occurredAt: now });
-        if (unlocked.length) await recordDomainEvent(tx, attemptId,
-          { eventName: 'level_unlocked', unlockedLevelId: next.id }, now);
+          })
+          .returning({ id: levelProgress.id });
+        if (unlocked.length)
+          await enqueueNotification(tx, {
+            kind: 'LEVEL_UNLOCKED',
+            sourceId: unlocked[0]!.id,
+            recipientId: studentId,
+            occurredAt: now,
+          });
+        if (unlocked.length)
+          await recordDomainEvent(
+            tx,
+            attemptId,
+            { eventName: 'level_unlocked', unlockedLevelId: next.id },
+            now,
+          );
       }
       const [packageRow] = await tx
         .select({ isDemo: assessmentPackages.isDemo })
         .from(assessmentPackages)
         .where(eq(assessmentPackages.id, attempt.packageId))
         .limit(1);
-      await recordDomainEvent(tx, attemptId, { eventName: 'drill_submitted',
-        submissionType: 'manual', questionCount: rows.length,
-        answeredCount: rows.filter(row => selectedOptionId(row.answer) !== null).length,
-      }, now);
-      if (reward) await tx.insert(xpLedger).values({
-        studentId, attemptId, sourceType: 'DRILL', classIdAtEvent: attempt.classIdAtStart,
-        xpAmount: reward.totalXp, policyCode: reward.policyCode, policyVersion: reward.policyVersion,
-        baseXp: reward.baseXp, bonusXp: reward.bonusXp.toString(),
-        durationSeconds: reward.durationSeconds.toString(), occurredAt: now,
-      });
+      await recordDomainEvent(
+        tx,
+        attemptId,
+        {
+          eventName: 'drill_submitted',
+          submissionType: 'manual',
+          questionCount: rows.length,
+          answeredCount: rows.filter((row) => selectedOptionId(row.answer) !== null).length,
+        },
+        now,
+      );
+      if (reward)
+        await tx.insert(xpLedger).values({
+          studentId,
+          attemptId,
+          sourceType: 'DRILL',
+          classIdAtEvent: attempt.classIdAtStart,
+          xpAmount: reward.totalXp,
+          policyCode: reward.policyCode,
+          policyVersion: reward.policyVersion,
+          baseXp: reward.baseXp,
+          bonusXp: reward.bonusXp.toString(),
+          durationSeconds: reward.durationSeconds.toString(),
+          occurredAt: now,
+        });
       await tx.insert(analyticsOutbox).values({
         eventName: 'drill_completed',
         actorUserId: studentId,
         entityType: 'assessmentAttempt',
-        entityId: attemptId, correlationId: attemptId, occurredAt: now,
-        payload: { score: scored.score, mastered: scored.mastered, isDemo: packageRow?.isDemo ?? false,
-          reward },
+        entityId: attemptId,
+        correlationId: attemptId,
+        occurredAt: now,
+        payload: {
+          score: scored.score,
+          mastered: scored.mastered,
+          isDemo: packageRow?.isDemo ?? false,
+          reward,
+        },
       });
     });
     return this.resultForStudent(studentId, attemptId);
@@ -625,14 +677,20 @@ export class DrillAssessmentService {
     const [counts] = await db
       .select({
         questionCount: sql<number>`count(*)::integer`,
-        correctCount: sql<number>`count(*) filter (where ${attemptAnswers.awardedPoints} > 0)::integer`,
+        correctCount: sql<number>`count(*) filter (where ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints})::integer`,
       })
       .from(attemptItems)
       .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
       .where(eq(attemptItems.attemptId, attemptId))
       .limit(1);
-    const available = attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION || explanationAvailable(attempt.completedAt);
-    const [reward] = await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attemptId)).limit(1);
+    const available =
+      attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION ||
+      explanationAvailable(attempt.completedAt);
+    const [reward] = await db
+      .select()
+      .from(xpLedger)
+      .where(eq(xpLedger.attemptId, attemptId))
+      .limit(1);
     const rows = available ? await this.questionRows(attemptId) : [];
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
@@ -652,20 +710,38 @@ export class DrillAssessmentService {
       stars: attempt.stars,
       xp: reward?.xpAmount ?? null,
       drillPolicyVersion: attempt.drillPolicyVersion,
-      reward: reward?.policyCode ? {
-        policyCode: reward.policyCode, policyVersion: reward.policyVersion!,
-        baseXp: reward.baseXp!, bonusXp: Number(reward.bonusXp),
-        totalXp: reward.xpAmount, durationSeconds: Number(reward.durationSeconds),
-      } : null,
+      reward: reward?.policyCode
+        ? {
+            policyCode: reward.policyCode,
+            policyVersion: reward.policyVersion!,
+            baseXp: reward.baseXp!,
+            bonusXp: Number(reward.bonusXp),
+            totalXp: reward.xpAmount,
+            durationSeconds: Number(reward.durationSeconds),
+            detail: rows.every((row) => row.questionType === 'SINGLE_CHOICE')
+              ? {
+                  calculationMode: 'FULL_CORRECT_ONLY' as const,
+                  fullCorrectCount: counts?.correctCount ?? 0,
+                  partialCorrectEquivalent: 0,
+                  correctEquivalent: counts?.correctCount ?? 0,
+                  fallbackReason: null,
+                }
+              : null,
+          }
+        : null,
       unlockedLevelId: attempt.unlockedLevelId,
       isDemo: attempt.isDemo,
       explanationState: available ? ('available' as const) : ('expired' as const),
       recommendations,
-      questions: rows.map((row) => ({
-        questionInstanceId: row.id,
-        ...decodeSingleChoiceVersion(row),
-        selectedOptionId: selectedOptionId(row.answer),
-      })),
+      questions: rows.map((row) =>
+        presentAssessmentReview(
+          decodeAssessmentContent(row),
+          row.id,
+          row.answer,
+          row.awardedPoints,
+          row.maxPoints,
+        ),
+      ),
     };
   }
 
