@@ -92,7 +92,7 @@ async function login(browser: Browser, alias: string) {
     },
   });
   // Explicitly accept browser-native unload prompts; exit-specific assertions opt out below.
-  context.on('page', page => page.on('dialog', dialog => void dialog.accept()));
+  context.on('page', (page) => page.on('dialog', (dialog) => void dialog.accept()));
   contexts.push(context);
   const page = await context.newPage();
   return page;
@@ -141,7 +141,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
         execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() &&
       execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim() === '';
     const dir = resolve(root, '.tmp/job06-evidence');
-    const complete = checks.length === requiredChecks.length && requiredChecks.every(check => checks.includes(check));
+    const complete =
+      checks.length === requiredChecks.length &&
+      requiredChecks.every((check) => checks.includes(check));
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       resolve(dir, 'connected.json'),
@@ -279,13 +281,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
     student.removeAllListeners('dialog');
-    student.once('dialog', async dialog => {
+    student.once('dialog', async (dialog) => {
       expect(dialog.message()).toContain('Timer tetap berjalan');
       await dialog.dismiss();
     });
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
-    student.on('dialog', dialog => void dialog.accept());
+    student.on('dialog', (dialog) => void dialog.accept());
     await student.reload();
     await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
@@ -304,6 +306,16 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(result.reward).toMatchObject({ baseXp: 80, policyVersion: 2 });
     await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(result.unlockedLevelId).toBe(levelTwo);
+    expect(
+      result.questions.every((q) => q.type === 'SINGLE_CHOICE' && q.reviewStatus !== null),
+    ).toBe(true);
+    await expect(resumed.getByRole('navigation', { name: 'Navigasi pembahasan' })).toHaveCount(0);
+    await resumed.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
+    await expect(resumed).toHaveURL(new RegExp('/student/drill/' + attempt.id + '/explanation$'));
+    await expect(resumed.getByRole('navigation', { name: 'Navigasi pembahasan' })).toBeVisible();
+    await expect(resumed.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+    await expect(option(resumed, 'A')).toBeDisabled();
+    await resumed.getByRole('link', { name: 'Kembali ke hasil', exact: true }).click();
     const duplicates = await Promise.all(
       [1, 2].map(() =>
         body<DrillResultDto>(
@@ -317,7 +329,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(duplicates.map((r) => r.score)).toEqual([80, 80]);
-    expect(duplicates.map(r => r.reward)).toEqual([result.reward, result.reward]);
+    expect(duplicates.map((r) => r.reward)).toEqual([result.reward, result.reward]);
     await call(
       request,
       'student',
@@ -379,7 +391,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
       }[];
       events: { entity_id: string; event_name: string }[];
       pins: { attempt_id: string; question_version_id: string }[];
-      rewards: { attempt_id: string; xp_amount: string | number; base_xp: number; policy_version: number }[];
+      rewards: {
+        attempt_id: string;
+        xp_amount: string | number;
+        base_xp: number;
+        policy_version: number;
+      }[];
     };
     expect(persisted.attempts).toHaveLength(3);
     expect(persisted.events).toHaveLength(3);
@@ -392,12 +409,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe(true);
     expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
     expect(persisted.rewards).toHaveLength(3);
-    expect(new Set(persisted.rewards.map(r => r.attempt_id)).size).toBe(3);
-    const persistedReward = persisted.rewards.find(r => r.attempt_id === attempt.id)!;
+    expect(new Set(persisted.rewards.map((r) => r.attempt_id)).size).toBe(3);
+    const persistedReward = persisted.rewards.find((r) => r.attempt_id === attempt.id)!;
     expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
     expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
-    await expect(resumed.getByRole('heading', { name: 'Riwayat level', exact: true })).toBeVisible();
+    await expect(
+      resumed.getByRole('heading', { name: 'Riwayat level', exact: true }),
+    ).toBeVisible();
     await expect(resumed.locator('.activity-row')).toHaveCount(2);
     await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(
@@ -754,9 +773,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       expect(records.find((r) => r.attemptId === attempt.id)).toMatchObject({
         score: null,
         resultState: 'waitingIrt',
-        xpState: 'ready', tryoutXpPolicyVersion: 1,
+        xpState: 'ready',
+        tryoutXpPolicyVersion: 1,
       });
-      const persisted = await body<TryoutAttemptDto>(request, alias, `tryout/attempts/${attempt.id}`);
+      const persisted = await body<TryoutAttemptDto>(
+        request,
+        alias,
+        `tryout/attempts/${attempt.id}`,
+      );
       expect(persisted.xp).toBeGreaterThanOrEqual(0);
       expect(persisted.questions).toEqual([]);
       expect(persisted).not.toHaveProperty('score');
@@ -816,6 +840,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect(result.score).toBe(50);
     expect(result.explanation).toHaveLength(2);
+    expect(result.resultMethod).toBeNull();
+    await mandiri.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
+    await expect(mandiri).toHaveURL(
+      new RegExp('/student/tryout/' + independent.id + '/explanation$'),
+    );
+    await expect(mandiri.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+    await expect(option(mandiri, 'A')).toBeDisabled();
+    await mandiri.getByRole('link', { name: 'Kembali ke hasil', exact: true }).click();
     const persistence = await (
       await request.get(`${fixtureBase}/tryout-fixture/persistence`)
     ).json();
@@ -828,8 +860,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toHaveLength(2);
     expect(persistence.pins).toHaveLength(4);
     expect(persistence.rewards).toHaveLength(2);
-    const independentReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id);
-    const affiliatedReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id);
+    const independentReward = persistence.rewards.find(
+      (r: { attempt_id: string }) => r.attempt_id === independent.id,
+    );
+    const affiliatedReward = persistence.rewards.find(
+      (r: { attempt_id: string }) => r.attempt_id === affiliated.id,
+    );
     expect(independentReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
     expect(affiliatedReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
     expect(Number(independentReward.xp_amount)).toBe(10);
@@ -845,7 +881,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (r) => r.attemptId === affiliated.id,
       ),
     ).toMatchObject({ score: 0, resultState: 'ready' });
-    checks.push('tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history');
+    checks.push(
+      'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
+    );
   });
 
   test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({

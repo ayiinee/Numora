@@ -12,6 +12,7 @@ import {
   classes,
   users,
   globalActivityLeaderboardEntries,
+  analyticsOutbox,
 } from '@tka/database';
 import { and, asc, eq, gte, lte, inArray, isNull, lt, or, sql } from 'drizzle-orm';
 
@@ -24,7 +25,12 @@ export async function projectClassLeaderboard(now = new Date()) {
     await tx.execute(sql`select pg_advisory_xact_lock(hashtext('class_leaderboard_projection'))`);
     await tx
       .insert(leaderboardPeriods)
-      .values({ startsAt: period.startsAt, endsAt: period.endsAt, timezone: 'Asia/Jakarta' })
+      .values({
+        startsAt: period.startsAt,
+        endsAt: period.endsAt,
+        timezone: 'Asia/Jakarta',
+        rankPolicyVersion: 'dense-v1',
+      })
       .onConflictDoNothing({ target: leaderboardPeriods.startsAt });
     const [current] = await tx
       .select()
@@ -42,7 +48,7 @@ export async function projectClassLeaderboard(now = new Date()) {
       const interval = leaderboardPeriod(new Date(event.occurred_at));
       await tx
         .insert(leaderboardPeriods)
-        .values({ ...interval, timezone: 'Asia/Jakarta' })
+        .values({ ...interval, timezone: 'Asia/Jakarta', rankPolicyVersion: 'dense-v1' })
         .onConflictDoNothing();
     }
     const pending = await tx
@@ -80,7 +86,7 @@ export async function projectClassLeaderboard(now = new Date()) {
           ),
         )
         .innerJoin(classes, eq(classes.id, classMemberships.classId))
-        .innerJoin(users, eq(users.id, xpLedger.studentId))
+        .innerJoin(users, eq(users.id, classMemberships.studentUserId))
         .where(
           and(
             lt(classMemberships.joinedAt, membershipAt),
@@ -111,9 +117,9 @@ export async function projectClassLeaderboard(now = new Date()) {
         );
         let rank = 0;
         let previousTotal: number | null = null;
-        return students.map((student, index) => {
+        return students.map((student) => {
           const totalXp = Number(student.totalXp);
-          if (totalXp !== previousTotal) rank = index + 1;
+          if (totalXp !== previousTotal) rank += 1;
           previousTotal = totalXp;
           return {
             periodId: projection.id,
@@ -154,9 +160,9 @@ export async function projectClassLeaderboard(now = new Date()) {
       );
       let globalRank = 0;
       let previousGlobal: number | null = null;
-      const globalEntries = globalTotals.map((row, index) => {
+      const globalEntries = globalTotals.map((row) => {
         const totalXp = Number(row.totalXp);
-        if (totalXp !== previousGlobal) globalRank = index + 1;
+        if (totalXp !== previousGlobal) globalRank += 1;
         previousGlobal = totalXp;
         return {
           periodId: period.id,
@@ -182,6 +188,7 @@ export async function projectClassLeaderboard(now = new Date()) {
           matchId: pvpMatches.id,
           points: pvpPlayers.totalPoints,
           achievedAt: pvpMatches.endedAt,
+          dataMode: pvpMatches.dataMode,
         })
         .from(pvpPlayers)
         .innerJoin(pvpMatches, eq(pvpMatches.id, pvpPlayers.matchId))
@@ -190,6 +197,7 @@ export async function projectClassLeaderboard(now = new Date()) {
             eq(pvpMatches.status, 'FINISHED'),
             eq(pvpMatches.recordEligible, true),
             eq(pvpMatches.endReason, 'COMPLETED'),
+            isNull(pvpPlayers.leftAt),
             gte(pvpMatches.endedAt, period.startsAt),
             lt(pvpMatches.endedAt, period.endsAt),
           ),
@@ -202,28 +210,32 @@ export async function projectClassLeaderboard(now = new Date()) {
       );
       const best = new Map<string, (typeof records)[number]>();
       for (const r of records)
-        if (!best.has(r.studentId + ':' + r.difficulty))
-          best.set(r.studentId + ':' + r.difficulty, r);
+        if (!best.has(r.studentId + ':' + r.difficulty + ':' + r.dataMode))
+          best.set(r.studentId + ':' + r.difficulty + ':' + r.dataMode, r);
       const projected: (typeof pvpLeaderboardEntries.$inferInsert)[] = [];
-      for (const difficulty of ['easy', 'medium', 'hard']) {
-        const sorted = [...best.values()]
-          .filter((r) => r.difficulty === difficulty)
-          .sort(
-            (a, b) => Number(b.points) - Number(a.points) || a.studentId.localeCompare(b.studentId),
-          );
-        let rank = 0;
-        let previous: number | null = null;
-        for (const [i, r] of sorted.entries()) {
-          if (Number(r.points) !== previous) rank = i + 1;
-          previous = Number(r.points);
-          projected.push({
-            periodId: projection.id,
-            studentId: r.studentId,
-            difficulty,
-            bestPoints: r.points!,
-            rank,
-            updatedAt: now,
-          });
+      for (const dataMode of ['demo', 'official', 'legacy'] as const) {
+        for (const difficulty of ['easy', 'medium', 'hard']) {
+          const sorted = [...best.values()]
+            .filter((r) => r.difficulty === difficulty && r.dataMode === dataMode)
+            .sort(
+              (a, b) =>
+                Number(b.points) - Number(a.points) || a.studentId.localeCompare(b.studentId),
+            );
+          let rank = 0;
+          let previous: number | null = null;
+          for (const r of sorted) {
+            if (Number(r.points) !== previous) rank += 1;
+            previous = Number(r.points);
+            projected.push({
+              periodId: projection.id,
+              studentId: r.studentId,
+              difficulty,
+              dataMode,
+              bestPoints: r.points!,
+              rank,
+              updatedAt: now,
+            });
+          }
         }
       }
       if (best.size)
@@ -232,20 +244,38 @@ export async function projectClassLeaderboard(now = new Date()) {
             periodId: projection.id,
             studentId: r.studentId,
             difficulty: r.difficulty,
+            dataMode: r.dataMode,
             matchId: r.matchId,
             bestPoints: r.points!,
             achievedAt: r.achievedAt!,
           })),
         );
       if (projected.length) await tx.insert(pvpLeaderboardEntries).values(projected);
+      await tx
+        .update(leaderboardPeriods)
+        .set({ projectedAt: now, rankPolicyVersion: 'dense-v1' })
+        .where(eq(leaderboardPeriods.id, projection.id));
       if (projection.id === current.id) {
         classCount = entries.length;
         pvpCount = projected.length;
-      } else
+      } else {
         await tx
           .update(leaderboardPeriods)
           .set({ status: 'ARCHIVED', archivedAt: now })
           .where(eq(leaderboardPeriods.id, projection.id));
+        await tx
+          .insert(analyticsOutbox)
+          .values({
+            eventName: 'leaderboard_archived',
+            entityType: 'leaderboard_period',
+            entityId: projection.id,
+            occurredAt: now,
+            payload: {
+              startsAt: period.startsAt.toISOString(),
+              endsAt: period.endsAt.toISOString(),
+            },
+          });
+      }
     }
     return { periodId: current.id, entries: classCount, pvpEntries: pvpCount };
   });

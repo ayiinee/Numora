@@ -1,6 +1,6 @@
 // Generated from pvp-events.schema.json. Do not edit by hand.
 
-export type PvpSnapshotDto = { "matchId": string; "roomCode": string; "creatorStudentId": string; "difficulty": "easy" | "medium" | "hard"; "status": "WAITING" | "READY" | "RUNNING" | "FINISHED" | "CANCELLED"; "serverTime": string; "isDemo": boolean; "recordEligible": boolean; "endReason": string | null; "players": (PvpPlayerDto)[]; "question": PvpQuestionDto | null; };
+export type PvpSnapshotDto = { "matchId": string; "roomCode": string; "creatorStudentId": string; "difficulty": "easy" | "medium" | "hard"; "status": "WAITING" | "READY" | "RUNNING" | "FINISHED" | "CANCELLED"; "serverTime": string; "isDemo": boolean; "participantActive"?: boolean; "expiresAt"?: string | null; "recordEligible": boolean; "endReason": string | null; "players": (PvpPlayerDto)[]; "question": PvpQuestionDto | null; };
 
 export type PvpPlayerDto = { "studentId": string; "displayName": string; "slot": number; "ready": boolean; "connectionStatus": string; "reconnectDeadlineAt": string | null; "points": number; "result": string | null; };
 

@@ -88,7 +88,12 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
         </time>
         {item.xpState === 'ready' && item.xp != null && <p>{item.xp} XP</p>}
         {item.starsState === 'ready' && item.stars != null && <p>Bintang: {item.stars} / 3</p>}
-        {item.xpState === 'legacy' && <p className="muted">XP tidak tercatat pada hasil versi lama</p>}
+        {item.xpState === 'legacy' && (
+          <p className="muted">XP tidak tercatat pada hasil versi lama</p>
+        )}
+        {item.starsState === 'legacy' && (
+          <p className="muted">Bintang tidak tercatat pada hasil versi lama</p>
+        )}
         {(item.xpState === 'pending' || item.starsState === 'pending') && (
           <p className="muted">
             {item.xpState === 'pending' && item.starsState === 'pending'
@@ -111,17 +116,17 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
           </>
         )}
       </div>
-      {item.activity !== 'pretest' && item.resultState === 'ready' && (
+      {item.resultState === 'ready' && (
         <Icon name="chevron" width={18} height={18} />
       )}
     </>
   );
-  return item.activity === 'pretest' || item.resultState !== 'ready' ? (
+  return item.resultState !== 'ready' ? (
     <div className="activity-row">{content}</div>
   ) : (
     <Link
       className="activity-row"
-      href={`/student/${drill ? 'drill' : 'tryout'}/${item.attemptId}/result`}
+      href={`/student/${drill ? 'drill' : item.activity === 'pretest' ? 'pretest' : 'tryout'}/${item.attemptId}/result`}
     >
       {content}
     </Link>

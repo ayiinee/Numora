@@ -26,6 +26,9 @@
     "db:seed:learning": "tsx src/seed.ts --learning-only",
     "db:seed:qa": "tsx src/qa-seed.ts",
     "db:seed:redesign": "tsx src/redesign-seed.ts",
+    "db:seed:lifecycle": "tsx src/seed-lifecycle-demo.ts",
+    "db:seed:pvp": "tsx src/seed-pvp-demo.ts",
+    "db:seed:assessments:mock": "tsx src/seed-assessment-mocks.ts",
     "db:studio": "drizzle-kit studio"
   },
   "dependencies": {

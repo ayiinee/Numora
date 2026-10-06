@@ -11,6 +11,7 @@ import { AssessmentHeader } from './assessment-presentation';
 import { useAssessmentHistory } from './assessment-queries';
 import { ActivityRow } from './cards';
 import { useLearningView } from './learning-interactions';
+import { PastTryoutPackages } from './tryout-packages';
 import { DataState, LearningFrame, Status, StudentGate } from './ui';
 import {
   TryoutDetail,
@@ -133,6 +134,11 @@ function CurrentTryout({ token }: { token: string }) {
                       ),
                   },
                   {
+                    value: 'past',
+                    label: 'Paket Lampau',
+                    content: <PastTryoutPackages enabled={tab === 'past'} />,
+                  },
+                  {
                     value: 'history',
                     label: 'Tryout Saya',
                     content: (
@@ -237,7 +243,13 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
           progressLabel="Tryout terkirim"
           exitHref="/student/tryout"
         />
-        <TryoutWaiting submitted xp={query.data.xp ?? null} />
+        <TryoutWaiting
+          submitted
+          xp={query.data.xp ?? null}
+          closeAt={query.data.closeAt}
+          resultDueAt={query.data.resultDueAt}
+          isDemo={query.data.isDemo}
+        />
       </>
     );
   return (
@@ -272,28 +284,41 @@ function TryoutForm({
   const router = useRouter();
   const client = useQueryClient();
   return (
-    <AssessmentSession
-      redesign
-      sessionKind="tryout"
-      title={attempt.packageTitle}
-      questions={attempt.questions}
-      deadlineAt={attempt.deadlineAt}
-      serverTime={attempt.serverTime}
-      onFinalizationCheck={check}
-      submitLabel="Kirim TryOut"
-      confirmMessage={(emptyCount) =>
-        `${emptyCount} soal belum dijawab. Kirim jawaban TryOut? Hasil baru tersedia setelah IRT.`
-      }
-      onSave={(questionId, optionId) =>
-        learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
-      }
-      onSubmit={() => learningApi.submitTryout(token, attempt.id)}
-      onSubmitted={() => {
-        for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
-          void client.invalidateQueries({ queryKey: [key] });
-        router.push(`/student/tryout/${attempt.id}/result`);
-      }}
-    />
+    <>
+      <AssessmentSession
+        redesign
+        sessionKind="tryout"
+        title={attempt.packageTitle}
+        questions={attempt.questions}
+        notice={
+          attempt.isDemo ? (
+            <Card fullWidth>
+              <p>
+                DEMO · Konten uji, bukan asesmen kemampuan TKA resmi.
+                {attempt.questions.some((question) => question.type !== 'SINGLE_CHOICE') &&
+                  ' Jawaban PGK disimpan tanpa nilai atau XP sampai rubrik disetujui.'}
+              </p>
+            </Card>
+          ) : undefined
+        }
+        deadlineAt={attempt.deadlineAt}
+        serverTime={attempt.serverTime}
+        onFinalizationCheck={check}
+        submitLabel="Kirim TryOut"
+        confirmMessage={(emptyCount) =>
+          `${emptyCount} soal belum dijawab. Kirim jawaban TryOut? Hasil baru tersedia setelah IRT.`
+        }
+        onSaveTyped={(questionId, optionId) =>
+          learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
+        }
+        onSubmit={() => learningApi.submitTryout(token, attempt.id)}
+        onSubmitted={() => {
+          for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
+            void client.invalidateQueries({ queryKey: [key] });
+          router.push(`/student/tryout/${attempt.id}/result`);
+        }}
+      />
+    </>
   );
 }
 
@@ -329,7 +354,9 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
         ? 15_000
         : false,
   });
-  const waiting = query.isError && query.error instanceof LearningApiError &&
+  const waiting =
+    query.isError &&
+    query.error instanceof LearningApiError &&
     query.error.code === 'TRYOUT_RESULT_PENDING';
   const attempt = useQuery({
     queryKey: ['tryout-attempt', attemptId],
@@ -341,12 +368,25 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
     query.error instanceof LearningApiError &&
     query.error.code === 'TRYOUT_RESULT_PENDING'
   )
-    return <>
-      {attempt.isError && <Status title="XP belum dapat dimuat">
-        <Button variant="secondary" onClick={() => void attempt.refetch()}>Coba muat XP lagi</Button>
-      </Status>}
-      <TryoutWaiting xp={attempt.data?.xp ?? null} fetching={query.isFetching} onCheck={() => void query.refetch()} />
-    </>;
+    return (
+      <>
+        {attempt.isError && (
+          <Status title="XP belum dapat dimuat">
+            <Button variant="secondary" onClick={() => void attempt.refetch()}>
+              Coba muat XP lagi
+            </Button>
+          </Status>
+        )}
+        <TryoutWaiting
+          xp={attempt.data?.xp ?? null}
+          closeAt={attempt.data?.closeAt}
+          resultDueAt={attempt.data?.resultDueAt}
+          isDemo={attempt.data?.isDemo}
+          fetching={query.isFetching}
+          onCheck={() => void query.refetch()}
+        />
+      </>
+    );
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />

@@ -1,4 +1,30 @@
+**ENGINEERING UPDATE — 6 October 2026:** existing save endpoints accept exactly one of legacy `optionId` or typed `answer` (PG optionId, MCMA optionIds, Category categoryByStatementId, or null). Responses add normalized answer/type/categories; graded review adds persisted status/points and key-matching detail. Invalid shape/foreign IDs are problem JSON errors. PGK start/grading remains PGK_SCORING_PENDING until an approved scoring policy exists. No client score or XP is accepted.
+
+Result pages link to `/student/drill/[attemptId]/explanation` and `/student/tryout/[attemptId]/explanation`. These read the existing authenticated result endpoint; they do not save or submit. TryOut publication, ownership and legacy Drill expiry gates also apply to direct URLs. XP detail is result-only; waiting exposes total XP only.
+
+TryOut `resultMethod` is IRT/STANDARD only for published canonical attempt results; legacy method is null. A published canonical score is read consistently by result/history/dashboard, without updating or recalculating the legacy attempt score. Public reasons are allowlisted codes, never arbitrary policy/exception text. This read path does not publish or decide fallback. [Scope and verification](../development/STUDENT_PGK_RESULT_UI.md).
+
 # Core Learning Student API — implementation contract
+
+**ENGINEERING UPDATE — 6 October 2026:** JOB-16/17 uses generated REST/WebSocket types for server activation, per-difficulty availability and active-room recovery. Leaderboards expose class/global activity/PvP, Top 10 + self, optional `periodId` (`classId` for classes), `/leaderboards/periods?scope=...`, mode/rank provenance, staleness and update metadata. Current class entries filter leave/ban immediately; archives require active membership and preserve stored ranks. XP display retains up to six persisted decimal places; DEMO/official/legacy PvP remain separate. [Approved specification](../development/PVP_LEADERBOARDS_JOB16_17.md), [rollout/acceptance](../operations/PVP_LEADERBOARDS_ROLLOUT.md).
+
+## JOB-13 / JOB-07/09 — lifecycle, 6 October 2026
+
+**ENGINEERING DECISION — approved by owner:** Pretest saves/resumes on the server without a deadline, one active attempt/account/chapter. Skip preserves the attempt and opens Level 1 without consuming completion. Placement adds unlocks without changing Drill scores/completion. [Rules and deferred academic dependencies](../development/PRETEST_TRYOUT_LIFECYCLE.md).
+
+| Endpoint | Request / behavior |
+| --- | --- |
+| `GET /pretest/chapters/{chapterId}` | Availability, skipped/completed state, own attempt ID, Start/Skip eligibility and DEMO label. |
+| `POST /pretest/chapters/{chapterId}/skip` | Idempotent Skip and additive Level 1 unlocks. |
+| `POST /pretest/attempts` | `{ chapterId }`; creates/resumes the same active attempt. |
+| `GET /pretest/attempts/{attemptId}` | Pinned questions, acknowledged answers/revisions; no keys, timeout or XP. |
+| `PATCH /pretest/attempts/{attemptId}/answers/{questionInstanceId}` | `{ answer, expectedRevision }`; ACK returns revision. Different stale writes return `409 ANSWER_REVISION_CONFLICT`. |
+| `POST /pretest/attempts/{attemptId}/submit` | Idempotent frozen result and additive placement; no XP. |
+| `GET /pretest/attempts/{attemptId}/result` | Persisted result including mapping availability and DEMO label. |
+| `GET /tryout/packages?cursor={packageId}` | Up to 20 released package metadata entries and next cursor; no questions/keys. |
+| `GET /tryout/packages/{packageId}` | Own attempt plus ongoing/past status. Past Start remains locked. |
+
+Tryout package/attempt metadata includes `closeAt`, `resultDueAt` and `isDemo`. New production packages require 30 items, 600 seconds and Sunday 23:59:00 WIB close; effective deadline is capped by close. DEMO PGK submit stores raw answers, remains `SUBMITTED`, and exposes no numeric grade/XP or result publication. Generated OpenAPI DTOs remain the response source of truth.
 
 ## JOB-11 TryOut — owner correction, 5 October 2026
 

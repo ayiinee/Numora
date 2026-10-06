@@ -74,6 +74,9 @@ export function PvpScreen() {
     />
   ) : undefined;
   const disabled = socket.busy || socket.uncertain || !socket.connected;
+  const selectedAvailable =
+    availability.data?.difficulties?.find((item) => item.difficulty === difficulty)?.available !==
+    false;
   return (
     <AppShell title="PvP Duel" className="pvp-lobby-shell" mobileHeader={header}>
       <div className="pvp-lobby-layout">
@@ -92,6 +95,21 @@ export function PvpScreen() {
             </span>
           </div>
           <PvpHero />
+          {availability.data?.dataMode === 'demo' && (
+            <Status title="PvP DEMO">
+              Konten sintetis untuk pengujian. Rekor terpisah dari pertandingan resmi.
+            </Status>
+          )}
+          {availability.data?.activeMatchId && (
+            <Status title="Kamu memiliki room aktif">
+              <Link
+                className="button-link"
+                href={`/student/pvp/${availability.data.activeMatchId}`}
+              >
+                Lanjutkan room aktif
+              </Link>
+            </Status>
+          )}
           <Link
             className="pvp-leaderboard-link"
             href={`/student/leaderboards?difficulty=${difficulty}`}
@@ -108,8 +126,7 @@ export function PvpScreen() {
             />
           ) : !availability.data.available ? (
             <Status title="PvP belum tersedia">
-              Pertandingan akan dibuka setelah aturan room dan undangan ditetapkan. Latihanmu tetap
-              tersedia.
+              {availability.data.message} Latihanmu tetap tersedia.
               <p>
                 <Link className="button-link" href="/student/learn">
                   Mulai latihan
@@ -165,11 +182,14 @@ export function PvpScreen() {
                           value={difficulty}
                           onChange={setDifficulty}
                           disabled={socket.busy || socket.uncertain}
+                          availability={availability.data.difficulties}
                         />
                         <Button
                           fullWidth
                           loading={socket.busy}
-                          disabled={disabled}
+                          disabled={
+                            disabled || !selectedAvailable || !!availability.data.activeMatchId
+                          }
                           onClick={() => void socket.command('room:create', { difficulty })}
                         >
                           Buat room
@@ -289,7 +309,9 @@ export function PvpMatchScreen() {
     queryKey: ['pvp-match', matchId],
     queryFn: () => request<PvpSnapshotDto>(token, `/pvp/matches/${encodeURIComponent(matchId)}`),
   });
-  const socket = usePvpSocket(availability.data?.available === true, matchId);
+  const transportActive =
+    availability.data?.available === true || availability.data?.activeMatchId === matchId;
+  const socket = usePvpSocket(transportActive, matchId);
   const snapshot = socket.state ?? result.data;
   const peers = useQuery({
     queryKey: ['pvp-classmates'],
@@ -302,6 +324,7 @@ export function PvpMatchScreen() {
   const [link, setLink] = useState('');
   const [notice, setNotice] = useState('');
   const [remaining, setRemaining] = useState(0);
+  const [roomRemaining, setRoomRemaining] = useState(0);
   const [confirmLeave, setConfirmLeave] = useState(false);
   const [reconnectRemaining, setReconnectRemaining] = useState<Record<string, number>>({});
   useEffect(() => {
@@ -354,6 +377,16 @@ export function PvpMatchScreen() {
     };
   }, [snapshot?.roomCode]);
   useEffect(() => {
+    if (!snapshot?.expiresAt) return;
+    const received = performance.now();
+    const deadline = Date.parse(snapshot.expiresAt) - Date.parse(snapshot.serverTime);
+    const tick = () =>
+      setRoomRemaining(Math.max(0, Math.ceil((deadline - (performance.now() - received)) / 1000)));
+    tick();
+    const timer = setInterval(tick, 1000);
+    return () => clearInterval(timer);
+  }, [snapshot]);
+  useEffect(() => {
     if (!snapshot?.question) return;
     const deadline = Date.parse(snapshot.question.deadlineAt);
     const serverAtReceipt = Date.parse(snapshot.serverTime);
@@ -387,7 +420,7 @@ export function PvpMatchScreen() {
     (p) => auth.status === 'ready' && p.studentId === auth.profile.id,
   );
   const closed = snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED';
-  const active = availability.data?.available === true;
+  const active = transportActive;
   const disabled = !active || socket.busy || socket.uncertain || !socket.connected;
   const title = closed
     ? 'Hasil Duel PvP'
@@ -458,6 +491,11 @@ export function PvpMatchScreen() {
         onLeave={!closed ? () => setConfirmLeave(true) : undefined}
       />
       <div className="pvp-match-content">
+        {!closed && snapshot.status !== 'RUNNING' && snapshot.expiresAt && (
+          <p role="timer" aria-label="Sisa waktu room">
+            Room berlaku {roomRemaining} detik lagi.
+          </p>
+        )}
         {snapshot.isDemo && (
           <p className="pvp-demo-notice">
             <Icon name="info" width={16} height={16} />
@@ -471,8 +509,8 @@ export function PvpMatchScreen() {
             retry={() => void availability.refetch()}
           />
         )}
-        {availability.data?.available === false && !closed && (
-          <Status title="PvP belum tersedia">Pertandingan akun nyata belum dibuka.</Status>
+        {availability.data?.available === false && !active && !closed && (
+          <Status title="PvP belum tersedia">{availability.data.message}</Status>
         )}
         {active && !socket.connected && !closed && (
           <Status title="Koneksi terputus">
@@ -482,7 +520,11 @@ export function PvpMatchScreen() {
             </Button>
           </Status>
         )}
-        {closed ? (
+        {snapshot.participantActive === false ? (
+          <Status title="Kamu sudah keluar dari room">
+            Host dapat menunggu pemain pengganti. <Link href="/student/pvp">Kembali ke PvP</Link>
+          </Status>
+        ) : closed ? (
           <MatchOutcome snapshot={snapshot} selfId={self?.studentId} />
         ) : snapshot.status === 'RUNNING' && snapshot.question ? (
           <BattleRoom

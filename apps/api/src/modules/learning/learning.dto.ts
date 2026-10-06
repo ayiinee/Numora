@@ -1,5 +1,7 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Allow, IsUUID } from 'class-validator';
+import type { AssessmentAnswer } from '@tka/assessment-engine';
+import { assessmentAnswerSchema } from './assessment-answer.schema';
 
 export class StartDrillDto {
   @ApiProperty({ format: 'uuid' })
@@ -11,10 +13,18 @@ export class SaveDrillAnswerDto {
   @ApiProperty({
     type: String,
     nullable: true,
-    description: 'A-D for demo; null clears the answer.',
+    description: 'Legacy PG input; null clears. Mutually exclusive with answer.',
+    required: false,
   })
   @Allow()
-  optionId!: string | null;
+  optionId?: string | null;
+  @ApiPropertyOptional({
+    ...assessmentAnswerSchema,
+    nullable: true,
+    description: 'Typed replacement answer. Supply exactly one of answer or legacy optionId.',
+  })
+  @Allow()
+  answer?: AssessmentAnswer;
 }
 
 export class ChapterDto {
@@ -39,7 +49,14 @@ export class LevelDto {
   @ApiProperty({ enum: ['locked', 'open', 'inProgress', 'completed'] }) status!: string;
   @ApiProperty({ type: Number, nullable: true }) latestScore!: number | null;
   @ApiProperty({ type: Number, nullable: true }) bestScore!: number | null;
-  @ApiPropertyOptional({ type: Number, nullable: true, minimum: 0, maximum: 3, description: 'Stars from the latest completed attempt, not best stars.' }) latestStars?: number | null;
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    minimum: 0,
+    maximum: 3,
+    description: 'Stars from the latest completed attempt, not best stars.',
+  })
+  latestStars?: number | null;
 }
 
 export class CatalogDto {
@@ -64,6 +81,10 @@ export class OptionDto {
   @ApiProperty() text!: string;
 }
 export class DrillQuestionDto {
+  @ApiPropertyOptional({ enum: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE_MULTIPLE_ANSWER', 'CATEGORY'] })
+  type?: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CATEGORY';
+  @ApiPropertyOptional({ ...assessmentAnswerSchema, nullable: true }) answer?: AssessmentAnswer;
+  @ApiPropertyOptional({ type: [OptionDto] }) categories?: OptionDto[];
   @ApiProperty({ format: 'uuid' }) questionInstanceId!: string;
   @ApiProperty() stem!: string;
   @ApiProperty({ type: [OptionDto] }) options!: OptionDto[];
@@ -75,16 +96,47 @@ export class DrillAttemptDto {
   @ApiProperty() levelTitle!: string;
   @ApiProperty({ enum: ['inProgress', 'completed'] }) status!: string;
   @ApiProperty({ format: 'date-time' }) startedAt!: string;
-  @ApiPropertyOptional({ format: 'date-time', description: 'Database time for count-up display; server timestamps own reward duration.' }) serverTime?: string;
+  @ApiPropertyOptional({
+    format: 'date-time',
+    description: 'Database time for count-up display; server timestamps own reward duration.',
+  })
+  serverTime?: string;
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ type: [DrillQuestionDto] }) questions!: DrillQuestionDto[];
 }
 export class SavedAnswerDto {
+  @ApiPropertyOptional({ ...assessmentAnswerSchema, nullable: true }) answer?: AssessmentAnswer;
   @ApiProperty({ format: 'uuid' }) questionInstanceId!: string;
   @ApiProperty({ type: String, nullable: true }) selectedOptionId!: string | null;
 }
+export class ReviewOptionDto {
+  @ApiProperty() optionId!: string;
+  @ApiProperty() selected!: boolean;
+  @ApiProperty() isKey!: boolean;
+}
+export class ReviewStatementDto {
+  @ApiProperty() statementId!: string;
+  @ApiProperty({ enum: ['correct', 'incorrect', 'unanswered'] }) status!:
+    'correct' | 'incorrect' | 'unanswered';
+}
 export class ReviewedQuestionDto extends DrillQuestionDto {
-  @ApiProperty() correctOptionId!: string;
+  @ApiPropertyOptional({ ...assessmentAnswerSchema, nullable: true }) answerKey?: AssessmentAnswer;
+  @ApiPropertyOptional({
+    enum: ['correct', 'partial', 'incorrect', 'unanswered'],
+    nullable: true,
+    description: 'From persisted grading, not client key comparison; null if unavailable.',
+  })
+  reviewStatus?: 'correct' | 'partial' | 'incorrect' | 'unanswered' | null;
+  @ApiPropertyOptional({ type: Number, nullable: true }) awardedPoints?: number | null;
+  @ApiPropertyOptional({ type: Number, nullable: true }) maximumPoints?: number | null;
+  @ApiPropertyOptional({ type: Number, nullable: true }) correctEquivalent?: number | null;
+  @ApiPropertyOptional({ type: [ReviewOptionDto] }) optionReview?: ReviewOptionDto[];
+  @ApiPropertyOptional({
+    type: [ReviewStatementDto],
+    description: 'Key matching per statement, not a partial-credit scoring formula.',
+  })
+  statementReview?: ReviewStatementDto[];
+  @ApiProperty({ type: String, nullable: true }) correctOptionId!: string | null;
   @ApiProperty() explanation!: string;
 }
 export class RecommendedVideoDto {
@@ -93,7 +145,22 @@ export class RecommendedVideoDto {
   @ApiProperty({ format: 'uri' }) url!: string;
   @ApiProperty() source!: string;
 }
+export class AssessmentXpDetailDto {
+  @ApiProperty({ enum: ['FULL_CORRECT_ONLY', 'PARTIAL_INCLUDED', 'FULL_CORRECT_FALLBACK'] })
+  calculationMode!: 'FULL_CORRECT_ONLY' | 'PARTIAL_INCLUDED' | 'FULL_CORRECT_FALLBACK';
+  @ApiProperty({ type: Number, nullable: true }) fullCorrectCount!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) partialCorrectEquivalent!: number | null;
+  @ApiProperty({ type: Number, nullable: true }) correctEquivalent!: number | null;
+  @ApiProperty({
+    type: String,
+    nullable: true,
+    description: 'Public-safe explanation only, never an exception or stack trace.',
+  })
+  fallbackReason!: string | null;
+}
 export class DrillRewardDto {
+  @ApiPropertyOptional({ type: AssessmentXpDetailDto, nullable: true })
+  detail?: AssessmentXpDetailDto | null;
   @ApiProperty() policyCode!: string;
   @ApiProperty() policyVersion!: number;
   @ApiProperty() baseXp!: number;
@@ -112,8 +179,18 @@ export class DrillResultDto {
   @ApiProperty() questionCount!: number;
   @ApiProperty() mastered!: boolean;
   @ApiProperty({ type: Number, nullable: true }) stars!: number | null;
-  @ApiPropertyOptional({ type: Number, nullable: true, description: 'Pinned at start. Null identifies the historical Drill policy.' }) drillPolicyVersion?: number | null;
-  @ApiPropertyOptional({ type: DrillRewardDto, nullable: true, description: 'Persisted ledger details; null for legacy attempts without this reward policy.' }) reward?: DrillRewardDto | null;
+  @ApiPropertyOptional({
+    type: Number,
+    nullable: true,
+    description: 'Pinned at start. Null identifies the historical Drill policy.',
+  })
+  drillPolicyVersion?: number | null;
+  @ApiPropertyOptional({
+    type: DrillRewardDto,
+    nullable: true,
+    description: 'Persisted ledger details; null for legacy attempts without this reward policy.',
+  })
+  reward?: DrillRewardDto | null;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) unlockedLevelId!: string | null;
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ enum: ['available', 'expired'] }) explanationState!: string;
@@ -153,8 +230,15 @@ export class AssessmentRecordDto {
   })
   levelId?: string | null;
   @ApiProperty({ type: String, nullable: true, required: false }) levelTitle?: string | null;
-  @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false, description: 'Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP.' }) xpState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
-  @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false }) starsState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
+  @ApiProperty({
+    enum: ['ready', 'legacy', 'pending', 'notApplicable'],
+    required: false,
+    description:
+      'Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP.',
+  })
+  xpState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
+  @ApiProperty({ enum: ['ready', 'legacy', 'pending', 'notApplicable'], required: false })
+  starsState?: 'ready' | 'legacy' | 'pending' | 'notApplicable';
   @ApiPropertyOptional({ type: Number, nullable: true }) xp?: number | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) stars?: number | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) drillPolicyVersion?: number | null;

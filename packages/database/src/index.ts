@@ -7,3 +7,5 @@ export * from './measurement-contract.js';
 export * from './measurement-handoff.js';
 export * from './notification-events.js';
 export * from './tryout-visibility.js';
+export * from './lifecycle-demo.js';
+export * from './pvp-demo-seed.js';

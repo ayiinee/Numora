@@ -6,6 +6,7 @@ import { PvpGateway } from './pvp.gateway';
 import { PvpSchedulerService } from './pvp-scheduler.service';
 import { PvpService } from './pvp.service';
 import { PVP_POLICY } from './pvp.policy';
+import { resolvePvpPolicy } from './pvp-runtime.policy';
 
 @Module({
   imports: [IdentityModule],
@@ -16,7 +17,7 @@ import { PVP_POLICY } from './pvp.policy';
     PvpEngineService,
     PvpGateway,
     PvpSchedulerService,
-    { provide: PVP_POLICY, useValue: null },
+    { provide: PVP_POLICY, useFactory: resolvePvpPolicy },
   ],
 })
 export class PvpModule {}

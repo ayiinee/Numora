@@ -12,7 +12,7 @@ import {
   classLeaderboardEntries,
   users,
 } from '@tka/database';
-import { and, eq } from 'drizzle-orm';
+import { and, eq, inArray } from 'drizzle-orm';
 import { projectClassLeaderboard } from './class-leaderboard.js';
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('PvP projection, best record and archive', () => {
@@ -51,6 +51,7 @@ integration('PvP projection, best record and archive', () => {
       eligible = true,
       status: 'FINISHED' | 'CANCELLED' = 'FINISHED',
       endReason = 'COMPLETED',
+      dataMode: 'demo' | 'official' = 'demo',
     ) => {
       const [match] = await db
         .insert(pvpMatches)
@@ -59,6 +60,7 @@ integration('PvP projection, best record and archive', () => {
           packageId: pack!.id,
           creatorStudentId: students[index]!.id,
           difficulty,
+          dataMode,
           status,
           recordEligible: eligible,
           startedAt: now,
@@ -66,15 +68,13 @@ integration('PvP projection, best record and archive', () => {
           endReason,
         })
         .returning();
-      await db
-        .insert(pvpPlayers)
-        .values({
-          matchId: match!.id,
-          studentId: students[index]!.id,
-          playerSlot: 1,
-          totalPoints: String(points),
-          result: status === 'CANCELLED' ? null : 'WIN',
-        });
+      await db.insert(pvpPlayers).values({
+        matchId: match!.id,
+        studentId: students[index]!.id,
+        playerSlot: 1,
+        totalPoints: String(points),
+        result: status === 'CANCELLED' ? null : 'WIN',
+      });
       return match!.id;
     };
     for (let i = 0; i < 23; i++) await record(i, i < 2 ? 500 : 500 - i * 10);
@@ -83,6 +83,7 @@ integration('PvP projection, best record and archive', () => {
     await record(22, 9999, 'easy', false, 'FINISHED', 'FORFEIT');
     await record(22, 9999, 'easy', false, 'CANCELLED', 'SERVER_RESTARTED');
     await record(22, 600, 'hard');
+    await record(22, 1200, 'easy', true, 'FINISHED', 'COMPLETED', 'official');
     const first = await projectClassLeaderboard(now);
     const again = await projectClassLeaderboard(now);
     expect(again.periodId).toBe(first.periodId);
@@ -93,11 +94,23 @@ integration('PvP projection, best record and archive', () => {
         and(
           eq(pvpLeaderboardEntries.periodId, first.periodId),
           eq(pvpLeaderboardEntries.difficulty, 'easy'),
+          eq(pvpLeaderboardEntries.dataMode, 'demo'),
         ),
       );
     expect(easy).toHaveLength(23);
     expect(easy.filter((e) => e.rank === 1)).toHaveLength(2);
-    expect(easy.some((e) => e.rank === 3)).toBe(true);
+    expect(easy.some((e) => e.rank === 2)).toBe(true);
+    const [official] = await db
+      .select()
+      .from(pvpLeaderboardEntries)
+      .where(
+        and(
+          eq(pvpLeaderboardEntries.periodId, first.periodId),
+          eq(pvpLeaderboardEntries.dataMode, 'official'),
+        ),
+      );
+    expect(Number(official?.bestPoints)).toBe(1200);
+    expect(official?.rank).toBe(1);
     const best = await db
       .select()
       .from(pvpBestRecords)
@@ -106,6 +119,7 @@ integration('PvP projection, best record and archive', () => {
           eq(pvpBestRecords.periodId, first.periodId),
           eq(pvpBestRecords.studentId, students[22]!.id),
           eq(pvpBestRecords.difficulty, 'easy'),
+          eq(pvpBestRecords.dataMode, 'demo'),
         ),
       );
     expect(best[0]!.matchId).toBe(bestMatch);
@@ -114,7 +128,15 @@ integration('PvP projection, best record and archive', () => {
       await db
         .select()
         .from(classLeaderboardEntries)
-        .where(eq(classLeaderboardEntries.periodId, first.periodId)),
+        .where(
+          and(
+            eq(classLeaderboardEntries.periodId, first.periodId),
+            inArray(
+              classLeaderboardEntries.studentId,
+              students.map((s) => s.id),
+            ),
+          ),
+        ),
     ).toHaveLength(0);
     await record(22, 550);
     await projectClassLeaderboard(new Date(now.getTime() + 7 * 86400_000));
@@ -131,6 +153,7 @@ integration('PvP projection, best record and archive', () => {
           eq(pvpLeaderboardEntries.periodId, first.periodId),
           eq(pvpLeaderboardEntries.studentId, students[22]!.id),
           eq(pvpLeaderboardEntries.difficulty, 'easy'),
+          eq(pvpLeaderboardEntries.dataMode, 'demo'),
         ),
       );
     expect(Number(archived[0]!.bestPoints)).toBe(550);

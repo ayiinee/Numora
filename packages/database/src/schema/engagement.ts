@@ -51,6 +51,8 @@ export const leaderboardPeriods = pgTable(
     timezone: text('timezone').notNull().default('Asia/Jakarta'),
     status: leaderboardPeriodStatus('status').notNull().default('ACTIVE'),
     archivedAt: timestamp('archived_at', { withTimezone: true }),
+    projectedAt: timestamp('projected_at', { withTimezone: true }),
+    rankPolicyVersion: text('rank_policy_version').notNull().default('legacy-competition-v0'),
   },
   (table) => [
     uniqueIndex('leaderboard_periods_starts_at_uq').on(table.startsAt),
@@ -58,31 +60,41 @@ export const leaderboardPeriods = pgTable(
   ],
 ).enableRLS();
 
-export const xpLedger = pgTable('xp_ledger', {
-  id: uuid('id').defaultRandom().primaryKey(),
-  studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
-  classIdAtEvent: uuid('class_id_at_event').references(() => classes.id, { onDelete: 'restrict' }),
-  sourceType: xpSourceType('source_type').notNull(),
-  attemptId: uuid('attempt_id').notNull().references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
-  xpAmount: numeric('xp_amount', { precision: 14, scale: 6, mode: 'number' }).notNull(),
-  policyCode: text('policy_code'),
-  policyVersion: integer('policy_version'),
-  baseXp: integer('base_xp'),
-  bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
-  durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
-  occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
-  periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
-}, (table) => [
-  uniqueIndex('xp_ledger_attempt_uq').on(table.attemptId),
-  index('xp_ledger_student_time_idx').on(table.studentId, table.occurredAt),
-  index('xp_ledger_class_period_idx').on(table.classIdAtEvent, table.periodId),
-  foreignKey({
-    name: 'xp_ledger_attempt_student_fk',
-    columns: [table.attemptId, table.studentId],
-    foreignColumns: [assessmentAttempts.id, assessmentAttempts.studentId],
-  }).onDelete('restrict'),
-  check('xp_ledger_amount_ck', sql`${table.xpAmount} >= 0`),
-]).enableRLS();
+export const xpLedger = pgTable(
+  'xp_ledger',
+  {
+    id: uuid('id').defaultRandom().primaryKey(),
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    classIdAtEvent: uuid('class_id_at_event').references(() => classes.id, {
+      onDelete: 'restrict',
+    }),
+    sourceType: xpSourceType('source_type').notNull(),
+    attemptId: uuid('attempt_id')
+      .notNull()
+      .references(() => assessmentAttempts.id, { onDelete: 'restrict' }),
+    xpAmount: numeric('xp_amount', { precision: 14, scale: 6, mode: 'number' }).notNull(),
+    policyCode: text('policy_code'),
+    policyVersion: integer('policy_version'),
+    baseXp: integer('base_xp'),
+    bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
+    durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
+    occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),
+    periodId: uuid('period_id').references(() => leaderboardPeriods.id, { onDelete: 'restrict' }),
+  },
+  (table) => [
+    uniqueIndex('xp_ledger_attempt_uq').on(table.attemptId),
+    index('xp_ledger_student_time_idx').on(table.studentId, table.occurredAt),
+    index('xp_ledger_class_period_idx').on(table.classIdAtEvent, table.periodId),
+    foreignKey({
+      name: 'xp_ledger_attempt_student_fk',
+      columns: [table.attemptId, table.studentId],
+      foreignColumns: [assessmentAttempts.id, assessmentAttempts.studentId],
+    }).onDelete('restrict'),
+    check('xp_ledger_amount_ck', sql`${table.xpAmount} >= 0`),
+  ],
+).enableRLS();
 
 export const classLeaderboardEntries = pgTable(
   'class_leaderboard_entries',
@@ -164,6 +176,7 @@ export const pvpMatches = pgTable(
     endReason: text('end_reason'),
     recordEligible: boolean('record_eligible').notNull().default(false),
     scoringSnapshot: jsonb('scoring_snapshot').notNull().default({}),
+    dataMode: text('data_mode').$type<'demo' | 'official' | 'legacy'>().notNull().default('legacy'),
   },
   (table) => [
     uniqueIndex('pvp_matches_room_code_uq').on(table.roomCode),
@@ -174,6 +187,7 @@ export const pvpMatches = pgTable(
       sql`${table.endedAt} is null or ${table.endedAt} >= coalesce(${table.startedAt}, ${table.createdAt})`,
     ),
     check('pvp_matches_difficulty_ck', sql`${table.difficulty} in ('easy', 'medium', 'hard')`),
+    check('pvp_matches_data_mode_ck', sql`${table.dataMode} in ('demo', 'official', 'legacy')`),
   ],
 ).enableRLS();
 
@@ -194,10 +208,15 @@ export const pvpPlayers = pgTable(
     reconnectDeadlineAt: timestamp('reconnect_deadline_at', { withTimezone: true }),
     totalPoints: numeric('total_points', { precision: 10, scale: 2 }),
     result: text('result'),
+    leftAt: timestamp('left_at', { withTimezone: true }),
   },
   (table) => [
-    uniqueIndex('pvp_players_match_student_uq').on(table.matchId, table.studentId),
-    uniqueIndex('pvp_players_match_slot_uq').on(table.matchId, table.playerSlot),
+    uniqueIndex('pvp_players_match_student_uq')
+      .on(table.matchId, table.studentId)
+      .where(sql`${table.leftAt} is null`),
+    uniqueIndex('pvp_players_match_slot_uq')
+      .on(table.matchId, table.playerSlot)
+      .where(sql`${table.leftAt} is null`),
     uniqueIndex('pvp_players_id_match_uq').on(table.id, table.matchId),
     check('pvp_players_slot_ck', sql`${table.playerSlot} in (1, 2)`),
     check(
@@ -205,6 +224,23 @@ export const pvpPlayers = pgTable(
       sql`${table.reconnectDeadlineAt} is null or (${table.disconnectedAt} is not null and ${table.reconnectDeadlineAt} >= ${table.disconnectedAt})`,
     ),
   ],
+).enableRLS();
+
+// Durable uniqueness across create/join/accept, maintained by database triggers.
+export const pvpActiveRooms = pgTable(
+  'pvp_active_rooms',
+  {
+    studentId: uuid('student_id')
+      .primaryKey()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    matchId: uuid('match_id')
+      .notNull()
+      .references(() => pvpMatches.id, { onDelete: 'restrict' }),
+    playerId: uuid('player_id')
+      .notNull()
+      .references(() => pvpPlayers.id, { onDelete: 'restrict' }),
+  },
+  (table) => [index('pvp_active_rooms_match_idx').on(table.matchId)],
 ).enableRLS();
 
 export const pvpMatchQuestions = pgTable(
@@ -294,6 +330,7 @@ export const pvpBestRecords = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
     difficulty: text('difficulty').notNull(),
+    dataMode: text('data_mode').$type<'demo' | 'official' | 'legacy'>().notNull().default('legacy'),
     matchId: uuid('match_id')
       .notNull()
       .references(() => pvpMatches.id, { onDelete: 'restrict' }),
@@ -305,8 +342,13 @@ export const pvpBestRecords = pgTable(
       table.periodId,
       table.studentId,
       table.difficulty,
+      table.dataMode,
     ),
     check('pvp_best_records_points_ck', sql`${table.bestPoints} >= 0`),
+    check(
+      'pvp_best_records_data_mode_ck',
+      sql`${table.dataMode} in ('demo', 'official', 'legacy')`,
+    ),
   ],
 ).enableRLS();
 
@@ -321,6 +363,7 @@ export const pvpLeaderboardEntries = pgTable(
       .notNull()
       .references(() => users.id, { onDelete: 'restrict' }),
     difficulty: text('difficulty').notNull(),
+    dataMode: text('data_mode').$type<'demo' | 'official' | 'legacy'>().notNull().default('legacy'),
     bestPoints: numeric('best_points', { precision: 10, scale: 2 }).notNull(),
     rank: integer('rank'),
     updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
@@ -330,8 +373,13 @@ export const pvpLeaderboardEntries = pgTable(
       table.periodId,
       table.studentId,
       table.difficulty,
+      table.dataMode,
     ),
     check('pvp_leaderboard_entries_points_ck', sql`${table.bestPoints} >= 0`),
+    check(
+      'pvp_leaderboard_entries_data_mode_ck',
+      sql`${table.dataMode} in ('demo', 'official', 'legacy')`,
+    ),
     check('pvp_leaderboard_entries_rank_ck', sql`${table.rank} is null or ${table.rank} > 0`),
   ],
 ).enableRLS();

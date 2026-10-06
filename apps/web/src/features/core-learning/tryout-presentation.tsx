@@ -2,10 +2,9 @@
 
 import Link from 'next/link';
 import { Badge, Button, Card, Icon } from '@tka/ui';
-import { useState, type Ref } from 'react';
+import type { Ref } from 'react';
 import type { TryoutPackage, TryoutResult } from './types';
-import { MathText } from './ui';
-import { AnswerMatrix } from './drill-review';
+import { RewardSummary } from './reward-summary';
 
 const stateLabels = {
   unavailable: 'Belum tersedia',
@@ -71,6 +70,9 @@ export function TryoutPackageCard({
           <Badge variant="primary">{stateLabels[current.state]}</Badge>
         </div>
         <h2>{current.title}</h2>
+        {current.isDemo && (
+          <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>
+        )}
       </div>
       <div className="tryout-catalog-card__body">
         <span className="tryout-package-symbol">
@@ -232,12 +234,20 @@ export function TryoutDetail({
                 server.
               </li>
               <li>
+                <strong>Batch mingguan:</strong> Senin 00:00 hingga Minggu 23:59:00 WIB. Pengiriman
+                otomatis saat countdown habis atau batch ditutup, mana yang lebih dahulu.
+                {current.closeAt && <> Paket ini ditutup {releaseDate(current.closeAt)}.</>}
+              </li>
+              <li>
                 <strong>Penyimpanan:</strong> hanya jawaban yang diterima server tersimpan. Refresh
                 atau keluar dapat menghilangkan perubahan yang belum tersimpan.
               </li>
               <li>
                 <strong>Hasil simulasi:</strong> menunggu rilis IRT; nilai ini bukan nilai TKA
-                resmi.
+                resmi. Nilai dan pembahasan tersedia bersama maksimal 72 jam setelah batch ditutup.
+                {current.resultDueAt && (
+                  <> Batas ketersediaan: {releaseDate(current.resultDueAt)}.</>
+                )}
               </li>
             </ul>
             {current.state === 'open' && current.eligible && (
@@ -293,11 +303,17 @@ export function TryoutWaiting({
   fetching = false,
   onCheck,
   xp,
+  closeAt,
+  resultDueAt,
+  isDemo,
 }: {
   submitted?: boolean;
   fetching?: boolean;
   onCheck?: () => void;
   xp?: number | null;
+  closeAt?: string | null | undefined;
+  resultDueAt?: string | null | undefined;
+  isDemo?: boolean | undefined;
 }) {
   return (
     <Card fullWidth className="tryout-waiting">
@@ -306,11 +322,28 @@ export function TryoutWaiting({
       </span>
       <Badge variant="success">Jawaban tersimpan</Badge>
       <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil IRT'}</h2>
-      {xp != null && <p><strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.</p>}
+      {isDemo && <Badge variant="warning">DEMO · Konten uji, bukan hasil TKA resmi</Badge>}
+      {xp != null && (
+        <p>
+          <strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.
+        </p>
+      )}
       <p>
         Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
         selesai belum berarti hasil telah dirilis.
       </p>
+      {isDemo ? (
+        <p>
+          Konten uji menyimpan jawaban di server. Rilis hasil DEMO menunggu persetujuan konten serta
+          rubrik terkait.
+        </p>
+      ) : (
+        <p>
+          Nilai dan pembahasan dirilis bersama maksimal 72 jam setelah batch ditutup.
+          {closeAt && <> Penutupan batch: {releaseDate(closeAt)}.</>}
+          {resultDueAt && <> Batas ketersediaan: {releaseDate(resultDueAt)}.</>}
+        </p>
+      )}
       <ol>
         <li>
           <Icon name="check" width={18} height={18} />
@@ -341,8 +374,6 @@ export function TryoutWaiting({
 }
 
 export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
-  const [selected, setSelected] = useState(0);
-  const item = result.explanation[selected];
   return (
     <div className="tryout-result-layout">
       <aside>
@@ -351,53 +382,39 @@ export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
           <h2>{result.packageTitle}</h2>
           <strong className="tryout-result-score">{result.score}</strong>
           <p>
-            {result.correctCount} dari {result.questionCount} benar
+            {result.correctCount} dari {result.questionCount} benar penuh
           </p>
           <small>Hasil simulasi, bukan nilai TKA resmi.</small>
-        </Card>
-        <Card fullWidth className="tryout-result-note">
-          <Icon name="info" />
-          <p>
-            {result.xp != null ? `${result.xp} XP sudah tercatat.` : 'XP attempt versi lama tidak tersedia.'}
-            {' '}Tidak ada bonus kecepatan Tryout. Nilai mengikuti hasil server.
-          </p>
-        </Card>
-      </aside>
-      <Card fullWidth className="tryout-released-review">
-        <h2>Pembahasan</h2>
-        <p>Gunakan nomor soal untuk melihat jawaban dan pembahasannya.</p>
-        <AnswerMatrix questions={result.explanation} selected={selected} onSelect={setSelected} />
-        {item ? (
-          <article className="drill-review__question">
-            <strong>Soal #{selected + 1}</strong>
-            <h3>
-              <MathText value={item.stem} />
-            </h3>
-            <div
-              className={`drill-review__answer ${item.selectedOptionId === item.correctOptionId ? 'drill-review__answer--correct' : 'drill-review__answer--wrong'}`}
-            >
-              Jawabanmu: {item.selectedOptionId ?? 'Tidak dijawab'}
-            </div>
-            <div className="drill-review__answer drill-review__answer--correct">
-              Jawaban benar: {item.correctOptionId}
-            </div>
-            <div className="drill-review__explanation">
-              <strong>Pembahasan Numora</strong>
+          <details className="learning-detail">
+            <summary>Info nilai</summary>
+            {result.resultMethod === 'IRT' ? (
+              <p>Metode: Skor IRT.</p>
+            ) : result.resultMethod === 'STANDARD' ? (
               <p>
-                <MathText value={item.explanation} />
+                Metode: Skor perhitungan standar. Hasil ini menggunakan scoring biasa untuk batch
+                tersebut.
               </p>
-            </div>
-          </article>
-        ) : (
-          <p>Pembahasan soal belum tersedia.</p>
-        )}
+            ) : (
+              <p>Metode penilaian tidak tercatat pada hasil versi ini.</p>
+            )}
+            {result.resultMethodReason && <p>{result.resultMethodReason}</p>}
+            <p>Metode nilai terpisah dari XP yang sudah tercatat saat submit.</p>
+          </details>
+        </Card>
+        <RewardSummary kind="tryout" xp={result.xp ?? null} detail={result.xpDetail} />
+      </aside>
+      <Card fullWidth className="explanation-entry">
+        <h2>Pembahasan soal</h2>
+        <p>Lihat jawabanmu, kunci, dan pembahasan setiap soal.</p>
+        <Link className="button-link" href={`/student/tryout/${result.attemptId}/explanation`}>
+          Lihat pembahasan
+        </Link>
       </Card>
       <Link
         className="button-link button-link--secondary tryout-result-back"
         href="/student/tryout"
       >
-        Kembali ke Tryout
-        <Icon name="back" width={18} height={18} />
+        Kembali ke Tryout <Icon name="back" width={18} height={18} />
       </Link>
     </div>
   );

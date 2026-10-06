@@ -7,6 +7,7 @@ import {
   pvpAnswers,
   pvpMatches,
   pvpMatchQuestions,
+  pvpPlayers,
   xpLedger,
 } from '@tka/database';
 import { and, eq } from 'drizzle-orm';
@@ -133,7 +134,7 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
       'CONNECTED',
     );
     await engine.disconnect(s(0), match.matchId);
-    now = new Date(now.getTime() + 20_000);
+    now = new Date(now.getTime() + 20_001);
     await engine.tick(match.matchId);
     const forfeited = await engine.snapshot(s(0), match.matchId);
     expect(forfeited.endReason).toBe('FORFEIT');
@@ -141,7 +142,7 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     const both = await start();
     await engine.disconnect(s(0), both.matchId);
     await engine.disconnect(s(1), both.matchId);
-    now = new Date(now.getTime() + 20_000);
+    now = new Date(now.getTime() + 20_001);
     await engine.tick(both.matchId);
     expect((await engine.snapshot(s(0), both.matchId)).status).toBe('CANCELLED');
     const interrupted = await start();
@@ -171,5 +172,92 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     const retry = await engine.invite(s(0), room.matchId, s(1));
     expect((await engine.respondInvite(s(1), retry.inviteId, true))!.players).toHaveLength(2);
     await engine.leave(s(0), room.matchId);
+  });
+  it('retains host room and guest history, resets Ready, permits replacement and enforces one active room', async () => {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    await expect(engine.create(s(0), 'easy', randomUUID())).rejects.toMatchObject({
+      response: { code: 'PVP_ACTIVE_ROOM_EXISTS' },
+    });
+    await engine.join(s(1), room.roomCode);
+    await engine.ready(s(0), room.matchId);
+    const leaveKey = randomUUID();
+    await engine.leave(s(1), room.matchId, leaveKey);
+    await engine.leave(s(1), room.matchId, leaveKey);
+    const waiting = await engine.snapshot(s(0), room.matchId);
+    expect(waiting.status).toBe('WAITING');
+    expect(waiting.players).toHaveLength(1);
+    expect(waiting.players[0]!.ready).toBe(false);
+    expect(waiting.expiresAt).toBe(room.expiresAt);
+    expect((await engine.snapshot(s(1), room.matchId)).participantActive).toBe(false);
+    await engine.join(s(1), room.roomCode);
+    await engine.leave(s(1), room.matchId, leaveKey); // Delayed retry must not evict the new participation.
+    expect((await engine.snapshot(s(1), room.matchId)).participantActive).toBe(true);
+    await expect(engine.create(s(1), 'easy', randomUUID())).rejects.toMatchObject({
+      response: { code: 'PVP_ACTIVE_ROOM_EXISTS' },
+    });
+    const history = await getDatabase()
+      .db.select()
+      .from(pvpPlayers)
+      .where(and(eq(pvpPlayers.matchId, room.matchId), eq(pvpPlayers.studentId, s(1))));
+    expect(history).toHaveLength(2);
+    expect(history.filter((p) => p.leftAt)).toHaveLength(1);
+    await engine.leave(s(0), room.matchId);
+    expect(await engine.activeRoom(s(0))).toBeNull();
+    expect(await engine.activeRoom(s(1))).toBeNull();
+  });
+  it('reconnects at exactly 20 seconds and preserves terminal state; earliest expired deadline loses regardless of slot', async () => {
+    const approved = new PvpEngineService({
+      ...fixture.policy,
+      simultaneousDisconnect: 'earliest-deadline-or-cancel',
+    });
+    vi.spyOn(approved, 'now').mockImplementation(() => now);
+    const room = await approved.create(s(0), 'easy', randomUUID());
+    await approved.join(s(1), room.roomCode);
+    await approved.ready(s(0), room.matchId);
+    await approved.ready(s(1), room.matchId);
+    await approved.disconnect(s(1), room.matchId);
+    now = new Date(now.getTime() + 20_000);
+    expect((await approved.reconnect(s(1), room.matchId)).players[1]!.connectionStatus).toBe(
+      'CONNECTED',
+    );
+    await approved.disconnect(s(1), room.matchId);
+    now = new Date(now.getTime() + 1_000);
+    await approved.disconnect(s(0), room.matchId);
+    now = new Date(now.getTime() + 21_000);
+    await approved.tick(room.matchId);
+    const final = await approved.snapshot(s(0), room.matchId);
+    expect(final.endReason).toBe('FORFEIT');
+    expect(final.players.map((p) => p.result)).toEqual(['WIN', 'FORFEIT']);
+    expect(final.recordEligible).toBe(false);
+    expect(await approved.reconnect(s(1), room.matchId)).toMatchObject({
+      status: final.status,
+      players: final.players,
+    });
+    const tied = await approved.create(s(0), 'easy', randomUUID());
+    await approved.join(s(1), tied.roomCode);
+    await approved.ready(s(0), tied.matchId);
+    await approved.ready(s(1), tied.matchId);
+    await approved.disconnect(s(0), tied.matchId);
+    await approved.disconnect(s(1), tied.matchId);
+    now = new Date(now.getTime() + 20_001);
+    await approved.tick(tied.matchId);
+    expect(await approved.snapshot(s(0), tied.matchId)).toMatchObject({
+      status: 'CANCELLED',
+      recordEligible: false,
+    });
+  });
+  it('releases a disconnected waiting guest at grace expiry but cancels an expired host', async () => {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    await engine.join(s(1), room.roomCode);
+    await engine.disconnect(s(1), room.matchId);
+    now = new Date(now.getTime() + 20_001);
+    await engine.tick(room.matchId);
+    expect((await engine.snapshot(s(0), room.matchId)).players).toHaveLength(1);
+    expect(await engine.activeRoom(s(1))).toBeNull();
+    await engine.join(s(2), room.roomCode);
+    await engine.disconnect(s(0), room.matchId);
+    now = new Date(now.getTime() + 20_001);
+    await engine.tick(room.matchId);
+    expect((await engine.snapshot(s(0), room.matchId)).endReason).toBe('HOST_RECONNECT_EXPIRED');
   });
 });

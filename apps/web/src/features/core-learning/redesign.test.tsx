@@ -33,7 +33,8 @@ vi.mock('next/navigation', () => ({
   usePathname: () => context.pathname,
   useRouter: () => ({ replace: context.replace, push: context.push }),
   useParams: () => ({ chapterId: 'chapter-test', subchapterId: 'sub-test' }),
-  useSearchParams: () => new URLSearchParams(context.levelFilter ? { levelId: context.levelFilter } : {}),
+  useSearchParams: () =>
+    new URLSearchParams(context.levelFilter ? { levelId: context.levelFilter } : {}),
 }));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: context.state, refresh: context.refresh, logout: context.logout }),
@@ -131,13 +132,27 @@ describe('assessment history states', () => {
   });
   it('requests the selected level and renders persisted zero rewards', async () => {
     context.levelFilter = 'level-test';
-    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [{ ...record,
-      xpState: 'ready', starsState: 'ready', xp: 0, stars: 0, levelId: 'level-test',
-    }], nextCursor: null });
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [
+        {
+          ...record,
+          xpState: 'ready',
+          starsState: 'ready',
+          xp: 0,
+          stars: 0,
+          levelId: 'level-test',
+        },
+      ],
+      nextCursor: null,
+    });
     renderStudent(<AssessmentScreen />);
     expect(await screen.findByText('0 XP')).toBeTruthy();
     expect(screen.getByText('Bintang: 0 / 3')).toBeTruthy();
-    expect(learningApi.assessmentHistory).toHaveBeenCalledWith('test-token', undefined, 'level-test');
+    expect(learningApi.assessmentHistory).toHaveBeenCalledWith(
+      'test-token',
+      undefined,
+      'level-test',
+    );
     expect(screen.getByRole('heading', { name: 'Riwayat level' })).toBeTruthy();
   });
   it('shows loading without claiming an empty history', async () => {
@@ -184,7 +199,8 @@ describe('assessment history states', () => {
     expect(within(zero).getByText('0', { exact: true })).toBeTruthy();
     expect(within(zero).getByText('Bilangan · Pecahan · Level 1')).toBeTruthy();
     expect(within(zero).getByText('XP dan bintang belum tersedia')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: /Tryout pending|Pretest fixture/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Tryout pending/ })).toBeNull();
+    expect(screen.getByRole('link', { name: /Pretest fixture/ }).getAttribute('href')).toBe('/student/pretest/pretest/result');
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
     expect(screen.getByRole('link', { name: /Tryout released/ }).getAttribute('href')).toBe(
       '/student/tryout/released/result',
@@ -262,9 +278,21 @@ describe('responsive learning composition', () => {
     expect(screen.getByText('0 XP')).toBeTruthy();
   });
   it('shows stored XP on released TryOut without recomputing it from score', () => {
-    render(<TryoutReleasedResult result={{ attemptId: 'fixture', packageTitle: 'Fixture',
-      score: 80, correctCount: 24, questionCount: 30, explanation: [], xp: 240, xpPolicyVersion: 1 }} />);
-    expect(screen.getByText(/240 XP sudah tercatat/)).toBeTruthy();
+    render(
+      <TryoutReleasedResult
+        result={{
+          attemptId: 'fixture',
+          packageTitle: 'Fixture',
+          score: 80,
+          correctCount: 24,
+          questionCount: 30,
+          explanation: [],
+          xp: 240,
+          xpPolicyVersion: 1,
+        }}
+      />,
+    );
+    expect(screen.getByText('240 XP', { exact: true })).toBeTruthy();
     expect(screen.queryByText(/XP belum tersedia/)).toBeNull();
   });
   it('hides provisional Home podium values when the server policy is pending', async () => {
@@ -419,6 +447,7 @@ describe('responsive learning composition', () => {
   });
   it('keeps ranks hidden when policy is pending, even if provisional rows are returned', async () => {
     vi.mocked(request).mockResolvedValue({
+      periods: [],
       policyPending: true,
       entries: [
         { studentId: 'rank-test', displayName: 'Provisional student', rank: 1, points: 999 },
@@ -433,8 +462,9 @@ describe('responsive learning composition', () => {
     expect(screen.queryByText('Provisional student')).toBeNull();
     expect(screen.queryByText('#37')).toBeNull();
   });
-  it('renders top/self positions from the server without calculating ties or excluding a self rank outside the top twenty', async () => {
+  it('renders top/self positions from the server including a self rank outside Top 10', async () => {
     vi.mocked(request).mockResolvedValue({
+      periods: [],
       policyPending: false,
       entries: [{ studentId: 'rank-test', displayName: 'Server student', rank: 2, points: 100 }],
       ownEntry: { rank: 37, points: 50 },

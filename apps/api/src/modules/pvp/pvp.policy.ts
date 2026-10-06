@@ -2,12 +2,19 @@ import { ConflictException } from '@nestjs/common';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
 export const PVP_POLICY = Symbol('PVP_POLICY');
-/** No production policy is supplied until OPEN-07 is approved. Tests override DI explicitly. */
+export type PvpMode = 'disabled' | 'demo' | 'official';
+export function pvpMode(env: NodeJS.ProcessEnv = process.env): PvpMode {
+  const mode = env.PVP_MODE ?? 'disabled';
+  if (mode !== 'disabled' && mode !== 'demo' && mode !== 'official')
+    throw new Error('PVP_MODE must be disabled, demo or official.');
+  return mode;
+}
 export interface PvpPolicy {
   policyVersionId: string;
   roomLifetimeSeconds: number;
   inviteLifetimeSeconds: number;
-  simultaneousDisconnect: 'cancel';
+  simultaneousDisconnect: 'cancel' | 'earliest-deadline-or-cancel';
+  mode?: 'demo' | 'official';
 }
 export function requirePvpPolicy(policy: PvpPolicy | null): PvpPolicy {
   if (!policy)

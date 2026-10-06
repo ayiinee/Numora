@@ -26,6 +26,22 @@ function enableDialogs() {
 }
 
 describe('Pretest chapter card', () => {
+  it('allows Start after Skip and explains that Skip retains the completion opportunity', async () => {
+    enableDialogs();
+    const start = vi.fn().mockResolvedValue(undefined);
+    render(<PretestCard chapterTitle="Bilangan" state="skipped" onStart={start} onSkip={vi.fn()} />);
+    fireEvent.click(screen.getByRole('button', { name: 'Lihat informasi' }));
+    expect(screen.getByText(/Skip tidak menghabiskan kesempatan/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Mulai Pretest' }));
+    await waitFor(() => expect(start).toHaveBeenCalledOnce());
+  });
+  it('allows Skip while an attempt remains resumable', async () => {
+    const skip = vi.fn().mockResolvedValue(undefined);
+    render(<PretestCard chapterTitle="Bilangan" state="inProgress" onResume={vi.fn()} onSkip={skip} />);
+    expect(screen.getByRole('button', { name: 'Lanjutkan' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Skip untuk sekarang' }));
+    await waitFor(() => expect(skip).toHaveBeenCalledOnce());
+  });
   it('shows unavailable without simulating eligibility or allowing a start', () => {
     render(<PretestCard chapterTitle="Bilangan" state="unavailable" />);
 

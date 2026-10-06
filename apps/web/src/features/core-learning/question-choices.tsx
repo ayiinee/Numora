@@ -2,7 +2,7 @@
 import { MathText } from './ui';
 import type { ReactNode } from 'react';
 
-/** Presentation-only controls. API DTO/answer mapping waits for Aini's generated PGK contract. */
+/** Presentation-only controls; the caller maps generated answers and the server grades. */
 export function QuestionChoices({
   kind,
   name,
