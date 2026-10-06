@@ -621,14 +621,20 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ).toMatchObject({ policyPending: true, reasonCode: 'PVP_RUNTIME_ACTIVATION' });
       expect(await body<LeaderboardDto>(request, alias, 'leaderboards/activity')).toMatchObject({
         policyPending: false,
-        reasonCode: null,
+        available: false,
+        reasonCode: 'PROJECTION_PENDING',
+        updatedAt: null,
+        entries: [],
         unit: 'xp',
         className: null,
       });
     }
     expect(await body<LeaderboardDto>(request, 'student', 'leaderboards/class')).toMatchObject({
       policyPending: false,
-      reasonCode: null,
+      available: false,
+      reasonCode: 'PROJECTION_PENDING',
+      updatedAt: null,
+      entries: [],
       unit: 'xp',
       className: cls.name,
     });
