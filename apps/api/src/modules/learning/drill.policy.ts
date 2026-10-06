@@ -43,17 +43,20 @@ export function drillReward(
   questionCount: number,
   startedAt: Date,
   finishedAt: Date,
+  allowPartial = false,
 ) {
   if (
     questionCount !== DRILL_QUESTION_COUNT ||
-    !Number.isInteger(correctCount) ||
+    !(allowPartial ? Number.isFinite(correctCount) : Number.isInteger(correctCount)) ||
     correctCount < 0 ||
     correctCount > questionCount
   )
     throw new Error('Invalid Drill reward inputs.');
   const durationSeconds = Math.max(0, (finishedAt.getTime() - startedAt.getTime()) / 1000);
   if (!Number.isFinite(durationSeconds)) throw new Error('Invalid Drill duration.');
-  const baseXp = correctCount * 10;
+  // ponytail: the one-off override keeps the existing integer base-XP ledger;
+  // use a numeric ledger migration before general fractional Drill rewards.
+  const baseXp = allowPartial ? Math.round(correctCount * 10) : correctCount * 10;
   const bonusXp = Math.max(0, ((900 - durationSeconds) / 900) * 50);
   return {
     policyCode: DRILL_REWARD_POLICY_CODE,
