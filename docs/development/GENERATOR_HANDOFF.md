@@ -48,4 +48,4 @@ Tanpa `.env` tim, hapus `GENERATOR_REAL_QA_EMAIL` untuk demo terisolasi dengan l
 
 ## Verifikasi PR setelah merge main
 
-API/web typecheck, root lint, 12 schema kontrak dan generated types check lolos. Regresi upload/preview/routing: 18 tes; generator/Drill Bab 3/PvP bank: 18 tes. Bukti connected generator desktop/mobile sebelum merge tercatat pada laporan generator. Launcher handoff baru telah diperiksa sintaksnya; setup dari clone bersih belum diuji otomatis.
+API/web typecheck, root lint, 12 schema kontrak dan generated types check lolos. Regresi upload/preview/routing: 18 tes; generator/Drill Bab 3/PvP bank: 18 tes. Mapping/Excel importer: 23 tes lolos, satu integrasi database dilewati tanpa TEST_DATABASE_URL. Build serial seluruh 10 package lolos. Bukti connected generator desktop/mobile sebelum merge tercatat pada laporan generator. Launcher handoff baru telah diperiksa sintaksnya; setup dari clone bersih belum diuji otomatis.
