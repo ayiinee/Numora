@@ -94,6 +94,8 @@ export class AdminService {
                       'content_media_upload',
                       'content_preview_session',
                       'irt_request',
+                      'analysis_request',
+                      'tryout_batch',
                       'irt_batch',
                     ],
               ),

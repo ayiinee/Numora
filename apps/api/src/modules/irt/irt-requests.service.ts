@@ -2,6 +2,7 @@ import { HttpException, Injectable } from '@nestjs/common';
 import { getDatabase } from '@tka/database';
 import {
   analysisRequestDetail,
+  adoptTryoutArtifact,
   IrtOrchestrationError,
   listAnalysisRequests,
   prepareTryoutAnalysis,
@@ -34,6 +35,12 @@ export class IrtRequestsService {
   }
   retry(actor: string, key: string, id: string) {
     return this.execute(() => retryTryoutAnalysis(getDatabase().client, actor, key, id));
+  }
+  adopt(actor: string, id: string) {
+    return this.execute(async () => {
+      await adoptTryoutArtifact(getDatabase().client, id, actor);
+      return analysisRequestDetail(getDatabase().client, id);
+    });
   }
   detail(id: string) {
     return this.execute(() => analysisRequestDetail(getDatabase().client, id));

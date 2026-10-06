@@ -279,6 +279,14 @@ export function HomeActivity({
             <span>Nilai belum tersedia</span>
           )}
           {item.isDemo && <span>Demo</span>}
+          {(item.xpState === 'ready' || item.starsState === 'ready') && (
+            <small>
+              {item.xpState === 'ready' && `${item.xp} XP`}
+              {item.xpState === 'ready' && item.starsState === 'ready' && ' - '}
+              {item.starsState === 'ready' && `${item.stars} bintang`}
+            </small>
+          )}
+          {item.xpState === 'legacy' && <small>XP tidak tercatat pada hasil versi lama</small>}
           {(item.xpState === 'pending' || item.starsState === 'pending') && (
             <small className="home-activity__pending">XP dan bintang belum tersedia</small>
           )}

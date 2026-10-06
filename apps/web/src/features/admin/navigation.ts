@@ -87,6 +87,24 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       },
     );
   }
+  if (
+    profile.capabilities?.some(
+      (cap) => cap === 'ANALYTICS_OPERATIONS' || cap === 'ANALYTICS_CONTENT',
+    )
+  )
+    items.push({
+      href: '/admin/analytics',
+      label: 'Analytics',
+      description: 'Aggregate operasional dan kesehatan rilis dari PostgreSQL.',
+      icon: 'chart',
+    });
+  if (profile.capabilities?.includes('CONTENT_MANAGE'))
+    items.push({
+      href: '/admin/irt',
+      label: 'Request IRT & publikasi',
+      description: 'Siapkan request, pantau execution, adoption dan SLA rilis.',
+      icon: 'chart',
+    });
   return items;
 }
 

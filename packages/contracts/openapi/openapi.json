@@ -3747,6 +3747,32 @@
         ]
       }
     },
+    "/api/v1/admin/analytics": {
+      "get": {
+        "operationId": "AdminController_summary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminAnalyticsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin"
+        ]
+      }
+    },
     "/api/v1/admin/dashboard": {
       "get": {
         "operationId": "AdminController_dashboard",
@@ -5205,6 +5231,121 @@
         ],
         "tags": [
           "student-support"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/options": {
+      "get": {
+        "operationId": "IrtController_options",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtOperationalOptionsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/batch-health": {
+      "get": {
+        "operationId": "IrtController_health",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtBatchHealthListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/requests/{id}/adopt": {
+      "post": {
+        "operationId": "IrtController_adopt",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
         ]
       }
     },
@@ -7984,7 +8125,21 @@
             "type": "string"
           },
           "score": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
+          },
+          "mode": {
+            "type": "string",
+            "enum": [
+              "IRT",
+              "FALLBACK",
+              "UNSCORABLE",
+              "DEMO"
+            ]
+          },
+          "publicationVersion": {
+            "type": "number",
+            "nullable": true
           },
           "correctCount": {
             "type": "number"
@@ -10484,6 +10639,67 @@
           "serverSavedAt"
         ]
       },
+      "AdminAnalyticsMetricDto": {
+        "type": "object",
+        "properties": {
+          "key": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "domain": {
+            "type": "string",
+            "enum": [
+              "STRUCTURE",
+              "OPERATIONS",
+              "CONTENT",
+              "RELEASE"
+            ]
+          },
+          "value": {
+            "type": "number",
+            "nullable": true
+          },
+          "unavailableReason": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "key",
+          "label",
+          "domain",
+          "value",
+          "unavailableReason"
+        ]
+      },
+      "AdminAnalyticsDto": {
+        "type": "object",
+        "properties": {
+          "generatedAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "source": {
+            "type": "string",
+            "enum": [
+              "POSTGRESQL"
+            ]
+          },
+          "metrics": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminAnalyticsMetricDto"
+            }
+          }
+        },
+        "required": [
+          "generatedAt",
+          "source",
+          "metrics"
+        ]
+      },
       "AdminDashboardDto": {
         "type": "object",
         "properties": {
@@ -11566,6 +11782,155 @@
           "mappingId"
         ]
       },
+      "IrtApprovedConfigurationDto": {
+        "type": "object",
+        "properties": {
+          "approvalId": {
+            "type": "string"
+          },
+          "digest": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "version": {
+            "type": "number"
+          },
+          "kind": {
+            "type": "string"
+          },
+          "contextId": {
+            "type": "string",
+            "nullable": true
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "approvalId",
+          "digest",
+          "code",
+          "version",
+          "kind",
+          "contextId",
+          "approvedAt"
+        ]
+      },
+      "IrtOperationalOptionsDto": {
+        "type": "object",
+        "properties": {
+          "enabled": {
+            "type": "boolean"
+          },
+          "configurations": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtApprovedConfigurationDto"
+            }
+          }
+        },
+        "required": [
+          "enabled",
+          "configurations"
+        ]
+      },
+      "IrtBatchHealthDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "contextId": {
+            "type": "string",
+            "nullable": true
+          },
+          "closesAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "dueAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "overdue": {
+            "type": "boolean"
+          },
+          "activeAttemptCount": {
+            "type": "number"
+          },
+          "finalizedAttemptCount": {
+            "type": "number"
+          },
+          "publicationMode": {
+            "type": "string",
+            "nullable": true
+          },
+          "publicationVersion": {
+            "type": "number",
+            "nullable": true
+          },
+          "publishedAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          },
+          "prepareBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "publicationBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "title",
+          "status",
+          "contextId",
+          "closesAt",
+          "dueAt",
+          "overdue",
+          "activeAttemptCount",
+          "finalizedAttemptCount",
+          "publicationMode",
+          "publicationVersion",
+          "publishedAt",
+          "prepareBlockers",
+          "publicationBlockers"
+        ]
+      },
+      "IrtBatchHealthListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtBatchHealthDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
       "IrtConfigurationPinDto": {
         "type": "object",
         "properties": {
@@ -11580,25 +11945,6 @@
         "required": [
           "approvalId",
           "digest"
-        ]
-      },
-      "PrepareIrtRequestDto": {
-        "type": "object",
-        "properties": {
-          "contextId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "configurationPins": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/IrtConfigurationPinDto"
-            }
-          }
-        },
-        "required": [
-          "contextId",
-          "configurationPins"
         ]
       },
       "IrtRequestExecutionDto": {
@@ -11669,6 +12015,12 @@
           "contextId": {
             "type": "string"
           },
+          "configurationPins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtConfigurationPinDto"
+            }
+          },
           "packageId": {
             "type": "string"
           },
@@ -11732,6 +12084,7 @@
           "id",
           "contractVersion",
           "contextId",
+          "configurationPins",
           "packageId",
           "status",
           "inputDigest",
@@ -11745,6 +12098,25 @@
           "execution",
           "failureCode",
           "artifacts"
+        ]
+      },
+      "PrepareIrtRequestDto": {
+        "type": "object",
+        "properties": {
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "configurationPins": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IrtConfigurationPinDto"
+            }
+          }
+        },
+        "required": [
+          "contextId",
+          "configurationPins"
         ]
       },
       "IrtRequestsDto": {

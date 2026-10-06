@@ -1,8 +1,11 @@
+import { IrtOperationsService } from './irt-operations.service';
+import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
   Body,
   Controller,
   Get,
   Headers,
+  HttpCode,
   Inject,
   Param,
   ParseUUIDPipe,
@@ -65,7 +68,24 @@ export class IrtController {
   constructor(
     @Inject(IrtService) private readonly irt: IrtService,
     @Inject(IrtRequestsService) private readonly requests: IrtRequestsService,
+    @Inject(IrtOperationsService) private readonly operations: IrtOperationsService,
   ) {}
+  @Get('options')
+  @ApiOkResponse({ type: IrtOperationalOptionsDto })
+  options() {
+    return this.operations.options();
+  }
+  @Get('batch-health')
+  @ApiOkResponse({ type: IrtBatchHealthListDto })
+  health(@Query() page: ContentPageDto) {
+    return this.operations.health(page);
+  }
+  @Post('requests/:id/adopt')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtRequestDto })
+  adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.adopt(request.adminId, id);
+  }
   @Post('requests')
   @ApiHeader({ name: 'Idempotency-Key', required: true })
   @ApiCreatedResponse({ type: IrtRequestDto })

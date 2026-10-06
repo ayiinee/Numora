@@ -46,6 +46,7 @@ export async function recoverOverdueTryouts(limit = 100, after?: RecoveryCursor)
       failed++;
     }
   }
+  await advanceTryoutBatches();
   const [backlog] = await db
     .select({
       total: sql<number>`count(*)::integer`,
@@ -64,4 +65,20 @@ export async function recoverOverdueTryouts(limit = 100, after?: RecoveryCursor)
     backlog: backlog?.total ?? 0,
     oldestOverdueSeconds: backlog?.oldestSeconds ?? 0,
   };
+}
+
+export async function advanceTryoutBatches() {
+  return getDatabase().client.begin(async (tx) => {
+    const batches = await tx<{ id: string; package_id: string; next_status: string }[]>`
+      SELECT b.id,b.package_id,CASE WHEN b.cutoff_at<=clock_timestamp() THEN 'CLOSED' ELSE 'OPEN' END AS next_status
+      FROM tryout_batches b WHERE b.status IN ('PLANNED','OPEN') AND b.starts_at<=clock_timestamp()
+      AND (b.status='PLANNED' OR b.cutoff_at<=clock_timestamp())
+      AND (b.cutoff_at>clock_timestamp() OR NOT EXISTS(SELECT 1 FROM assessment_attempts a WHERE a.package_id=b.package_id AND a.purpose='REGULAR' AND a.status IN ('IN_PROGRESS','SUBMITTED')))
+      ORDER BY b.cutoff_at,b.id LIMIT 100 FOR UPDATE OF b SKIP LOCKED`;
+    for (const batch of batches) {
+      await tx`UPDATE tryout_batches SET status=${batch.next_status} WHERE id=${batch.id}`;
+      await tx`INSERT INTO analytics_outbox(event_name,event_version,entity_type,entity_id,payload) VALUES(${batch.next_status === 'CLOSED' ? 'tryout.batch_closed' : 'tryout.batch_opened'},'3','tryout_batch',${batch.id},${JSON.stringify({ packageId: batch.package_id })}::text::jsonb)`;
+    }
+    return batches.length;
+  });
 }

@@ -356,7 +356,12 @@ export function TryoutReleasedResult({
         <Card fullWidth className="tryout-released-summary">
           <Badge variant="success">Hasil dirilis</Badge>
           <h2>{result.packageTitle}</h2>
-          <strong className="tryout-result-score">{result.score}</strong>
+          <strong className="tryout-result-score">{result.score ?? 'Tidak tersedia'}</strong>
+          {result.mode && result.mode !== 'DEMO' && (
+            <p>
+              Mode {result.mode} - versi publikasi {result.publicationVersion}
+            </p>
+          )}
           <p>
             {result.correctCount} dari {result.questionCount} benar
           </p>
