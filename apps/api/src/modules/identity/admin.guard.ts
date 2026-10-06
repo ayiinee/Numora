@@ -49,6 +49,10 @@ export class AdminGuard implements CanActivate {
     }
     request.adminId = profile.id;
     request.adminRole = profile.adminRole as AdminRole;
+    context
+      .switchToHttp()
+      .getResponse<{ setHeader(name: string, value: string): void }>()
+      .setHeader('X-Numora-Admin-Role', request.adminRole);
     return true;
   }
 }

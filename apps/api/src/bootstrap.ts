@@ -25,6 +25,7 @@ export function configureApplication(app: INestApplication) {
   app.enableCors({
     origin: allowedOrigins,
     credentials: true,
+    exposedHeaders: ['X-Numora-Admin-Role'],
   });
 
   const document = createOpenApiDocument(app);

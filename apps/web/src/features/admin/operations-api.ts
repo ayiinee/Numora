@@ -2,7 +2,9 @@ import { apiRequest } from '@/lib/api';
 import type {
   AdminClassDto,
   AdminClassListDto,
-  AdminUserDto,
+  AdminUserDetailDto,
+  AdminMembershipsDto,
+  AdminRosterDto,
   AdminUserListDto,
 } from './generated-types';
 
@@ -19,11 +21,32 @@ function queryString(values: Record<string, string | number | undefined>) {
 
 export const listAdminUsers = (
   token: string,
-  filters: { offset: number; search?: string; role?: string; status?: string },
+  filters: {
+    offset: number;
+    search?: string;
+    role?: string;
+    status?: string;
+    affiliation?: string;
+    schoolId?: string;
+  },
 ) => apiRequest<AdminUserListDto>(`admin/users${queryString(filters)}`, token);
 
 export const getAdminUser = (token: string, userId: string) =>
-  apiRequest<AdminUserDto>(`admin/users/${encodeURIComponent(userId)}`, token);
+  apiRequest<AdminUserDetailDto>(`admin/users/${encodeURIComponent(userId)}`, token);
+export const getAdminMemberships = (token: string, userId: string, offset = 0) =>
+  apiRequest<AdminMembershipsDto>(
+    `admin/users/${encodeURIComponent(userId)}/memberships${queryString({ offset })}`,
+    token,
+  );
+export const getAdminRoster = (
+  token: string,
+  classId: string,
+  filters: { offset: number; state?: string; search?: string },
+) =>
+  apiRequest<AdminRosterDto>(
+    `admin/classes/${encodeURIComponent(classId)}/roster${queryString(filters)}`,
+    token,
+  );
 
 export const listAdminClasses = (
   token: string,

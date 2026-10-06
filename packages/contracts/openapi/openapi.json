@@ -1285,6 +1285,41 @@
         "operationId": "AdminSchoolsController_list",
         "parameters": [
           {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "authorization",
             "required": true,
             "in": "header",
@@ -1350,6 +1385,39 @@
       }
     },
     "/api/v1/admin/schools/{schoolId}": {
+      "get": {
+        "operationId": "AdminSchoolsController_detail",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      },
       "patch": {
         "operationId": "AdminSchoolsController_update",
         "parameters": [
@@ -1404,6 +1472,33 @@
             "in": "path",
             "schema": {
               "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
             }
           }
         ],
@@ -3305,6 +3400,27 @@
             }
           },
           {
+            "name": "schoolId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "affiliation",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "MANDIRI",
+                "SCHOOL"
+              ]
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -3379,7 +3495,151 @@
             "content": {
               "application/json": {
                 "schema": {
-                  "$ref": "#/components/schemas/AdminUserDto"
+                  "$ref": "#/components/schemas/AdminUserDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/v1/admin/users/{userId}/memberships": {
+      "get": {
+        "operationId": "AdminOperationsController_memberships",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminMembershipsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
+    "/api/v1/admin/classes/{classId}/roster": {
+      "get": {
+        "operationId": "AdminOperationsController_roster",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "former"
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminRosterDto"
                 }
               }
             }
@@ -3955,6 +4215,151 @@
         ],
         "tags": [
           "admin-accounts"
+        ]
+      }
+    },
+    "/api/v1/admin/structures/schools": {
+      "get": {
+        "operationId": "AdminStructuresController_schools",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStructureSchoolsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-structures"
+        ]
+      }
+    },
+    "/api/v1/admin/structures/classes": {
+      "get": {
+        "operationId": "AdminStructuresController_classes",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "schoolId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "state",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "active",
+                "archived"
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminStructureClassesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-structures"
         ]
       }
     },
@@ -6724,6 +7129,10 @@
           "left"
         ]
       },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
       "AdminSchoolDto": {
         "type": "object",
         "properties": {
@@ -6737,6 +7146,10 @@
           "name": {
             "type": "string"
           },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -6749,6 +7162,7 @@
           "id",
           "code",
           "name",
+          "address",
           "status"
         ]
       },
@@ -6760,15 +7174,24 @@
             "items": {
               "$ref": "#/components/schemas/AdminSchoolDto"
             }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextOffset"
         ]
       },
       "CreateSchoolDto": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "maxLength": 500
+          },
           "code": {
             "type": "string",
             "minLength": 2,
@@ -6788,6 +7211,11 @@
       "UpdateSchoolDto": {
         "type": "object",
         "properties": {
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -6820,13 +7248,38 @@
           "revokedAt": {
             "type": "string",
             "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "usedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "EXPIRED",
+              "USED",
+              "REVOKED"
+            ]
           }
         },
         "required": [
           "id",
           "expiresAt",
           "usedAt",
-          "revokedAt"
+          "revokedAt",
+          "createdAt",
+          "usedByUserId",
+          "usedByName",
+          "status"
         ]
       },
       "TokenListDto": {
@@ -6837,10 +7290,15 @@
             "items": {
               "$ref": "#/components/schemas/TokenSummaryDto"
             }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
-          "items"
+          "items",
+          "nextOffset"
         ]
       },
       "TokenDto": {
@@ -7216,10 +7674,6 @@
             ]
           }
         }
-      },
-      "Object": {
-        "type": "object",
-        "properties": {}
       },
       "ContentOptionDto": {
         "type": "object",
@@ -8727,6 +9181,196 @@
           "nextOffset"
         ]
       },
+      "AdminUserDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "TEACHER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "email": {
+            "type": "string"
+          },
+          "affiliation": {
+            "type": "string",
+            "enum": [
+              "MANDIRI",
+              "SCHOOL"
+            ],
+            "nullable": true
+          },
+          "teacherVerified": {
+            "type": "boolean",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "role",
+          "status",
+          "createdAt",
+          "email",
+          "affiliation",
+          "teacherVerified"
+        ]
+      },
+      "AdminMembershipDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "schoolName": {
+            "type": "string"
+          },
+          "classId": {
+            "type": "string",
+            "nullable": true
+          },
+          "className": {
+            "type": "string",
+            "nullable": true
+          },
+          "startedAt": {
+            "type": "string"
+          },
+          "endedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "active": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "schoolId",
+          "schoolName",
+          "classId",
+          "className",
+          "startedAt",
+          "endedAt",
+          "active"
+        ]
+      },
+      "AdminMembershipsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminMembershipDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "AdminRosterMemberDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          },
+          "role": {
+            "type": "string",
+            "enum": [
+              "STUDENT",
+              "TEACHER",
+              "ADMIN"
+            ]
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "DISABLED"
+            ]
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "membershipId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "joinedAt": {
+            "type": "string"
+          },
+          "leftAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "displayName",
+          "role",
+          "status",
+          "createdAt",
+          "membershipId",
+          "joinedAt",
+          "leftAt"
+        ]
+      },
+      "AdminRosterDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminRosterMemberDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
       "AdminClassDto": {
         "type": "object",
         "properties": {
@@ -8753,6 +9397,9 @@
             "type": "string",
             "nullable": true
           },
+          "teacherActive": {
+            "type": "boolean"
+          },
           "studentCount": {
             "type": "number"
           },
@@ -8773,6 +9420,7 @@
           "schoolName",
           "teacherId",
           "teacherName",
+          "teacherActive",
           "studentCount",
           "createdAt",
           "archivedAt"
@@ -9005,6 +9653,126 @@
           "email",
           "displayName",
           "adminRole"
+        ]
+      },
+      "AdminStructureSchoolDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          },
+          "classCount": {
+            "type": "number"
+          },
+          "activeTeacherCount": {
+            "type": "number"
+          },
+          "studentCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "code",
+          "status",
+          "classCount",
+          "activeTeacherCount",
+          "studentCount"
+        ]
+      },
+      "AdminStructureSchoolsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminStructureSchoolDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "AdminStructureClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          },
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "schoolName": {
+            "type": "string"
+          },
+          "studentCount": {
+            "type": "number"
+          },
+          "teacherActive": {
+            "type": "boolean"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "archivedAt": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "schoolId",
+          "schoolName",
+          "studentCount",
+          "teacherActive",
+          "createdAt",
+          "archivedAt"
+        ]
+      },
+      "AdminStructureClassesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminStructureClassDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
         ]
       },
       "AdminReportDto": {

@@ -5,11 +5,12 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, eq, gt, inArray, isNull, sql } from 'drizzle-orm';
+import { and, desc, eq, gt, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import {
   auditLogs,
   getDatabase,
   schools,
+  users,
   teacherSchoolMemberships,
   teacherVerificationTokens,
 } from '@tka/database';
@@ -238,23 +239,56 @@ export class SchoolsService {
     });
   }
 
-  async listForAdmin(authorization?: string) {
+  async listForAdmin(
+    authorization?: string,
+    query: { limit: number; offset: number; search?: string } = { limit: 20, offset: 0 },
+  ) {
     await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
+    const rows = await db
+      .select({
+        id: schools.id,
+        code: schools.code,
+        name: schools.name,
+        address: schools.address,
+        status: schools.status,
+      })
+      .from(schools)
+      .where(
+        query.search
+          ? or(ilike(schools.name, `%${query.search}%`), ilike(schools.code, `%${query.search}%`))
+          : undefined,
+      )
+      .orderBy(schools.name, schools.id)
+      .limit(query.limit + 1)
+      .offset(query.offset);
     return {
-      items: await db
-        .select({
-          id: schools.id,
-          code: schools.code,
-          name: schools.name,
-          status: schools.status,
-        })
-        .from(schools)
-        .orderBy(schools.name),
+      items: rows.slice(0, query.limit),
+      nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
     };
   }
+  async schoolForAdmin(authorization: string | undefined, id: string) {
+    await this.role(authorization, 'ADMIN');
+    const [row] = await getDatabase()
+      .db.select({
+        id: schools.id,
+        code: schools.code,
+        name: schools.name,
+        address: schools.address,
+        status: schools.status,
+      })
+      .from(schools)
+      .where(eq(schools.id, id));
+    if (!row) throw new NotFoundException('Sekolah tidak ditemukan.');
+    return row;
+  }
 
-  async createSchool(authorization: string | undefined, code: string, name: string) {
+  async createSchool(
+    authorization: string | undefined,
+    code: string,
+    name: string,
+    address?: string,
+  ) {
     const adminId = await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
     try {
@@ -264,11 +298,13 @@ export class SchoolsService {
           .values({
             code: code.trim().toUpperCase(),
             name: name.trim(),
+            address: address?.trim() || null,
           })
           .returning({
             id: schools.id,
             code: schools.code,
             name: schools.name,
+            address: schools.address,
             status: schools.status,
           });
         await tx.insert(auditLogs).values({
@@ -292,7 +328,7 @@ export class SchoolsService {
   async updateSchool(
     authorization: string | undefined,
     schoolId: string,
-    input: { name?: string; status?: 'ACTIVE' | 'INACTIVE' },
+    input: { name?: string; address?: string | null; status?: 'ACTIVE' | 'INACTIVE' },
   ) {
     const adminId = await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
@@ -301,6 +337,7 @@ export class SchoolsService {
         .update(schools)
         .set({
           ...(input.name !== undefined ? { name: input.name.trim() } : {}),
+          ...(input.address !== undefined ? { address: input.address?.trim() || null } : {}),
           ...(input.status !== undefined ? { status: input.status } : {}),
           updatedAt: new Date(),
         })
@@ -309,6 +346,7 @@ export class SchoolsService {
           id: schools.id,
           code: schools.code,
           name: schools.name,
+          address: schools.address,
           status: schools.status,
         });
       if (!school)
@@ -321,13 +359,21 @@ export class SchoolsService {
         action: 'school_updated',
         entityType: 'school',
         entityId: schoolId,
-        metadata: { nameChanged: input.name !== undefined, status: input.status },
+        metadata: {
+          nameChanged: input.name !== undefined,
+          addressChanged: input.address !== undefined,
+          status: input.status,
+        },
       });
       return school;
     });
   }
 
-  async listTokens(authorization: string | undefined, schoolId: string) {
+  async listTokens(
+    authorization: string | undefined,
+    schoolId: string,
+    query = { limit: 20, offset: 0 },
+  ) {
     await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
     const items = await db
@@ -336,10 +382,30 @@ export class SchoolsService {
         expiresAt: teacherVerificationTokens.expiresAt,
         usedAt: teacherVerificationTokens.usedAt,
         revokedAt: teacherVerificationTokens.revokedAt,
+        createdAt: teacherVerificationTokens.createdAt,
+        usedByUserId: teacherVerificationTokens.usedByUserId,
+        usedByName: users.displayName,
       })
       .from(teacherVerificationTokens)
-      .where(eq(teacherVerificationTokens.schoolId, schoolId));
-    return { items };
+      .leftJoin(users, eq(users.id, teacherVerificationTokens.usedByUserId))
+      .where(eq(teacherVerificationTokens.schoolId, schoolId))
+      .orderBy(desc(teacherVerificationTokens.createdAt), desc(teacherVerificationTokens.id))
+      .limit(query.limit + 1)
+      .offset(query.offset);
+    return {
+      items: items.slice(0, query.limit).map((row) => ({
+        ...row,
+        createdAt: row.createdAt.toISOString(),
+        status: row.usedAt
+          ? 'USED'
+          : row.revokedAt
+            ? 'REVOKED'
+            : row.expiresAt <= new Date()
+              ? 'EXPIRED'
+              : 'AVAILABLE',
+      })),
+      nextOffset: items.length > query.limit ? query.offset + query.limit : null,
+    };
   }
 
   async revokeToken(authorization: string | undefined, schoolId: string, tokenId: string) {

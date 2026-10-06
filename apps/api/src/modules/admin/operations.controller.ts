@@ -15,10 +15,14 @@ import {
   AdminClassDto,
   AdminClassListDto,
   AdminClassQueryDto,
-  AdminUserDto,
   AdminUserListDto,
   AdminUserQueryDto,
+  AdminUserDetailDto,
+  AdminMembershipsDto,
+  AdminRosterDto,
+  AdminRosterQueryDto,
 } from './operations.dto';
+import { ContentPageDto } from '../content/content.dto';
 import { AdminOperationsService } from './operations.service';
 
 @ApiTags('admin-operations')
@@ -36,9 +40,22 @@ export class AdminOperationsController {
     return this.operations.users(query, request.adminRole);
   }
   @Get('users/:userId')
-  @ApiOkResponse({ type: AdminUserDto })
+  @ApiOkResponse({ type: AdminUserDetailDto })
   user(@Req() request: AdminRequest, @Param('userId', ParseUUIDPipe) id: string) {
     return this.operations.user(id, request.adminRole);
+  }
+  @Get('users/:userId/memberships') @ApiOkResponse({ type: AdminMembershipsDto }) memberships(
+    @Req() request: AdminRequest,
+    @Param('userId', ParseUUIDPipe) id: string,
+    @Query() query: ContentPageDto,
+  ) {
+    return this.operations.memberships(id, request.adminRole, query);
+  }
+  @Get('classes/:classId/roster') @ApiOkResponse({ type: AdminRosterDto }) roster(
+    @Param('classId', ParseUUIDPipe) id: string,
+    @Query() query: AdminRosterQueryDto,
+  ) {
+    return this.operations.roster(id, query);
   }
   @Get('classes')
   @ApiOkResponse({ type: AdminClassListDto })

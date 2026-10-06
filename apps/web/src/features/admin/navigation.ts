@@ -39,7 +39,7 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       description: 'Invite internal dan kelola assignment serta status akun.',
       icon: 'users',
     });
-  if (profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'OPERATIONS') {
+  if (profile.capabilities?.includes('OPERATIONS_MANAGE')) {
     items.push(
       {
         href: '/admin/schools',
@@ -55,6 +55,16 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       },
     );
   }
+  if (
+    profile.capabilities?.includes('OPERATIONS_LIMITED_READ') &&
+    !profile.capabilities.includes('OPERATIONS_MANAGE')
+  )
+    items.push({
+      href: '/admin/structures',
+      label: 'Struktur sekolah & kelas',
+      description: 'Lihat struktur serta aggregate anggota tanpa data individual.',
+      icon: 'school',
+    });
   if (profile.capabilities?.includes('CONTENT_MANAGE')) {
     items.push(
       {

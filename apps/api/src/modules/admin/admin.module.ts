@@ -10,6 +10,8 @@ import {
 } from './accounts.controller';
 import { AdminAccountsService } from './accounts.service';
 import { AdminAuthProvider } from './admin-auth.provider';
+import { AdminStructuresController } from './structures.controller';
+import { AdminStructuresService } from './structures.service';
 @Module({
   imports: [IdentityModule],
   controllers: [
@@ -17,7 +19,14 @@ import { AdminAuthProvider } from './admin-auth.provider';
     AdminOperationsController,
     AdminAccountsController,
     AdminInvitationAcceptanceController,
+    AdminStructuresController,
   ],
-  providers: [AdminService, AdminOperationsService, AdminAccountsService, AdminAuthProvider],
+  providers: [
+    AdminService,
+    AdminOperationsService,
+    AdminAccountsService,
+    AdminAuthProvider,
+    AdminStructuresService,
+  ],
 })
 export class AdminModule {}

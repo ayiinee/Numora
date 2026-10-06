@@ -35,6 +35,24 @@ export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "num
 
 export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
+export type AdminUserDetailDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; "email": string; "affiliation": "MANDIRI" | "SCHOOL" | null; "teacherVerified": boolean | null; };
+
+export type AdminMembershipDto = { "id": string; "schoolId": string; "schoolName": string; "classId": string | null; "className": string | null; "startedAt": string; "endedAt": string | null; "active": boolean; };
+
+export type AdminMembershipsDto = { "items": (AdminMembershipDto)[]; "nextOffset": number | null; };
+
+export type AdminRosterMemberDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; "membershipId": string; "joinedAt": string; "leftAt": string | null; };
+
+export type AdminRosterDto = { "items": (AdminRosterMemberDto)[]; "nextOffset": number | null; };
+
+export type AdminStructureSchoolDto = { "id": string; "name": string; "code": string; "status": "ACTIVE" | "INACTIVE"; "classCount": number; "activeTeacherCount": number; "studentCount": number; };
+
+export type AdminStructureSchoolsDto = { "items": (AdminStructureSchoolDto)[]; "nextOffset": number | null; };
+
+export type AdminStructureClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "studentCount": number; "teacherActive": boolean; "createdAt": string; "archivedAt": string | null; };
+
+export type AdminStructureClassesDto = { "items": (AdminStructureClassDto)[]; "nextOffset": number | null; };
+
 export type AdminAccountDto = { "id": string; "displayName": string; "email": string; "adminRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
 export type AdminAccountsDto = { "items": (AdminAccountDto)[]; "nextOffset": number | null; };
@@ -51,7 +69,7 @@ export type UpdateAdminAccountDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS"
 
 export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; };
 
-export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
+export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "teacherActive": boolean; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
 
 export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": number | null; };
 
