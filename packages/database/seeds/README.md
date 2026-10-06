@@ -1,5 +1,11 @@
 # Learning redesign DEMO seed
 
+## Master kurikulum terpisah
+
+`curriculum-master.json` memuat empat bab dan sepuluh subbab dari draf Curriculum, terpisah dari seluruh konten DEMO di bawah. Seeder `db:seed:curriculum` mendukung `--dry-run` (default, offline), `--check` (baca Cloud), dan `--apply` (INSERT DRAFT atomik). Lihat [acuan kode dan panduan](../../../docs/data/CURRICULUM_MASTER_SEED.md). Tidak berjalan otomatis bersama seed DEMO atau migrasi.
+
+**ENGINEERING DECISION — disetujui Reyhan, 6 Oktober 2026:** manifest ini menjadi acuan identitas bab/subbab pada spreadsheet dan JSON. Pengisi spreadsheet memakai kode master; backend menyelesaikan kode menjadi UUID database. Persetujuan acuan tidak berarti seeder sudah dijalankan atau konten telah berstatus READY.
+
 **ENGINEERING DECISION — 3 October 2026:** the project owner explicitly authorized additive Supabase testing content during Phase 3. This is separate from the presentation changes; it does not approve new product rules or schema changes.
 
 `redesign-learning.sql` creates one separate `DEMO-UI-ALJABAR` chapter, one subchapter, one competency, five levels, 50 question families, two equivalent variants per family, and ten DEMO Drill packages. Each package contains ten single-answer questions. The 100 question versions include four distinct options, a rotating correct option and a mathematical explanation. Questions exercise perfect-square constants and difference-of-squares identities.
