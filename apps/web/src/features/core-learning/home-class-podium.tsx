@@ -33,9 +33,10 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
       <div className="sh-class__card">
         {!data.class ? (
           <EmptyState
+            compact
             icon={<Icon name="school" />}
             title="Belajar mandiri"
-            description="Gabung kelas dengan kode dari guru jika ingin melihat peringkat kelas. Belajar tetap bisa dilanjutkan."
+            description="Gabung dengan kode guru untuk melihat peringkat kelas."
             action={
               <Link href="/student/profile" className="section-link">
                 Gabung kelas (opsional) <Icon name="arrow" width={16} height={16} />
@@ -43,11 +44,12 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
             }
           />
         ) : pendingPolicy || ranking.data?.available === false ? (
-          <div className="sh-class__state">
-            <Icon name="trophy" width={30} height={30} />
-            <strong>Peringkat belum tersedia</strong>
-            <p>Progres belajarmu tetap tersimpan.</p>
-          </div>
+          <EmptyState
+            compact
+            icon={<Icon name="trophy" />}
+            title="Peringkat belum tersedia"
+            description="Progres belajarmu tetap tersimpan."
+          />
         ) : ranking.isPending ? (
           <div role="status" aria-label="Memuat peringkat kelas">
             <Skeleton height={160} />
@@ -91,6 +93,7 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
               </>
             ) : (
               <EmptyState
+                compact
                 icon={<Icon name="trophy" />}
                 title="Peringkat masih kosong"
                 description="Peringkat akan tampil ketika data kelas tersedia."
