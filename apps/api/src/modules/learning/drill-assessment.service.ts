@@ -40,6 +40,7 @@ import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
+import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
 import {
   decodeSingleChoiceVersion,
   DRILL_POLICY_CODE,
@@ -130,6 +131,7 @@ export class DrillAssessmentService {
           scoringPolicyVersionId: assessmentPackages.scoringPolicyVersionId,
           policyCode: scoringPolicyVersions.policyCode,
           policyVersion: scoringPolicyVersions.version,
+          policyConfiguration: scoringPolicyVersions.configuration,
         })
         .from(assessmentPackages)
         .innerJoin(
@@ -150,6 +152,7 @@ export class DrillAssessmentService {
       const packages = availablePackages.filter(
         (item) =>
           item.isDemo ||
+          allowsChapter3Override(item) ||
           (item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION),
       );
       if (!packages.length)
@@ -203,11 +206,12 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill harus berisi 10 soal bernilai satu poin.'),
         );
-      if (items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
+      const ownerOverride = allowsChapter3Override(selected);
+      if (!ownerOverride && items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
         throw new ServiceUnavailableException(
           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
-      items.forEach(decodeSingleChoiceVersion);
+      items.forEach(ownerOverride ? decodeAssessmentContent : decodeSingleChoiceVersion);
       if (
         items.some(
           (item) =>
@@ -443,6 +447,21 @@ export class DrillAssessmentService {
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
       if (!attempt.levelIdAtStart) throw new Error('Drill attempt level is missing.');
+      const [pinnedPolicy] = await tx
+        .select({
+          id: assessmentPackages.id,
+          policyCode: scoringPolicyVersions.policyCode,
+          policyVersion: scoringPolicyVersions.version,
+          policyConfiguration: scoringPolicyVersions.configuration,
+        })
+        .from(assessmentPackages)
+        .innerJoin(assessmentAttempts, eq(assessmentAttempts.packageId, assessmentPackages.id))
+        .innerJoin(
+          scoringPolicyVersions,
+          eq(scoringPolicyVersions.id, assessmentAttempts.scoringPolicyVersionId),
+        )
+        .where(eq(assessmentAttempts.id, attemptId));
+      const ownerOverride = !!pinnedPolicy && allowsChapter3Override(pinnedPolicy);
 
       const rows = await tx
         .select({
@@ -463,17 +482,29 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill tidak lengkap.'),
         );
-      if (rows.some((row) => row.questionType !== 'SINGLE_CHOICE'))
+      if (!ownerOverride && rows.some((row) => row.questionType !== 'SINGLE_CHOICE'))
         throw new ServiceUnavailableException(
           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
       const graded = rows.map((row) => {
+        if (ownerOverride) {
+          const grade = gradeChapter3Answer(decodeAssessmentContent(row), row.answer);
+          return { ...row, ...grade, correct: grade.fullyCorrect };
+        }
         const content = decodeSingleChoiceVersion(row);
         const correct = selectedOptionId(row.answer) === content.correctOptionId;
-        return { ...row, correct, awardedPoints: correct ? Number(row.maxPoints) : 0 };
+        return {
+          ...row,
+          correct,
+          awardedPoints: correct ? Number(row.maxPoints) : 0,
+          equivalent: Number(correct),
+          scoreCategory: undefined,
+          fullyCorrect: undefined,
+          responseState: undefined,
+        };
       });
-      const correctCount = graded.filter((item) => item.correct).length;
-      const scored = scoreDrill(correctCount, graded.length, attempt.drillPolicyVersion);
+      const correctEquivalent = graded.reduce((sum, item) => sum + item.equivalent, 0);
+      const scored = scoreDrill(correctEquivalent, graded.length, attempt.drillPolicyVersion);
       const [level] = await tx
         .select()
         .from(levels)
@@ -496,7 +527,7 @@ export class DrillAssessmentService {
       const now = await databaseTime(tx);
       const reward =
         attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION
-          ? drillReward(correctCount, graded.length, attempt.startedAt, now)
+          ? drillReward(correctEquivalent, graded.length, attempt.startedAt, now, ownerOverride)
           : null;
       for (const item of graded) {
         await tx
@@ -507,10 +538,19 @@ export class DrillAssessmentService {
             savedAt: now,
             awardedPoints: String(item.awardedPoints),
             gradedAt: now,
+            scoreCategory: item.scoreCategory,
+            fullyCorrect: item.fullyCorrect,
+            responseState: item.responseState,
           })
           .onConflictDoUpdate({
             target: attemptAnswers.attemptItemId,
-            set: { awardedPoints: String(item.awardedPoints), gradedAt: now },
+            set: {
+              awardedPoints: String(item.awardedPoints),
+              gradedAt: now,
+              scoreCategory: item.scoreCategory,
+              fullyCorrect: item.fullyCorrect,
+              responseState: item.responseState,
+            },
           });
       }
       await tx
@@ -518,7 +558,7 @@ export class DrillAssessmentService {
         .set({
           status: 'GRADED',
           finishedAt: now,
-          rawPoints: String(correctCount),
+          rawPoints: String(graded.reduce((sum, item) => sum + item.awardedPoints, 0)),
           score0To100: String(scored.score),
           stars: scored.stars,
           unlockedLevelId: next?.id ?? null,
@@ -605,7 +645,10 @@ export class DrillAssessmentService {
           eventName: 'drill_submitted',
           submissionType: 'manual',
           questionCount: rows.length,
-          answeredCount: rows.filter((row) => selectedOptionId(row.answer) !== null).length,
+          answeredCount: rows.filter(
+            (row) =>
+              normalizeAssessmentAnswer(decodeAssessmentContent(row), row.answer ?? null) !== null,
+          ).length,
         },
         now,
       );
