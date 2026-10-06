@@ -1,3 +1,5 @@
+**ENGINEERING DECISION - owner approved, 7 October 2026:** new PvP rooms randomly draw ten distinct READY Drill question families across all chapters at the difficulty selected in PvP. Admin review or existing CONTENT_VALID evidence, valid difficulty/content and READY hierarchy replace separate PvP-package approval for both DEMO and official modes. No additional question marker/UI choice or automatic content publication is introduced. Per-room immutable packages preserve retry/reconnect and history. [Source, compatibility and QA](../development/PVP_RANDOM_DRILL_BANK.md).
+
 # JOB-16 / JOB-17 — PvP activation and valid leaderboards
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** initial staging uses labelled DEMO matches. Official activation waits for Curriculum-approved content/difficulty. This specification supersedes fixture-only OPEN-07 treatment and historical Top 20/tie proposals.
@@ -15,7 +17,7 @@
 
 ## Interfaces and activation
 
-Server-only `PVP_MODE=disabled|demo|official` defaults disabled. Resolve published `PVP_PRD_V06`, never test fixtures. Official non-DEMO packages require Curriculum approval bound to their manifest. Availability and create share per-difficulty package validation and scheduler readiness. Add active-room recovery, leaderboard period listing/optional periodId, staleness/mode/rank provenance; regenerate REST/WebSocket contracts.
+Server-only `PVP_MODE=disabled|demo|official` defaults disabled. Resolve published `PVP_PRD_V06`, never test fixtures. New rooms in both modes use reviewed READY Drill content and a generated frozen per-room package as specified in [the random bank decision](PVP_RANDOM_DRILL_BANK.md). Availability and create share bank eligibility and scheduler readiness. Add active-room recovery, leaderboard period listing/optional periodId, staleness/mode/rank provenance; regenerate REST/WebSocket contracts.
 
 ## Delivery
 
