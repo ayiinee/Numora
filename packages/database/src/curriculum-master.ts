@@ -227,12 +227,13 @@ export async function seedCurriculumMaster(db: CurriculumDatabase, master: Curri
     await tx.query('LOCK TABLE public.chapters, public.subchapters IN SHARE ROW EXCLUSIVE MODE');
     const plan = await readCurriculumPlan(tx, master);
     if (plan.conflicts.length) throw new CurriculumConflict(plan.conflicts);
+    // Bind serialized JSON as text so the driver's JSON codec cannot encode it a second time.
     if (plan.newChapters.length)
       await tx.query(
         `INSERT INTO public.chapters
       (code,slug,name,material_category,display_order,status)
       SELECT code,slug,name,"materialCategory","displayOrder",'DRAFT'
-      FROM jsonb_to_recordset($1::jsonb) AS seed(code text,slug text,name text,
+      FROM jsonb_to_recordset($1::text::jsonb) AS seed(code text,slug text,name text,
         "materialCategory" text,"displayOrder" integer)`,
         [JSON.stringify(plan.newChapters)],
       );
@@ -241,7 +242,7 @@ export async function seedCurriculumMaster(db: CurriculumDatabase, master: Curri
         `INSERT INTO public.subchapters
       (chapter_id,code,slug,name,display_order,status)
       SELECT c.id,s.code,s.slug,s.name,s."displayOrder",'DRAFT'
-      FROM jsonb_to_recordset($1::jsonb) AS s("chapterCode" text,code text,slug text,name text,"displayOrder" integer)
+      FROM jsonb_to_recordset($1::text::jsonb) AS s("chapterCode" text,code text,slug text,name text,"displayOrder" integer)
       JOIN public.chapters c ON c.code=s."chapterCode"`,
         [JSON.stringify(plan.newSubchapters)],
       );
