@@ -32,7 +32,12 @@ export class LearningCatalogService {
       .where(eq(chapters.status, 'READY'))
       .orderBy(asc(chapters.displayOrder));
     return {
-      chapters: rows.map((row) => ({ id: row.id, slug: row.slug, title: row.name, order: row.displayOrder })),
+      chapters: rows.map((row) => ({
+        id: row.id,
+        slug: row.slug,
+        title: row.name,
+        order: row.displayOrder,
+      })),
     };
   }
 
@@ -51,7 +56,12 @@ export class LearningCatalogService {
       .where(and(eq(subchapters.chapterId, chapterId), eq(subchapters.status, 'READY')))
       .orderBy(asc(subchapters.displayOrder));
     return {
-      chapter: { id: chapter.id, slug: chapter.slug, title: chapter.name, order: chapter.displayOrder },
+      chapter: {
+        id: chapter.id,
+        slug: chapter.slug,
+        title: chapter.name,
+        order: chapter.displayOrder,
+      },
       subchapters: children.map((row) => ({
         id: row.id,
         slug: row.slug,
@@ -75,11 +85,13 @@ export class LearningCatalogService {
       })
       .from(subchapters)
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
-      .where(and(
-        eq(subchapters.id, subchapterId),
-        eq(subchapters.status, 'READY'),
-        eq(chapters.status, 'READY'),
-      ))
+      .where(
+        and(
+          eq(subchapters.id, subchapterId),
+          eq(subchapters.status, 'READY'),
+          eq(chapters.status, 'READY'),
+        ),
+      )
       .limit(1);
     if (!subchapter)
       throw new NotFoundException(problem('SUBCHAPTER_NOT_FOUND', 'Subbab tidak ditemukan.'));
@@ -95,13 +107,15 @@ export class LearningCatalogService {
     const attempts = await db
       .select({ levelId: assessmentAttempts.levelIdAtStart })
       .from(assessmentAttempts)
-      .where(and(
-        eq(assessmentAttempts.studentId, studentId),
-        eq(assessmentAttempts.assessmentType, 'DRILL'),
-        eq(assessmentAttempts.status, 'IN_PROGRESS'),
-      ));
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.status, 'IN_PROGRESS'),
+        ),
+      );
     const byLevel = new Map(progress.map((row) => [row.levelId, row]));
-    const active = new Set(attempts.flatMap((row) => row.levelId ? [row.levelId] : []));
+    const active = new Set(attempts.flatMap((row) => (row.levelId ? [row.levelId] : [])));
     return {
       subchapter: {
         id: subchapter.id,
@@ -127,6 +141,7 @@ export class LearningCatalogService {
           status,
           latestScore: state?.latestScore ?? null,
           bestScore: state?.bestScore ?? null,
+          latestStars: state?.latestStars ?? null,
         };
       }),
     };
@@ -144,11 +159,13 @@ export class LearningCatalogService {
       .from(levels)
       .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
       .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
-      .where(and(
-        eq(levels.status, 'READY'),
-        eq(subchapters.status, 'READY'),
-        eq(chapters.status, 'READY'),
-      ));
+      .where(
+        and(
+          eq(levels.status, 'READY'),
+          eq(subchapters.status, 'READY'),
+          eq(chapters.status, 'READY'),
+        ),
+      );
     const done = await db
       .select({ levelId: levelProgress.levelId })
       .from(levelProgress)
@@ -156,18 +173,21 @@ export class LearningCatalogService {
     const [latest] = await db
       .select({ score: assessmentAttempts.score0To100 })
       .from(assessmentAttempts)
-      .where(and(
-        eq(assessmentAttempts.studentId, studentId),
-        eq(assessmentAttempts.assessmentType, 'DRILL'),
-        eq(assessmentAttempts.status, 'GRADED'),
-      ))
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.assessmentType, 'DRILL'),
+          eq(assessmentAttempts.status, 'GRADED'),
+        ),
+      )
       .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
       .limit(1);
     const publishedIds = new Set(published.map((row) => row.id));
     return {
       completedLevels: done.filter((row) => publishedIds.has(row.levelId)).length,
       totalLevels: published.length,
-      latestScore: latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
+      latestScore:
+        latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
     };
   }
 }

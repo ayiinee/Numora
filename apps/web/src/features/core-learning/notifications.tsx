@@ -36,10 +36,7 @@ const icons: Record<string, IconName> = {
 function destination(action: NotificationActionDto): { href: string; label: string } | null {
   if (!action.enabled) return null;
   if (action.type === 'feedback' && action.feedbackId)
-    return {
-      href: `/student/feedback#feedback-${action.feedbackId}`,
-      label: 'Buka Feedback dari Guru',
-    };
+    return { href: `/student/feedback#feedback-${action.feedbackId}`, label: 'Buka Feedback dari Guru' };
   if (action.type === 'tryout') return { href: '/student/tryout', label: 'Buka Paket Tryout' };
   if (action.type === 'result' && action.attemptId)
     return { href: `/student/tryout/${action.attemptId}/result`, label: 'Lihat Hasil Tryout' };

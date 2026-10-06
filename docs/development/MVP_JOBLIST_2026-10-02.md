@@ -166,6 +166,8 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-05 — Tutup gap Drill session/result terhadap PRD terbaru
 
+- **Engineering update — 5 October 2026:** v0.6 single-package retry, latest stars/score, 0 stars, result XP, scoped level history, server-time count-up, every unfinished-exit confirmation and new explanations without expiry implemented with prospective policy pins. Saved/offline recovery retained. [Rules and acceptance](DRILL_V06_REWARDS.md); older conflicting requirements below are historical. Curriculum/trial/independent QA remain gates.
+
 - **Owner:** Ferdi frontend; Aini domain/policy; Avicenna history integration; Salim QA. **Asal:** LAMA-02,04,06,16; gap baru PRD.
 - **Kerjakan:** Retry langsung dari hasil gagal/completed, detail/history level, warning refresh/exit saat risiko data hilang, failed-save/retry/session lost, count-up tanpa pause/deadline. Representasikan XP/star/retensi pending sesuai keputusan; jangan menjanjikan 90 hari/rentang bintang sebagai rule terbaru. Durasi reward dari server, bukan jam UI.
 - **Output:** UI/result contract jujur tentang policy dan state yang tersedia, retry memakai attempt baru, history terpisah, best score monotonic dan unlock permanen.
@@ -225,8 +227,10 @@ Urutan JOB adalah prioritas nominal. Pekerjaan yang independen dapat paralel; de
 
 ### JOB-11 — Posting XP durable dan idempotent
 
+- **Engineering update — 5 October 2026:** Drill v0.6 base correct×10, speed bonus/cap150 and nearest-integer final XP implemented atomically/idempotently with ledger/outbox and persisted result details; no legacy backfill. [Rules and acceptance](DRILL_V06_REWARDS.md). Aini resolved TryOut multiplier as ×10; current PG path now posts XP on completion with prospective pins, immutable ledger and waiting/result/history UI. [TryOut scope](TRYOUT_XP_V06.md). PGK rubric/assessment/fractional persistence and leaderboard JOB-17 remain separate; this is not full JOB-11 acceptance.
+
 - **Owner:** Aini ledger/domain; Ferdi result UI; Data/PO formula; Salim consistency QA. **Asal:** LAMA-06,08,13.
-- **Kerjakan:** setelah approval formula, implementasikan XP Drill (base/gagal/bonus eligibility <15 menit) dan TryOut (final-score-only, tanpa speed bonus). Pin policy, satu source per valid attempt/released result, atomic ledger/outbox menurut timing approved; tampilkan pending sebelum valid.
+- **Kerjakan:** pertahankan XP Drill (base/gagal/bonus eligibility <15 menit); TryOut memakai benar ekuivalen ×10 langsung saat selesai, tanpa speed bonus atau menunggu IRT (§12, koreksi Aini atas AC-15). Pin policy, satu source per valid attempt, atomic ledger/outbox. Lengkapi assessment PGK setelah rubrik disetujui dan selaraskan XP pecahan tanpa pembulatan yang belum disepakati.
 - **Output:** API XP result, event/ledger transactional, reconciliation tooling dan regression tests. Consumer outbox yang sudah ada dipakai ulang.
 - **Bukti selesai:** duplicate submit/release/job tidak menggandakan XP; tepat 15 menit tidak eligible bonus Drill; TryOut duration tidak menambah XP; Pretest/PvP tidak masuk ledger XP kelas; perubahan formula tidak merombak XP historis.
 

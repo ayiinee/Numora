@@ -237,7 +237,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
           progressLabel="Tryout terkirim"
           exitHref="/student/tryout"
         />
-        <TryoutWaiting submitted />
+        <TryoutWaiting submitted xp={query.data.xp ?? null} />
       </>
     );
   return (
@@ -329,12 +329,24 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
         ? 15_000
         : false,
   });
+  const waiting = query.isError && query.error instanceof LearningApiError &&
+    query.error.code === 'TRYOUT_RESULT_PENDING';
+  const attempt = useQuery({
+    queryKey: ['tryout-attempt', attemptId],
+    queryFn: () => learningApi.tryoutAttempt(token, attemptId),
+    enabled: waiting,
+  });
   if (
     query.isError &&
     query.error instanceof LearningApiError &&
     query.error.code === 'TRYOUT_RESULT_PENDING'
   )
-    return <TryoutWaiting fetching={query.isFetching} onCheck={() => void query.refetch()} />;
+    return <>
+      {attempt.isError && <Status title="XP belum dapat dimuat">
+        <Button variant="secondary" onClick={() => void attempt.refetch()}>Coba muat XP lagi</Button>
+      </Status>}
+      <TryoutWaiting xp={attempt.data?.xp ?? null} fetching={query.isFetching} onCheck={() => void query.refetch()} />
+    </>;
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />

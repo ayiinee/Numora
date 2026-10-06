@@ -1,5 +1,21 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Post, UseGuards } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiResponse, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsString, Length, Matches } from 'class-validator';
 import { SchoolsService } from './schools.service';
 import { TEACHER_TOKEN_PATTERN } from './teacher-token';
@@ -22,6 +38,9 @@ class VerifyTeacherDto {
 class VerifiedDto {
   @ApiProperty() verified!: boolean;
 }
+class LeftSchoolDto {
+  @ApiProperty() left!: boolean;
+}
 
 @ApiTags('schools')
 @ApiBearerAuth()
@@ -38,7 +57,11 @@ export class SchoolsController {
   @Post(':schoolId/teacher-verifications')
   @CodeAttempt('teacher')
   @UseGuards(CodeAttemptGuard)
-  @ApiResponse({ status: 429, description: 'Attempt limit exceeded.', headers: { 'Retry-After': { schema: { type: 'integer' } } } })
+  @ApiResponse({
+    status: 429,
+    description: 'Attempt limit exceeded.',
+    headers: { 'Retry-After': { schema: { type: 'integer' } } },
+  })
   @ApiResponse({ status: 503, description: 'Attempt limiter unavailable.' })
   @ApiCreatedResponse({ type: VerifiedDto })
   verify(
@@ -47,5 +70,14 @@ export class SchoolsController {
     @Body() body: VerifyTeacherDto,
   ) {
     return this.schools.verifyTeacher(authorization, schoolId, body.token);
+  }
+
+  @Post(':schoolId/leave')
+  @ApiCreatedResponse({ type: LeftSchoolDto })
+  leave(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('schoolId', ParseUUIDPipe) schoolId: string,
+  ) {
+    return this.schools.leaveSchool(authorization, schoolId);
   }
 }

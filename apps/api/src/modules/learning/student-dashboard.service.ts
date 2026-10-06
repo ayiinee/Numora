@@ -38,7 +38,7 @@ export class StudentDashboardService {
         .innerJoin(classes, eq(classes.id, classMemberships.classId))
         .innerJoin(schools, eq(schools.id, classes.schoolId))
         .where(and(eq(classMemberships.studentUserId, user.id), isNull(classMemberships.leftAt)))
-        .limit(1),
+        .orderBy(desc(classMemberships.joinedAt), desc(classMemberships.id)),
       db
         .select({ score: sql<string | null>`max(${assessmentAttempts.score0To100})` })
         .from(assessmentAttempts)
@@ -46,7 +46,7 @@ export class StudentDashboardService {
           and(
             eq(assessmentAttempts.studentId, user.id),
             eq(assessmentAttempts.assessmentType, 'DRILL'),
-          eq(assessmentAttempts.purpose, 'REGULAR'),
+            eq(assessmentAttempts.purpose, 'REGULAR'),
             eq(assessmentAttempts.status, 'GRADED'),
           ),
         ),
@@ -62,7 +62,7 @@ export class StudentDashboardService {
           and(
             eq(assessmentAttempts.studentId, user.id),
             eq(assessmentAttempts.assessmentType, 'DRILL'),
-          eq(assessmentAttempts.purpose, 'REGULAR'),
+            eq(assessmentAttempts.purpose, 'REGULAR'),
             eq(assessmentAttempts.status, 'IN_PROGRESS'),
           ),
         )
@@ -74,6 +74,7 @@ export class StudentDashboardService {
       displayName: user.displayName,
       affiliation: membership ? 'SCHOOL' : 'MANDIRI',
       class: membership,
+      classes: memberships,
       completedLevels: progress.completedLevels,
       availableLevels: progress.totalLevels,
       latestDrillScore: progress.latestScore,
@@ -85,8 +86,8 @@ export class StudentDashboardService {
         tryout: true,
         pretest: false,
         pvp: false,
-        classLeaderboard: false,
-        pendingPolicies: ['OPEN-02', 'OPEN-03', 'OPEN-07', 'OPEN-11'],
+        classLeaderboard: membership !== null,
+        pendingPolicies: ['CURRICULUM_PRETEST_DISTRIBUTION', 'PVP_RUNTIME_ACTIVATION'],
       },
     };
   }

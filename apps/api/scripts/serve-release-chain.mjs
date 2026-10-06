@@ -42,6 +42,11 @@ const {
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { db, client } = getDatabase();
 await seedDemoLearning(db);
+const policies = await client`select id,policy_code from scoring_policy_versions
+  where policy_code in ('DRILL_PRD_V06','TRYOUT_PRD_V06') and version=1 and status='PUBLISHED'`;
+const drillPolicy = policies.find((p) => p.policy_code === 'DRILL_PRD_V06')?.id;
+const tryoutPolicy = policies.find((p) => p.policy_code === 'TRYOUT_PRD_V06')?.id;
+if (!drillPolicy || !tryoutPolicy) throw new Error('PRD v0.6 fixture policies are required.');
 
 // Explicit TEST-ONLY DEMO continuation; not a Curriculum approval or shared seed mutation.
 const levelTwo = '00000000-0000-4000-8000-000000000103';
@@ -56,7 +61,7 @@ await db.insert(assessmentPackages).values({
   chapterId: '00000000-0000-4000-8000-000000000100',
   variantIndex: 1,
   isDemo: true,
-  scoringPolicyVersionId: '00000000-0000-4000-8000-000000000901',
+  scoringPolicyVersionId: drillPolicy,
   releaseAt: new Date(),
   status: 'PUBLISHED',
 });
@@ -103,7 +108,7 @@ for (const [alias, role] of [
     .values({
       authUserId: id,
       role,
-      adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
+      adminRole: role === 'ADMIN' ? 'SUPER_ADMIN' : null,
       displayName: user.user_metadata.name,
       email: user.email,
       status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
@@ -122,7 +127,7 @@ for (const [alias, role] of [
   };
 }
 
-// TEST ONLY access/release fixture: two PG items, not an approved 35-item package or IRT model.
+// TEST ONLY access/release fixture: two PG items, not an approved 30-item package or IRT model.
 // Archive only prior fixtures created by this guarded harness so reruns cannot select stale packages.
 await client`update assessment_packages set status = 'ARCHIVED'
   where family_code like 'JOB06-TRYOUT-TEST-%' and is_demo = true and status = 'PUBLISHED'`;
@@ -138,7 +143,7 @@ await db.insert(assessmentPackages).values({
   assessmentType: 'TRYOUT',
   isDemo: true,
   chapterId: '00000000-0000-4000-8000-000000000100',
-  scoringPolicyVersionId: '00000000-0000-4000-8000-000000000901',
+  scoringPolicyVersionId: tryoutPolicy,
   releaseAt: new Date(local.getTime() - 7 * 3600_000),
   closeAt: new Date(Date.now() + 24 * 3600_000),
   durationSeconds: 3600,
@@ -287,24 +292,28 @@ const authServer = createServer(async (req, res) => {
   }
   if (req.url === '/tryout-fixture/persistence' && req.method === 'GET') {
     const attempts =
-      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, student_id, class_id_at_start, scoring_policy_version_id, score_0_100, tryout_xp_policy_version
       from assessment_attempts where package_id = ${tryoutId}`;
     const events = await client`select o.entity_id, o.event_name from analytics_outbox o
       join assessment_attempts a on a.id = o.entity_id where a.package_id = ${tryoutId}
       and o.event_name in ('tryout_started', 'tryout_completed')`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.package_id = ${tryoutId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select x.attempt_id, x.xp_amount, x.policy_code, x.policy_version
+      from xp_ledger x join assessment_attempts a on a.id=x.attempt_id where a.package_id=${tryoutId}`;
+    return send(200, { attempts, events, pins, rewards });
   }
   if (req.url === '/persistence') {
     const attempts =
-      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100
+      await client`select id, package_id, class_id_at_start, scoring_policy_version_id, score_0_100, drill_policy_version, stars
       from assessment_attempts where student_id = ${actors.student.profileId} order by started_at, id`;
     const events = await client`select entity_id, event_name from analytics_outbox
       where actor_user_id = ${actors.student.profileId} and event_name = 'drill_completed'`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.student_id = ${actors.student.profileId}`;
-    return send(200, { attempts, events, pins });
+    const rewards = await client`select attempt_id, xp_amount, base_xp, bonus_xp, duration_seconds, policy_version
+      from xp_ledger where student_id = ${actors.student.profileId} order by occurred_at, attempt_id`;
+    return send(200, { attempts, events, pins, rewards });
   }
   send(404, { message: 'Unknown fixture request' });
 });

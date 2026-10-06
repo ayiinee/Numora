@@ -6,6 +6,7 @@ import { StudentAccess } from './student-session';
 import { NewStudentDashboard } from './dashboard-new';
 import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
+import { TryoutWaiting, TryoutReleasedResult } from './tryout-presentation';
 import { SubchapterScreen } from './catalog';
 import { AssessmentScreen } from './assessment-history';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
@@ -22,6 +23,7 @@ import { destination } from '@/features/onboarding/destination';
 const context = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
   pathname: '/student',
+  levelFilter: '',
   replace: vi.fn(),
   push: vi.fn(),
   refresh: vi.fn(),
@@ -31,6 +33,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => context.pathname,
   useRouter: () => ({ replace: context.replace, push: context.push }),
   useParams: () => ({ chapterId: 'chapter-test', subchapterId: 'sub-test' }),
+  useSearchParams: () => new URLSearchParams(context.levelFilter ? { levelId: context.levelFilter } : {}),
 }));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: context.state, refresh: context.refresh, logout: context.logout }),
@@ -68,6 +71,7 @@ beforeEach(() => {
   vi.resetAllMocks();
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   context.pathname = '/student';
+  context.levelFilter = '';
   context.state = { status: 'ready', profile, session: { access_token: 'test-token' } };
   vi.mocked(learningApi.dashboard).mockResolvedValue({
     displayName: profile.displayName,
@@ -124,6 +128,17 @@ describe('assessment history states', () => {
     expect(screen.getByRole('link', { name: 'Mulai belajar' }).getAttribute('href')).toBe(
       '/student/learn',
     );
+  });
+  it('requests the selected level and renders persisted zero rewards', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({ records: [{ ...record,
+      xpState: 'ready', starsState: 'ready', xp: 0, stars: 0, levelId: 'level-test',
+    }], nextCursor: null });
+    renderStudent(<AssessmentScreen />);
+    expect(await screen.findByText('0 XP')).toBeTruthy();
+    expect(screen.getByText('Bintang: 0 / 3')).toBeTruthy();
+    expect(learningApi.assessmentHistory).toHaveBeenCalledWith('test-token', undefined, 'level-test');
+    expect(screen.getByRole('heading', { name: 'Riwayat level' })).toBeTruthy();
   });
   it('shows loading without claiming an empty history', async () => {
     vi.mocked(learningApi.assessmentHistory).mockImplementation(() => new Promise(() => {}));
@@ -239,6 +254,19 @@ describe('assessment history states', () => {
   });
 });
 describe('responsive learning composition', () => {
+  it('shows persisted TryOut XP while IRT is pending, including zero', () => {
+    const view = render(<TryoutWaiting xp={245} />);
+    expect(screen.getByText('245 XP')).toBeTruthy();
+    expect(screen.queryByText(/Jawaban benar:/)).toBeNull();
+    view.rerender(<TryoutWaiting xp={0} />);
+    expect(screen.getByText('0 XP')).toBeTruthy();
+  });
+  it('shows stored XP on released TryOut without recomputing it from score', () => {
+    render(<TryoutReleasedResult result={{ attemptId: 'fixture', packageTitle: 'Fixture',
+      score: 80, correctCount: 24, questionCount: 30, explanation: [], xp: 240, xpPolicyVersion: 1 }} />);
+    expect(screen.getByText(/240 XP sudah tercatat/)).toBeTruthy();
+    expect(screen.queryByText(/XP belum tersedia/)).toBeNull();
+  });
   it('hides provisional Home podium values when the server policy is pending', async () => {
     const data = await learningApi.dashboard('test-token');
     data.class = { id: 'class-test', name: 'IX', schoolName: 'Sekolah fixture' };

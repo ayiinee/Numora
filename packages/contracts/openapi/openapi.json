@@ -187,6 +187,163 @@
         ]
       }
     },
+    "/api/v1/classes/takeover": {
+      "post": {
+        "operationId": "ClassesController_takeover",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/JoinClassDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/CreatedClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/leave": {
+      "post": {
+        "operationId": "ClassesController_leave",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftClassDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/ban": {
+      "post": {
+        "operationId": "ClassesController_ban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/unban": {
+      "post": {
+        "operationId": "ClassesController_unban",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassBanDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
     "/api/v1/classes/join": {
       "post": {
         "operationId": "ClassesController_join",
@@ -1088,6 +1245,41 @@
         ]
       }
     },
+    "/api/v1/schools/{schoolId}/leave": {
+      "post": {
+        "operationId": "SchoolsController_leave",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
     "/api/v1/admin/schools": {
       "get": {
         "operationId": "AdminSchoolsController_list",
@@ -1760,7 +1952,8 @@
               "enum": [
                 "DRAFT",
                 "READY",
-                "ARCHIVED"
+                "ARCHIVED",
+                "REVISION"
               ]
             }
           },
@@ -4431,6 +4624,42 @@
         "operationId": "LeaderboardsController_class",
         "parameters": [
           {
+            "name": "classId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeaderboardDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "leaderboards"
+        ]
+      }
+    },
+    "/api/v1/leaderboards/activity": {
+      "get": {
+        "operationId": "LeaderboardsController_activity",
+        "parameters": [
+          {
             "name": "authorization",
             "required": true,
             "in": "header",
@@ -4957,6 +5186,11 @@
               "ADMIN"
             ]
           },
+          "profilePhotoObjectKey": {
+            "type": "string",
+            "nullable": true,
+            "description": "Storage object key; never a stored signed URL."
+          },
           "status": {
             "type": "string",
             "enum": [
@@ -5044,6 +5278,10 @@
       "CreateClassDto": {
         "type": "object",
         "properties": {
+          "schoolId": {
+            "type": "string",
+            "format": "uuid"
+          },
           "name": {
             "type": "string",
             "minLength": 1,
@@ -5086,6 +5324,28 @@
         },
         "required": [
           "joinCode"
+        ]
+      },
+      "LeftClassDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
+        ]
+      },
+      "ClassBanDto": {
+        "type": "object",
+        "properties": {
+          "banned": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "banned"
         ]
       },
       "JoinedClassDto": {
@@ -5210,18 +5470,37 @@
           "xpState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
             ],
-            "description": "Numeric XP policy/posting is pending JOB-11; Pretest never awards XP."
+            "description": "Persisted XP is available independently of IRT release. Legacy XP is unknown, not zero; Pretest has no XP."
           },
           "starsState": {
             "type": "string",
             "enum": [
+              "ready",
+              "legacy",
               "pending",
               "notApplicable"
-            ],
-            "description": "Drill star thresholds are OPEN; other assessment types do not award Drill stars."
+            ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "stars": {
+            "type": "number",
+            "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
+          "tryoutXpPolicyVersion": {
+            "type": "number",
+            "nullable": true
           },
           "submittedAt": {
             "type": "string",
@@ -5325,6 +5604,13 @@
                 "$ref": "#/components/schemas/DashboardClassDto"
               }
             ]
+          },
+          "classes": {
+            "description": "All active classes, up to five. Legacy class is the latest joined class.",
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DashboardClassDto"
+            }
           },
           "completedLevels": {
             "type": "number"
@@ -5598,6 +5884,13 @@
           "bestScore": {
             "type": "number",
             "nullable": true
+          },
+          "latestStars": {
+            "type": "number",
+            "nullable": true,
+            "minimum": 0,
+            "maximum": 3,
+            "description": "Stars from the latest completed attempt, not best stars."
           }
         },
         "required": [
@@ -5747,6 +6040,11 @@
             "type": "string",
             "format": "date-time"
           },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time",
+            "description": "Database time for count-up display; server timestamps own reward duration."
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -5795,6 +6093,39 @@
         "required": [
           "questionInstanceId",
           "selectedOptionId"
+        ]
+      },
+      "DrillRewardDto": {
+        "type": "object",
+        "properties": {
+          "policyCode": {
+            "type": "string"
+          },
+          "policyVersion": {
+            "type": "number"
+          },
+          "baseXp": {
+            "type": "number"
+          },
+          "bonusXp": {
+            "type": "number",
+            "description": "Unrounded speed bonus stored at submission."
+          },
+          "totalXp": {
+            "type": "number",
+            "description": "Once-rounded final XP, including bonus and cap."
+          },
+          "durationSeconds": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "policyCode",
+          "policyVersion",
+          "baseXp",
+          "bonusXp",
+          "totalXp",
+          "durationSeconds"
         ]
       },
       "ReviewedQuestionDto": {
@@ -5861,6 +6192,10 @@
       "DrillResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"
@@ -5890,6 +6225,21 @@
           "stars": {
             "type": "number",
             "nullable": true
+          },
+          "drillPolicyVersion": {
+            "type": "number",
+            "nullable": true,
+            "description": "Pinned at start. Null identifies the historical Drill policy."
+          },
+          "reward": {
+            "nullable": true,
+            "description": "Persisted ledger details; null for legacy attempts without this reward policy.",
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/DrillRewardDto"
+              }
+            ]
           },
           "unlockedLevelId": {
             "type": "string",
@@ -5998,6 +6348,15 @@
       "TryoutAttemptDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Persisted XP available after completion, independently of IRT release; null for active/legacy attempts."
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "serverTime": {
             "type": "string",
             "format": "date-time"
@@ -6044,11 +6403,20 @@
       "TryoutSubmitDto": {
         "type": "object",
         "properties": {
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "state": {
             "type": "string",
             "enum": [
               "waitingIrt"
             ]
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Immediate XP, independent of later IRT result release; null for legacy policy attempts."
           }
         },
         "required": [
@@ -6087,6 +6455,14 @@
       "TryoutResultDto": {
         "type": "object",
         "properties": {
+          "xp": {
+            "type": "number",
+            "nullable": true
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
           "attemptId": {
             "type": "string",
             "format": "uuid"
@@ -6277,6 +6653,17 @@
         },
         "required": [
           "verified"
+        ]
+      },
+      "LeftSchoolDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
         ]
       },
       "AdminSchoolDto": {
@@ -6477,7 +6864,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6529,7 +6917,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -6585,7 +6974,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -6625,7 +7015,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           },
@@ -6665,7 +7056,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ],
             "default": "DRAFT"
           }
@@ -6689,7 +7081,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6713,7 +7106,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6726,7 +7120,9 @@
             "format": "uuid"
           },
           "levelNumber": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 5
           },
           "description": {
             "type": "string"
@@ -6736,7 +7132,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -6756,7 +7153,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -6876,7 +7274,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "questionStatus": {
@@ -6884,7 +7283,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           },
           "reviewedByUserId": {
@@ -7037,7 +7437,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -7106,7 +7507,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -7159,7 +7561,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         },
@@ -7195,7 +7598,8 @@
             "enum": [
               "DRAFT",
               "READY",
-              "ARCHIVED"
+              "ARCHIVED",
+              "REVISION"
             ]
           }
         }
@@ -7384,7 +7788,10 @@
             "format": "uuid"
           },
           "variantIndex": {
-            "type": "number"
+            "type": "number",
+            "minimum": 1,
+            "maximum": 1,
+            "description": "PRD v0.6 MVP uses one variant per level."
           },
           "scoringPolicyVersionId": {
             "type": "string",
@@ -9237,10 +9644,12 @@
           },
           "teacherId": {
             "type": "string",
-            "format": "uuid"
+            "format": "uuid",
+            "nullable": true
           },
           "teacherName": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "studentCount": {
             "type": "number"
@@ -10143,6 +10552,11 @@
           },
           "className": {
             "type": "string",
+            "nullable": true
+          },
+          "classId": {
+            "type": "string",
+            "format": "uuid",
             "nullable": true
           },
           "unit": {

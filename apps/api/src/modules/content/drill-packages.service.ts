@@ -312,6 +312,36 @@ export class DrillPackagesService {
             'Varian dan kebijakan penilaian harus tersedia sebelum publikasi.',
           ),
         );
+      if (row.variantIndex !== 1)
+        throw new ConflictException(
+          problem('DRILL_MVP_SINGLE_VARIANT', 'MVP memakai satu varian pada setiap level.'),
+        );
+      // Serialize publications per level, including requests for different families.
+      await tx
+        .select({ id: levels.id })
+        .from(levels)
+        .where(eq(levels.id, row.levelId!))
+        .for('no key update');
+      const [published] = await tx
+        .select({ id: assessmentPackages.id })
+        .from(assessmentPackages)
+        .where(
+          and(
+            eq(assessmentPackages.levelId, row.levelId!),
+            eq(assessmentPackages.assessmentType, 'DRILL'),
+            eq(assessmentPackages.purpose, 'REGULAR'),
+            eq(assessmentPackages.status, 'PUBLISHED'),
+            eq(assessmentPackages.isDemo, false),
+          ),
+        )
+        .limit(1);
+      if (!row.isDemo && published)
+        throw new ConflictException(
+          problem(
+            'DRILL_LEVEL_ALREADY_PUBLISHED',
+            'Archive paket aktif sebelum menerbitkan revisi level.',
+          ),
+        );
       const items = await tx
         .select()
         .from(packageItems)

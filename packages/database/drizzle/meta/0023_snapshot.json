@@ -1,6 +1,6 @@
 {
-  "id": "13279751-7090-4113-b110-0c1b783b31d1",
-  "prevId": "34063b44-4540-4d2a-b0ba-f515725fe58e",
+  "id": "b39238c8-a846-43b7-bb91-2ba5a3638c2b",
+  "prevId": "13279751-7090-4113-b110-0c1b783b31d1",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -455,6 +455,13 @@
           "primaryKey": false,
           "notNull": true
         },
+        "admin_role": {
+          "name": "admin_role",
+          "type": "admin_role",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": false
+        },
         "display_name": {
           "name": "display_name",
           "type": "text",
@@ -526,7 +533,12 @@
       "compositePrimaryKeys": {},
       "uniqueConstraints": {},
       "policies": {},
-      "checkConstraints": {},
+      "checkConstraints": {
+        "users_admin_role_ck": {
+          "name": "users_admin_role_ck",
+          "value": "\"users\".\"admin_role\" is null or \"users\".\"role\" = 'ADMIN'"
+        }
+      },
       "isRLSEnabled": true
     },
     "public.class_memberships": {
@@ -1076,12 +1088,6 @@
           "primaryKey": false,
           "notNull": true,
           "default": "'DRAFT'"
-        },
-        "material_category": {
-          "name": "material_category",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": false
         }
       },
       "indexes": {
@@ -1147,10 +1153,6 @@
         "chapters_name_ck": {
           "name": "chapters_name_ck",
           "value": "length(trim(\"chapters\".\"name\")) > 0"
-        },
-        "chapters_category_ck": {
-          "name": "chapters_category_ck",
-          "value": "\"chapters\".\"material_category\" is null or \"chapters\".\"material_category\" in ('algebra', 'geometry', 'numbers', 'statistics')"
         }
       },
       "isRLSEnabled": true
@@ -1566,7 +1568,7 @@
           "name": "difficulty",
           "type": "text",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "parent_original_question_version_id": {
           "name": "parent_original_question_version_id",
@@ -2293,6 +2295,539 @@
         "content_media_uploads_expiry_ck": {
           "name": "content_media_uploads_expiry_ck",
           "value": "\"content_media_uploads\".\"expires_at\" > \"content_media_uploads\".\"created_at\""
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.content_import_identities": {
+      "name": "content_import_identities",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "source_namespace": {
+          "name": "source_namespace",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "external_id": {
+          "name": "external_id",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_id": {
+          "name": "question_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "content_import_identities_source_uq": {
+          "name": "content_import_identities_source_uq",
+          "columns": [
+            {
+              "expression": "source_namespace",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "external_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "content_import_identities_question_uq": {
+          "name": "content_import_identities_question_uq",
+          "columns": [
+            {
+              "expression": "question_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "content_import_identities_question_id_questions_id_fk": {
+          "name": "content_import_identities_question_id_questions_id_fk",
+          "tableFrom": "content_import_identities",
+          "tableTo": "questions",
+          "columnsFrom": [
+            "question_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.content_import_versions": {
+      "name": "content_import_versions",
+      "schema": "",
+      "columns": {
+        "question_version_id": {
+          "name": "question_version_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "identity_id": {
+          "name": "identity_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "import_id": {
+          "name": "import_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "content_hash": {
+          "name": "content_hash",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "provenance": {
+          "name": "provenance",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "content_import_versions_question_version_id_question_versions_id_fk": {
+          "name": "content_import_versions_question_version_id_question_versions_id_fk",
+          "tableFrom": "content_import_versions",
+          "tableTo": "question_versions",
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "content_import_versions_identity_id_content_import_identities_id_fk": {
+          "name": "content_import_versions_identity_id_content_import_identities_id_fk",
+          "tableFrom": "content_import_versions",
+          "tableTo": "content_import_identities",
+          "columnsFrom": [
+            "identity_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "content_import_versions_import_id_content_imports_id_fk": {
+          "name": "content_import_versions_import_id_content_imports_id_fk",
+          "tableFrom": "content_import_versions",
+          "tableTo": "content_imports",
+          "columnsFrom": [
+            "import_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.content_imports": {
+      "name": "content_imports",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "source_namespace": {
+          "name": "source_namespace",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "report": {
+          "name": "report",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "content_imports_operation_uq": {
+          "name": "content_imports_operation_uq",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "content_imports_actor_user_id_users_id_fk": {
+          "name": "content_imports_actor_user_id_users_id_fk",
+          "tableFrom": "content_imports",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
+      "isRLSEnabled": true
+    },
+    "public.content_preview_answers": {
+      "name": "content_preview_answers",
+      "schema": "",
+      "columns": {
+        "item_id": {
+          "name": "item_id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true
+        },
+        "answer": {
+          "name": "answer",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "saved_at": {
+          "name": "saved_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {},
+      "foreignKeys": {
+        "content_preview_answers_item_id_content_preview_items_id_fk": {
+          "name": "content_preview_answers_item_id_content_preview_items_id_fk",
+          "tableFrom": "content_preview_answers",
+          "tableTo": "content_preview_items",
+          "columnsFrom": [
+            "item_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "content_preview_answer_revision_ck": {
+          "name": "content_preview_answer_revision_ck",
+          "value": "\"content_preview_answers\".\"revision\">=0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.content_preview_items": {
+      "name": "content_preview_items",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "session_id": {
+          "name": "session_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "question_version_id": {
+          "name": "question_version_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "position": {
+          "name": "position",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "snapshot": {
+          "name": "snapshot",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        }
+      },
+      "indexes": {
+        "content_preview_item_position_uq": {
+          "name": "content_preview_item_position_uq",
+          "columns": [
+            {
+              "expression": "session_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "position",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "content_preview_items_session_id_content_preview_sessions_id_fk": {
+          "name": "content_preview_items_session_id_content_preview_sessions_id_fk",
+          "tableFrom": "content_preview_items",
+          "tableTo": "content_preview_sessions",
+          "columnsFrom": [
+            "session_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "content_preview_items_question_version_id_question_versions_id_fk": {
+          "name": "content_preview_items_question_version_id_question_versions_id_fk",
+          "tableFrom": "content_preview_items",
+          "tableTo": "question_versions",
+          "columnsFrom": [
+            "question_version_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "content_preview_position_ck": {
+          "name": "content_preview_position_ck",
+          "value": "\"content_preview_items\".\"position\">0"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.content_preview_sessions": {
+      "name": "content_preview_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "fingerprint": {
+          "name": "fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'IN_PROGRESS'"
+        },
+        "submit_key": {
+          "name": "submit_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "submitted_at": {
+          "name": "submitted_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        }
+      },
+      "indexes": {
+        "content_preview_operation_uq": {
+          "name": "content_preview_operation_uq",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "content_preview_sessions_actor_user_id_users_id_fk": {
+          "name": "content_preview_sessions_actor_user_id_users_id_fk",
+          "tableFrom": "content_preview_sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "content_preview_state_ck": {
+          "name": "content_preview_state_ck",
+          "value": "(\"content_preview_sessions\".\"state\"='IN_PROGRESS' and \"content_preview_sessions\".\"submitted_at\" is null and \"content_preview_sessions\".\"submit_key\" is null) or (\"content_preview_sessions\".\"state\"='SUBMITTED' and \"content_preview_sessions\".\"submitted_at\" is not null and \"content_preview_sessions\".\"submit_key\" is not null)"
         }
       },
       "isRLSEnabled": true
@@ -14603,323 +15138,6 @@
         }
       },
       "isRLSEnabled": true
-    },
-    "public.notification_outbox": {
-      "name": "notification_outbox",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "source_key": {
-          "name": "source_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_id": {
-          "name": "source_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "recipient_id": {
-          "name": "recipient_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "occurred_at": {
-          "name": "occurred_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "audience_before": {
-          "name": "audience_before",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "cursor": {
-          "name": "cursor",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "attempts": {
-          "name": "attempts",
-          "type": "integer",
-          "primaryKey": false,
-          "notNull": true,
-          "default": 0
-        },
-        "failed_at": {
-          "name": "failed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        },
-        "processed_at": {
-          "name": "processed_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "notification_outbox_source_uq": {
-          "name": "notification_outbox_source_uq",
-          "columns": [
-            {
-              "expression": "source_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notification_outbox_pending_idx": {
-          "name": "notification_outbox_pending_idx",
-          "columns": [
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"notification_outbox\".\"processed_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "notification_outbox_recipient_id_users_id_fk": {
-          "name": "notification_outbox_recipient_id_users_id_fk",
-          "tableFrom": "notification_outbox",
-          "tableTo": "users",
-          "columnsFrom": [
-            "recipient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "notification_outbox_kind_ck": {
-          "name": "notification_outbox_kind_ck",
-          "value": "\"notification_outbox\".\"kind\" in ('SYSTEM_STARTED', 'FEEDBACK_RECEIVED', 'PVP_INVITED', 'TRYOUT_OPENED', 'TRYOUT_RESULT_READY', 'LEVEL_UNLOCKED')"
-        },
-        "notification_outbox_recipient_ck": {
-          "name": "notification_outbox_recipient_ck",
-          "value": "\"notification_outbox\".\"recipient_id\" is not null or \"notification_outbox\".\"kind\" in ('SYSTEM_STARTED', 'TRYOUT_OPENED')"
-        },
-        "notification_outbox_attempts_ck": {
-          "name": "notification_outbox_attempts_ck",
-          "value": "\"notification_outbox\".\"attempts\" >= 0"
-        }
-      },
-      "isRLSEnabled": true
-    },
-    "public.notifications": {
-      "name": "notifications",
-      "schema": "",
-      "columns": {
-        "id": {
-          "name": "id",
-          "type": "uuid",
-          "primaryKey": true,
-          "notNull": true,
-          "default": "gen_random_uuid()"
-        },
-        "recipient_id": {
-          "name": "recipient_id",
-          "type": "uuid",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "source_key": {
-          "name": "source_key",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "kind": {
-          "name": "kind",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "title": {
-          "name": "title",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "body": {
-          "name": "body",
-          "type": "text",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "context": {
-          "name": "context",
-          "type": "jsonb",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "occurred_at": {
-          "name": "occurred_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true
-        },
-        "created_at": {
-          "name": "created_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": true,
-          "default": "now()"
-        },
-        "read_at": {
-          "name": "read_at",
-          "type": "timestamp with time zone",
-          "primaryKey": false,
-          "notNull": false
-        }
-      },
-      "indexes": {
-        "notifications_recipient_source_uq": {
-          "name": "notifications_recipient_source_uq",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "source_key",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": true,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notifications_recipient_time_idx": {
-          "name": "notifications_recipient_time_idx",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        },
-        "notifications_unread_idx": {
-          "name": "notifications_unread_idx",
-          "columns": [
-            {
-              "expression": "recipient_id",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            },
-            {
-              "expression": "occurred_at",
-              "isExpression": false,
-              "asc": true,
-              "nulls": "last"
-            }
-          ],
-          "isUnique": false,
-          "where": "\"notifications\".\"read_at\" is null",
-          "concurrently": false,
-          "method": "btree",
-          "with": {}
-        }
-      },
-      "foreignKeys": {
-        "notifications_recipient_id_users_id_fk": {
-          "name": "notifications_recipient_id_users_id_fk",
-          "tableFrom": "notifications",
-          "tableTo": "users",
-          "columnsFrom": [
-            "recipient_id"
-          ],
-          "columnsTo": [
-            "id"
-          ],
-          "onDelete": "restrict",
-          "onUpdate": "no action"
-        }
-      },
-      "compositePrimaryKeys": {},
-      "uniqueConstraints": {},
-      "policies": {},
-      "checkConstraints": {
-        "notifications_kind_ck": {
-          "name": "notifications_kind_ck",
-          "value": "\"notifications\".\"kind\" in ('FEEDBACK_RECEIVED', 'PVP_INVITED', 'TRYOUT_OPENED', 'TRYOUT_RESULT_READY', 'LEVEL_UNLOCKED')"
-        },
-        "notifications_read_at_ck": {
-          "name": "notifications_read_at_ck",
-          "value": "\"notifications\".\"read_at\" is null or \"notifications\".\"read_at\" >= \"notifications\".\"created_at\""
-        }
-      },
-      "isRLSEnabled": true
     }
   },
   "enums": {
@@ -14929,6 +15147,15 @@
       "values": [
         "ACTIVE",
         "DISABLED"
+      ]
+    },
+    "public.admin_role": {
+      "name": "admin_role",
+      "schema": "public",
+      "values": [
+        "SUPER_ADMIN",
+        "OPERATIONS",
+        "CONTENT_DATA_MODERATION"
       ]
     },
     "public.school_status": {

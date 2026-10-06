@@ -26,18 +26,21 @@ export class PvpService {
   async classmates(authorization?: string) {
     const student = await this.student(authorization);
     const { db } = getDatabase();
-    const [membership] = await db
+    const memberships = await db
       .select()
       .from(classMemberships)
       .where(and(eq(classMemberships.studentUserId, student.id), isNull(classMemberships.leftAt)));
-    if (!membership) return { classmates: [] };
+    if (!memberships.length) return { classmates: [] };
     const rows = await db
-      .select({ studentId: users.id, displayName: users.displayName })
+      .selectDistinct({ studentId: users.id, displayName: users.displayName })
       .from(classMemberships)
       .innerJoin(users, eq(users.id, classMemberships.studentUserId))
       .where(
         and(
-          eq(classMemberships.classId, membership.classId),
+          inArray(
+            classMemberships.classId,
+            memberships.map((m) => m.classId),
+          ),
           isNull(classMemberships.leftAt),
           eq(users.status, 'ACTIVE'),
           eq(users.role, 'STUDENT'),
@@ -49,11 +52,11 @@ export class PvpService {
   async invitations(authorization?: string) {
     const student = await this.student(authorization);
     const { db } = getDatabase();
-    const [membership] = await db
+    const memberships = await db
       .select()
       .from(classMemberships)
       .where(and(eq(classMemberships.studentUserId, student.id), isNull(classMemberships.leftAt)));
-    if (!membership) return { invites: [] };
+    if (!memberships.length) return { invites: [] };
     const rows = await db
       .select({
         id: pvpInvites.id,
@@ -69,14 +72,17 @@ export class PvpService {
         classMemberships,
         and(
           eq(classMemberships.studentUserId, pvpInvites.senderStudentId),
-          eq(classMemberships.classId, membership.classId),
+          eq(classMemberships.classId, pvpInvites.classIdAtInvite),
           isNull(classMemberships.leftAt),
         ),
       )
       .where(
         and(
           eq(pvpInvites.recipientStudentId, student.id),
-          eq(pvpInvites.classIdAtInvite, membership.classId),
+          inArray(
+            pvpInvites.classIdAtInvite,
+            memberships.map((m) => m.classId),
+          ),
           eq(pvpInvites.status, 'PENDING'),
           gt(pvpInvites.expiresAt, new Date()),
           inArray(pvpMatches.status, ['WAITING']),

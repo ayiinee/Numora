@@ -91,6 +91,11 @@ export const assessmentPackages = pgTable(
       .on(table.releaseAt)
       .where(sql`${table.assessmentType} = 'TRYOUT' and ${table.status} = 'PUBLISHED'`),
     index('assessment_packages_type_status_idx').on(table.assessmentType, table.status),
+    uniqueIndex('assessment_packages_drill_mvp_level_uq')
+      .on(table.levelId)
+      .where(
+        sql`${table.assessmentType} = 'DRILL' and ${table.purpose} = 'REGULAR' and ${table.status} = 'PUBLISHED' and not ${table.isDemo}`,
+      ),
     check('assessment_packages_version_ck', sql`${table.packageVersion} > 0`),
     check('assessment_packages_content_revision_ck', sql`${table.contentRevision} >= 0`),
     check(
@@ -196,6 +201,8 @@ export const assessmentAttempts = pgTable(
     rawPoints: numeric('raw_points', { precision: 10, scale: 2 }),
     score0To100: numeric('score_0_100', { precision: 5, scale: 2 }),
     stars: integer('stars'),
+    drillPolicyVersion: integer('drill_policy_version'),
+    tryoutXpPolicyVersion: integer('tryout_xp_policy_version'),
   },
   (table) => [
     uniqueIndex('assessment_attempts_pretest_once_uq')
@@ -214,6 +221,11 @@ export const assessmentAttempts = pgTable(
     uniqueIndex('assessment_attempts_trial_assignment_uq').on(table.trialAssignmentId),
     uniqueIndex('assessment_attempts_id_package_uq').on(table.id, table.packageId),
     uniqueIndex('assessment_attempts_id_student_uq').on(table.id, table.studentId),
+    uniqueIndex('assessment_attempts_id_student_level_uq').on(
+      table.id,
+      table.studentId,
+      table.levelIdAtStart,
+    ),
     index('assessment_attempts_tryout_recovery_idx')
       .on(table.deadlineAt, table.id)
       .where(
@@ -268,8 +280,10 @@ export const assessmentAttempts = pgTable(
     ),
     check(
       'assessment_attempts_stars_ck',
-      sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 1 and 3)`,
+      sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 0 and 3)`,
     ),
+    check('assessment_attempts_drill_policy_ck', sql`${table.drillPolicyVersion} is null or (${table.assessmentType} = 'DRILL' and ${table.drillPolicyVersion} = 2)`),
+    check('assessment_attempts_tryout_xp_policy_ck', sql`${table.tryoutXpPolicyVersion} is null or (${table.assessmentType} = 'TRYOUT' and ${table.tryoutXpPolicyVersion} = 1)`),
   ],
 ).enableRLS();
 
@@ -370,11 +384,26 @@ export const levelProgress = pgTable(
       onDelete: 'restrict',
     }),
     latestScore: numeric('latest_score', { precision: 5, scale: 2, mode: 'number' }),
+    latestStars: integer('latest_stars'),
+    latestAttemptId: uuid('latest_attempt_id'),
     bestScore: numeric('best_score', { precision: 5, scale: 2, mode: 'number' }),
     bestStars: integer('best_stars'),
   },
   (table) => [
     uniqueIndex('level_progress_student_level_uq').on(table.studentId, table.levelId),
+    foreignKey({
+      name: 'level_progress_latest_attempt_scope_fk',
+      columns: [table.latestAttemptId, table.studentId, table.levelId],
+      foreignColumns: [
+        assessmentAttempts.id,
+        assessmentAttempts.studentId,
+        assessmentAttempts.levelIdAtStart,
+      ],
+    }).onDelete('restrict'),
+    check(
+      'level_progress_latest_stars_ck',
+      sql`${table.latestStars} is null or ${table.latestStars} between 0 and 3`,
+    ),
     check(
       'level_progress_completed_ck',
       sql`${table.completedAt} is null or (${table.unlockedAt} is not null and ${table.completedAt} >= ${table.unlockedAt})`,

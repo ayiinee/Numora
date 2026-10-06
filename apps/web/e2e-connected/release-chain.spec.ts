@@ -45,6 +45,15 @@ let fixtures: Fixtures;
 let school: AdminSchoolDto;
 let cls: CreatedClassDto;
 const checks: string[] = [];
+const requiredChecks = [
+  'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+  'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
+  'real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth',
+  'direct-url-role-refresh-logout-reauth-mandiri-drill',
+  'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
+  'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
+  'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
+];
 const contexts: BrowserContext[] = [];
 
 async function call(
@@ -82,6 +91,8 @@ async function login(browser: Browser, alias: string) {
       ],
     },
   });
+  // Explicitly accept browser-native unload prompts; exit-specific assertions opt out below.
+  context.on('page', page => page.on('dialog', dialog => void dialog.accept()));
   contexts.push(context);
   const page = await context.newPage();
   return page;
@@ -130,6 +141,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         execFileSync('git', ['rev-parse', 'HEAD'], { cwd: root, encoding: 'utf8' }).trim() &&
       execFileSync('git', ['status', '--porcelain'], { cwd: root, encoding: 'utf8' }).trim() === '';
     const dir = resolve(root, '.tmp/job06-evidence');
+    const complete = checks.length === requiredChecks.length && requiredChecks.every(check => checks.includes(check));
     mkdirSync(dir, { recursive: true });
     writeFileSync(
       resolve(dir, 'connected.json'),
@@ -137,7 +149,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         {
           releaseSha: fixtures?.sha,
           collectedAt: new Date().toISOString(),
-          status: unchanged && checks.length === 5 ? 'PASS' : 'FAIL',
+          status: unchanged && complete ? 'PASS' : 'FAIL',
           environment: 'isolated-local-postgresql-redis-chromium',
           authMode: 'email-fixture-boundary',
           productApiMocks: false,
@@ -156,6 +168,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ) + '\n',
     );
     expect(unchanged, 'The entire run must retain one clean release SHA').toBe(true);
+    expect(complete, 'Every required connected acceptance check must be recorded').toBe(true);
   });
 
   test('Admin → Teacher → Student → saved/resumed Drill → monitoring → retry → Level 2', async ({
@@ -265,6 +278,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
+    student.removeAllListeners('dialog');
+    student.once('dialog', async dialog => {
+      expect(dialog.message()).toContain('Timer tetap berjalan');
+      await dialog.dismiss();
+    });
+    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
+    student.on('dialog', dialog => void dialog.accept());
     await student.reload();
     await expect(option(student, 'B')).toBeChecked();
     // A new auth/browser context also resumes the same persisted answers.
@@ -280,6 +301,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await answer(resumed, 8);
     const result = await submit(resumed);
     expect(result.score).toBe(80);
+    expect(result.reward).toMatchObject({ baseXp: 80, policyVersion: 2 });
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(result.unlockedLevelId).toBe(levelTwo);
     const duplicates = await Promise.all(
       [1, 2].map(() =>
@@ -294,6 +317,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(duplicates.map((r) => r.score)).toEqual([80, 80]);
+    expect(duplicates.map(r => r.reward)).toEqual([result.reward, result.reward]);
     await call(
       request,
       'student',
@@ -313,7 +337,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const retryId = resumed.url().split('/').at(-1)!;
     expect(retryId).not.toBe(attempt.id);
     const retry = await body<DrillAttemptDto>(request, 'student', `assessment-attempts/${retryId}`);
-    expect(retry.questions.map((q) => q.stem)).not.toEqual(attempt.questions.map((q) => q.stem));
+    expect(retry.questions.map((q) => q.stem)).toEqual(attempt.questions.map((q) => q.stem));
     await answer(resumed, 7);
     expect((await submit(resumed)).score).toBe(70);
     await teacher.reload();
@@ -328,6 +352,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelOne)).toMatchObject({
       latestScore: 70,
       bestScore: 80,
+      latestStars: 2,
     });
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
@@ -337,7 +362,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
       .getByRole('button', { name: 'Mulai latihan', exact: true })
       .click();
     await answer(resumed, 0);
-    expect((await submit(resumed)).score).toBe(0);
+    const zeroResult = await submit(resumed);
+    expect(zeroResult.score).toBe(0);
+    expect(zeroResult.stars).toBe(0);
     await teacher.reload();
     await expect(
       teacher.locator('.level-card').filter({ hasText: 'Level 2' }).locator('dd'),
@@ -352,6 +379,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       }[];
       events: { entity_id: string; event_name: string }[];
       pins: { attempt_id: string; question_version_id: string }[];
+      rewards: { attempt_id: string; xp_amount: string | number; base_xp: number; policy_version: number }[];
     };
     expect(persisted.attempts).toHaveLength(3);
     expect(persisted.events).toHaveLength(3);
@@ -362,17 +390,27 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (a) => a.class_id_at_start === cls.id && !!a.scoring_policy_version_id,
       ),
     ).toBe(true);
-    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(3);
+    expect(new Set(persisted.attempts.map((a) => a.package_id)).size).toBe(2);
+    expect(persisted.rewards).toHaveLength(3);
+    expect(new Set(persisted.rewards.map(r => r.attempt_id)).size).toBe(3);
+    const persistedReward = persisted.rewards.find(r => r.attempt_id === attempt.id)!;
+    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
+    await resumed.goto(`/student/assessment?levelId=${levelOne}`);
+    await expect(resumed.getByRole('heading', { name: 'Riwayat level', exact: true })).toBeVisible();
+    await expect(resumed.locator('.activity-row')).toHaveCount(2);
+    await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(
       (await body<DrillResultDto>(request, 'student', `assessment-attempts/${attempt.id}/result`))
         .score,
     ).toBe(80);
     checks.push(
       'connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence',
+      'drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history',
     );
   });
 
-  test('token lifecycle, single-use race, join race, one-class and authorization at real HTTP boundary', async ({
+  test('token lifecycle, single-use race, concurrent multi-class joins and authorization at real HTTP boundary', async ({
     request,
   }) => {
     const tokensPath = `admin/schools/${school.id}/teacher-tokens`;
@@ -421,7 +459,14 @@ test.describe.serial('JOB-06 connected release chain', () => {
       201,
     );
     await call(request, 'student', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
-    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'student', 'classes/join', 'POST', { joinCode: foreign.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(2);
+    await call(request, 'student', `classes/${foreign.id}/leave`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'student', 'students/me/dashboard')).classes,
+    ).toHaveLength(1);
     await call(request, 'otherStudent', 'classes/join', 'POST', { joinCode: 'BAD234' }, 404);
     const joins = await Promise.all(
       [cls.joinCode, foreign.joinCode].map((joinCode) =>
@@ -431,7 +476,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         }),
       ),
     );
-    expect(joins.map((r) => r.status()).sort()).toEqual([201, 409]);
+    expect(joins.map((r) => r.status()).sort()).toEqual([201, 201]);
     const progressPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/progress`;
     await call(request, 'foreignTeacher', progressPath, 'GET', undefined, 403);
     await call(request, 'student', progressPath, 'GET', undefined, 403);
@@ -473,7 +518,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       bestDrillScore: 80,
       accessStatus: 'UNLOCKED',
     });
-    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-one-class-ownership-auth');
+    checks.push('real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth');
   });
 
   test('direct URL role guards, refresh, logout/re-auth and independent Mandiri persistence', async ({
@@ -554,11 +599,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
       });
       expect(
         await body<LeaderboardDto>(request, alias, 'leaderboards/pvp?difficulty=easy'),
-      ).toMatchObject({ policyPending: true, reasonCode: 'OPEN-07' });
+      ).toMatchObject({ policyPending: true, reasonCode: 'PVP_RUNTIME_ACTIVATION' });
+      expect(await body<LeaderboardDto>(request, alias, 'leaderboards/activity')).toMatchObject({
+        policyPending: false,
+        reasonCode: null,
+        unit: 'xp',
+        className: null,
+      });
     }
     expect(await body<LeaderboardDto>(request, 'student', 'leaderboards/class')).toMatchObject({
-      policyPending: true,
-      reasonCode: 'OPEN-11',
+      policyPending: false,
+      reasonCode: null,
+      unit: 'xp',
       className: cls.name,
     });
     await call(request, 'otherStudent', 'leaderboards/class', 'GET', undefined, 403);
@@ -659,7 +711,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBe(independent.id);
     const submissions = await Promise.all(
       Array.from({ length: 3 }, () =>
-        body<{ state: string }>(
+        body<{ state: string; xp: number }>(
           request,
           'student',
           `tryout/attempts/${affiliated.id}/submit`,
@@ -669,7 +721,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         ),
       ),
     );
-    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt' }));
+    expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
     await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
@@ -680,6 +732,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(
       mandiri.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
     ).toBeVisible();
+    await expect(mandiri.getByText('10 XP', { exact: true })).toBeVisible();
     for (const [alias, attempt] of [
       ['student', affiliated],
       ['otherStudent', independent],
@@ -701,7 +754,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
       expect(records.find((r) => r.attemptId === attempt.id)).toMatchObject({
         score: null,
         resultState: 'waitingIrt',
+        xpState: 'ready', tryoutXpPolicyVersion: 1,
       });
+      const persisted = await body<TryoutAttemptDto>(request, alias, `tryout/attempts/${attempt.id}`);
+      expect(persisted.xp).toBeGreaterThanOrEqual(0);
+      expect(persisted.questions).toEqual([]);
+      expect(persisted).not.toHaveProperty('score');
       expect(await body<CurrentTryoutDto>(request, alias, 'tryout/packages/current')).toMatchObject(
         { eligible: false, state: 'waitingIrt' },
       );
@@ -769,6 +827,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
       persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
     ).toHaveLength(2);
     expect(persistence.pins).toHaveLength(4);
+    expect(persistence.rewards).toHaveLength(2);
+    const independentReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === independent.id);
+    const affiliatedReward = persistence.rewards.find((r: { attempt_id: string }) => r.attempt_id === affiliated.id);
+    expect(independentReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(affiliatedReward).toMatchObject({ policy_code: 'TRYOUT_PRD_V06', policy_version: 1 });
+    expect(Number(independentReward.xp_amount)).toBe(10);
+    expect(Number(affiliatedReward.xp_amount)).toBe(0);
     expect(
       persistence.attempts.find((a: { id: string }) => a.id === independent.id).class_id_at_start,
     ).toBeNull();
@@ -780,7 +845,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
         (r) => r.attemptId === affiliated.id,
       ),
     ).toMatchObject({ score: 0, resultState: 'ready' });
-    checks.push('tryout-mandiri-school-snapshot-idempotency-irt-privacy-level-and-teacher-history');
+    checks.push('tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history');
   });
 
   test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
@@ -951,5 +1016,69 @@ test.describe.serial('JOB-06 connected release chain', () => {
       403,
     );
     checks.push('draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review');
+  });
+
+  test('five-class limit, teacher ban/unban and teacherless takeover preserve account progress', async ({
+    request,
+  }) => {
+    const extras: CreatedClassDto[] = [];
+    for (let i = 0; i < 4; i++) {
+      extras.push(
+        await body<CreatedClassDto>(
+          request,
+          'teacher',
+          'classes',
+          'POST',
+          { name: `JOB06 membership ${i}`, schoolId: school.id },
+          201,
+        ),
+      );
+    }
+    for (const extra of extras.slice(0, 3))
+      await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: extra.joinCode }, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(5);
+    await call(
+      request,
+      'raceStudent',
+      'classes/join',
+      'POST',
+      { joinCode: extras[3]!.joinCode },
+      409,
+    );
+
+    const banPath = `classes/${cls.id}/students/${fixtures.actors.raceStudent!.profileId}`;
+    await call(request, 'admin', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'foreignTeacher', `${banPath}/ban`, 'POST', undefined, 403);
+    await call(request, 'teacher', `${banPath}/ban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 403);
+    await call(request, 'teacher', `${banPath}/unban`, 'POST', undefined, 201);
+    expect(
+      (await body<StudentDashboardDto>(request, 'raceStudent', 'students/me/dashboard')).classes,
+    ).toHaveLength(4);
+    await call(request, 'raceStudent', 'classes/join', 'POST', { joinCode: cls.joinCode }, 201);
+    await call(request, 'raceStudent', `classes/${extras[0]!.id}/leave`, 'POST', undefined, 201);
+
+    const foreign = (await body<{ items: CreatedClassDto[] }>(request, 'foreignTeacher', 'classes'))
+      .items[0]!;
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 409);
+    await call(request, 'foreignTeacher', `schools/${school.id}/leave`, 'POST', undefined, 201);
+    await call(request, 'teacher', 'classes/takeover', 'POST', { joinCode: foreign.joinCode }, 201);
+    await call(request, 'foreignTeacher', `classes/${foreign.id}/students`, 'GET', undefined, 403);
+    const progress = await body<SubchapterDetailDto>(
+      request,
+      'student',
+      `subchapters/${subchapter}`,
+    );
+    expect(progress.levels.find((level) => level.id === levelOne)).toMatchObject({
+      latestScore: 70,
+      bestScore: 80,
+      latestStars: 2,
+    });
+    checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
   });
 });

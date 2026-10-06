@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
-import { and, eq, sql } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   getDatabase,
   closeDatabaseConnection,
@@ -340,6 +340,8 @@ const url = process.env.TEST_DATABASE_URL;
         (n) => n.id === old!.id && n.archived,
       ),
     ).toBe(true);
+    // A cursor can cross the archive boundary between page requests.
+    expect((await service.list('student', { filter: 'all', cursor: old!.id })).items).toEqual([]);
     await service.readAll('student');
     expect((await service.summary('student')).unread).toBe(0);
     expect(
@@ -358,6 +360,22 @@ const url = process.env.TEST_DATABASE_URL;
       });
     expect((await service.summary('student')).unread).toBe(1);
     await expect(service.summary('teacher')).rejects.toMatchObject({ status: 403 });
+  });
+
+  it('preserves microsecond pagination and rejects cursors from a different kind filter', async () => {
+    const ids: string[] = Array.from({ length: 21 }, () => randomUUID());
+    await db().insert(notifications).values(ids.map((id, index) => ({
+      id, recipientId: fixture.students[1]!.id, sourceKey: randomUUID(),
+      kind: 'LEVEL_UNLOCKED' as const, title: 'TEST microseconds', body: 'TEST', context: {},
+      occurredAt: sql`date_trunc('second', statement_timestamp()) + interval '1 hour' + ${index} * interval '1 microsecond'`,
+    })));
+    const first = await service.list('student', { filter: 'learning' });
+    expect(first.items.map(row => row.id)).toEqual(ids.slice(1).reverse());
+    const second = await service.list('student', { filter: 'learning', cursor: first.nextCursor! });
+    expect(second.items.filter(row => ids.includes(row.id)).map(row => row.id)).toEqual([ids[0]]);
+    await expect(service.list('student', { filter: 'tryout', cursor: first.nextCursor! }))
+      .rejects.toMatchObject({ status: 400 });
+    await db().delete(notifications).where(inArray(notifications.id, ids));
   });
 
   it('delivers a real invitation once and disables actions after decline', async () => {

@@ -57,7 +57,7 @@ describe.skipIf(!testUrl)('Supabase default ACL lockdown', () => {
           expect((await tx`SELECT public.measurement_fixture() AS value`)[0]!.value).toBe(42);
         });
 
-      const sql = await readFile(resolve('drizzle/0023_data_api_runtime_lockdown.sql'), 'utf8');
+      const sql = await readFile(resolve('drizzle/0022_data_api_runtime_lockdown.sql'), 'utf8');
       await client.begin(async (tx) => {
         for (const statement of sql.split('--> statement-breakpoint'))
           if (statement.trim()) await tx.unsafe(statement);

@@ -5,6 +5,8 @@ import {
   assessmentAttempts,
   assessmentPackages,
   classLeaderboardEntries,
+  classMemberships,
+  globalActivityLeaderboardEntries,
   classes,
   closeDatabaseConnection,
   getDatabase,
@@ -69,6 +71,12 @@ integration('class leaderboard projection against PostgreSQL', () => {
         joinCode: `LB${suffix}`,
       })
       .returning({ id: classes.id });
+    await db.insert(classMemberships).values(
+      [first!, second!, third!].map((student) => ({
+        classId: schoolClass!.id,
+        studentUserId: student.id,
+      })),
+    );
     const [policy] = await db
       .insert(scoringPolicyVersions)
       .values({
@@ -131,6 +139,16 @@ integration('class leaderboard projection against PostgreSQL', () => {
         ),
       );
     expect(entries).toHaveLength(3);
+    const globals = await db
+      .select()
+      .from(globalActivityLeaderboardEntries)
+      .where(
+        and(
+          eq(globalActivityLeaderboardEntries.periodId, firstRun.periodId),
+          eq(globalActivityLeaderboardEntries.studentId, first!.id),
+        ),
+      );
+    expect(globals[0]?.totalXp).toBe(12);
     expect(
       entries.map((entry) => [entry.totalXp, entry.rank]).sort((a, b) => b[0]! - a[0]!),
     ).toEqual([
@@ -162,16 +180,14 @@ integration('class leaderboard projection against PostgreSQL', () => {
         status: 'GRADED',
       })
       .returning();
-    await db
-      .insert(xpLedger)
-      .values({
-        studentId: first!.id,
-        classIdAtEvent: schoolClass!.id,
-        sourceType: 'TRYOUT',
-        attemptId: lateAttempt!.id,
-        xpAmount: 5,
-        occurredAt: now,
-      });
+    await db.insert(xpLedger).values({
+      studentId: first!.id,
+      classIdAtEvent: schoolClass!.id,
+      sourceType: 'TRYOUT',
+      attemptId: lateAttempt!.id,
+      xpAmount: 5,
+      occurredAt: now,
+    });
     const nextWeek = new Date(now.getTime() + weekMs);
     await projectClassLeaderboard(nextWeek);
     const [oldPeriod] = await db

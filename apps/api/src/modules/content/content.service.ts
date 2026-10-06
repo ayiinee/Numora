@@ -526,6 +526,8 @@ export class ContentService {
             'Buat revisi baru; versi yang telah digunakan tidak dapat dikembalikan menjadi draf.',
           );
         if (status === 'READY') {
+          if (!version.difficulty?.trim())
+            throw new BadRequestException('Difficulty Curriculum wajib diisi sebelum READY.');
           await this.validateReady(tx, version.variantId);
           if (version.questionType !== 'SINGLE_CHOICE')
             throw new ConflictException('Publikasi PGK menunggu OPEN-04.');

@@ -1,7 +1,7 @@
 import { Controller, Get, Headers, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { DifficultyQueryDto } from '../pvp/pvp.dto';
-import { LeaderboardDto } from './leaderboards.dto';
+import { ClassLeaderboardQueryDto, LeaderboardDto } from './leaderboards.dto';
 import { LeaderboardsService } from './leaderboards.service';
 
 @ApiTags('leaderboards')
@@ -19,7 +19,15 @@ export class LeaderboardsController {
   }
   @Get('class')
   @ApiOkResponse({ type: LeaderboardDto })
-  class(@Headers('authorization') authorization?: string) {
-    return this.service.class(authorization);
+  class(
+    @Headers('authorization') authorization: string | undefined,
+    @Query() query: ClassLeaderboardQueryDto,
+  ) {
+    return this.service.class(authorization, query.classId);
+  }
+  @Get('activity')
+  @ApiOkResponse({ type: LeaderboardDto })
+  activity(@Headers('authorization') authorization?: string) {
+    return this.service.activity(authorization);
   }
 }

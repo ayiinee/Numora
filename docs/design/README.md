@@ -46,3 +46,5 @@ The owner authorized committing/publishing all redesign phases on 4 October 2026
 ## UI feedback revision — 5 October 2026
 
 **ENGINEERING DECISION — owner approved:** follow the [UI feedback revision](UI_FEEDBACK_REVISION_2026-10-05.md). Teacher navigation becomes Kelas / Profil, feedback requires an explicitly selected owned-Class student, and Teacher read-receipt presentation is hidden while Student unread/read behavior remains. Student Pretest loses only its unavailable Home shortcut. No API, database, academic policy or OPEN decision is resolved by this UI revision.
+
+Materi accordion and durable Student notifications: [5 October handoff](MATERIALS_NOTIFICATIONS_REDESIGN_2026-10-05.md), with [mobile/desktop evidence](screenshots/materials-notifications/README.md).

@@ -18,7 +18,7 @@ import { scoringRubricVersions, validationState } from './measurement-foundation
 import { contentValidationDecisions } from './measurement.js';
 import type { QuestionUsage } from '../content-import-contract.js';
 
-export const contentStatus = pgEnum('content_status', ['DRAFT', 'READY', 'ARCHIVED']);
+export const contentStatus = pgEnum('content_status', ['DRAFT', 'READY', 'ARCHIVED', 'REVISION']);
 export const questionType = pgEnum('question_type', [
   'SINGLE_CHOICE',
   'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
@@ -103,7 +103,7 @@ export const levels = pgTable(
   },
   (table) => [
     uniqueIndex('levels_subchapter_number_uq').on(table.subchapterId, table.levelNumber),
-    check('levels_number_ck', sql`${table.levelNumber} > 0`),
+    check('levels_number_ck', sql`${table.levelNumber} between 1 and 5`),
   ],
 ).enableRLS();
 
@@ -225,6 +225,10 @@ export const questionVersions = pgTable(
     uniqueIndex('question_versions_id_variant_uq').on(table.id, table.variantId),
     uniqueIndex('question_versions_variant_version_uq').on(table.variantId, table.versionNumber),
     index('question_versions_status_idx').on(table.contentStatus),
+    check(
+      'question_versions_ready_difficulty_ck',
+      sql`${table.contentStatus} <> 'READY' or (${table.difficulty} is not null and length(trim(${table.difficulty})) > 0)`,
+    ),
     check('question_versions_number_ck', sql`${table.versionNumber} > 0`),
     index('question_versions_fingerprint_idx').on(table.contentFingerprint),
     check(

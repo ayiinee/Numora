@@ -54,6 +54,7 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
       onComplete={() => {
         void queryClient.invalidateQueries({ queryKey: ['student-progress'] });
         void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
+        void queryClient.invalidateQueries({ queryKey: ['student-materials'] });
         void queryClient.invalidateQueries({ queryKey: ['assessment-history'] });
         void queryClient.invalidateQueries({ queryKey: ['subchapter'] });
         router.push(`/student/drill/${attemptId}/result`);
@@ -76,7 +77,7 @@ function DrillForm({
       redesign
       title={attempt.levelTitle}
       questions={attempt.questions}
-      headerExtra={<DrillTimer startedAt={attempt.startedAt} />}
+      headerExtra={<DrillTimer startedAt={attempt.startedAt} serverTime={attempt.serverTime} />}
       notice={
         attempt.isDemo ? (
           <p className="rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-950">
@@ -99,15 +100,20 @@ function DrillForm({
   );
 }
 
-function DrillTimer({ startedAt }: { startedAt: string }) {
-  const [now, setNow] = useState<number | null>(null);
+export function DrillTimer({ startedAt, serverTime }: { startedAt: string; serverTime?: string | undefined }) {
+  const [elapsed, setElapsed] = useState<number | null>(null);
   useEffect(() => {
-    setNow(Date.now());
-    const timer = window.setInterval(() => setNow(Date.now()), 1000);
+    if (!serverTime) { setElapsed(null); return; }
+    const start = Date.parse(startedAt);
+    const receivedTime = Date.parse(serverTime);
+    if (!Number.isFinite(start) || !Number.isFinite(receivedTime)) { setElapsed(null); return; }
+    const received = performance.now();
+    const tick = () => setElapsed(Math.max(0, Math.floor((receivedTime - start + performance.now() - received) / 1000)));
+    tick();
+    const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, []);
-  if (now === null) return <span>Waktu: --:--</span>;
-  const elapsed = Math.max(0, Math.floor((now - new Date(startedAt).getTime()) / 1000));
+  }, [startedAt, serverTime]);
+  if (elapsed === null) return <span>Waktu: --:--</span>;
   return (
     <span aria-label="Waktu berjalan">
       <Icon name="clock" width={14} height={14} /> {Math.floor(elapsed / 60)}:
@@ -174,10 +180,14 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
                 <strong>{result.rawPoints}</strong>
               </div>
             </div>
-            <p>
-              XP belum tersedia. Formula reward menunggu persetujuan; nilai akademik tetap
-              tersimpan.
-            </p>
+            {result.reward ? (
+              <dl className="drill-rewards__stats" aria-label="Rincian XP tersimpan">
+                <div><dt>XP dasar</dt><dd>{result.reward.baseXp}</dd></div>
+                <div><dt>Bonus kecepatan</dt><dd>{result.reward.bonusXp.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</dd></div>
+                <div><dt>Total XP</dt><dd>{result.reward.totalXp} XP</dd></div>
+                <div><dt>Waktu pengerjaan</dt><dd>{result.reward.durationSeconds.toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik</dd></div>
+              </dl>
+            ) : <p>XP tidak tercatat pada kebijakan attempt lama; nilai akademik tetap tersimpan.</p>}
           </Card>
         </div>
         <div className="drill-result__review">
@@ -309,7 +319,7 @@ export function ResultSummary({ result }: { result: DrillResult }) {
         <p className="mt-2 font-semibold text-[var(--numora-purple)]">Level berikutnya terbuka.</p>
       )}
       {result.stars === null && (
-        <p className="result-stars-pending">Bintang menunggu kebijakan penilaian.</p>
+        <p className="result-stars-pending">Bintang tidak tercatat pada hasil versi lama.</p>
       )}
       <div className="result-threshold">
         <span>Skor minimal tuntas: 80</span>

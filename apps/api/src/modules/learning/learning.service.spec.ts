@@ -3,6 +3,7 @@ import {
   explanationAvailable,
   presentActiveQuestion,
   scoreDrill,
+  drillReward,
   selectDrillPackage,
 } from './drill.policy';
 
@@ -11,15 +12,18 @@ describe('Drill domain policy', () => {
     expect(scoreDrill(7, 10)).toEqual({ score: 70, mastered: false, stars: 2 });
     expect(scoreDrill(8, 10)).toEqual({ score: 80, mastered: true, stars: 2 });
     expect(scoreDrill(10, 10)).toEqual({ score: 100, mastered: true, stars: 3 });
-    expect(scoreDrill(0, 10)).toEqual({ score: 0, mastered: false, stars: null });
+    expect(scoreDrill(0, 10, 2)).toEqual({ score: 0, mastered: false, stars: 0 });
+    expect(scoreDrill(95, 100, 2).stars).toBe(2);
+    expect(scoreDrill(0, 10, null).stars).toBeNull();
+    expect(scoreDrill(95, 100, null).stars).toBe(3);
   });
 
-  it('uses the other equivalent package for the next completed attempt', () => {
+  it('reuses the sole MVP variant for retries', () => {
     const packages = [{ id: 'a' }, { id: 'b' }];
     expect(selectDrillPackage(packages)?.id).toBe('a');
-    expect(selectDrillPackage(packages, 'a')?.id).toBe('b');
+    expect(selectDrillPackage(packages, 'a')?.id).toBe('a');
     expect(selectDrillPackage(packages, 'b')?.id).toBe('a');
-    expect(selectDrillPackage([{ id: 'a' }], 'a')).toBeUndefined();
+    expect(selectDrillPackage([{ id: 'a' }], 'a')?.id).toBe('a');
   });
 
   it('does not expose answer key or explanation in an active attempt', () => {
@@ -40,9 +44,28 @@ describe('Drill domain policy', () => {
     });
   });
 
-  it('expires explanation at the exact 90-day boundary', () => {
+  it('preserves the pinned legacy explanation expiry', () => {
     const completed = new Date('2026-01-01T00:00:00.000Z');
     expect(explanationAvailable(completed, new Date('2026-03-31T23:59:59.999Z'))).toBe(true);
     expect(explanationAvailable(completed, new Date('2026-04-01T00:00:00.000Z'))).toBe(false);
+  });
+
+  it.each([[0, 0], [1, 1], [5, 1], [6, 2], [9, 2], [10, 3]])('v0.6 gives %i/10 %i stars', (correct, stars) => {
+    expect(scoreDrill(correct, 10, 2).stars).toBe(stars);
+  });
+  it.each([[600, 97], [899, 80], [900, 80], [901, 80]])('uses server duration %i seconds for %i XP', (duration, total) => {
+    const start = new Date('2026-10-05T00:00:00Z');
+    const reward = drillReward(8, 10, start, new Date(start.getTime() + duration * 1000));
+    expect(reward.totalXp).toBe(total);
+    expect(reward.bonusXp).toBeGreaterThanOrEqual(0);
+    if (duration >= 900) expect(reward.bonusXp).toBe(0);
+  });
+  it('rounds only the final sum and applies the formula to failed attempts too', () => {
+    const start = new Date('2026-10-05T00:00:00Z');
+    expect(drillReward(0, 10, start, start).totalXp).toBe(50);
+    expect(drillReward(10, 10, start, start).totalXp).toBe(150);
+    expect(drillReward(8, 10, start, new Date(start.getTime() + 891000))).toMatchObject({ bonusXp: 0.5, totalXp: 81 });
+    expect(() => drillReward(11, 10, start, start)).toThrow();
+    expect(() => drillReward(8, 9, start, start)).toThrow();
   });
 });

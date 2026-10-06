@@ -15,25 +15,57 @@ export async function migrateIntegratedDatabase(
   const [existing] = await client<{ history: string | null }[]>`
     SELECT to_regclass('drizzle.__drizzle_migrations')::text AS history`;
   if (existing?.history) {
-    await client.begin(async (tx) => {
+    const branchRecovered = await client.begin(async (tx) => {
       await tx.unsafe("SET LOCAL lock_timeout = '5s'");
       await tx.unsafe('LOCK TABLE drizzle.__drizzle_migrations IN EXCLUSIVE MODE');
       const history = await tx<{ hash: string; created_at: string }[]>`
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
-      // The generated local file could have Windows line endings before Git enforced LF.
+      // Published Excel branch DDL is archived unchanged; canonical main stays 0000–0027.
+      const forkFolder = resolve(
+        migrationsFolder,
+        '..',
+        'staging',
+        'fixtures',
+        'excel-import-branch',
+      );
+      const fork = readMigrationFiles({ migrationsFolder: forkFolder });
+      // The generated notification file initially also had Windows line endings.
       const notificationSql = await readFile(
-        resolve(migrationsFolder, '0022_amusing_quasar.sql'),
+        resolve(forkFolder, '0022_amusing_quasar.sql'),
         'utf8',
       );
       const notificationLf = notificationSql.replaceAll('\r\n', '\n');
-      if (
-        [notificationLf, notificationLf.replaceAll('\n', '\r\n')].some((sql) =>
-          hashes.has(createHash('sha256').update(sql).digest('hex')),
-        )
-      )
-        hashes.add(migrations[22]!.hash);
+      const notificationHashes = [notificationLf, notificationLf.replaceAll('\n', '\r\n')].map(
+        (sql) => createHash('sha256').update(sql).digest('hex'),
+      );
+      const canonicalHashes = new Set(migrations.map((entry) => entry.hash));
+      const branchHashes = new Set([...fork.map((entry) => entry.hash), ...notificationHashes]);
+      const notificationFork =
+        notificationHashes.some((hash) => hashes.has(hash)) &&
+        migrations.slice(3, 18).every((entry) => hashes.has(entry.hash)) &&
+        history
+          .filter((row) => Number(row.created_at) >= migrations[3]!.folderMillis)
+          .every((row) => canonicalHashes.has(row.hash) || branchHashes.has(row.hash));
+      if (notificationFork) {
+        // A later branch cursor must not skip main's rewards/data migrations. Apply only
+        // absent hashes, in canonical order, preserving every original history row.
+        for (const [index, entry] of migrations.entries()) {
+          if (index < 4 || hashes.has(entry.hash)) continue;
+          if (index === 27) {
+            // Tables/data are identical; main additionally revokes service_role access.
+            const revoke = entry.sql.find((statement) => statement.includes("'service_role'"));
+            if (!revoke) throw new Error('Canonical notification permission statement missing.');
+            await tx.unsafe(revoke);
+          } else {
+            for (const statement of entry.sql) if (statement.trim()) await tx.unsafe(statement);
+          }
+          await tx`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+            VALUES(${entry.hash},${entry.folderMillis})`;
+        }
+        return true;
+      }
       // The audited Staging bridge retains alternate 0000-0002 history. 0003 is shared.
       const skipped = migrations
         .slice(4)
@@ -54,27 +86,7 @@ export async function migrateIntegratedDatabase(
         hashes.has(migrations[3]!.hash) &&
         irtHashes.some((hash) => hashes.has(hash)) &&
         skipped.every((entry) => entry.folderMillis <= migrations[8]!.folderMillis);
-      // Local 0018 notifications became 0022; its SQL hash and original cursor are unchanged.
-      const notificationFork =
-        hashes.has(migrations[22]!.hash) &&
-        cursor === migrations[22]!.folderMillis &&
-        migrations.slice(0, 18).every((entry) => hashes.has(entry.hash)) &&
-        skipped.every((entry) =>
-          migrations.slice(18, 22).some((remote) => remote.hash === entry.hash),
-        );
-      // Incoming main had already applied lockdown/import (formerly 0022/0023),
-      // while the UI branch independently added notifications at the same number.
-      // The audited bridge also keeps alternate 0000–0002; 0003 onward is shared.
-      const contentFork =
-        migrations.slice(3, 22).every((entry) => hashes.has(entry.hash)) &&
-        [23, 24].some(
-          (index) =>
-            cursor === migrations[index]!.folderMillis &&
-            migrations.slice(23, index + 1).every((entry) => hashes.has(entry.hash)),
-        ) &&
-        skipped.length === 1 &&
-        skipped[0]!.hash === migrations[22]!.hash;
-      if (!irtFork && !notificationFork && !contentFork) {
+      if (!irtFork) {
         throw new Error(
           'Migration history would skip unapplied migrations. Reconcile the database before migrating.',
         );
@@ -89,6 +101,7 @@ export async function migrateIntegratedDatabase(
           VALUES (${entry.hash}, ${entry.folderMillis})`;
       }
     });
+    if (branchRecovered) return;
   }
   await migrate(drizzle(client), { migrationsFolder });
 }
