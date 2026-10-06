@@ -809,9 +809,14 @@ describe.skipIf(!databaseUrl)(
       >`INSERT INTO tryout_result_finalizations(batch_id,version,mode,scoring_policy_version_id,policy_snapshot,digest) VALUES(${f.batchId},1,'FALLBACK',${policy!.scoring_policy_version_id},'{"fixture":"TEST ONLY approved fallback"}','TEST-finalization') RETURNING id`;
       await main`INSERT INTO tryout_finalization_items(finalization_id,question_version_id,included,max_points,reason) VALUES(${finalization!.id},${f.versionId},true,1,'TEST ONLY')`;
       await main`INSERT INTO tryout_attempt_results(finalization_id,attempt_id,score,coverage) VALUES(${finalization!.id},${f.attemptId!},73.25,'{"fixture":true}')`;
-      await main`UPDATE tryout_result_finalizations SET published_at=now() WHERE id=${finalization!.id}`;
+      await main`UPDATE tryout_result_finalizations SET published_at=now()-interval '1 second' WHERE id=${finalization!.id}`;
       const release = new TryoutReleaseService();
-      expect((await release.releasedPackageIds([f.packageId])).has(f.packageId)).toBe(true);
+      expect(
+        (await release.releasedPackageIds([f.packageId])).has(f.packageId),
+        JSON.stringify(
+          await main`SELECT b.status,f.published_at FROM tryout_batches b JOIN tryout_result_finalizations f ON f.batch_id=b.id WHERE b.id=${f.batchId}`,
+        ),
+      ).toBe(true);
       await discoverNotificationReleases();
       await drainNotificationBatch(100);
       expect(
