@@ -1,3 +1,18 @@
+# Current source — PRD v0.6 Final
+
+**PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
+
+Current rules: three fixed Admin subroles and action-level permissions; maximum five active classes; account-based progress/XP; leave/ban/takeover preserving history; active teacher may be absent. Pretest: 20 items, one completed attempt/chapter, optional/skip, placement 0–7 L1 / 8–18 L2 / 19–20 L3, zero XP. Drill: 10 items/level, five levels/subchapter, one MVP variant, >=80 unlock, irreversible unlock, latest stars (0 included), final base/time bonus formula. Tryout: 30 items, free ongoing batch Monday–Sunday WIB, one attempt/package, close-time auto-submit, immediate XP independent of IRT, immutable value/explanation within 72 hours. PvP: 10-minute waiting/invite, 20-second reconnect, Top 10 plus self leaderboard. Admin cannot ban students or edit product formulas.
+
+**ENGINEERING DECISION - approved Product clarifications in main PR #77, 5 October 2026:** Tryout XP uses ceil(equivalent-correct x10) at completion; Drill XP rounds the final total once to the nearest integer. Product weights are PG=2, MCMA=3 and Category=3. Drill partial credit contributes to mastery and equivalent-correct XP. New Drill explanation access has no expiry; legacy attempts retain their pins. Tryout XP fallback applies only when partial calculation is unavailable at submit, using fully-correct x10. Result fallback is separate and applies to the whole batch after 72 hours without a valid IRT result. See [Drill decisions](../development/DRILL_V06_REWARDS.md) and [Tryout decisions](../development/TRYOUT_XP_V06.md).
+
+**OPEN:** approved Curriculum bank/metadata/blueprints, exhaustive PGK rubric/full-correctness evidence and Drill score precision before stars; Data scientific configuration, respondent mapping/quality and ordinary-result fallback formula; Cloud/independent QA acceptance. The scoring handoff remains partially unapproved. No substitute scientific mapping or academic rubric is inferred.
+
+**ENGINEERING DECISION — user-approved 5 October plan:** full-stack Admin implementation, fixed role capabilities, invite by email, stage gates without a fixed date. Import preview stays unscored. Full Pretest Student remains a separate domain dependency. Main PR #77 supplies membership/ownership lifecycle; Admin readers must integrate that implementation without taking over Teacher-only actions. See [Admin implementation and acceptance](../development/ADMIN_FULL_STACK_STATUS.md).
+
+<details>
+<summary>Historical sources and decisions — superseded where v0.6 differs</summary>
+
 > **PRD RULE - 4 October 2026:** [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied by the project owner, supersedes conflicting earlier product rules. Relevant content rules: Admin content access requires Super Admin or Content/Data/Moderation; initial JSON import and R2 media; 5 levels per subchapter and 10 Drill items per level; one Drill variant per level for MVP; TryOut has 30 items. Historical decisions below remain evidence, not overriding policy.
 >
 > **ENGINEERING DECISION:** importer/preview rollout imports DRAFT only, with all preview scores null. No production publication, PGK grading, XP, or IRT is enabled by preview.
@@ -127,3 +142,5 @@ Autorisasi, batas akses Mandiri/Sekolah, waktu asesmen/PvP, penilaian, dan idemp
 PRD fitur Drill v1.2 dan TryOut v1.1 adalah acuan terbaru untuk area terkait. PRD v0.5 **sudah disetujui tim sebagai baseline lintas fitur**, walaupun label pada PDF yang diberikan masih menyebut “draf untuk review”. `docs/product/OPEN_DECISIONS.md` mencatat keputusan yang tetap belum final. Dokumen Sprint 2 yang diberikan masih mencantumkan 70% untuk unlock Drill; tim menegaskan bahwa aturan PRD v0.5, yaitu **80%**, berlaku juga untuk Sprint 2.
 
 Peristiwa analitik tambahan v0.5 antara lain `user_type_changed` dan `star_earned`; kontrak lengkap ada di `docs/data/EVENTS.md`. Kebutuhan keamanan, privasi, observabilitas, dan QA ada di folder `docs/security`, `docs/operations`, serta `docs/testing`.
+
+</details>
