@@ -182,7 +182,8 @@ async function fixtures(
         ],
       };
     else if (path === `/assessment-attempts/${attemptId}/answers/${questionId}`) {
-      option = (route.request().postDataJSON() as { optionId: string | null }).optionId;
+      const payload = route.request().postDataJSON();
+      option = payload.answer?.optionId ?? payload.optionId ?? null;
       data = { questionInstanceId: questionId, selectedOptionId: option };
     } else if (path === `/assessment-attempts/${attemptId}/submit`) {
       completed = true;
@@ -774,6 +775,8 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
   await page.reload();
   await page.getByRole('link', { name: 'Lihat hasil simulasi' }).click();
   await expect(page).toHaveURL(`/student/tryout/${attemptId}/result`);
+  await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
+  await expect(page).toHaveURL(`/student/tryout/${attemptId}/explanation`);
   await expect(page.getByText('Fixture explanation', { exact: true })).toBeVisible();
 });
 
@@ -849,8 +852,12 @@ test('history keeps zero/context, hides pending links and retries pagination wit
   await expect(zero.getByText('Bilangan fixture · Pecahan fixture · Level 1')).toBeVisible();
   await expect(zero.getByText('XP dan bintang belum tersedia')).toBeVisible();
   await expect(
-    page.getByRole('link', { name: /History waiting fixture|History Pretest fixture/ }),
+    page.getByRole('link', { name: /History waiting fixture/ }),
   ).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /History Pretest fixture/ })).toHaveAttribute(
+    'href',
+    `/student/pretest/${subchapterId}/result`,
+  );
   await page.evaluate(() => document.fonts.ready);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 844 });
@@ -1383,7 +1390,8 @@ test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and re
     `http://localhost:3301/api/v1/tryout/attempts/${attemptId}/answers/*`,
     (route) => {
       const id = new URL(route.request().url()).pathname.split('/').at(-1)!;
-      const { optionId } = route.request().postDataJSON();
+      const payload = route.request().postDataJSON();
+      const optionId = payload.answer?.optionId ?? payload.optionId ?? null;
       answers.set(id, optionId);
       return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: optionId } });
     },
@@ -1763,7 +1771,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       }
       if (path.includes('/answers/')) {
         const id = path.split('/').at(-1)!;
-        const answer = route.request().postDataJSON().optionId as string | null;
+        const payload = route.request().postDataJSON();
+        const answer = (payload.answer?.optionId ?? payload.optionId ?? null) as string | null;
         answerKeys.set(id, answer);
         return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: answer } });
       }
@@ -1975,7 +1984,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         });
       if (path.includes('/answers/')) {
         const id = path.split('/').at(-1)!;
-        const { optionId } = route.request().postDataJSON();
+        const payload = route.request().postDataJSON();
+        const optionId = payload.answer?.optionId ?? payload.optionId ?? null;
         selected.set(id, optionId);
         return route.fulfill({ json: { questionInstanceId: id, selectedOptionId: optionId } });
       }
