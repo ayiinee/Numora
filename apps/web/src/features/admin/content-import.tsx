@@ -4,6 +4,7 @@ import { useRef, useState } from 'react';
 import { Badge, Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import { validateImport, importContent, createPreview } from './content-preview-api';
 import type {
   ImportReportDto,
@@ -36,6 +37,7 @@ function ContentImportContent() {
   const [namespace, setNamespace] = useState('CURRICULUM_SHEETS_SAMPLE');
   const [questions, setQuestions] = useState<ImportBodyDto['questions']>([]);
   const [report, setReport] = useState<ImportReportDto | null>(null);
+  const reportPage = useAdminPagination(report?.items ?? [], report);
   const [sessionId, setSessionId] = useState<string | null>(null);
   const [error, setError] = useState('');
   const [working, setBusy] = useState(false);
@@ -557,7 +559,7 @@ function ContentImportContent() {
                 </>
               )}
               <ul className="monitoring-list">
-                {report.items.map((item, i) => (
+                {reportPage.items.map((item, i) => (
                   <li key={`${item.externalId}:${i}`}>
                     <strong>{item.externalId || 'Objek tanpa ID'}</strong>
                     <p>
@@ -580,6 +582,11 @@ function ContentImportContent() {
                   </li>
                 ))}
               </ul>
+              <AdminPagination
+                {...reportPage.pagination}
+                disabled={busy || editing}
+                label="Halaman laporan impor"
+              />
             </Card>
           )}
         </>

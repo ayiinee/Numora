@@ -7801,7 +7801,7 @@ a.settings-row:hover {
   font-size: 12px;
   flex: 1 1 160px;
 }
-.admin-redesign-shell .admin-content-actions[aria-label='Halaman data'] {
+.admin-redesign-shell .admin-pagination {
   display: grid;
   width: 100%;
   max-width: 480px;
@@ -7810,13 +7810,14 @@ a.settings-row:hover {
   align-items: center;
   padding-top: 16px;
   border-top: 1px solid var(--color-border-light);
+  grid-column: 1 / -1;
 }
-.admin-redesign-shell .admin-content-actions[aria-label='Halaman data'] > button {
+.admin-redesign-shell .admin-pagination > button {
   min-width: 0;
   padding-inline: 8px !important;
   font-size: 12px;
 }
-.admin-redesign-shell .admin-content-actions[aria-label='Halaman data'] > span {
+.admin-redesign-shell .admin-pagination > span {
   font-size: 12px;
   color: var(--color-text-muted);
 }
@@ -7849,17 +7850,48 @@ a.settings-row:hover {
   font-size: 13px;
   line-height: 1.7;
 }
-.admin-redesign-shell .admin-operations-filters {
-  display: grid;
-  gap: 12px;
-  margin-bottom: 16px;
+.admin-operations-search {
+  grid-column: 1 / -1;
 }
-.admin-operations-filters .admin-content-field {
-  display: grid;
-  gap: 6px;
+.admin-redesign-shell .admin-search-toolbar {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: flex-end;
+  gap: var(--space-3);
+  width: 100%;
+  min-width: 0;
+  grid-column: 1 / -1;
+  margin-bottom: var(--space-4);
 }
-.admin-operations-filters .admin-content-actions {
+.admin-redesign-shell .admin-search-toolbar > label {
+  display: grid;
+  gap: var(--space-2);
+  flex: 1 1 120px;
+  min-width: 0;
+  font-size: var(--text-sm);
+  font-weight: var(--font-semibold);
+  margin-block: 0;
+}
+.admin-redesign-shell .admin-search-toolbar > .admin-search-primary {
+  flex: 2 1 220px;
+}
+.admin-redesign-shell .admin-search-toolbar :is(input, select) {
+  width: 100%;
+  min-width: 0;
+  min-height: 46px;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-secondary-light);
+  font: inherit;
+}
+.admin-search-toolbar .admin-content-actions {
   margin-top: 0;
+}
+.admin-search-toolbar > [role='status'] {
+  flex-basis: 100%;
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
 }
 .admin-operation-row-heading {
   display: flex;
@@ -7952,7 +7984,7 @@ a.settings-row:hover {
     grid-template-columns: minmax(0, 1.15fr) minmax(300px, 0.85fr);
     align-items: start;
   }
-  .admin-operations-grid > section:nth-child(2) {
+  .admin-operations-grid > section:last-child {
     position: sticky;
     top: 20px;
   }

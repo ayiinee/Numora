@@ -6,6 +6,8 @@
 
 ## Approved behavior
 
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** use a more compact PvP leaderboard: smaller headings, podium portraits/pedestals, point labels and participant rows, with reduced card padding and gaps. Apply this only to the PvP tab across all difficulties and responsive widths; retain at least 44px interactive targets. Class/activity presentation, server ranks, points, ties and archives retain their existing behavior.
+
 - **PRD RULE:** ten identical questions, first answer locked, advance after both answers or deadline, server points/time. Correct = 100 + floor(50 × remaining / duration); wrong/blank = 0. Easy/medium/hard durations = 30/45/60 seconds. Room/invitation lifetime = 600 seconds.
 - **ENGINEERING DECISION:** one active room/account; tabs share participation. Guest leaving/exceeding reconnect grace in waiting releases the slot and resets Ready without extending expiry. Host leaving/exceeding grace cancels. Both current players must explicitly be Ready and connected.
 - **ENGINEERING DECISION:** guest leave receipts are persisted in the transactional outbox with the command request ID. A delayed retry after that student rejoins the same room cannot end their replacement participation.

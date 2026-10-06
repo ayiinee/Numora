@@ -273,14 +273,6 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
           <Icon name="chevron" width={18} height={18} />
         </Link>
       </div>
-      <img
-        className="sh-hero__illustration sh-hero__illustration--tryout"
-        src="/illustrations/student-home/reference-tryout.png"
-        width="93"
-        height="77"
-        alt=""
-        draggable="false"
-      />
     </div>
   );
 }
@@ -301,7 +293,7 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
       imageWidth: 76,
       imageHeight: 78,
       href: '/student/learn',
-      tone: 'peach',
+      tone: 'violet',
     },
     {
       title: 'Tryout',
@@ -309,7 +301,7 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
       imageWidth: 93,
       imageHeight: 77,
       href: '/student/tryout',
-      tone: 'purple',
+      tone: 'blue',
     },
     {
       title: 'PvP',
@@ -317,7 +309,7 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
       imageWidth: 99,
       imageHeight: 71,
       href: '/student/pvp',
-      tone: 'cool',
+      tone: 'mint',
     },
   ];
   return (

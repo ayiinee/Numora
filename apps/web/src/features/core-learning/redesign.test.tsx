@@ -127,7 +127,17 @@ describe('Student Home carousel and server-driven actions', () => {
   const visibleSlide = () => document.querySelector('.sh-carousel__slide[aria-hidden="false"]');
 
   it('starts with Drill, switches with indicators and swipes, and keeps the other CTA inert', () => {
+    vi.stubGlobal(
+      'matchMedia',
+      vi.fn(() => ({ matches: true, addEventListener: vi.fn(), removeEventListener: vi.fn() })),
+    );
     carousel();
+    expect(document.querySelectorAll('.sh-carousel__slide[data-clone="true"]')).toHaveLength(3);
+    expect(
+      Array.from(document.querySelectorAll('.sh-carousel__slide[data-clone="true"]')).every(
+        (slide) => slide.hasAttribute('inert'),
+      ),
+    ).toBe(true);
     expect(screen.queryByRole('button', { name: 'Slide berikutnya' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Slide sebelumnya' })).toBeNull();
     expect(screen.queryByRole('button', { name: 'Jeda carousel' })).toBeNull();
@@ -142,52 +152,48 @@ describe('Student Home carousel and server-driven actions', () => {
     expect(document.querySelector('.sh-carousel__slide--drill')?.hasAttribute('inert')).toBe(true);
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
-    fireEvent.touchStart(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
-      touches: [{ clientX: 230, clientY: 100 }],
-    });
-    fireEvent.touchEnd(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
-      changedTouches: [{ clientX: 100, clientY: 104 }],
-    });
+    const viewport = document.querySelector('.sh-carousel__viewport')!;
+    fireEvent.pointerDown(viewport, { pointerId: 1, button: 0, clientX: 230, clientY: 100 });
+    fireEvent.pointerMove(viewport, { pointerId: 1, clientX: 100, clientY: 104 });
+    fireEvent.pointerUp(viewport, { pointerId: 1, clientX: 100, clientY: 104 });
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
-    fireEvent.touchStart(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
-      touches: [{ clientX: 100, clientY: 100 }],
-    });
-    fireEvent.touchEnd(screen.getByRole('region', { name: 'Pilihan belajar utama' }), {
-      changedTouches: [{ clientX: 230, clientY: 104 }],
-    });
+    fireEvent.pointerDown(viewport, { pointerId: 2, button: 0, clientX: 100, clientY: 100 });
+    fireEvent.pointerMove(viewport, { pointerId: 2, clientX: 230, clientY: 104 });
+    fireEvent.pointerUp(viewport, { pointerId: 2, clientX: 230, clientY: 104 });
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
   });
 
   it('uses the existing Drill attempt link without starting a new attempt', () => {
     carousel({ attemptId: 'active-test', levelId: 'level-test', title: 'Materi aktif' });
-    expect(screen.getByText(/Lanjutkan Materi aktif/)).toBeTruthy();
+    expect(within(visibleSlide() as HTMLElement).getByText(/Lanjutkan Materi aktif/)).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Lanjutkan latihan' }).getAttribute('href')).toBe(
       '/student/drill/active-test',
     );
   });
 
-  it('autoplays after six seconds, wraps, resets after selection, and pauses on hover and focus', () => {
+  it('autoplays after six seconds, wraps, resets after selection, and pauses on hover and focus', async () => {
     vi.useFakeTimers();
     carousel();
-    act(() => vi.advanceTimersByTime(6_000));
+    act(() => vi.advanceTimersByTime(5_350));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
-    act(() => vi.advanceTimersByTime(6_000));
-    expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
+    act(() => vi.advanceTimersByTime(690));
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
-    act(() => vi.advanceTimersByTime(5_999));
+    act(() => vi.advanceTimersByTime(690));
+    act(() => vi.advanceTimersByTime(5_349));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
     const region = screen.getByRole('region', { name: 'Pilihan belajar utama' });
     fireEvent.mouseEnter(region);
-    act(() => vi.advanceTimersByTime(6_000));
+    act(() => vi.advanceTimersByTime(5_350));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
     fireEvent.mouseLeave(region);
     fireEvent.focus(screen.getByRole('button', { name: 'Tampilkan slide Drill' }));
-    act(() => vi.advanceTimersByTime(6_000));
+    act(() => vi.advanceTimersByTime(5_350));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--drill')).toBe(true);
     fireEvent.blur(screen.getByRole('button', { name: 'Tampilkan slide Drill' }), {
       relatedTarget: null,
     });
-    act(() => vi.advanceTimersByTime(6_000));
+    await act(async () => Promise.resolve());
+    act(() => vi.advanceTimersByTime(5_350));
     expect(visibleSlide()?.classList.contains('sh-carousel__slide--tryout')).toBe(true);
   });
 
@@ -512,7 +518,8 @@ describe('responsive learning composition', () => {
     renderStudent(<NewStudentDashboard />);
     await screen.findByRole('heading', { name: 'Latihan matematika!' });
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
-    await screen.findByText('Tryout offline', {}, { timeout: 5000 });
+    const tryoutSlide = within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!);
+    await tryoutSlide.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: 'Shortcut Belajar' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Aktivitas' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Feedback' })).toBeTruthy();
@@ -653,7 +660,11 @@ describe('responsive learning composition', () => {
     await screen.findByRole('heading', { name: 'Latihan matematika!' });
     expect(screen.getAllByText('Materi sedang disiapkan').length).toBeGreaterThan(0);
     fireEvent.click(screen.getByRole('button', { name: 'Tampilkan slide Tryout' }));
-    expect(await screen.findByText('Tryout Matematika')).toBeTruthy();
+    expect(
+      await within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!).findByText(
+        'Tryout Matematika',
+      ),
+    ).toBeTruthy();
     expect(screen.queryByRole('button', { name: 'Pretest belum tersedia' })).toBeNull();
     expect(document.querySelectorAll('.sh-shortcuts__grid > a')).toHaveLength(3);
     expect(screen.getByRole('link', { name: /Latihan Soal/ })).toBeTruthy();

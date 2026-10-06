@@ -87,6 +87,7 @@ The full source is `docs/product/sources/PRD_Numora_v0.6.docx.md`. Reyhan confir
 
 ## Coding rules
 
+- **ENGINEERING DECISION — owner instruction, 7 October 2026:** new branch names must not start with `codex`; use descriptive prefixes such as `feat/`, `fix/`, or `docs/`.
 - TypeScript strict mode.
 - DB identifiers: `snake_case`; TypeScript/API JSON: `camelCase`.
 - External identifiers use UUID unless an ADR says otherwise.

@@ -17,6 +17,8 @@ Both players and reconnects use saved version IDs/order. Retry returns the exist
 
 ## QA and rollout
 
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** remove the standalone `PvP DEMO` lobby card and its obsolete synthetic-content copy. The lobby uses the existing authenticated REST/WebSocket backend and new rooms use the READY Drill bank described above. This presentation change does not switch server mode or rewrite historical records; the in-match notice still follows `isDemo`.
+
 Use isolated PostgreSQL/Redis fixtures with explicitly READY Drill families; verify difficulty, hierarchy, review, latest versions, family deduplication, malformed/unsupported exclusions, pools of 0/9/10/>10, deterministic random tests, concurrent idempotency and transaction rollback. Connected two-player QA covers equal questions/order, saved answers/reconnect, pinned versions and no keys in responses. Drain rooms before deployment because the existing API restart policy cancels outstanding matches. Enable new rooms only when the scheduler/policy and at least one difficulty's ten eligible families are available; no writes to the active content bank are part of this rollout.
 
 

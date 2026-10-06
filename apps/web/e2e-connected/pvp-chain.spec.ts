@@ -47,7 +47,8 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
     expect(availability.difficulties.every((d: { available: boolean }) => d.available)).toBe(true);
     for (const difficulty of ['easy', 'medium', 'hard']) {
       await Promise.all([host.goto('/student/pvp'), guest.goto('/student/pvp')]);
-      await expect(host.getByText('PvP DEMO', { exact: true })).toBeVisible();
+      await expect(host.getByRole('button', { name: 'Buat room', exact: true })).toBeVisible();
+      await expect(host.getByText('PvP DEMO', { exact: true })).toHaveCount(0);
       const label = { easy: 'Mudah', medium: 'Sedang', hard: 'Sulit' }[difficulty]!;
       await host.getByRole('radio', { name: new RegExp(label) }).click();
       await host.getByRole('button', { name: 'Buat room', exact: true }).click();

@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import {
   ApiProblem,
   createSchool,
@@ -44,6 +45,8 @@ function AdminSchoolsScreenContent() {
   const [accessError, setAccessError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
+  const schoolPage = useAdminPagination(schools ?? []);
+  const tokenPage = useAdminPagination(tokens ?? [], selected);
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -225,7 +228,7 @@ function AdminSchoolsScreenContent() {
               </Card>
             ) : (
               <ul className="admin-school-rows">
-                {schools.map((school) => (
+                {schoolPage.items.map((school) => (
                   <li key={school.id}>
                     <button
                       className="admin-school-row"
@@ -255,6 +258,9 @@ function AdminSchoolsScreenContent() {
                   </li>
                 ))}
               </ul>
+            )}
+            {schools && !schoolError && (
+              <AdminPagination {...schoolPage.pagination} disabled={busy} label="Halaman sekolah" />
             )}
           </section>
         </div>
@@ -335,7 +341,7 @@ function AdminSchoolsScreenContent() {
                   <p className="admin-empty-inline">Belum ada token.</p>
                 ) : (
                   <ul className="admin-token-list">
-                    {tokens.map((item) => (
+                    {tokenPage.items.map((item) => (
                       <li key={item.id} className="admin-token-row">
                         <div>
                           <Badge
@@ -394,6 +400,13 @@ function AdminSchoolsScreenContent() {
                       </li>
                     ))}
                   </ul>
+                )}
+                {tokens && !tokenError && (
+                  <AdminPagination
+                    {...tokenPage.pagination}
+                    disabled={busy}
+                    label="Halaman token Guru"
+                  />
                 )}
               </div>
             </Card>

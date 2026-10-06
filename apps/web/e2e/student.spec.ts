@@ -446,23 +446,41 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       '.sh-identity__pattern',
       '.sh-identity__bell img',
       '.sh-identity__announcement img',
-      '.sh-carousel__slide--drill .sh-hero__illustration',
       '.sh-shortcut__icon img',
       '.sh-class__trophy',
       '.sh-feedback__icon img',
     ];
     for (const slot of imageSlots) {
-      const images = await page.locator(slot).evaluateAll((nodes) =>
-        nodes.map((node) => ({
-          complete: (node as HTMLImageElement).complete,
-          width: (node as HTMLImageElement).naturalWidth,
-          height: (node as HTMLImageElement).naturalHeight,
-        })),
-      );
-      expect(images.length, slot).toBeGreaterThan(0);
+      await expect
+        .poll(
+          () =>
+            page.locator(slot).evaluateAll(
+              (nodes) =>
+                nodes.length > 0 &&
+                nodes.every((node) => {
+                  const image = node as HTMLImageElement;
+                  return image.complete && image.naturalWidth > 0 && image.naturalHeight > 0;
+                }),
+            ),
+          { message: slot },
+        )
+        .toBe(true);
+    }
+    for (const [slide, asset] of [
+      ['drill', 'drill-owl-background.png'],
+      ['tryout', 'tryout-exam-background.png'],
+    ]) {
+      const background = await page
+        .locator(`.sh-carousel__slide--${slide} .sh-hero`)
+        .evaluate((hero) => getComputedStyle(hero).backgroundImage);
+      expect(background).toContain(asset);
       expect(
-        images.every((image) => image.complete && image.width > 0 && image.height > 0),
-        slot,
+        await page.evaluate(async (filename) => {
+          const picture = new Image();
+          picture.src = `/illustrations/student-home/${filename}`;
+          await picture.decode();
+          return picture.naturalWidth > 0 && picture.naturalHeight > 0;
+        }, asset),
       ).toBe(true);
     }
     await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
@@ -576,13 +594,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await expect
         .poll(() =>
           page.locator('.sh-carousel__viewport').evaluate((viewport) => {
-            const drill = viewport.querySelector<HTMLElement>('.sh-carousel__slide--drill');
+            const track = viewport.querySelector<HTMLElement>('.sh-carousel__track');
             const tryout = viewport.querySelector<HTMLElement>('.sh-carousel__slide--tryout');
-            if (!drill || !tryout) return false;
+            const nextDrill = track?.children[3] as HTMLElement | undefined;
+            if (!track || !nextDrill || !tryout || track.dataset.phase !== 'hold') return false;
+            const viewportBox = viewport.getBoundingClientRect();
+            const activeBox = tryout.getBoundingClientRect();
+            const nextBox = nextDrill.getBoundingClientRect();
             return (
-              tryout.offsetLeft === 0 &&
-              drill.offsetLeft > tryout.offsetWidth &&
-              drill.offsetLeft < viewport.clientWidth - 12
+              Math.abs(activeBox.left - viewportBox.left) <= 2 &&
+              nextBox.left > activeBox.right &&
+              nextBox.left < viewportBox.right - 12
             );
           }),
         )
@@ -598,8 +620,11 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         );
       });
     expect(tryoutActionFits).toBe(true);
-    if (width === 390)
-      await page.screenshot({ path: testInfo.outputPath('home-tryout-390.png'), fullPage: true });
+    if ([320, 390, 1440].includes(width))
+      await page.screenshot({
+        path: testInfo.outputPath(`home-tryout-${width}.png`),
+        fullPage: true,
+      });
     if ([320, 390, 1440].includes(width)) {
       await page.getByRole('button', { name: 'Tampilkan slide Drill' }).click();
       await expect(page.locator('.sh-carousel__slide--drill')).toHaveAttribute(
@@ -609,13 +634,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await expect
         .poll(() =>
           page.locator('.sh-carousel__viewport').evaluate((viewport) => {
+            const track = viewport.querySelector<HTMLElement>('.sh-carousel__track');
             const drill = viewport.querySelector<HTMLElement>('.sh-carousel__slide--drill');
             const tryout = viewport.querySelector<HTMLElement>('.sh-carousel__slide--tryout');
-            if (!drill || !tryout) return false;
+            if (!track || !drill || !tryout || track.dataset.phase !== 'hold') return false;
+            const viewportBox = viewport.getBoundingClientRect();
+            const activeBox = drill.getBoundingClientRect();
+            const nextBox = tryout.getBoundingClientRect();
             return (
-              drill.offsetLeft === 0 &&
-              tryout.offsetLeft > drill.offsetWidth &&
-              tryout.offsetLeft < viewport.clientWidth - 12
+              Math.abs(activeBox.left - viewportBox.left) <= 2 &&
+              nextBox.left > activeBox.right &&
+              nextBox.left < viewportBox.right - 12
             );
           }),
         )
@@ -626,11 +655,31 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         'false',
       );
     }
+    await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
     await page.getByRole('button', { name: 'Tampilkan slide Drill' }).click();
     await expect(page.locator('.sh-carousel__slide--drill')).toHaveAttribute(
       'aria-hidden',
       'false',
     );
+    if (width === 390) {
+      const viewport = page.locator('.sh-carousel__viewport');
+      await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
+      const box = await viewport.boundingBox();
+      expect(box).not.toBeNull();
+      const startX = box!.x + box!.width * 0.68;
+      const startY = box!.y + 30;
+      for (const nextSlide of ['tryout', 'drill']) {
+        await page.mouse.move(startX, startY);
+        await page.mouse.down();
+        await page.mouse.move(startX - 110, startY, { steps: 8 });
+        await page.mouse.up();
+        await expect(page.locator(`.sh-carousel__slide--${nextSlide}`)).toHaveAttribute(
+          'aria-hidden',
+          'false',
+        );
+        await expect(page.locator('.sh-carousel__track')).toHaveAttribute('data-phase', 'hold');
+      }
+    }
     await page.locator('.sh-identity__bell:visible').click();
     await expect(page).toHaveURL('/student/notifications');
     expect(mutations).toEqual([]);
@@ -798,6 +847,14 @@ test('home loading and independent Tryout errors preserve learning and pending c
   await expect(
     tryoutError.getByRole('heading', { name: 'Tryout belum dapat dimuat' }),
   ).toBeVisible();
+  const retryTryout = tryoutError.getByRole('button', { name: 'Coba lagi' });
+  await expect(retryTryout).toBeVisible();
+  expect(
+    await retryTryout.evaluate((button) => {
+      const hero = button.closest('.sh-hero')!.getBoundingClientRect();
+      return button.getBoundingClientRect().bottom <= hero.bottom;
+    }),
+  ).toBe(true);
   await expect(page.getByText('Peringkat belum tersedia', { exact: true })).toBeVisible();
   await expect(page.getByText(/Catatan persisted fixture/)).toBeVisible();
   await page.screenshot({

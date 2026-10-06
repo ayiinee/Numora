@@ -20,7 +20,11 @@
 
 **ENGINEERING UPDATE — owner instruction, 6 October 2026:** use the currently configured Development cloud environment for JOB-16/17 migration and DEMO activation. Migration/replay, additive seed/replay and authenticated QA availability/leaderboard checks now pass. [Evidence](../operations/PVP_CLOUD_ACTIVATION_2026-10-06.md). This resolves target selection for this Development operation; two Google-identity acceptance, public staging hosting and Curriculum approval remain separate dependencies.
 
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** remove the standalone `PvP DEMO` lobby card now that new rooms use the connected READY Drill bank. Server mode, historical record separation and the in-match demo notice remain as implemented. [UI scope](../development/PVP_RANDOM_DRILL_BANK.md#qa-and-rollout).
+
 # Open Decisions Register
+
+**ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents at mobile, tablet and desktop widths while retaining 44px interactive targets and existing ranking rules. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** implement [directed package import](../content/CONTENT_PACKAGE_PIPELINE.md): single-purpose question families; one file/package; bound V4 templates; required source name/reference; explicit admin review; partial DRAFTs; replacement preview and concurrency control. Blueprint, rubric and publication dependencies remain OPEN.
 
