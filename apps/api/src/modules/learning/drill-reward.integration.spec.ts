@@ -33,9 +33,11 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
   afterAll(async () => {
     vi.useRealTimers();
     await closeDatabaseConnection();
+    vi.unstubAllEnvs();
   });
   it('posts once, rolls back all effects on failure, retries a single package and leaves legacy XP untouched', async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const { db } = getDatabase();
     const suffix = randomUUID();
     const [student, legacyStudent] = await db

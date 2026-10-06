@@ -21,6 +21,7 @@ Object.assign(process.env, {
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
   ALLOW_DEMO_SEED: 'true',
+  ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
   SUPABASE_PUBLISHABLE_KEY: 'job16-test-only-public-key',
   TEACHER_TOKEN_PEPPER: 'job16-isolated-test-only-pepper',

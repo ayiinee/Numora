@@ -46,6 +46,7 @@ describe.skipIf(!testUrl)(
     const namespace = `TEST_${suffix}`;
     let samples: ImportQuestion[], report: ImportReportDto, session: PreviewSessionDto;
     const beforeUrl = process.env.DATABASE_URL;
+    const beforeSynthetic = process.env.ALLOW_SYNTHETIC_CONTENT;
     let enabled = true;
     const bytes = new Map<string, Buffer>();
     const workbooks = new Map<string, Buffer>();
@@ -174,6 +175,7 @@ describe.skipIf(!testUrl)(
       url.username = mainLogin;
       url.password = pass;
       process.env.DATABASE_URL = url.toString();
+      process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
       url.username = computeLogin;
       compute = postgres(url.toString(), { max: 1, onnotice: () => {} });
       const module = await Test.createTestingModule({ imports: [ContentModule] })
@@ -206,6 +208,8 @@ describe.skipIf(!testUrl)(
       await app?.close();
       await closeDatabaseConnection();
       process.env.DATABASE_URL = beforeUrl;
+      if (beforeSynthetic === undefined) delete process.env.ALLOW_SYNTHETIC_CONTENT;
+      else process.env.ALLOW_SYNTHETIC_CONTENT = beforeSynthetic;
       await compute?.end();
       await owner?.end();
       if (admin) {

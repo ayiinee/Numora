@@ -224,6 +224,7 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     await screen.findByText('Soal halaman 0');
     expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
+    fireEvent.click(screen.getAllByRole('button', { name: 'Buat revisi / varian' })[0]!);
     fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
       target: { value: 'Draf belum disimpan' },
     });
