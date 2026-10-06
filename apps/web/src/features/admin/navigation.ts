@@ -107,6 +107,9 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
         'Pantau analisis Tryout, penerimaan hasil ilmiah, hambatan, dan batas rilis 72 jam.',
       icon: 'chart',
     });
+  if (profile.adminRole === 'OPERATIONS') {
+    return items.filter(({ href }) => href !== '/admin' && href !== '/admin/analytics');
+  }
   if (profile.adminRole === 'CONTENT_DATA_MODERATION') {
     // Content opens the bank directly; these pages are temporarily out of its portal.
     const contentItems = items.filter(

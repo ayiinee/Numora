@@ -32,7 +32,15 @@ function Pager({
     </div>
   );
 }
-export function OperationsMemberships({ token, userId }: { token: string; userId: string }) {
+export function OperationsMemberships({
+  token,
+  userId,
+  onAccessError,
+}: {
+  token: string;
+  userId: string;
+  onAccessError: (error: unknown) => void;
+}) {
   const [data, setData] = useState<AdminMembershipsDto | null>(null),
     [error, setError] = useState(''),
     [offset, setOffset] = useState(0),
@@ -46,12 +54,15 @@ export function OperationsMemberships({ token, userId }: { token: string; userId
         if (active) setData(value);
       })
       .catch((error) => {
-        if (active) setError(error.message);
+        if (active) {
+          setError(error instanceof Error ? error.message : 'Membership belum dapat dimuat.');
+          onAccessError(error);
+        }
       });
     return () => {
       active = false;
     };
-  }, [token, userId, offset, revision]);
+  }, [token, userId, offset, revision, onAccessError]);
   return (
     <section>
       <h4>Membership dan verifikasi sekolah</h4>
@@ -85,7 +96,15 @@ export function OperationsMemberships({ token, userId }: { token: string; userId
     </section>
   );
 }
-export function OperationsRoster({ token, classId }: { token: string; classId: string }) {
+export function OperationsRoster({
+  token,
+  classId,
+  onAccessError,
+}: {
+  token: string;
+  classId: string;
+  onAccessError: (error: unknown) => void;
+}) {
   const [data, setData] = useState<AdminRosterDto | null>(null),
     [error, setError] = useState(''),
     [offset, setOffset] = useState(0),
@@ -102,12 +121,15 @@ export function OperationsRoster({ token, classId }: { token: string; classId: s
         if (active) setData(value);
       })
       .catch((error) => {
-        if (active) setError(error.message);
+        if (active) {
+          setError(error instanceof Error ? error.message : 'Roster belum dapat dimuat.');
+          onAccessError(error);
+        }
       });
     return () => {
       active = false;
     };
-  }, [token, classId, offset, state, filter, revision]);
+  }, [token, classId, offset, state, filter, revision, onAccessError]);
   return (
     <Card>
       <h4>Roster kelas</h4>

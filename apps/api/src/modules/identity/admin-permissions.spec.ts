@@ -41,6 +41,7 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
   const users = vi.fn(() => ({ items: [], nextOffset: null }));
   const reports = vi.fn(() => ({ items: [] }));
   const prepare = vi.fn(() => ({ id: 'test-request' }));
+  const updateSchool = vi.fn(() => ({ id: 'test-school' }));
   const identity = {
     me: vi.fn(async () => ({
       id: 'test-admin',
@@ -71,7 +72,10 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
         { provide: PretestService, useValue: { list: reports, blueprints: reports } },
         { provide: IdentityService, useValue: identity },
         { provide: AdminOperationsService, useValue: { users, roster: users, memberships: users } },
-        { provide: SchoolsService, useValue: { listForAdmin: users, listTokens: users } },
+        {
+          provide: SchoolsService,
+          useValue: { listForAdmin: users, listTokens: users, updateSchool },
+        },
         { provide: ContentService, useValue: { curriculum: reports } },
         { provide: AssessmentPoliciesService, useValue: { list: reports } },
         { provide: MediaUploadsService, useValue: { reserve: prepare } },
@@ -220,5 +224,34 @@ describe('Admin v0.6 authorization through direct HTTP', () => {
     expect(adminCapabilities(null)).toEqual([]);
     expect(adminCapabilities('toString')).toEqual([]);
     expect(adminCapabilities('OPERATIONS')).not.toContain('CONTENT_MANAGE');
+  });
+  it.each([{ name: null }, { status: null }, { name: '   ' }, { status: 'INVALID' }])(
+    'rejects invalid school update input before service execution: %j',
+    async (body) => {
+      assignment = 'OPERATIONS';
+      updateSchool.mockClear();
+      const response = await fetch(base + '/admin/schools/00000000-0000-4000-8000-000000000001', {
+        method: 'PATCH',
+        headers: { Authorization: 'Bearer unchanged', 'Content-Type': 'application/json' },
+        body: JSON.stringify(body),
+      });
+      expect(response.status).toBe(400);
+      expect(response.headers.get('content-type')).toContain('application/problem+json');
+      expect(updateSchool).not.toHaveBeenCalled();
+    },
+  );
+  it('permits explicit address removal without weakening name/status validation', async () => {
+    assignment = 'OPERATIONS';
+    const response = await fetch(base + '/admin/schools/00000000-0000-4000-8000-000000000001', {
+      method: 'PATCH',
+      headers: { Authorization: 'Bearer unchanged', 'Content-Type': 'application/json' },
+      body: JSON.stringify({ address: null }),
+    });
+    expect(response.status).toBe(200);
+    expect(updateSchool).toHaveBeenLastCalledWith(
+      'Bearer unchanged',
+      '00000000-0000-4000-8000-000000000001',
+      { address: null },
+    );
   });
 });

@@ -17,7 +17,15 @@ import {
   ApiProperty,
   ApiTags,
 } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, Length, Matches, MaxLength } from 'class-validator';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator';
 import { AdminAccountQueryDto } from '../admin/accounts.dto';
 import { ContentPageDto } from '../content/content.dto';
 import { SchoolsService } from './schools.service';
@@ -60,14 +68,14 @@ class UpdateSchoolDto {
   @MaxLength(500)
   address?: string | null;
   @ApiProperty({ required: false, minLength: 1, maxLength: 120 })
-  @IsOptional()
+  @ValidateIf((_o, value) => value !== undefined)
   @IsString()
   @Length(1, 120)
   @Matches(/\S/)
   name?: string;
 
   @ApiProperty({ required: false, enum: ['ACTIVE', 'INACTIVE'] })
-  @IsOptional()
+  @ValidateIf((_o, value) => value !== undefined)
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
 }

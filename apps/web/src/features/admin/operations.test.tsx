@@ -57,6 +57,7 @@ const adminClass = {
 };
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/admin/operations');
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
@@ -81,6 +82,71 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('Admin operations UI', () => {
+  it('opens class deep links without requesting users or losing the school filter', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      `/admin/operations?view=classes&schoolId=${adminClass.schoolId}`,
+    );
+    render(<AdminOperationsScreen />);
+    await screen.findByText('Kelas IX-A TEST');
+    expect(listAdminUsers).not.toHaveBeenCalled();
+    expect(listAdminClasses).toHaveBeenCalledExactlyOnceWith('test-token', {
+      offset: 0,
+      search: '',
+      schoolId: adminClass.schoolId,
+      teacherId: '',
+      state: '',
+    });
+  });
+  it('honours teacher deep links and restores the tab on browser history changes', async () => {
+    window.history.replaceState(null, '', '/admin/operations?role=TEACHER');
+    render(<AdminOperationsScreen />);
+    await screen.findByText('Siswa TEST');
+    expect(listAdminUsers).toHaveBeenLastCalledWith(
+      'test-token',
+      expect.objectContaining({ role: 'TEACHER' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kelas' }));
+    await screen.findByText('Kelas IX-A TEST');
+    expect(new URLSearchParams(window.location.search).get('view')).toBe('classes');
+    window.history.replaceState(null, '', '/admin/operations?role=TEACHER');
+    fireEvent(window, new PopStateEvent('popstate'));
+    await screen.findByText('Siswa TEST');
+    expect(screen.queryByRole('heading', { name: 'Daftar kelas' })).toBeNull();
+  });
+  it.each([401, 403])(
+    'clears the whole workspace when membership rejects access with %s',
+    async (status) => {
+      vi.mocked(getAdminMemberships).mockRejectedValueOnce(
+        new ApiProblem(status, 'FORBIDDEN', 'Membership ditolak.'),
+      );
+      render(<AdminOperationsScreen />);
+      fireEvent.click(
+        within((await screen.findByText('Siswa TEST')).closest('li')!).getByRole('button', {
+          name: 'Lihat detail',
+        }),
+      );
+      await screen.findByText('Membership ditolak.');
+      expect(screen.queryByText(user.email)).toBeNull();
+      expect(screen.queryByRole('heading', { name: 'Daftar pengguna' })).toBeNull();
+    },
+  );
+  it.each([401, 403])('clears class detail when roster rejects access with %s', async (status) => {
+    vi.mocked(getAdminRoster).mockRejectedValueOnce(
+      new ApiProblem(status, 'FORBIDDEN', 'Roster ditolak.'),
+    );
+    window.history.replaceState(null, '', '/admin/operations?view=classes');
+    render(<AdminOperationsScreen />);
+    fireEvent.click(
+      within((await screen.findByText('Kelas IX-A TEST')).closest('li')!).getByRole('button', {
+        name: 'Lihat detail',
+      }),
+    );
+    await screen.findByText('Roster ditolak.');
+    expect(screen.queryByText(adminClass.id)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Daftar kelas' })).toBeNull();
+  });
   it('filters users with the existing API contract and loads a minimal user detail', async () => {
     render(<AdminOperationsScreen />);
     await screen.findByText('Siswa TEST');

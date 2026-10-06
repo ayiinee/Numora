@@ -55,11 +55,12 @@ beforeEach(() => {
   vi.mocked(listTeacherTokens).mockResolvedValue({ items: [], nextOffset: null });
 });
 afterEach(cleanup);
-it('preserves code case and failed creation input, then selects the server-created school', async () => {
+it('passes code to the server, preserves failed creation input, then selects the created school', async () => {
   vi.mocked(createSchool)
     .mockRejectedValueOnce(new Error('Kode sudah digunakan.'))
     .mockResolvedValueOnce(school);
   render(<AdminSchoolsScreen />);
+  fireEvent.click(screen.getByText('Tambah sekolah', { selector: 'summary' }));
   fireEvent.change(screen.getByLabelText(/Kode sekolah/), { target: { value: 'Test-Ab' } });
   fireEvent.change(screen.getByLabelText(/Nama sekolah/), { target: { value: ' Sekolah TEST ' } });
   fireEvent.click(screen.getByRole('button', { name: 'Simpan sekolah' }));
@@ -84,7 +85,7 @@ it('disables editing and selection during pending token issuance and removes its
   );
   render(<AdminSchoolsScreen />);
   fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
-  fireEvent.click(screen.getByRole('button', { name: 'Terbitkan token' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Terbitkan token' }));
   expect(
     (screen.getByLabelText(/Ubah nama/).closest('fieldset') as HTMLFieldSetElement).disabled,
   ).toBe(true);
@@ -131,6 +132,7 @@ it('keeps token failure retryable and hides revoked/used actions', async () => {
     });
   render(<AdminSchoolsScreen />);
   fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  await screen.findByRole('button', { name: 'Terbitkan token' });
   const alert = await screen.findByRole('alert');
   fireEvent.click(within(alert).getByRole('button', { name: 'Coba lagi' }));
   await screen.findByText('Terpakai');
@@ -148,12 +150,167 @@ it('disables issuance for an inactive school and preserves the status update end
   render(<AdminSchoolsScreen />);
   fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
   expect(
-    (screen.getByRole('button', { name: 'Terbitkan token' }) as HTMLButtonElement).disabled,
+    ((await screen.findByRole('button', { name: 'Terbitkan token' })) as HTMLButtonElement)
+      .disabled,
   ).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Aktifkan sekolah' }));
   await waitFor(() =>
     expect(updateSchool).toHaveBeenCalledWith('test-admin', 'school-one', { status: 'ACTIVE' }),
   );
+});
+it('keeps the loaded credential list when the selected school is clicked again', async () => {
+  render(<AdminSchoolsScreen />);
+  const row = await screen.findByRole('button', { name: /Sekolah TEST/ });
+  fireEvent.click(row);
+  await screen.findByText('Belum ada token.');
+  fireEvent.click(row);
+  expect(screen.getByText('Belum ada token.')).toBeTruthy();
+  expect(listTeacherTokens).toHaveBeenCalledTimes(1);
+});
+it('pages school results using the server offset and resets pagination when searching', async () => {
+  vi.mocked(listAdminSchools).mockResolvedValue({ items: [school], nextOffset: 20 });
+  render(<AdminSchoolsScreen />);
+  await screen.findByRole('button', { name: /Sekolah TEST/ });
+  fireEvent.click(screen.getByRole('button', { name: 'Sekolah berikutnya' }));
+  await waitFor(() =>
+    expect(listAdminSchools).toHaveBeenLastCalledWith('test-admin', { offset: 20, search: '' }),
+  );
+  fireEvent.change(screen.getByLabelText('Cari sekolah'), { target: { value: ' TEST ' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Cari sekolah' }));
+  await waitFor(() =>
+    expect(listAdminSchools).toHaveBeenLastCalledWith('test-admin', { offset: 0, search: 'TEST' }),
+  );
+});
+it('pages credentials without losing the selected school or unsaved edits', async () => {
+  vi.mocked(listTeacherTokens).mockResolvedValue({ items: [], nextOffset: 20 });
+  render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  fireEvent.change(await screen.findByLabelText(/Ubah nama/), {
+    target: { value: 'Edit belum disimpan' },
+  });
+  await waitFor(() =>
+    expect(
+      (screen.getByRole('button', { name: 'Token berikutnya' }) as HTMLButtonElement).disabled,
+    ).toBe(false),
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Token berikutnya' }));
+  await waitFor(() =>
+    expect(listTeacherTokens).toHaveBeenLastCalledWith('test-admin', school.id, 20),
+  );
+  await waitFor(() =>
+    expect(
+      (screen.getByRole('button', { name: 'Token sebelumnya' }) as HTMLButtonElement).disabled,
+    ).toBe(false),
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Token sebelumnya' }));
+  await waitFor(() =>
+    expect(listTeacherTokens).toHaveBeenLastCalledWith('test-admin', school.id, 0),
+  );
+  expect((screen.getByLabelText(/Ubah nama/) as HTMLInputElement).value).toBe(
+    'Edit belum disimpan',
+  );
+});
+it('uses fresh detail for editing and makes a failed detail read retryable without offering mutations', async () => {
+  vi.mocked(getAdminSchool)
+    .mockRejectedValueOnce(new Error('Detail sekolah gagal.'))
+    .mockResolvedValueOnce({ ...school, name: 'Nama terbaru', address: 'Alamat terbaru' });
+  render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  const error = await screen.findByRole('alert');
+  expect(screen.queryByRole('button', { name: 'Terbitkan token' })).toBeNull();
+  fireEvent.click(within(error).getByRole('button', { name: 'Coba lagi' }));
+  expect(((await screen.findByLabelText(/Ubah nama/)) as HTMLInputElement).value).toBe(
+    'Nama terbaru',
+  );
+  expect((screen.getByLabelText(/Ubah alamat/) as HTMLInputElement).value).toBe('Alamat terbaru');
+});
+it.each([401, 403])(
+  'clears schools and credentials when detail denies access with %s',
+  async (status) => {
+    vi.mocked(getAdminSchool).mockRejectedValueOnce(
+      new ApiProblem(status, 'FORBIDDEN', 'Detail ditolak.'),
+    );
+    render(<AdminSchoolsScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+    await screen.findByText('Detail ditolak.');
+    expect(screen.queryByRole('button', { name: /Sekolah TEST/ })).toBeNull();
+    expect(screen.queryByLabelText(/Ubah nama/)).toBeNull();
+  },
+);
+it('discards one-time credential data after capability revocation even if the same account regains access', async () => {
+  vi.mocked(issueTeacherToken).mockResolvedValue({
+    id: 'new-token',
+    token: 'SYNTHETIC-SECRET',
+    expiresAt: '2099-01-01T00:00:00Z',
+  });
+  const view = render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Terbitkan token' }));
+  await screen.findByText('SYNTHETIC-SECRET');
+  const profile = auth.state.profile as Record<string, unknown>;
+  profile.capabilities = [];
+  view.rerender(<AdminSchoolsScreen />);
+  expect(screen.queryByText('SYNTHETIC-SECRET')).toBeNull();
+  profile.capabilities = ['OPERATIONS_MANAGE'];
+  view.rerender(<AdminSchoolsScreen />);
+  await screen.findByRole('button', { name: /Sekolah TEST/ });
+  expect(screen.queryByText('SYNTHETIC-SECRET')).toBeNull();
+  expect(screen.queryByLabelText(/Ubah nama/)).toBeNull();
+});
+it('preserves unsaved school edits during token issuance and uses the server credential status', async () => {
+  vi.mocked(issueTeacherToken).mockResolvedValue({
+    id: 'new-token',
+    token: 'SYNTHETIC-SECRET',
+    expiresAt: '2099-01-01T00:00:00Z',
+  });
+  vi.mocked(listTeacherTokens).mockResolvedValue({
+    nextOffset: null,
+    items: [
+      {
+        id: 'expired',
+        createdAt: '2026-01-01T00:00:00Z',
+        expiresAt: '2099-01-01T00:00:00Z',
+        status: 'EXPIRED',
+        usedAt: null,
+        revokedAt: null,
+        usedByUserId: null,
+        usedByName: null,
+      },
+    ],
+  });
+  render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  await screen.findByText('Kedaluwarsa');
+  fireEvent.change(screen.getByLabelText(/Ubah nama/), { target: { value: 'Belum disimpan' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Terbitkan token' }));
+  await screen.findByText('SYNTHETIC-SECRET');
+  expect(((await screen.findByLabelText(/Ubah nama/)) as HTMLInputElement).value).toBe(
+    'Belum disimpan',
+  );
+});
+it('blocks new/reissued credentials for an inactive school while allowing revocation', async () => {
+  vi.mocked(getAdminSchool).mockResolvedValue({ ...school, status: 'INACTIVE' });
+  vi.mocked(listTeacherTokens).mockResolvedValue({
+    nextOffset: null,
+    items: [
+      {
+        id: 'available',
+        createdAt: '2026-01-01T00:00:00Z',
+        expiresAt: '2099-01-01T00:00:00Z',
+        status: 'AVAILABLE',
+        usedAt: null,
+        revokedAt: null,
+        usedByUserId: null,
+        usedByName: null,
+      },
+    ],
+  });
+  render(<AdminSchoolsScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: /Sekolah TEST/ }));
+  expect(
+    ((await screen.findByRole('button', { name: 'Terbit ulang' })) as HTMLButtonElement).disabled,
+  ).toBe(true);
+  expect((screen.getByRole('button', { name: 'Cabut' }) as HTMLButtonElement).disabled).toBe(false);
 });
 it('offers list retry after a load error and conceals cached administrative detail after access rejection', async () => {
   vi.mocked(listAdminSchools)
@@ -167,7 +324,7 @@ it('offers list retry after a load error and conceals cached administrative deta
   vi.mocked(issueTeacherToken).mockRejectedValueOnce(
     new ApiProblem(403, 'FORBIDDEN', 'Akses ditolak.'),
   );
-  fireEvent.click(screen.getByRole('button', { name: 'Terbitkan token' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Terbitkan token' }));
   await screen.findByText('Akses ditolak.');
   expect(screen.queryByLabelText(/Ubah nama/)).toBeNull();
   expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe(

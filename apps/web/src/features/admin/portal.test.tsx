@@ -56,7 +56,6 @@ describe('Admin portal navigation', () => {
   });
   it.each([
     ['SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE'], true, true],
-    ['OPERATIONS', ['OPERATIONS_MANAGE'], true, false],
     [null, [], false, false],
   ] as const)('shows assigned modules for %s', (role, capabilities, operations, content) => {
     ready(role, [...capabilities]);
@@ -103,6 +102,24 @@ describe('Admin portal navigation', () => {
       expect(main.queryByRole('link', { name })).toBeNull();
   });
   it.each([AdminHomeScreen, AdminAnalyticsScreen])(
+    'redirects retired Operations pages to schools without rendering them',
+    async (Page) => {
+      ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
+      const { container } = render(<Page />);
+      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/schools'));
+      expect(container.textContent).toBe('');
+    },
+  );
+  it('keeps only operational modules in Operations navigation', () => {
+    ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
+    render(<AppShell area="admin">Sekolah</AppShell>);
+    const navigation = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
+    expect(navigation.getByRole('link', { name: 'Sekolah & credential' })).toBeTruthy();
+    expect(navigation.getByRole('link', { name: 'Pengguna & kelas' })).toBeTruthy();
+    for (const name of ['Ringkasan', 'Analytics', 'Konten & assessment', 'Akun Admin'])
+      expect(navigation.queryByRole('link', { name })).toBeNull();
+  });
+  it.each([AdminHomeScreen, AdminAnalyticsScreen])(
     'redirects retired Content pages to the bank without rendering them',
     async (Page) => {
       ready('CONTENT_DATA_MODERATION', ['CONTENT_MANAGE', 'ANALYTICS_CONTENT']);
@@ -112,7 +129,7 @@ describe('Admin portal navigation', () => {
     },
   );
   it.each(['CONTENT_DATA_MODERATION', 'OPERATIONS', 'SUPER_ADMIN'])(
-    'removes only the Content page banner for %s',
+    'hides Content and Operations page banners while preserving the Super banner for %s',
     (role) => {
       ready(role, ['CONTENT_MANAGE']);
       const { container } = render(
@@ -120,13 +137,16 @@ describe('Admin portal navigation', () => {
           <h2>Isi modul</h2>
         </AdminFrame>,
       );
-      expect(!!container.querySelector('.admin-page-header')).toBe(
-        role !== 'CONTENT_DATA_MODERATION',
-      );
+      expect(!!container.querySelector('.admin-page-header')).toBe(role === 'SUPER_ADMIN');
       expect(
         screen.getByRole('heading', { name: 'Judul halaman' }).classList.contains('sr-only'),
-      ).toBe(role === 'CONTENT_DATA_MODERATION');
+      ).toBe(role !== 'SUPER_ADMIN');
       expect(screen.getByRole('heading', { name: 'Isi modul' })).toBeTruthy();
+      expect(!!container.querySelector('.admin-workspace-shell')).toBe(role !== 'SUPER_ADMIN');
+      expect(!!container.querySelector('.admin-operations-shell')).toBe(role === 'OPERATIONS');
+      expect(!!container.querySelector('.admin-content-shell')).toBe(
+        role === 'CONTENT_DATA_MODERATION',
+      );
     },
   );
   it('sends signed-out users to internal login and Teachers to their own area', async () => {

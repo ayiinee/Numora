@@ -124,7 +124,7 @@ it('retains the retry operation key after failure and refreshes durable request 
   expect(calls[0]?.[2]?.headers).toEqual(calls[1]?.[2]?.headers);
 });
 it('clears analytics on access revocation and renders unavailable distinctly from a valid zero', async () => {
-  mocks.state.profile.adminRole = 'OPERATIONS';
+  mocks.state.profile.adminRole = 'SUPER_ADMIN';
   mocks.state.profile.capabilities = ['ANALYTICS_OPERATIONS'];
   vi.mocked(apiRequest).mockResolvedValue({
     generatedAt: '2026-10-06T00:00:00Z',

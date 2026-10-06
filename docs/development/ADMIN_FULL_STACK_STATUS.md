@@ -1,5 +1,7 @@
 # Admin full stack — implementation and acceptance
 
+**ENGINEERING UPDATE — 7 October 2026:** Operations functional fixes cover transactional credential eligibility against school deactivation, PATCH validation, literal school search, retryable fresh school detail, URL/history filters, and clearing cached identities/credentials on access changes. See [Operations functional audit](ADMIN_OPERATIONS_FUNCTIONAL_AUDIT_2026-10-07.md). Local connected tests and browser fixtures do not close sandbox acceptance.
+
 **ENGINEERING UPDATE — 7 October 2026:** Content functional fixes cover independent Tryout question pagination, Pretest edit/create state and reference retry, JSON envelope namespaces, retained server filters and clearing cached detail on target/access changes. See [functional audit](ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md) for page coverage and test evidence. External gates in the ledger remain open.
 
 **ENGINEERING EVIDENCE — 7 October 2026:** the owner requested deletion of persisted Content demos from the isolated Development database. Materials/question readers are now empty; related demo packages and test attempts were removed after backup and rehearsal. Three non-fixture drafts, six unrelated upload sessions and all accounts/schools/classes/memberships remain. This environment cleanup does not change milestone acceptance or product rules. See [cleanup evidence](ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md).

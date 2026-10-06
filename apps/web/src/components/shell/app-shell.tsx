@@ -62,6 +62,9 @@ export function AppShell({
     area === 'admin' &&
     profile?.role === 'ADMIN' &&
     profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const operationsAdmin =
+    area === 'admin' && profile?.role === 'ADMIN' && profile.adminRole === 'OPERATIONS';
+  const workspaceAdmin = contentAdmin || operationsAdmin;
   const adminItems = adminNavigation(profile);
   const adminActive = activeAdminHref(pathname, adminItems);
   const areaName =
@@ -102,7 +105,9 @@ export function AppShell({
           <Link href={`/${area}`} className="app-brand">
             <Brand />
           </Link>
-          <p className="nav-caption">{contentAdmin ? 'Content workspace' : areaName}</p>
+          <p className="nav-caption">
+            {contentAdmin ? 'Content workspace' : operationsAdmin ? 'Operasional' : areaName}
+          </p>
           <nav aria-label={`Navigasi ${areaName}`}>{links()}</nav>
           {area === 'student' && (
             <div className="sidebar-note">
@@ -139,7 +144,7 @@ export function AppShell({
           variant={headerVariant ?? (focus ? 'assessment' : 'context')}
           logo={
             <>
-              {contentAdmin && (
+              {workspaceAdmin && (
                 <button
                   ref={menuButton}
                   type="button"
@@ -169,14 +174,19 @@ export function AppShell({
           right={
             <div className="topbar-actions">
               {actions}
-              {contentAdmin && (
-                <div className="content-topbar-account" aria-label="Akun Admin Content">
+              {workspaceAdmin && (
+                <div
+                  className="content-topbar-account"
+                  aria-label={operationsAdmin ? 'Akun Admin Operasional' : 'Akun Admin Content'}
+                >
                   <span className="account-avatar" aria-hidden="true">
                     {profile.displayName.slice(0, 1).toUpperCase() || 'N'}
                   </span>
                   <div>
                     <strong>{profile.displayName}</strong>
-                    <small>Content, Data & Moderation</small>
+                    <small>
+                      {operationsAdmin ? 'Admin Operasional' : 'Content, Data & Moderation'}
+                    </small>
                   </div>
                 </div>
               )}
@@ -206,7 +216,7 @@ export function AppShell({
                   <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
                 </button>
               )}
-              {area !== 'student' && !contentAdmin && (
+              {area !== 'student' && !workspaceAdmin && (
                 <button
                   ref={menuButton}
                   type="button"

@@ -234,14 +234,30 @@ async function setup(page: Page) {
       },
     ] as AdminSchool[],
     tokens: [
-      { id: id(110), expiresAt: '2099-01-01T00:00:00Z', usedAt: null, revokedAt: null },
+      {
+        id: id(110),
+        status: 'AVAILABLE',
+        createdAt: '2026-10-01T00:00:00Z',
+        expiresAt: '2099-01-01T00:00:00Z',
+        usedAt: null,
+        revokedAt: null,
+      },
       {
         id: id(111),
+        status: 'USED',
+        createdAt: '2026-10-01T00:00:00Z',
         expiresAt: '2099-01-01T00:00:00Z',
         usedAt: '2026-10-03T00:00:00Z',
         revokedAt: null,
       },
-      { id: id(112), expiresAt: '2026-01-01T00:00:00Z', usedAt: null, revokedAt: null },
+      {
+        id: id(112),
+        status: 'EXPIRED',
+        createdAt: '2025-12-29T00:00:00Z',
+        expiresAt: '2026-01-01T00:00:00Z',
+        usedAt: null,
+        revokedAt: null,
+      },
     ] as TeacherTokenSummary[],
     data: workbench(),
     failPath: '',
@@ -314,7 +330,7 @@ async function setup(page: Page) {
       if (path === '/admin/schools') {
         const school = {
           id: id(103),
-          code: String(body.code),
+          code: String(body.code).toUpperCase(),
           name: String(body.name),
           status: 'ACTIVE' as const,
           address: typeof body.address === 'string' ? body.address : null,
@@ -324,7 +340,10 @@ async function setup(page: Page) {
       } else if (path.endsWith('/teacher-tokens') || path.endsWith('/reissue')) {
         if (path.endsWith('/reissue')) {
           const previous = state.tokens.find((t) => path.includes(t.id));
-          if (previous) previous.revokedAt = '2026-10-04T00:00:00Z';
+          if (previous) {
+            previous.revokedAt = '2026-10-04T00:00:00Z';
+            previous.status = 'REVOKED';
+          }
         }
         const issued = {
           id: id(110 + state.tokens.length),
@@ -343,7 +362,10 @@ async function setup(page: Page) {
         result = issued;
       } else if (path.endsWith('/revoke')) {
         const previous = state.tokens.find((t) => path.includes(t.id));
-        if (previous) previous.revokedAt = '2026-10-04T00:00:00Z';
+        if (previous) {
+          previous.revokedAt = '2026-10-04T00:00:00Z';
+          previous.status = 'REVOKED';
+        }
         result = { revoked: true };
       } else if (path.startsWith('/admin/schools/')) {
         const school = state.schools.find((s) => path.endsWith(s.id))!;
@@ -593,12 +615,15 @@ for (const width of [390, 1280]) {
         await expect(page).toHaveURL(/\/admin\/content$/);
         await expect(page.locator('.admin-page-header')).toHaveCount(0);
         await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+      } else if (role === 'OPERATIONS') {
+        await expect(page).toHaveURL(/\/admin\/schools$/);
+        await expect(page.locator('.admin-page-header')).toHaveCount(0);
       } else
         await expect(
           page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
         ).toBeVisible();
       const main = page.getByRole('main');
-      if (role === 'SUPER_ADMIN' || role === 'OPERATIONS') {
+      if (role === 'SUPER_ADMIN') {
         await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
       } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
       if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
@@ -669,50 +694,127 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     expect(errors).toEqual([]);
   });
 }
-test('School lifecycle preserves input, code case, one-time token and inactive eligibility', async ({
+for (const width of [320, 768, 1440]) {
+  test(`Operations school workspace at ${width}px keeps credential history and responsive panels`, async ({
+    page,
+  }) => {
+    const { state, errors } = await setup(page);
+    state.adminRole = 'OPERATIONS';
+    await page.setViewportSize({ width, height: 960 });
+    await page.goto('/admin/schools');
+    await expect(page.getByRole('heading', { name: 'Sekolah terdaftar' })).toBeVisible();
+    await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
+    await expect(page.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeVisible();
+    await expect(page.getByText('Terpakai', { exact: true })).toBeVisible();
+    await expect(page.getByText('Kedaluwarsa', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Invalid Date/)).toHaveCount(0);
+    await expect(page.locator('.admin-page-header')).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: `../../.tmp/admin-operations-school-${width}.png`,
+      fullPage: true,
+      animations: 'disabled',
+      style: 'nextjs-portal {visibility:hidden !important;}',
+    });
+    expect(state.mutations).toEqual([]);
+    expect(errors).toEqual([]);
+  });
+}
+for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
+  test(`School lifecycle ${role} preserves input, address, server code and one-time token eligibility`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width: 390, height: 900 });
+    const { state, errors } = await setup(page);
+    state.adminRole = role;
+    await page.goto('/admin/schools');
+    if (role === 'OPERATIONS')
+      await page.locator('.operations-create-disclosure > summary').click();
+    await page.getByRole('textbox', { name: 'Kode sekolah', exact: true }).fill('Test-Ab');
+    await page
+      .getByRole('textbox', { name: 'Nama sekolah', exact: true })
+      .fill('Sekolah DEMO Baru');
+    state.failMutation = true;
+    await page.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
+    await expect(page.locator('main').getByRole('alert')).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Kode sekolah', exact: true })).toHaveValue(
+      'Test-Ab',
+    );
+    await capture(page, 'school-mutation-error', 390);
+    state.failMutation = false;
+    await page.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
+    await expect(page.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveValue(
+      'Sekolah DEMO Baru',
+    );
+    await expect(page.getByText('TEST-AB', { exact: true })).toBeVisible();
+    await page
+      .getByRole('textbox', { name: 'Ubah nama', exact: true })
+      .fill('Sekolah DEMO Direvisi');
+    await page
+      .getByRole('textbox', { name: 'Ubah alamat', exact: true })
+      .fill('Jalan Verifikasi 1');
+    await page.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Sekolah DEMO Direvisi' })).toBeVisible();
+    await expect(page.getByRole('textbox', { name: 'Ubah alamat', exact: true })).toHaveValue(
+      'Jalan Verifikasi 1',
+    );
+    await page.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
+    await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
+    await capture(page, 'school-issued-token', 390);
+    await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
+    await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Terbit ulang', exact: true }).first().click();
+    await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Cabut', exact: true }).first().click();
+    await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
+    await page.getByRole('button', { name: 'Nonaktifkan sekolah', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeDisabled();
+    for (const button of await page
+      .getByRole('button', { name: 'Terbit ulang', exact: true })
+      .all())
+      await expect(button).toBeDisabled();
+    await capture(page, 'school-inactive', 390);
+    expect(state.mutations[0]?.body).toEqual({
+      code: 'Test-Ab',
+      name: 'Sekolah DEMO Baru',
+      address: '',
+    });
+    expect(state.mutations.some((r) => r.path.endsWith('/reissue'))).toBe(true);
+    expect(state.mutations.some((r) => r.path.endsWith('/revoke'))).toBe(true);
+    expect(errors).toEqual([]);
+  });
+}
+
+test('Operations school detail can recover and repeated selection keeps credential history', async ({
   page,
 }) => {
-  await page.setViewportSize({ width: 390, height: 900 });
   const { state, errors } = await setup(page);
+  state.adminRole = 'OPERATIONS';
+  state.failPath = `/admin/schools/${id(101)}`;
   await page.goto('/admin/schools');
-  await page.getByRole('textbox', { name: 'Kode sekolah', exact: true }).fill('Test-Ab');
-  await page.getByRole('textbox', { name: 'Nama sekolah', exact: true }).fill('Sekolah DEMO Baru');
-  state.failMutation = true;
-  await page.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
-  await expect(page.locator('main').getByRole('alert')).toBeVisible();
-  await expect(page.getByRole('textbox', { name: 'Kode sekolah', exact: true })).toHaveValue(
-    'Test-Ab',
-  );
-  await capture(page, 'school-mutation-error', 390);
-  state.failMutation = false;
-  await page.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
-  await expect(page.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveValue(
-    'Sekolah DEMO Baru',
-  );
-  await page.getByRole('textbox', { name: 'Ubah nama', exact: true }).fill('Sekolah DEMO Direvisi');
-  await page.getByRole('button', { name: 'Simpan nama', exact: true }).click();
-  await expect(page.getByRole('heading', { name: 'Sekolah DEMO Direvisi' })).toBeVisible();
-  await page.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
-  await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
-  await capture(page, 'school-issued-token', 390);
   await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
-  await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Terbit ulang', exact: true }).first().click();
+  const detail = page.getByRole('complementary', { name: 'Detail sekolah dan token' });
+  await expect(detail.getByRole('alert')).toBeVisible();
+  await expect(detail.getByRole('button', { name: 'Terbitkan token', exact: true })).toHaveCount(0);
+  state.failPath = '';
+  await detail.getByRole('button', { name: 'Coba lagi' }).click();
+  await expect(detail.getByText('Terpakai', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
+  await expect(detail.getByText('Terpakai', { exact: true })).toBeVisible();
+  await detail.getByRole('textbox', { name: 'Ubah nama', exact: true }).fill('Edit belum disimpan');
+  await detail.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
   await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Cabut', exact: true }).first().click();
+  await expect(detail.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveValue(
+    'Edit belum disimpan',
+  );
+  await page.getByRole('button', { name: /Sekolah Pendampingan/ }).click();
+  await expect(detail.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeDisabled();
   await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Nonaktifkan sekolah', exact: true }).click();
-  await expect(page.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeDisabled();
-  await capture(page, 'school-inactive', 390);
-  expect(state.mutations[0]?.body).toEqual({
-    code: 'Test-Ab',
-    name: 'Sekolah DEMO Baru',
-    address: '',
-  });
-  expect(state.mutations.some((r) => r.path.endsWith('/reissue'))).toBe(true);
-  expect(state.mutations.some((r) => r.path.endsWith('/revoke'))).toBe(true);
   expect(errors).toEqual([]);
 });
+
 test('Removed Admin mock returns 404 and QA login remains gated for the fixture project', async ({
   page,
 }) => {

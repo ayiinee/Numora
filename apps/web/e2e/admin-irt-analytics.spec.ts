@@ -1,6 +1,9 @@
 import { expect, test, type Page } from '@playwright/test';
 const id = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
-async function fixture(page: Page, operations = false) {
+async function fixture(
+  page: Page,
+  role: 'OPERATIONS' | 'CONTENT_DATA_MODERATION' | 'SUPER_ADMIN' = 'CONTENT_DATA_MODERATION',
+) {
   const now = Math.floor(Date.now() / 1000),
     user = {
       id,
@@ -64,12 +67,13 @@ async function fixture(page: Page, operations = false) {
           id,
           role: 'ADMIN',
           status: 'ACTIVE',
-          adminRole: operations ? 'OPERATIONS' : 'CONTENT_DATA_MODERATION',
+          adminRole: role,
           displayName: 'TEST reviewer',
           teacherVerified: false,
-          capabilities: operations
-            ? ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']
-            : ['CONTENT_MANAGE', 'ANALYTICS_CONTENT', 'OPERATIONS_LIMITED_READ'],
+          capabilities:
+            role !== 'CONTENT_DATA_MODERATION'
+              ? ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']
+              : ['CONTENT_MANAGE', 'ANALYTICS_CONTENT', 'OPERATIONS_LIMITED_READ'],
         },
       });
     if (path === 'admin/analytics')
@@ -194,13 +198,14 @@ for (const width of [320, 1440])
     ).toBe(true);
     await page.screenshot({ path: `../../.tmp/admin-m6-irt-${width}.png`, fullPage: true });
   });
-test('Operations analytics preserves zero and unavailable and denies the IRT direct route', async ({
-  page,
-}) => {
-  await fixture(page, true);
+test('Super analytics preserves zero and unavailable', async ({ page }) => {
+  await fixture(page, 'SUPER_ADMIN');
   await page.goto('/admin/analytics');
   await expect(page.getByText('Tidak tersedia', { exact: true })).toBeVisible();
   await expect(page.getByText('0', { exact: true })).toBeVisible();
+});
+test('Operations cannot open the IRT direct route', async ({ page }) => {
+  await fixture(page, 'OPERATIONS');
   await page.goto('/admin/irt');
   await expect(page.getByText('Akses Content diperlukan.', { exact: true })).toBeVisible();
 });

@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
 import Link from 'next/link';
 
@@ -22,10 +22,19 @@ import {
   type TeacherTokenSummary,
 } from '@/lib/api';
 
+const tokenStatusLabels = {
+  AVAILABLE: 'Belum dipakai',
+  USED: 'Terpakai',
+  REVOKED: 'Dicabut',
+  EXPIRED: 'Kedaluwarsa',
+} satisfies Record<TeacherTokenSummary['status'], string>;
+
 export function AdminSchoolsScreen() {
   const { state } = useAuth();
   const accountKey =
-    state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status;
+    state.status === 'ready'
+      ? `${state.profile.id}:${state.profile.adminRole}:${state.profile.status}:${state.profile.capabilities?.includes('OPERATIONS_MANAGE')}`
+      : state.status;
   return <AdminSchoolsScreenContent key={accountKey} />;
 }
 
@@ -58,9 +67,23 @@ function AdminSchoolsScreenContent() {
   const [error, setError] = useState('');
   const [schoolError, setSchoolError] = useState('');
   const [tokenError, setTokenError] = useState('');
+  const [detailError, setDetailError] = useState('');
+  const [detailLoading, setDetailLoading] = useState(false);
+  const initializedSchool = useRef('');
   const [accessError, setAccessError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
+  const denyAccess = useCallback((cause: unknown) => {
+    if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) {
+      setAccessError(true);
+      setSchools(null);
+      setSelected('');
+      setSelectedSchool(null);
+      setTokens(null);
+      setIssued(null);
+      initializedSchool.current = '';
+    }
+  }, []);
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -72,6 +95,7 @@ function AdminSchoolsScreenContent() {
     let active = true;
     setSchoolError('');
     setSchools(null);
+    setNextOffset(null);
     listAdminSchools(token, { offset, search: filter }).then(
       (result) => {
         if (active) {
@@ -82,37 +106,53 @@ function AdminSchoolsScreenContent() {
       (cause: unknown) => {
         if (active) {
           setSchoolError(message(cause));
-          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
-            setAccessError(true);
+          denyAccess(cause);
         }
       },
     );
     return () => {
       active = false;
     };
-  }, [token, revision, offset, filter]);
+  }, [token, revision, offset, filter, denyAccess]);
   useEffect(() => {
     if (!token || !selected) {
       setSelectedSchool(null);
       return;
     }
     let active = true;
+    setDetailError('');
+    setDetailLoading(true);
     void getAdminSchool(token, selected)
       .then((value) => {
-        if (active) setSelectedSchool(value);
+        if (active) {
+          setSelectedSchool(value);
+          setDetailLoading(false);
+          if (initializedSchool.current !== selected) {
+            setEditName(value.name);
+            setEditAddress(value.address ?? '');
+            initializedSchool.current = selected;
+          }
+        }
       })
       .catch((cause) => {
-        if (active) setError(message(cause));
+        if (active) {
+          setDetailError(message(cause));
+          setDetailLoading(false);
+          setSelectedSchool(null);
+          setIssued(null);
+          denyAccess(cause);
+        }
       });
     return () => {
       active = false;
     };
-  }, [token, selected, revision]);
+  }, [token, selected, revision, denyAccess]);
   useEffect(() => {
     if (!token || !selected) return;
     let active = true;
     setTokenError('');
     setTokens(null);
+    setTokenNextOffset(null);
     listTeacherTokens(token, selected, tokenOffset).then(
       (result) => {
         if (active) {
@@ -123,15 +163,14 @@ function AdminSchoolsScreenContent() {
       (cause: unknown) => {
         if (active) {
           setTokenError(message(cause));
-          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
-            setAccessError(true);
+          denyAccess(cause);
         }
       },
     );
     return () => {
       active = false;
     };
-  }, [token, selected, revision, tokenOffset]);
+  }, [token, selected, revision, tokenOffset, denyAccess]);
   const current = selectedSchool;
   async function run(action: () => Promise<unknown>) {
     if (busy) return;
@@ -142,7 +181,7 @@ function AdminSchoolsScreenContent() {
       setRevision((value) => value + 1);
     } catch (cause) {
       setError(message(cause));
-      if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setAccessError(true);
+      denyAccess(cause);
     } finally {
       setBusy(false);
     }
@@ -150,6 +189,10 @@ function AdminSchoolsScreenContent() {
   async function addSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
+    if (!code.trim() || !name.trim()) {
+      setError('Isi kode dan nama sekolah dengan karakter selain spasi.');
+      return;
+    }
     await run(async () => {
       const created = await createSchool(token, code.trim(), name.trim(), address.trim());
       setSelectedSchool(created);
@@ -166,6 +209,10 @@ function AdminSchoolsScreenContent() {
   }
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!editName.trim()) {
+      setError('Nama sekolah tidak boleh kosong.');
+      return;
+    }
     if (token && current && editName.trim())
       await run(() =>
         updateSchool(token, current.id, {
@@ -194,7 +241,7 @@ function AdminSchoolsScreenContent() {
             error
             message={
               accessError
-                ? error || schoolError || tokenError || 'Akses Admin belum tersedia.'
+                ? error || schoolError || tokenError || detailError || 'Akses Admin belum tersedia.'
                 : state.status === 'error'
                   ? (state.message ?? 'Akun belum dapat diperiksa.')
                   : 'Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.'
@@ -208,6 +255,49 @@ function AdminSchoolsScreenContent() {
         )}
       </AdminFrame>
     );
+  const operationsRole = state.status === 'ready' && state.profile.adminRole === 'OPERATIONS';
+  const schoolForm = (
+    <Card className="admin-card admin-create-school">
+      <div className="admin-section-heading">
+        <Icon name="school" />
+        <h2>Tambah sekolah</h2>
+      </div>
+      <p className="admin-helper">Daftarkan sekolah sebelum menerbitkan token guru.</p>
+      <form onSubmit={(event) => void addSchool(event)}>
+        <fieldset disabled={busy} className="admin-form-fields">
+          <Input
+            label="Kode sekolah"
+            id="school-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            minLength={2}
+            maxLength={32}
+            pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+            required
+            helper="Huruf/angka dan tanda hubung; server menyimpan kode dalam huruf kapital."
+          />
+          <Input
+            label="Nama sekolah"
+            id="school-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            maxLength={120}
+            required
+          />
+          <Input
+            label="Alamat sekolah"
+            id="school-address"
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            maxLength={500}
+          />
+          <Button type="submit" disabled={busy} fullWidth>
+            Simpan sekolah
+          </Button>
+        </fieldset>
+      </form>
+    </Card>
+  );
   return (
     <AdminFrame {...frame}>
       {error && <AdminMessage error message={error} />}
@@ -225,46 +315,16 @@ function AdminSchoolsScreenContent() {
       )}
       <div className="admin-schools-layout">
         <div className="admin-schools-main">
-          <Card className="admin-card admin-create-school">
-            <div className="admin-section-heading">
-              <Icon name="school" />
-              <h2>Tambah sekolah</h2>
-            </div>
-            <p className="admin-helper">Daftarkan sekolah sebelum menerbitkan token guru.</p>
-            <form onSubmit={(event) => void addSchool(event)}>
-              <fieldset disabled={busy} className="admin-form-fields">
-                <Input
-                  label="Kode sekolah"
-                  id="school-code"
-                  value={code}
-                  onChange={(event) => setCode(event.target.value)}
-                  minLength={2}
-                  maxLength={32}
-                  pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
-                  required
-                  helper="Huruf/angka dan tanda hubung; kapitalisasi tetap disimpan."
-                />
-                <Input
-                  label="Nama sekolah"
-                  id="school-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  maxLength={120}
-                  required
-                />
-                <Input
-                  label="Alamat sekolah"
-                  id="school-address"
-                  value={address}
-                  onChange={(event) => setAddress(event.target.value)}
-                  maxLength={500}
-                />
-                <Button type="submit" disabled={busy} fullWidth>
-                  Simpan sekolah
-                </Button>
-              </fieldset>
-            </form>
-          </Card>
+          {operationsRole ? (
+            <details className="operations-create-disclosure">
+              <summary>
+                <Icon name="school" /> Tambah sekolah
+              </summary>
+              {schoolForm}
+            </details>
+          ) : (
+            schoolForm
+          )}
           <section className="admin-school-list" aria-label="Daftar sekolah">
             <form
               onSubmit={(event) => {
@@ -309,10 +369,10 @@ function AdminSchoolsScreenContent() {
                       disabled={busy}
                       aria-pressed={selected === school.id}
                       onClick={() => {
+                        if (selected === school.id) return;
                         setSelected(school.id);
-                        setSelectedSchool(school);
-                        setEditName(school.name);
-                        setEditAddress(school.address ?? '');
+                        setSelectedSchool(null);
+                        setDetailError('');
                         setTokenOffset(0);
                         setIssued(null);
                         setTokens(null);
@@ -338,14 +398,14 @@ function AdminSchoolsScreenContent() {
             <div className="admin-content-actions">
               <Button
                 variant="secondary"
-                disabled={offset === 0 || busy}
+                disabled={offset === 0 || busy || schools === null}
                 onClick={() => setOffset(Math.max(0, offset - 20))}
               >
                 Sekolah sebelumnya
               </Button>
               <Button
                 variant="secondary"
-                disabled={nextOffset === null || busy}
+                disabled={nextOffset === null || busy || schools === null}
                 onClick={() => setOffset(nextOffset!)}
               >
                 Sekolah berikutnya
@@ -354,7 +414,11 @@ function AdminSchoolsScreenContent() {
           </section>
         </div>
         <aside className="admin-school-context" aria-label="Detail sekolah dan token">
-          {current ? (
+          {detailError ? (
+            <AdminMessage error message={detailError} retry={retry} />
+          ) : selected && (detailLoading || !current) ? (
+            <AdminLoading message="Memuat detail sekolah…" />
+          ) : current ? (
             <Card className="admin-card admin-school-detail">
               <span className="admin-eyebrow">Sekolah dipilih</span>
               <h2>{current.name}</h2>
@@ -387,7 +451,7 @@ function AdminSchoolsScreenContent() {
                     maxLength={500}
                   />
                   <Button variant="secondary" type="submit" disabled={busy} fullWidth>
-                    Simpan nama
+                    Simpan perubahan
                   </Button>
                 </fieldset>
               </form>
@@ -450,22 +514,8 @@ function AdminSchoolsScreenContent() {
                     {tokens.map((item) => (
                       <li key={item.id} className="admin-token-row">
                         <div>
-                          <Badge
-                            variant={
-                              item.usedAt ||
-                              item.revokedAt ||
-                              new Date(item.expiresAt) <= new Date()
-                                ? 'default'
-                                : 'success'
-                            }
-                          >
-                            {item.usedAt
-                              ? 'Terpakai'
-                              : item.revokedAt
-                                ? 'Dicabut'
-                                : new Date(item.expiresAt) <= new Date()
-                                  ? 'Kedaluwarsa'
-                                  : 'Belum dipakai'}
+                          <Badge variant={item.status === 'AVAILABLE' ? 'success' : 'default'}>
+                            {tokenStatusLabels[item.status]}
                           </Badge>
                           <small className="admin-token-id">{item.id}</small>
                           <small>
@@ -511,7 +561,7 @@ function AdminSchoolsScreenContent() {
                           <div className="admin-content-actions">
                             <Button
                               variant="secondary"
-                              disabled={busy}
+                              disabled={busy || current.status !== 'ACTIVE'}
                               onClick={() =>
                                 void run(async () =>
                                   setIssued(await reissueTeacherToken(token, current.id, item.id)),
@@ -541,14 +591,14 @@ function AdminSchoolsScreenContent() {
                 <div className="admin-content-actions">
                   <Button
                     variant="secondary"
-                    disabled={tokenOffset === 0 || busy}
+                    disabled={tokenOffset === 0 || busy || tokens === null}
                     onClick={() => setTokenOffset(Math.max(0, tokenOffset - 20))}
                   >
                     Token sebelumnya
                   </Button>
                   <Button
                     variant="secondary"
-                    disabled={tokenNextOffset === null || busy}
+                    disabled={tokenNextOffset === null || busy || tokens === null}
                     onClick={() => setTokenOffset(tokenNextOffset!)}
                   >
                     Token berikutnya

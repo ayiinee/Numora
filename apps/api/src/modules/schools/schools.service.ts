@@ -97,7 +97,8 @@ export class SchoolsService {
           .select({ id: schools.id })
           .from(schools)
           .where(and(eq(schools.id, schoolId), eq(schools.status, 'ACTIVE')))
-          .limit(1);
+          .limit(1)
+          .for('update');
         if (!school)
           throw new NotFoundException({
             code: 'SCHOOL_NOT_FOUND',
@@ -162,14 +163,6 @@ export class SchoolsService {
 
   async issueToken(authorization: string | undefined, schoolId: string) {
     const adminId = await this.role(authorization, 'ADMIN');
-    const { db } = getDatabase();
-    const [school] = await db
-      .select({ id: schools.id })
-      .from(schools)
-      .where(and(eq(schools.id, schoolId), eq(schools.status, 'ACTIVE')))
-      .limit(1);
-    if (!school)
-      throw new NotFoundException({ code: 'SCHOOL_NOT_FOUND', detail: 'Sekolah tidak tersedia.' });
     return this.createToken(adminId, schoolId);
   }
 
@@ -181,6 +174,18 @@ export class SchoolsService {
       const expiresAt = new Date(createdAt.getTime() + 72 * 60 * 60 * 1000);
       try {
         const issued = await db.transaction(async (tx) => {
+          // Serialize issuance/reissue/verification against school deactivation.
+          const [school] = await tx
+            .select({ id: schools.id })
+            .from(schools)
+            .where(and(eq(schools.id, schoolId), eq(schools.status, 'ACTIVE')))
+            .limit(1)
+            .for('update');
+          if (!school)
+            throw new NotFoundException({
+              code: 'SCHOOL_NOT_FOUND',
+              detail: 'Sekolah tidak tersedia.',
+            });
           // A pre-marker HMAC digest identifies the same token as hmac-v1.
           // Check both encodings so an old token can never be reissued by collision.
           const [collision] = await tx
@@ -245,6 +250,7 @@ export class SchoolsService {
   ) {
     await this.role(authorization, 'ADMIN');
     const { db } = getDatabase();
+    const term = query.search?.trim().replace(/[\\%_]/g, '\\$&');
     const rows = await db
       .select({
         id: schools.id,
@@ -255,9 +261,7 @@ export class SchoolsService {
       })
       .from(schools)
       .where(
-        query.search
-          ? or(ilike(schools.name, `%${query.search}%`), ilike(schools.code, `%${query.search}%`))
-          : undefined,
+        term ? or(ilike(schools.name, `%${term}%`), ilike(schools.code, `%${term}%`)) : undefined,
       )
       .orderBy(schools.name, schools.id)
       .limit(query.limit + 1)

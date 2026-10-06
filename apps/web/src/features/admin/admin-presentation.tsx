@@ -23,13 +23,18 @@ export function AdminFrame({
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const operationsRole =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.adminRole === 'OPERATIONS';
+  const hidePageHeader = contentRole || operationsRole;
   return (
     <AppShell
       area="admin"
-      className={`admin-redesign-shell${contentRole ? ' admin-content-shell' : ''}`}
+      className={`admin-redesign-shell${hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}`}
     >
       <div className="admin-redesign-frame">
-        {contentRole ? (
+        {hidePageHeader ? (
           <h1 className="sr-only">{title}</h1>
         ) : (
           <header className="admin-page-header">

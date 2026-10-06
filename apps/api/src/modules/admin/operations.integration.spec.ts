@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import {
   classMemberships,
   classes,
@@ -8,6 +8,8 @@ import {
   teacherSchoolMemberships,
   users,
   auditLogs,
+  schools,
+  teacherVerificationTokens,
 } from '@tka/database';
 import { eq, sql } from 'drizzle-orm';
 import { AdminOperationsService } from './operations.service';
@@ -19,6 +21,125 @@ import type { IdentityService } from '../identity/identity.service';
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('admin operations readers and limited structure in PostgreSQL', () => {
   afterAll(closeDatabaseConnection);
+  it('blocks issuance, replacement and verification during school deactivation and escapes literal searches', async () => {
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    const { db } = getDatabase();
+    const suffix = randomUUID();
+    const [admin, teacher] = await db
+      .insert(users)
+      .values([
+        {
+          authUserId: randomUUID(),
+          role: 'ADMIN',
+          adminRole: 'OPERATIONS',
+          displayName: 'Ops',
+          email: `ops-race-${suffix}@example.test`,
+        },
+        {
+          authUserId: randomUUID(),
+          role: 'TEACHER',
+          displayName: 'Teacher',
+          email: `teacher-race-${suffix}@example.test`,
+        },
+      ])
+      .returning();
+    const identity = {
+      me: async (token: string) => ({
+        id: token === 'teacher' ? teacher!.id : admin!.id,
+        role: token === 'teacher' ? 'TEACHER' : 'ADMIN',
+        adminRole: token === 'teacher' ? null : 'OPERATIONS',
+        status: 'ACTIVE',
+      }),
+    } as unknown as IdentityService;
+    const service = new SchoolsService(identity);
+    const school = await service.createSchool(
+      'ops',
+      `RACE-${suffix.slice(0, 8)}`,
+      `School %_${suffix}`,
+    );
+    const ordinary = await service.createSchool(
+      'ops',
+      `PLAIN-${suffix.slice(0, 8)}`,
+      `School ${suffix}`,
+    );
+    const found = await service.listForAdmin('ops', {
+      limit: 20,
+      offset: 0,
+      search: `%_${suffix}`,
+    });
+    expect(found.items.map((row) => row.id)).toEqual([school.id]);
+    expect(found.items.map((row) => row.id)).not.toContain(ordinary.id);
+    const issued = await service.issueToken('ops', school.id);
+    let release!: () => void;
+    let locked!: () => void;
+    const held = new Promise<void>((resolve) => {
+      locked = resolve;
+    });
+    const proceed = new Promise<void>((resolve) => {
+      release = resolve;
+    });
+    const deactivation = db.transaction(async (tx) => {
+      await tx.update(schools).set({ status: 'INACTIVE' }).where(eq(schools.id, school.id));
+      locked();
+      await proceed;
+    });
+    await held;
+    const operations = Promise.allSettled([
+      service.issueToken('ops', school.id),
+      service.reissueToken('ops', school.id, issued.id),
+      service.verifyTeacher('teacher', school.id, issued.token),
+    ]);
+    try {
+      await vi.waitFor(
+        async () => {
+          const waiting = await db.execute(
+            sql`select count(*)::int as count from pg_stat_activity where datname=current_database() and pid<>pg_backend_pid() and wait_event_type='Lock' and query ilike '%schools%' and query ilike '%for update%'`,
+          );
+          expect(waiting[0]?.count).toBe(3);
+        },
+        { timeout: 5000, interval: 25 },
+      );
+    } finally {
+      release();
+      await deactivation;
+    }
+    expect(await operations).toEqual([
+      expect.objectContaining({
+        status: 'rejected',
+        reason: expect.objectContaining({ status: 404 }),
+      }),
+      expect.objectContaining({
+        status: 'rejected',
+        reason: expect.objectContaining({ status: 404 }),
+      }),
+      expect.objectContaining({
+        status: 'rejected',
+        reason: expect.objectContaining({ status: 404 }),
+      }),
+    ]);
+    const tokens = await service.listTokens('ops', school.id);
+    expect(tokens.items).toHaveLength(1);
+    expect(tokens.items[0]).toMatchObject({ id: issued.id, usedAt: null, revokedAt: null });
+    await service.updateSchool('ops', school.id, { status: 'ACTIVE' });
+    const replacements = await Promise.allSettled([
+      service.reissueToken('ops', school.id, issued.id),
+      service.reissueToken('ops', school.id, issued.id),
+    ]);
+    expect(replacements.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
+    expect(replacements.find((result) => result.status === 'rejected')).toMatchObject({
+      reason: { status: 409 },
+    });
+    const [original] = await db
+      .select()
+      .from(teacherVerificationTokens)
+      .where(eq(teacherVerificationTokens.id, issued.id));
+    expect(original!.revokedAt).not.toBeNull();
+    const tokenAudit = await db
+      .select()
+      .from(auditLogs)
+      .where(eq(auditLogs.actorUserId, admin!.id));
+    expect(tokenAudit.filter((row) => row.action === 'teacher_token_reissued')).toHaveLength(1);
+  });
   it('preserves address, credential actor, membership history and classes without active teachers', async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
     const { db } = getDatabase(),

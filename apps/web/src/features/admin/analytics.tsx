@@ -9,21 +9,24 @@ import type { AdminAnalyticsDto } from './generated-types';
 export function AdminAnalyticsScreen() {
   const { state } = useAuth();
   const router = useRouter();
-  const contentRole =
-    state.status === 'ready' &&
-    state.profile.role === 'ADMIN' &&
-    state.profile.status === 'ACTIVE' &&
-    state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const activeAdmin =
+    state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE';
+  const redirectTo = activeAdmin
+    ? state.profile.adminRole === 'CONTENT_DATA_MODERATION'
+      ? '/admin/content'
+      : state.profile.adminRole === 'OPERATIONS'
+        ? '/admin/schools'
+        : null
+    : null;
   useEffect(() => {
-    if (contentRole) router.replace('/admin/content');
-  }, [contentRole, router]);
+    if (redirectTo) router.replace(redirectTo);
+  }, [redirectTo, router]);
   const allowed =
-    state.status === 'ready' &&
-    state.profile.role === 'ADMIN' &&
+    activeAdmin &&
     state.profile.capabilities?.some(
       (cap) => cap === 'ANALYTICS_CONTENT' || cap === 'ANALYTICS_OPERATIONS',
     );
-  if (contentRole) return null;
+  if (redirectTo) return null;
   return (
     <AdminFrame
       title="Analytics operasional"

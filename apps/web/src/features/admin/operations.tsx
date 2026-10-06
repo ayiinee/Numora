@@ -15,6 +15,7 @@ const PAGE_SIZE = 20;
 const dateTime = new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
   timeStyle: 'short',
+  timeZone: 'Asia/Jakarta',
 });
 const roleLabels = {
   STUDENT: 'Siswa',
@@ -40,7 +41,9 @@ export function AdminOperationsScreen() {
   return (
     <AdminOperationsScreenContent
       key={
-        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+        state.status === 'ready'
+          ? `${state.profile.id}:${state.profile.adminRole}:${state.profile.status}:${state.profile.capabilities?.includes('OPERATIONS_MANAGE')}`
+          : state.status
       }
     />
   );
@@ -49,8 +52,10 @@ function AdminOperationsScreenContent() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const [tab, setTab] = useState<OperationsTab>('users');
+  const [routeQuery, setRouteQuery] = useState<string | null>(null);
   const [revision, setRevision] = useState(0);
   const [deniedError, setDeniedError] = useState('');
+  const operationsRole = state.status === 'ready' && state.profile.adminRole === 'OPERATIONS';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -60,8 +65,24 @@ function AdminOperationsScreenContent() {
       : null;
 
   useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('view') === 'classes') setTab('classes');
+    const restore = () => {
+      setTab(
+        new URLSearchParams(window.location.search).get('view') === 'classes' ? 'classes' : 'users',
+      );
+      setRouteQuery(window.location.search);
+    };
+    restore();
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
   }, []);
+  function navigate(next: OperationsTab) {
+    if (next === tab) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', next);
+    window.history.pushState(null, '', url);
+    setTab(next);
+    setRouteQuery(url.search);
+  }
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -109,38 +130,51 @@ function AdminOperationsScreenContent() {
 
   return (
     <AdminFrame {...frame}>
-      <div className="monitoring-frame admin-content admin-operations">
-        <p className="admin-context-note">
-          <span>Data operasional · baca saja</span>
-          Telusuri verifikasi Guru, affiliation siswa, membership, dan roster kelas.
-        </p>
-        <nav className="admin-content-nav" aria-label="Jenis data operasional">
-          <Button
-            variant={tab === 'users' ? 'primary' : 'secondary'}
-            aria-current={tab === 'users' ? 'page' : undefined}
-            onClick={() => setTab('users')}
-          >
-            Pengguna
-          </Button>
-          <Button
-            variant={tab === 'classes' ? 'primary' : 'secondary'}
-            aria-current={tab === 'classes' ? 'page' : undefined}
-            onClick={() => setTab('classes')}
-          >
-            Kelas
-          </Button>
-        </nav>
-        {tab === 'users' ? (
-          <UsersPanel key="users" token={token} revision={revision} onAccessError={onAccessError} />
-        ) : (
-          <ClassesPanel
-            key="classes"
-            token={token}
-            revision={revision}
-            onAccessError={onAccessError}
-          />
-        )}
-      </div>
+      {routeQuery === null ? (
+        <AdminLoading message="Memuat halaman operasional…" />
+      ) : (
+        <div className="monitoring-frame admin-content admin-operations">
+          <p className="admin-context-note">
+            <span>Data operasional · baca saja</span>
+            Telusuri verifikasi Guru, affiliation siswa, membership, dan roster kelas.
+          </p>
+          <nav className="admin-content-nav" aria-label="Jenis data operasional">
+            <Button
+              className={operationsRole ? 'admin-view-button' : undefined}
+              variant={tab === 'users' ? 'primary' : 'secondary'}
+              aria-current={tab === 'users' ? 'page' : undefined}
+              onClick={() => navigate('users')}
+            >
+              {operationsRole && <Icon name="users" />}
+              Pengguna
+            </Button>
+            <Button
+              className={operationsRole ? 'admin-view-button' : undefined}
+              variant={tab === 'classes' ? 'primary' : 'secondary'}
+              aria-current={tab === 'classes' ? 'page' : undefined}
+              onClick={() => navigate('classes')}
+            >
+              {operationsRole && <Icon name="school" />}
+              Kelas
+            </Button>
+          </nav>
+          {tab === 'users' ? (
+            <UsersPanel
+              key={`users:${routeQuery}`}
+              token={token}
+              revision={revision}
+              onAccessError={onAccessError}
+            />
+          ) : (
+            <ClassesPanel
+              key={`classes:${routeQuery}`}
+              token={token}
+              revision={revision}
+              onAccessError={onAccessError}
+            />
+          )}
+        </div>
+      )}
     </AdminFrame>
   );
 }
@@ -155,22 +189,28 @@ function UsersPanel({
   onAccessError: (error: unknown) => void;
 }) {
   const [search, setSearch] = useState('');
-  const [role, setRole] = useState('');
+  const [role, setRole] = useState(
+    () => new URLSearchParams(window.location.search).get('role') ?? '',
+  );
   const [status, setStatus] = useState('');
   const [affiliation, setAffiliation] = useState('');
-  const [schoolId, setSchoolId] = useState('');
+  const [schoolId, setSchoolId] = useState(
+    () => new URLSearchParams(window.location.search).get('schoolId') ?? '',
+  );
   const [filters, setFilters] = useState({
     search: '',
-    role: '',
+    role,
     status: '',
     affiliation: '',
-    schoolId: '',
+    schoolId,
   });
   const { state: auth } = useAuth();
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminUserDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const [selectedId, setSelectedId] = useState('');
+  const [selectedId, setSelectedId] = useState(
+    () => new URLSearchParams(window.location.search).get('userId') ?? '',
+  );
   const [detail, setDetail] = useState<AdminUserDetailDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
@@ -178,18 +218,6 @@ function UsersPanel({
   const [loading, setLoading] = useState(true);
   const [error, setError] = useState('');
   const [retry, setRetry] = useState(0);
-  useEffect(() => {
-    const query = new URLSearchParams(window.location.search);
-    const school = query.get('schoolId') ?? '',
-      initialRole = query.get('role') ?? '',
-      selected = query.get('userId') ?? '';
-    if (school) {
-      setSchoolId(school);
-      setRole(initialRole);
-      setFilters({ search: '', role: initialRole, status: '', affiliation: '', schoolId: school });
-    }
-    if (selected) setSelectedId(selected);
-  }, []);
 
   useEffect(() => {
     let active = true;
@@ -356,6 +384,7 @@ function UsersPanel({
         loading={detailLoading}
         error={detailError}
         selected={Boolean(selectedId)}
+        onAccessError={onAccessError}
         onClose={() => setSelectedId('')}
         onRetry={() => setDetailRetry((current) => current + 1)}
       />
@@ -371,6 +400,7 @@ function UserDetail({
   selected,
   onClose,
   onRetry,
+  onAccessError,
 }: {
   token: string;
   detail: AdminUserDetailDto | null;
@@ -379,6 +409,7 @@ function UserDetail({
   selected: boolean;
   onClose: () => void;
   onRetry: () => void;
+  onAccessError: (error: unknown) => void;
 }) {
   return (
     <section aria-labelledby="admin-user-detail-title">
@@ -424,7 +455,12 @@ function UserDetail({
             <DetailField label="Akun dibuat">{formatDate(detail.createdAt)}</DetailField>
           </dl>
           {detail.role !== 'ADMIN' && (
-            <OperationsMemberships key={detail.id} token={token} userId={detail.id} />
+            <OperationsMemberships
+              key={detail.id}
+              token={token}
+              userId={detail.id}
+              onAccessError={onAccessError}
+            />
           )}
           <Button variant="secondary" onClick={onClose}>
             Tutup detail
@@ -445,17 +481,12 @@ function ClassesPanel({
   onAccessError: (error: unknown) => void;
 }) {
   const [search, setSearch] = useState('');
-  const [schoolId, setSchoolId] = useState('');
+  const [schoolId, setSchoolId] = useState(
+    () => new URLSearchParams(window.location.search).get('schoolId') ?? '',
+  );
   const [teacherId, setTeacherId] = useState('');
   const [state, setState] = useState('');
-  const [filters, setFilters] = useState({ search: '', schoolId: '', teacherId: '', state: '' });
-  useEffect(() => {
-    const school = new URLSearchParams(window.location.search).get('schoolId');
-    if (school) {
-      setSchoolId(school);
-      setFilters({ search: '', schoolId: school, teacherId: '', state: '' });
-    }
-  }, []);
+  const [filters, setFilters] = useState({ search: '', schoolId, teacherId: '', state: '' });
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminClassDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
@@ -599,7 +630,9 @@ function ClassesPanel({
                   </div>
                   <p>{item.schoolName}</p>
                   <small>
-                    Guru: {item.teacherName} · {item.studentCount} siswa aktif
+                    Guru tercatat: {item.teacherName ?? 'Tidak ada Guru tercatat'} ·{' '}
+                    {item.teacherActive ? 'Guru aktif' : 'Tanpa Guru aktif'} · {item.studentCount}{' '}
+                    siswa aktif
                   </small>
                   <Button
                     variant="secondary"
@@ -629,6 +662,7 @@ function ClassesPanel({
         loading={detailLoading}
         error={detailError}
         selected={Boolean(selectedId)}
+        onAccessError={onAccessError}
         onClose={() => setSelectedId('')}
         onRetry={() => setDetailRetry((current) => current + 1)}
       />
@@ -644,6 +678,7 @@ function ClassDetail({
   selected,
   onClose,
   onRetry,
+  onAccessError,
 }: {
   token: string;
   detail: AdminClassDto | null;
@@ -652,6 +687,7 @@ function ClassDetail({
   selected: boolean;
   onClose: () => void;
   onRetry: () => void;
+  onAccessError: (error: unknown) => void;
 }) {
   return (
     <section aria-labelledby="admin-class-detail-title">
@@ -699,7 +735,12 @@ function ClassDetail({
               <code>{detail.id}</code>
             </DetailField>
           </dl>
-          <OperationsRoster key={detail.id} token={token} classId={detail.id} />
+          <OperationsRoster
+            key={detail.id}
+            token={token}
+            classId={detail.id}
+            onAccessError={onAccessError}
+          />
           <Button variant="secondary" onClick={onClose}>
             Tutup detail
           </Button>
