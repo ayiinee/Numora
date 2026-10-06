@@ -40,6 +40,25 @@ export class ContentPageDto {
   limit = 20;
 }
 
+export class ContentVersionQueryDto extends ContentPageDto {
+  @ApiPropertyOptional({ enum: ['DRILL', 'PRETEST', 'TRYOUT', 'UNCLASSIFIED'] })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(['DRILL', 'PRETEST', 'TRYOUT', 'UNCLASSIFIED'])
+  usageType?: 'DRILL' | 'PRETEST' | 'TRYOUT' | 'UNCLASSIFIED';
+  @ApiPropertyOptional({ enum: statuses })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(statuses)
+  status?: ContentState;
+  @ApiPropertyOptional({ format: 'uuid' })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsUUID()
+  chapterId?: string;
+  @ApiPropertyOptional()
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsString()
+  @MaxLength(240)
+  source?: string;
+}
 export class TaxonomyBaseDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
   @ApiPropertyOptional({
@@ -96,7 +115,12 @@ export class UpdateCompetencyDto extends PartialType(
 ) {}
 export class CreateLevelDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty({ minimum: 1, maximum: 5 }) @Type(() => Number) @IsInt() @Min(1) @Max(5) levelNumber!: number;
+  @ApiProperty({ minimum: 1, maximum: 5 })
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(5)
+  levelNumber!: number;
   @ApiPropertyOptional()
   @ValidateIf((_o, v) => v !== undefined)
   @IsString()
@@ -134,6 +158,10 @@ export class QuestionContentDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(80) @Matches(/\S/) difficulty!: string;
 }
 export class CreateQuestionDto extends QuestionContentDto {
+  @ApiPropertyOptional({ enum: ['DRILL', 'PRETEST', 'TRYOUT'] })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(['DRILL', 'PRETEST', 'TRYOUT'])
+  usageType?: 'DRILL' | 'PRETEST' | 'TRYOUT';
   @ApiProperty({ format: 'uuid' }) @IsUUID() primaryCompetencyId!: string;
   @ApiPropertyOptional({
     minimum: 1,
@@ -194,6 +222,13 @@ export class AdminCurriculumDto {
   @ApiProperty({ type: [AdminTaxonDto] }) items!: AdminTaxonDto[];
 }
 export class AdminVersionDto {
+  @ApiPropertyOptional({ type: String, nullable: true }) sourceName?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) sourceReference?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) sourceNamespace?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) sourceFileName?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true, enum: ['DRILL', 'PRETEST', 'TRYOUT'] })
+  usageType?: 'DRILL' | 'PRETEST' | 'TRYOUT' | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) sourceQuestionId?: string | null;
   @ApiProperty({ required: false }) imported?: boolean;
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;

@@ -1,11 +1,61 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type ImportBodyDto = { "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
+export type ImportBodyDto = { "target"?: PackageTargetDto; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
-export type ImportItemDto = { "externalId": string; "canImportDraft": boolean; "canPreview": boolean; "blockers": (string)[]; "outcome": "VALIDATED" | "CREATED" | "CREATED_REVISION" | "SKIPPED_UNCHANGED" | "INVALID"; "questionVersionId": string | null; };
+export type PackageTargetDto = { "packageId": string; "expectedRevision": number; "fileName"?: string; };
 
-export type ImportReportDto = { "id": string | null; "sourceNamespace": string; "canImportDraft": boolean; "items": (ImportItemDto)[]; };
+export type WorkbookBindingDto = { "packageId": string; "familyCode": string; "packageVersion": number; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "chapterCode": string | null; "subchapterCode": string | null; "levelNumber": number | null; "sourceNamespace": string; "sourceName": string; "sourceReference": string; "isDemo": boolean; };
+
+export type PackageSourceDto = { "sourceNamespace": string; "sourceName": string; "sourceReference": string; };
+
+export type PackageCheckDto = { "code": string; "passed": boolean; "detail": string; };
+
+export type PackageValidationDto = { "packageId": string; "contentRevision": number; "canSaveDraft": boolean; "canPublish": boolean; "expectedCount": number; "actualCount": number; "blockers": (string)[]; "removedVersionIds": (string)[]; "checks": (PackageCheckDto)[]; };
+
+export type CreateContentPackageDto = { "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "chapterId"?: string; "levelId"?: string; "isDemo": boolean; "source": PackageSourceDto; };
+
+export type UpdateContentPackageDto = { "expectedRevision": number; "name": string; "questionVersionIds": (string)[]; };
+
+export type ContentPackageDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
+
+export type ContentPackagesDto = { "items": (ContentPackageDto)[]; };
+
+export type ContentPackageDetailDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
+
+export type ContentPackageItemDto = { "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
+
+export type ContentDistributionDto = { "dimension": string; "value": string; "count": number; };
+
+export type ClassifyQuestionDto = { "usageType": "DRILL" | "PRETEST" | "TRYOUT"; };
+
+export type ReviewImportedQuestionDto = { "packageId": string; "confirmed": true; "notes": string; };
+
+export type ExcelParseDto = { "envelope": ExcelEnvelopeDto; "media": (ExcelMediaDto)[]; "issues": (ExcelIssueDto)[]; "report": ImportReportDto | null; };
+
+export type ExcelEnvelopeDto = { "binding"?: WorkbookBindingDto; "schemaVersion": 2; "sourceNamespace": string; "questions": (ExcelQuestionDto)[]; };
+
+export type ExcelQuestionDto = { "externalId": string; "type": "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "chapterCode": string; "subchapterCode": string; "competencyCode": string; "difficulty": "EASY" | "MEDIUM" | "HARD" | null; "stem": RichContentDto; "options": (PreviewOptionDto)[]; "answer": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; }; "explanation": RichContentDto; "metadata": ExcelMetadataDto; };
+
+export type ExcelMetadataDto = { "sourceLevelNumber": number; "sourceOrder"?: number; "sourceQuestionId"?: string; "sourceSheet": string; "sourceRowNumber": number; "assetManifest": (ExcelAssetDto)[]; "categories"?: (PreviewCategoryDto)[]; };
+
+export type ExcelAssetDto = { "externalId": string; "assetId": string; "textMarker": string; "placement": "STEM" | "OPTION" | "STATEMENT" | "EXPLANATION"; "itemId": string | null; "assetOrder": number; "altText": string; "objectKey": string | null; "sha256": string; "contentType": string; "byteLength": number; "bucket": string; };
+
+export type ExcelIssueDto = { "sheet": string; "row": number; "cell": string; "code": string; "detail": string; };
+
+export type ExcelMediaDto = { "externalId": string; "assetId": string; "base64": string; };
+
+export type CreateMediaUploadDto = { "externalId": string; "assetId": string; "contentVersion"?: number; "contentType": "image/png" | "image/jpeg" | "image/webp"; "byteLength": number; "sha256": string; };
+
+export type MediaUploadReceiptDto = { "uploadId": string; "status": "PENDING" | "VERIFIED"; "externalId": string; "assetId": string; "bucket": string; "objectKey": string; "contentType": string; "byteLength": number; "sha256": string; "verifiedAt": string | null; };
+
+export type MediaUploadReservationDto = { "uploadId": string; "status": "PENDING" | "VERIFIED"; "externalId": string; "assetId": string; "bucket": string; "objectKey": string; "contentType": string; "byteLength": number; "sha256": string; "verifiedAt": string | null; "uploadUrl": string | null; "method": "PUT" | null; "headers": Record<string, unknown> | null; "expiresAt": string; };
+
+export type ImportItemDto = { "issues"?: (ImportIssueDto)[]; "externalId": string; "canImportDraft": boolean; "canPreview": boolean; "blockers": (string)[]; "outcome": "VALIDATED" | "CREATED" | "CREATED_REVISION" | "SKIPPED_UNCHANGED" | "INVALID"; "questionVersionId": string | null; "change"?: "ADD" | "REVISE" | "KEEP" | "REUSE" | "INVALID"; };
+
+export type ImportIssueDto = { "code": string; "detail": string; "sheet": string | null; "row": number | null; };
+
+export type ImportReportDto = { "id": string | null; "sourceNamespace": string; "canImportDraft": boolean; "items": (ImportItemDto)[]; "package"?: PackageValidationDto; };
 
 export type CreatePreviewDto = { "questionVersionIds": (string)[]; };
 
@@ -43,7 +93,7 @@ export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": numb
 
 export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
-export type AdminVersionDto = { "imported"?: boolean; "id": string; "questionId": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string | null; "contentStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
+export type AdminVersionDto = { "sourceName"?: string | null; "sourceReference"?: string | null; "sourceNamespace"?: string | null; "sourceFileName"?: string | null; "usageType"?: "DRILL" | "PRETEST" | "TRYOUT" | null; "sourceQuestionId"?: string | null; "imported"?: boolean; "id": string; "questionId": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string | null; "contentStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
 
 export type AdminVersionsDto = { "items": (AdminVersionDto)[]; };
 
@@ -71,7 +121,7 @@ export type UpdateLevelDto = { "description"?: string; "status"?: "DRAFT" | "REA
 
 export type QuestionContentDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; };
 
-export type CreateQuestionDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "primaryCompetencyId": string; "curriculumLevelNumber"?: number; "sourceRef"?: string; "variantCode": string; };
+export type CreateQuestionDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "usageType"?: "DRILL" | "PRETEST" | "TRYOUT"; "primaryCompetencyId": string; "curriculumLevelNumber"?: number; "sourceRef"?: string; "variantCode": string; };
 
 export type CreateVariantDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "originalVariantId": string; "variantCode": string; };
 

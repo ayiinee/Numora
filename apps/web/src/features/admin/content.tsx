@@ -5,6 +5,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
+import { classifyQuestion } from './content-package-api';
+import { ContentPackageWorkspace } from './content-package-workspace';
 import {
   setChapterCategory,
   createChapter,
@@ -50,6 +52,7 @@ type View =
   | 'videos'
   | 'packages'
   | 'drillPackages'
+  | 'directedPackages'
   | 'reports'
   | 'irt'
   | 'audit';
@@ -60,6 +63,7 @@ const views: { id: View; label: string }[] = [
   { id: 'videos', label: 'Video' },
   { id: 'packages', label: 'Draf Tryout' },
   { id: 'drillPackages', label: 'Paket Drill' },
+  { id: 'directedPackages', label: 'Paket & Pretest' },
   { id: 'reports', label: 'Laporan' },
   { id: 'irt', label: 'IRT' },
   { id: 'audit', label: 'Audit' },
@@ -96,10 +100,20 @@ function AdminContentScreenContent() {
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
+  const [versionUsage, setVersionUsage] = useState('');
+  const [versionStatus, setVersionStatus] = useState('');
+  const [versionChapter, setVersionChapter] = useState('');
+  const [versionSource, setVersionSource] = useState('');
+  const versionQuery = new URLSearchParams({
+    ...(versionUsage ? { usageType: versionUsage } : {}),
+    ...(versionStatus ? { status: versionStatus } : {}),
+    ...(versionChapter ? { chapterId: versionChapter } : {}),
+    ...(versionSource ? { source: versionSource } : {}),
+  }).toString();
   useEffect(() => {
     if (!token) return;
     let active = true;
-    loadAdminWorkbench(token, offset).then(
+    loadAdminWorkbench(token, offset, versionQuery).then(
       (result) => {
         if (active) {
           setData(result);
@@ -118,7 +132,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision]);
+  }, [token, offset, revision, versionQuery]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -187,6 +201,7 @@ function AdminContentScreenContent() {
         videos: current.videos.items.length,
         packages: current.packages.items.length,
         drillPackages: current.drillPackages.items.length,
+        directedPackages: 0,
         reports: current.reports.items.length,
         irt: Math.max(current.irt.items.length, current.irtBatches.items.length),
         audit: current.audit.items.length,
@@ -263,7 +278,76 @@ function AdminContentScreenContent() {
                   />
                   <section>
                     <h2>Versi soal</h2>
-                    <Link href="/admin/content/imports">Impor JSON & preview internal</Link>
+                    <Link href="/admin/content/imports">
+                      Impor Excel/JSON, paket & preview internal
+                    </Link>
+                    <div className="excel-editor-options">
+                      <label>
+                        Tujuan soal
+                        <select
+                          value={versionUsage}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setVersionUsage(e.target.value);
+                            setOffset(0);
+                          }}
+                        >
+                          <option value="">Semua tujuan</option>
+                          <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
+                          {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+                            <option key={u}>{u}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Status versi
+                        <select
+                          value={versionStatus}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setVersionStatus(e.target.value);
+                            setOffset(0);
+                          }}
+                        >
+                          <option value="">Semua status</option>
+                          {['DRAFT', 'READY', 'ARCHIVED'].map((s) => (
+                            <option key={s}>{s}</option>
+                          ))}
+                        </select>
+                      </label>
+                      <label>
+                        Materi soal
+                        <select
+                          value={versionChapter}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setVersionChapter(e.target.value);
+                            setOffset(0);
+                          }}
+                        >
+                          <option value="">Semua bab</option>
+                          {current.curriculum.items
+                            .filter((c) => c.kind === 'CHAPTER')
+                            .map((c) => (
+                              <option key={c.id} value={c.id}>
+                                {c.name}
+                              </option>
+                            ))}
+                        </select>
+                      </label>
+                      <label>
+                        Sumber soal
+                        <input
+                          value={versionSource}
+                          maxLength={240}
+                          disabled={busy}
+                          onChange={(e) => {
+                            setVersionSource(e.target.value);
+                            setOffset(0);
+                          }}
+                        />
+                      </label>
+                    </div>
                     {!current.versions.items.length && (
                       <p>Belum ada versi soal pada halaman ini.</p>
                     )}
@@ -277,6 +361,41 @@ function AdminContentScreenContent() {
                           <p>
                             Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
                           </p>
+                          <Badge>{v.usageType ?? 'Belum diklasifikasikan'}</Badge>
+                          {v.sourceQuestionId && (
+                            <small>Salinan dari keluarga soal: {v.sourceQuestionId}</small>
+                          )}
+                          <small>
+                            Sumber: {v.sourceName ?? 'Belum tercatat'} {v.sourceReference ?? ''}{' '}
+                            {v.sourceFileName ? `· ${v.sourceFileName}` : ''}
+                          </small>
+                          {!v.usageType && (
+                            <form
+                              onSubmit={(e) => {
+                                e.preventDefault();
+                                const f = new FormData(e.currentTarget);
+                                void run(() =>
+                                  classifyQuestion(token, v.questionId, {
+                                    usageType: field(f, 'usageType') as
+                                      'DRILL' | 'PRETEST' | 'TRYOUT',
+                                  }),
+                                );
+                              }}
+                            >
+                              <label>
+                                Klasifikasi tujuan
+                                <select name="usageType" required disabled={busy}>
+                                  <option value="">Pilih tujuan permanen</option>
+                                  {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+                                    <option key={u}>{u}</option>
+                                  ))}
+                                </select>
+                              </label>
+                              <Button type="submit" disabled={busy}>
+                                Simpan klasifikasi
+                              </Button>
+                            </form>
+                          )}
                           {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
                           <small>ID versi: {v.id}</small>
                           {v.reviewedAt && (
@@ -392,6 +511,14 @@ function AdminContentScreenContent() {
                   run={run}
                   draft={drillDraft}
                   setDraft={setDrillDraft}
+                />
+              )}
+              {view === 'directedPackages' && (
+                <ContentPackageWorkspace
+                  token={token}
+                  disabled={busy}
+                  refreshKey={0}
+                  onSelect={() => {}}
                 />
               )}
               {view === 'reports' && (
@@ -1162,6 +1289,7 @@ function QuestionEditor({
             ...body,
             primaryCompetencyId: field(f, 'competency'),
             variantCode: field(f, 'variantCode'),
+            usageType: field(f, 'usageType') as 'DRILL' | 'PRETEST' | 'TRYOUT',
           })
         : variant
           ? createVariant(token, version.questionId, {
@@ -1220,6 +1348,16 @@ function QuestionEditor({
             pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
             maxLength={64}
           />
+        </Field>
+      )}
+      {!version && (
+        <Field label="Tujuan soal permanen" name="usageType">
+          <select name="usageType" required defaultValue="">
+            <option value="">Pilih tujuan</option>
+            {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+              <option key={u}>{u}</option>
+            ))}
+          </select>
         </Field>
       )}
       <Field label="Teks soal (LaTeX inline diperbolehkan)" name="stem">

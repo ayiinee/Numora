@@ -598,8 +598,7 @@ export class TryoutService {
       resultMethod: canonical?.resultMethod ?? null,
       resultMethodReason: canonical?.reason ?? null,
       xpDetail:
-        xp === null ||
-        rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
+        xp === null || rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
           ? null
           : {
               calculationMode: 'FULL_CORRECT_ONLY' as const,

@@ -13,7 +13,7 @@ session pooler port 5432, dengan role operator `postgres`.
 - Runner resmi menerapkan `0018_mysterious_maelstrom`, `0019_curriculum_slugs`,
   `0020_indicator_question_levels`, dan `0021_content_media_uploads`.
 - Pemeriksaan Cloud menemukan default ACL Supabase memberi role Data API grant
-  pada tabel/view baru. Migrasi maju `0022_data_api_runtime_lockdown` mencabut
+  pada tabel/view baru. Migrasi maju `0023_data_api_runtime_lockdown` mencabut
   grant relation public dan helper domain untuk `anon`, `authenticated`,
   `service_role`, serta grant PUBLIC yang relevan. Hak main/compute eksplisit
   dipertahankan, termasuk view input compute. Default grant owner untuk objek

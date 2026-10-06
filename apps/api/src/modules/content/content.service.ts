@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, max } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   chapters,
@@ -23,12 +23,14 @@ import {
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
+import { assertPackageUsage } from './content-package.rules';
 import type {
   AdminCurriculumDto,
   AdminVersionDto,
   AdminVersionsDto,
   AdminVideosDto,
   ContentPageDto,
+  ContentVersionQueryDto,
   ContentState,
   CreateChapterDto,
   CreateCompetencyDto,
@@ -248,53 +250,91 @@ export class ContentService {
     );
   }
 
-  async versions(page: ContentPageDto): Promise<AdminVersionsDto> {
+  async versions(page: ContentVersionQueryDto): Promise<AdminVersionsDto> {
     const rows = await getDatabase()
       .db.select({
         version: questionVersions,
         variant: questionVariants,
         question: questions,
         imported: contentImportVersions.questionVersionId,
+        provenance: contentImportVersions.provenance,
+        sourceNamespace: contentImportIdentities.sourceNamespace,
       })
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+      .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+      .innerJoin(subchapters, eq(subchapters.id, competencies.subchapterId))
+      .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
       .leftJoin(
         contentImportVersions,
         eq(contentImportVersions.questionVersionId, questionVersions.id),
+      )
+      .where(
+        and(
+          page.usageType === 'UNCLASSIFIED'
+            ? isNull(questions.usageType)
+            : page.usageType
+              ? eq(questions.usageType, page.usageType)
+              : undefined,
+          page.status ? eq(questionVersions.contentStatus, page.status) : undefined,
+          page.chapterId ? eq(subchapters.chapterId, page.chapterId) : undefined,
+          page.source
+            ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
+            : undefined,
+        ),
       )
       .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
       .limit(page.limit)
       .offset(page.offset);
     return {
-      items: rows.map(({ version: v, variant, question: q, imported }): AdminVersionDto => ({
-        id: v.id,
-        questionId: q.id,
-        primaryCompetencyId: q.primaryCompetencyId,
-        curriculumLevelNumber: q.curriculumLevelNumber,
-        variantId: variant.id,
-        variantCode: variant.variantCode,
-        versionNumber: v.versionNumber,
-        questionType: v.questionType,
-        stem: text(v.stem),
-        imported: imported !== null,
-        variantKind: variant.kind,
-        originalVariantId: variant.originalVariantId,
-        options: optionsFrom(v.optionsOrStatements),
-        answerOptionId:
-          v.answerKey !== null &&
-          typeof v.answerKey === 'object' &&
-          'optionId' in v.answerKey &&
-          typeof v.answerKey.optionId === 'string'
-            ? v.answerKey.optionId
-            : null,
-        explanation: text(v.explanation),
-        difficulty: v.difficulty,
-        contentStatus: v.contentStatus,
-        questionStatus: q.status,
-        reviewedByUserId: v.reviewedByUserId,
-        reviewedAt: v.reviewedAt?.toISOString() ?? null,
-      })),
+      items: rows.map(
+        ({
+          version: v,
+          variant,
+          question: q,
+          imported,
+          provenance,
+          sourceNamespace,
+        }): AdminVersionDto => ({
+          sourceName:
+            (provenance as { packageSource?: { sourceName?: string } } | null)?.packageSource
+              ?.sourceName ?? q.sourceRef,
+          sourceReference:
+            (provenance as { packageSource?: { sourceReference?: string } } | null)?.packageSource
+              ?.sourceReference ?? null,
+          sourceFileName: (provenance as { fileName?: string } | null)?.fileName ?? null,
+          sourceNamespace,
+          id: v.id,
+          questionId: q.id,
+          primaryCompetencyId: q.primaryCompetencyId,
+          curriculumLevelNumber: q.curriculumLevelNumber,
+          usageType: q.usageType,
+          sourceQuestionId: q.sourceQuestionId,
+          variantId: variant.id,
+          variantCode: variant.variantCode,
+          versionNumber: v.versionNumber,
+          questionType: v.questionType,
+          stem: text(v.stem),
+          imported: imported !== null,
+          variantKind: variant.kind,
+          originalVariantId: variant.originalVariantId,
+          options: optionsFrom(v.optionsOrStatements),
+          answerOptionId:
+            v.answerKey !== null &&
+            typeof v.answerKey === 'object' &&
+            'optionId' in v.answerKey &&
+            typeof v.answerKey.optionId === 'string'
+              ? v.answerKey.optionId
+              : null,
+          explanation: text(v.explanation),
+          difficulty: v.difficulty,
+          contentStatus: v.contentStatus,
+          questionStatus: q.status,
+          reviewedByUserId: v.reviewedByUserId,
+          reviewedAt: v.reviewedAt?.toISOString() ?? null,
+        }),
+      ),
     };
   }
   createQuestion(actor: string, body: CreateQuestionDto) {
@@ -308,6 +348,7 @@ export class ContentService {
               primaryCompetencyId: body.primaryCompetencyId,
               sourceRef: body.sourceRef,
               curriculumLevelNumber: body.curriculumLevelNumber,
+              usageType: body.usageType ?? null,
             })
             .returning({ id: questions.id })
         )[0],
@@ -688,6 +729,13 @@ export class ContentService {
   }
   createPackage(actor: string, body: CreateTryoutDraftDto) {
     return adminMutation(actor, 'tryout_draft_created', 'assessment_package', async (tx) => {
+      await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${body.familyCode}))`);
+      const siblings = await tx
+        .select()
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.familyCode, body.familyCode));
+      if (siblings.some((p) => p.assessmentType !== 'TRYOUT'))
+        throw new ConflictException({ code: 'PACKAGE_FAMILY_SCOPE_IMMUTABLE' });
       const p = required(
         (
           await tx
@@ -722,9 +770,11 @@ export class ContentService {
         throw new ConflictException(
           'Paket yang telah dipublikasikan bersifat tetap; buat versi paket baru.',
         );
+      if (p.importSource)
+        throw new ConflictException({ code: 'DIRECTED_PACKAGE_ENDPOINT_REQUIRED' });
       await tx
         .update(assessmentPackages)
-        .set({ name: body.name })
+        .set({ name: body.name, contentRevision: p.contentRevision + 1 })
         .where(eq(assessmentPackages.id, id));
       await tx.delete(packageItems).where(eq(packageItems.packageId, id));
       await this.draftItems(tx, id, body.questionVersionIds);
@@ -732,6 +782,7 @@ export class ContentService {
     });
   }
   private async draftItems(tx: AdminTransaction, packageId: string, versionIds: string[]) {
+    await assertPackageUsage(tx, versionIds, 'TRYOUT');
     if (!versionIds.length) return;
     const rows = await tx
       .select({

@@ -131,7 +131,7 @@ export function installFerdiFixture() {
     for (let i = 0; i < 10; i++) {
       const [q] = await db
         .insert(questions)
-        .values({ primaryCompetencyId: comp!.id, status: 'READY' })
+        .values({ primaryCompetencyId: comp!.id, status: 'READY', usageType: 'DRILL' })
         .returning();
       const [v] = await db
         .insert(questionVariants)

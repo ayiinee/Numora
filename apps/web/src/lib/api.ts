@@ -44,6 +44,7 @@ export async function apiRequest<T>(
   path: string,
   token: string,
   options?: RequestInit,
+  responseType: 'json' | 'blob' = 'json',
 ): Promise<T> {
   const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl;
   if (process.env.NODE_ENV === 'development') {
@@ -60,13 +61,14 @@ export async function apiRequest<T>(
       headers: {
         ...(options?.headers ?? {}),
         Authorization: `Bearer ${token}`,
-        'Content-Type': 'application/json',
+        ...(options?.body instanceof FormData ? {} : { 'Content-Type': 'application/json' }),
       },
       cache: 'no-store',
     });
   } catch {
     throw new ApiProblem(0, 'NETWORK_ERROR', 'Koneksi ke server gagal. Coba lagi.');
   }
+  if (response.ok && responseType === 'blob') return (await response.blob()) as T;
   const body = (await response.json().catch(() => null)) as
     { code?: string; detail?: string } | T | null;
   if (!response.ok) {

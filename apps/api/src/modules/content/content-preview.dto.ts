@@ -13,8 +13,9 @@ import {
   Min,
 } from 'class-validator';
 import type { ContentAnswer, ContentKind } from '@tka/database';
+import { DirectedImportContextDto } from './package-context.dto';
 
-export class ImportBodyDto {
+export class ImportBodyDto extends DirectedImportContextDto {
   @ApiProperty({ pattern: '^[A-Za-z0-9_-]{1,128}$' })
   @Matches(/^[A-Za-z0-9_-]{1,128}$/)
   sourceNamespace!: string;
@@ -30,7 +31,14 @@ export class ImportBodyDto {
   @IsObject({ each: true })
   questions!: object[];
 }
+export class ImportIssueDto {
+  @ApiProperty() code!: string;
+  @ApiProperty() detail!: string;
+  @ApiProperty({ type: String, nullable: true }) sheet!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) row!: number | null;
+}
 export class ImportItemDto {
+  @ApiPropertyOptional({ type: [ImportIssueDto] }) issues?: ImportIssueDto[];
   @ApiProperty() externalId!: string;
   @ApiProperty() canImportDraft!: boolean;
   @ApiProperty() canPreview!: boolean;
@@ -40,12 +48,30 @@ export class ImportItemDto {
   })
   outcome!: string;
   @ApiProperty({ type: String, format: 'uuid', nullable: true }) questionVersionId!: string | null;
+  @ApiPropertyOptional({ enum: ['ADD', 'REVISE', 'KEEP', 'REUSE', 'INVALID'] }) change?: string;
+}
+export class PackageCheckDto {
+  @ApiProperty() code!: string;
+  @ApiProperty() passed!: boolean;
+  @ApiProperty() detail!: string;
+}
+export class PackageValidationDto {
+  @ApiProperty({ format: 'uuid' }) packageId!: string;
+  @ApiProperty() contentRevision!: number;
+  @ApiProperty() canSaveDraft!: boolean;
+  @ApiProperty() canPublish!: boolean;
+  @ApiProperty() expectedCount!: number;
+  @ApiProperty() actualCount!: number;
+  @ApiProperty({ type: [String] }) blockers!: string[];
+  @ApiProperty({ type: [String] }) removedVersionIds!: string[];
+  @ApiProperty({ type: [PackageCheckDto] }) checks!: PackageCheckDto[];
 }
 export class ImportReportDto {
   @ApiProperty({ type: String, nullable: true, format: 'uuid' }) id!: string | null;
   @ApiProperty() sourceNamespace!: string;
   @ApiProperty() canImportDraft!: boolean;
   @ApiProperty({ type: [ImportItemDto] }) items!: ImportItemDto[];
+  @ApiPropertyOptional({ type: PackageValidationDto }) package?: PackageValidationDto;
 }
 export class CreatePreviewDto {
   @ApiProperty({ type: [String], minItems: 1, maxItems: 100 })

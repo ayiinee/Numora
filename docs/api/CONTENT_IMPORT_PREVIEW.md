@@ -51,7 +51,7 @@ UI nyata: `/admin/content/imports` dan `/admin/content/preview-sessions/:id`, de
 
 ## Persistence dan batas lanjutan
 
-Migrasi `0023_content_import_preview` menambah subrole nullable tanpa backfill, nullable difficulty, tiga tabel impor dan tiga tabel preview. Tabel baru mempunyai RLS dan grant main eksplisit, tanpa akses compute atau Supabase Data API. Audit tidak membawa jawaban/kunci/token.
+Migrasi `0024_content_import_preview` menambah subrole nullable tanpa backfill, nullable difficulty, tiga tabel impor dan tiga tabel preview. Tabel baru mempunyai RLS dan grant main eksplisit, tanpa akses compute atau Supabase Data API. Audit tidak membawa jawaban/kunci/token.
 
 **OPEN:** taxonomy, kode/urutan/indikator/blueprint/difficulty sampel belum approved Curriculum. Lima level dan sepuluh soal Drill per level tidak menyetujui master sandbox. Rubrik PGK, publication/lifecycle Ready–Revision–Archive, XP dan IRT tetap terpisah. Rumus XP TryOut section 12 x10 versus AC-15 x100 membutuhkan koreksi Product Owner.
 

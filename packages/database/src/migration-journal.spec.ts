@@ -19,14 +19,16 @@ describe('reconciled Drizzle migration ordering', () => {
 
   it('chains the merged snapshots from main through the separated compute additions', async () => {
     const snapshots = await Promise.all(
-      [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27].map(async (index) => {
-        return JSON.parse(
-          await readFile(
-            resolve(`drizzle/meta/${String(index).padStart(4, '0')}_snapshot.json`),
-            'utf8',
-          ),
-        ) as { id: string; prevId: string };
-      }),
+      [13, 14, 15, 16, 17, 18, 19, 20, 21, 22, 23, 24, 25, 26, 27, 28, 29, 30].map(
+        async (index) => {
+          return JSON.parse(
+            await readFile(
+              resolve(`drizzle/meta/${String(index).padStart(4, '0')}_snapshot.json`),
+              'utf8',
+            ),
+          ) as { id: string; prevId: string };
+        },
+      ),
     );
     expect(new Set(snapshots.map((snapshot) => snapshot.id)).size).toBe(snapshots.length);
     for (let index = 1; index < snapshots.length; index++)

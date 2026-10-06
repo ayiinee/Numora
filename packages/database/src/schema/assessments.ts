@@ -25,6 +25,7 @@ import {
   scoringRubricVersions,
 } from './measurement-foundation.js';
 import { trialAssignments, trialPhases } from './measurement.js';
+import type { PackageSource } from '../content-import-contract.js';
 
 export const assessmentType = pgEnum('assessment_type', ['PRETEST', 'DRILL', 'TRYOUT', 'PVP']);
 export const packageStatus = pgEnum('package_status', ['DRAFT', 'PUBLISHED', 'CLOSED', 'ARCHIVED']);
@@ -58,6 +59,8 @@ export const assessmentPackages = pgTable(
     familyCode: text('family_code').notNull(),
     packageVersion: integer('package_version').notNull(),
     name: text('name').notNull(),
+    importSource: jsonb('import_source').$type<PackageSource>(),
+    contentRevision: integer('content_revision').notNull().default(0),
     assessmentType: assessmentType('assessment_type').notNull(),
     purpose: assessmentPurpose('purpose').notNull().default('REGULAR'),
     blueprintVersionId: uuid('blueprint_version_id').references(
@@ -99,6 +102,7 @@ export const assessmentPackages = pgTable(
         sql`${table.assessmentType} = 'DRILL' and ${table.purpose} = 'REGULAR' and ${table.status} = 'PUBLISHED' and not ${table.isDemo}`,
       ),
     check('assessment_packages_version_ck', sql`${table.packageVersion} > 0`),
+    check('assessment_packages_content_revision_ck', sql`${table.contentRevision} >= 0`),
     check(
       'assessment_packages_purpose_ck',
       sql`${table.purpose} = 'REGULAR' or (${table.assessmentType} = 'DRILL' and ${table.blueprintVersionId} is not null)`,

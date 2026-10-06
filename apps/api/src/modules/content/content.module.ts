@@ -12,6 +12,10 @@ import { MediaUploadsController } from './media-uploads.controller';
 import { MediaUploadsService } from './media-uploads.service';
 import { MediaUploadsRepository } from './media-uploads.repository';
 import { R2MediaStorage } from './r2-media.storage';
+import { ExcelImportController } from './excel-import.controller';
+import { ExcelImportService } from './excel-import.service';
+import { ContentPackagesController } from './content-packages.controller';
+import { ContentPackagesService } from './content-packages.service';
 
 @Module({
   imports: [IdentityModule, ConfigModule],
@@ -20,9 +24,13 @@ import { R2MediaStorage } from './r2-media.storage';
     DrillPackagesController,
     MediaUploadsController,
     ContentPreviewController,
+    ExcelImportController,
+    ContentPackagesController,
   ],
   providers: [
     ContentImportService,
+    ExcelImportService,
+    ContentPackagesService,
     ContentPreviewService,
     ContentService,
     DrillPackagesService,

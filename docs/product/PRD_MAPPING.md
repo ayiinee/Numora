@@ -20,6 +20,8 @@
 
 # PRD → Engineering Mapping
 
+**ENGINEERING DECISION — owner approved, 6 October 2026:** [directed package pipeline](../content/CONTENT_PACKAGE_PIPELINE.md) maps Excel/JSON intake to versioned questions and canonical assessment packages. PRD v0.6 counts are Drill 10, Pretest 20 and Tryout 30. Admin review/readiness is separate from publication and student runtime compatibility.
+
 **ENGINEERING DECISION — klarifikasi Aini, 5 Oktober 2026:** JOB-11 TryOut mencatat XP saat submit; perhitungan normal ceil(benar ekuivalen ×10), fallback saat perhitungan parsial terkendala memakai benar penuh ×10. Status atau skor IRT tidak menentukan fallback XP dan tidak memicu revisi ledger. Implementasi PGK memerlukan rubrik dan penanganan kendala; jalur PG existing tidak membuktikan fallback parsial selesai. Nilai hasil fallback/release IRT tetap dipetakan terpisah ke JOB-07/JOB-10: pembahasan bersama hasil, scoring biasa untuk seluruh batch jika belum ada hasil IRT valid hingga 72 jam sesudah batch tutup; rumus nilainya belum ditetapkan. [Rincian](../development/TRYOUT_XP_V06.md#klarifikasi-fallback-xp--5-oktober-2026).
 
 **ENGINEERING DECISION — klarifikasi Drill/bobot Aini, 5 Oktober 2026:** bobot produk PG=2, MCMA=3, Kategori=3 final. JOB-05/JOB-11 Drill memakai parsial dalam scoring ketuntasan dan benar ekuivalen XP dasar ×10 plus bonus existing; bintang mengikuti nilai akhir. Rubrik/versi scoring dan presisi nilai akhir masih perlu dirinci, dengan pin prospektif dan preservasi histori. [Spesifikasi dan batas bukti PG existing](../development/DRILL_V06_REWARDS.md#klarifikasi-pgk--5-oktober-2026).
@@ -141,4 +143,8 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 
 ## Question media and review samples — 3 October 2026
 
-**ENGINEERING IMPLEMENTATION:** [R2 upload contract](../api/CONTENT_MEDIA_UPLOADS.md) adds Admin-only reservations/completion, durable idempotency/audit and verified hashed object keys in `numora-bucket`; migration 0018 adds only upload persistence. [Ten review samples](../data/samples/2026-10-03/README.md) cover all three content formats and six images. **USER CLARIFICATION:** source levels follow Curriculum; PvP difficulty mapping remains OPEN. **OPEN:** master approval/seed, nullable difficulty import contract, three-format rich runtime/renderer and partial PGK formula. No Cloud upload/migration or academic acceptance is implied by this infrastructure.
+**ENGINEERING IMPLEMENTATION:** [R2 upload contract](../api/CONTENT_MEDIA_UPLOADS.md) adds Admin-only reservations/completion, durable idempotency/audit and verified hashed object keys in `numora-bucket`; migration 0021 adds only upload persistence. [Ten review samples](../data/samples/2026-10-03/README.md) cover all three content formats and six images. **USER CLARIFICATION:** source levels follow Curriculum; PvP difficulty mapping remains OPEN. **OPEN:** master approval/seed, nullable difficulty import contract, three-format rich runtime/renderer and partial PGK formula. No Cloud upload/migration or academic acceptance is implied by this infrastructure.
+
+## Materi / notification extension — 4 October 2026
+
+**ENGINEERING DECISION:** owner-approved [scope](MATERIALS_NOTIFICATIONS_2026-10-04.md) adds explicit category metadata, inline material navigation and durable event-driven in-app notifications, with 30-day archive. It does not resolve academic, scoring, reward or PvP OPEN policies.

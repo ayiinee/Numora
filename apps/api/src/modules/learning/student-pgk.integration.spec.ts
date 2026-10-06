@@ -309,8 +309,11 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
       response: { code: 'TRYOUT_RESULT_PENDING' },
     });
     await connection.unsafe(
-      'UPDATE tryout_result_finalizations SET published_at=now() WHERE id=$1',
+      "UPDATE tryout_result_finalizations SET published_at=now()-interval '1 second' WHERE id=$1",
       [finalization.id],
+    );
+    expect((await row('SELECT status FROM tryout_batches WHERE id=$1', [batch.id])).status).toBe(
+      'PUBLISHED',
     );
     const result = await service.result('TEST', attempt.id);
     expect(result).toMatchObject({ score: 75, resultMethod: 'STANDARD', xp: null, xpDetail: null });

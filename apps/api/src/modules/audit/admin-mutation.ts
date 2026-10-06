@@ -10,6 +10,7 @@ export async function adminMutation<T extends { id: string }>(
   action: string,
   entityType: string,
   write: (tx: AdminTransaction) => Promise<T>,
+  metadata?: Record<string, unknown>,
 ): Promise<T> {
   try {
     return await getDatabase().db.transaction(async (tx) => {
@@ -17,7 +18,7 @@ export async function adminMutation<T extends { id: string }>(
       // No demo actor or untrusted actor ID. Audit failure rolls back the business write.
       await tx
         .insert(auditLogs)
-        .values({ actorUserId: actorId, action, entityType, entityId: result.id });
+        .values({ actorUserId: actorId, action, entityType, entityId: result.id, metadata });
       return result;
     });
   } catch (error) {

@@ -2410,6 +2410,51 @@
                 }
               ]
             }
+          },
+          {
+            "name": "usageType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRILL",
+                "PRETEST",
+                "TRYOUT",
+                "UNCLASSIFIED"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRAFT",
+                "READY",
+                "ARCHIVED",
+                "REVISION"
+              ]
+            }
+          },
+          {
+            "name": "chapterId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -3629,6 +3674,388 @@
         ],
         "tags": [
           "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/excel-parses": {
+      "post": {
+        "operationId": "ExcelImportController_parse",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file",
+                  "sourceNamespace"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "sourceNamespace": {
+                    "type": "string",
+                    "pattern": "^[A-Za-z0-9_-]{1,128}$"
+                  },
+                  "packageId": {
+                    "type": "string",
+                    "format": "uuid"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ExcelParseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/excel-template": {
+      "get": {
+        "operationId": "ExcelImportController_template",
+        "parameters": [
+          {
+            "name": "packageId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "examples",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "boolean"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-preview"
+        ]
+      }
+    },
+    "/api/v1/admin/content/packages": {
+      "get": {
+        "operationId": "ContentPackagesController_list",
+        "parameters": [
+          {
+            "name": "usageType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRILL",
+                "PRETEST",
+                "TRYOUT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "source",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "chapterId",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "format": "uuid",
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "number"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentPackagesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      },
+      "post": {
+        "operationId": "ContentPackagesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/packages/{id}": {
+      "get": {
+        "operationId": "ContentPackagesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentPackageDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      },
+      "patch": {
+        "operationId": "ContentPackagesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/questions/{id}/usage": {
+      "patch": {
+        "operationId": "ContentPackagesController_classify",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ClassifyQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/versions/{id}/review": {
+      "post": {
+        "operationId": "ContentPackagesController_review",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ReviewImportedQuestionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
         ]
       }
     },
@@ -8559,6 +8986,35 @@
       "AdminVersionDto": {
         "type": "object",
         "properties": {
+          "sourceName": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceReference": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceNamespace": {
+            "type": "string",
+            "nullable": true
+          },
+          "sourceFileName": {
+            "type": "string",
+            "nullable": true
+          },
+          "usageType": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "sourceQuestionId": {
+            "type": "string",
+            "nullable": true
+          },
           "imported": {
             "type": "boolean"
           },
@@ -8702,6 +9158,14 @@
           },
           "difficulty": {
             "type": "string"
+          },
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
           },
           "primaryCompetencyId": {
             "type": "string",
@@ -9192,7 +9656,7 @@
             "example": "bahas-1"
           },
           "contentVersion": {
-            "type": "object",
+            "type": "number",
             "default": 1,
             "minimum": 1
           },
@@ -9356,9 +9820,31 @@
           "verifiedAt"
         ]
       },
+      "PackageTargetDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expectedRevision": {
+            "type": "number"
+          },
+          "fileName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "packageId",
+          "expectedRevision"
+        ]
+      },
       "ImportBodyDto": {
         "type": "object",
         "properties": {
+          "target": {
+            "$ref": "#/components/schemas/PackageTargetDto"
+          },
           "sourceNamespace": {
             "type": "string",
             "pattern": "^[A-Za-z0-9_-]{1,128}$"
@@ -9378,9 +9864,40 @@
           "questions"
         ]
       },
+      "ImportIssueDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "string",
+            "nullable": true
+          },
+          "row": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "detail",
+          "sheet",
+          "row"
+        ]
+      },
       "ImportItemDto": {
         "type": "object",
         "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssueDto"
+            }
+          },
           "externalId": {
             "type": "string"
           },
@@ -9410,6 +9927,16 @@
             "type": "string",
             "format": "uuid",
             "nullable": true
+          },
+          "change": {
+            "type": "string",
+            "enum": [
+              "ADD",
+              "REVISE",
+              "KEEP",
+              "REUSE",
+              "INVALID"
+            ]
           }
         },
         "required": [
@@ -9419,6 +9946,78 @@
           "blockers",
           "outcome",
           "questionVersionId"
+        ]
+      },
+      "PackageCheckDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "passed",
+          "detail"
+        ]
+      },
+      "PackageValidationDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "canSaveDraft": {
+            "type": "boolean"
+          },
+          "canPublish": {
+            "type": "boolean"
+          },
+          "expectedCount": {
+            "type": "number"
+          },
+          "actualCount": {
+            "type": "number"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removedVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackageCheckDto"
+            }
+          }
+        },
+        "required": [
+          "packageId",
+          "contentRevision",
+          "canSaveDraft",
+          "canPublish",
+          "expectedCount",
+          "actualCount",
+          "blockers",
+          "removedVersionIds",
+          "checks"
         ]
       },
       "ImportReportDto": {
@@ -9440,6 +10039,9 @@
             "items": {
               "$ref": "#/components/schemas/ImportItemDto"
             }
+          },
+          "package": {
+            "$ref": "#/components/schemas/PackageValidationDto"
           }
         },
         "required": [
@@ -9910,6 +10512,791 @@
         },
         "required": [
           "media"
+        ]
+      },
+      "WorkbookBindingDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "packageId",
+          "familyCode",
+          "packageVersion",
+          "assessmentType",
+          "chapterCode",
+          "subchapterCode",
+          "levelNumber",
+          "sourceNamespace",
+          "sourceName",
+          "sourceReference",
+          "isDemo"
+        ]
+      },
+      "ExcelAssetDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "textMarker": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "STEM",
+              "OPTION",
+              "STATEMENT",
+              "EXPLANATION"
+            ]
+          },
+          "itemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetOrder": {
+            "type": "number"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "bucket": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "textMarker",
+          "placement",
+          "itemId",
+          "assetOrder",
+          "altText",
+          "objectKey",
+          "sha256",
+          "contentType",
+          "byteLength",
+          "bucket"
+        ]
+      },
+      "ExcelMetadataDto": {
+        "type": "object",
+        "properties": {
+          "sourceLevelNumber": {
+            "type": "number"
+          },
+          "sourceOrder": {
+            "type": "number"
+          },
+          "sourceQuestionId": {
+            "type": "string"
+          },
+          "sourceSheet": {
+            "type": "string"
+          },
+          "sourceRowNumber": {
+            "type": "number"
+          },
+          "assetManifest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelAssetDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          }
+        },
+        "required": [
+          "sourceLevelNumber",
+          "sourceSheet",
+          "sourceRowNumber",
+          "assetManifest"
+        ]
+      },
+      "ExcelQuestionDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "chapterCode": {
+            "type": "string"
+          },
+          "subchapterCode": {
+            "type": "string"
+          },
+          "competencyCode": {
+            "type": "string"
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "answer": {
+            "nullable": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ExcelMetadataDto"
+          }
+        },
+        "required": [
+          "externalId",
+          "type",
+          "chapterCode",
+          "subchapterCode",
+          "competencyCode",
+          "difficulty",
+          "stem",
+          "options",
+          "answer",
+          "explanation",
+          "metadata"
+        ]
+      },
+      "ExcelEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "binding": {
+            "$ref": "#/components/schemas/WorkbookBindingDto"
+          },
+          "schemaVersion": {
+            "type": "number",
+            "enum": [
+              2
+            ]
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "schemaVersion",
+          "sourceNamespace",
+          "questions"
+        ]
+      },
+      "ExcelMediaDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "base64": {
+            "type": "string",
+            "description": "Exact embedded bytes, separate from the import JSON."
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "base64"
+        ]
+      },
+      "ExcelIssueDto": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string"
+          },
+          "row": {
+            "type": "number"
+          },
+          "cell": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "row",
+          "cell",
+          "code",
+          "detail"
+        ]
+      },
+      "ExcelParseDto": {
+        "type": "object",
+        "properties": {
+          "envelope": {
+            "$ref": "#/components/schemas/ExcelEnvelopeDto"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelMediaDto"
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelIssueDto"
+            }
+          },
+          "report": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportReportDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelope",
+          "media",
+          "issues",
+          "report"
+        ]
+      },
+      "PackageSourceDto": {
+        "type": "object",
+        "properties": {
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceNamespace",
+          "sourceName",
+          "sourceReference"
+        ]
+      },
+      "ContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "source": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PackageSourceDto"
+              }
+            ]
+          },
+          "chapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelNumber": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "assessmentType",
+          "contentRevision",
+          "status",
+          "isDemo",
+          "source",
+          "chapterId",
+          "levelId",
+          "chapterCode",
+          "chapterName",
+          "subchapterCode",
+          "subchapterName",
+          "levelNumber"
+        ]
+      },
+      "ContentPackagesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentPackageDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "chapterId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PackageSourceDto"
+          }
+        },
+        "required": [
+          "familyCode",
+          "packageVersion",
+          "name",
+          "assessmentType",
+          "isDemo",
+          "source"
+        ]
+      },
+      "ContentPackageItemDto": {
+        "type": "object",
+        "properties": {
+          "questionVersionId": {
+            "type": "string"
+          },
+          "questionId": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ],
+            "nullable": true
+          },
+          "contentStatus": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "question": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExcelQuestionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "questionVersionId",
+          "questionId",
+          "displayOrder",
+          "usageType",
+          "contentStatus",
+          "reviewedAt",
+          "reviewedByUserId",
+          "question"
+        ]
+      },
+      "ContentDistributionDto": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dimension",
+          "value",
+          "count"
+        ]
+      },
+      "ContentPackageDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "source": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PackageSourceDto"
+              }
+            ]
+          },
+          "chapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentPackageItemDto"
+            }
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/PackageValidationDto"
+          },
+          "distribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentDistributionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "assessmentType",
+          "contentRevision",
+          "status",
+          "isDemo",
+          "source",
+          "chapterId",
+          "levelId",
+          "chapterCode",
+          "chapterName",
+          "subchapterCode",
+          "subchapterName",
+          "levelNumber",
+          "items",
+          "readiness",
+          "distribution"
+        ]
+      },
+      "UpdateContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "name",
+          "questionVersionIds"
+        ]
+      },
+      "ClassifyQuestionDto": {
+        "type": "object",
+        "properties": {
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          }
+        },
+        "required": [
+          "usageType"
+        ]
+      },
+      "ReviewImportedQuestionDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "notes": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "packageId",
+          "confirmed",
+          "notes"
         ]
       },
       "AdminDashboardDto": {

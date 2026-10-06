@@ -58,7 +58,7 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       },
       {
         href: '/admin/content/imports',
-        label: 'Impor JSON',
+        label: 'Impor soal',
         description: 'Validasi JSON, impor DRAFT, lalu tinjau soal dalam sesi internal.',
         icon: 'clipboard',
       },
