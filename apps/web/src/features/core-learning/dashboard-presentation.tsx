@@ -182,17 +182,6 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
       badge: data.availableLevels ? `${data.availableLevels} Lvl` : 'Latihan',
       href: '/student/learn',
     },
-    ...(data.features.pretest
-      ? [
-          {
-            title: 'Pretest',
-            subtitle: 'Kenali level awal',
-            icon: 'rocket' as const,
-            badge: 'Opsional',
-            href: '/student/learn',
-          },
-        ]
-      : []),
     {
       title: 'Tryout',
       subtitle: 'Simulasi TKA',

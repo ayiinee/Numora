@@ -6,9 +6,9 @@ Review source: the owner-supplied 26-page [feedback UI UX.pdf](<D:/D;Download/fe
 
 **ENGINEERING DECISION — approved by the project owner, 5 October 2026:** apply the reviewed 26-page `feedback UI UX.pdf` to the existing frontend/API capabilities. Student keeps Drill progress, three Home shortcuts (Latihan Soal / Tryout / PvP), and the existing notification inbox. Remove only the unavailable Pretest shortcut, not the product requirement. Preserve the three PvP arena themes and leaderboard link. Teacher navigation contains only Kelas and Profil; monitoring and feedback require a selected class/student. Hide read receipts from Teacher presentation; keep Student unread/read behavior and durable records.
 
-**PRD RULE:** Drill unlock remains server-owned at 80, scores/history remain versioned, class XP and best PvP points remain separate, and Teachers may access only their owned Classes. The revision does not activate pending XP/star/PvP policies.
+**PRD RULE:** Drill unlock remains server-owned at 80, scores/history remain versioned, class XP and best PvP points remain separate, and Teachers may access only their owned Classes. Current reward formulas and stars follow PRD v0.6 and server results; the UI revision does not alter those rules or resolve remaining PvP policies.
 
-**OPEN / deferred:** Teacher rename, leave/takeover, new Tryout sharing/banner, intervention algorithms and unsupported notification capabilities. Preserve stored class names verbatim. No database, generated-contract or endpoint changes are part of this revision.
+**UI scope deferred:** Teacher rename, leave/takeover controls, new Tryout sharing/banner, intervention algorithms and unsupported Teacher notification capabilities. PRD v0.6 specifies leave/takeover product behavior; this presentation revision does not add those controls. Preserve stored class names verbatim. No database, generated-contract or endpoint changes are part of this revision.
 
 ## PDF reconciliation
 
@@ -57,3 +57,11 @@ Browser checks use synthetic HTTP/WebSocket responses and auth sessions. They ve
 - [x] Individual progress/latest/best scores and history precede contextual feedback; no recipient reselection or Teacher read receipts.
 - [x] Old monitoring/settings redirect; missing feedback context returns to Classes; Teacher notifications removed; invite remains.
 - [x] No API/DTO/migration/stored-data change or OPEN-policy resolution in this revision; preexisting local changes preserved.
+
+## Publishing integration — 6 October 2026
+
+**ENGINEERING MAINTENANCE:** PR #61 was already merged before these feedback revisions. Publication uses a new branch based on the integrated `main` history, preserving the newer PRD v0.6 rewards, account-based membership, Admin portal, Materi filters and notification pagination. The canonical migration stream including `0028_friendly_wind_dancer` and `0029_pvp_leaderboard_activation` is retained unchanged; the earlier local notification migration fork is not included. No shared database migration or stored-data mutation is performed. The verification above describes the original UI revision; publication checks are recorded separately.
+
+Publication checks on the integrated branch: all **209 web tests** passed across 28 files (`--maxWorkers=1 --pool=threads --testTimeout=20000`); 68 repository checks, 8 contract schemas and generated-type freshness passed; root lint, all 14 typecheck tasks and all 10 build tasks passed. The Windows fork-pool run encountered resource stalls; the complete thread-pool rerun passed without changing assertions. A separate production browser build uses synthetic API/auth configuration. Browser regression and GitHub CI results are reported in the PR.
+
+A subsequent synchronization includes PR #81 (`53e7857`): Pretest and typed PGK answers, assessment review routes, server XP display and PvP/leaderboard provenance remain intact. Pretest entry stays in Materi; only its Home shortcut is removed by the approved feedback decision.

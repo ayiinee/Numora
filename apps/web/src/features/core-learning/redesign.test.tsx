@@ -501,15 +501,14 @@ describe('responsive learning composition', () => {
     expect(screen.queryByText('XP')).toBeNull();
     expect(document.querySelector('a[href^="/demo"]')).toBeNull();
   });
-  it('shows the Pretest shortcut when the server enables it', async () => {
+  it('keeps three Home shortcuts when Pretest is enabled in Materi', async () => {
     const data = await learningApi.dashboard('test-token');
     data.features.pretest = true;
     vi.mocked(learningApi.dashboard).mockResolvedValue(data);
     renderStudent(<NewStudentDashboard />);
-    expect((await screen.findByRole('link', { name: /Pretest/ })).getAttribute('href')).toBe(
-      '/student/learn',
-    );
-    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(4);
+    expect(await screen.findByRole('link', { name: /Latihan Soal/ })).toBeTruthy();
+    expect(screen.queryByRole('link', { name: /Pretest/ })).toBeNull();
+    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(3);
   });
   it('marks the learning destination on nested Drill routes and removes navigation during an attempt', () => {
     context.pathname = '/student/drill/attempt-test';

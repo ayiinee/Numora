@@ -1,8 +1,7 @@
 'use client';
 
-import Link from 'next/link';
-
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
+import Link from 'next/link';
 import type { Level, SubchapterDetail } from './types';
 
 /** The path is decorative. Access, scores and start targets come from the server. */
@@ -97,8 +96,14 @@ export function LevelPath({
                         <dd>{level.bestScore ?? '—'}</dd>
                       </div>
                     </dl>
-                    {level.latestStars != null && <p aria-label="Bintang attempt terbaru">Bintang terakhir: {level.latestStars} / 3</p>}
-                    <Link href={`/student/assessment?levelId=${encodeURIComponent(level.id)}`}>Riwayat level</Link>
+                    {level.latestStars != null && (
+                      <p aria-label="Bintang attempt terbaru">
+                        Bintang terakhir: {level.latestStars} / 3
+                      </p>
+                    )}
+                    <Link href={`/student/assessment?levelId=${encodeURIComponent(level.id)}`}>
+                      Riwayat level
+                    </Link>
                     {level.id !== current?.id && (
                       <Button
                         variant="secondary"

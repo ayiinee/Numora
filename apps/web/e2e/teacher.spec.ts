@@ -393,6 +393,11 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     expect(removed?.status()).toBe(404);
     await page.goto('/teacher/profile');
     await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+    await expect(
+      page.locator(
+        'main a[href="/teacher/monitoring"], main a[href="/teacher/feedback"], main a[href="/teacher/notifications"]',
+      ),
+    ).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Keluar dari akun' })).toBeVisible();
     await capture(page, 'profile', width);
     await expect(page.locator('.teacher-sidebar')).toBeVisible({ visible: width >= 960 });

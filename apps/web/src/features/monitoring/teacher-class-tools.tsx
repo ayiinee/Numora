@@ -95,8 +95,8 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
               <li>Setelah bergabung, siswa tampil dalam daftar anggota kelas.</li>
             </ol>
             <TeacherAnnouncement>
-              Siswa hanya dapat bergabung dalam satu kelas. Gunakan kode kelas; QR ini bukan tautan
-              otomatis untuk bergabung.
+              Siswa dapat bergabung dalam maksimal lima kelas aktif. Gunakan kode kelas; QR ini
+              bukan tautan otomatis untuk bergabung.
             </TeacherAnnouncement>
           </Card>
         </>

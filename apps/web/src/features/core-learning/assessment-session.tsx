@@ -181,7 +181,7 @@ export function AssessmentSession({
             sessionKind === 'pretest'
               ? 'Sesi Pretest Bab'
               : sessionKind === 'tryout'
-                ? 'Sesi Tryout TKA'
+                ? 'Sesi Tryout'
                 : 'Sesi Latihan Soal'
           }
           exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}

@@ -1,9 +1,8 @@
-import { configDefaults, defineConfig } from 'vitest/config';
+import { defineConfig } from 'vitest/config';
 import ts from 'typescript';
 
 export default defineConfig({
   test: {
-    exclude: [...configDefaults.exclude, 'scripts/**/*.test.mjs'],
     include: ['src/**/*.{test,spec}.ts'],
     maxWorkers: 2,
     env: { TEACHER_TOKEN_PEPPER: 'fixture-only-teacher-token-pepper-not-for-deployment' },
