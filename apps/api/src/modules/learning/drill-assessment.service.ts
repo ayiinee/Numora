@@ -50,6 +50,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from 'dr
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
+import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
 import {
   DRILL_QUESTION_COUNT,
   DRILL_REWARD_POLICY_VERSION,
@@ -138,6 +139,7 @@ export class DrillAssessmentService {
           policyCode: scoringPolicyVersions.policyCode,
           policyVersion: scoringPolicyVersions.version,
           configuration: scoringPolicyVersions.configuration,
+          policyConfiguration: scoringPolicyVersions.configuration,
           policyStatus: scoringPolicyVersions.status,
           approvedAt: scoringPolicyVersions.approvedAt,
           approvedByUserId: scoringPolicyVersions.approvedByUserId,
@@ -160,7 +162,7 @@ export class DrillAssessmentService {
         )
         .orderBy(asc(assessmentPackages.variantIndex), asc(assessmentPackages.id));
       const packages = availablePackages.filter((item) => {
-        if (item.isDemo) return true;
+        if (item.isDemo || allowsChapter3Override(item)) return true;
         try {
           readApprovedPolicy(
             { ...item, version: item.policyVersion, status: item.policyStatus },
@@ -171,6 +173,7 @@ export class DrillAssessmentService {
           return false;
         }
       });
+
       if (!packages.length)
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_UNAVAILABLE', 'Paket Drill belum tersedia.'),
@@ -226,6 +229,7 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill harus berisi 10 soal bernilai satu poin.'),
         );
+      const ownerOverride = allowsChapter3Override(selected);
       const rubricIds = [
         ...new Set(items.flatMap((item) => (item.rubricVersionId ? [item.rubricVersionId] : []))),
       ];
@@ -237,16 +241,19 @@ export class DrillAssessmentService {
         : [];
       try {
         items.forEach((item) =>
-          validateRubricCoverage(
-            decodeRuntimeQuestion(item),
-            rubrics.find((r) => r.id === item.rubricVersionId),
-          ),
+          ownerOverride
+            ? decodeAssessmentContent(item)
+            : validateRubricCoverage(
+                decodeRuntimeQuestion(item),
+                rubrics.find((r) => r.id === item.rubricVersionId),
+              ),
         );
       } catch (error) {
         if (error instanceof AssessmentFinalizationError)
           throw new ServiceUnavailableException(problem('PGK_SCORING_PENDING', error.message));
         throw error;
       }
+
       if (
         items.some(
           (item) =>
@@ -489,6 +496,21 @@ export class DrillAssessmentService {
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
       if (!attempt.levelIdAtStart) throw new Error('Drill attempt level is missing.');
+      const [pinnedPolicy] = await tx
+        .select({
+          id: assessmentPackages.id,
+          policyCode: scoringPolicyVersions.policyCode,
+          policyVersion: scoringPolicyVersions.version,
+          policyConfiguration: scoringPolicyVersions.configuration,
+        })
+        .from(assessmentPackages)
+        .innerJoin(assessmentAttempts, eq(assessmentAttempts.packageId, assessmentPackages.id))
+        .innerJoin(
+          scoringPolicyVersions,
+          eq(scoringPolicyVersions.id, assessmentAttempts.scoringPolicyVersionId),
+        )
+        .where(eq(assessmentAttempts.id, attemptId));
+      const ownerOverride = !!pinnedPolicy && allowsChapter3Override(pinnedPolicy);
 
       const rows = await tx
         .select({
@@ -520,7 +542,7 @@ export class DrillAssessmentService {
         )
         .where(eq(assessmentPackages.id, attempt.packageId));
       const policy: ApprovedPolicy | null =
-        packagePolicy?.isDemo || attempt.drillPolicyVersion === null
+        ownerOverride || packagePolicy?.isDemo || attempt.drillPolicyVersion === null
           ? null
           : readApprovedPolicy(packagePolicy!.policy, 'DRILL', true);
       const rubricIds = [
@@ -533,6 +555,10 @@ export class DrillAssessmentService {
             .where(inArray(scoringRubricVersions.id, rubricIds))
         : [];
       const graded = rows.map((row) => {
+        if (ownerOverride) {
+          const grade = gradeChapter3Answer(decodeAssessmentContent(row), row.answer);
+          return { ...row, ...grade, correct: grade.fullyCorrect };
+        }
         const content = decodeRuntimeQuestion(row),
           answer = validateRuntimeAnswer(content, row.answer ?? null);
         let grade;
@@ -556,11 +582,15 @@ export class DrillAssessmentService {
           answer,
           equivalent: grade.equivalent,
           correct: grade.fullyCorrect,
+          fullyCorrect: grade.fullyCorrect,
+          responseState: answer === null ? ('OMITTED' as const) : ('RESPONDED' as const),
           scoreCategory: grade.category,
           awardedPoints,
         };
       });
-      const correctCount = graded.filter((item) => item.correct).length;
+      const correctCount = ownerOverride
+        ? graded.reduce((sum, item) => sum + item.equivalent, 0)
+        : graded.filter((item) => item.correct).length;
       const rawPoints = graded.reduce((sum, item) => sum + item.awardedPoints, 0);
       const maximum = graded.reduce((sum, item) => sum + Number(item.maxPoints), 0);
       const normalized = policy
@@ -573,6 +603,7 @@ export class DrillAssessmentService {
             stars: approvedStars(normalized, policy),
           }
         : scoreDrill(correctCount, graded.length, attempt.drillPolicyVersion);
+
       const [level] = await tx
         .select()
         .from(levels)
@@ -600,6 +631,7 @@ export class DrillAssessmentService {
               graded.length,
               attempt.startedAt,
               now,
+              ownerOverride,
             )
           : null;
       for (const item of graded) {
@@ -610,18 +642,15 @@ export class DrillAssessmentService {
             answer: item.answer === null ? sql`'null'::jsonb` : item.answer,
             savedAt: now,
             awardedPoints: String(item.awardedPoints),
-            fullyCorrect: item.correct,
-            scoreCategory: item.scoreCategory,
-            responseState: item.answer === null ? 'OMITTED' : 'RESPONDED',
             gradedAt: now,
+            scoreCategory: item.scoreCategory,
+            fullyCorrect: item.fullyCorrect,
+            responseState: item.responseState,
           })
           .onConflictDoUpdate({
             target: attemptAnswers.attemptItemId,
             set: {
               awardedPoints: String(item.awardedPoints),
-              fullyCorrect: item.correct,
-              scoreCategory: item.scoreCategory,
-              responseState: item.answer === null ? 'OMITTED' : 'RESPONDED',
               gradedAt: now,
             },
           });
@@ -632,6 +661,7 @@ export class DrillAssessmentService {
           status: 'GRADED',
           finishedAt: now,
           rawPoints: String(rawPoints),
+
           score0To100: String(scored.score),
           stars: scored.stars,
           unlockedLevelId: next?.id ?? null,
@@ -718,7 +748,10 @@ export class DrillAssessmentService {
           eventName: 'drill_submitted',
           submissionType: 'manual',
           questionCount: rows.length,
-          answeredCount: rows.filter((row) => selectedOptionId(row.answer) !== null).length,
+          answeredCount: rows.filter(
+            (row) =>
+              normalizeAssessmentAnswer(decodeAssessmentContent(row), row.answer ?? null) !== null,
+          ).length,
         },
         now,
       );

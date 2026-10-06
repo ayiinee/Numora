@@ -43,6 +43,7 @@ export function drillReward(
   questionCount: number,
   startedAt: Date,
   finishedAt: Date,
+  allowPartial = false,
 ) {
   if (
     questionCount !== DRILL_QUESTION_COUNT ||
@@ -53,7 +54,9 @@ export function drillReward(
     throw new Error('Invalid Drill reward inputs.');
   const durationSeconds = Math.max(0, (finishedAt.getTime() - startedAt.getTime()) / 1000);
   if (!Number.isFinite(durationSeconds)) throw new Error('Invalid Drill duration.');
-  const baseXp = correctCount * 10;
+  // Preserve the explicitly accepted Chapter 3 base rounding; general approved rubrics
+  // use the numeric ledger and round only the final reward.
+  const baseXp = allowPartial ? Math.round(correctCount * 10) : correctCount * 10;
   const bonusXp = Math.max(0, ((900 - durationSeconds) / 900) * 50);
   return {
     policyCode: DRILL_REWARD_POLICY_CODE,

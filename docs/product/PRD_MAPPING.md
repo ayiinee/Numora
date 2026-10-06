@@ -26,6 +26,8 @@ Current rules: three fixed Admin subroles and action-level permissions; maximum 
 | IRT/publication   | Existing requests, respondent contract, SLA, immutable release                          | Data pipeline/quality/mapping          |
 | Analytics         | Authorized aggregate queries over durable truth                                         | Unavailable metrics explicitly marked  |
 
+**ENGINEERING DECISION — instruksi pemilik proyek, 7 Oktober 2026:** penerimaan langsung khusus 120 original Drill Bab 3 indikator 16–19, Paket 1 level 1–3; 12 paket PUBLISHED dengan policy allowlist. Review impor lainnya tetap berlaku; tidak mengklaim pengesahan Curriculum/IRT. [Scope dan verifikasi](../development/DRILL_CHAPTER3_OWNER_EXCEPTION.md).
+
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents across responsive widths while retaining interactive targets and server-provided ranking behavior. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).
 
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** remove the standalone `PvP DEMO` lobby card and obsolete synthetic-content copy. PvP remains connected to REST/WebSocket and the READY Drill bank; this UI change does not change server mode or historical records. [UI scope](../development/PVP_RANDOM_DRILL_BANK.md#qa-and-rollout).
