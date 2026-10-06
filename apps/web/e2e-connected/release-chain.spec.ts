@@ -982,12 +982,26 @@ test.describe.serial('JOB-06 connected release chain', () => {
         );
         asset.objectKey = receipt.objectKey;
       }
+    const targetPackage = await content<{ id: string }>('packages', {
+      familyCode: `TEST-PREVIEW-${crypto.randomUUID()}`,
+      packageVersion: 1,
+      name: 'TEST ONLY mixed-format DRAFT preview',
+      assessmentType: 'TRYOUT',
+      isDemo: true,
+      source: {
+        sourceNamespace: 'CURRICULUM_SHEETS_SAMPLE',
+        sourceName: 'TEST ONLY Curriculum sample',
+        sourceReference: 'docs/data/samples/2026-10-03',
+      },
+    });
     await admin.goto('/admin/content/imports');
+    await admin.getByLabel('Paket tujuan').selectOption(targetPackage.id);
     await admin.getByLabel('File soal JSON').setInputFiles({
       name: 'questions.json',
       mimeType: 'application/json',
       buffer: Buffer.from(JSON.stringify(samples)),
     });
+    await admin.getByRole('button', { name: 'Konversi ke paket terpilih', exact: true }).click();
     await admin.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
     await expect(admin.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
     const imported = admin.waitForResponse(
