@@ -2,7 +2,8 @@ import { SetMetadata } from '@nestjs/common';
 
 export const ADMIN_PERMISSION = 'numora.adminPermission';
 export type AdminSubRole = 'SUPER_ADMIN' | 'OPERATIONS' | 'CONTENT_DATA_MODERATION';
-export type AdminPermission = 'operations' | 'content' | 'dashboard' | 'audit' | 'adminAccounts';
+export type AdminPermission =
+  'operations' | 'content' | 'dashboard' | 'audit' | 'adminAccounts' | 'schoolRead';
 export const AdminAccess = (permission: AdminPermission) =>
   SetMetadata(ADMIN_PERMISSION, permission);
 
@@ -12,6 +13,8 @@ export function adminAllows(role: AdminSubRole | null | undefined, permission: A
     role === 'SUPER_ADMIN' ||
     (permission === 'dashboard' && (role === 'OPERATIONS' || role === 'CONTENT_DATA_MODERATION')) ||
     (role === 'OPERATIONS' && permission === 'operations') ||
+    (permission === 'schoolRead' &&
+      (role === 'OPERATIONS' || role === 'CONTENT_DATA_MODERATION')) ||
     (role === 'CONTENT_DATA_MODERATION' && permission === 'content')
   );
 }

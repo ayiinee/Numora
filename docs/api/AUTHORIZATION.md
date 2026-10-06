@@ -49,6 +49,8 @@ Evaluate as needed:
 
 Do not rely on hidden menus. All sensitive endpoints and WebSocket actions must enforce policy server-side.
 
+**ENGINEERING IMPLEMENTATION:** Admin authorization requires an active identity with an assigned `adminRole`. Content/assessment, reports/moderation, and IRT endpoints accept `SUPER_ADMIN` and `CONTENT_DATA_MODERATION`; school mutations, teacher credentials, and full user/class directories accept `SUPER_ADMIN` and `OPERATIONS`. Content Admin may read only the school list's basic ID/code/name/status fields; token/credential history and user/class directories remain denied until limited views are defined. The aggregate Admin dashboard is available to all assigned subroles; the unfiltered audit log is Super Admin-only. Admin-account/permission management and role-scoped audit views remain unimplemented.
+
 **ENGINEERING DECISION:** creating a Class and joining an existing Class both require an active School and an active Teacher-School membership for that Class's Teacher at the time of the database transaction. A standalone foreign key from `classes` to `users` cannot prove this cross-table condition. Identity reports a Teacher as verified only while a membership in an active School exists.
 
 Example Teacher check:

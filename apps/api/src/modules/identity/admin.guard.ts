@@ -9,10 +9,12 @@ import { IdentityService } from './identity.service';
 import { Reflector } from '@nestjs/core';
 import { ADMIN_PERMISSION, adminAllows, type AdminPermission } from './admin-permissions';
 
+import type { AdminSubRole } from './admin-permissions';
+
 export type AdminRequest = {
   headers: { authorization?: string };
   adminId: string;
-  adminRole: string;
+  adminRole: AdminSubRole;
 };
 
 @Injectable()

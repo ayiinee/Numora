@@ -77,6 +77,10 @@ export function AdminContentScreen() {
 
 function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
+  const canViewAudit =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.adminRole === 'SUPER_ADMIN';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -96,10 +100,11 @@ function AdminContentScreenContent() {
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
+  const visibleViews = canViewAudit ? views : views.filter((item) => item.id !== 'audit');
   useEffect(() => {
     if (!token) return;
     let active = true;
-    loadAdminWorkbench(token, offset).then(
+    loadAdminWorkbench(token, offset, canViewAudit).then(
       (result) => {
         if (active) {
           setData(result);
@@ -118,7 +123,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision]);
+  }, [token, offset, revision, canViewAudit]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -156,6 +161,9 @@ function AdminContentScreenContent() {
     setLoading(true);
     setDenied(false);
   }, [profileId]);
+  useEffect(() => {
+    if (!canViewAudit && view === 'audit') setView('questions');
+  }, [canViewAudit, view]);
   if (!token || denied)
     return (
       <AdminFrame
@@ -183,13 +191,13 @@ function AdminContentScreenContent() {
     ? {
         curriculum: 0,
         questions: current.versions.items.length,
-        verification: Math.max(current.versions.items.length, current.audit.items.length),
+        verification: Math.max(current.versions.items.length, current.audit?.items.length ?? 0),
         videos: current.videos.items.length,
         packages: current.packages.items.length,
         drillPackages: current.drillPackages.items.length,
         reports: current.reports.items.length,
         irt: Math.max(current.irt.items.length, current.irtBatches.items.length),
-        audit: current.audit.items.length,
+        audit: current.audit?.items.length ?? 0,
       }[view]
     : 0;
   return (
@@ -204,7 +212,7 @@ function AdminContentScreenContent() {
           tetap dipertahankan.
         </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
-          {views.map((item) => (
+          {visibleViews.map((item) => (
             <Button
               key={item.id}
               disabled={busy}
@@ -245,7 +253,7 @@ function AdminContentScreenContent() {
             />
             <div
               className="admin-content-view"
-              aria-label={views.find((item) => item.id === view)?.label}
+              aria-label={visibleViews.find((item) => item.id === view)?.label}
             >
               {view === 'curriculum' && (
                 <Curriculum data={current} token={token} busy={busy} run={run} />
@@ -455,7 +463,7 @@ function AdminContentScreenContent() {
                   </ul>
                 </section>
               )}
-              {view === 'audit' && (
+              {view === 'audit' && current.audit && (
                 <section>
                   <h2>Audit perubahan</h2>
                   {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
@@ -731,24 +739,28 @@ function VerificationHistory({ data }: { data: Workbench }) {
           ))}
         </ul>
       </section>
-      <section>
-        <h2>Riwayat perubahan Admin</h2>
-        {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
-        <ul className="monitoring-list">
-          {data.audit.items.map((entry) => (
-            <li className="monitoring-notice admin-content-row" key={entry.id}>
-              <strong>{entry.action}</strong>
-              <p>
-                {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
-              </p>
-              <small>
-                Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
-                {entry.actorUserId ?? 'Tidak tersedia'}
-              </small>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {data.audit && (
+        <section>
+          <h2>Riwayat perubahan Admin</h2>
+          <>
+            {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
+            <ul className="monitoring-list">
+              {data.audit.items.map((entry) => (
+                <li className="monitoring-notice admin-content-row" key={entry.id}>
+                  <strong>{entry.action}</strong>
+                  <p>
+                    {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
+                  </p>
+                  <small>
+                    Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
+                    {entry.actorUserId ?? 'Tidak tersedia'}
+                  </small>
+                </li>
+              ))}
+            </ul>
+          </>
+        </section>
+      )}
     </>
   );
 }

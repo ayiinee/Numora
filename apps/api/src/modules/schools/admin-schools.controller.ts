@@ -1,6 +1,24 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
 import { IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
+import { AdminGuard } from '../identity/admin.guard';
+import { AdminAccess } from '../identity/admin-permissions';
 import { SchoolsService } from './schools.service';
 
 class AdminSchoolDto {
@@ -58,23 +76,30 @@ class RevokedDto {
 
 @ApiTags('admin-schools')
 @ApiBearerAuth()
+@UseGuards(AdminGuard)
 @Controller('admin/schools')
 export class AdminSchoolsController {
   constructor(private readonly schools: SchoolsService) {}
 
   @Get()
+  @AdminAccess('schoolRead')
   @ApiOkResponse({ type: AdminSchoolsDto })
   list(@Headers('authorization') authorization?: string) {
     return this.schools.listForAdmin(authorization);
   }
 
   @Post()
+  @AdminAccess('operations')
   @ApiCreatedResponse({ type: AdminSchoolDto })
-  create(@Headers('authorization') authorization: string | undefined, @Body() body: CreateSchoolDto) {
+  create(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: CreateSchoolDto,
+  ) {
     return this.schools.createSchool(authorization, body.code, body.name);
   }
 
   @Patch(':schoolId')
+  @AdminAccess('operations')
   @ApiOkResponse({ type: AdminSchoolDto })
   update(
     @Headers('authorization') authorization: string | undefined,
@@ -85,6 +110,7 @@ export class AdminSchoolsController {
   }
 
   @Get(':schoolId/teacher-tokens')
+  @AdminAccess('operations')
   @ApiOkResponse({ type: TokenListDto })
   tokens(
     @Headers('authorization') authorization: string | undefined,
@@ -94,6 +120,7 @@ export class AdminSchoolsController {
   }
 
   @Post(':schoolId/teacher-tokens')
+  @AdminAccess('operations')
   @ApiCreatedResponse({ type: TokenDto })
   issue(
     @Headers('authorization') authorization: string | undefined,
@@ -103,6 +130,7 @@ export class AdminSchoolsController {
   }
 
   @Post(':schoolId/teacher-tokens/:tokenId/reissue')
+  @AdminAccess('operations')
   @ApiCreatedResponse({ type: TokenDto })
   reissue(
     @Headers('authorization') authorization: string | undefined,
@@ -113,6 +141,7 @@ export class AdminSchoolsController {
   }
 
   @Post(':schoolId/teacher-tokens/:tokenId/revoke')
+  @AdminAccess('operations')
   @ApiOkResponse({ type: RevokedDto })
   revoke(
     @Headers('authorization') authorization: string | undefined,

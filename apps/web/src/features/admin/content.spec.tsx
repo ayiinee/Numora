@@ -184,6 +184,7 @@ beforeEach(() => {
       id: 'admin-test',
       role: 'ADMIN',
       status: 'ACTIVE',
+      adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['CONTENT_MANAGE'],
       displayName: 'Admin test',
     },
@@ -378,10 +379,33 @@ describe('Admin content UI', () => {
     );
   });
   it('shows verification metadata and read-only audit history', async () => {
+    context.state = {
+      status: 'ready',
+      profile: {
+        id: 'admin-test',
+        role: 'ADMIN',
+        status: 'ACTIVE',
+        adminRole: 'SUPER_ADMIN',
+        capabilities: ['CONTENT_MANAGE'],
+        displayName: 'Admin test',
+      },
+      session: { access_token: 'test-token' },
+    };
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
     expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
     expect(screen.getByText('drill_package_published')).toBeTruthy();
+  });
+  it('loads content for Content Admin without requesting or showing Super Admin audit logs', async () => {
+    vi.mocked(loadAdminWorkbench).mockResolvedValueOnce({ ...data, audit: null });
+    render(<AdminContentScreen />);
+    expect(await screen.findByLabelText('Kompetensi')).toBeTruthy();
+    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, false);
+    expect(screen.queryByRole('button', { name: 'Audit' })).toBeNull();
+
+    fireEvent.click(screen.getByRole('button', { name: 'Verifikasi & riwayat' }));
+    expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
+    expect(screen.queryByText('Riwayat perubahan Admin')).toBeNull();
   });
   it('publishes a Drill draft through the existing Admin endpoint', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
