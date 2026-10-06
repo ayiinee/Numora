@@ -14,7 +14,7 @@ import time
 from uuid import uuid4
 
 ROOT = Path(__file__).resolve().parents[1]
-SERVICE = Path(os.environ.get('NUMORA_AI_SERVICE_PATH', 'D:/Dev/numora-ai-service'))
+SERVICE = Path(os.environ.get('NUMORA_AI_SERVICE_PATH', str(Path(__file__).resolve().parents[2] / 'numora-ai-service')))
 BIN = Path(os.environ.get('POSTGRES_BIN', str(ROOT / '.tmp/pg-runtime/node_modules/@embedded-postgres/windows-x64/native/bin')))
 def port():
     with socket.socket() as s:

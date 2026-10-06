@@ -2,7 +2,7 @@
 import os,sys
 from pathlib import Path
 from uuid import uuid4
-SERVICE=Path(os.environ.get('NUMORA_AI_SERVICE_PATH','D:/Dev/numora-ai-service'))
+SERVICE=Path(os.environ.get('NUMORA_AI_SERVICE_PATH',str(Path(__file__).resolve().parents[2] / 'numora-ai-service')))
 sys.path.insert(0,str(SERVICE))
 import psycopg
 from psycopg.rows import dict_row

@@ -4,13 +4,12 @@ import {
   assessmentPackages,
   closeDatabaseConnection,
   getDatabase,
-  pvpDemoId,
-  seedPvpDemo,
   packageItems,
   questionVersions,
   questionVariants,
   questions,
 } from '@tka/database';
+import { seedPvpDemo, pvpDemoId } from '@tka/database/testing';
 import { eq } from 'drizzle-orm';
 import { pvpFixture } from './pvp.test-fixture';
 import { resolvePvpPolicy } from './pvp-runtime.policy';

@@ -101,3 +101,7 @@ This repository includes the P0 walking skeleton and separate Student/PvP/leader
 - CI baseline.
 
 It does **not** silently implement unresolved PRD OPEN items. See `docs/product/OPEN_DECISIONS.md`.
+
+## Handoff generator paket
+
+Untuk menjalankan generator di localhost:3000 dengan alur impor preview dan akun Super Admin Development yang sama, ikuti [panduan handoff](docs/development/GENERATOR_HANDOFF.md). Launcher permanen: `corepack pnpm dev:generator`. Service Python dan konfigurasi privat tim diperlukan; tidak ada ketergantungan pada PID atau lokasi temporary komputer pembuat PR.

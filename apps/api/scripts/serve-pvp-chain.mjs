@@ -31,8 +31,6 @@ Object.assign(process.env, {
 const {
   getDatabase,
   closeDatabaseConnection,
-  seedPvpDemo,
-  pvpDemoId,
   questions,
   questionVersions,
   users,
@@ -40,6 +38,7 @@ const {
   classes,
   classMemberships,
 } = await import('@tka/database');
+const { seedPvpDemo, pvpDemoId } = await import('@tka/database/testing');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { projectClassLeaderboard } = await import('../../worker/dist/class-leaderboard.js');
 const { db, client } = getDatabase();

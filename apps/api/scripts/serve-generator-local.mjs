@@ -134,7 +134,7 @@ try {
     env: {
       ...process.env,
       NODE_ENV: 'development',
-      NUMORA_WEB_DIST_DIR: '.next-generator-demo',
+      NUMORA_WEB_DIST_DIR: process.env.NUMORA_WEB_DIST_DIR ?? '.next-generator-handoff',
       NUMORA_LOW_MEMORY: 'true',
       NEXT_PUBLIC_API_URL: `${apiUrl}/api/v1`,
       NEXT_PUBLIC_SUPABASE_URL: authUrl,

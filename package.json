@@ -51,7 +51,8 @@
     "db:migrate:test": "dotenv -e .env.test.local -- node scripts/check-test-env.mjs && dotenv -e .env.test.local -- pnpm --filter @tka/database db:migrate",
     "media:upload:samples": "node --env-file-if-exists=.env.media-upload.local scripts/upload-question-media.mjs",
     "db:seed:scenarios": "dotenv -e .env -- pnpm --filter @tka/database db:seed:scenarios",
-    "db:cleanup:development": "dotenv -e .env -- pnpm --filter @tka/database db:cleanup:development"
+    "db:cleanup:development": "dotenv -e .env -- pnpm --filter @tka/database db:cleanup:development",
+    "dev:generator": "node scripts/run-generator-demo.mjs"
   },
   "devDependencies": {
     "@eslint/js": "9.39.5",
