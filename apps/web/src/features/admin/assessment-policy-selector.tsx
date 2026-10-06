@@ -39,7 +39,12 @@ export function AssessmentPolicySelector({
     <div>
       <label>
         Versi kebijakan penilaian
-        <select name="scoringPolicyVersionId" required defaultValue={defaultValue}>
+        <select
+          key={`${type}:${defaultValue}:${query.status}`}
+          name="scoringPolicyVersionId"
+          required
+          defaultValue={defaultValue}
+        >
           <option value="">Pilih versi published yang disahkan</option>
           {items.map((policy) => (
             <option value={policy.id} key={policy.id}>

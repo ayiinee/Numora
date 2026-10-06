@@ -10,14 +10,56 @@ vi.mock('@/features/onboarding/auth', () => ({
 }));
 afterEach(cleanup);
 beforeEach(() => vi.resetAllMocks());
-function mount() {
+function mount(defaultValue = '') {
   render(
     <form>
-      <AssessmentPolicySelector token="TEST" type="DRILL" />
+      <AssessmentPolicySelector token="TEST" type="DRILL" defaultValue={defaultValue} />
       <button>Submit</button>
     </form>,
   );
 }
+it('restores the saved approved policy after asynchronous options load and native form reset', async () => {
+  vi.mocked(apiRequest).mockResolvedValue({
+    items: [
+      {
+        id: 'approved',
+        code: 'TEST-APPROVED',
+        version: 1,
+        assessmentType: 'DRILL',
+        approvedAt: null,
+        approvalReference: 'TEST ONLY',
+      },
+    ],
+  });
+  mount('approved');
+  expect((screen.getByRole('combobox') as HTMLSelectElement).checkValidity()).toBe(false);
+  await screen.findByRole('option', { name: /TEST-APPROVED/ });
+  const select = screen.getByRole('combobox') as HTMLSelectElement;
+  expect(select.value).toBe('approved');
+  expect(select.checkValidity()).toBe(true);
+  fireEvent.reset(select.closest('form')!);
+  expect(select.value).toBe('approved');
+});
+
+it('keeps an unavailable saved policy invalid rather than selecting another approved version', async () => {
+  vi.mocked(apiRequest).mockResolvedValue({
+    items: [
+      {
+        id: 'replacement',
+        code: 'TEST-REPLACEMENT',
+        version: 2,
+        assessmentType: 'DRILL',
+        approvedAt: null,
+        approvalReference: 'TEST ONLY',
+      },
+    ],
+  });
+  mount('unavailable');
+  await screen.findByRole('option', { name: /TEST-REPLACEMENT/ });
+  const select = screen.getByRole('combobox') as HTMLSelectElement;
+  expect(select.value).toBe('');
+  expect(select.checkValidity()).toBe(false);
+});
 it('blocks native form validity when no approved policy exists and exposes the academic blocker', async () => {
   vi.mocked(apiRequest).mockResolvedValue({ items: [] });
   mount();
