@@ -3,6 +3,8 @@ import { useEffect, useState } from 'react';
 import { Badge, Button, Card } from '@tka/ui';
 import { apiRequest } from '@/lib/api';
 import { AdminMessage } from './admin-presentation';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
+import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import { ContentRichText } from './content-rich-text';
 import { createPreview, submitPreview } from './content-preview-api';
 import {
@@ -40,8 +42,10 @@ export function ContentPackageWorkspace({
   const [source, setSource] = useState('');
   const [offset, setOffset] = useState(0);
   const [packages, setPackages] = useState<ContentPackageDto[]>([]);
+  const [hasNext, setHasNext] = useState(false);
   const [curriculum, setCurriculum] = useState<AdminCurriculumDto['items']>([]);
   const [detail, setDetail] = useState<ContentPackageDetailDto | null>(null);
+  const itemPage = useAdminPagination(detail?.items ?? [], detail?.id);
   const [creating, setCreating] = useState(false);
   const [busy, setBusy] = useState(false);
   const [loading, setLoading] = useState(true);
@@ -55,7 +59,7 @@ export function ContentPackageWorkspace({
     const query = new URLSearchParams({
       usageType: usage,
       status,
-      limit: '20',
+      limit: String(ADMIN_PAGE_SIZE + 1),
       offset: String(offset),
       ...(chapter ? { chapterId: chapter } : {}),
       ...(source ? { source } : {}),
@@ -66,7 +70,9 @@ export function ContentPackageWorkspace({
     ])
       .then(([p, c]) => {
         if (active) {
-          setPackages(p.items);
+          const page = adminPage(p.items);
+          setPackages(page.items);
+          setHasNext(page.hasNext);
           setCurriculum(c.items);
           setError('');
         }
@@ -156,7 +162,7 @@ export function ContentPackageWorkspace({
         Satu file untuk satu paket. PG, MCMA, dan Kategori adalah format jawaban dalam tujuan yang
         sama.
       </p>
-      <div className="excel-editor-options">
+      <div className="admin-search-toolbar">
         <label>
           Tujuan unggah
           <select
@@ -244,21 +250,16 @@ export function ContentPackageWorkspace({
       {!loading && !packages.length && (
         <p>Belum ada paket yang cocok dengan filter. Buat paket DRAFT terlebih dahulu.</p>
       )}
+      <AdminPagination
+        offset={offset}
+        hasNext={hasNext}
+        disabled={locked || loading}
+        onChange={setOffset}
+        label="Halaman paket"
+        previousLabel="Paket sebelumnya"
+        nextLabel="Paket berikutnya"
+      />
       <div className="admin-content-actions">
-        <Button
-          variant="secondary"
-          disabled={locked || !offset}
-          onClick={() => setOffset((n) => Math.max(0, n - 20))}
-        >
-          Paket sebelumnya
-        </Button>
-        <Button
-          variant="secondary"
-          disabled={locked || packages.length < 20}
-          onClick={() => setOffset((n) => n + 20)}
-        >
-          Paket berikutnya
-        </Button>
         <Button variant="secondary" disabled={locked} onClick={() => setCreating((v) => !v)}>
           {creating ? 'Tutup formulir paket' : 'Buat paket DRAFT'}
         </Button>
@@ -452,7 +453,7 @@ export function ContentPackageWorkspace({
                 />
               </label>
               <ul className="monitoring-list">
-                {detail.items.map((item) => (
+                {itemPage.items.map((item) => (
                   <li key={item.questionVersionId}>
                     <strong>
                       {item.displayOrder}. {item.question?.externalId ?? item.questionVersionId}
@@ -536,6 +537,11 @@ export function ContentPackageWorkspace({
                   </li>
                 ))}
               </ul>
+              <AdminPagination
+                {...itemPage.pagination}
+                disabled={locked}
+                label="Halaman soal paket"
+              />
             </>
           )}
         </>

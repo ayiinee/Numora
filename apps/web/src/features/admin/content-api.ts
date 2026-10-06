@@ -1,4 +1,5 @@
 import { apiRequest } from '@/lib/api';
+import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import type {
   AdminAuditListDto,
   AdminCurriculumDto,
@@ -27,8 +28,13 @@ import type {
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
-export async function loadAdminWorkbench(token: string, offset: number, versionQuery = '') {
-  const page = `?limit=20&offset=${offset}`;
+export async function loadAdminWorkbench(
+  token: string,
+  offset: number,
+  versionQuery = '',
+  includeAudit = false,
+) {
+  const page = `?limit=${ADMIN_PAGE_SIZE + 1}&offset=${offset}`;
   const [
     curriculum,
     versions,
@@ -50,22 +56,24 @@ export async function loadAdminWorkbench(token: string, offset: number, versionQ
     apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
     apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
     apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
-    apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token),
+    includeAudit
+      ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
+      : Promise.resolve({ items: [] } satisfies AdminAuditListDto),
     apiRequest<AdminDashboardDto>('admin/dashboard', token),
     apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
     apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
   ]);
   return {
     curriculum,
-    versions,
-    videos,
-    reports,
-    irt,
-    irtBatches,
-    audit,
+    versions: adminPage(versions.items),
+    videos: adminPage(videos.items),
+    reports: adminPage(reports.items),
+    irt: adminPage(irt.items),
+    irtBatches: adminPage(irtBatches.items),
+    audit: adminPage(audit.items),
     dashboard,
-    packages,
-    drillPackages,
+    packages: adminPage(packages.items),
+    drillPackages: adminPage(drillPackages.items),
   };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {

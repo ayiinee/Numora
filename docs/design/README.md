@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.
+
 **ENGINEERING DECISION — owner UI request, 7 October 2026:** all web pages use `#F3ECCB` as their outer page background through the shared `--color-bg` token. Cards, headers, hero panels, and state surfaces retain their semantic colors.
 
 **ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.

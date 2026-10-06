@@ -2,6 +2,7 @@
 import { Fragment, useState } from 'react';
 import { Badge, Button, Card } from '@tka/ui';
 import { ContentRichText } from './content-rich-text';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import type { ExcelParseDto, ExcelQuestionDto, ImportReportDto } from './generated-types';
 
 function QuestionEditor({
@@ -198,6 +199,7 @@ export function ContentExcelPreview({
     editingChanged(id !== null);
   };
   const questions = excel.envelope.questions;
+  const questionPage = useAdminPagination(questions);
   const imageCount = questions.reduce((total, q) => total + q.metadata.assetManifest.length, 0);
   const imageIssues = excel.issues.filter((i) => i.code.startsWith('IMAGE_'));
   const toggle = (id: string) => {
@@ -288,7 +290,7 @@ export function ContentExcelPreview({
               </tr>
             </thead>
             <tbody>
-              {questions.map((q) => {
+              {questionPage.items.map((q) => {
                 const media = q.metadata.assetManifest.flatMap((a) => {
                   const bytes = excel.media.find(
                     (m) => m.externalId === q.externalId && m.assetId === a.assetId,
@@ -458,6 +460,11 @@ export function ContentExcelPreview({
           </table>
         </div>
       )}
+      <AdminPagination
+        {...questionPage.pagination}
+        disabled={disabled || editing !== null}
+        label="Halaman preview soal Excel"
+      />
     </Card>
   );
 }

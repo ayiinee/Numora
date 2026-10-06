@@ -7,6 +7,7 @@ import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import { classifyQuestion } from './content-package-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import {
   setChapterCategory,
   createChapter,
@@ -81,6 +82,7 @@ export function AdminContentScreen() {
 
 function AdminContentScreenContent() {
   const { state, refresh } = useAuth();
+  const canReadAudit = state.status === 'ready' && state.profile.adminRole === 'SUPER_ADMIN';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -113,7 +115,9 @@ function AdminContentScreenContent() {
   useEffect(() => {
     if (!token) return;
     let active = true;
-    loadAdminWorkbench(token, offset, versionQuery).then(
+    setLoading(true);
+    setError('');
+    loadAdminWorkbench(token, offset, versionQuery, canReadAudit).then(
       (result) => {
         if (active) {
           setData(result);
@@ -132,7 +136,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, versionQuery]);
+  }, [token, offset, revision, versionQuery, canReadAudit]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -193,20 +197,20 @@ function AdminContentScreenContent() {
       </AdminFrame>
     );
   const current = loadedFor === profileId ? data : null;
-  const pageLength = current
+  const hasNext = current
     ? {
-        curriculum: 0,
-        questions: current.versions.items.length,
-        verification: Math.max(current.versions.items.length, current.audit.items.length),
-        videos: current.videos.items.length,
-        packages: current.packages.items.length,
-        drillPackages: current.drillPackages.items.length,
-        directedPackages: 0,
-        reports: current.reports.items.length,
-        irt: Math.max(current.irt.items.length, current.irtBatches.items.length),
-        audit: current.audit.items.length,
+        curriculum: false,
+        questions: current.versions.hasNext,
+        verification: current.versions.hasNext || (canReadAudit && current.audit.hasNext),
+        videos: current.videos.hasNext,
+        packages: current.packages.hasNext,
+        drillPackages: current.drillPackages.hasNext,
+        directedPackages: false,
+        reports: current.reports.hasNext,
+        irt: current.irt.hasNext || current.irtBatches.hasNext,
+        audit: current.audit.hasNext,
       }[view]
-    : 0;
+    : false;
   return (
     <AdminFrame
       title="Konten & assessment"
@@ -219,18 +223,20 @@ function AdminContentScreenContent() {
           tetap dipertahankan.
         </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
-          {views.map((item) => (
-            <Button
-              key={item.id}
-              disabled={busy}
-              variant={view === item.id ? 'primary' : 'secondary'}
-              className="admin-view-button"
-              aria-current={view === item.id ? 'page' : undefined}
-              onClick={() => navigate(item.id)}
-            >
-              {item.label}
-            </Button>
-          ))}
+          {views
+            .filter((item) => canReadAudit || item.id !== 'audit')
+            .map((item) => (
+              <Button
+                key={item.id}
+                disabled={busy}
+                variant={view === item.id ? 'primary' : 'secondary'}
+                className="admin-view-button"
+                aria-current={view === item.id ? 'page' : undefined}
+                onClick={() => navigate(item.id)}
+              >
+                {item.label}
+              </Button>
+            ))}
         </nav>
         {notice && <AdminMessage message={notice} />}
         {error && (
@@ -241,7 +247,7 @@ function AdminContentScreenContent() {
             </Button>
           </div>
         )}
-        {loading || !current ? (
+        {!current ? (
           error ? (
             <p className="admin-empty-inline" role="status">
               Data belum dapat dimuat.
@@ -261,12 +267,80 @@ function AdminContentScreenContent() {
             <div
               className="admin-content-view"
               aria-label={views.find((item) => item.id === view)?.label}
+              aria-busy={loading}
             >
               {view === 'curriculum' && (
                 <Curriculum data={current} token={token} busy={busy} run={run} />
               )}
               {view === 'questions' && (
                 <>
+                  <div className="admin-search-toolbar">
+                    <label>
+                      Tujuan soal
+                      <select
+                        value={versionUsage}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionUsage(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua tujuan</option>
+                        <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
+                        {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+                          <option key={u}>{u}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Status versi
+                      <select
+                        value={versionStatus}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionStatus(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua status</option>
+                        {['DRAFT', 'READY', 'ARCHIVED'].map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Materi soal
+                      <select
+                        value={versionChapter}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionChapter(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua bab</option>
+                        {current.curriculum.items
+                          .filter((c) => c.kind === 'CHAPTER')
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label>
+                      Sumber soal
+                      <input
+                        value={versionSource}
+                        maxLength={240}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionSource(e.target.value);
+                          setOffset(0);
+                        }}
+                      />
+                    </label>
+                  </div>
                   <QuestionEditor
                     key={editing?.id ?? 'new'}
                     version={editing}
@@ -281,73 +355,7 @@ function AdminContentScreenContent() {
                     <Link href="/admin/content/imports">
                       Impor Excel/JSON, paket & preview internal
                     </Link>
-                    <div className="excel-editor-options">
-                      <label>
-                        Tujuan soal
-                        <select
-                          value={versionUsage}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionUsage(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua tujuan</option>
-                          <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
-                          {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-                            <option key={u}>{u}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Status versi
-                        <select
-                          value={versionStatus}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionStatus(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua status</option>
-                          {['DRAFT', 'READY', 'ARCHIVED'].map((s) => (
-                            <option key={s}>{s}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Materi soal
-                        <select
-                          value={versionChapter}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionChapter(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua bab</option>
-                          {current.curriculum.items
-                            .filter((c) => c.kind === 'CHAPTER')
-                            .map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                        </select>
-                      </label>
-                      <label>
-                        Sumber soal
-                        <input
-                          value={versionSource}
-                          maxLength={240}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionSource(e.target.value);
-                            setOffset(0);
-                          }}
-                        />
-                      </label>
-                    </div>
+
                     {!current.versions.items.length && (
                       <p>Belum ada versi soal pada halaman ini.</p>
                     )}
@@ -470,7 +478,9 @@ function AdminContentScreenContent() {
                   </section>
                 </>
               )}
-              {view === 'verification' && <VerificationHistory data={current} />}
+              {view === 'verification' && (
+                <VerificationHistory data={current} canReadAudit={canReadAudit} />
+              )}
               {view === 'videos' && <Videos data={current} token={token} busy={busy} run={run} />}
               {view === 'packages' && (
                 <>
@@ -582,7 +592,7 @@ function AdminContentScreenContent() {
                   </ul>
                 </section>
               )}
-              {view === 'audit' && (
+              {view === 'audit' && canReadAudit && (
                 <section>
                   <h2>Audit perubahan</h2>
                   {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
@@ -603,28 +613,13 @@ function AdminContentScreenContent() {
                 </section>
               )}
             </div>
-            {view !== 'curriculum' && (
-              <nav className="admin-content-actions" aria-label="Halaman data">
-                <Button
-                  disabled={offset === 0 || busy}
-                  onClick={() => {
-                    setLoading(true);
-                    setOffset(Math.max(0, offset - 20));
-                  }}
-                >
-                  Sebelumnya
-                </Button>
-                <span>Halaman {offset / 20 + 1}</span>
-                <Button
-                  disabled={pageLength < 20 || busy}
-                  onClick={() => {
-                    setLoading(true);
-                    setOffset(offset + 20);
-                  }}
-                >
-                  Berikutnya
-                </Button>
-              </nav>
+            {view !== 'curriculum' && view !== 'directedPackages' && (
+              <AdminPagination
+                offset={offset}
+                hasNext={hasNext}
+                disabled={busy || loading}
+                onChange={setOffset}
+              />
             )}
           </>
         )}
@@ -663,7 +658,7 @@ function Reports({
       <p>
         Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.
       </p>
-      <div className="admin-content-actions">
+      <div className="admin-search-toolbar">
         <label>
           Jenis laporan
           <select
@@ -826,7 +821,7 @@ function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED
   }[status];
 }
 
-function VerificationHistory({ data }: { data: Workbench }) {
+function VerificationHistory({ data, canReadAudit }: { data: Workbench; canReadAudit: boolean }) {
   return (
     <>
       <section>
@@ -858,24 +853,26 @@ function VerificationHistory({ data }: { data: Workbench }) {
           ))}
         </ul>
       </section>
-      <section>
-        <h2>Riwayat perubahan Admin</h2>
-        {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
-        <ul className="monitoring-list">
-          {data.audit.items.map((entry) => (
-            <li className="monitoring-notice admin-content-row" key={entry.id}>
-              <strong>{entry.action}</strong>
-              <p>
-                {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
-              </p>
-              <small>
-                Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
-                {entry.actorUserId ?? 'Tidak tersedia'}
-              </small>
-            </li>
-          ))}
-        </ul>
-      </section>
+      {canReadAudit && (
+        <section>
+          <h2>Riwayat perubahan Admin</h2>
+          {!data.audit.items.length && <p>Belum ada riwayat pada halaman ini.</p>}
+          <ul className="monitoring-list">
+            {data.audit.items.map((entry) => (
+              <li className="monitoring-notice admin-content-row" key={entry.id}>
+                <strong>{entry.action}</strong>
+                <p>
+                  {entry.entityType} · {new Date(entry.createdAt).toLocaleString('id-ID')}
+                </p>
+                <small>
+                  Entitas: {entry.entityId ?? 'Tidak tersedia'} · Aktor:{' '}
+                  {entry.actorUserId ?? 'Tidak tersedia'}
+                </small>
+              </li>
+            ))}
+          </ul>
+        </section>
+      )}
     </>
   );
 }
@@ -1104,6 +1101,7 @@ function DrillPackageEditor({
 
 function Curriculum({ data, token, busy, run }: EditorProps) {
   const [kind, setKind] = useState<AdminTaxonDto['kind']>('CHAPTER');
+  const page = useAdminPagination(data.curriculum.items);
   const parents = data.curriculum.items.filter(
     (r) => r.kind === (kind === 'SUBCHAPTER' ? 'CHAPTER' : 'SUBCHAPTER'),
   );
@@ -1199,7 +1197,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
       </AdminEditorForm>
       {!data.curriculum.items.length && <p>Belum ada materi. Mulai dengan Bab.</p>}
       <ul className="monitoring-list">
-        {data.curriculum.items.map((r) => (
+        {page.items.map((r) => (
           <li key={r.id} className="monitoring-notice admin-content-row">
             <strong>{r.name}</strong>
             <small>
@@ -1259,6 +1257,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
           </li>
         ))}
       </ul>
+      <AdminPagination {...page.pagination} disabled={busy} label="Halaman materi" />
     </section>
   );
 }

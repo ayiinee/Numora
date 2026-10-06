@@ -91,11 +91,6 @@ export function PvpScreen() {
             </span>
           </div>
           <PvpHero />
-          {availability.data?.dataMode === 'demo' && (
-            <Status title="PvP DEMO">
-              Konten sintetis untuk pengujian. Rekor terpisah dari pertandingan resmi.
-            </Status>
-          )}
           {availability.data?.activeMatchId && (
             <Status title="Kamu memiliki room aktif">
               <Link
