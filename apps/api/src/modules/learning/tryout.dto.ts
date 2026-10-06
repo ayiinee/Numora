@@ -103,7 +103,10 @@ export class TryoutResultDto {
   @ApiProperty({ type: Number, nullable: true, required: false }) xpPolicyVersion?: number | null;
   @ApiProperty({ format: 'uuid' }) attemptId!: string;
   @ApiProperty() packageTitle!: string;
-  @ApiProperty() score!: number;
+  @ApiProperty({ type: Number, nullable: true }) score!: number | null;
+  @ApiProperty({ enum: ['IRT', 'FALLBACK', 'UNSCORABLE', 'DEMO'], required: false }) mode?: string;
+  @ApiProperty({ type: Number, nullable: true, required: false }) publicationVersion?:
+    number | null;
   @ApiProperty() correctCount!: number;
   @ApiProperty() questionCount!: number;
   @ApiProperty({ type: [TryoutReviewedQuestionDto] }) explanation!: TryoutReviewedQuestionDto[];

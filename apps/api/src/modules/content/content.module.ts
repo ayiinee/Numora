@@ -1,4 +1,10 @@
+import { PretestController } from './pretest.controller';
+import { PretestService } from './pretest.service';
 import { Module } from '@nestjs/common';
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import { ContentLifecycleController } from './content-lifecycle.controller';
+import { ContentLifecycleService } from './content-lifecycle.service';
 import { ContentPreviewController } from './content-preview.controller';
 import { ContentPreviewService } from './content-preview.service';
 import { ContentImportService } from './content-import.service';
@@ -20,6 +26,8 @@ import { ContentPackagesService } from './content-packages.service';
 @Module({
   imports: [IdentityModule, ConfigModule],
   controllers: [
+    PretestController,
+    ContentLifecycleController,
     ContentController,
     DrillPackagesController,
     MediaUploadsController,
@@ -28,6 +36,10 @@ import { ContentPackagesService } from './content-packages.service';
     ContentPackagesController,
   ],
   providers: [
+    PretestService,
+    AssessmentPoliciesService,
+    AssessmentReadinessService,
+    ContentLifecycleService,
     ContentImportService,
     ExcelImportService,
     ContentPackagesService,
@@ -38,6 +50,6 @@ import { ContentPackagesService } from './content-packages.service';
     MediaUploadsRepository,
     R2MediaStorage,
   ],
-  exports: [ContentService, DrillPackagesService],
+  exports: [ContentService, DrillPackagesService, ContentLifecycleService],
 })
 export class ContentModule {}

@@ -45,10 +45,19 @@ export const scoringPolicyVersions = pgTable(
     configuration: jsonb('configuration').notNull(),
     effectiveAt: timestamp('effective_at', { withTimezone: true }),
     status: packageStatus('status').notNull().default('DRAFT'),
+    approvedByUserId: uuid('approved_by_user_id').references(() => users.id, {
+      onDelete: 'restrict',
+    }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    approvalReference: text('approval_reference'),
   },
   (table) => [
     uniqueIndex('scoring_policy_versions_code_version_uq').on(table.policyCode, table.version),
     check('scoring_policy_versions_version_ck', sql`${table.version} > 0`),
+    check(
+      'scoring_policy_versions_approval_ck',
+      sql`(${table.approvedByUserId} is null and ${table.approvedAt} is null and ${table.approvalReference} is null) or (${table.approvedByUserId} is not null and ${table.approvedAt} is not null and ${table.approvalReference} is not null and length(trim(${table.approvalReference})) > 0)`,
+    ),
   ],
 ).enableRLS();
 
@@ -209,7 +218,9 @@ export const assessmentAttempts = pgTable(
     drillPolicyVersion: integer('drill_policy_version'),
     tryoutXpPolicyVersion: integer('tryout_xp_policy_version'),
     pretestResult: jsonb('pretest_result').$type<{
-      correctCount: number; initialLevel: number; mappingStatus: 'applied' | 'unavailable';
+      correctCount: number;
+      initialLevel: number;
+      mappingStatus: 'applied' | 'unavailable';
       unlockedLevels: { id: string; title: string }[];
     }>(),
   },
@@ -294,8 +305,14 @@ export const assessmentAttempts = pgTable(
       'assessment_attempts_stars_ck',
       sql`${table.stars} is null or (${table.assessmentType} = 'DRILL' and ${table.stars} between 0 and 3)`,
     ),
-    check('assessment_attempts_drill_policy_ck', sql`${table.drillPolicyVersion} is null or (${table.assessmentType} = 'DRILL' and ${table.drillPolicyVersion} = 2)`),
-    check('assessment_attempts_tryout_xp_policy_ck', sql`${table.tryoutXpPolicyVersion} is null or (${table.assessmentType} = 'TRYOUT' and ${table.tryoutXpPolicyVersion} = 1)`),
+    check(
+      'assessment_attempts_drill_policy_ck',
+      sql`${table.drillPolicyVersion} is null or (${table.assessmentType} = 'DRILL' and ${table.drillPolicyVersion} = 2)`,
+    ),
+    check(
+      'assessment_attempts_tryout_xp_policy_ck',
+      sql`${table.tryoutXpPolicyVersion} is null or (${table.assessmentType} = 'TRYOUT' and ${table.tryoutXpPolicyVersion} = 1)`,
+    ),
   ],
 ).enableRLS();
 
@@ -379,11 +396,21 @@ export const attemptAnswers = pgTable(
 ).enableRLS();
 
 // Skip is an entry decision, not an attempt completion or cancellation.
-export const pretestChapterStates = pgTable('pretest_chapter_states', {
-  studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
-  chapterId: uuid('chapter_id').notNull().references(() => chapters.id, { onDelete: 'restrict' }),
-  skippedAt: timestamp('skipped_at', { withTimezone: true }).notNull().defaultNow(),
-}, (table) => [uniqueIndex('pretest_chapter_states_student_chapter_uq').on(table.studentId, table.chapterId)]).enableRLS();
+export const pretestChapterStates = pgTable(
+  'pretest_chapter_states',
+  {
+    studentId: uuid('student_id')
+      .notNull()
+      .references(() => users.id, { onDelete: 'restrict' }),
+    chapterId: uuid('chapter_id')
+      .notNull()
+      .references(() => chapters.id, { onDelete: 'restrict' }),
+    skippedAt: timestamp('skipped_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('pretest_chapter_states_student_chapter_uq').on(table.studentId, table.chapterId),
+  ],
+).enableRLS();
 
 export const levelProgress = pgTable(
   'level_progress',

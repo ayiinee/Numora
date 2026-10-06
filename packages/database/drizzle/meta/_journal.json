@@ -218,6 +218,69 @@
       "when": 1791270982628,
       "tag": "0030_question_package_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791280200000,
+      "tag": "0031_admin_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791280201000,
+      "tag": "0032_admin_recovery_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791280202000,
+      "tag": "0033_content_revision_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791280203000,
+      "tag": "0034_historical_report_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791280204000,
+      "tag": "0035_assessment_policy_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791280205000,
+      "tag": "0036_partial_reward_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791280206000,
+      "tag": "0037_admin_authored_package_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791280207000,
+      "tag": "0038_pretest_blueprint_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791280208000,
+      "tag": "0039_legacy_package_fixture_compatibility",
+      "breakpoints": true
     }
   ]
 }

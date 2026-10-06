@@ -1,3 +1,10 @@
+import { AdminAnalyticsService } from '../admin/analytics.service';
+import { TryoutReleaseService } from '../learning/tryout-release.service';
+import {
+  discoverNotificationReleases,
+  drainNotificationBatch,
+} from '../../../../worker/src/notifications';
+import { advanceTryoutBatches } from '../../../../worker/src/tryout-recovery';
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import { execFileSync } from 'node:child_process';
@@ -150,8 +157,8 @@ describe.skipIf(!databaseUrl)(
         else process.env[key] = value;
       }
       if (process.env.IRT_CHAIN_EVIDENCE === 'true') {
-        if (passed.length !== 11 || !redisUrl)
-          throw new Error('Connected suite did not complete all eleven scenarios');
+        if (passed.length !== 14 || !redisUrl)
+          throw new Error('Connected suite did not complete all fourteen scenarios');
         const root = resolve('../..');
         const sha = execFileSync('git', ['rev-parse', 'HEAD'], {
           cwd: root,
@@ -736,5 +743,166 @@ describe.skipIf(!databaseUrl)(
         passed.push('Real Redis connection outage and durable cooldown');
       },
     );
+    it('exposes approved pins, durable health and scoped aggregates without publishing compute success', async () => {
+      const f = await fixture(),
+        actorKey = randomUUID(),
+        r = await prepare(f, actorKey);
+      const other = await fixture();
+      expect(
+        (
+          await call(
+            'admin/irt/requests',
+            'POST',
+            { contextId: f.contextId, configurationPins: f.pins },
+            other.actor,
+            actorKey,
+          )
+        ).status,
+      ).toBe(409);
+      const optionsResponse = await call('admin/irt/options', 'GET', undefined, f.actor);
+      const options = await optionsResponse.json();
+      expect(optionsResponse.status, JSON.stringify(options)).toBe(200);
+      expect(
+        options.configurations.filter((c: { contextId: string }) => c.contextId === f.contextId),
+      ).toHaveLength(2);
+      expect(JSON.stringify(options)).not.toMatch(/definition|Private fixture|rawAnswer/);
+      const detail = await analysisRequestDetail(main, r.id);
+      expect(detail.configurationPins).toEqual(expect.arrayContaining(f.pins));
+      await artifact(f, r);
+      await adoptTryoutArtifact(main, r.id, f.actor);
+      const release = new TryoutReleaseService();
+      expect((await release.releasedPackageIds([f.packageId])).has(f.packageId)).toBe(false);
+      await discoverNotificationReleases();
+      await drainNotificationBatch(100);
+      expect(
+        await main`SELECT id FROM notifications WHERE source_key=${'TRYOUT_RESULT_READY:' + f.attemptId}`,
+      ).toHaveLength(0);
+      const health = await (
+        await fetch(base + '/api/v1/admin/irt/batch-health?limit=100', {
+          headers: { Authorization: 'Bearer ' + f.actor },
+        })
+      ).json();
+      expect(health.items.find((b: { id: string }) => b.id === f.batchId)).toMatchObject({
+        publicationMode: null,
+        publicationBlockers: ['RESPONDENT_CONTRACT_NOT_APPROVED'],
+      });
+      const content = await new AdminAnalyticsService().summary('CONTENT_DATA_MODERATION');
+      const ops = await new AdminAnalyticsService().summary('OPERATIONS');
+      expect(content.metrics.some((m) => m.domain === 'OPERATIONS')).toBe(false);
+      expect(ops.metrics.some((m) => m.domain === 'CONTENT')).toBe(false);
+      expect(content.metrics.every((m) => m.value !== null && m.unavailableReason === null)).toBe(
+        true,
+      );
+      expect(ops.metrics.every((m) => m.value !== null && m.unavailableReason === null)).toBe(true);
+      expect(JSON.stringify(content)).not.toMatch(/Private fixture|answer|example.test/);
+      passed.push(
+        'Approved configuration and immutable pins, operational SLA and scoped aggregate readers',
+      );
+    });
+    it('reads immutable published participant results and preserves value/mode/version on replay', async () => {
+      const f = await fixture();
+      const [policy] = await main<
+        { scoring_policy_version_id: string }[]
+      >`SELECT scoring_policy_version_id FROM assessment_packages WHERE id=${f.packageId}`;
+      const [finalization] = await main<
+        { id: string }[]
+      >`INSERT INTO tryout_result_finalizations(batch_id,version,mode,scoring_policy_version_id,policy_snapshot,digest) VALUES(${f.batchId},1,'FALLBACK',${policy!.scoring_policy_version_id},'{"fixture":"TEST ONLY approved fallback"}','TEST-finalization') RETURNING id`;
+      await main`INSERT INTO tryout_finalization_items(finalization_id,question_version_id,included,max_points,reason) VALUES(${finalization!.id},${f.versionId},true,1,'TEST ONLY')`;
+      await main`INSERT INTO tryout_attempt_results(finalization_id,attempt_id,score,coverage) VALUES(${finalization!.id},${f.attemptId!},73.25,'{"fixture":true}')`;
+      await main`UPDATE tryout_result_finalizations SET published_at=now() WHERE id=${finalization!.id}`;
+      const release = new TryoutReleaseService();
+      expect((await release.releasedPackageIds([f.packageId])).has(f.packageId)).toBe(true);
+      await discoverNotificationReleases();
+      await drainNotificationBatch(100);
+      expect(
+        await main`SELECT id FROM notifications WHERE source_key=${'TRYOUT_RESULT_READY:' + f.attemptId}`,
+      ).toHaveLength(1);
+      await discoverNotificationReleases();
+      await drainNotificationBatch(100);
+      expect(
+        await main`SELECT id FROM notifications WHERE source_key=${'TRYOUT_RESULT_READY:' + f.attemptId}`,
+      ).toHaveLength(1);
+      expect((await release.publishedResults([f.attemptId!])).get(f.attemptId!)).toEqual({
+        score: 73.25,
+        mode: 'FALLBACK',
+        version: 1,
+      });
+      const response = await call(
+        `tryout/attempts/${f.attemptId}/result`,
+        'GET',
+        undefined,
+        f.student,
+      );
+      const result = await response.json();
+      expect(response.status, JSON.stringify(result)).toBe(200);
+      expect(result).toMatchObject({ score: 73.25, mode: 'FALLBACK', publicationVersion: 1 });
+      expect(result.explanation[0].explanation).toBe('PRIVATE explanation');
+      const history = await (
+        await call('students/me/assessment-results', 'GET', undefined, f.student)
+      ).json();
+      expect(
+        history.records.find((row: { attemptId: string }) => row.attemptId === f.attemptId),
+      ).toMatchObject({ score: 73.25, resultState: 'ready' });
+      await expect(
+        main`UPDATE tryout_attempt_results SET score=99 WHERE finalization_id=${finalization!.id}`,
+      ).rejects.toMatchObject({ code: '23514' });
+      await expect(
+        main`UPDATE tryout_result_finalizations SET mode='UNSCORABLE' WHERE id=${finalization!.id}`,
+      ).rejects.toMatchObject({ code: '23514' });
+      expect((await release.publishedResults([f.attemptId!])).get(f.attemptId!)?.score).toBe(73.25);
+      const unscorable = await fixture();
+      const [unscorablePolicy] = await main<
+        { scoring_policy_version_id: string }[]
+      >`SELECT scoring_policy_version_id FROM assessment_packages WHERE id=${unscorable.packageId}`;
+      const [unscorableFinalization] = await main<
+        { id: string }[]
+      >`INSERT INTO tryout_result_finalizations(batch_id,version,mode,scoring_policy_version_id,policy_snapshot,digest) VALUES(${unscorable.batchId},1,'UNSCORABLE',${unscorablePolicy!.scoring_policy_version_id},'{"fixture":"TEST ONLY unscorable approval"}','TEST-unscorable-finalization') RETURNING id`;
+      await main`INSERT INTO tryout_finalization_items(finalization_id,question_version_id,included,max_points,reason) VALUES(${unscorableFinalization!.id},${unscorable.versionId},false,1,'TEST ONLY insufficient scientific evidence')`;
+      await main`INSERT INTO tryout_attempt_results(finalization_id,attempt_id,coverage) VALUES(${unscorableFinalization!.id},${unscorable.attemptId!},'{"fixture":true}')`;
+      await main`UPDATE tryout_result_finalizations SET published_at=now() WHERE id=${unscorableFinalization!.id}`;
+      const unscorableResponse = await call(
+        `tryout/attempts/${unscorable.attemptId}/result`,
+        'GET',
+        undefined,
+        unscorable.student,
+      );
+      const unscorableResult = await unscorableResponse.json();
+      expect(unscorableResponse.status, JSON.stringify(unscorableResult)).toBe(409);
+      expect(unscorableResult).toMatchObject({ code: 'TRYOUT_RESULT_PENDING' });
+      const unscorableHistory = await (
+        await call('students/me/assessment-results', 'GET', undefined, unscorable.student)
+      ).json();
+      expect(
+        unscorableHistory.records.find(
+          (row: { attemptId: string }) => row.attemptId === unscorable.attemptId,
+        ),
+      ).toMatchObject({ score: null, resultState: 'waitingIrt' });
+      passed.push(
+        'Immutable participant publication reader with atomic explanations, mapped score and withholding unscorable publication',
+      );
+    });
+    it('closes batches once and includes late worker grading while excluding late saved answers', async () => {
+      const f = await fixture({ lateGrading: true });
+      await main`UPDATE tryout_batches SET status='OPEN' WHERE id=${f.batchId}`;
+      await Promise.all([advanceTryoutBatches(), advanceTryoutBatches()]);
+      const [events] = await main<
+        { n: number }[]
+      >`SELECT count(*)::int AS n FROM analytics_outbox WHERE entity_id=${f.batchId} AND event_name='tryout.batch_closed'`;
+      expect(events!.n).toBe(1);
+      const r = await prepare(f);
+      const [response] = await main<
+        { operational_eligible: boolean }[]
+      >`SELECT operational_eligible FROM response_snapshot_items WHERE snapshot_id=${r.snapshotId}`;
+      expect(response!.operational_eligible).toBe(true);
+      const late = await fixture({ lateSaved: true });
+      const lr = await prepare(late);
+      const [excluded] = await main<
+        { operational_eligible: boolean }[]
+      >`SELECT operational_eligible FROM response_snapshot_items WHERE snapshot_id=${lr.snapshotId}`;
+      expect(excluded!.operational_eligible).toBe(false);
+      passed.push(
+        'Concurrent batch close outbox and late worker grading with cutoff-protected answers',
+      );
+    });
   },
 );

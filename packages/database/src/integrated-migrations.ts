@@ -57,6 +57,18 @@ export async function migrateIntegratedDatabase(
         ...notificationHashes,
         ...irtHashes,
       ]);
+      const adminFork =
+        migrations.slice(3, 28).every((entry) => hashes.has(entry.hash)) &&
+        migrations
+          .slice(31)
+          .some((entry) =>
+            history.some(
+              (row) => row.hash === entry.hash && Number(row.created_at) !== entry.folderMillis,
+            ),
+          ) &&
+        history
+          .filter((row) => Number(row.created_at) >= migrations[3]!.folderMillis)
+          .every((row) => canonicalHashes.has(row.hash) || branchHashes.has(row.hash));
       const excelFork =
         (notificationHashes.some((hash) => hashes.has(hash)) ||
           history.some(
@@ -69,7 +81,7 @@ export async function migrateIntegratedDatabase(
         history
           .filter((row) => Number(row.created_at) >= migrations[3]!.folderMillis)
           .every((row) => canonicalHashes.has(row.hash) || branchHashes.has(row.hash));
-      if (excelFork) {
+      if (excelFork || adminFork) {
         // A later branch cursor must not skip main's rewards/data migrations. Apply only
         // absent hashes, in canonical order, preserving every original history row.
         for (const [index, entry] of migrations.entries()) {
@@ -86,7 +98,7 @@ export async function migrateIntegratedDatabase(
                 VALUES(${entry.hash},${entry.folderMillis})`;
             continue;
           }
-          if (index === 27) {
+          if (excelFork && index === 27) {
             // Tables/data are identical; main additionally revokes service_role access.
             const revoke = entry.sql.find((statement) => statement.includes("'service_role'"));
             if (!revoke) throw new Error('Canonical notification permission statement missing.');

@@ -25,16 +25,40 @@ import type {
   ResolveReportDto,
   UpdateTryoutDraftDto,
   UpdateDrillPackageDto,
+  PublishTryoutPackageDto,
 } from './generated-types';
 import type { AdminTaxonDto, UpdateVideoDto } from './generated-types';
 
+export type AdminWorkbenchView =
+  | 'curriculum'
+  | 'questions'
+  | 'verification'
+  | 'videos'
+  | 'packages'
+  | 'drillPackages'
+  | 'directedPackages'
+  | 'reports'
+  | 'irt'
+  | 'audit';
 export async function loadAdminWorkbench(
   token: string,
   offset: number,
-  versionQuery = '',
-  includeAudit = false,
+  view: AdminWorkbenchView = 'questions',
+  filters: Record<string, string> = {},
+  compactDemos = false,
 ) {
-  const page = `?limit=${ADMIN_PAGE_SIZE + 1}&offset=${offset}`;
+  const parameters = new URLSearchParams({
+    limit: String(
+      ['questions', 'verification', 'reports'].includes(view)
+        ? ADMIN_PAGE_SIZE
+        : ADMIN_PAGE_SIZE + 1,
+    ),
+    offset: String(offset),
+    ...filters,
+  });
+  if (compactDemos && view === 'questions') parameters.set('catalog', 'COMPACT_DEMO');
+  const page = `?${parameters}`;
+  const empty = { items: [] };
   const [
     curriculum,
     versions,
@@ -47,27 +71,47 @@ export async function loadAdminWorkbench(
     packages,
     drillPackages,
   ] = await Promise.all([
-    apiRequest<AdminCurriculumDto>('admin/content/curriculum', token),
-    apiRequest<AdminVersionsDto>(
-      `admin/content/versions${page}${versionQuery ? `&${versionQuery}` : ''}`,
-      token,
-    ),
-    apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
-    apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
-    apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
-    apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
-    includeAudit
+    ['curriculum', 'questions', 'verification', 'videos', 'packages', 'drillPackages'].includes(
+      view,
+    )
+      ? apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
+      : Promise.resolve({ items: [] } as AdminCurriculumDto),
+    ['questions', 'verification', 'drillPackages'].includes(view)
+      ? apiRequest<AdminVersionsDto>(`admin/content/versions${page}`, token)
+      : { ...empty, nextOffset: null },
+    view === 'videos' ? apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token) : empty,
+    view === 'reports'
+      ? apiRequest<AdminReportsDto>(`admin/reports${page}`, token)
+      : { ...empty, nextOffset: null },
+    view === 'irt' ? apiRequest<AdminIrtDto>(`admin/irt${page}`, token) : empty,
+    view === 'irt' ? apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token) : empty,
+    ['audit', 'verification'].includes(view)
       ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
-      : Promise.resolve({ items: [] } satisfies AdminAuditListDto),
-    apiRequest<AdminDashboardDto>('admin/dashboard', token),
-    apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
-    apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
+      : empty,
+    apiRequest<AdminDashboardDto>('admin/dashboard', token).catch(() => null),
+    view === 'packages'
+      ? apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token)
+      : empty,
+    view === 'drillPackages'
+      ? apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token)
+      : empty,
   ]);
   return {
     curriculum,
-    versions: adminPage(versions.items),
+    versions: {
+      ...versions,
+      items: versions.items.slice(0, ADMIN_PAGE_SIZE),
+      hasNext:
+        versions.nextOffset !== undefined
+          ? versions.nextOffset !== null
+          : versions.items.length > ADMIN_PAGE_SIZE,
+    },
     videos: adminPage(videos.items),
-    reports: adminPage(reports.items),
+    reports: {
+      ...reports,
+      items: reports.items.slice(0, ADMIN_PAGE_SIZE),
+      hasNext: reports.nextOffset !== null,
+    },
     irt: adminPage(irt.items),
     irtBatches: adminPage(irtBatches.items),
     audit: adminPage(audit.items),
@@ -76,6 +120,7 @@ export async function loadAdminWorkbench(
     drillPackages: adminPage(drillPackages.items),
   };
 }
+
 function mutation(token: string, path: string, body: object, method = 'POST') {
   return apiRequest<ContentMutationDto>(path, token, { method, body: JSON.stringify(body) });
 }
@@ -121,6 +166,8 @@ export const archiveDrillPackage = (t: string, id: string) =>
   mutation(t, `admin/content/drill-packages/${encodeURIComponent(id)}/archive`, {});
 export const updateTryoutDraft = (t: string, id: string, b: UpdateTryoutDraftDto) =>
   mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}`, b, 'PATCH');
+export const publishTryoutPackage = (t: string, id: string, b: PublishTryoutPackageDto) =>
+  mutation(t, `admin/content/tryout-packages/${encodeURIComponent(id)}/publish`, b);
 export const resolveReport = (
   t: string,
   kind: 'QUESTION' | 'VIDEO',

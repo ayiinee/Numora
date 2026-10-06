@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto';
 import { ForbiddenException, type INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
 import { afterAll, beforeAll, describe } from 'vitest';
-import { and, eq } from 'drizzle-orm';
+import { eq } from 'drizzle-orm';
 import {
   assessmentAttempts,
   assessmentPackages,
@@ -26,7 +26,7 @@ import { IdentityService } from '../identity/identity.service';
 import { ReportsModule } from '../reports/reports.module';
 import { IrtModule } from '../irt/irt.module';
 import { LearningModule } from '../learning/learning.module';
-import { DRILL_POLICY_CODE, DRILL_POLICY_VERSION } from '../learning/drill.policy';
+import { R2MediaStorage } from './r2-media.storage';
 import { ContentModule } from './content.module';
 import type { CreateDrillPackageDto } from './drill-packages.dto';
 const url = process.env.TEST_DATABASE_URL;
@@ -117,21 +117,39 @@ export function installFerdiFixture() {
       .values({ subchapterId: subchapter, levelNumber: 1, status: 'READY' })
       .returning();
     level = lev!.id;
+    // TEST ONLY approval/configuration; never represents Curriculum/Product acceptance.
     const [p] = await db
-      .select()
-      .from(scoringPolicyVersions)
-      .where(
-        and(
-          eq(scoringPolicyVersions.policyCode, DRILL_POLICY_CODE),
-          eq(scoringPolicyVersions.version, DRILL_POLICY_VERSION),
-        ),
-      );
+      .insert(scoringPolicyVersions)
+      .values({
+        policyCode: 'NUMORA_DRILL_V06',
+        version: (parseInt(suffix, 16) % 1000000000) + 1,
+        configuration: {
+          fixture: 'TEST_ONLY',
+          contractVersion: 'NUMORA_ASSESSMENT_V1',
+          assessmentType: 'DRILL',
+          scoreRounding: 'HALF_UP',
+          xpRounding: 'HALF_UP',
+          itemPointRounding: 'HALF_UP',
+          drillXpBasis: 'EQUIVALENT_CORRECT',
+          itemWeights: { SINGLE_CHOICE: 2 },
+        },
+        status: 'PUBLISHED',
+        approvedByUserId: admin,
+        approvedAt: new Date(),
+        approvalReference: `TEST_ONLY_NOT_ACADEMIC_APPROVAL_${suffix}`,
+      })
+      .returning();
     policy = p!.id;
     versionIds = [];
     for (let i = 0; i < 10; i++) {
       const [q] = await db
         .insert(questions)
-        .values({ primaryCompetencyId: comp!.id, status: 'READY', usageType: 'DRILL' })
+        .values({
+          primaryCompetencyId: comp!.id,
+          status: 'READY',
+          usageType: 'DRILL',
+          curriculumLevelNumber: 1,
+        })
         .returning();
       const [v] = await db
         .insert(questionVariants)
@@ -150,7 +168,7 @@ export function installFerdiFixture() {
           })),
           answerKey: { optionId: 'A' },
           explanation: { text: 'TEST 2' },
-          difficulty: 'TEST',
+          difficulty: 'EASY',
           contentStatus: 'READY',
           reviewedByUserId: admin,
           reviewedAt: new Date(),
@@ -202,6 +220,13 @@ export function installFerdiFixture() {
           };
         },
       })
+      .overrideProvider(R2MediaStorage)
+      .useValue({
+        readLink: async (_bucket: string, key: string) => ({
+          url: `https://media.example.invalid/${key}`,
+          expiresAt: new Date(Date.now() + 60000).toISOString(),
+        }),
+      }) // TEST ONLY private storage signer.
       .compile();
     app = module.createNestApplication();
     configureApplication(app);

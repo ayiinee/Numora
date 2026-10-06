@@ -21,7 +21,7 @@ export type ChapterDto = { "id": string; "slug"?: string; "title": string; "orde
 
 export type SubchapterDto = { "id": string; "slug"?: string; "chapterId": string; "title": string; "order": number; };
 
-export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; };
+export type LevelDto = { "id": string; "title": string; "order": number; "status": "locked" | "open" | "inProgress" | "completed"; "latestScore": number | null; "bestScore": number | null; "latestStars"?: number | null; "bestStars"?: number | null; };
 
 export type CatalogDto = { "chapters": (ChapterDto)[]; };
 
@@ -37,13 +37,23 @@ export type SaveDrillAnswerDto = { "optionId"?: string | null; "answer"?: { "opt
 
 export type AssessmentXpDetailDto = { "calculationMode": "FULL_CORRECT_ONLY" | "PARTIAL_INCLUDED" | "FULL_CORRECT_FALLBACK"; "fullCorrectCount": number | null; "partialCorrectEquivalent": number | null; "correctEquivalent": number | null; "fallbackReason": string | null; };
 
-export type DrillQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
+export type RichContentDto = { "text": string; };
+
+export type PreviewOptionDto = { "id": string; "content": RichContentDto; };
+
+export type PreviewCategoryDto = { "id": string; "label": string; };
+
+export type PreviewMediaDto = { "instanceId": string; "assetId": string; "altText": string; "url": string; "expiresAt": string; };
+
+export type MediaLinksDto = { "media": (PreviewMediaDto)[]; };
+
+export type DrillQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
 
 export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "serverTime"?: string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
 
 export type SavedAnswerDto = { "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "questionInstanceId": string; "selectedOptionId": string | null; };
 
-export type ReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "reviewStatus"?: "correct" | "partial" | "incorrect" | "unanswered" | null; "awardedPoints"?: number | null; "maximumPoints"?: number | null; "correctEquivalent"?: number | null; "optionReview"?: (ReviewOptionDto)[]; "statementReview"?: (ReviewStatementDto)[]; "correctOptionId": string | null; "explanation": string; };
+export type ReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "reviewStatus"?: "correct" | "partial" | "incorrect" | "unanswered" | null; "awardedPoints"?: number | null; "maximumPoints"?: number | null; "correctEquivalent"?: number | null; "optionReview"?: (ReviewOptionDto)[]; "statementReview"?: (ReviewStatementDto)[]; "correctOptionId": string | null; "explanation": string; "richExplanation"?: RichContentDto; "fullyCorrect"?: boolean; };
 
 export type ReviewOptionDto = { "optionId": string; "selected": boolean; "isKey": boolean; };
 
@@ -73,7 +83,7 @@ export type PretestSavedAnswerDto = { "answer"?: { "optionId": string; } | { "op
 
 export type PretestChapterDto = { "chapterId": string; "chapterTitle": string; "state": "unavailable" | "available" | "inProgress" | "completed" | "skipped"; "attemptId": string | null; "canStart": boolean; "canSkip": boolean; "skipped": boolean; "isDemo": boolean; };
 
-export type PretestQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "revision": number; };
+export type PretestQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "revision": number; };
 
 export type PretestAttemptDto = { "id": string; "chapterId": string; "chapterTitle": string; "status": "inProgress" | "completed"; "isDemo": boolean; "startedAt": string; "questions": (PretestQuestionDto)[]; };
 
@@ -85,9 +95,9 @@ export type TryoutAttemptDto = { "closeAt"?: string | null; "resultDueAt"?: stri
 
 export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "waitingIrt"; "xp"?: number | null; };
 
-export type TryoutReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "reviewStatus"?: "correct" | "partial" | "incorrect" | "unanswered" | null; "awardedPoints"?: number | null; "maximumPoints"?: number | null; "correctEquivalent"?: number | null; "optionReview"?: (ReviewOptionDto)[]; "statementReview"?: (ReviewStatementDto)[]; "correctOptionId": string | null; "explanation": string; };
+export type TryoutReviewedQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; "answerKey"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "reviewStatus"?: "correct" | "partial" | "incorrect" | "unanswered" | null; "awardedPoints"?: number | null; "maximumPoints"?: number | null; "correctEquivalent"?: number | null; "optionReview"?: (ReviewOptionDto)[]; "statementReview"?: (ReviewStatementDto)[]; "correctOptionId": string | null; "explanation": string; "richExplanation"?: RichContentDto; "fullyCorrect"?: boolean; };
 
-export type TryoutResultDto = { "resultMethod"?: "IRT" | "STANDARD" | null; "resultMethodReason"?: string | null; "xpDetail"?: AssessmentXpDetailDto | null; "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
+export type TryoutResultDto = { "resultMethod"?: "IRT" | "STANDARD" | null; "resultMethodReason"?: string | null; "xpDetail"?: AssessmentXpDetailDto | null; "xp"?: number | null; "xpPolicyVersion"?: number | null; "attemptId": string; "packageTitle": string; "score": number | null; "mode"?: "IRT" | "FALLBACK" | "UNSCORABLE" | "DEMO"; "publicationVersion"?: number | null; "correctCount": number; "questionCount": number; "explanation": (TryoutReviewedQuestionDto)[]; };
 
 export type DashboardClassDto = { "id": string; "name": string; "schoolName": string; };
 

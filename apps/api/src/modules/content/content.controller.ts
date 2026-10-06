@@ -1,3 +1,5 @@
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AdminAssessmentPoliciesDto } from './assessment-policies.dto';
 import {
   Body,
   Controller,
@@ -38,13 +40,22 @@ import {
   UpdateVideoDto,
 } from './content.dto';
 import { AdminTryoutDraftsDto, CreateTryoutDraftDto, UpdateTryoutDraftDto } from './content.dto';
+import { PublishTryoutPackageDto } from './content.dto';
 
 @ApiTags('admin-content')
 @ApiBearerAuth()
 @UseGuards(ContentAdminGuard)
 @Controller('admin/content')
 export class ContentController {
-  constructor(@Inject(ContentService) private readonly content: ContentService) {}
+  constructor(
+    @Inject(ContentService) private readonly content: ContentService,
+    @Inject(AssessmentPoliciesService) private readonly policies: AssessmentPoliciesService,
+  ) {}
+  @Get('assessment-policies')
+  @ApiOkResponse({ type: AdminAssessmentPoliciesDto })
+  assessmentPolicies() {
+    return this.policies.list();
+  }
   @Get('curriculum')
   @ApiOkResponse({ type: AdminCurriculumDto })
   curriculum() {
@@ -191,7 +202,12 @@ export class ContentController {
     return this.content.updatePackage(r.adminId, id, b);
   }
   @Post('tryout-packages/:id/publish')
-  publishPackage(@Param('id', ParseUUIDPipe) _id: string) {
-    return this.content.publishPackage();
+  @ApiCreatedResponse({ type: ContentMutationDto })
+  publishPackage(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PublishTryoutPackageDto,
+  ) {
+    return this.content.publishPackage(r.adminId, id, body);
   }
 }

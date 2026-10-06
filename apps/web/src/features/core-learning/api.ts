@@ -12,12 +12,18 @@ import type {
 } from './types';
 import type {
   StudentDashboardDto,
+  SavedAnswerDto,
+  MediaLinksDto,
   StudentQuestionReportDto,
   StudentVideoReportDto,
   StudentVideosDto,
   TryoutSubmitDto,
-  PretestAttemptDto, PretestChapterDto, PretestResultDto, PretestSavedAnswerDto,
-  TryoutPackagesDto, TryoutPackageDto,
+  PretestAttemptDto,
+  PretestChapterDto,
+  PretestResultDto,
+  PretestSavedAnswerDto,
+  TryoutPackagesDto,
+  TryoutPackageDto,
 } from './generated-types';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -66,19 +72,67 @@ export async function request<T>(token: string, path: string, init?: RequestInit
 }
 
 import type { AssessmentAnswer } from './assessment-answers';
-import type { SavedAnswerDto } from './generated-types';
 const id = encodeURIComponent;
 
 export const learningApi = {
-  pretestChapter: (token: string, chapterId: string) => request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}`),
-  startPretest: (token: string, chapterId: string) => request<PretestAttemptDto>(token, '/pretest/attempts', { method: 'POST', body: JSON.stringify({ chapterId }) }),
-  skipPretest: (token: string, chapterId: string) => request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}/skip`, { method: 'POST' }),
-  pretestAttempt: (token: string, attemptId: string) => request<PretestAttemptDto>(token, `/pretest/attempts/${id(attemptId)}`),
-  savePretestAnswer: (token: string, attemptId: string, questionId: string, answer: AssessmentAnswer, expectedRevision: number) => request<PretestSavedAnswerDto>(token, `/pretest/attempts/${id(attemptId)}/answers/${id(questionId)}`, { method: 'PATCH', body: JSON.stringify({ answer, expectedRevision }) }),
-  submitPretest: (token: string, attemptId: string) => request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/submit`, { method: 'POST' }),
-  pretestResult: (token: string, attemptId: string) => request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/result`),
-  tryoutPackages: (token: string, cursor?: string) => request<TryoutPackagesDto>(token, `/tryout/packages${cursor ? `?cursor=${id(cursor)}` : ''}`),
-  tryoutPackage: (token: string, packageId: string) => request<TryoutPackageDto>(token, `/tryout/packages/${id(packageId)}`),
+  pretestChapter: (token: string, chapterId: string) =>
+    request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}`),
+  startPretest: (token: string, chapterId: string) =>
+    request<PretestAttemptDto>(token, '/pretest/attempts', {
+      method: 'POST',
+      body: JSON.stringify({ chapterId }),
+    }),
+  skipPretest: (token: string, chapterId: string) =>
+    request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}/skip`, {
+      method: 'POST',
+    }),
+  pretestAttempt: (token: string, attemptId: string) =>
+    request<PretestAttemptDto>(token, `/pretest/attempts/${id(attemptId)}`),
+  savePretestAnswer: (
+    token: string,
+    attemptId: string,
+    questionId: string,
+    answer: AssessmentAnswer,
+    expectedRevision: number,
+  ) =>
+    request<PretestSavedAnswerDto>(
+      token,
+      `/pretest/attempts/${id(attemptId)}/answers/${id(questionId)}`,
+      { method: 'PATCH', body: JSON.stringify({ answer, expectedRevision }) },
+    ),
+  submitPretest: (token: string, attemptId: string) =>
+    request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/submit`, {
+      method: 'POST',
+    }),
+  pretestResult: (token: string, attemptId: string) =>
+    request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/result`),
+  tryoutPackages: (token: string, cursor?: string) =>
+    request<TryoutPackagesDto>(token, `/tryout/packages${cursor ? `?cursor=${id(cursor)}` : ''}`),
+  tryoutPackage: (token: string, packageId: string) =>
+    request<TryoutPackageDto>(token, `/tryout/packages/${id(packageId)}`),
+  saveContentAnswer: (
+    token: string,
+    attemptId: string,
+    questionInstanceId: string,
+    answer: SavedAnswerDto['answer'],
+    kind: 'drill' | 'tryout',
+  ) =>
+    request<SavedAnswerDto>(
+      token,
+      `${kind === 'drill' ? '/assessment-attempts' : '/tryout/attempts'}/${id(attemptId)}/answers/${id(questionInstanceId)}`,
+      { method: 'PATCH', body: JSON.stringify({ answer }) },
+    ),
+  media: (
+    token: string,
+    attemptId: string,
+    instanceId: string,
+    phase: 'WORK' | 'REVIEW',
+    assetIds: string[],
+  ) =>
+    request<MediaLinksDto>(token, `/assessment-attempts/${id(attemptId)}/media`, {
+      method: 'POST',
+      body: JSON.stringify({ instanceId, phase, assetIds }),
+    }),
   dashboard: (token: string) => request<StudentDashboardDto>(token, '/students/me/dashboard'),
   catalog: (token: string) => request<Catalog>(token, '/chapters'),
   chapter: (token: string, chapterId: string) =>

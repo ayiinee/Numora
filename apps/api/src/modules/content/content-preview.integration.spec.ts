@@ -200,6 +200,8 @@ describe.skipIf(!testUrl)(
       const paths = [
         'admin/content/curriculum',
         'admin/content/versions',
+        'admin/content/versions/00000000-0000-4000-8000-000000000001',
+        'admin/content/versions/00000000-0000-4000-8000-000000000001/review',
         'admin/content/drill-packages',
         'admin/content/media/uploads',
         'admin/content/import-validations',
@@ -211,6 +213,7 @@ describe.skipIf(!testUrl)(
           const method =
             path.endsWith('curriculum') ||
             path.endsWith('versions') ||
+            path.endsWith('00000000-0000-4000-8000-000000000001') ||
             path.endsWith('drill-packages')
               ? 'GET'
               : 'POST';
@@ -1030,6 +1033,129 @@ describe.skipIf(!testUrl)(
           await owner`SELECT count(*)::int AS n FROM question_versions WHERE content_status<>'DRAFT'`
         )[0]!.n,
       ).toBe(0);
+    });
+    it('reviews all rich types without scoring and preserves imported payload and preview snapshots', async () => {
+      await owner`UPDATE chapters SET status='READY'`;
+      await owner`UPDATE subchapters SET status='READY'`;
+      await owner`UPDATE competencies SET status='READY'`;
+      await owner`UPDATE levels SET status='READY'`;
+      const revised = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        body(
+          samples.map((q) => ({
+            ...q,
+            difficulty: 'EASY',
+            stem: { text: q.stem.text + ' TEST editorial revision' },
+          })),
+        ),
+        'admin',
+        randomUUID(),
+      );
+      for (const entry of revised.items) {
+        const id = entry.questionVersionId!;
+        const detail = await ok<import('./content-lifecycle.dto').ContentVersionDetailDto>(
+          `admin/content/versions/${id}`,
+        );
+        await ok(`admin/content/questions/${detail.questionId}/status`, 'PATCH', {
+          status: 'READY',
+        });
+        const decisions = await Promise.all([
+          request(`admin/content/versions/${id}/review`, 'POST', {
+            status: 'READY',
+            expectedStatus: 'DRAFT',
+            reason: 'TEST reviewed key/explanation/taxonomy',
+          }),
+          request(`admin/content/versions/${id}/review`, 'POST', {
+            status: 'REVISION',
+            expectedStatus: 'DRAFT',
+            reason: 'TEST concurrent decision',
+          }),
+        ]);
+        expect(
+          decisions.map((r) => r.status).sort(),
+          JSON.stringify(await Promise.all(decisions.map((r) => r.json()))),
+        ).toEqual([200, 409]);
+        const reviewed = await ok<import('./content-lifecycle.dto').ContentVersionDetailDto>(
+          `admin/content/versions/${id}`,
+        );
+        expect(reviewed.status).not.toBe('DRAFT');
+        if (reviewed.status === 'REVISION')
+          await ok(`admin/content/versions/${id}/review`, 'POST', {
+            status: 'READY',
+            expectedStatus: 'REVISION',
+            reason: 'TEST final review',
+          });
+        const ready = await ok<import('./content-lifecycle.dto').ContentVersionDetailDto>(
+          `admin/content/versions/${id}`,
+        );
+        expect(ready.readiness.canReviewReady).toBe(true);
+        if (ready.payload.type !== 'SINGLE_CHOICE')
+          expect(ready.readiness.publicationBlockers).toContain('APPROVED_PGK_RUBRIC_REQUIRED');
+        await expect(
+          owner`UPDATE question_versions SET stem='{}' WHERE id=${id}`,
+        ).rejects.toMatchObject({ code: '23514' });
+        await expect(owner`DELETE FROM question_versions WHERE id=${id}`).rejects.toMatchObject({
+          code: '23514',
+        });
+      }
+      const source = revised.items[0]!.questionVersionId!;
+      const q = {
+        ...samples[0]!,
+        difficulty: 'EASY',
+        stem: { text: samples[0]!.stem.text + ' TEST next editorial revision' },
+      };
+      const revision = {
+        ...body([q as ImportQuestion]),
+        expectedSourceVersionId: source,
+        revisionReason: 'TEST fix explanation',
+      };
+      const key = randomUUID();
+      const next = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        revision,
+        'admin',
+        key,
+      );
+      expect(
+        (await ok<ImportReportDto>('admin/content/imports', 'POST', revision, 'admin', key)).items,
+      ).toEqual(next.items);
+      expect(
+        (await request('admin/content/imports', 'POST', revision, 'admin', randomUUID())).status,
+      ).toBe(409);
+      expect(
+        (
+          await ok<import('./content-lifecycle.dto').ContentVersionDetailDto>(
+            `admin/content/versions/${next.items[0]!.questionVersionId}`,
+          )
+        ).revisedFromId,
+      ).toBe(source);
+      await ok(`admin/content/versions/${source}/review`, 'POST', {
+        status: 'ARCHIVED',
+        expectedStatus: 'READY',
+        reason: 'TEST superseded',
+      });
+      expect(
+        (
+          await request(
+            'admin/content/preview-sessions',
+            'POST',
+            { questionVersionIds: [source] },
+            'admin',
+            randomUUID(),
+          )
+        ).status,
+      ).toBe(409);
+      const historical = await ok<PreviewSessionDto>(
+        `admin/content/preview-sessions/${session.id}/result`,
+      );
+      expect(historical.items[0]!.stem.text).toBe(session.items[0]!.stem.text);
+      expect(
+        (
+          await owner`SELECT count(*)::int n FROM audit_logs WHERE action='content_review_decision'`
+        )[0]!.n,
+      ).toBeGreaterThanOrEqual(11);
     });
   },
 );

@@ -394,7 +394,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       rewards: {
         attempt_id: string;
         xp_amount: string | number;
-        base_xp: number;
+        base_xp: string | number;
         policy_version: number;
       }[];
     };
@@ -411,7 +411,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(persisted.rewards).toHaveLength(3);
     expect(new Set(persisted.rewards.map((r) => r.attempt_id)).size).toBe(3);
     const persistedReward = persisted.rewards.find((r) => r.attempt_id === attempt.id)!;
-    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(Number(persistedReward.base_xp)).toBe(80);
+    expect(persistedReward.policy_version).toBe(2);
     expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
     await expect(
@@ -1018,7 +1019,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
     await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
     await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
-    await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
+    await expect(admin.getByText(/Preview internal.*tanpa scoring/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
     for (let i = 0; i < 10; i++) {
       await expect(admin.getByText(new RegExp(`Soal ${i + 1}/10`))).toBeVisible();

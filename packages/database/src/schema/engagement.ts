@@ -77,7 +77,7 @@ export const xpLedger = pgTable(
     xpAmount: numeric('xp_amount', { precision: 14, scale: 6, mode: 'number' }).notNull(),
     policyCode: text('policy_code'),
     policyVersion: integer('policy_version'),
-    baseXp: integer('base_xp'),
+    baseXp: numeric('base_xp', { precision: 14, scale: 6, mode: 'number' }),
     bonusXp: numeric('bonus_xp', { precision: 18, scale: 12 }),
     durationSeconds: numeric('duration_seconds', { precision: 14, scale: 3 }),
     occurredAt: timestamp('occurred_at', { withTimezone: true }).notNull().defaultNow(),

@@ -1,17 +1,18 @@
 'use client';
 
-import { useMutation } from '@tanstack/react-query';
+import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
-import { MathText, Panel, PrimaryButton, Status } from './ui';
+import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { useAssessmentDeadline } from './use-assessment-deadline';
 import { LearningApiError } from './api';
 import { AssessmentHeader, SubmitConfirmation } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
 
-import type { SavedAnswerDto } from './generated-types';
+import { ContentRichText } from '@/components/content-rich-text';
+import type { SavedAnswerDto, PreviewMediaDto } from './generated-types';
 import {
   answerOf,
   answerFromChoice,
@@ -34,6 +35,7 @@ export function AssessmentSession({
   confirmMessage,
   onSave,
   onSaveTyped,
+  loadMedia,
   onSubmit,
   onSubmitted,
   deadlineAt,
@@ -51,6 +53,7 @@ export function AssessmentSession({
   confirmMessage: (emptyCount: number) => string;
   onSave?: (questionId: string, optionId: string | null) => Promise<SavedAnswer>;
   onSaveTyped?: (questionId: string, answer: AssessmentAnswer) => Promise<SavedAnswer>;
+  loadMedia?: (questionId: string, phase: 'WORK', assetIds: string[]) => Promise<PreviewMediaDto[]>;
   onSubmit: () => Promise<unknown>;
   onSubmitted: () => void;
   deadlineAt?: string | null | undefined;
@@ -114,6 +117,22 @@ export function AssessmentSession({
     emptyAnswer(answers[item.questionInstanceId] ?? null),
   ).length;
 
+  const assetIds = [
+    ...new Set(
+      [question?.stem ?? '', ...(question?.options.map((o) => o.text) ?? [])].flatMap((text) =>
+        [...text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g)].map((match) => match[1]!),
+      ),
+    ),
+  ];
+  const media = useQuery({
+    queryKey: ['assessment-work-media', question?.questionInstanceId, assetIds],
+    enabled: !!loadMedia && !!question && assetIds.length > 0,
+    queryFn: () => loadMedia!(question!.questionInstanceId, 'WORK', assetIds),
+    retry: false,
+  });
+  const renderContent = (text: string) => (
+    <ContentRichText text={text} media={media.data ?? []} retry={() => void media.refetch()} />
+  );
   async function choose(questionId: string, answer: AssessmentAnswer) {
     if (
       saveConflict ||
@@ -240,12 +259,13 @@ export function AssessmentSession({
                 <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
               </div>
               <h2 className="practice-stem">
-                <MathText value={question.stem} />
+                {renderContent(question.richStem?.text ?? question.stem)}
               </h2>
               <QuestionChoices
                 kind={question.type ?? 'SINGLE_CHOICE'}
                 name={`answer-${question.questionInstanceId}`}
                 options={question.options}
+                renderContent={renderContent}
                 value={choiceValue(answers[question.questionInstanceId] ?? null)}
                 statements={question.options}
                 categories={question.categories ?? []}
@@ -417,12 +437,13 @@ export function AssessmentSession({
       />
       <Panel className="assessment-question">
         <h2 className="text-lg font-bold">
-          <MathText value={question.stem} />
+          {renderContent(question.richStem?.text ?? question.stem)}
         </h2>
         <QuestionChoices
           kind={question.type ?? 'SINGLE_CHOICE'}
           name={`answer-${question.questionInstanceId}`}
           options={question.options}
+          renderContent={renderContent}
           statements={question.options}
           categories={question.categories ?? []}
           value={choiceValue(answers[question.questionInstanceId] ?? null)}

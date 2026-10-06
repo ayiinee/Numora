@@ -1,3 +1,31 @@
+# Current source — PRD v0.6 Final
+
+**PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
+
+Current rules: three fixed Admin subroles and action-level permissions; maximum five active classes; account-based progress/XP; leave/ban/takeover preserving history; active teacher may be absent. Pretest: 20 items, one completed attempt/chapter, optional/skip, placement 0–7 L1 / 8–18 L2 / 19–20 L3, zero XP. Drill: 10 items/level, five levels/subchapter, one MVP variant, >=80 unlock, irreversible unlock, latest stars (0 included), final base/time bonus formula. Tryout: 30 items, free ongoing batch Monday–Sunday WIB, one attempt/package, close-time auto-submit, immediate XP independent of IRT, immutable value/explanation within 72 hours. PvP: 10-minute waiting/invite, 20-second reconnect, Top 10 plus self leaderboard. Admin cannot ban students or edit product formulas.
+
+**ENGINEERING DECISION - approved Product clarifications in main PR #77, 5 October 2026:** Tryout XP uses ceil(equivalent-correct x10) at completion; Drill XP rounds the final total once to the nearest integer. Product weights are PG=2, MCMA=3 and Category=3. Drill partial credit contributes to mastery and equivalent-correct XP. New Drill explanation access has no expiry; legacy attempts retain their pins. Tryout XP fallback applies only when partial calculation is unavailable at submit, using fully-correct x10. Result fallback is separate and applies to the whole batch after 72 hours without a valid IRT result. See [Drill decisions](../development/DRILL_V06_REWARDS.md) and [Tryout decisions](../development/TRYOUT_XP_V06.md).
+
+**OPEN:** approved Curriculum bank/metadata/blueprints, exhaustive PGK rubric/full-correctness evidence and Drill score precision before stars; Data scientific configuration, respondent mapping/quality and ordinary-result fallback formula; Cloud/independent QA acceptance. The scoring handoff remains partially unapproved. No substitute scientific mapping or academic rubric is inferred.
+
+**ENGINEERING DECISION — user-approved 5 October plan:** full-stack Admin implementation, fixed role capabilities, invite by email, stage gates without a fixed date. Import preview stays unscored. Main now provides the Pretest Student lifecycle; academic blueprint/rubric approval remains a separate gate. Main PR #77 supplies membership/ownership lifecycle; Admin readers must integrate that implementation without taking over Teacher-only actions. See [Admin implementation and acceptance](../development/ADMIN_FULL_STACK_STATUS.md).
+
+**ENGINEERING UPDATE - M6:** request/pin/adoption UI, aggregate analytics, batch SLA and immutable participant readers now reuse the foundation models. Response snapshot v2 separates collection deadline from actual grading time and preserves historical v1 data. Production participant publication remains blocked by the approved versioned respondent producer/mapping/release handoff. See [implementation boundary](../api/ADMIN_IRT_ANALYTICS.md).
+
+## Current engineering mapping
+
+**PRD RULE — Admin permissions:** §3.2–3.3 grants Content limited school/class views and aggregate Student data, without operational management; ban/unban remains Teacher-only even for Super Admin. **ENGINEERING DECISION:** the [three-subrole API and portal matrix](../api/ADMIN_PERMISSION_MATRIX.md) implements credential status counts, scoped IRT diagnostics and masked non-Admin audit actors.
+
+| Domain            | v0.6 implementation target                                                              | Gate                                   |
+| ----------------- | --------------------------------------------------------------------------------------- | -------------------------------------- |
+| Admin permissions | Per-action server guard, limited structure DTO, scoped audit                            | Direct HTTP + browser matrix           |
+| Admin accounts    | Internal invite, fixed assignment/status, durable reconciliation, last-Super protection | Provider/DB failure + actual email     |
+| Operations        | Address, credential used_by, verified teacher, memberships/roster, limited view         | No individual data for Content         |
+| Content/media     | JSON rich formats, Draft/Ready/Revision/Archive, immutable lineage, R2 receipt          | Curriculum review + storage acceptance |
+| Assessment        | 10 Drill/20 Pretest/30 Tryout, approved pins, retry, batch close, XP                    | Rubric/precision approval + consumer   |
+| IRT/publication   | Existing requests, respondent contract, SLA, immutable release                          | Data pipeline/quality/mapping          |
+| Analytics         | Authorized aggregate queries over durable truth                                         | Unavailable metrics explicitly marked  |
+
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents across responsive widths while retaining interactive targets and server-provided ranking behavior. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).
 
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** remove the standalone `PvP DEMO` lobby card and obsolete synthetic-content copy. PvP remains connected to REST/WebSocket and the READY Drill bank; this UI change does not change server mode or historical records. [UI scope](../development/PVP_RANDOM_DRILL_BANK.md#qa-and-rollout).

@@ -2,7 +2,14 @@ import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApiProblem } from '@/lib/api';
 import { AdminOperationsScreen } from './operations';
-import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
+import {
+  getAdminClass,
+  getAdminUser,
+  getAdminMemberships,
+  getAdminRoster,
+  listAdminClasses,
+  listAdminUsers,
+} from './operations-api';
 
 const context = vi.hoisted(() => ({
   state: {} as Record<string, unknown>,
@@ -19,6 +26,8 @@ vi.mock('@/features/onboarding/auth', () => ({
 }));
 vi.mock('./operations-api', () => ({
   getAdminClass: vi.fn(),
+  getAdminMemberships: vi.fn(),
+  getAdminRoster: vi.fn(),
   getAdminUser: vi.fn(),
   listAdminClasses: vi.fn(),
   listAdminUsers: vi.fn(),
@@ -27,6 +36,9 @@ vi.mock('./operations-api', () => ({
 const user = {
   id: '00000000-0000-4000-8000-000000000001',
   displayName: 'Siswa TEST',
+  email: 'student@example.test',
+  affiliation: 'MANDIRI' as const,
+  teacherVerified: null,
   role: 'STUDENT' as const,
   status: 'ACTIVE' as const,
   createdAt: '2026-10-01T08:00:00.000Z',
@@ -38,20 +50,31 @@ const adminClass = {
   schoolName: 'Sekolah TEST',
   teacherId: '00000000-0000-4000-8000-000000000012',
   teacherName: 'Guru TEST',
+  teacherActive: true,
   studentCount: 3,
   createdAt: '2026-10-01T08:00:00.000Z',
   archivedAt: null,
 };
 
 beforeEach(() => {
+  window.history.replaceState(null, '', '/admin/operations');
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
-    profile: { id: 'admin-test', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
+    profile: {
+      id: 'admin-test',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS',
+      capabilities: ['OPERATIONS_MANAGE'],
+      status: 'ACTIVE',
+      displayName: 'Admin TEST',
+    },
     session: { access_token: 'test-token' },
   };
   vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5 });
   vi.mocked(getAdminUser).mockResolvedValue(user);
+  vi.mocked(getAdminMemberships).mockResolvedValue({ items: [], nextOffset: null });
+  vi.mocked(getAdminRoster).mockResolvedValue({ items: [], nextOffset: null });
   vi.mocked(listAdminClasses).mockResolvedValue({ items: [adminClass], nextOffset: null });
   vi.mocked(getAdminClass).mockResolvedValue(adminClass);
 });
@@ -59,6 +82,71 @@ beforeEach(() => {
 afterEach(cleanup);
 
 describe('Admin operations UI', () => {
+  it('opens class deep links without requesting users or losing the school filter', async () => {
+    window.history.replaceState(
+      null,
+      '',
+      `/admin/operations?view=classes&schoolId=${adminClass.schoolId}`,
+    );
+    render(<AdminOperationsScreen />);
+    await screen.findByText('Kelas IX-A TEST');
+    expect(listAdminUsers).not.toHaveBeenCalled();
+    expect(listAdminClasses).toHaveBeenCalledExactlyOnceWith('test-token', {
+      offset: 0,
+      search: '',
+      schoolId: adminClass.schoolId,
+      teacherId: '',
+      state: '',
+    });
+  });
+  it('honours teacher deep links and restores the tab on browser history changes', async () => {
+    window.history.replaceState(null, '', '/admin/operations?role=TEACHER');
+    render(<AdminOperationsScreen />);
+    await screen.findByText('Siswa TEST');
+    expect(listAdminUsers).toHaveBeenLastCalledWith(
+      'test-token',
+      expect.objectContaining({ role: 'TEACHER' }),
+    );
+    fireEvent.click(screen.getByRole('button', { name: 'Kelas' }));
+    await screen.findByText('Kelas IX-A TEST');
+    expect(new URLSearchParams(window.location.search).get('view')).toBe('classes');
+    window.history.replaceState(null, '', '/admin/operations?role=TEACHER');
+    fireEvent(window, new PopStateEvent('popstate'));
+    await screen.findByText('Siswa TEST');
+    expect(screen.queryByRole('heading', { name: 'Daftar kelas' })).toBeNull();
+  });
+  it.each([401, 403])(
+    'clears the whole workspace when membership rejects access with %s',
+    async (status) => {
+      vi.mocked(getAdminMemberships).mockRejectedValueOnce(
+        new ApiProblem(status, 'FORBIDDEN', 'Membership ditolak.'),
+      );
+      render(<AdminOperationsScreen />);
+      fireEvent.click(
+        within((await screen.findByText('Siswa TEST')).closest('li')!).getByRole('button', {
+          name: 'Lihat detail',
+        }),
+      );
+      await screen.findByText('Membership ditolak.');
+      expect(screen.queryByText(user.email)).toBeNull();
+      expect(screen.queryByRole('heading', { name: 'Daftar pengguna' })).toBeNull();
+    },
+  );
+  it.each([401, 403])('clears class detail when roster rejects access with %s', async (status) => {
+    vi.mocked(getAdminRoster).mockRejectedValueOnce(
+      new ApiProblem(status, 'FORBIDDEN', 'Roster ditolak.'),
+    );
+    window.history.replaceState(null, '', '/admin/operations?view=classes');
+    render(<AdminOperationsScreen />);
+    fireEvent.click(
+      within((await screen.findByText('Kelas IX-A TEST')).closest('li')!).getByRole('button', {
+        name: 'Lihat detail',
+      }),
+    );
+    await screen.findByText('Roster ditolak.');
+    expect(screen.queryByText(adminClass.id)).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Daftar kelas' })).toBeNull();
+  });
   it('filters users with the existing API contract and loads a minimal user detail', async () => {
     render(<AdminOperationsScreen />);
     await screen.findByText('Siswa TEST');
@@ -76,6 +164,8 @@ describe('Admin operations UI', () => {
         search: 'Guru TEST',
         role: 'TEACHER',
         status: 'DISABLED',
+        affiliation: '',
+        schoolId: '',
       }),
     );
 
@@ -83,7 +173,7 @@ describe('Admin operations UI', () => {
     fireEvent.click(within(row!).getByRole('button', { name: 'Lihat detail' }));
     await screen.findByText(user.id);
     expect(getAdminUser).toHaveBeenCalledWith('test-token', user.id);
-    expect(screen.queryByText(/@/)).toBeNull();
+    expect(screen.getByText('student@example.test')).toBeTruthy();
     expect(screen.queryByRole('button', { name: /ban|nonaktifkan|koreksi/i })).toBeNull();
   });
 
@@ -140,6 +230,8 @@ describe('Admin operations UI', () => {
         search: '',
         role: '',
         status: '',
+        affiliation: '',
+        schoolId: '',
       }),
     );
   });

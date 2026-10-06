@@ -308,6 +308,9 @@ function TryoutForm({
         confirmMessage={(emptyCount) =>
           `${emptyCount} soal belum dijawab. Kirim jawaban TryOut? Hasil baru tersedia setelah IRT.`
         }
+        loadMedia={async (questionId, phase, assetIds) =>
+          (await learningApi.media(token, attempt.id, questionId, phase, assetIds)).media
+        }
         onSaveTyped={(questionId, optionId) =>
           learningApi.saveTryoutAnswer(token, attempt.id, questionId, optionId)
         }

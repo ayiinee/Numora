@@ -24,6 +24,7 @@ import {
   contentImportVersions,
   assessmentPackages,
   packageItems,
+  scoringRubricVersions,
   getDatabase,
   type ImportQuestion,
 } from '@tka/database';
@@ -181,6 +182,31 @@ export class ContentImportService {
           .limit(1);
         if (!receipt) errors.push('MEDIA_RECEIPT_INVALID');
       }
+      if (q.metadata.scoringRubricVersionId !== undefined) {
+        const rubricId = q.metadata.scoringRubricVersionId;
+        if (
+          typeof rubricId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            rubricId,
+          )
+        )
+          errors.push('RUBRIC_ID_INVALID');
+        else {
+          const [rubric] = await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(eq(scoringRubricVersions.id, rubricId))
+            .for('share');
+          if (
+            !rubric ||
+            rubric.status !== 'SEALED' ||
+            !rubric.approvedAt ||
+            !rubric.approvedByUserId ||
+            rubric.questionType !== q.type
+          )
+            errors.push('APPROVED_PGK_RUBRIC_REQUIRED');
+        }
+      }
       const [identity] = await tx
         .select()
         .from(contentImportIdentities)
@@ -232,6 +258,9 @@ export class ContentImportService {
         competencyCode: q.competencyCode,
         sourceLevelNumber: q.metadata.sourceLevelNumber,
         difficulty: q.difficulty ?? null,
+        ...(q.metadata.scoringRubricVersionId
+          ? { scoringRubricVersionId: q.metadata.scoringRubricVersionId }
+          : {}),
       });
       records.push({
         q,
@@ -410,6 +439,14 @@ export class ContentImportService {
           { code: 'MEDIA_NOT_READY', detail: 'Verifikasi seluruh gambar sebelum menyimpan paket.' },
           422,
         );
+      if (
+        body.expectedSourceVersionId &&
+        (records.length !== 1 || records[0]?.latest?.version.id !== body.expectedSourceVersionId)
+      )
+        throw new ConflictException({
+          code: 'CONTENT_REVISION_CONFLICT',
+          detail: 'Reload the latest imported version before revising.',
+        });
       if (!report.canImportDraft)
         throw new HttpException(
           { code: 'IMPORT_VALIDATION_FAILED', detail: 'Import rejected atomically.', report },
@@ -483,6 +520,10 @@ export class ContentImportService {
             media: data.assets,
             difficulty: r.q.difficulty ?? null,
             levelId: r.level!.id,
+            scoringRubricVersionId:
+              typeof r.q.metadata.scoringRubricVersionId === 'string'
+                ? r.q.metadata.scoringRubricVersionId
+                : null,
             contentStatus: 'DRAFT',
             validationState: 'DRAFT',
             revisedFromQuestionVersionId: r.latest?.version!.id,
@@ -517,16 +558,14 @@ export class ContentImportService {
           .map((item, index) => ({ item, order: records[index]!.q.metadata.sourceOrder! }))
           .sort((a, b) => a.order - b.order);
         await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
-        await tx
-          .insert(packageItems)
-          .values(
-            ordered.map(({ item }, index) => ({
-              packageId: target.id,
-              questionVersionId: item.questionVersionId!,
-              displayOrder: index + 1,
-              maxPoints: '1',
-            })),
-          );
+        await tx.insert(packageItems).values(
+          ordered.map(({ item }, index) => ({
+            packageId: target.id,
+            questionVersionId: item.questionVersionId!,
+            displayOrder: index + 1,
+            maxPoints: '1',
+          })),
+        );
         await tx
           .update(assessmentPackages)
           .set({ contentRevision: target.contentRevision + 1 })
@@ -545,6 +584,9 @@ export class ContentImportService {
           packageId: target?.id ?? null,
           usageType: target?.assessmentType ?? null,
           fileName: body.target?.fileName ?? null,
+          ...(body.expectedSourceVersionId
+            ? { revisedFromId: body.expectedSourceVersionId, reason: body.revisionReason }
+            : {}),
         },
       });
       return report;

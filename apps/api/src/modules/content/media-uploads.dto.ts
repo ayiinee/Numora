@@ -48,6 +48,7 @@ export class MediaUploadReservationDto extends MediaUploadReceiptDto {
   })
   uploadUrl!: string | null;
   @ApiProperty({ type: String, nullable: true, enum: ['PUT'] }) method!: 'PUT' | null;
-  @ApiProperty({ type: Object, nullable: true }) headers!: Record<string, string> | null;
+  @ApiProperty({ type: 'object', additionalProperties: { type: 'string' }, nullable: true })
+  headers!: Record<string, string> | null;
   @ApiProperty({ format: 'date-time' }) expiresAt!: string;
 }

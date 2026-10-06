@@ -1,3 +1,6 @@
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import { ContentLifecycleService } from './content-lifecycle.service';
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { desc, eq } from 'drizzle-orm';
@@ -41,7 +44,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     } finally {
       await db
         .update(questions)
-        .set({ curriculumLevelNumber: null })
+        .set({ curriculumLevelNumber: 1 })
         .where(eq(questions.id, row!.questionId));
     }
   });
@@ -135,7 +138,9 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         packageItemId: packageItem!.id,
         questionVersionId: packageItem!.questionVersionId,
         displayOrder: 1,
-        maxPoints: '1',
+        maxPoints: packageItem!.maxPoints,
+        rubricVersionId: packageItem!.rubricVersionId,
+        maximumScoreCategory: packageItem!.maximumScoreCategory,
       })
       .returning();
     const [source] = await db
@@ -295,7 +300,10 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         status: 'PUBLISHED',
       })
       .returning();
-    const service = new DrillPackagesService();
+    const service = new DrillPackagesService(
+      new AssessmentPoliciesService(),
+      new AssessmentReadinessService(new ContentLifecycleService()),
+    );
     const draft = await service.create(fixture.admin, {
       ...fixture.body,
       familyCode: `POLICY-${fixture.suffix}`,
@@ -309,29 +317,25 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         .where(eq(questionVersions.id, fixture.versionIds[0]!))
     )[0]!.optionsOrStatements;
     const copy = await copyVersion(fixture.versionIds[0]!, {
-      optionsOrStatements: (options as unknown[]).slice(0, 2),
+      optionsOrStatements: [(options as unknown[])[0], (options as unknown[])[0]],
     });
-    try {
-      const invalid = await service.create(fixture.admin, {
-        ...fixture.body,
-        familyCode: `OPTIONS-${fixture.suffix}`,
-        questionVersionIds: fixture.versionIds.map((id) =>
-          id === fixture.versionIds[0] ? copy.id : id,
-        ),
-      });
-      await expect(service.publish(fixture.admin, invalid.id)).rejects.toMatchObject({
-        status: 409,
-      });
-    } finally {
-      await db
-        .update(questionVersions)
-        .set({ optionsOrStatements: options })
-        .where(eq(questionVersions.id, copy.id));
-    }
+    const invalid = await service.create(fixture.admin, {
+      ...fixture.body,
+      familyCode: `OPTIONS-${fixture.suffix}`,
+      questionVersionIds: fixture.versionIds.map((id) =>
+        id === fixture.versionIds[0] ? copy.id : id,
+      ),
+    });
+    await expect(service.publish(fixture.admin, invalid.id)).rejects.toMatchObject({
+      status: 409,
+    });
   });
   it('rejects incomplete, unready and malformed content; rolls back audit failures', async () => {
     const { admin, body, suffix, versionIds } = fixture;
-    const service = new DrillPackagesService();
+    const service = new DrillPackagesService(
+      new AssessmentPoliciesService(),
+      new AssessmentReadinessService(new ContentLifecycleService()),
+    );
     const incomplete = await service.create(admin, {
       ...body,
       familyCode: `SHORT-${suffix}`,

@@ -113,11 +113,20 @@ export const assessmentBlueprintVersions = pgTable(
     definition: jsonb('definition').notNull(),
     digest: text('digest').notNull(),
     status: configurationState('status').notNull().default('DRAFT'),
+    approvedByUserId: uuid('approved_by_user_id').references(() => users.id, {
+      onDelete: 'restrict',
+    }),
+    approvedAt: timestamp('approved_at', { withTimezone: true }),
+    approvalReference: text('approval_reference'),
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (t) => [
     uniqueIndex('assessment_blueprint_versions_code_version_uq').on(t.code, t.version),
     check('assessment_blueprint_versions_version_ck', sql`${t.version} > 0`),
+    check(
+      'assessment_blueprint_versions_approval_ck',
+      sql`(${t.approvedByUserId} is null and ${t.approvedAt} is null and ${t.approvalReference} is null) or (${t.approvedByUserId} is not null and ${t.approvedAt} is not null and ${t.approvalReference} is not null and length(trim(${t.approvalReference})) > 0)`,
+    ),
   ],
 ).enableRLS();
 
