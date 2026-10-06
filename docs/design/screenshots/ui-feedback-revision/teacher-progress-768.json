@@ -1,0 +1,87 @@
+{
+  "width": 768,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "teacher-sidebar",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": "0px",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "className": "teacher-header",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 80,
+      "radius": "0px",
+      "background": "rgb(0, 72, 186)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-student-identity",
+      "x": 24,
+      "y": 242,
+      "width": 468,
+      "height": 155.96875,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-latest-score",
+      "x": 504,
+      "y": 242,
+      "width": 240,
+      "height": 155.96875,
+      "radius": "16px",
+      "background": "rgb(224, 232, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   level-card teacher-level-card",
+      "x": 24,
+      "y": 473.15625,
+      "width": 352,
+      "height": 249.265625,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   level-card teacher-level-card",
+      "x": 392,
+      "y": 473.15625,
+      "width": 352,
+      "height": 249.265625,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   level-card teacher-level-card",
+      "x": 24,
+      "y": 738.421875,
+      "width": 352,
+      "height": 274.859375,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   level-card teacher-level-card",
+      "x": 392,
+      "y": 738.421875,
+      "width": 352,
+      "height": 274.859375,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-bottom-nav teacher-bottom-nav",
+      "x": 0,
+      "y": 836,
+      "width": 768,
+      "height": 64,
+      "radius": "0px",
+      "background": "rgb(255, 255, 255)"
+    }
+  ]
+}

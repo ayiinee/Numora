@@ -505,7 +505,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       fullPage: true,
     });
     expect(mutations).toEqual([]);
-    await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Pretest belum tersedia' })).toHaveCount(0);
+    await expect(page.locator('.home-feature-grid > a')).toHaveCount(3);
+    await expect(page.locator('.student-identity__affiliation')).toHaveCount(0);
     await expect(
       page.getByRole('link', { name: 'Lanjutkan latihan', exact: true }),
     ).toHaveAttribute('href', `/student/drill/${attemptId}`);
@@ -1710,6 +1712,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       selectedOptionId: index === 5 ? null : 'A',
     }));
     const answerKeys = new Map(questions.map((q) => [q.questionInstanceId, q.selectedOptionId]));
+    let resultStars: number | null = null;
     let submits = 0;
     await page.route('http://localhost:3301/api/v1/subchapters/**', (route) =>
       route.fulfill({
@@ -1750,7 +1753,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             correctCount: 9,
             questionCount: 10,
             mastered: true,
-            stars: null,
+            stars: resultStars,
             unlockedLevelId: subchapterId,
             isDemo: false,
             explanationState: 'available',
@@ -1846,6 +1849,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       page.locator('.adventure-focus').getByRole('heading', { name: 'Bentuk Kuadrat Sempurna' }),
     ).toBeVisible();
     expect(await page.locator('.level-path__step--locked button').count()).toBe(0);
+    await expect(page.locator('.adventure-summary')).not.toContainText('80');
+    await expect(page.locator('.adventure-shortcuts')).toHaveCount(0);
+    await expect(page.locator('.adventure-focus')).toContainText('≥80');
     await capture('level-map');
     await page.goto(`/student/drill/${attemptId}`);
     await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();
@@ -1868,7 +1874,16 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
     await expect(page.getByText('Soal 3 dari 10', { exact: true }).first()).toBeVisible();
     await expect(page.getByRole('region', { name: 'Rekomendasi video' })).toHaveCount(0);
+    await expect(page.locator('.result-stars')).toHaveCount(0);
     await capture('result');
+    // Explicit server fixture; no star formula is inferred from the score.
+    resultStars = 3;
+    await page.reload();
+    await expect(page.getByText('Bintang: 3', { exact: true })).toBeVisible();
+    await expect(page.locator('.result-stars svg')).toHaveCount(3);
+    await expect(page.locator('.result-stars svg').first()).toHaveCSS('width', '40px');
+    await expect(page.locator('.result-stars svg').first()).toHaveCSS('height', '40px');
+    await capture('result-stars');
   });
 }
 

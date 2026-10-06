@@ -2,24 +2,12 @@
 
 import { useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useSearchParams } from 'next/navigation';
-import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Avatar,
-  Badge,
-  Button,
-  Card,
-  EmptyState,
-  Icon,
-  SectionHeader,
-  Select,
-  Textarea,
-} from '@tka/ui';
+import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Textarea } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
-import { ApiProblem } from '@/lib/api';
+import { ApiProblem, getTeacherStudentProgress } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
-import { useTeacherClassContext } from './teacher-data';
 import { TeacherAnnouncement } from './teacher-ui';
 import { getTeacherFeedback, sendTeacherFeedback } from './teacher-feedback-api';
 
@@ -28,18 +16,17 @@ const formatter = new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
   timeStyle: 'short',
 });
-export function TeacherFeedbackScreen() {
-  const params = useSearchParams();
+export function TeacherFeedbackScreen({
+  classId,
+  studentId,
+}: {
+  classId: string;
+  studentId: string;
+}) {
   return (
     <TeacherGate>
       {(token, name) => (
-        <Feedback
-          key={`${params.get('classId') ?? ''}/${params.get('studentId') ?? ''}`}
-          token={token}
-          teacherName={name}
-          initialClassId={params.get('classId') ?? ''}
-          initialStudentId={params.get('studentId') ?? ''}
-        />
+        <Feedback token={token} teacherName={name} classId={classId} studentId={studentId} />
       )}
     </TeacherGate>
   );
@@ -47,121 +34,43 @@ export function TeacherFeedbackScreen() {
 function Feedback({
   token,
   teacherName,
-  initialClassId,
-  initialStudentId,
+  classId,
+  studentId,
 }: {
   token: string;
   teacherName: string;
-  initialClassId: string;
-  initialStudentId: string;
+  classId: string;
+  studentId: string;
 }) {
-  const context = useTeacherClassContext(token, initialClassId);
-  const [selectedId, setSelectedId] = useState(initialStudentId);
-  const [sendingFeedback, setSendingFeedback] = useState(false);
-  const studentId = selectedId || context.roster.data?.items[0]?.id || '';
-  const student = context.roster.isSuccess
-    ? context.roster.data.items.find((value) => value.id === studentId)
-    : undefined;
+  const progress = useQuery({
+    queryKey: ['student-progress', classId, studentId],
+    queryFn: () => getTeacherStudentProgress(token, classId, studentId),
+  });
   return (
     <TeacherShell
       title="Feedback siswa"
-      description="Berikan arahan belajar melalui catatan pribadi."
+      description={progress.data?.class.name}
       teacherName={teacherName}
+      backHref={`/teacher/classes/${classId}/students/${studentId}`}
     >
       <div className="teacher-page-stack">
         <TeacherAnnouncement>
-          Feedback berupa catatan teks satu arah. Siswa dapat membaca catatan Anda; status baca
-          tampil pada riwayat.
+          Feedback berupa catatan teks satu arah untuk siswa yang dipilih.
         </TeacherAnnouncement>
-        {context.classes.isPending || context.classes.isError ? (
+        {progress.isPending || progress.isError ? (
           <DataState
-            pending={context.classes.isPending}
-            error={context.classes.error}
-            retry={() => void context.classes.refetch()}
+            pending={progress.isPending}
+            error={progress.error}
+            retry={() => void progress.refetch()}
           />
-        ) : !context.classes.data.items.length ? (
-          <Card>
-            <EmptyState
-              icon={<Icon name="users" />}
-              title="Belum ada kelas"
-              description="Buat kelas dan undang siswa untuk mengirim feedback."
-            />
-            <Link className="button-link" href="/teacher">
-              Buka kelas saya
-            </Link>
-          </Card>
         ) : (
-          <>
-            <Card className="teacher-recipient-picker">
-              <Select
-                label="Pilih kelas"
-                disabled={sendingFeedback}
-                value={context.classId}
-                onChange={(event) => {
-                  context.setSelection(event.target.value);
-                  setSelectedId('');
-                }}
-                options={context.classes.data.items.map((value) => ({
-                  value: value.id,
-                  label: value.name,
-                }))}
-              />
-              {context.roster.isSuccess && context.roster.data.items.length > 0 && (
-                <Select
-                  label="Penerima feedback"
-                  disabled={sendingFeedback}
-                  value={studentId}
-                  onChange={(event) => setSelectedId(event.target.value)}
-                  options={context.roster.data.items.map((value) => ({
-                    value: value.id,
-                    label: value.displayName,
-                  }))}
-                />
-              )}
-            </Card>
-            {context.invalidError ? (
-              <DataState
-                pending={false}
-                error={context.invalidError}
-                retry={() => context.setSelection('')}
-              />
-            ) : context.roster.isPending || context.roster.isError ? (
-              <DataState
-                pending={context.roster.isPending}
-                error={context.roster.error}
-                retry={() => void context.roster.refetch()}
-              />
-            ) : !context.roster.data.items.length ? (
-              <Card>
-                <EmptyState
-                  icon={<Icon name="users" />}
-                  title="Belum ada siswa"
-                  description="Siswa yang bergabung akan tersedia sebagai penerima feedback."
-                />
-              </Card>
-            ) : !student ? (
-              <DataState
-                pending={false}
-                error={
-                  new ApiProblem(
-                    404,
-                    'STUDENT_NOT_FOUND',
-                    'Penerima tidak tersedia dalam kelas ini.',
-                  )
-                }
-                retry={() => setSelectedId('')}
-              />
-            ) : (
-              <FeedbackWorkspace
-                key={`${context.classId}/${studentId}`}
-                token={token}
-                classId={context.classId}
-                studentId={studentId}
-                studentName={student.displayName}
-                onSendingChange={setSendingFeedback}
-              />
-            )}
-          </>
+          <FeedbackWorkspace
+            key={`${classId}/${studentId}`}
+            token={token}
+            classId={classId}
+            studentId={studentId}
+            studentName={progress.data.student.displayName}
+          />
         )}
       </div>
     </TeacherShell>
@@ -173,13 +82,11 @@ export function FeedbackWorkspace({
   classId,
   studentId,
   studentName,
-  onSendingChange,
 }: {
   token: string;
   classId: string;
   studentId: string;
   studentName: string;
-  onSendingChange?: (busy: boolean) => void;
 }) {
   const cache = useQueryClient();
   const [body, setBody] = useState('');
@@ -188,7 +95,6 @@ export function FeedbackWorkspace({
   const request = useRef<{ body: string; id: string } | null>(null);
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState('');
-  const [filter, setFilter] = useState('all');
   const history = useInfiniteQuery({
     queryKey: ['teacher-feedback', classId, studentId],
     initialPageParam: 0,
@@ -204,15 +110,11 @@ export function FeedbackWorkspace({
       (history.data?.pages.flatMap((page) => page.items) ?? []).map((item) => [item.id, item]),
     ).values(),
   ];
-  const filtered = entries.filter(
-    (item) => filter === 'all' || (filter === 'read' ? item.readAt !== null : item.readAt === null),
-  );
   async function send(event: FormEvent) {
     event.preventDefault();
     const message = body.trim();
     if (sending.current || !message || message.length > 1000) return;
     sending.current = true;
-    onSendingChange?.(true);
     setBusy(true);
     setError(null);
     setSuccess('');
@@ -232,7 +134,6 @@ export function FeedbackWorkspace({
       setError(err);
     } finally {
       sending.current = false;
-      onSendingChange?.(false);
       setBusy(false);
     }
   }
@@ -302,20 +203,9 @@ export function FeedbackWorkspace({
       <section className="teacher-feedback-history">
         <SectionHeader title="Riwayat feedback" subtitle={`Untuk ${studentName}`} />
         <Card>
-          <Select
-            label="Status baca"
-            value={filter}
-            onChange={(event) => setFilter(event.target.value)}
-            options={[
-              { value: 'all', label: 'Semua catatan' },
-              { value: 'unread', label: 'Belum dibaca' },
-              { value: 'read', label: 'Sudah dibaca' },
-            ]}
-          />
           <p className="teacher-help-text">
             {entries.length} catatan dimuat
-            {history.hasNextPage ? ' · masih ada riwayat sebelumnya' : ''}. Filter berlaku pada
-            catatan yang dimuat.
+            {history.hasNextPage ? ' · masih ada riwayat sebelumnya' : ''}.
           </p>
         </Card>
         {history.isPending || (history.isError && !history.data) ? (
@@ -326,30 +216,21 @@ export function FeedbackWorkspace({
           />
         ) : (
           <>
-            {filtered.map((item) => (
+            {entries.map((item) => (
               <Card className="teacher-feedback-entry" key={item.id}>
                 <div className="teacher-feedback-entry__header">
                   <strong>{item.teacherName}</strong>
-                  <Badge variant={item.readAt ? 'success' : 'default'}>
-                    <Icon name={item.readAt ? 'check' : 'clock'} width={14} height={14} />
-                    {item.readAt ? 'Sudah dibaca' : 'Belum dibaca'}
-                  </Badge>
                 </div>
                 <p>{item.body}</p>
                 <time dateTime={item.sentAt}>{formatter.format(new Date(item.sentAt))} WIB</time>
-                {item.readAt && <small>Dibaca {formatter.format(new Date(item.readAt))} WIB</small>}
               </Card>
             ))}
-            {!filtered.length && (
+            {!entries.length && (
               <Card>
                 <EmptyState
                   icon={<Icon name="chat" />}
-                  title={entries.length ? 'Tidak ada catatan sesuai filter' : 'Belum ada feedback'}
-                  description={
-                    entries.length
-                      ? 'Ubah filter atau muat riwayat sebelumnya.'
-                      : 'Kirim catatan pertama untuk mendampingi siswa ini.'
-                  }
+                  title="Belum ada feedback"
+                  description="Kirim catatan pertama untuk mendampingi siswa ini."
                 />
               </Card>
             )}

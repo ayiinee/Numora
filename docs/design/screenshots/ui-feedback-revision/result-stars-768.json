@@ -1,0 +1,14 @@
+{
+  "overflow": false,
+  "width": 768,
+  "cards": [
+    {
+      "className": "numora-card numora-card--default   drill-review",
+      "x": 16,
+      "y": 624.265625,
+      "width": 736,
+      "height": 624.78125,
+      "radius": "20px"
+    }
+  ]
+}

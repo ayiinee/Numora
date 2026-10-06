@@ -87,14 +87,15 @@ it('paginates within the selected student and labels loaded counts rather than a
   mount('student-2');
   await screen.findByText('Catatan 0');
   expect(screen.getByText(/20 catatan dimuat/)).toBeTruthy();
-  fireEvent.change(screen.getByLabelText('Status baca'), { target: { value: 'unread' } });
-  expect(screen.queryByText('Catatan 0')).toBeNull();
+  expect(screen.queryByLabelText('Status baca')).toBeNull();
+  expect(screen.queryByText('Sudah dibaca')).toBeNull();
+  expect(screen.queryByText('Belum dibaca')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Muat riwayat sebelumnya' }));
   await screen.findByText(/21 catatan dimuat/);
   expect(getTeacherFeedback).toHaveBeenLastCalledWith('teacher-test', 'class-1', 'student-2', 20);
   expect(screen.queryByRole('button', { name: 'Muat riwayat sebelumnya' })).toBeNull();
-  fireEvent.change(screen.getByLabelText('Status baca'), { target: { value: 'read' } });
   expect(screen.getByText('Catatan 20')).toBeTruthy();
+  expect(screen.getByText('Catatan 0')).toBeTruthy();
 });
 
 it('hides cached recipient history and composer after the session becomes unauthorized', async () => {

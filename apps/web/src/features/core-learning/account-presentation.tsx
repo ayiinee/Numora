@@ -99,7 +99,7 @@ export function ProfileIdentity({
         {data ? (
           <>
             <div>
-              <strong>Progres Drill</strong>
+              <strong>Progres level Drill</strong>
               <span>
                 {data.completedLevels} / {data.availableLevels} level
               </span>

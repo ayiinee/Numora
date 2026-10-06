@@ -95,7 +95,6 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
                   </Link>
                   <div>
                     <Link href={`/teacher/classes/${cls.id}/invite`}>Undang siswa</Link>
-                    <Link href={`/teacher/classes/${cls.id}/settings`}>Pengaturan</Link>
                   </div>
                 </div>
               ))
@@ -116,34 +115,9 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
                 style={{ padding: 0, cursor: 'inherit' }}
               />
             </Link>
-            <Link className="teacher-quick-link" href="/teacher/monitoring">
-              <Icon name="chart" />
-              <span>
-                <strong>Monitoring akademik</strong>
-                <small>Progres siswa di kelas Anda</small>
-              </span>
-              <Icon name="chevron" />
-            </Link>
-            <Link className="teacher-quick-link" href="/teacher/feedback">
-              <Icon name="chat" />
-              <span>
-                <strong>Feedback siswa</strong>
-                <small>Kirim dan lihat catatan belajar</small>
-              </span>
-              <Icon name="chevron" />
-            </Link>
-            <Link className="teacher-quick-link" href="/teacher/notifications">
-              <Icon name="bell" />
-              <span>
-                <strong>Pusat Notifikasi</strong>
-                <small>Notifikasi guru belum tersedia</small>
-              </span>
-              <Icon name="chevron" />
-            </Link>
           </Card>
           <TeacherAnnouncement>
-            Perubahan profil dan preferensi notifikasi belum tersedia. Informasi akun mengikuti akun
-            yang Anda gunakan untuk masuk.
+            Informasi akun mengikuti akun yang Anda gunakan untuk masuk.
           </TeacherAnnouncement>
           {error && (
             <p role="alert" className="form-error">

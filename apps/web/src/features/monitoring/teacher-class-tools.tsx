@@ -1,11 +1,10 @@
 'use client';
 
 import { useEffect, useState } from 'react';
-import Link from 'next/link';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Button, Card, Icon, ListRow, SectionHeader } from '@tka/ui';
+import { Button, Card, Icon, SectionHeader } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { getClassStudents, getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
@@ -96,8 +95,8 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
               <li>Setelah bergabung, siswa tampil dalam daftar anggota kelas.</li>
             </ol>
             <TeacherAnnouncement>
-              Siswa hanya dapat bergabung dalam satu kelas. Gunakan kode kelas; QR ini bukan tautan
-              otomatis untuk bergabung.
+              Siswa dapat bergabung dalam maksimal lima kelas aktif. Gunakan kode kelas; QR ini
+              bukan tautan otomatis untuk bergabung.
             </TeacherAnnouncement>
           </Card>
         </>
@@ -111,18 +110,10 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
   );
 }
 
-export function TeacherClassToolsScreen({
-  classId,
-  mode,
-}: {
-  classId: string;
-  mode: 'invite' | 'settings';
-}) {
+export function TeacherClassToolsScreen({ classId }: { classId: string }) {
   return (
     <TeacherGate>
-      {(token, name) => (
-        <ClassTools token={token} teacherName={name} classId={classId} mode={mode} />
-      )}
+      {(token, name) => <ClassTools token={token} teacherName={name} classId={classId} />}
     </TeacherGate>
   );
 }
@@ -130,12 +121,10 @@ function ClassTools({
   token,
   teacherName,
   classId,
-  mode,
 }: {
   token: string;
   teacherName: string;
   classId: string;
-  mode: 'invite' | 'settings';
 }) {
   const classes = useQuery({
     queryKey: ['teacher-classes'],
@@ -148,16 +137,12 @@ function ClassTools({
   const cls = classes.data?.items.find((value) => value.id === classId);
   return (
     <TeacherShell
-      title={mode === 'invite' ? 'Undang siswa' : 'Pengaturan kelas'}
+      title="Undang siswa"
       description={roster.data?.class.name}
       teacherName={teacherName}
       backHref={`/teacher/classes/${classId}`}
     >
       <div className="teacher-tools-page">
-        <Link className="back-link" href={`/teacher/classes/${classId}`}>
-          <Icon name="back" />
-          Kembali ke detail kelas
-        </Link>
         {classes.isPending || classes.isError || roster.isPending || roster.isError ? (
           <DataState
             pending={classes.isPending || roster.isPending}
@@ -167,38 +152,8 @@ function ClassTools({
               void roster.refetch();
             }}
           />
-        ) : mode === 'invite' ? (
-          <TeacherInviteContent name={roster.data.class.name} code={cls?.joinCode} />
         ) : (
-          <>
-            <Card>
-              <SectionHeader title="Informasi kelas" />
-              <ListRow
-                wrapText
-                title={roster.data.class.name}
-                description="Nama kelas"
-                leading={<Icon name="users" />}
-              />
-              <ListRow
-                wrapText
-                title={cls?.joinCode ?? 'Belum tersedia'}
-                description="Kode kelas"
-                leading={<Icon name="clipboard" />}
-              />
-              <ListRow
-                title={`${roster.data.items.length} siswa`}
-                description="Anggota aktif"
-                leading={<Icon name="graduation" />}
-              />
-              <Badge variant="primary">Informasi hanya baca</Badge>
-            </Card>
-            <TeacherAnnouncement>
-              Pengubahan nama, pengarsipan kelas, dan pengaturan keanggotaan belum tersedia.
-            </TeacherAnnouncement>
-            <Link className="button-link" href={`/teacher/classes/${classId}/invite`}>
-              Bagikan kode kelas <Icon name="arrow" />
-            </Link>
-          </>
+          <TeacherInviteContent name={roster.data.class.name} code={cls?.joinCode} />
         )}
       </div>
     </TeacherShell>

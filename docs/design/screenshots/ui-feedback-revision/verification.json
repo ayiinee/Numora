@@ -1,0 +1,943 @@
+{
+  "date": "2026-10-05",
+  "webUnitTests": {
+    "files": 23,
+    "passed": 153
+  },
+  "e2eDistinctCasesPassed": 153,
+  "e2eByEnvironment": {
+    "production": 129,
+    "development": 24
+  },
+  "rootChecks": {
+    "lint": "passed",
+    "typecheck": "passed",
+    "build": "passed",
+    "diffCheck": "passed"
+  },
+  "scope": "Synthetic frontend/API/WebSocket fixture QA; no connected backend/database or academic-policy approval",
+  "resolvedRuns": [
+    "Production excludes the development-only Admin preview; its development rerun passed.",
+    "Teacher loading assertion follows the approved removal of the welcome card; the complete final Teacher rerun passed."
+  ],
+  "cases": [
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 320px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 360px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 390px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 393px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 430px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 768px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 1024px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 1280px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Student profile and feedback at 1440px preserve explicit read and responsive layout",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "feedback failure, pagination retry and refresh preserve messages without false read success",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "account.spec.ts",
+      "title": "Mandiri join failure preserves input; successful join refreshes identity; logout guards the inbox",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 320px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 360px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 390px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 393px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 430px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 768px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 1024px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 1280px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin schools and all workbench panels at 1440px keep server data and navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "School lifecycle preserves input, code case, one-time token and inactive eligibility",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin list/token errors, empty schools and expired access provide recovery",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Workbench retry, denied access, empty panels and page boundaries retain domain states",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Admin loading, pinned Tryout edits, report follow-up and logout remain explicit",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 320px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 360px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 390px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 393px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 430px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 768px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 1024px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 1280px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Auth visual states at 1440px keep Google identity and keyboard role selection",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Google login launches the existing PKCE authorize URL and origin callback",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "PKCE callback exchanges once, persists a session, and recovers an expired code",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "STUDENT onboarding retries registration, sends only role, and follows server destination",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "TEACHER onboarding retries registration, sends only role, and follows server destination",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "identity retry, disabled account logout, and expired session retain recovery",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "loading and long Google identity reflow without overflow at narrow width",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Existing STUDENT default identity leaves login for /student",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Existing TEACHER default identity leaves login for /teacher/verification-required",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Existing TEACHER verified identity leaves login for /teacher",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "Existing ADMIN default identity leaves login for /admin/schools",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "auth.spec.ts",
+      "title": "onboarding identity errors retry without exposing role choices prematurely",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 320px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 360px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 390px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 393px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 430px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 768px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 1024px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 1280px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials and notifications visual/interaction verification 1440px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "notification failures preserve explicit read state and hide cached data when the session expires",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "materials shows empty published content without manufacturing locked chapters",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "materials-notifications.spec.ts",
+      "title": "notification invitation retry preserves its request identifier and refreshes the actual status",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 320px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 360px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 390px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 393px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 430px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 768px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 1024px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 1280px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "pvp.spec.ts",
+      "title": "PvP visual evidence at 1440px preserves ready, lock and server outcome",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 320px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 360px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 390px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 393px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 430px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 768px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 1024px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 1280px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home visual composition at 1440px preserves query and navigation boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 320px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 360px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 390px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 393px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 430px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 768px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 1024px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 1280px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "student routes at 1440px use real-data boundaries and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "home loading and independent Tryout errors preserve learning and pending class policy",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Mandiri Tryout starts and resumes without a class, then waits for released results",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "history keeps zero/context, hides pending links and retries pagination without losing records",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "join class FIX234 refreshes eligibility, and removed demo routes return 404",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "join class QA_LEGACY-CLASS refreshes eligibility, and removed demo routes return 404",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Mandiri keeps learning and global PvP access while class ranking stays restricted",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "invalid class code does not change Mandiri affiliation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "joined class affiliation persists after signing out and back in",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher class monitoring at 390px keeps zero scores and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Admin school/token workflow at 390px retains operational forms",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher class monitoring at 1440px keeps zero scores and accessible navigation",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Admin school/token workflow at 1440px retains operational forms",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher profile owns logout and signed-out Teacher routes stay protected",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Student cannot open Teacher profile",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher sees distinct latest and best Drill scores but no foreign Class progress",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "signed-out login offers Google authentication without removed demo destinations",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Drill result retry uses its server level and navigates to a new server attempt",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "failed Drill save warns before refresh and can recover without claiming Saved prematurely",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "TEST ONLY TryOut with 35 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher verification accepts short token without changing capitalization",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher verification accepts legacy token without changing capitalization",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Teacher stays on verification while refreshed identity is pending",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Admin PR40 package lifecycle, report resolution and IRT release state at 390px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Admin PR40 package lifecycle, report resolution and IRT release state at 1440px",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "STUDENT cannot enter /teacher",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "TEACHER cannot enter /student",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "TEACHER unverified cannot enter /admin/schools",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "ADMIN cannot enter /student",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 320px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 360px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 390px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 393px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 430px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 768px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 1024px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 1280px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "learning visual evidence at 1440px preserves mastery and saved-answer boundaries",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 320px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 360px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 390px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 393px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 430px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 768px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 1024px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 1280px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "student.spec.ts",
+      "title": "Tryout visual evidence at 1440px keeps package eligibility and released results separate",
+      "environment": "production",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 320px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 360px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 375px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 390px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 393px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 430px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 768px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 834px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 1024px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 1280px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 1366px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 1440px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification, class, student and profile at 1920px",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher failed verification and school loading remain retryable without opening classes",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher create error, empty classes and students retain recovery and no fake data",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher denied class and expired session never expose student scores",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher verification handles empty schools, expired token session and disabled identity",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher long identity, reduced motion and narrow content keep navigation accessible",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher viewport transition switches navigation without overlapping sidebar and bottom bar",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher desktop invite dialog traps focus, copies the actual code, downloads QR and restores focus",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher feedback retries delivery with the same UUID, paginates and isolates recipient histories",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Legacy Teacher routes and contextual feedback preserve ownership and expired-session states",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "admin.spec.ts",
+      "title": "Development preview remains local and QA login remains gated for the fixture project",
+      "environment": "development",
+      "status": "passed"
+    },
+    {
+      "file": "teacher.spec.ts",
+      "title": "Teacher class loading does not fabricate cards before the server responds",
+      "environment": "development",
+      "status": "passed"
+    }
+  ]
+}

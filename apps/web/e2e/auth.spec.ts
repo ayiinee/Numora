@@ -293,7 +293,7 @@ for (const role of ['STUDENT', 'TEACHER'] as const) {
           .getByRole('link', { name: 'Buka profil siswa' })
           .getByText('User Mandiri', { exact: true }),
       ).toBeVisible();
-      await expect(page.getByRole('link', { name: /Drill Bab/ })).toBeVisible();
+      await expect(page.getByRole('link', { name: /Latihan Soal/ })).toBeVisible();
     } else await expect(page.getByRole('combobox', { name: 'Sekolah', exact: true })).toBeVisible();
     expect(errors).toEqual([]);
   });

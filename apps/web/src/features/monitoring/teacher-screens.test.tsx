@@ -180,7 +180,7 @@ it('withholds total students when one class roster fails and recovers without a 
     };
   });
   render(<TeacherDashboardScreen />);
-  const label = await screen.findByText('Total siswa');
+  const label = await screen.findByText('Siswa di kelas Anda');
   await screen.findByRole('button', { name: 'Muat ulang jumlah siswa' }, { timeout: 4000 });
   expect(label.parentElement?.querySelector('strong')?.textContent).toBe('—');
   failed = false;

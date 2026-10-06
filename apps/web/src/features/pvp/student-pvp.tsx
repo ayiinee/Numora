@@ -202,7 +202,7 @@ export function PvpScreen() {
                     label: (
                       <>
                         <Icon name="users" width={16} height={16} />
-                        Gabung via Kode / QR
+                        Gabung via Kode
                       </>
                     ),
                     content: (

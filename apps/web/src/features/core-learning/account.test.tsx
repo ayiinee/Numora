@@ -219,7 +219,7 @@ describe('Student account and feedback', () => {
     expect(screen.getByLabelText(/Kode kelas/)).toBeTruthy();
     expect(
       screen
-        .getAllByRole('link', { name: /Catatan Guru/ })
+        .getAllByRole('link', { name: /Feedback dari Guru/ })
         .every((link) => link.getAttribute('href') === '/student/feedback'),
     ).toBe(true);
   });

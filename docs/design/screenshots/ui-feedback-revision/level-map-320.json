@@ -1,0 +1,22 @@
+{
+  "overflow": false,
+  "width": 320,
+  "cards": [
+    {
+      "className": "numora-card numora-card--default   adventure-summary",
+      "x": 16,
+      "y": 208,
+      "width": 288,
+      "height": 173.59375,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default  numora-card--full adventure-focus",
+      "x": 16,
+      "y": 1046.84375,
+      "width": 288,
+      "height": 243.390625,
+      "radius": "20px"
+    }
+  ]
+}

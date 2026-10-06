@@ -25,12 +25,7 @@ import {
   getTeacherStudentProgress,
   ApiProblem,
 } from '@/lib/api';
-import {
-  MonitoredLevelCard,
-  TeacherClassCard,
-  TeacherStudentRow,
-  TeacherWelcome,
-} from './teacher-presentation';
+import { MonitoredLevelCard, TeacherClassCard, TeacherStudentRow } from './teacher-presentation';
 import { useTeacherRosterCounts } from './teacher-data';
 import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
 import { TeacherInviteContent } from './teacher-class-tools';
@@ -81,10 +76,6 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       teacherName={teacherName}
     >
       <div className="teacher-dashboard-layout">
-        <TeacherWelcome
-          name={teacherName}
-          count={query.isSuccess ? query.data.items.length : undefined}
-        />
         <TeacherAnnouncement>
           Bagikan kode kelas untuk mengajak siswa bergabung. Progres dan hasil latihan mereka dapat
           Anda pantau dari ruang guru.
@@ -97,22 +88,16 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             detail="Kelas yang Anda dampingi"
           />
           <TeacherMetric
-            label="Total siswa"
+            label="Siswa di kelas Anda"
             value={counts.total ?? '—'}
             icon="graduation"
             detail={
               counts.error
                 ? 'Jumlah belum dapat dimuat'
                 : counts.complete
-                  ? 'Anggota aktif seluruh kelas'
+                  ? 'Anggota aktif kelas yang Anda dampingi'
                   : 'Menunggu daftar anggota'
             }
-          />
-          <TeacherMetric
-            label="Status guru"
-            value="Terverifikasi"
-            icon="school"
-            detail="Akses ruang guru aktif"
           />
         </div>
         {counts.error && (
@@ -215,25 +200,6 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             </Card>
           )}
         </section>
-        <Card className="teacher-dashboard-context">
-          <SectionHeader title="Akses cepat" />
-          <Link className="teacher-quick-link" href="/teacher/monitoring">
-            <Icon name="chart" />
-            <span>
-              <strong>Monitoring progres</strong>
-              <small>Lihat hasil Drill siswa per kelas.</small>
-            </span>
-            <Icon name="chevron" />
-          </Link>
-          <Link className="teacher-quick-link" href="/teacher/feedback">
-            <Icon name="chat" />
-            <span>
-              <strong>Kirim feedback</strong>
-              <small>Berikan catatan belajar untuk siswa.</small>
-            </span>
-            <Icon name="chevron" />
-          </Link>
-        </Card>
       </div>
     </TeacherShell>
   );
@@ -277,10 +243,6 @@ function ClassStudentsContent({
       backHref="/teacher"
     >
       <div className="teacher-page-stack">
-        <Link className="back-link" href="/teacher">
-          <Icon name="back" />
-          Kembali ke kelas saya
-        </Link>
         {query.isSuccess && (
           <>
             <Card className="teacher-class-overview">
@@ -312,17 +274,6 @@ function ClassStudentsContent({
               >
                 <Icon name="users" />
                 Undang siswa
-              </Link>
-              <Link
-                className="button-link secondary"
-                href={`/teacher/monitoring?classId=${classId}`}
-              >
-                <Icon name="chart" />
-                Monitoring kelas
-              </Link>
-              <Link className="button-link secondary" href={`/teacher/classes/${classId}/settings`}>
-                <Icon name="settings" />
-                Pengaturan kelas
               </Link>
             </div>
             <TeacherAnnouncement>
@@ -454,10 +405,6 @@ function StudentProgressContent({
       backHref={`/teacher/classes/${classId}`}
     >
       <div className="teacher-page-stack">
-        <Link className="back-link" href={`/teacher/classes/${classId}`}>
-          <Icon name="back" />
-          Kembali ke daftar siswa
-        </Link>
         {query.isPending || query.isError ? (
           <DataState
             pending={query.isPending}
@@ -473,13 +420,6 @@ function StudentProgressContent({
               >
                 <Icon name="chat" />
                 Kirim feedback untuk siswa
-              </Link>
-              <Link
-                className="button-link secondary"
-                href={`/teacher/monitoring?classId=${classId}`}
-              >
-                <Icon name="chart" />
-                Monitoring kelas
               </Link>
             </div>
             <div className="teacher-progress-summary">

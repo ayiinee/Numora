@@ -2158,19 +2158,6 @@ a.settings-row:hover {
   background: var(--color-selected) !important;
   color: var(--color-primary-strong) !important;
 }
-.student-identity__affiliation {
-  position: absolute;
-  bottom: -1px;
-  left: 50%;
-  transform: translateX(-50%);
-  background: var(--numora-gold);
-  color: var(--color-text-strong);
-  border-radius: 8px;
-  padding: 0 5px;
-  font-size: 8px;
-  font-weight: 800;
-  line-height: 14px;
-}
 .student-identity__name {
   display: flex;
   flex-direction: column;
@@ -2379,12 +2366,11 @@ a.settings-row:hover {
 }
 .home-feature-grid {
   display: grid;
-  grid-template-columns: repeat(4, minmax(0, 1fr));
-  gap: 8px;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  gap: var(--space-3);
   text-align: center;
 }
-.home-feature-grid > a,
-.home-feature-grid > button {
+.home-feature-grid > a {
   display: flex;
   flex-direction: column;
   align-items: center;
@@ -2395,10 +2381,6 @@ a.settings-row:hover {
   color: var(--color-text);
   padding: 0;
   font: inherit;
-}
-.home-feature-grid > button:disabled {
-  opacity: 1;
-  cursor: not-allowed;
 }
 .home-feature-grid strong {
   font-size: 12px;
@@ -2430,32 +2412,25 @@ a.settings-row:hover {
   line-height: 1.5;
   font-weight: 800;
 }
-.home-feature-icon--0 {
+.home-feature-icon--book {
   color: var(--color-primary);
   background: var(--color-selected);
 }
-.home-feature-icon--0 > span {
+.home-feature-icon--book > span {
   background: var(--color-primary);
 }
-.home-feature-icon--1 {
-  color: var(--numora-peach-800);
-  background: var(--numora-peach-200);
-}
-.home-feature-icon--1 > span {
-  background: var(--numora-peach-800);
-}
-.home-feature-icon--2 {
+.home-feature-icon--clipboard {
   color: var(--numora-gold-900);
   background: var(--numora-gold);
 }
-.home-feature-icon--2 > span {
+.home-feature-icon--clipboard > span {
   background: var(--color-success-text);
 }
-.home-feature-icon--3 {
+.home-feature-icon--gamepad {
   color: var(--color-success-text);
   background: var(--color-feature-mint);
 }
-.home-feature-icon--3 > span {
+.home-feature-icon--gamepad > span {
   background: var(--color-success-text);
 }
 .home-activity-list {
@@ -3063,22 +3038,6 @@ a.settings-row:hover {
 }
 .adventure-summary__labels strong {
   color: var(--color-success-text);
-}
-.adventure-shortcuts {
-  display: grid;
-  grid-template-columns: repeat(3, 1fr);
-  gap: 4px;
-}
-.adventure-shortcuts a {
-  display: flex;
-  align-items: center;
-  justify-content: center;
-  gap: 8px;
-  border-radius: 14px;
-  background: white;
-  min-height: 44px;
-  font-size: 12px;
-  padding: 6px;
 }
 .adventure-layout {
   display: grid;
@@ -3777,7 +3736,12 @@ a.settings-row:hover {
   line-height: 1.6;
 }
 .drill-result-summary .result-stars {
-  margin: 8px auto;
+  margin: var(--space-3) auto;
+  gap: var(--space-2);
+}
+.drill-result-summary .result-stars svg {
+  width: 40px;
+  height: 40px;
 }
 .drill-rewards h2 {
   display: flex;
@@ -4060,7 +4024,6 @@ a.settings-row:hover {
 }
 .practice-actions button:focus-visible,
 .level-path button:focus-visible,
-.adventure-shortcuts a:focus-visible,
 .practice-profile:focus-visible,
 .practice-exit:focus-visible {
   outline: 3px solid var(--color-primary);
@@ -5395,9 +5358,14 @@ a.settings-row:hover {
 }
 .pvp-rules li {
   display: flex;
+  min-width: 0;
   gap: 10px;
   font-size: 12px;
   line-height: 1.6;
+}
+.pvp-rules li span {
+  min-width: 0;
+  overflow-wrap: anywhere;
 }
 .pvp-rules li svg {
   flex-shrink: 0;
@@ -6220,31 +6188,16 @@ a.settings-row:hover {
     display: contents;
   }
   .pvp-ranking-podium {
-    order: 1;
+    order: 0;
   }
   .pvp-ranking-list {
-    order: 3;
+    order: 1;
   }
   .pvp-own-rank {
-    order: 0;
+    order: 2;
   }
   .pvp-ranking-period {
-    order: 4;
-  }
-  .pvp-ranking-shell--medium .pvp-ranking-podium {
-    order: 0;
-  }
-  .pvp-ranking-shell--medium .pvp-own-rank {
-    order: 1;
-  }
-  .pvp-ranking-shell--hard .pvp-ranking-period {
-    order: 0;
-  }
-  .pvp-ranking-shell--hard .pvp-ranking-podium {
-    order: 1;
-  }
-  .pvp-ranking-shell--hard .pvp-own-rank {
-    order: 2;
+    order: 3;
   }
 }
 /* Compact podium geometry specific to PvP, without changing Home's class podium. */

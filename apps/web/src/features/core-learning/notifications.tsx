@@ -36,7 +36,10 @@ const icons: Record<string, IconName> = {
 function destination(action: NotificationActionDto): { href: string; label: string } | null {
   if (!action.enabled) return null;
   if (action.type === 'feedback' && action.feedbackId)
-    return { href: `/student/feedback#feedback-${action.feedbackId}`, label: 'Buka Catatan Guru' };
+    return {
+      href: `/student/feedback#feedback-${action.feedbackId}`,
+      label: 'Buka Feedback dari Guru',
+    };
   if (action.type === 'tryout') return { href: '/student/tryout', label: 'Buka Paket Tryout' };
   if (action.type === 'result' && action.attemptId)
     return { href: `/student/tryout/${action.attemptId}/result`, label: 'Lihat Hasil Tryout' };
@@ -291,7 +294,7 @@ export function NotificationsScreen() {
               <Icon name="info" width={18} /> Pemberitahuan otomatis diarsipkan setelah 30 hari.
             </p>
             <Link href="/student/feedback">
-              Lihat semua Catatan Guru <Icon name="arrow" width={16} />
+              Lihat semua Feedback dari Guru <Icon name="arrow" width={16} />
             </Link>
           </aside>
         </div>

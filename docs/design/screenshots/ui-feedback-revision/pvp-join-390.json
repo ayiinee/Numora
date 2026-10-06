@@ -1,0 +1,46 @@
+{
+  "width": 390,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "pvp-hero",
+      "x": 16,
+      "y": 161.5,
+      "width": 358,
+      "height": 164.875,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-lobby-podium",
+      "x": 16,
+      "y": 402.375,
+      "width": 358,
+      "height": 259.390625,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-join-card",
+      "x": 16,
+      "y": 741.765625,
+      "width": 358,
+      "height": 219.8125,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-rules",
+      "x": 16,
+      "y": 977.578125,
+      "width": 358,
+      "height": 389.4375,
+      "radius": "20px"
+    },
+    {
+      "className": "numora-card numora-card--default   pvp-invitations",
+      "x": 16,
+      "y": 1383.015625,
+      "width": 358,
+      "height": 78.1875,
+      "radius": "20px"
+    }
+  ]
+}

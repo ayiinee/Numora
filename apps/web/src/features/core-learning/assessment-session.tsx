@@ -144,7 +144,8 @@ export function AssessmentSession({
         }
       }
     } catch (error) {
-      if (error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT') setSaveConflict(true);
+      if (error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT')
+        setSaveConflict(true);
       setSaveError(error instanceof Error ? error.message : 'Jawaban belum tersimpan.');
     } finally {
       saving.current = false;
@@ -176,11 +177,21 @@ export function AssessmentSession({
     return (
       <div className="practice-session">
         <AssessmentHeader
-          title={sessionKind === 'pretest' ? 'Sesi Pretest Bab' : sessionKind === 'tryout' ? 'Sesi Tryout TKA' : 'Sesi Latihan Soal'}
+          title={
+            sessionKind === 'pretest'
+              ? 'Sesi Pretest Bab'
+              : sessionKind === 'tryout'
+                ? 'Sesi Tryout'
+                : 'Sesi Latihan Soal'
+          }
           exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}
           status={
             <span role="status">
-              {saveError ? 'Belum tersimpan' : save.isPending || unsaved ? 'Menyimpan…' : 'Tersimpan'}
+              {saveError
+                ? 'Belum tersimpan'
+                : save.isPending || unsaved
+                  ? 'Menyimpan…'
+                  : 'Tersimpan'}
             </span>
           }
           timer={
@@ -276,7 +287,12 @@ export function AssessmentSession({
                   disabled={save.isPending || submit.isPending || submit.isSuccess}
                   onClick={() => {
                     if (saveConflict) {
-                      if (window.confirm('Muat jawaban terbaru dari server? Perubahan lokal yang belum tersimpan akan diganti.')) onReload?.();
+                      if (
+                        window.confirm(
+                          'Muat jawaban terbaru dari server? Perubahan lokal yang belum tersimpan akan diganti.',
+                        )
+                      )
+                        onReload?.();
                     } else if (unsaved) void choose(unsaved.questionId, unsaved.answer);
                   }}
                 >
@@ -349,7 +365,11 @@ export function AssessmentSession({
         <SubmitConfirmation
           open={confirmationOpen && !submit.isSuccess && !deadline.expired}
           title={
-            sessionKind === 'pretest' ? 'Kumpulkan Pretest Sekarang?' : sessionKind === 'tryout' ? 'Kumpulkan Tryout Sekarang?' : 'Kumpulkan Latihan Sekarang?'
+            sessionKind === 'pretest'
+              ? 'Kumpulkan Pretest Sekarang?'
+              : sessionKind === 'tryout'
+                ? 'Kumpulkan Tryout Sekarang?'
+                : 'Kumpulkan Latihan Sekarang?'
           }
           onClose={() => setConfirmationOpen(false)}
           onConfirm={() => {

@@ -4,33 +4,6 @@ import { Avatar, Badge, Brand, Card, Icon } from '@tka/ui';
 import type { ClassSummaryDto, MonitoredLevelDto } from '@/lib/generated-api-types';
 
 // Presentation only: authorization, queries, scores and mutations remain in controllers.
-export function TeacherWelcome({ name, count }: { name: string; count: number | undefined }) {
-  return (
-    <Card className="teacher-identity-card">
-      <div className="teacher-identity-status">
-        <Badge variant="success">
-          <Icon name="school" width={16} height={16} /> Guru terverifikasi
-        </Badge>
-      </div>
-      <div className="teacher-identity-person">
-        <div>
-          <span className="teacher-kicker">Ruang guru NUMORA</span>
-          <h2>Selamat datang, {name}</h2>
-          <p>Dampingi setiap langkah belajar siswa.</p>
-        </div>
-      </div>
-      <div className="teacher-identity-foot">
-        <Icon name="users" width={18} height={18} />
-        <span>
-          {count === undefined
-            ? 'Buka kelas untuk melihat perkembangan siswa.'
-            : `${count} kelas yang Anda dampingi`}
-        </span>
-      </div>
-    </Card>
-  );
-}
-
 export function TeacherClassCard({
   value,
   index,

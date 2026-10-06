@@ -1,0 +1,33 @@
+{
+  "width": 1440,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "teacher-sidebar",
+      "x": 0,
+      "y": 0,
+      "width": 288,
+      "height": 900,
+      "radius": "0px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "teacher-header",
+      "x": 288,
+      "y": 0,
+      "width": 1152,
+      "height": 64,
+      "radius": "0px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-bottom-nav teacher-bottom-nav",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": "0px",
+      "background": "rgb(255, 255, 255)"
+    }
+  ]
+}

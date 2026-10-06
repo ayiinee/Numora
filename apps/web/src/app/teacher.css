@@ -887,7 +887,6 @@
   :where(
     .teacher-announcement,
     .teacher-metrics,
-    .teacher-monitoring-layout,
     .teacher-feedback-layout,
     .teacher-tools-page,
     .teacher-invite-content
@@ -1131,114 +1130,20 @@
   background: var(--teacher-selected);
   color: white;
 }
-.teacher-redesign-shell .teacher-monitoring-layout,
 .teacher-redesign-shell .teacher-feedback-layout {
   display: grid;
   gap: 24px;
   align-items: start;
 }
-.teacher-redesign-shell .teacher-monitoring-students,
-.teacher-redesign-shell .teacher-feedback-history,
-.teacher-redesign-shell .teacher-curriculum {
+.teacher-redesign-shell .teacher-feedback-history {
   display: grid;
   gap: 16px;
   min-width: 0;
 }
-.teacher-redesign-shell .teacher-progress-roster {
-  --card-padding: 0 16px;
-}
-.teacher-redesign-shell .teacher-progress-row {
+.teacher-redesign-shell .teacher-tools-page {
+  max-width: 800px;
   display: grid;
-  gap: 16px;
-  padding: 20px 0;
-  border-bottom: 1px solid var(--color-border-light);
-}
-.teacher-redesign-shell .teacher-progress-row:last-child {
-  border-bottom: 0;
-}
-.teacher-redesign-shell .teacher-progress-row__identity {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-width: 0;
-}
-.teacher-redesign-shell .teacher-progress-row__identity > div {
-  display: grid;
-  gap: 6px;
-  min-width: 0;
-}
-.teacher-redesign-shell .teacher-progress-row__identity a {
-  font-weight: 700;
-  overflow-wrap: anywhere;
-}
-.teacher-redesign-shell .teacher-progress-row__scores {
-  display: grid;
-  grid-template-columns: 1fr 1fr;
-  gap: 16px;
-  background: var(--color-secondary-light);
-  border-radius: 12px;
-  padding: 12px;
-}
-.teacher-redesign-shell .teacher-progress-row__scores dt {
-  font-size: 11px;
-  color: var(--color-text-light);
-}
-.teacher-redesign-shell .teacher-progress-row__scores dd {
-  font-size: 22px;
-  font-weight: 800;
-  color: var(--color-primary);
-  margin: 4px 0 0;
-}
-.teacher-redesign-shell .teacher-progress-row__actions {
-  display: flex;
-  justify-content: space-between;
-  flex-wrap: wrap;
-  gap: 12px;
-}
-.teacher-redesign-shell .teacher-progress-row__actions a {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 700;
-  min-height: 44px;
-}
-.teacher-redesign-shell .teacher-chapter summary {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  min-height: 44px;
-  cursor: pointer;
-}
-.teacher-redesign-shell .teacher-chapter summary strong {
-  flex: 1;
-}
-.teacher-redesign-shell .teacher-chapter summary > svg {
-  color: var(--color-primary);
-  flex-shrink: 0;
-}
-.teacher-redesign-shell .teacher-chapter dl {
-  display: grid;
-  gap: 12px;
-  margin-top: 16px;
-}
-.teacher-redesign-shell .teacher-chapter dl > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-}
-.teacher-redesign-shell .teacher-chapter dd {
-  font-weight: 800;
-  margin: 0;
-  color: var(--color-primary);
-}
-.teacher-redesign-shell .teacher-chapter p {
-  color: var(--color-text-light);
-  font-size: 11px;
-  margin-top: 16px;
-  line-height: 1.6;
+  gap: 20px;
 }
 .teacher-redesign-shell .teacher-unavailable {
   max-width: 760px;
@@ -1247,11 +1152,6 @@
   gap: 16px;
   text-align: center;
   --card-padding: 32px 20px;
-}
-.teacher-redesign-shell .teacher-tools-page {
-  max-width: 800px;
-  display: grid;
-  gap: 20px;
 }
 .teacher-redesign-shell .teacher-invite-content {
   display: grid;
@@ -1459,19 +1359,13 @@
   .teacher-redesign-shell .teacher-dashboard-metrics {
     grid-template-columns: 1fr 1fr;
   }
-  .teacher-redesign-shell .teacher-dashboard-metrics > :last-child {
-    grid-column: 1 / -1;
-  }
   .teacher-redesign-shell .teacher-dashboard-metrics .teacher-metric {
     flex-direction: column;
-  }
-  .teacher-redesign-shell .teacher-dashboard-metrics > :last-child {
-    flex-direction: row;
   }
 }
 @media (min-width: 700px) {
   .teacher-redesign-shell .teacher-metrics {
-    grid-template-columns: repeat(3, minmax(0, 1fr));
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .teacher-redesign-shell .teacher-metric {
     flex-direction: column;
@@ -1536,13 +1430,10 @@
   }
   .teacher-redesign-shell .teacher-dashboard-layout .teacher-classes-section {
     grid-column: 1;
-    grid-row: 4 / span 3;
   }
   .teacher-redesign-shell .teacher-dashboard-layout .teacher-create-card {
     grid-column: 2;
-  }
-  .teacher-redesign-shell .teacher-dashboard-context {
-    grid-column: 2;
+    order: 1;
   }
   .teacher-redesign-shell .teacher-feedback-layout {
     grid-template-columns: minmax(0, 0.9fr) minmax(0, 1.1fr);
@@ -1553,9 +1444,6 @@
   }
 }
 @media (min-width: 1200px) {
-  .teacher-redesign-shell .teacher-monitoring-layout {
-    grid-template-columns: minmax(0, 1fr) 280px;
-  }
   .teacher-redesign-shell .teacher-metric {
     flex-direction: row;
   }
@@ -1633,4 +1521,12 @@
   .teacher-redesign-shell .teacher-roster-table td:last-child {
     padding-left: 20px;
   }
+}
+
+/* Approved feedback revision: disclosure arrows indicate expandable content. */
+.teacher-create-details > summary > svg:last-child {
+  transform: rotate(90deg);
+}
+.teacher-create-details[open] > summary > svg:last-child {
+  transform: rotate(270deg);
 }

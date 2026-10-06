@@ -1,0 +1,78 @@
+{
+  "width": 768,
+  "overflow": false,
+  "bounds": [
+    {
+      "className": "teacher-sidebar",
+      "x": 0,
+      "y": 0,
+      "width": 0,
+      "height": 0,
+      "radius": "0px",
+      "background": "rgba(0, 0, 0, 0)"
+    },
+    {
+      "className": "teacher-header",
+      "x": 0,
+      "y": 0,
+      "width": 768,
+      "height": 80,
+      "radius": "0px",
+      "background": "rgb(0, 72, 186)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-create-card",
+      "x": 24,
+      "y": 470.5625,
+      "width": 720,
+      "height": 80,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-class-card",
+      "x": 24,
+      "y": 732.75,
+      "width": 352,
+      "height": 252.578125,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-class-card",
+      "x": 392,
+      "y": 732.75,
+      "width": 352,
+      "height": 252.578125,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-class-card",
+      "x": 24,
+      "y": 1001.328125,
+      "width": 352,
+      "height": 277.765625,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-card numora-card--default   teacher-class-card",
+      "x": 392,
+      "y": 1001.328125,
+      "width": 352,
+      "height": 277.765625,
+      "radius": "16px",
+      "background": "rgb(255, 255, 255)"
+    },
+    {
+      "className": "numora-bottom-nav teacher-bottom-nav",
+      "x": 0,
+      "y": 836,
+      "width": 768,
+      "height": 64,
+      "radius": "0px",
+      "background": "rgb(255, 255, 255)"
+    }
+  ]
+}

@@ -34,13 +34,18 @@ export function StudentIdentityHeader({
         >
           <span className="student-identity__avatar">
             <Avatar name={data.displayName} {...(avatarUrl ? { src: avatarUrl } : {})} />
-            <span className="student-identity__affiliation">
-              {data.affiliation === 'SCHOOL' ? 'SEKOLAH' : 'MANDIRI'}
-            </span>
           </span>
           <span className="student-identity__name">
             <strong>{data.displayName}</strong>
-            <small>{data.class?.schoolName ?? 'User Mandiri'}</small>
+            <small>
+              <span>{data.affiliation === 'SCHOOL' ? 'User Sekolah' : 'User Mandiri'}</span>
+              {data.class?.schoolName && (
+                <>
+                  {' · '}
+                  <span>{data.class.schoolName}</span>
+                </>
+              )}
+            </small>
           </span>
         </Link>
         <div className="student-identity__actions">
@@ -69,7 +74,7 @@ export function StudentIdentityHeader({
       </div>
       <div className="student-identity__progress">
         <div>
-          <strong>Progres Drill</strong>
+          <strong>Progres level Drill</strong>
           <span>
             {data.completedLevels} / {data.availableLevels} level
           </span>
@@ -168,16 +173,15 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
     subtitle: string;
     icon: IconName;
     badge: string;
-    href?: string;
+    href: string;
   }[] = [
     {
-      title: 'Drill Bab',
+      title: 'Latihan Soal',
       subtitle: 'Adaptif',
       icon: 'book',
       badge: data.availableLevels ? `${data.availableLevels} Lvl` : 'Latihan',
       href: '/student/learn',
     },
-    { title: 'Pretest', subtitle: data.features.pretest ? 'Kenali level awal' : 'Belum tersedia', icon: 'rocket', badge: data.features.pretest ? 'Opsional' : 'Segera', ...(data.features.pretest ? { href: '/student/learn' } : {}) },
     {
       title: 'Tryout',
       subtitle: 'Simulasi TKA',
@@ -199,10 +203,10 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
         Fitur Belajar <Icon name="info" width={14} height={14} />
       </h2>
       <div className="home-feature-grid">
-        {features.map((item, index) => {
+        {features.map((item) => {
           const content = (
             <>
-              <span className={`home-feature-icon home-feature-icon--${index}`}>
+              <span className={`home-feature-icon home-feature-icon--${item.icon}`}>
                 <Icon name={item.icon} width={28} height={28} />
                 <span>{item.badge}</span>
               </span>
@@ -210,14 +214,10 @@ export function HomeFeatures({ data }: { data: StudentDashboardDto }) {
               <small>{item.subtitle}</small>
             </>
           );
-          return item.href ? (
+          return (
             <Link key={item.title} href={item.href}>
               {content}
             </Link>
-          ) : (
-            <button key={item.title} type="button" disabled aria-label="Pretest belum tersedia">
-              {content}
-            </button>
           );
         })}
       </div>

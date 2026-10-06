@@ -42,7 +42,6 @@ export function LevelPath({
           <span>
             {completed} / {levels.length} level selesai
           </span>
-          <strong>Target nilai: ≥80</strong>
         </div>
         <ProgressBar
           value={completed}
@@ -51,20 +50,6 @@ export function LevelPath({
           label="Level subbab selesai"
         />
       </Card>
-      <nav className="adventure-shortcuts" aria-label="Pilihan belajar">
-        <Link href="/student/learn">
-          <Icon name="book" width={18} height={18} />
-          Materi
-        </Link>
-        <Link href="/student/assessment">
-          <Icon name="clock" width={18} height={18} />
-          Riwayat skor
-        </Link>
-        <Link href="/student/leaderboards">
-          <Icon name="chart" width={18} height={18} />
-          Peringkat
-        </Link>
-      </nav>
       <div className="adventure-layout">
         <ol className="level-path" aria-label="Pilih level latihan">
           {[...levels].reverse().map((level, position) => (
@@ -111,8 +96,14 @@ export function LevelPath({
                         <dd>{level.bestScore ?? '—'}</dd>
                       </div>
                     </dl>
-                    {level.latestStars != null && <p aria-label="Bintang attempt terbaru">Bintang terakhir: {level.latestStars} / 3</p>}
-                    <Link href={`/student/assessment?levelId=${encodeURIComponent(level.id)}`}>Riwayat level</Link>
+                    {level.latestStars != null && (
+                      <p aria-label="Bintang attempt terbaru">
+                        Bintang terakhir: {level.latestStars} / 3
+                      </p>
+                    )}
+                    <Link href={`/student/assessment?levelId=${encodeURIComponent(level.id)}`}>
+                      Riwayat level
+                    </Link>
                     {level.id !== current?.id && (
                       <Button
                         variant="secondary"

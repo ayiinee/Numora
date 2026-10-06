@@ -200,7 +200,9 @@ describe('assessment history states', () => {
     expect(within(zero).getByText('Bilangan · Pecahan · Level 1')).toBeTruthy();
     expect(within(zero).getByText('XP dan bintang belum tersedia')).toBeTruthy();
     expect(screen.queryByRole('link', { name: /Tryout pending/ })).toBeNull();
-    expect(screen.getByRole('link', { name: /Pretest fixture/ }).getAttribute('href')).toBe('/student/pretest/pretest/result');
+    expect(screen.getByRole('link', { name: /Pretest fixture/ }).getAttribute('href')).toBe(
+      '/student/pretest/pretest/result',
+    );
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
     expect(screen.getByRole('link', { name: /Tryout released/ }).getAttribute('href')).toBe(
       '/student/tryout/released/result',
@@ -362,7 +364,7 @@ describe('responsive learning composition', () => {
     await screen.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: /Fitur Belajar/ })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Aktivitas Terakhir' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Catatan Guru Pembimbing' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Feedback dari Guru' })).toBeTruthy();
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
       state: 'open',
       eligible: true,
@@ -486,9 +488,10 @@ describe('responsive learning composition', () => {
       ),
     ).toBeTruthy();
     expect(await screen.findByRole('region', { name: 'Paket Tryout Mingguan' })).toBeTruthy();
-    expect(
-      screen.getByRole('button', { name: 'Pretest belum tersedia' }).hasAttribute('disabled'),
-    ).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Pretest belum tersedia' })).toBeNull();
+    expect(document.querySelectorAll('.home-feature-grid > a')).toHaveLength(3);
+    expect(screen.getByRole('link', { name: /Latihan Soal/ })).toBeTruthy();
+    expect(screen.getAllByText('Progres level Drill').length).toBeGreaterThan(0);
     expect(request).not.toHaveBeenCalledWith('test-token', '/leaderboards/class');
     expect(screen.getByRole('link', { name: 'Lihat Leaderboard' }).getAttribute('href')).toBe(
       '/student/leaderboards',
@@ -506,7 +509,7 @@ describe('responsive learning composition', () => {
       'page',
     );
     expect(within(nav).getAllByRole('link')).toHaveLength(9);
-    expect(within(nav).getByRole('link', { name: 'Catatan Guru' }).getAttribute('href')).toBe(
+    expect(within(nav).getByRole('link', { name: 'Feedback dari Guru' }).getAttribute('href')).toBe(
       '/student/feedback',
     );
     expect(

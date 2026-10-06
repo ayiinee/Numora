@@ -18,7 +18,7 @@ const navigation: Record<Area, { href: string; label: string; icon: IconName }[]
     { href: '/student/assessment', label: 'Progres', icon: 'chart' },
     { href: '/student/leaderboards', label: 'Peringkat', icon: 'chart' },
     { href: '/student/notifications', label: 'Notifikasi', icon: 'bell' },
-    { href: '/student/feedback', label: 'Catatan Guru', icon: 'chat' },
+    { href: '/student/feedback', label: 'Feedback dari Guru', icon: 'chat' },
   ],
   teacher: [
     { href: '/teacher', label: 'Kelas saya', icon: 'users' },

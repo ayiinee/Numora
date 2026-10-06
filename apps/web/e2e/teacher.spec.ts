@@ -310,19 +310,31 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
       'background-color',
       'rgb(249, 249, 255)',
     );
-    await expect(
-      page.locator('.teacher-header').getByRole('link', { name: 'Pusat Notifikasi' }),
-    ).toHaveAttribute('href', '/teacher/notifications');
+    await expect(page.getByRole('link', { name: 'Pusat Notifikasi' })).toHaveCount(0);
     const primaryNav = page.locator(width < 960 ? '.teacher-bottom-nav' : '.teacher-sidebar__nav');
-    await expect(primaryNav.getByRole('link', { name: /Monitoring/ })).toHaveAttribute(
+    await expect(primaryNav.getByRole('link')).toHaveCount(2);
+    await expect(primaryNav.getByRole('link', { name: 'Kelas', exact: true })).toHaveAttribute(
       'href',
-      '/teacher/monitoring',
+      '/teacher',
     );
-    await expect(primaryNav.getByRole('link', { name: 'Feedback', exact: true })).toHaveAttribute(
+    await expect(primaryNav.getByRole('link', { name: 'Profil', exact: true })).toHaveAttribute(
       'href',
-      '/teacher/feedback',
+      '/teacher/profile',
     );
-    await expect(page.getByText('Total siswa').locator('..').locator('strong')).toHaveText('3');
+    await expect(page.getByText('Siswa di kelas Anda').locator('..').locator('strong')).toHaveText(
+      '3',
+    );
+    const metrics = await page
+      .locator('.teacher-dashboard-metrics .teacher-metric')
+      .evaluateAll((cards) =>
+        cards.map((card) => {
+          const box = card.getBoundingClientRect();
+          return { top: box.top, width: box.width };
+        }),
+      );
+    expect(metrics).toHaveLength(2);
+    expect(metrics[1]!.width).toBeCloseTo(metrics[0]!.width, 0);
+    if (width >= 375) expect(metrics[1]!.top).toBeCloseTo(metrics[0]!.top, 0);
     await capture(page, 'classes', width);
     const create = page.locator('.teacher-create-details summary');
     await create.focus();
@@ -359,22 +371,14 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     );
     await capture(page, 'invite', width);
     await page.goto(`/teacher/classes/${classId}/settings`);
-    await expect(page.getByText('Informasi hanya baca')).toBeVisible();
-    await expect(page.locator('main input,main textarea,main select')).toHaveCount(0);
-    await capture(page, 'settings', width);
+    await expect(page).toHaveURL(`/teacher/classes/${classId}`);
+    await expect(page.locator('.teacher-student-link')).toHaveCount(3);
     await page.goto(`/teacher/monitoring?classId=${classId}`);
-    await expect(page.locator('.teacher-progress-row')).toHaveCount(3);
-    await capture(page, 'monitoring', width);
-    await page.getByRole('tab', { name: 'Tryout', exact: true }).click();
+    await expect(page).toHaveURL(`/teacher/classes/${classId}`);
     await expect(
-      page.getByRole('heading', { name: 'Monitoring Tryout belum tersedia' }),
-    ).toBeVisible();
-    await capture(page, 'tryout-unavailable', width);
-    await page.getByRole('tab', { name: 'Leaderboard', exact: true }).click();
-    await expect(
-      page.getByRole('heading', { name: 'Leaderboard guru belum tersedia' }),
-    ).toBeVisible();
-    await capture(page, 'leaderboard-unavailable', width);
+      page.locator('.teacher-progress-row, .teacher-metric, .teacher-curriculum'),
+    ).toHaveCount(0);
+    await capture(page, 'class-redirect', width);
     await page.goto(`/teacher/feedback?classId=${classId}&studentId=${studentId}`);
     await expect(page.locator('.teacher-feedback-entry')).toHaveCount(20);
     await page.getByLabel('Pesan feedback').fill('Terus berlatih di level yang sudah terbuka.');
@@ -382,24 +386,30 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await page.getByRole('button', { name: 'Kirim feedback', exact: true }).click();
     await expect(page.getByText('Feedback berhasil dikirim kepada Kirino S.')).toBeVisible();
     expect(state.feedbackSends).toHaveLength(1);
-    await page.goto('/teacher/notifications');
-    await expect(
-      page.getByRole('heading', { name: 'Notifikasi guru belum tersedia' }),
-    ).toBeVisible();
-    await capture(page, 'notifications-unavailable', width);
-    await page.getByRole('link', { name: 'Buka profil' }).click();
+    await expect(page.getByLabel('Status baca')).toHaveCount(0);
+    await expect(page.getByLabel('Penerima feedback')).toHaveCount(0);
+    await expect(page.locator('.teacher-feedback-history')).not.toContainText('Sudah dibaca');
+    const removed = await page.goto('/teacher/notifications');
+    expect(removed?.status()).toBe(404);
+    await page.goto('/teacher/profile');
     await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+    await expect(
+      page.locator(
+        'main a[href="/teacher/monitoring"], main a[href="/teacher/feedback"], main a[href="/teacher/notifications"]',
+      ),
+    ).toHaveCount(0);
     await expect(page.getByRole('button', { name: 'Keluar dari akun' })).toBeVisible();
     await capture(page, 'profile', width);
     await expect(page.locator('.teacher-sidebar')).toBeVisible({ visible: width >= 960 });
     await expect(page.locator('.teacher-bottom-nav')).toBeVisible({ visible: width < 960 });
-    await expect(
-      primaryNav.getByRole('link', { name: width < 960 ? 'Profil' : 'Profil & Pengaturan' }),
-    ).toHaveAttribute('aria-current', 'page');
+    await expect(primaryNav.getByRole('link', { name: 'Profil' })).toHaveAttribute(
+      'aria-current',
+      'page',
+    );
     if (width < 960) {
       await primaryNav.getByRole('link', { name: 'Kelas', exact: true }).focus();
       await page.keyboard.press('Tab');
-      await expect(primaryNav.getByRole('link', { name: 'Monitoring', exact: true })).toBeFocused();
+      await expect(primaryNav.getByRole('link', { name: 'Profil', exact: true })).toBeFocused();
     }
     expect(errors).toEqual([]);
   });
@@ -527,9 +537,8 @@ test('Teacher class loading does not fabricate cards before the server responds'
   });
   try {
     await page.goto('/teacher');
-    await expect(
-      page.getByRole('heading', { name: 'Selamat datang, Bu Ratna, M.Pd.' }),
-    ).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Kelas saya', exact: true })).toBeVisible();
+    await expect(page.locator('.teacher-header__identity strong')).toHaveText('Bu Ratna, M.Pd.');
     await expect(page.getByLabel('Memuat data')).toBeVisible();
     await expect(page.locator('.teacher-class-card')).toHaveCount(0);
     await capture(page, 'classes-loading', 390);
@@ -625,8 +634,8 @@ test('Teacher feedback retries delivery with the same UUID, paginates and isolat
   await expect(page.locator('.teacher-feedback-entry')).toHaveCount(20);
   await page.getByRole('button', { name: 'Muat riwayat sebelumnya' }).click();
   await expect(page.locator('.teacher-feedback-entry')).toHaveCount(21);
-  await page.getByLabel('Status baca').selectOption('unread');
-  await expect(page.locator('.teacher-feedback-entry')).toHaveCount(10);
+  await expect(page.getByLabel('Status baca')).toHaveCount(0);
+  await expect(page.locator('.teacher-feedback-history')).not.toContainText('Dibaca ');
   await page.getByLabel('Pesan feedback').fill('  Periksa langkah faktorisasi.  ');
   await page.getByRole('button', { name: 'Kirim feedback', exact: true }).click();
   await expect(page.locator('main').getByRole('alert')).toContainText(
@@ -638,49 +647,37 @@ test('Teacher feedback retries delivery with the same UUID, paginates and isolat
   await expect(page.getByText('Feedback berhasil dikirim kepada Kirino S.')).toBeVisible();
   expect(state.feedbackSends[0]).toEqual(state.feedbackSends[1]);
   expect(state.feedbackSends[0]?.body).toBe('Periksa langkah faktorisasi.');
-  await page.getByLabel('Penerima feedback').selectOption('99999999-9999-4999-8999-999999999999');
+  await page.goto(
+    `/teacher/feedback?classId=${classId}&studentId=99999999-9999-4999-8999-999999999999`,
+  );
   await expect(
     page.getByRole('heading', { name: 'Belum ada feedback', exact: true }),
   ).toBeVisible();
   await expect(page.locator('.teacher-feedback-entry')).toHaveCount(0);
-  await page
-    .getByLabel('Pilih kelas', { exact: true })
-    .selectOption('55555555-5555-4555-8555-555555555555');
-  await expect(page.getByRole('heading', { name: 'Belum ada siswa', exact: true })).toBeVisible();
+  await expect(page.locator('.teacher-feedback-recipient')).toContainText('Nabila');
+  await page.goto('/teacher/feedback');
+  await expect(page).toHaveURL('/teacher');
   await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
-test('Teacher monitoring refuses partial progress and new screens preserve ownership and expired-session states', async ({
+test('Legacy Teacher routes and contextual feedback preserve ownership and expired-session states', async ({
   page,
 }) => {
   const { state, errors } = await setup(page);
   state.verified = true;
-  let unavailable = true;
-  await page.route(
-    `http://localhost:3301/api/v1/classes/${classId}/students/99999999-9999-4999-8999-999999999999/progress`,
-    (route) =>
-      unavailable
-        ? route.fulfill({
-            status: 503,
-            json: { code: 'TEST_UNAVAILABLE', detail: 'Progres belum lengkap.' },
-          })
-        : route.fallback(),
-  );
-  await page.goto(`/teacher/monitoring?classId=${classId}`);
-  await expect(page.getByRole('heading', { name: 'Gagal memuat', exact: true })).toBeVisible();
-  await expect(page.locator('.teacher-metric')).toHaveCount(0);
-  unavailable = false;
-  await page.getByRole('button', { name: 'Coba lagi' }).click();
-  await expect(page.locator('.teacher-progress-row')).toHaveCount(3);
-  await page
-    .getByLabel('Pilih kelas', { exact: true })
-    .selectOption('55555555-5555-4555-8555-555555555555');
-  await expect(page.getByRole('heading', { name: 'Belum ada siswa', exact: true })).toBeVisible();
+  await page.goto('/teacher/monitoring');
+  await expect(page).toHaveURL('/teacher');
+  for (const path of ['/teacher/feedback', `/teacher/feedback?classId=${classId}`]) {
+    await page.goto(path);
+    await expect(page).toHaveURL('/teacher');
+    await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+  }
   for (const path of [
-    `/teacher/feedback?classId=${classId}`,
+    `/teacher/feedback?classId=${classId}&studentId=${studentId}`,
     `/teacher/classes/${classId}/invite`,
     `/teacher/classes/${classId}/settings`,
+    `/teacher/monitoring?classId=${classId}`,
   ]) {
     state.denied = 403;
     await page.goto(path);
@@ -689,9 +686,14 @@ test('Teacher monitoring refuses partial progress and new screens preserve owner
     await expect(page.locator('.teacher-code-panel')).toHaveCount(0);
   }
   state.denied = 401;
-  await page.goto(`/teacher/monitoring?classId=${classId}`);
+  await page.goto(`/teacher/feedback?classId=${classId}&studentId=${studentId}`);
   await expect(page.getByRole('heading', { name: 'Sesi berakhir', exact: true })).toBeVisible();
-  await page.goto('/teacher/feedback?classId=00000000-0000-4000-8000-000000000000');
+  await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+  state.denied = 404;
+  await page.goto(
+    `/teacher/feedback?classId=${classId}&studentId=00000000-0000-4000-8000-000000000000`,
+  );
   await expect(page.getByRole('heading', { name: 'Tidak ditemukan', exact: true })).toBeVisible();
+  await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

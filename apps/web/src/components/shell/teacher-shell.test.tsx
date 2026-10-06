@@ -44,13 +44,9 @@ it('shows actual identity and destinations for implemented Teacher screens witho
   const nav = within(screen.getByRole('navigation', { name: 'Navigasi utama' }));
   expect(nav.getAllByRole('link').map((link) => link.getAttribute('href'))).toEqual([
     '/teacher',
-    '/teacher/monitoring',
-    '/teacher/feedback',
     '/teacher/profile',
   ]);
-  expect(screen.getAllByRole('link', { name: 'Pusat Notifikasi' })[0]?.getAttribute('href')).toBe(
-    '/teacher/notifications',
-  );
+  expect(screen.queryByRole('link', { name: 'Pusat Notifikasi' })).toBeNull();
   expect(nav.queryByRole('button')).toBeNull();
 });
 it('keeps nested student progress in class context and activates profile independently', () => {
@@ -58,9 +54,7 @@ it('keeps nested student progress in class context and activates profile indepen
   const { rerender } = mount();
   const mobile = () => within(screen.getByRole('navigation', { name: 'Navigasi utama' }));
   expect(mobile().getByRole('link', { name: 'Kelas' }).getAttribute('aria-current')).toBe('page');
-  expect(screen.getByRole('link', { name: 'Detail Kelas' }).getAttribute('href')).toBe(
-    '/teacher/classes/class-id',
-  );
+  expect(screen.queryByRole('link', { name: 'Detail Kelas' })).toBeNull();
   fixture.pathname = '/teacher/profile';
   rerender(
     <TeacherShell title="Profil" teacherName="">

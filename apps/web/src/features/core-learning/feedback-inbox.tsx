@@ -92,7 +92,7 @@ function FeedbackInbox({ token }: { token: string }) {
   }
   return (
     <AppShell className="student-account-shell student-feedback-shell">
-      <AccountHeader title="Catatan Guru" backHref="/student" />
+      <AccountHeader title="Feedback dari Guru" backHref="/student" />
       <div className="student-feedback-layout">
         <div className="student-feedback-main">
           <div className="student-feedback-filters" role="group" aria-label="Filter catatan">

@@ -1,10 +1,14 @@
-import { Suspense } from 'react';
-import { TeacherMonitoringScreen } from '@/features/monitoring/teacher-monitoring';
+import { redirect } from 'next/navigation';
 
-export default function Page() {
-  return (
-    <Suspense>
-      <TeacherMonitoringScreen />
-    </Suspense>
+export default async function Page({
+  searchParams,
+}: {
+  searchParams: Promise<{ classId?: string | string[] }>;
+}) {
+  const { classId } = await searchParams;
+  redirect(
+    typeof classId === 'string' && classId
+      ? `/teacher/classes/${encodeURIComponent(classId)}`
+      : '/teacher',
   );
 }

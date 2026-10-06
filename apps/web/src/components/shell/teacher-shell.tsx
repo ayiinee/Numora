@@ -92,6 +92,7 @@ export function TeacherShell({
           verified={available}
           backHref={backHref}
           actions={actions}
+          showIdentity={pathname === '/teacher'}
         />
         <main id="main-content" className="app-content teacher-shell__content" tabIndex={-1}>
           {logoutError && (
