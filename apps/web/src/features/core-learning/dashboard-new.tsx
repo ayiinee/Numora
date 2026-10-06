@@ -100,6 +100,7 @@ function DashboardReady({
             ) : (
               <div className="sh-activities__empty">
                 <EmptyState
+                  compact
                   icon={<Icon name="clock" />}
                   title="Perjalananmu dimulai di sini"
                   description="Hasil latihan pertamamu akan tersimpan di bagian ini."
