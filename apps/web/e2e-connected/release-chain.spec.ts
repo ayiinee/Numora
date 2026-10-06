@@ -892,7 +892,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
   });
 
-  test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
+  test('DRAFT JSON API import -> ten three-format browser previews -> server save/resume -> unscored review', async ({
     browser,
     request,
   }) => {
@@ -994,29 +994,23 @@ test.describe.serial('JOB-06 connected release chain', () => {
         sourceReference: 'docs/data/samples/2026-10-03',
       },
     });
-    await admin.goto('/admin/content/imports');
-    await admin.getByLabel('Tujuan unggah').selectOption('TRYOUT');
-    await admin.getByLabel('Paket tujuan').selectOption(targetPackage.id);
-    await expect(
-      admin.getByRole('heading', { name: /TEST ONLY mixed-format DRAFT preview/ }),
-    ).toBeVisible();
-    await admin.getByLabel('File soal JSON').setInputFiles({
-      name: 'questions.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(samples)),
-    });
-    await admin.getByRole('button', { name: 'Konversi ke paket terpilih', exact: true }).click();
-    await admin.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
-    await expect(admin.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
-    const imported = admin.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/content/imports'),
-    );
-    await admin.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
-    const report = (await (await imported).json()) as ImportReportDto;
+    // JSON remains an internal API transport; the Admin intake UI now starts with Excel.
+    const importBody = {
+      sourceNamespace: 'CURRICULUM_SHEETS_SAMPLE',
+      target: { packageId: targetPackage.id, expectedRevision: 0, fileName: 'questions.json' },
+      questions: samples,
+    };
+    const validation = await content<ImportReportDto>('import-validations', importBody);
+    expect(validation.canImportDraft).toBe(true);
+    const report = await content<ImportReportDto>('imports', importBody, crypto.randomUUID());
     expect(report.items).toHaveLength(10);
     expect(report.items.every((i) => i.canPreview)).toBe(true);
-    await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
-    await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+    const preview = await content<PreviewSessionDto>(
+      'preview-sessions',
+      { questionVersionIds: report.items.map((item) => item.questionVersionId) },
+      crypto.randomUUID(),
+    );
+    await admin.goto(`/admin/content/preview-sessions/${preview.id}`);
     await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
     await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
