@@ -879,7 +879,7 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
     return route.fallback();
   });
   await page.goto('/student/tryout');
-  await expect(page.getByText(/TryOut gratis untuk seluruh siswa/)).toBeVisible();
+  await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
   await page.getByLabel('Saya memahami aturan pengerjaan.').check();
   await page.getByRole('button', { name: 'Mulai TryOut' }).click();
