@@ -191,6 +191,7 @@ async function fixtures(page: Page) {
     else if (path === '/pvp/invitations') data = { invites: [] };
     else if (path === '/pvp/classmates') data = { classmates: [] };
     else if (path.startsWith('/pvp/matches/')) data = snapshot;
+    else if (path === '/leaderboards/periods') data = { periods: [] };
     else if (path.startsWith('/leaderboards/')) {
       const entries = [
         'Kevin S.',

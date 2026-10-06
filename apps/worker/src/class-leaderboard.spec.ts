@@ -38,7 +38,7 @@ integration('class leaderboard projection against PostgreSQL', () => {
     process.env.DATABASE_URL = testUrl;
     const { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
-    const [teacher, first, second, third] = await db
+    const [teacher, first, second, third, zero] = await db
       .insert(users)
       .values([
         {
@@ -47,7 +47,7 @@ integration('class leaderboard projection against PostgreSQL', () => {
           displayName: 'Teacher',
           email: `leader-teacher-${suffix}@example.test`,
         },
-        ...['first', 'second', 'third'].map((name) => ({
+        ...['first', 'second', 'third', 'zero'].map((name) => ({
           authUserId: randomUUID(),
           role: 'STUDENT' as const,
           displayName: name,
@@ -72,11 +72,23 @@ integration('class leaderboard projection against PostgreSQL', () => {
       })
       .returning({ id: classes.id });
     await db.insert(classMemberships).values(
-      [first!, second!, third!].map((student) => ({
+      [first!, second!, third!, zero!].map((student) => ({
         classId: schoolClass!.id,
         studentUserId: student.id,
       })),
     );
+    const [anotherClass] = await db
+      .insert(classes)
+      .values({
+        schoolId: school!.id,
+        teacherUserId: teacher!.id,
+        name: 'IX second account board',
+        joinCode: `LC${suffix}`,
+      })
+      .returning();
+    await db
+      .insert(classMemberships)
+      .values({ classId: anotherClass!.id, studentUserId: first!.id });
     const [policy] = await db
       .insert(scoringPolicyVersions)
       .values({
@@ -122,7 +134,7 @@ integration('class leaderboard projection against PostgreSQL', () => {
         classIdAtEvent: schoolClass!.id,
         sourceType: 'TRYOUT' as const,
         attemptId: attempts[index]!.id,
-        xpAmount: [12, 12, 7][index]!,
+        xpAmount: [12.125, 12.125, 7][index]!,
         occurredAt: now,
       })),
     );
@@ -138,7 +150,17 @@ integration('class leaderboard projection against PostgreSQL', () => {
           eq(classLeaderboardEntries.classId, schoolClass!.id),
         ),
       );
-    expect(entries).toHaveLength(3);
+    expect(entries).toHaveLength(4);
+    const [otherEntry] = await db
+      .select()
+      .from(classLeaderboardEntries)
+      .where(
+        and(
+          eq(classLeaderboardEntries.periodId, firstRun.periodId),
+          eq(classLeaderboardEntries.classId, anotherClass!.id),
+        ),
+      );
+    expect(otherEntry?.totalXp).toBe(12.125);
     const globals = await db
       .select()
       .from(globalActivityLeaderboardEntries)
@@ -148,13 +170,14 @@ integration('class leaderboard projection against PostgreSQL', () => {
           eq(globalActivityLeaderboardEntries.studentId, first!.id),
         ),
       );
-    expect(globals[0]?.totalXp).toBe(12);
+    expect(globals[0]?.totalXp).toBe(12.125);
     expect(
       entries.map((entry) => [entry.totalXp, entry.rank]).sort((a, b) => b[0]! - a[0]!),
     ).toEqual([
-      [12, 1],
-      [12, 1],
-      [7, 3],
+      [12.125, 1],
+      [12.125, 1],
+      [7, 2],
+      [0, 3],
     ]);
     // A late fixture event in the prior period must be included before archive.
     const [latePackage] = await db
@@ -204,7 +227,7 @@ integration('class leaderboard projection against PostgreSQL', () => {
           eq(classLeaderboardEntries.studentId, first!.id),
         ),
       );
-    expect(reconciled[0]!.totalXp).toBe(17);
+    expect(reconciled[0]!.totalXp).toBe(17.125);
     expect(
       await db
         .select()
@@ -215,6 +238,82 @@ integration('class leaderboard projection against PostgreSQL', () => {
             eq(classLeaderboardEntries.classId, schoolClass!.id),
           ),
         ),
-    ).toHaveLength(3);
+    ).toHaveLength(4);
+    // Worker downtime spans several weeks: materialize a missed event period,
+    // stamp empty known periods, and keep the already-closed archive immutable.
+    const missedAt = new Date(now.getTime() + 2 * weekMs);
+    const [missedPackage] = await db
+      .insert(assessmentPackages)
+      .values({
+        familyCode: `LEADER-MISSED-${suffix}`,
+        packageVersion: 1,
+        name: 'TEST missed week',
+        assessmentType: 'TRYOUT',
+        status: 'DRAFT',
+        isDemo: true,
+      })
+      .returning();
+    const [missedAttempt] = await db
+      .insert(assessmentAttempts)
+      .values({
+        studentId: first!.id,
+        packageId: missedPackage!.id,
+        assessmentType: 'TRYOUT',
+        status: 'GRADED',
+        startedAt: missedAt,
+        finishedAt: missedAt,
+      })
+      .returning();
+    await db
+      .insert(xpLedger)
+      .values({
+        studentId: first!.id,
+        sourceType: 'TRYOUT',
+        attemptId: missedAttempt!.id,
+        xpAmount: 3.123456,
+        occurredAt: missedAt,
+      });
+    await db
+      .update(classMemberships)
+      .set({ leftAt: missedAt, endReason: 'LEFT' })
+      .where(
+        and(
+          eq(classMemberships.classId, schoolClass!.id),
+          eq(classMemberships.studentUserId, zero!.id),
+        ),
+      );
+    const resumedAt = new Date(now.getTime() + 5 * weekMs);
+    await projectClassLeaderboard(resumedAt);
+    const [missedPeriod] = await db
+      .select()
+      .from(leaderboardPeriods)
+      .where(eq(leaderboardPeriods.startsAt, classLeaderboardPeriod(missedAt).startsAt));
+    expect(missedPeriod).toMatchObject({
+      status: 'ARCHIVED',
+      rankPolicyVersion: 'dense-v1',
+      projectedAt: resumedAt,
+    });
+    const [missedEntry] = await db
+      .select()
+      .from(classLeaderboardEntries)
+      .where(
+        and(
+          eq(classLeaderboardEntries.periodId, missedPeriod!.id),
+          eq(classLeaderboardEntries.classId, schoolClass!.id),
+          eq(classLeaderboardEntries.studentId, first!.id),
+        ),
+      );
+    expect(missedEntry?.totalXp).toBe(3.123456);
+    const oldEntries = await db
+      .select()
+      .from(classLeaderboardEntries)
+      .where(
+        and(
+          eq(classLeaderboardEntries.periodId, firstRun.periodId),
+          eq(classLeaderboardEntries.classId, schoolClass!.id),
+        ),
+      );
+    expect(oldEntries).toHaveLength(4);
+    expect(oldEntries.find((e) => e.studentId === first!.id)?.totalXp).toBe(17.125);
   }, 30_000);
 });

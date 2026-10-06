@@ -199,7 +199,10 @@ describe('assessment history states', () => {
     expect(within(zero).getByText('0', { exact: true })).toBeTruthy();
     expect(within(zero).getByText('Bilangan · Pecahan · Level 1')).toBeTruthy();
     expect(within(zero).getByText('XP dan bintang belum tersedia')).toBeTruthy();
-    expect(screen.queryByRole('link', { name: /Tryout pending|Pretest fixture/ })).toBeNull();
+    expect(screen.queryByRole('link', { name: /Tryout pending/ })).toBeNull();
+    expect(screen.getByRole('link', { name: /Pretest fixture/ }).getAttribute('href')).toBe(
+      '/student/pretest/pretest/result',
+    );
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
     expect(screen.getByRole('link', { name: /Tryout released/ }).getAttribute('href')).toBe(
       '/student/tryout/released/result',
@@ -291,7 +294,7 @@ describe('responsive learning composition', () => {
         }}
       />,
     );
-    expect(screen.getByText(/240 XP sudah tercatat/)).toBeTruthy();
+    expect(screen.getByText('240 XP', { exact: true })).toBeTruthy();
     expect(screen.queryByText(/XP belum tersedia/)).toBeNull();
   });
   it('hides provisional Home podium values when the server policy is pending', async () => {
@@ -446,6 +449,7 @@ describe('responsive learning composition', () => {
   });
   it('keeps ranks hidden when policy is pending, even if provisional rows are returned', async () => {
     vi.mocked(request).mockResolvedValue({
+      periods: [],
       policyPending: true,
       entries: [
         { studentId: 'rank-test', displayName: 'Provisional student', rank: 1, points: 999 },
@@ -460,8 +464,9 @@ describe('responsive learning composition', () => {
     expect(screen.queryByText('Provisional student')).toBeNull();
     expect(screen.queryByText('#37')).toBeNull();
   });
-  it('renders top/self positions from the server without calculating ties or excluding a self rank outside the top twenty', async () => {
+  it('renders top/self positions from the server including a self rank outside Top 10', async () => {
     vi.mocked(request).mockResolvedValue({
+      periods: [],
       policyPending: false,
       entries: [{ studentId: 'rank-test', displayName: 'Server student', rank: 2, points: 100 }],
       ownEntry: { rank: 37, points: 50 },

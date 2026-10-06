@@ -74,10 +74,12 @@ export function DifficultyChoices({
   value,
   onChange,
   disabled,
+  availability,
 }: {
   value: Difficulty;
   onChange: (value: Difficulty) => void;
   disabled: boolean;
+  availability?: { difficulty: Difficulty; available: boolean }[] | undefined;
 }) {
   return (
     <fieldset className="pvp-difficulties" disabled={disabled}>
@@ -94,6 +96,9 @@ export function DifficultyChoices({
             name="pvp-difficulty"
             value={difficulty}
             checked={value === difficulty}
+            disabled={
+              availability?.find((item) => item.difficulty === difficulty)?.available === false
+            }
             onChange={() => onChange(difficulty)}
           />
           <span className="pvp-difficulty__icon">
@@ -104,7 +109,11 @@ export function DifficultyChoices({
           <span className="pvp-difficulty__body">
             <span>
               <strong>{difficultyLabels[difficulty]}</strong>
-              <small>{durations[difficulty]} dtk / soal</small>
+              <small>
+                {availability?.find((item) => item.difficulty === difficulty)?.available === false
+                  ? 'Belum tersedia'
+                  : `${durations[difficulty]} dtk / soal`}
+              </small>
             </span>
             <span>Duel matematika tingkat {difficultyLabels[difficulty].toLowerCase()}</span>
             <span className="pvp-difficulty__points">

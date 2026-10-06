@@ -1,4 +1,9 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import {
+  BadRequestException,
+  ForbiddenException,
+  Injectable,
+  NotFoundException,
+} from '@nestjs/common';
 import {
   classes,
   classLeaderboardEntries,
@@ -12,8 +17,13 @@ import {
 } from '@tka/database';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
-import type { Difficulty } from '../pvp/pvp.policy';
-import type { LeaderboardDto } from './leaderboards.dto';
+import { pvpMode, type Difficulty } from '../pvp/pvp.policy';
+import type { LeaderboardDto, LeaderboardPeriodsQueryDto } from './leaderboards.dto';
+
+type Database = ReturnType<typeof getDatabase>['db'];
+type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
+type Period = typeof leaderboardPeriods.$inferSelect;
+type Scope = 'class' | 'activity' | 'pvp';
 
 @Injectable()
 export class LeaderboardsService {
@@ -27,163 +37,218 @@ export class LeaderboardsService {
       });
     return user;
   }
-  private period(now: Date) {
-    const p = leaderboardPeriod(now);
-    return {
-      startsAt: p.startsAt.toISOString(),
-      endsAt: p.endsAt.toISOString(),
-      timezone: 'Asia/Jakarta',
-    };
+  private get mode() {
+    return pvpMode() === 'demo' ? ('demo' as const) : ('official' as const);
   }
-  async pvp(authorization: string | undefined, difficulty: Difficulty): Promise<LeaderboardDto> {
-    const student = await this.student(authorization);
-    const now = new Date();
-    const period = this.period(now);
-    const { db } = getDatabase();
-    const [current] = await db
-      .select()
-      .from(leaderboardPeriods)
-      .where(eq(leaderboardPeriods.startsAt, new Date(period.startsAt)));
-    const empty: LeaderboardDto = {
-      policyPending: true,
-      reasonCode: 'PVP_RUNTIME_ACTIVATION',
-      className: null,
-      unit: 'points',
-      period,
-      updatedAt: null,
-      entries: [],
-      ownEntry: null,
-    };
-    if (!current) return empty;
-    const selection = {
-      studentId: users.id,
-      displayName: users.displayName,
-      points: pvpLeaderboardEntries.bestPoints,
-      rank: pvpLeaderboardEntries.rank,
-      updatedAt: pvpLeaderboardEntries.updatedAt,
-    };
-    const scope = and(
-      eq(pvpLeaderboardEntries.periodId, current.id),
-      eq(pvpLeaderboardEntries.difficulty, difficulty),
-      eq(users.status, 'ACTIVE'),
-    );
-    const [top, own] = await Promise.all([
-      db
-        .select(selection)
-        .from(pvpLeaderboardEntries)
-        .innerJoin(users, eq(users.id, pvpLeaderboardEntries.studentId))
-        .where(scope)
-        .orderBy(asc(pvpLeaderboardEntries.rank), asc(users.id))
-        .limit(10),
-      db
-        .select(selection)
-        .from(pvpLeaderboardEntries)
-        .innerJoin(users, eq(users.id, pvpLeaderboardEntries.studentId))
-        .where(and(scope, eq(users.id, student.id)))
-        .limit(1),
-    ]);
-    const map = (r: (typeof top)[number]) => ({
-      studentId: r.studentId,
-      displayName: r.displayName,
-      points: Number(r.points),
-      rank: r.rank!,
-    });
-    return {
-      ...empty,
-      entries: top.map(map),
-      ownEntry: own[0] ? map(own[0]) : null,
-      updatedAt: top[0]?.updatedAt.toISOString() ?? own[0]?.updatedAt.toISOString() ?? null,
-    };
-  }
-  async class(authorization?: string, classId?: string): Promise<LeaderboardDto> {
-    const student = await this.student(authorization);
-    const { db } = getDatabase();
-    const [membership] = await db
+  private async membership(tx: Transaction, studentId: string, classId?: string) {
+    const [member] = await tx
       .select({ id: classes.id, name: classes.name })
       .from(classMemberships)
       .innerJoin(classes, eq(classes.id, classMemberships.classId))
       .where(
         and(
-          eq(classMemberships.studentUserId, student.id),
+          eq(classMemberships.studentUserId, studentId),
           isNull(classMemberships.leftAt),
           isNull(classes.archivedAt),
           classId ? eq(classes.id, classId) : undefined,
         ),
       )
       .orderBy(desc(classMemberships.joinedAt), asc(classes.id))
-      .limit(1);
-    if (!membership)
+      .limit(1)
+      .for('share');
+    if (!member)
       throw new ForbiddenException({
         code: 'CLASS_REQUIRED',
-        detail: 'Bergabung ke kelas untuk mengakses peringkat kelas.',
+        detail: 'Keanggotaan kelas aktif diperlukan untuk melihat peringkat.',
       });
-    return this.activityProjection(student.id, membership);
+    return member;
   }
-  async activity(authorization?: string): Promise<LeaderboardDto> {
-    return this.activityProjection((await this.student(authorization)).id);
-  }
-  private async activityProjection(
-    studentId: string,
-    membership?: { id: string; name: string },
-  ): Promise<LeaderboardDto> {
-    const period = this.period(new Date());
-    const { db } = getDatabase();
-    const [current] = await db
+  private async period(tx: Transaction, now: Date, periodId?: string): Promise<Period | undefined> {
+    const [period] = await tx
       .select()
       .from(leaderboardPeriods)
-      .where(eq(leaderboardPeriods.startsAt, new Date(period.startsAt)));
-    const result: LeaderboardDto = {
-      policyPending: false,
-      reasonCode: null,
-      unit: 'xp',
-      period,
-      classId: membership?.id ?? null,
-      className: membership?.name ?? null,
-      updatedAt: null,
-      entries: [],
-      ownEntry: null,
-    };
-    if (!current) return result;
-    const table = membership ? classLeaderboardEntries : globalActivityLeaderboardEntries;
-    const scope = and(
-      eq(table.periodId, current.id),
-      eq(users.status, 'ACTIVE'),
-      membership
-        ? and(
-            eq(classLeaderboardEntries.classId, membership.id),
-            // Filter ended membership immediately, before the next hourly projection.
-            sql`exists(select 1 from ${classMemberships} m where m.class_id=${membership.id}::uuid and m.student_user_id=${table.studentId} and m.left_at is null)`,
-          )
-        : undefined,
+      .where(
+        periodId
+          ? eq(leaderboardPeriods.id, periodId)
+          : eq(leaderboardPeriods.startsAt, leaderboardPeriod(now).startsAt),
+      );
+    if (periodId && !period)
+      throw new NotFoundException({
+        code: 'LEADERBOARD_PERIOD_NOT_FOUND',
+        detail: 'Periode peringkat tidak ditemukan.',
+      });
+    return period;
+  }
+  async pvp(authorization: string | undefined, difficulty: Difficulty, periodId?: string) {
+    return this.board(
+      (await this.student(authorization)).id,
+      'pvp',
+      periodId,
+      undefined,
+      difficulty,
     );
-    const query = () =>
-      db
-        .select({
-          studentId: table.studentId,
-          displayName: users.displayName,
-          points: table.totalXp,
-          rank: table.rank,
-          updatedAt: table.updatedAt,
-        })
-        .from(table)
-        .innerJoin(users, eq(users.id, table.studentId));
-    const [top, own] = await Promise.all([
-      query().where(scope).orderBy(asc(table.rank), asc(table.studentId)).limit(10),
-      query()
-        .where(and(scope, eq(table.studentId, studentId)))
-        .limit(1),
-    ]);
-    const map = (row: (typeof top)[number]) => ({
-      studentId: row.studentId,
-      displayName: row.displayName,
-      points: Number(row.points),
-      rank: row.rank ?? 0,
+  }
+  async class(authorization?: string, classId?: string, periodId?: string) {
+    return this.board((await this.student(authorization)).id, 'class', periodId, classId);
+  }
+  async activity(authorization?: string, periodId?: string) {
+    return this.board((await this.student(authorization)).id, 'activity', periodId);
+  }
+  async periods(authorization: string | undefined, query: LeaderboardPeriodsQueryDto) {
+    const student = await this.student(authorization);
+    if (query.scope === 'pvp' && !query.difficulty)
+      throw new BadRequestException({
+        code: 'DIFFICULTY_REQUIRED',
+        detail: 'Pilih kesulitan PvP.',
+      });
+    return getDatabase().db.transaction(async (tx) => {
+      const member =
+        query.scope === 'class' ? await this.membership(tx, student.id, query.classId) : undefined;
+      const current = leaderboardPeriod(new Date());
+      const exists =
+        query.scope === 'class'
+          ? sql`exists(select 1 from class_leaderboard_entries e where e.period_id=${leaderboardPeriods.id} and e.class_id=${member!.id}::uuid)`
+          : query.scope === 'pvp'
+            ? sql`exists(select 1 from pvp_leaderboard_entries e where e.period_id=${leaderboardPeriods.id} and e.difficulty=${query.difficulty} and (e.data_mode=${this.mode} or (${leaderboardPeriods.rankPolicyVersion} like 'legacy%' and e.data_mode='legacy')))`
+            : sql`exists(select 1 from global_activity_leaderboard_entries e where e.period_id=${leaderboardPeriods.id})`;
+      const periods = await tx
+        .select()
+        .from(leaderboardPeriods)
+        .where(
+          sql`(${leaderboardPeriods.status}='ARCHIVED' and ${exists}) or ${leaderboardPeriods.startsAt}=${current.startsAt.toISOString()}::timestamptz`,
+        )
+        .orderBy(desc(leaderboardPeriods.startsAt))
+        .limit(52);
+      return {
+        periods: periods.map((p) => ({
+          id: p.id,
+          status: p.status,
+          startsAt: p.startsAt.toISOString(),
+          endsAt: p.endsAt.toISOString(),
+          timezone: p.timezone,
+        })),
+      };
     });
-    return {
-      ...result,
-      updatedAt: top[0]?.updatedAt.toISOString() ?? own[0]?.updatedAt.toISOString() ?? null,
-      entries: top.map(map),
-      ownEntry: own[0] ? map(own[0]) : null,
-    };
+  }
+  private async board(
+    studentId: string,
+    scope: Scope,
+    periodId?: string,
+    classId?: string,
+    difficulty?: Difficulty,
+  ): Promise<LeaderboardDto> {
+    return getDatabase().db.transaction(
+      async (tx) => {
+        const now = new Date();
+        const member =
+          scope === 'class' ? await this.membership(tx, studentId, classId) : undefined;
+        const period = await this.period(tx, now, periodId);
+        const interval = period ?? leaderboardPeriod(now);
+        const archived = period?.status === 'ARCHIVED';
+        const dataMode =
+          archived && period.rankPolicyVersion.startsWith('legacy')
+            ? ('legacy' as const)
+            : this.mode;
+        const pendingArchive = !!period && !archived && period.endsAt <= now;
+      const disabled = scope === 'pvp' && pvpMode() === 'disabled' && !archived;
+        const updatedAt = period?.projectedAt?.toISOString() ?? null;
+        const available = !!updatedAt && !disabled && !pendingArchive;
+        const hour = Math.floor(now.getTime() / 3_600_000) * 3_600_000;
+        const result: LeaderboardDto = {
+          policyPending: disabled,
+          available,
+          reasonCode: disabled
+            ? 'PVP_RUNTIME_ACTIVATION'
+            : pendingArchive
+              ? 'PERIOD_ARCHIVE_PENDING'
+              : !updatedAt
+                ? 'PROJECTION_PENDING'
+                : null,
+          classId: member?.id ?? null,
+          className: member?.name ?? null,
+          unit: scope === 'pvp' ? 'points' : 'xp',
+          dataMode: scope === 'pvp' ? dataMode : 'activity',
+          rankPolicyVersion: period?.rankPolicyVersion ?? 'dense-v1',
+          period: {
+            id: period?.id ?? null,
+            status: period?.status ?? 'ACTIVE',
+            startsAt: interval.startsAt.toISOString(),
+            endsAt: interval.endsAt.toISOString(),
+            timezone: 'Asia/Jakarta',
+          },
+          updatedAt,
+          stale: !archived && (!updatedAt || Date.parse(updatedAt) < hour),
+          nextUpdateAt: archived ? null : new Date(hour + 3_600_000).toISOString(),
+          entries: [],
+          ownEntry: null,
+        };
+        if (!period || pendingArchive || disabled) return result;
+        const activityTable = member ? classLeaderboardEntries : globalActivityLeaderboardEntries;
+        const table = scope === 'pvp' ? pvpLeaderboardEntries : activityTable;
+        const points = scope === 'pvp' ? pvpLeaderboardEntries.bestPoints : activityTable.totalXp;
+        const filter = and(
+          eq(table.periodId, period.id),
+          archived ? undefined : eq(users.status, 'ACTIVE'),
+          scope === 'pvp'
+            ? and(
+                eq(pvpLeaderboardEntries.difficulty, difficulty!),
+                eq(pvpLeaderboardEntries.dataMode, dataMode),
+              )
+            : undefined,
+          member
+            ? and(
+                eq(classLeaderboardEntries.classId, member.id),
+                archived
+                  ? undefined
+                  : sql`exists(select 1 from class_memberships m where m.class_id=${member.id}::uuid and m.student_user_id=${table.studentId} and m.left_at is null)`,
+              )
+            : undefined,
+        );
+        const ranked = tx.$with('ranked').as(
+          tx
+            .select({
+              studentId: table.studentId,
+              displayName: users.displayName,
+              points,
+              rank: archived
+                ? sql<number>`${table.rank}`.as('rank')
+                : sql<number>`dense_rank() over(order by ${points} desc)::int`.as('rank'),
+              updatedAt: table.updatedAt,
+            })
+            .from(table)
+            .innerJoin(users, eq(users.id, table.studentId))
+            .where(filter),
+        );
+        const top = await tx
+          .with(ranked)
+          .select()
+          .from(ranked)
+          .orderBy(asc(ranked.rank), asc(ranked.studentId))
+          .limit(10);
+        const [own] = await tx
+          .with(ranked)
+          .select()
+          .from(ranked)
+          .where(eq(ranked.studentId, studentId))
+          .limit(1);
+        const map = (row: (typeof top)[number]) => ({
+          studentId: row.studentId,
+          displayName: row.displayName,
+          points: Number(row.points),
+          rank: row.rank,
+        });
+        if (archived && !updatedAt) {
+          result.updatedAt =
+            top[0]?.updatedAt.toISOString() ??
+            own?.updatedAt.toISOString() ??
+            period.archivedAt?.toISOString() ??
+            null;
+          result.available = true;
+          result.reasonCode = null;
+        }
+        return { ...result, entries: top.map(map), ownEntry: own ? map(own) : null };
+      },
+      { isolationLevel: 'repeatable read' },
+    );
   }
 }

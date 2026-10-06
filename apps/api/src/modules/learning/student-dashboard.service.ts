@@ -1,4 +1,5 @@
-import { ForbiddenException, Injectable } from '@nestjs/common';
+import { ForbiddenException, Injectable, Optional } from '@nestjs/common';
+import { PvpService } from '../pvp/pvp.service';
 import {
   assessmentAttempts,
   assessmentPackages,
@@ -19,6 +20,7 @@ export class StudentDashboardService {
     private readonly identity: IdentityService,
     private readonly catalog: LearningCatalogService,
     private readonly history: AssessmentHistoryService,
+    @Optional() private readonly pvp?: PvpService,
   ) {}
 
   async dashboard(authorization?: string): Promise<StudentDashboardDto> {
@@ -70,6 +72,7 @@ export class StudentDashboardService {
         .limit(1),
     ]);
     const membership = memberships[0] ?? null;
+    const pvpAvailable = this.pvp ? (await this.pvp.engine.availability()).available : false;
     return {
       displayName: user.displayName,
       affiliation: membership ? 'SCHOOL' : 'MANDIRI',
@@ -84,10 +87,10 @@ export class StudentDashboardService {
       features: {
         drill: true,
         tryout: true,
-        pretest: false,
-        pvp: false,
+        pretest: true,
+        pvp: pvpAvailable,
         classLeaderboard: membership !== null,
-        pendingPolicies: ['CURRICULUM_PRETEST_DISTRIBUTION', 'PVP_RUNTIME_ACTIVATION'],
+        pendingPolicies: ['CURRICULUM_PRETEST_DISTRIBUTION', ...(pvpAvailable ? [] : ['PVP_RUNTIME_ACTIVATION'])],
       },
     };
   }

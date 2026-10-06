@@ -39,6 +39,19 @@
         "isDemo": {
           "type": "boolean"
         },
+        "participantActive": {
+          "type": "boolean"
+        },
+        "expiresAt": {
+          "anyOf": [
+            {
+              "type": "string"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
         "recordEligible": {
           "type": "boolean"
         },

@@ -138,12 +138,13 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
         VALUES(${student!.id},${attempt!.id},'DRILL',80) RETURNING *`;
       const oldHistory = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       await migrateIntegratedDatabase(client, folder);
-      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toEqual(attempt);
+      expect((await client`SELECT * FROM assessment_attempts WHERE id=${attempt!.id}`)[0]).toMatchObject(attempt!);
       const [preserved] = await client`SELECT * FROM xp_ledger WHERE id=${reward!.id}`;
       expect({ ...preserved, xp_amount: Number(preserved!.xp_amount) }).toEqual({ ...reward, xp_amount: 80 });
       const history = await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
       expect(history.slice(0, oldHistory.length)).toEqual(oldHistory);
-      expect(history).toHaveLength(oldHistory.length + 2);
+      const journal = JSON.parse(await readFile(join(folder, 'meta/_journal.json'), 'utf8')) as {entries:unknown[]};
+      expect(history).toHaveLength(journal.entries.length);
       await expect(client`UPDATE xp_ledger SET xp_amount=81 WHERE id=${reward!.id}`).rejects.toThrow();
       await migrateIntegratedDatabase(client, folder);
       expect(await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`).toEqual(history);

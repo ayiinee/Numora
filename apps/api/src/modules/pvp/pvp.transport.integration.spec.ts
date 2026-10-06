@@ -116,7 +116,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
       error: { code: 'PVP_PAYLOAD_INVALID', status: 400 },
     });
     const create = await command(first, 'room:create', { difficulty: 'easy' });
-    expect(create.payload.ok).toBe(true);
+    expect(create.payload).toMatchObject({ ok: true });
     const room = create.payload.state as PvpSnapshotDto;
     expect((await command(second, 'room:join', { roomCode: room.roomCode })).payload.ok).toBe(true);
     await command(first, 'player:ready', { matchId: room.matchId });
@@ -177,6 +177,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const bad = await fetch(`${url}/api/v1/leaderboards/pvp?difficulty=invalid`, { headers });
     expect(bad.status).toBe(400);
     const { db } = getDatabase();
+    process.env.PVP_MODE = 'demo';
     const p = leaderboardPeriod(new Date());
     await db.insert(leaderboardPeriods).values(p).onConflictDoNothing();
     const [period] = await db
@@ -199,6 +200,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
         periodId: period!.id,
         studentId: s.id,
         difficulty: 'medium',
+        dataMode: 'demo' as const,
         rank: i + 1,
         bestPoints: String(1500 - i),
         updatedAt: new Date(),
@@ -223,6 +225,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     await app.get(PvpEngineService).leave(fixture.students[0]!.id, room.matchId);
   }, 30_000);
   it('keeps the default production module gated even with test environment and Redis configured', async () => {
+    process.env.PVP_MODE = 'disabled';
     const module = await Test.createTestingModule({ imports: [PvpModule] })
       .overrideProvider(IdentityService)
       .useValue(app.get(IdentityService))

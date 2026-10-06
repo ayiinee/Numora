@@ -69,6 +69,7 @@ export function SubmitConfirmation({
   total,
   empty,
   flagged,
+  incomplete = [],
   description,
   pending,
   error,
@@ -80,6 +81,7 @@ export function SubmitConfirmation({
   total: number;
   empty: number[];
   flagged: number[];
+  incomplete?: number[];
   description: string;
   pending: boolean;
   error?: string | undefined;
@@ -113,8 +115,8 @@ export function SubmitConfirmation({
         </div>
         <div className="submit-summary__counts">
           <div>
-            <span>Selesai</span>
-            <strong>{total - empty.length}</strong>
+            <span>Terisi lengkap</span>
+            <strong>{total - empty.length - incomplete.length}</strong>
           </div>
           <div>
             <span>Kosong</span>
@@ -128,6 +130,12 @@ export function SubmitConfirmation({
           </div>
         </div>
       </div>
+      {incomplete.length > 0 && (
+        <p role="note" className="submit-incomplete-notice">
+          {incomplete.length} soal Kategori belum lengkap (No. {incomplete.join(', ')}). Jawaban
+          yang sudah tersimpan tetap dapat dikumpulkan.
+        </p>
+      )}
       {error && (
         <p role="alert" className="form-error">
           {error} Coba kirim lagi.

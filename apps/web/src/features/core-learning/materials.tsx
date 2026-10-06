@@ -10,6 +10,7 @@ import { useAuth } from '@/features/onboarding/auth';
 import { useStudentToken } from './student-session';
 import { learningApi, request } from './api';
 import { DataState } from './ui';
+import { ChapterPretest } from './pretest-screens';
 import { HomeActivity, StudentIdentityHeader } from './dashboard-presentation';
 import type { StudentMaterialsDto, MaterialChapterDto } from './generated-types';
 
@@ -137,7 +138,7 @@ function MaterialsContent() {
           </span>
           <div>
             <strong>Pretest</strong>
-            <p>Fitur belum tersedia · Tetap bisa mulai Drill</p>
+            <p>Opsional · 20 soal per bab · Tanpa XP. Pilih bab untuk Mulai, Skip, atau Lanjutkan.</p>
           </div>
         </Card>
         <div className="materials-composition">
@@ -275,6 +276,7 @@ function MaterialChapter({
         <Icon name="chevron" className="material-chapter__chevron" width={16} height={16} />
       </button>
       <div id={`chapter-${chapter.id}`} hidden={!expanded} className="material-chapter__body">
+        {expanded && <ChapterPretest chapterId={chapter.id} chapterTitle={chapter.title} />}
         <div className="material-chapter__progress">
           <span>
             Progres: {chapter.completedLevels} dari {chapter.totalLevels} level selesai

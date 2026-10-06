@@ -1,14 +1,20 @@
 import {
-  analyticsOutbox, assessmentAttempts, attemptAnswers, attemptItems,
-  getDatabase, questionVersions, xpLedger,
+  analyticsOutbox,
+  assessmentAttempts,
+  assessmentPackages,
+  attemptAnswers,
+  attemptItems,
+  getDatabase,
+  questionVersions,
+  xpLedger,
 } from '@tka/database';
 import { eq } from 'drizzle-orm';
 import { databaseTime } from './database-time.js';
 import { AssessmentFinalizationError } from './errors.js';
 import { recordDomainEvent } from './domain-events.js';
+import { decodeAssessmentContent, normalizeAssessmentAnswer } from './question-content.js';
 import { decodeSingleChoice } from './single-choice.js';
 import { pgTryoutReward, TRYOUT_XP_POLICY } from './tryout-reward.js';
-
 
 type Request =
   | { kind: 'manual'; attemptId: string; studentId: string }
@@ -35,7 +41,7 @@ export async function finalizeTryout(request: Request) {
         return { finalized: false, reason: 'unavailable' as const };
       throw new AssessmentFinalizationError('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.');
     }
-    if (attempt.status === 'GRADED')
+    if (attempt.status === 'GRADED' || attempt.status === 'SUBMITTED')
       return { finalized: false, reason: 'alreadyCompleted' as const };
     if (attempt.status !== 'IN_PROGRESS') {
       if (request.kind === 'automatic') return { finalized: false, reason: 'inactive' as const };
@@ -63,6 +69,23 @@ export async function finalizeTryout(request: Request) {
       .where(eq(attemptItems.attemptId, attempt.id));
     if (!rows.length)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.');
+    if (rows.some((row) => row.questionType !== 'SINGLE_CHOICE')) {
+      const [pack] = await tx.select({ isDemo: assessmentPackages.isDemo }).from(assessmentPackages).where(eq(assessmentPackages.id, attempt.packageId));
+      if (!pack?.isDemo) throw new AssessmentFinalizationError('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.');
+      // DEMO transport acceptance only: freeze raw answers without grading or XP.
+      let answeredCount = 0;
+      for (const row of rows) {
+        const content = decodeAssessmentContent(row);
+        const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
+        if (answer) answeredCount++;
+        const empty = content.type === 'CATEGORY' ? { categoryByStatementId: {} } : content.type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' ? { optionIds: [] } : { optionId: null };
+        await tx.insert(attemptAnswers).values({ attemptItemId: row.id, answer: answer ?? empty, savedAt: now }).onConflictDoNothing();
+      }
+      await tx.update(assessmentAttempts).set({ status: 'SUBMITTED', finishedAt: now }).where(eq(assessmentAttempts.id, attempt.id));
+      await recordDomainEvent(tx, attempt.id, { eventName: 'tryout_submitted', submissionType: expired ? 'deadline' : 'manual', questionCount: rows.length, answeredCount }, now);
+      await tx.insert(analyticsOutbox).values({ eventName: 'tryout_completed', actorUserId: attempt.studentId, entityType: 'assessmentAttempt', entityId: attempt.id, correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId, gradingState: 'WAITING_RUBRIC', isDemo: true, xp: null } });
+      return { finalized: true, reason: expired ? 'deadline' as const : 'manual' as const };
+    }
     const grades = rows.map((row) => {
       const content = decodeSingleChoice(row);
       const answer = row.answer ?? { optionId: null };
@@ -76,38 +99,73 @@ export async function finalizeTryout(request: Request) {
       };
     });
     const raw = grades.reduce((sum, grade) => sum + grade.points, 0);
-    const xp = attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version
-      ? pgTryoutReward(grades) : null;
+    const xp =
+      attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version ? pgTryoutReward(grades) : null;
     const maximum = grades.reduce((sum, grade) => sum + grade.maximum, 0);
     if (!Number.isFinite(maximum) || maximum <= 0)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Poin paket tidak valid.');
     for (const grade of grades)
-      await tx.insert(attemptAnswers).values({
-        attemptItemId: grade.id, answer: grade.answer, savedAt: now,
-        awardedPoints: String(grade.points), gradedAt: now,
-      }).onConflictDoUpdate({ target: attemptAnswers.attemptItemId,
-        // Preserve the raw answer and its original save timestamp.
-        set: { awardedPoints: String(grade.points), gradedAt: now } });
-    await tx.update(assessmentAttempts).set({
-      status: 'GRADED', finishedAt: now, rawPoints: String(raw),
-      score0To100: String(Math.round(raw * 100 / maximum)),
-    }).where(eq(assessmentAttempts.id, attempt.id));
-    if (xp !== null) await tx.insert(xpLedger).values({
-      studentId: attempt.studentId, classIdAtEvent: attempt.classIdAtStart,
-      sourceType: 'TRYOUT', attemptId: attempt.id, xpAmount: xp,
-      policyCode: TRYOUT_XP_POLICY.code, policyVersion: TRYOUT_XP_POLICY.version,
-      baseXp: xp, bonusXp: '0', occurredAt: now,
-    });
-    await recordDomainEvent(tx, attempt.id, { eventName: 'tryout_submitted',
-      submissionType: expired ? 'deadline' : 'manual', questionCount: rows.length,
-      answeredCount: rows.filter(row => row.answer && typeof row.answer === 'object' &&
-        'optionId' in row.answer && typeof row.answer.optionId === 'string').length,
-    }, now);
+      await tx
+        .insert(attemptAnswers)
+        .values({
+          attemptItemId: grade.id,
+          answer: grade.answer,
+          savedAt: now,
+          awardedPoints: String(grade.points),
+          gradedAt: now,
+        })
+        .onConflictDoUpdate({
+          target: attemptAnswers.attemptItemId,
+          // Preserve the raw answer and its original save timestamp.
+          set: { awardedPoints: String(grade.points), gradedAt: now },
+        });
+    await tx
+      .update(assessmentAttempts)
+      .set({
+        status: 'GRADED',
+        finishedAt: now,
+        rawPoints: String(raw),
+        score0To100: String(Math.round((raw * 100) / maximum)),
+      })
+      .where(eq(assessmentAttempts.id, attempt.id));
+    if (xp !== null)
+      await tx.insert(xpLedger).values({
+        studentId: attempt.studentId,
+        classIdAtEvent: attempt.classIdAtStart,
+        sourceType: 'TRYOUT',
+        attemptId: attempt.id,
+        xpAmount: xp,
+        policyCode: TRYOUT_XP_POLICY.code,
+        policyVersion: TRYOUT_XP_POLICY.version,
+        baseXp: xp,
+        bonusXp: '0',
+        occurredAt: now,
+      });
+    await recordDomainEvent(
+      tx,
+      attempt.id,
+      {
+        eventName: 'tryout_submitted',
+        submissionType: expired ? 'deadline' : 'manual',
+        questionCount: rows.length,
+        answeredCount: rows.filter(
+          (row) =>
+            row.answer &&
+            typeof row.answer === 'object' &&
+            'optionId' in row.answer &&
+            typeof row.answer.optionId === 'string',
+        ).length,
+      },
+      now,
+    );
     await tx.insert(analyticsOutbox).values({
-      eventName: 'tryout_completed', actorUserId: attempt.studentId,
-      entityType: 'assessmentAttempt', entityId: attempt.id,
-      correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId,
-        xp, xpPolicyVersion: attempt.tryoutXpPolicyVersion },
+      eventName: 'tryout_completed',
+      actorUserId: attempt.studentId,
+      entityType: 'assessmentAttempt',
+      entityId: attempt.id,
+      correlationId: attempt.id,
+      occurredAt: now,
+      payload: { packageId: attempt.packageId, xp, xpPolicyVersion: attempt.tryoutXpPolicyVersion },
     });
     return { finalized: true, reason: expired ? ('deadline' as const) : ('manual' as const) };
   });
