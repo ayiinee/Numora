@@ -1,0 +1,4618 @@
+{
+  "demoOnly": true,
+  "version": 1,
+  "approvedCurriculum": false,
+  "pgkNumericRubric": null,
+  "pretest": {
+    "numbers": [
+      {
+        "code": "PRETEST-numbers-01",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 6 − 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · 6 − 2 = 4."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-02",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 2/8 + 3/8 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "6/8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5/8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7/8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "8/8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Penyebut sama, sehingga pembilang dijumlahkan: (2 + 3)/8 = 5/8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-03",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · 20% dari 100 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "21"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "22"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "20"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "23"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · 20/100 × 100 = 20."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-04",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai 2 pangkat 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "4"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Mengalikan 2 faktor 2 menghasilkan 4."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-05",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Perbandingan bola merah dan biru 2 : 3. Total 10 bola. Banyak bola merah adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Bagian merah 2/5 dari total: 2/5 × 10 = 4."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-06",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 9 − 3 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · 9 − 3 = 6."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-07",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 3/8 + 3/8 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7/8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "8/8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6/8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9/8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Penyebut sama, sehingga pembilang dijumlahkan: (3 + 3)/8 = 6/8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-08",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · 20% dari 150 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "31"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "32"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "33"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "30"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · 20/100 × 150 = 30."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-09",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai 2 pangkat 3 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Mengalikan 3 faktor 2 menghasilkan 8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-10",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Perbandingan bola merah dan biru 2 : 3. Total 15 bola. Banyak bola merah adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Bagian merah 2/5 dari total: 2/5 × 15 = 6."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-11",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 12 − 4 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · 12 − 4 = 8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-12",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 4/8 + 3/8 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8/8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9/8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10/8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7/8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Penyebut sama, sehingga pembilang dijumlahkan: (4 + 3)/8 = 7/8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-13",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · 20% dari 200 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "40"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "41"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "42"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "43"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · 20/100 × 200 = 40."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-14",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai 2 pangkat 4 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "17"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "18"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "19"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Mengalikan 4 faktor 2 menghasilkan 16."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-15",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Perbandingan bola merah dan biru 2 : 3. Total 20 bola. Banyak bola merah adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Bagian merah 2/5 dari total: 2/5 × 20 = 8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-16",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 15 − 5 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "10"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · 15 − 5 = 10."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-17",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Hasil 5/8 + 3/8 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8/8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9/8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10/8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11/8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Penyebut sama, sehingga pembilang dijumlahkan: (5 + 3)/8 = 8/8."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-18",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · 20% dari 250 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "51"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "50"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "52"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "53"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · 20/100 × 250 = 50."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-19",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai 2 pangkat 5 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "33"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "34"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "32"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "35"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Mengalikan 5 faktor 2 menghasilkan 32."
+        }
+      },
+      {
+        "code": "PRETEST-numbers-20",
+        "topic": "numbers",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Perbandingan bola merah dan biru 2 : 3. Total 25 bola. Banyak bola merah adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "10"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Bagian merah 2/5 dari total: 2/5 × 25 = 10."
+        }
+      }
+    ],
+    "algebra": [
+      {
+        "code": "PRETEST-algebra-01",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Akar positif persamaan x² − 4 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · x² = 4; akar positifnya 2."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-02",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai minimum y = (x − 2)² + 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Kuadrat paling kecil 0, saat x = 2; nilai minimum y adalah 2."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-03",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Agar x² + 4x + c = (x + 2)², nilai c adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · (x + 2)² = x² + 4x + 4."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-04",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jika f(x) = x² + 2x + 1, nilai f(2) adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · f(2) = 4 + 4 + 1 = 9."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-05",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jumlah kedua akar x² − 5x + 6 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Persamaan berfaktor (x − 2)(x − 3); jumlah akar 5."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-06",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Akar positif persamaan x² − 9 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "6"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · x² = 9; akar positifnya 3."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-07",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai minimum y = (x − 3)² + 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Kuadrat paling kecil 0, saat x = 3; nilai minimum y adalah 2."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-08",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Agar x² + 6x + c = (x + 3)², nilai c adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · (x + 3)² = x² + 6x + 9."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-09",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jika f(x) = x² + 3x + 1, nilai f(2) adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "14"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · f(2) = 4 + 6 + 1 = 11."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-10",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jumlah kedua akar x² − 7x + 12 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "10"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Persamaan berfaktor (x − 3)(x − 4); jumlah akar 7."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-11",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Akar positif persamaan x² − 16 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · x² = 16; akar positifnya 4."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-12",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai minimum y = (x − 4)² + 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "2"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Kuadrat paling kecil 0, saat x = 4; nilai minimum y adalah 2."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-13",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Agar x² + 8x + c = (x + 4)², nilai c adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "17"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "18"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "19"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · (x + 4)² = x² + 8x + 16."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-14",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jika f(x) = x² + 4x + 1, nilai f(2) adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "14"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "15"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "16"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · f(2) = 4 + 8 + 1 = 13."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-15",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jumlah kedua akar x² − 9x + 20 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "12"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Persamaan berfaktor (x − 4)(x − 5); jumlah akar 9."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-16",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Akar positif persamaan x² − 25 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · x² = 25; akar positifnya 5."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-17",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Nilai minimum y = (x − 5)² + 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Kuadrat paling kecil 0, saat x = 5; nilai minimum y adalah 2."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-18",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Agar x² + 10x + c = (x + 5)², nilai c adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "26"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "25"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "27"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "28"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · (x + 5)² = x² + 10x + 25."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-19",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jika f(x) = x² + 5x + 1, nilai f(2) adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "17"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "15"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "18"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · f(2) = 4 + 10 + 1 = 15."
+        }
+      },
+      {
+        "code": "PRETEST-algebra-20",
+        "topic": "algebra",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Jumlah kedua akar x² − 11x + 30 = 0 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "14"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Persamaan berfaktor (x − 5)(x − 6); jumlah akar 11."
+        }
+      }
+    ],
+    "geometry": [
+      {
+        "code": "PRETEST-geometry-01",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga siku-siku memiliki sisi tegak 6 cm dan 8 cm. Sisi miringnya ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "11"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "13"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · √(6² + 8²) = 10 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-02",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Kubus bersisi 2 cm memiliki volume ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Volume kubus = sisi³ = 2³ = 8 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-03",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Keliling persegi panjang dengan panjang 5 cm dan lebar 2 cm adalah ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "15"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "14"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "17"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · 2 × (5 + 2) = 14 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-04",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga memiliki alas 4 cm dan tinggi 3 cm. Luasnya ... cm²."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "6"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · ½ × 4 × 3 = 6 cm²."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-05",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Tabung berjari-jari 7 cm dan tinggi 2 cm. Dengan π = 22/7, volumenya ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "308"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "309"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "310"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "311"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · (22/7) × 7² × 2 = 308 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-06",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga siku-siku memiliki sisi tegak 9 cm dan 12 cm. Sisi miringnya ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "15"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "17"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "18"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · √(9² + 12²) = 15 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-07",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Kubus bersisi 3 cm memiliki volume ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "28"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "29"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "27"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "30"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Volume kubus = sisi³ = 3³ = 27 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-08",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Keliling persegi panjang dengan panjang 6 cm dan lebar 3 cm adalah ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "19"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "20"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "21"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "18"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · 2 × (6 + 3) = 18 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-09",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga memiliki alas 6 cm dan tinggi 4 cm. Luasnya ... cm²."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "14"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "15"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · ½ × 6 × 4 = 12 cm²."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-10",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Tabung berjari-jari 7 cm dan tinggi 3 cm. Dengan π = 22/7, volumenya ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "463"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "462"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "464"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "465"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · (22/7) × 7² × 3 = 462 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-11",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga siku-siku memiliki sisi tegak 12 cm dan 16 cm. Sisi miringnya ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "21"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "22"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "20"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "23"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · √(12² + 16²) = 20 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-12",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Kubus bersisi 4 cm memiliki volume ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "65"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "66"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "67"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "64"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Volume kubus = sisi³ = 4³ = 64 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-13",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Keliling persegi panjang dengan panjang 7 cm dan lebar 4 cm adalah ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "22"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "23"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "24"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "25"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · 2 × (7 + 4) = 22 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-14",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga memiliki alas 8 cm dan tinggi 5 cm. Luasnya ... cm²."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "21"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "20"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "22"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "23"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · ½ × 8 × 5 = 20 cm²."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-15",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Tabung berjari-jari 7 cm dan tinggi 4 cm. Dengan π = 22/7, volumenya ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "617"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "618"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "616"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "619"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · (22/7) × 7² × 4 = 616 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-16",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga siku-siku memiliki sisi tegak 15 cm dan 20 cm. Sisi miringnya ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "26"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "27"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "28"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "25"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · √(15² + 20²) = 25 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-17",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Kubus bersisi 5 cm memiliki volume ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "125"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "126"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "127"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "128"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Volume kubus = sisi³ = 5³ = 125 cm³."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-18",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Keliling persegi panjang dengan panjang 8 cm dan lebar 5 cm adalah ... cm."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "27"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "26"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "28"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "29"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · 2 × (8 + 5) = 26 cm."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-19",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Segitiga memiliki alas 10 cm dan tinggi 6 cm. Luasnya ... cm²."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "31"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "32"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "30"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "33"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · ½ × 10 × 6 = 30 cm²."
+        }
+      },
+      {
+        "code": "PRETEST-geometry-20",
+        "topic": "geometry",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Tabung berjari-jari 7 cm dan tinggi 5 cm. Dengan π = 22/7, volumenya ... cm³."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "771"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "772"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "773"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "770"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · (22/7) × 7² × 5 = 770 cm³."
+        }
+      }
+    ],
+    "statistics": [
+      {
+        "code": "PRETEST-statistics-01",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Rata-rata data 2, 4, 6 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Jumlah 12 dibagi 3 = 4."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-02",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Median data terurut 2, 3, 5, 7, 9 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Lima data memiliki nilai tengah pada urutan ketiga: 5."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-03",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Modus data 2, 3, 2, 4, 2 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · 2 muncul tiga kali, paling sering."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-04",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Satu kartu diambil acak dari kartu bernomor 1 sampai 4. Peluang nomor genap adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "1/6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "1/3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "2/3"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "1/2"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Ada 2 nomor genap dari 4 kartu: 2/4 = 1/2."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-05",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Data terkecil 2 dan terbesar 10. Jangkauannya adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · 10 − 2 = 8."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-06",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Rata-rata data 3, 5, 7 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Jumlah 15 dibagi 3 = 5."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-07",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Median data terurut 3, 4, 6, 8, 10 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Lima data memiliki nilai tengah pada urutan ketiga: 6."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-08",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Modus data 3, 4, 3, 5, 3 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "3"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · 3 muncul tiga kali, paling sering."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-09",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Satu kartu diambil acak dari kartu bernomor 1 sampai 6. Peluang nomor genap adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "1/2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "1/6"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "1/3"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "2/3"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Ada 3 nomor genap dari 6 kartu: 3/6 = 1/2."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-10",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Data terkecil 3 dan terbesar 15. Jangkauannya adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "13"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "12"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "14"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "15"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · 15 − 3 = 12."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-11",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Rata-rata data 4, 6, 8 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Jumlah 18 dibagi 3 = 6."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-12",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Median data terurut 4, 5, 7, 9, 11 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Lima data memiliki nilai tengah pada urutan ketiga: 7."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-13",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Modus data 4, 5, 4, 6, 4 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "4"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · 4 muncul tiga kali, paling sering."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-14",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Satu kartu diambil acak dari kartu bernomor 1 sampai 8. Peluang nomor genap adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "1/6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "1/2"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "1/3"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "2/3"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · Ada 4 nomor genap dari 8 kartu: 4/8 = 1/2."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-15",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Data terkecil 4 dan terbesar 20. Jangkauannya adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "17"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "18"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "16"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "19"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · 20 − 4 = 16."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-16",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Rata-rata data 5, 7, 9 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "7"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · Jumlah 21 dibagi 3 = 7."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-17",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Median data terurut 5, 6, 8, 10, 12 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "9"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "10"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "11"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "DEMO QA · Lima data memiliki nilai tengah pada urutan ketiga: 8."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-18",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Modus data 5, 6, 5, 7, 5 adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "5"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "7"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "8"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "DEMO QA · 5 muncul tiga kali, paling sering."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-19",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Satu kartu diambil acak dari kartu bernomor 1 sampai 10. Peluang nomor genap adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "1/6"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "1/3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "1/2"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "2/3"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "DEMO QA · Ada 5 nomor genap dari 10 kartu: 5/10 = 1/2."
+        }
+      },
+      {
+        "code": "PRETEST-statistics-20",
+        "topic": "statistics",
+        "questionType": "SINGLE_CHOICE",
+        "stem": {
+          "text": "DEMO · Data terkecil 5 dan terbesar 25. Jangkauannya adalah ..."
+        },
+        "optionsOrStatements": [
+          {
+            "id": "A",
+            "content": {
+              "text": "21"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "22"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "23"
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "20"
+            }
+          }
+        ],
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "DEMO QA · 25 − 5 = 20."
+        }
+      }
+    ]
+  },
+  "tryout": [
+    {
+      "code": "TRYOUT-01",
+      "topic": "numbers",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Hasil 6 − 2 adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "4"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "5"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "6"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "7"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "A"
+      },
+      "explanation": {
+        "text": "DEMO QA · 6 − 2 = 4."
+      }
+    },
+    {
+      "code": "TRYOUT-02",
+      "topic": "algebra",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2 merupakan akar x² − 4 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "−2 merupakan akar x² − 4 = 0."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Nilai minimum (x − 2)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "(x + 2)² = x² + 2x + 4."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["A", "B"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — 2 merupakan akar x² − 4 = 0. B: Benar — −2 merupakan akar x² − 4 = 0. C: Salah — Nilai minimum (x − 2)² + 2 adalah −2. D: Salah — (x + 2)² = x² + 2x + 4. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-03",
+      "topic": "geometry",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Kubus dengan sisi 2 cm memiliki volume 8 cm³."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Kubus dengan sisi 2 cm memiliki luas permukaan 24 cm²."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Segitiga dengan alas 4 cm dan tinggi 2 cm memiliki luas 8 cm²."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Segitiga siku-siku bersisi tegak 6 dan 8 memiliki sisi miring 14."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "Y",
+          "C": "N",
+          "D": "N"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — Kubus dengan sisi 2 cm memiliki volume 8 cm³. B: Benar — Kubus dengan sisi 2 cm memiliki luas permukaan 24 cm². C: Salah — Segitiga dengan alas 4 cm dan tinggi 2 cm memiliki luas 8 cm². D: Salah — Segitiga siku-siku bersisi tegak 6 dan 8 memiliki sisi miring 14. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-04",
+      "topic": "statistics",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Median data terurut 2, 3, 5, 7, 9 adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "6"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "5"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "7"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "8"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "B"
+      },
+      "explanation": {
+        "text": "DEMO QA · Lima data memiliki nilai tengah pada urutan ketiga: 5."
+      }
+    },
+    {
+      "code": "TRYOUT-05",
+      "topic": "numbers",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "7 adalah bilangan genap."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "20% dari 150 adalah 30."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "3/8 + 3/8 = 6/16."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "6 adalah bilangan genap."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["B", "D"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — 7 adalah bilangan genap. B: Benar — 20% dari 150 adalah 30. C: Salah — 3/8 + 3/8 = 6/16. D: Benar — 6 adalah bilangan genap. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-06",
+      "topic": "algebra",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "−3 merupakan akar x² − 9 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Nilai minimum (x − 3)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "(x + 3)² = x² + 3x + 9."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "3 merupakan akar x² − 9 = 0."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "N",
+          "C": "N",
+          "D": "Y"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — −3 merupakan akar x² − 9 = 0. B: Salah — Nilai minimum (x − 3)² + 2 adalah −2. C: Salah — (x + 3)² = x² + 3x + 9. D: Benar — 3 merupakan akar x² − 9 = 0. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-07",
+      "topic": "geometry",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Keliling persegi panjang dengan panjang 5 cm dan lebar 2 cm adalah ... cm."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "15"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "16"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "14"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "17"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "C"
+      },
+      "explanation": {
+        "text": "DEMO QA · 2 × (5 + 2) = 14 cm."
+      }
+    },
+    {
+      "code": "TRYOUT-08",
+      "topic": "statistics",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Jangkauan 3, 5, 7 adalah 4."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Rata-rata 3, 5, 7 adalah 5."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Median 3, 5, 7 adalah 7."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["A", "C"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — Jangkauan 3, 5, 7 adalah 4. B: Salah — Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3. C: Benar — Rata-rata 3, 5, 7 adalah 5. D: Salah — Median 3, 5, 7 adalah 7. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-09",
+      "topic": "numbers",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "20% dari 200 adalah 40."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4/8 + 3/8 = 7/16."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "8 adalah bilangan genap."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9 adalah bilangan genap."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "N",
+          "C": "Y",
+          "D": "N"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — 20% dari 200 adalah 40. B: Salah — 4/8 + 3/8 = 7/16. C: Benar — 8 adalah bilangan genap. D: Salah — 9 adalah bilangan genap. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-10",
+      "topic": "algebra",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Jika f(x) = x² + 2x + 1, nilai f(2) adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "10"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "11"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "12"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "9"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "D"
+      },
+      "explanation": {
+        "text": "DEMO QA · f(2) = 4 + 4 + 1 = 9."
+      }
+    },
+    {
+      "code": "TRYOUT-11",
+      "topic": "geometry",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Segitiga siku-siku bersisi tegak 12 dan 16 memiliki sisi miring 28."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Kubus dengan sisi 4 cm memiliki volume 64 cm³."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Kubus dengan sisi 4 cm memiliki luas permukaan 96 cm²."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Segitiga dengan alas 8 cm dan tinggi 4 cm memiliki luas 32 cm²."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["B", "C"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — Segitiga siku-siku bersisi tegak 12 dan 16 memiliki sisi miring 28. B: Benar — Kubus dengan sisi 4 cm memiliki volume 64 cm³. C: Benar — Kubus dengan sisi 4 cm memiliki luas permukaan 96 cm². D: Salah — Segitiga dengan alas 8 cm dan tinggi 4 cm memiliki luas 32 cm². Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-12",
+      "topic": "statistics",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Rata-rata 4, 6, 8 adalah 6."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Median 4, 6, 8 adalah 8."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Jangkauan 4, 6, 8 adalah 4."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "N",
+          "B": "Y",
+          "C": "N",
+          "D": "Y"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3. B: Benar — Rata-rata 4, 6, 8 adalah 6. C: Salah — Median 4, 6, 8 adalah 8. D: Benar — Jangkauan 4, 6, 8 adalah 4. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-13",
+      "topic": "numbers",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Perbandingan bola merah dan biru 2 : 3. Total 10 bola. Banyak bola merah adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "4"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "5"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "6"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "7"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "A"
+      },
+      "explanation": {
+        "text": "DEMO QA · Bagian merah 2/5 dari total: 2/5 × 10 = 4."
+      }
+    },
+    {
+      "code": "TRYOUT-14",
+      "topic": "algebra",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "5 merupakan akar x² − 25 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "−5 merupakan akar x² − 25 = 0."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Nilai minimum (x − 5)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "(x + 5)² = x² + 5x + 25."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["A", "B"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — 5 merupakan akar x² − 25 = 0. B: Benar — −5 merupakan akar x² − 25 = 0. C: Salah — Nilai minimum (x − 5)² + 2 adalah −2. D: Salah — (x + 5)² = x² + 5x + 25. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-15",
+      "topic": "geometry",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Kubus dengan sisi 5 cm memiliki volume 125 cm³."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Kubus dengan sisi 5 cm memiliki luas permukaan 150 cm²."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Segitiga dengan alas 10 cm dan tinggi 5 cm memiliki luas 50 cm²."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Segitiga siku-siku bersisi tegak 15 dan 20 memiliki sisi miring 35."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "Y",
+          "C": "N",
+          "D": "N"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — Kubus dengan sisi 5 cm memiliki volume 125 cm³. B: Benar — Kubus dengan sisi 5 cm memiliki luas permukaan 150 cm². C: Salah — Segitiga dengan alas 10 cm dan tinggi 5 cm memiliki luas 50 cm². D: Salah — Segitiga siku-siku bersisi tegak 15 dan 20 memiliki sisi miring 35. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-16",
+      "topic": "statistics",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Rata-rata data 3, 5, 7 adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "6"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "5"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "7"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "8"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "B"
+      },
+      "explanation": {
+        "text": "DEMO QA · Jumlah 15 dibagi 3 = 5."
+      }
+    },
+    {
+      "code": "TRYOUT-17",
+      "topic": "numbers",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "13 adalah bilangan genap."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "20% dari 300 adalah 60."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "6/8 + 3/8 = 9/16."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "12 adalah bilangan genap."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["B", "D"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — 13 adalah bilangan genap. B: Benar — 20% dari 300 adalah 60. C: Salah — 6/8 + 3/8 = 9/16. D: Benar — 12 adalah bilangan genap. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-18",
+      "topic": "algebra",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "−6 merupakan akar x² − 36 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Nilai minimum (x − 6)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "(x + 6)² = x² + 6x + 36."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "6 merupakan akar x² − 36 = 0."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "N",
+          "C": "N",
+          "D": "Y"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — −6 merupakan akar x² − 36 = 0. B: Salah — Nilai minimum (x − 6)² + 2 adalah −2. C: Salah — (x + 6)² = x² + 6x + 36. D: Benar — 6 merupakan akar x² − 36 = 0. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-19",
+      "topic": "geometry",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Kubus bersisi 3 cm memiliki volume ... cm³."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "28"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "29"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "27"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "30"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "C"
+      },
+      "explanation": {
+        "text": "DEMO QA · Volume kubus = sisi³ = 3³ = 27 cm³."
+      }
+    },
+    {
+      "code": "TRYOUT-20",
+      "topic": "statistics",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Jangkauan 6, 8, 10 adalah 4."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Rata-rata 6, 8, 10 adalah 8."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Median 6, 8, 10 adalah 10."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["A", "C"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — Jangkauan 6, 8, 10 adalah 4. B: Salah — Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3. C: Benar — Rata-rata 6, 8, 10 adalah 8. D: Salah — Median 6, 8, 10 adalah 10. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-21",
+      "topic": "numbers",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "20% dari 350 adalah 70."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "7/8 + 3/8 = 10/16."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "14 adalah bilangan genap."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "15 adalah bilangan genap."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "N",
+          "C": "Y",
+          "D": "N"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — 20% dari 350 adalah 70. B: Salah — 7/8 + 3/8 = 10/16. C: Benar — 14 adalah bilangan genap. D: Salah — 15 adalah bilangan genap. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-22",
+      "topic": "algebra",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Agar x² + 6x + c = (x + 3)², nilai c adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "10"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "11"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "12"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "9"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "D"
+      },
+      "explanation": {
+        "text": "DEMO QA · (x + 3)² = x² + 6x + 9."
+      }
+    },
+    {
+      "code": "TRYOUT-23",
+      "topic": "geometry",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Segitiga siku-siku bersisi tegak 21 dan 28 memiliki sisi miring 49."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Kubus dengan sisi 7 cm memiliki volume 343 cm³."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Kubus dengan sisi 7 cm memiliki luas permukaan 294 cm²."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Segitiga dengan alas 14 cm dan tinggi 7 cm memiliki luas 98 cm²."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["B", "C"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — Segitiga siku-siku bersisi tegak 21 dan 28 memiliki sisi miring 49. B: Benar — Kubus dengan sisi 7 cm memiliki volume 343 cm³. C: Benar — Kubus dengan sisi 7 cm memiliki luas permukaan 294 cm². D: Salah — Segitiga dengan alas 14 cm dan tinggi 7 cm memiliki luas 98 cm². Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-24",
+      "topic": "statistics",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Rata-rata 7, 9, 11 adalah 9."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Median 7, 9, 11 adalah 11."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Jangkauan 7, 9, 11 adalah 4."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "N",
+          "B": "Y",
+          "C": "N",
+          "D": "Y"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — Peluang muncul angka genap pada dadu adil bersisi enam adalah 1/3. B: Benar — Rata-rata 7, 9, 11 adalah 9. C: Salah — Median 7, 9, 11 adalah 11. D: Benar — Jangkauan 7, 9, 11 adalah 4. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-25",
+      "topic": "numbers",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Nilai 2 pangkat 3 adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "8"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "9"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "10"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "11"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "A"
+      },
+      "explanation": {
+        "text": "DEMO QA · Mengalikan 3 faktor 2 menghasilkan 8."
+      }
+    },
+    {
+      "code": "TRYOUT-26",
+      "topic": "algebra",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "8 merupakan akar x² − 64 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "−8 merupakan akar x² − 64 = 0."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Nilai minimum (x − 8)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "(x + 8)² = x² + 8x + 64."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["A", "B"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — 8 merupakan akar x² − 64 = 0. B: Benar — −8 merupakan akar x² − 64 = 0. C: Salah — Nilai minimum (x − 8)² + 2 adalah −2. D: Salah — (x + 8)² = x² + 8x + 64. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-27",
+      "topic": "geometry",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "Kubus dengan sisi 8 cm memiliki volume 512 cm³."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Kubus dengan sisi 8 cm memiliki luas permukaan 384 cm²."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "Segitiga dengan alas 16 cm dan tinggi 8 cm memiliki luas 128 cm²."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "Segitiga siku-siku bersisi tegak 24 dan 32 memiliki sisi miring 56."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "Y",
+          "C": "N",
+          "D": "N"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — Kubus dengan sisi 8 cm memiliki volume 512 cm³. B: Benar — Kubus dengan sisi 8 cm memiliki luas permukaan 384 cm². C: Salah — Segitiga dengan alas 16 cm dan tinggi 8 cm memiliki luas 128 cm². D: Salah — Segitiga siku-siku bersisi tegak 24 dan 32 memiliki sisi miring 56. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-28",
+      "topic": "statistics",
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "DEMO · Data terkecil 3 dan terbesar 15. Jangkauannya adalah ..."
+      },
+      "optionsOrStatements": [
+        {
+          "id": "A",
+          "content": {
+            "text": "13"
+          }
+        },
+        {
+          "id": "B",
+          "content": {
+            "text": "12"
+          }
+        },
+        {
+          "id": "C",
+          "content": {
+            "text": "14"
+          }
+        },
+        {
+          "id": "D",
+          "content": {
+            "text": "15"
+          }
+        }
+      ],
+      "answerKey": {
+        "optionId": "B"
+      },
+      "explanation": {
+        "text": "DEMO QA · 15 − 3 = 12."
+      }
+    },
+    {
+      "code": "TRYOUT-29",
+      "topic": "numbers",
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "DEMO · Pilih semua pernyataan yang benar (lebih dari satu jawaban)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "19 adalah bilangan genap."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "20% dari 450 adalah 90."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "9/8 + 3/8 = 12/16."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "18 adalah bilangan genap."
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": ["B", "D"]
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Salah — 19 adalah bilangan genap. B: Benar — 20% dari 450 adalah 90. C: Salah — 9/8 + 3/8 = 12/16. D: Benar — 18 adalah bilangan genap. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    },
+    {
+      "code": "TRYOUT-30",
+      "topic": "algebra",
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "DEMO · Tentukan Benar/Salah untuk setiap pernyataan."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "−9 merupakan akar x² − 81 = 0."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "Nilai minimum (x − 9)² + 2 adalah −2."
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "(x + 9)² = x² + 9x + 81."
+            }
+          },
+          {
+            "id": "D",
+            "content": {
+              "text": "9 merupakan akar x² − 81 = 0."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "Y",
+            "label": "Benar"
+          },
+          {
+            "id": "N",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "Y",
+          "B": "N",
+          "C": "N",
+          "D": "Y"
+        }
+      },
+      "explanation": {
+        "text": "DEMO QA · A: Benar — −9 merupakan akar x² − 81 = 0. B: Salah — Nilai minimum (x − 9)² + 2 adalah −2. C: Salah — (x + 9)² = x² + 9x + 81. D: Benar — 9 merupakan akar x² − 81 = 0. Gunakan operasi bilangan, faktorisasi, rumus geometri, atau definisi statistik untuk memeriksa pernyataan. Kunci ini bukan rubrik skor parsial PGK."
+      }
+    }
+  ]
+}

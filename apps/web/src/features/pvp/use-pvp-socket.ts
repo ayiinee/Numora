@@ -131,6 +131,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
         if (!matchId) router.push(`/student/pvp/${ack.payload.state.matchId}`);
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
+      await client.invalidateQueries({ queryKey: ['pvp-availability'] });
       await client.invalidateQueries({ queryKey: ['student-notifications'] });
     } catch {
       if (socket.current !== currentSocket) return;

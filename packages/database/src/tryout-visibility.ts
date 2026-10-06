@@ -1,5 +1,13 @@
 import { getDatabase } from './client.js';
-import { irtBatches, irtItemResults, packageItems, assessmentPackages } from './schema/index.js';
+import {
+  irtBatches,
+  irtItemResults,
+  packageItems,
+  assessmentPackages,
+  tryoutBatches,
+  tryoutResultFinalizations,
+  tryoutAttemptResults,
+} from './schema/index.js';
 import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 export function isJakartaMondayMidnight(instant: Date): boolean {
   const parts = new Intl.DateTimeFormat('en-US', {
@@ -20,14 +28,40 @@ export function isJakartaMondayMidnight(instant: Date): boolean {
   );
 }
 
+/** Monday 00:00 through the start of Sunday 23:59, Asia/Jakarta. */
+export function tryoutBatchCloseAt(releaseAt: Date) {
+  return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
+}
+
 export async function releasedTryoutPackageTimes(
   packageIds: string[],
   now = new Date(),
 ): Promise<Map<string, Date>> {
   if (!packageIds.length) return new Map();
   const { db } = getDatabase();
+  const canonical = await db
+    .select({
+      packageId: tryoutBatches.packageId,
+      releasedAt: tryoutResultFinalizations.publishedAt,
+    })
+    .from(tryoutResultFinalizations)
+    .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutResultFinalizations.batchId))
+    .where(
+      and(
+        inArray(tryoutBatches.packageId, packageIds),
+        eq(tryoutBatches.status, 'PUBLISHED'),
+        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),
+        isNotNull(tryoutResultFinalizations.publishedAt),
+        lte(tryoutResultFinalizations.publishedAt, now),
+      ),
+    );
+  const canonicalTimes = new Map(canonical.map((row) => [row.packageId, row.releasedAt!]));
   const batches = await db
-    .select({ id: irtBatches.id, packageId: irtBatches.packageId, releasedAt: irtBatches.resultReleasedAt })
+    .select({
+      id: irtBatches.id,
+      packageId: irtBatches.packageId,
+      releasedAt: irtBatches.resultReleasedAt,
+    })
     .from(irtBatches)
     .where(
       and(
@@ -37,7 +71,7 @@ export async function releasedTryoutPackageTimes(
         lte(irtBatches.resultReleasedAt, now),
       ),
     );
-  if (!batches.length) return new Map();
+  if (!batches.length) return canonicalTimes;
   const items = await db
     .select({
       packageId: packageItems.packageId,
@@ -72,7 +106,7 @@ export async function releasedTryoutPackageTimes(
     versions.add(result.questionVersionId);
     validByBatch.set(result.batchId, versions);
   }
-  const released = new Map<string, Date>();
+  const released = canonicalTimes;
   for (const batch of batches) {
     if (!batch.packageId) continue;
     const versions = itemsByPackage.get(batch.packageId) ?? [];
@@ -82,7 +116,10 @@ export async function releasedTryoutPackageTimes(
   }
   return released;
 }
-export async function releasedTryoutPackageIds(packageIds: string[], now = new Date()): Promise<Set<string>> {
+export async function releasedTryoutPackageIds(
+  packageIds: string[],
+  now = new Date(),
+): Promise<Set<string>> {
   return new Set((await releasedTryoutPackageTimes(packageIds, now)).keys());
 }
 
@@ -108,8 +145,67 @@ export async function currentTryoutPackage() {
     !row ||
     !row.releaseAt ||
     !isJakartaMondayMidnight(row.releaseAt) ||
-    (row.closeAt && row.closeAt <= now)
+    (!row.isDemo &&
+      (row.durationSeconds !== 600 ||
+        row.closeAt?.getTime() !== tryoutBatchCloseAt(row.releaseAt).getTime())) ||
+    (row.closeAt ?? tryoutBatchCloseAt(row.releaseAt)) <= now
   )
     return null;
   return row;
+}
+
+/** Published immutable academic results only. No release, mapping or fallback decisions here. */
+export async function publishedTryoutAttemptResults(attemptIds: string[], now = new Date()) {
+  if (!attemptIds.length)
+    return new Map<
+      string,
+      { score: number; resultMethod: 'IRT' | 'STANDARD'; reason: string | null }
+    >();
+  const { db } = getDatabase();
+  const rows = await db
+    .select({
+      attemptId: tryoutAttemptResults.attemptId,
+      score: tryoutAttemptResults.score,
+      mode: tryoutResultFinalizations.mode,
+      policy: tryoutResultFinalizations.policySnapshot,
+    })
+    .from(tryoutAttemptResults)
+    .innerJoin(
+      tryoutResultFinalizations,
+      eq(tryoutResultFinalizations.id, tryoutAttemptResults.finalizationId),
+    )
+    .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutResultFinalizations.batchId))
+    .where(
+      and(
+        inArray(tryoutAttemptResults.attemptId, attemptIds),
+        eq(tryoutBatches.status, 'PUBLISHED'),
+        isNotNull(tryoutResultFinalizations.publishedAt),
+        lte(tryoutResultFinalizations.publishedAt, now),
+        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),
+      ),
+    );
+  const reasons: Record<string, string> = {
+    IRT_DEADLINE_EXCEEDED: 'Hasil IRT belum tersedia hingga batas waktu pemrosesan batch.',
+    IRT_FAILED: 'Pemrosesan IRT tidak menghasilkan hasil valid untuk batch ini.',
+    DATA_INSUFFICIENT: 'Data batch belum memenuhi syarat perhitungan IRT.',
+  };
+  return new Map(
+    rows
+      .filter((row) => row.score !== null && Number.isFinite(Number(row.score)))
+      .map((row) => {
+        const policy =
+          row.policy && typeof row.policy === 'object' && !Array.isArray(row.policy)
+            ? (row.policy as Record<string, unknown>)
+            : {};
+        const code = typeof policy.reasonCode === 'string' ? policy.reasonCode : '';
+        return [
+          row.attemptId,
+          {
+            score: Number(row.score),
+            resultMethod: row.mode === 'IRT' ? ('IRT' as const) : ('STANDARD' as const),
+            reason: row.mode === 'FALLBACK' ? (reasons[code] ?? null) : null,
+          },
+        ];
+      }),
+  );
 }

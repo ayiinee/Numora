@@ -19,9 +19,9 @@ export function AuthFrame({
       </header>
       <div className="auth-redesign-layout">
         <section className="auth-welcome" aria-label="Selamat datang di NUMORA">
-          <span className="auth-welcome-badge">
+          {/* <span className="auth-welcome-badge">
             <Icon name="graduation" width="16" height="16" /> Belajar bersama NUMORA
-          </span>
+          </span> */}
           <h1>
             Matematika jadi lebih <em>terarah.</em>
           </h1>

@@ -2,6 +2,7 @@ import { onlineManager, QueryClient, QueryClientProvider } from '@tanstack/react
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AssessmentSession } from './assessment-session';
+import { LearningApiError } from './api';
 
 afterEach(() => {
   cleanup();
@@ -232,6 +233,23 @@ describe('sesi asesmen', () => {
 });
 
 describe('screenshot Drill controls', () => {
+  it('stops stale-tab Pretest writes and offers explicit reload without submitting', async () => {
+    vi.spyOn(window, 'confirm').mockReturnValue(true);
+    const reload = vi.fn();
+    const save = vi.fn().mockRejectedValue(new LearningApiError('Jawaban diperbarui di perangkat lain.', 409, 'ANSWER_REVISION_CONFLICT'));
+    const submit = vi.fn();
+    render(<QueryClientProvider client={new QueryClient({ defaultOptions: { mutations: { retry: false } } })}>
+      <AssessmentSession redesign sessionKind="pretest" title="Pretest Bilangan" questions={[question]}
+        submitLabel="Kirim Pretest" confirmMessage={() => 'Kirim?'} onSave={save} onSubmit={submit} onSubmitted={vi.fn()} onReload={reload} />
+    </QueryClientProvider>);
+    fireEvent.click(screen.getByRole('radio', { name: /^A\./ }));
+    await screen.findByText('Jawaban diperbarui di perangkat lain.');
+    expect(screen.getByRole('radio', { name: /^B\./ }).closest('fieldset')?.hasAttribute('disabled')).toBe(true);
+    expect(screen.queryByRole('button', { name: 'Coba simpan lagi' })).toBeNull();
+    fireEvent.click(screen.getByRole('button', { name: 'Muat ulang sesi' }));
+    expect(reload).toHaveBeenCalledOnce(); expect(save).toHaveBeenCalledOnce(); expect(submit).not.toHaveBeenCalled();
+    expect(screen.queryByRole('timer')).toBeNull();
+  });
   beforeEach(() => {
     Object.defineProperties(HTMLDialogElement.prototype, {
       showModal: {
@@ -366,5 +384,140 @@ describe('screenshot Drill controls', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }));
     await waitFor(() => expect(onSubmitted).toHaveBeenCalledOnce());
     expect(complete).toHaveBeenCalledTimes(2);
+  });
+});
+
+describe('typed PGK sessions (TEST ONLY)', () => {
+  beforeEach(() => {
+    Object.defineProperties(HTMLDialogElement.prototype, {
+      showModal: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.setAttribute('open', '');
+        },
+      },
+      close: {
+        configurable: true,
+        value: function (this: HTMLDialogElement) {
+          this.removeAttribute('open');
+        },
+      },
+    });
+  });
+  afterEach(() => {
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+    Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+  });
+
+  const mcma: import('./generated-types').DrillQuestionDto = {
+    ...question,
+    type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+    answer: null,
+  };
+  function typedMount(
+    questions: import('./generated-types').DrillQuestionDto[],
+    onSaveTyped: NonNullable<React.ComponentProps<typeof AssessmentSession>['onSaveTyped']>,
+  ) {
+    const onSubmit = vi.fn().mockResolvedValue({});
+    const client = new QueryClient({ defaultOptions: { mutations: { retry: false } } });
+    render(
+      <QueryClientProvider client={client}>
+        <AssessmentSession
+          redesign
+          title="TEST ONLY PGK"
+          questions={questions}
+          submitLabel="Kirim Drill"
+          confirmMessage={(n) => `${n} kosong`}
+          onSaveTyped={onSaveTyped}
+          onSubmit={onSubmit}
+          onSubmitted={() => {}}
+        />
+      </QueryClientProvider>,
+    );
+    return onSubmit;
+  }
+  it('coalesces rapid MCMA edits in order and waits for the newest matching ACK', async () => {
+    let acknowledge!: (ack: import('./generated-types').SavedAnswerDto) => void;
+    const save = vi
+      .fn()
+      .mockImplementationOnce(
+        () =>
+          new Promise((resolve) => {
+            acknowledge = resolve;
+          }),
+      )
+      .mockImplementation(async (id, answer) => ({
+        questionInstanceId: id,
+        selectedOptionId: null,
+        answer,
+      }));
+    typedMount([mcma], save);
+    fireEvent.click(screen.getByRole('checkbox', { name: /^A\./ }));
+    fireEvent.click(screen.getByRole('checkbox', { name: /^B\./ }));
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(1));
+    expect(screen.getByRole('button', { name: 'Kirim Drill' }).hasAttribute('disabled')).toBe(true);
+    acknowledge({
+      questionInstanceId: question.questionInstanceId,
+      selectedOptionId: null,
+      answer: { optionIds: ['A'] },
+    });
+    await waitFor(() => expect(save).toHaveBeenCalledTimes(2));
+    expect(save.mock.calls[1]).toEqual([question.questionInstanceId, { optionIds: ['A', 'B'] }]);
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Tersimpan'));
+    expect((screen.getByRole('checkbox', { name: /^A\./ }) as HTMLInputElement).checked).toBe(true);
+    expect((screen.getByRole('checkbox', { name: /^B\./ }) as HTMLInputElement).checked).toBe(true);
+  });
+  it('resumes partial Category answers and warns without preventing confirmed submission', async () => {
+    const save = vi
+      .fn()
+      .mockImplementation(async (id, answer) => ({
+        questionInstanceId: id,
+        selectedOptionId: null,
+        answer,
+      }));
+    const submit = typedMount(
+      [
+        {
+          ...question,
+          type: 'CATEGORY',
+          categories: [
+            { id: 'Y', text: 'Ya' },
+            { id: 'N', text: 'Tidak' },
+          ],
+          answer: { categoryByStatementId: { A: 'Y' } },
+        },
+      ],
+      save,
+    );
+    expect((screen.getAllByRole('radio', { name: 'Ya' })[0] as HTMLInputElement).checked).toBe(
+      true,
+    );
+    expect(screen.getByRole('button', { name: 'Soal 1, belum lengkap' })).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Kirim Drill' }));
+    expect(screen.getByText(/1 soal Kategori belum lengkap/)).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }));
+    await waitFor(() => expect(submit).toHaveBeenCalledTimes(1));
+    expect(save).not.toHaveBeenCalled();
+  });
+  it('keeps mismatched typed ACK unsaved until a successful retry; empty MCMA clears to null', async () => {
+    const save = vi
+      .fn()
+      .mockResolvedValueOnce({
+        questionInstanceId: question.questionInstanceId,
+        selectedOptionId: null,
+        answer: null,
+      })
+      .mockImplementation(async (id, answer) => ({
+        questionInstanceId: id,
+        selectedOptionId: null,
+        answer,
+      }));
+    typedMount([mcma], save);
+    fireEvent.click(screen.getByRole('checkbox', { name: /^A\./ }));
+    await screen.findByText(/Konfirmasi penyimpanan tidak sesuai/);
+    fireEvent.click(screen.getByRole('button', { name: 'Coba simpan lagi' }));
+    await waitFor(() => expect(screen.getByRole('status').textContent).toBe('Tersimpan'));
+    fireEvent.click(screen.getByRole('checkbox', { name: /^A\./ }));
+    await waitFor(() => expect(save).toHaveBeenLastCalledWith(question.questionInstanceId, null));
   });
 });

@@ -3,16 +3,15 @@
 import Link from 'next/link';
 import { Card, Icon, ProgressBar } from '@tka/ui';
 import { AssessmentHeader } from './assessment-presentation';
-import { DrillReview } from './drill-review';
+import { RewardSummary } from './reward-summary';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
-import { useLearningView } from './learning-interactions';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
 import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
-import { QUESTION_REPORT_CATEGORIES, RecommendedVideos, ReportForm } from './support';
+import { RecommendedVideos } from './support';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -91,7 +90,7 @@ function DrillForm({
           ? 'Semua soal sudah dijawab. Kirim Drill sekarang?'
           : `${emptyCount} soal belum dijawab. Kirim Drill sekarang?`
       }
-      onSave={(questionId, optionId) =>
+      onSaveTyped={(questionId, optionId) =>
         learningApi.saveAnswer(token, attempt.id, questionId, optionId)
       }
       onSubmit={() => learningApi.submit(token, attempt.id)}
@@ -100,15 +99,30 @@ function DrillForm({
   );
 }
 
-export function DrillTimer({ startedAt, serverTime }: { startedAt: string; serverTime?: string | undefined }) {
+export function DrillTimer({
+  startedAt,
+  serverTime,
+}: {
+  startedAt: string;
+  serverTime?: string | undefined;
+}) {
   const [elapsed, setElapsed] = useState<number | null>(null);
   useEffect(() => {
-    if (!serverTime) { setElapsed(null); return; }
+    if (!serverTime) {
+      setElapsed(null);
+      return;
+    }
     const start = Date.parse(startedAt);
     const receivedTime = Date.parse(serverTime);
-    if (!Number.isFinite(start) || !Number.isFinite(receivedTime)) { setElapsed(null); return; }
+    if (!Number.isFinite(start) || !Number.isFinite(receivedTime)) {
+      setElapsed(null);
+      return;
+    }
     const received = performance.now();
-    const tick = () => setElapsed(Math.max(0, Math.floor((receivedTime - start + performance.now() - received) / 1000)));
+    const tick = () =>
+      setElapsed(
+        Math.max(0, Math.floor((receivedTime - start + performance.now() - received) / 1000)),
+      );
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
@@ -132,29 +146,21 @@ export function ResultScreen() {
 }
 
 function ResultData({ token, attemptId }: { token: string; attemptId: string }) {
-  const [selected, setSelected] = useState(0);
   const query = useQuery({
     queryKey: ['result', attemptId],
     queryFn: () => learningApi.result(token, attemptId),
   });
-  useLearningView(
-    token,
-    'explanation_viewed',
-    { attemptId },
-    query.data?.explanationState === 'available',
-  );
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const result = query.data;
-  const question = result.questions[selected];
   return (
     <div className="practice-session drill-result">
       <AssessmentHeader
         progressLabel="Latihan selesai"
         title="Hasil Latihan Level"
-        status={<span>Hasil tersimpan</span>}
+        status="Hasil tersimpan"
         progress={100}
       />
       {result.isDemo && (
@@ -163,64 +169,33 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
       <div className="drill-result__layout">
         <div className="drill-result__summary">
           <ResultSummary result={result} />
-          <Card className="drill-rewards">
-            <h2>
-              <Icon name="spark" />
-              Rincian XP & Poin
-            </h2>
-            <div className="drill-rewards__stats">
-              <div>
-                <span>Jawaban benar</span>
-                <strong>
-                  {result.correctCount} / {result.questionCount} Soal
-                </strong>
-              </div>
-              <div>
-                <span>Poin mentah</span>
-                <strong>{result.rawPoints}</strong>
-              </div>
-            </div>
-            {result.reward ? (
-              <dl className="drill-rewards__stats" aria-label="Rincian XP tersimpan">
-                <div><dt>XP dasar</dt><dd>{result.reward.baseXp}</dd></div>
-                <div><dt>Bonus kecepatan</dt><dd>{result.reward.bonusXp.toLocaleString('id-ID', { maximumFractionDigits: 2 })}</dd></div>
-                <div><dt>Total XP</dt><dd>{result.reward.totalXp} XP</dd></div>
-                <div><dt>Waktu pengerjaan</dt><dd>{result.reward.durationSeconds.toLocaleString('id-ID', { maximumFractionDigits: 1 })} detik</dd></div>
-              </dl>
-            ) : <p>XP tidak tercatat pada kebijakan attempt lama; nilai akademik tetap tersimpan.</p>}
-          </Card>
+          <RewardSummary
+            kind="drill"
+            xp={result.xp ?? result.reward?.totalXp ?? null}
+            reward={result.reward}
+          />
         </div>
         <div className="drill-result__review">
-          {result.explanationState === 'expired' ? (
-            <Status title="Pembahasan tidak tersedia">
-              Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di
-              server. Nilai dan riwayat hasil tetap tersimpan.
-            </Status>
-          ) : (
-            <DrillReview
-              result={result}
-              selected={selected}
-              onSelect={setSelected}
-              report={
-                question && (
-                  <ReportForm
-                    modal
-                    key={question.questionInstanceId}
-                    categories={QUESTION_REPORT_CATEGORIES}
-                    label={`Laporkan soal ${selected + 1}`}
-                    submit={(category, details, clientRequestId) =>
-                      learningApi.reportQuestion(token, {
-                        clientRequestId,
-                        attemptItemId: question.questionInstanceId,
-                        category,
-                        details,
-                      })
-                    }
-                  />
-                )
-              }
-            />
-          )}
+          <Card className="explanation-entry">
+            <h2>
+              {result.explanationState === 'available'
+                ? 'Pembahasan soal'
+                : 'Pembahasan tidak tersedia'}
+            </h2>
+            {result.explanationState === 'available' ? (
+              <>
+                <p>Lihat jawabanmu, kunci, dan pembahasan setiap soal.</p>
+                <Link className="button-link" href={`/student/drill/${attemptId}/explanation`}>
+                  Lihat pembahasan
+                </Link>
+              </>
+            ) : (
+              <p>
+                Akses pembahasan tidak tersedia untuk attempt ini sesuai kebijakan tersimpan di
+                server. Nilai dan riwayat hasil tetap tersimpan.
+              </p>
+            )}
+          </Card>
           {!result.mastered && <RecommendedVideos token={token} attemptId={attemptId} />}
         </div>
       </div>

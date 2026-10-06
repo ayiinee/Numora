@@ -1,5 +1,7 @@
 # Realtime PvP Architecture
 
+**ENGINEERING DECISION — owner approved 6 October 2026:** the active PRD v0.6 implementation is described in [JOB-16/17](../development/PVP_LEADERBOARDS_JOB16_17.md) and its [rollout](../operations/PVP_LEADERBOARDS_ROLLOUT.md). Server policy resolves published PVP_PRD_V06 v1; default activation is disabled, initial QA is labelled DEMO. PostgreSQL `pvp_active_rooms` enforces one current room per student, participant `left_at` preserves guest history, and terminal transitions release claims transactionally. Redis is disposable scheduling/cache infrastructure. DEMO, official and legacy result dimensions remain separate. Older proposed state/event labels below are historical; generated OpenAPI/WebSocket contracts describe the implemented interfaces.
+
 ## Product baseline
 
 PRD v0.5 baseline requires:
@@ -129,15 +131,10 @@ Initial single API instance can use Socket.IO locally. If multiple API instances
 
 Do not add horizontal WebSocket complexity before load tests justify it.
 
-## OPEN-07
+## OPEN-07 — resolved behavior, Curriculum dependency retained
 
-Still unresolved:
-
-- room/invite expiry;
-- final readiness edge cases;
-- behavior when both players independently lose network.
-
-Implement configuration/state extension points; do not hardcode undocumented product outcomes.## WebSocket contract
+**ENGINEERING DECISION — owner approved 6 October 2026:** room/invite expiry is 600 seconds; both current players must be active, connected and Ready. Waiting guest exit releases the slot and resets Ready; host exit cancels. The earlier expired reconnect deadline forfeits; equal deadlines with both offline cancel. The approved specification above supersedes earlier OPEN wording. Official academic content/difficulty approval remains a Curriculum delivery dependency.
+## WebSocket contract
 
 **ENGINEERING DECISION:** Socket.IO namespace `/pvp`; event names and envelopes follow [Student Area Contract](../api/STUDENT_AREA_CONTRACT.md) and `packages/contracts/websocket/pvp-events.schema.json`. Commands use `eventVersion: "1"`, UUID `requestId`, and validated payloads. Handshake accepts Bearer auth; every command revalidates Student authorization.
 
@@ -145,7 +142,7 @@ Client events: `room:create`, `room:join`, `player:ready`, `answer:submit`, `mat
 
 Server state/transition events: `room:state`, `match:started`, `question:started`, `answer:acknowledged`, `question:resolved`, `player:disconnected`, `match:completed`, `match:forfeited`, `match:cancelled`, `invitation:received`. Callback envelopes use `command:acknowledged`; failures also emit `room:error`.
 
-**OPEN-07:** runtime policy remains absent and real matches are blocked. Fixture policy is injected only by tests, with no environment/user bypass.
+**Historical OPEN-07 (superseded 6 October 2026):** runtime now resolves the published versioned policy through server-only `PVP_MODE`; default remains disabled. Test policy injection stays restricted to tests. Official availability additionally requires manifest-bound Curriculum approval. See JOB-16/17 above.
 
 ## Server time authority
 
@@ -196,12 +193,6 @@ Initial single API instance can use Socket.IO locally. If multiple API instances
 
 Do not add horizontal WebSocket complexity before load tests justify it.
 
-## OPEN-07
+## OPEN-07 — resolved behavior, Curriculum dependency retained
 
-Still unresolved:
-
-- room/invite expiry;
-- final readiness edge cases;
-- behavior when both players independently lose network.
-
-Implement configuration/state extension points; do not hardcode undocumented product outcomes.
+**ENGINEERING DECISION — owner approved 6 October 2026:** room/invite expiry is 600 seconds; both current players must be active, connected and Ready. Waiting guest exit releases the slot and resets Ready; host exit cancels. The earlier expired reconnect deadline forfeits; equal deadlines with both offline cancel. The approved specification above supersedes earlier OPEN wording. Official academic content/difficulty approval remains a Curriculum delivery dependency.

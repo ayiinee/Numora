@@ -1141,3 +1141,83 @@
 .student-answer-option:has(input:focus-visible) {
   outline: 3px solid var(--numora-purple);
 }
+
+/* Shared Student question/reward surfaces; values reuse existing semantic tokens. */
+.learning-detail {
+  margin-top: var(--space-4, 1rem);
+}
+.learning-detail > summary {
+  min-height: 44px;
+  display: flex;
+  align-items: center;
+  cursor: pointer;
+  font-weight: 700;
+  color: var(--color-primary);
+}
+.learning-detail > summary:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+  border-radius: var(--radius-sm);
+}
+.learning-detail[open] > summary {
+  margin-bottom: var(--space-3, 0.75rem);
+}
+.reward-summary__total {
+  display: block;
+  font-size: 1.75rem;
+  color: var(--color-primary);
+}
+.explanation-entry {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-start;
+  gap: var(--space-4, 1rem);
+}
+.question-review-details {
+  display: grid;
+  gap: var(--space-4, 1rem);
+  border-top: 1px solid var(--color-border);
+  margin-top: var(--space-5, 1.25rem);
+  padding-top: var(--space-5, 1.25rem);
+}
+.question-review-status {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3, 0.75rem);
+}
+.review-option-text {
+  display: block;
+  margin-top: var(--space-2, 0.5rem);
+}
+.category-review-list {
+  display: grid;
+  gap: var(--space-3, 0.75rem);
+}
+.submit-incomplete-notice {
+  padding: var(--space-3, 0.75rem);
+  background: var(--color-surface-warm, var(--color-surface));
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+}
+.practice-numbers .is-incomplete {
+  border-style: dashed;
+  color: var(--color-primary);
+}
+.explanation-session .practice-option input:disabled + .practice-option__letter,
+.explanation-session .practice-statement input:disabled {
+  opacity: 1;
+}
+
+.explanation-session .practice-choices:disabled,
+.explanation-session .practice-categories:disabled {
+  opacity: 1;
+}
+
+/* Keep visually hidden statement legends from inheriting full-width positioning. */
+.practice-statement > legend.sr-only { float: none; width: 1px; min-width: 0; }
+/* Pretest uses the existing assessment layout and semantic Student tokens. */
+.pretest-entry { display: grid; gap: var(--space-3, 12px); margin-block: var(--space-4, 16px); }
+.pretest-result { max-width: 760px; margin-inline: auto; }
+.pretest-result dl { display: grid; grid-template-columns: minmax(0, 1fr) auto; gap: var(--space-3, 12px); }
+.pretest-result dd { margin: 0; font-weight: 700; }

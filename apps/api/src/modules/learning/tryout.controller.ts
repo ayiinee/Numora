@@ -1,4 +1,5 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
+import { assessmentAnswerInput } from './assessment-answer.input';
+import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SaveDrillAnswerDto, SavedAnswerDto } from './learning.dto';
 import {
@@ -7,6 +8,8 @@ import {
   TryoutAttemptDto,
   TryoutResultDto,
   TryoutSubmitDto,
+  TryoutPackagesDto,
+  TryoutPackageDto,
 } from './tryout.dto';
 import { TryoutService } from './tryout.service';
 
@@ -22,9 +25,22 @@ export class TryoutController {
     return this.tryout.current(authorization);
   }
 
+  @Get('packages') @ApiOkResponse({ type: TryoutPackagesDto })
+  packages(@Headers('authorization') authorization?: string, @Query('cursor') cursor?: string) {
+    return this.tryout.packages(authorization, cursor);
+  }
+
+  @Get('packages/:packageId') @ApiOkResponse({ type: TryoutPackageDto })
+  packageDetail(@Headers('authorization') authorization: string | undefined, @Param('packageId', ParseUUIDPipe) packageId: string) {
+    return this.tryout.packageDetail(authorization, packageId);
+  }
+
   @Post('attempts')
   @ApiCreatedResponse({ type: TryoutAttemptDto })
-  start(@Headers('authorization') authorization: string | undefined, @Body() input: StartTryoutDto) {
+  start(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() input: StartTryoutDto,
+  ) {
     return this.tryout.start(authorization, input.packageId);
   }
 
@@ -45,7 +61,12 @@ export class TryoutController {
     @Param('questionInstanceId', ParseUUIDPipe) questionInstanceId: string,
     @Body() input: SaveDrillAnswerDto,
   ) {
-    return this.tryout.saveAnswer(authorization, attemptId, questionInstanceId, input.optionId);
+    return this.tryout.saveAnswer(
+      authorization,
+      attemptId,
+      questionInstanceId,
+      assessmentAnswerInput(input),
+    );
   }
 
   @Post('attempts/:attemptId/submit')

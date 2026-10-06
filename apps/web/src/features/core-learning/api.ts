@@ -16,6 +16,8 @@ import type {
   StudentVideoReportDto,
   StudentVideosDto,
   TryoutSubmitDto,
+  PretestAttemptDto, PretestChapterDto, PretestResultDto, PretestSavedAnswerDto,
+  TryoutPackagesDto, TryoutPackageDto,
 } from './generated-types';
 
 const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
@@ -63,9 +65,20 @@ export async function request<T>(token: string, path: string, init?: RequestInit
   return (await response.json()) as T;
 }
 
+import type { AssessmentAnswer } from './assessment-answers';
+import type { SavedAnswerDto } from './generated-types';
 const id = encodeURIComponent;
 
 export const learningApi = {
+  pretestChapter: (token: string, chapterId: string) => request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}`),
+  startPretest: (token: string, chapterId: string) => request<PretestAttemptDto>(token, '/pretest/attempts', { method: 'POST', body: JSON.stringify({ chapterId }) }),
+  skipPretest: (token: string, chapterId: string) => request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}/skip`, { method: 'POST' }),
+  pretestAttempt: (token: string, attemptId: string) => request<PretestAttemptDto>(token, `/pretest/attempts/${id(attemptId)}`),
+  savePretestAnswer: (token: string, attemptId: string, questionId: string, answer: AssessmentAnswer, expectedRevision: number) => request<PretestSavedAnswerDto>(token, `/pretest/attempts/${id(attemptId)}/answers/${id(questionId)}`, { method: 'PATCH', body: JSON.stringify({ answer, expectedRevision }) }),
+  submitPretest: (token: string, attemptId: string) => request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/submit`, { method: 'POST' }),
+  pretestResult: (token: string, attemptId: string) => request<PretestResultDto>(token, `/pretest/attempts/${id(attemptId)}/result`),
+  tryoutPackages: (token: string, cursor?: string) => request<TryoutPackagesDto>(token, `/tryout/packages${cursor ? `?cursor=${id(cursor)}` : ''}`),
+  tryoutPackage: (token: string, packageId: string) => request<TryoutPackageDto>(token, `/tryout/packages/${id(packageId)}`),
   dashboard: (token: string) => request<StudentDashboardDto>(token, '/students/me/dashboard'),
   catalog: (token: string) => request<Catalog>(token, '/chapters'),
   chapter: (token: string, chapterId: string) =>
@@ -84,12 +97,17 @@ export const learningApi = {
     token: string,
     attemptId: string,
     questionInstanceId: string,
-    optionId: string | null,
+    answer: string | AssessmentAnswer,
   ) =>
-    request<{ questionInstanceId: string; selectedOptionId: string | null }>(
+    request<SavedAnswerDto>(
       token,
       `/assessment-attempts/${id(attemptId)}/answers/${id(questionInstanceId)}`,
-      { method: 'PATCH', body: JSON.stringify({ optionId }) },
+      {
+        method: 'PATCH',
+        body: JSON.stringify(
+          typeof answer === 'string' || answer === null ? { optionId: answer } : { answer },
+        ),
+      },
     ),
   submit: (token: string, attemptId: string) =>
     request<DrillResult>(token, `/assessment-attempts/${id(attemptId)}/submit`, {
@@ -109,12 +127,17 @@ export const learningApi = {
     token: string,
     attemptId: string,
     questionInstanceId: string,
-    optionId: string | null,
+    answer: string | AssessmentAnswer,
   ) =>
-    request<{ questionInstanceId: string; selectedOptionId: string | null }>(
+    request<SavedAnswerDto>(
       token,
       `/tryout/attempts/${id(attemptId)}/answers/${id(questionInstanceId)}`,
-      { method: 'PATCH', body: JSON.stringify({ optionId }) },
+      {
+        method: 'PATCH',
+        body: JSON.stringify(
+          typeof answer === 'string' || answer === null ? { optionId: answer } : { answer },
+        ),
+      },
     ),
   submitTryout: (token: string, attemptId: string) =>
     request<TryoutSubmitDto>(token, `/tryout/attempts/${id(attemptId)}/submit`, {

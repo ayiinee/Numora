@@ -7,10 +7,23 @@ import type { DrillQuestion } from './types';
 import { MathText, Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { useAssessmentDeadline } from './use-assessment-deadline';
+import { LearningApiError } from './api';
 import { AssessmentHeader, SubmitConfirmation } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
 
-type SavedAnswer = { questionInstanceId: string; selectedOptionId: string | null };
+import type { SavedAnswerDto } from './generated-types';
+import {
+  answerOf,
+  answerFromChoice,
+  choiceValue,
+  emptyAnswer,
+  incompleteCategory,
+  acknowledgedAnswer,
+  sameAnswer,
+  questionTypeLabels,
+  type AssessmentAnswer,
+} from './assessment-answers';
+type SavedAnswer = SavedAnswerDto;
 
 export function AssessmentSession({
   title,
@@ -20,11 +33,13 @@ export function AssessmentSession({
   submitLabel,
   confirmMessage,
   onSave,
+  onSaveTyped,
   onSubmit,
   onSubmitted,
   deadlineAt,
   serverTime,
   onFinalizationCheck,
+  onReload,
   redesign = false,
   sessionKind = 'drill',
 }: {
@@ -34,34 +49,42 @@ export function AssessmentSession({
   notice?: ReactNode;
   submitLabel: string;
   confirmMessage: (emptyCount: number) => string;
-  onSave: (questionId: string, optionId: string | null) => Promise<SavedAnswer>;
+  onSave?: (questionId: string, optionId: string | null) => Promise<SavedAnswer>;
+  onSaveTyped?: (questionId: string, answer: AssessmentAnswer) => Promise<SavedAnswer>;
   onSubmit: () => Promise<unknown>;
   onSubmitted: () => void;
   deadlineAt?: string | null | undefined;
   serverTime?: string | undefined;
   onFinalizationCheck?: () => void;
+  onReload?: () => void;
   redesign?: boolean;
-  sessionKind?: 'drill' | 'tryout';
+  sessionKind?: 'drill' | 'tryout' | 'pretest';
 }) {
   const [index, setIndex] = useState(0);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
-  const [answers, setAnswers] = useState<Record<string, string | null>>(() =>
+  const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>(() =>
     Object.fromEntries(
-      questions.map((question) => [question.questionInstanceId, question.selectedOptionId]),
+      questions.map((question) => [question.questionInstanceId, answerOf(question)]),
     ),
   );
-  const [unsaved, setUnsaved] = useState<{ questionId: string; optionId: string | null } | null>(
+  const [unsaved, setUnsaved] = useState<{ questionId: string; answer: AssessmentAnswer } | null>(
     null,
   );
+  const pendingAnswer = useRef<{ questionId: string; answer: AssessmentAnswer } | null>(null);
   const [saveError, setSaveError] = useState<string | null>(null);
+  const [saveConflict, setSaveConflict] = useState(false);
   const saving = useRef(false);
   const save = useMutation({
     // Fail visibly when already offline instead of silently pausing the save queue.
     // Only a server acknowledgement may clear unsaved state; retry remains explicit.
     networkMode: 'always',
-    mutationFn: ({ questionId, optionId }: { questionId: string; optionId: string | null }) =>
-      onSave(questionId, optionId),
+    mutationFn: ({ questionId, answer }: { questionId: string; answer: AssessmentAnswer }) => {
+      if (onSaveTyped) return onSaveTyped(questionId, answer);
+      if (onSave && (!answer || 'optionId' in answer))
+        return onSave(questionId, answer?.optionId ?? null);
+      throw new Error('Penyimpanan tipe soal ini belum tersedia.');
+    },
   });
   const finalizing = useRef(false);
   const submit = useMutation({
@@ -80,34 +103,48 @@ export function AssessmentSession({
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
-  useUnsavedWarning(!submit.isSuccess && unsaved !== null, sessionKind === 'drill' && !submit.isSuccess);
+  useUnsavedWarning(
+    !submit.isSuccess && unsaved !== null,
+    sessionKind === 'drill' && !submit.isSuccess,
+  );
 
   if (!question)
     return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
-  const emptyCount = questions.filter((item) => !answers[item.questionInstanceId]).length;
+  const emptyCount = questions.filter((item) =>
+    emptyAnswer(answers[item.questionInstanceId] ?? null),
+  ).length;
 
-  async function choose(questionId: string, optionId: string | null) {
+  async function choose(questionId: string, answer: AssessmentAnswer) {
     if (
+      saveConflict ||
       deadline.expired ||
       finalizing.current ||
-      saving.current ||
-      (unsaved && unsaved.questionId !== questionId)
+      (pendingAnswer.current && pendingAnswer.current.questionId !== questionId)
     )
       return;
-    saving.current = true;
-    setAnswers((previous) => ({ ...previous, [questionId]: optionId }));
-    setUnsaved({ questionId, optionId });
+    const pending = { questionId, answer };
+    pendingAnswer.current = pending;
+    setAnswers((previous) => ({ ...previous, [questionId]: answer }));
+    setUnsaved(pending);
     setSaveError(null);
+    if (saving.current) return;
+    saving.current = true;
     try {
-      const acknowledged = await save.mutateAsync({ questionId, optionId });
-      if (
-        acknowledged.questionInstanceId !== questionId ||
-        acknowledged.selectedOptionId !== optionId
-      ) {
-        throw new Error('Konfirmasi penyimpanan tidak sesuai. Coba simpan lagi.');
+      while (pendingAnswer.current && !finalizing.current) {
+        const next: { questionId: string; answer: AssessmentAnswer } = pendingAnswer.current;
+        const acknowledged = await save.mutateAsync(next);
+        if (
+          acknowledged.questionInstanceId !== next.questionId ||
+          !sameAnswer(acknowledgedAnswer(acknowledged), next.answer)
+        )
+          throw new Error('Konfirmasi penyimpanan tidak sesuai. Coba simpan lagi.');
+        if (pendingAnswer.current === next) {
+          pendingAnswer.current = null;
+          setUnsaved(null);
+        }
       }
-      setUnsaved(null);
     } catch (error) {
+      if (error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT') setSaveConflict(true);
       setSaveError(error instanceof Error ? error.message : 'Jawaban belum tersimpan.');
     } finally {
       saving.current = false;
@@ -122,13 +159,16 @@ export function AssessmentSession({
 
   if (redesign) {
     const disabled =
-      save.isPending ||
+      saveConflict ||
       deadline.expired ||
       submit.isPending ||
       submit.isSuccess ||
       (!!unsaved && unsaved.questionId !== question.questionInstanceId);
     const empty = questions.flatMap((item, position) =>
-      answers[item.questionInstanceId] ? [] : [position + 1],
+      !emptyAnswer(answers[item.questionInstanceId] ?? null) ? [] : [position + 1],
+    );
+    const incomplete = questions.flatMap((item, position) =>
+      incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? [position + 1] : [],
     );
     const flagged = questions.flatMap((item, position) =>
       flags[item.questionInstanceId] ? [position + 1] : [],
@@ -136,11 +176,11 @@ export function AssessmentSession({
     return (
       <div className="practice-session">
         <AssessmentHeader
-          title={sessionKind === 'tryout' ? 'Sesi Tryout TKA' : 'Sesi Latihan Soal'}
+          title={sessionKind === 'pretest' ? 'Sesi Pretest Bab' : sessionKind === 'tryout' ? 'Sesi Tryout TKA' : 'Sesi Latihan Soal'}
           exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}
           status={
             <span role="status">
-              {save.isPending ? 'Menyimpan…' : saveError ? 'Belum tersimpan' : 'Tersimpan'}
+              {saveError ? 'Belum tersimpan' : save.isPending || unsaved ? 'Menyimpan…' : 'Tersimpan'}
             </span>
           }
           timer={
@@ -186,21 +226,22 @@ export function AssessmentSession({
                 <span>
                   Soal {index + 1} dari {questions.length}
                 </span>
-                <span>Pilihan ganda</span>
+                <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
               </div>
               <h2 className="practice-stem">
                 <MathText value={question.stem} />
               </h2>
               <QuestionChoices
-                kind="SINGLE_CHOICE"
+                kind={question.type ?? 'SINGLE_CHOICE'}
                 name={`answer-${question.questionInstanceId}`}
                 options={question.options}
-                value={answers[question.questionInstanceId] ?? null}
+                value={choiceValue(answers[question.questionInstanceId] ?? null)}
+                statements={question.options}
+                categories={question.categories ?? []}
                 disabled={disabled}
-                onChange={(value) => {
-                  if (typeof value === 'string' || value === null)
-                    void choose(question.questionInstanceId, value);
-                }}
+                onChange={(value) =>
+                  void choose(question.questionInstanceId, answerFromChoice(question.type, value))
+                }
               />
               <div className="practice-question__footer">
                 <label>
@@ -217,7 +258,7 @@ export function AssessmentSession({
                   />
                   Tandai Ragu-ragu
                 </label>
-                {answers[question.questionInstanceId] && (
+                {!emptyAnswer(answers[question.questionInstanceId] ?? null) && (
                   <button
                     disabled={disabled}
                     onClick={() => void choose(question.questionInstanceId, null)}
@@ -233,9 +274,13 @@ export function AssessmentSession({
                 <Button
                   variant="secondary"
                   disabled={save.isPending || submit.isPending || submit.isSuccess}
-                  onClick={() => unsaved && void choose(unsaved.questionId, unsaved.optionId)}
+                  onClick={() => {
+                    if (saveConflict) {
+                      if (window.confirm('Muat jawaban terbaru dari server? Perubahan lokal yang belum tersimpan akan diganti.')) onReload?.();
+                    } else if (unsaved) void choose(unsaved.questionId, unsaved.answer);
+                  }}
                 >
-                  Coba simpan lagi
+                  {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
                 </Button>
               </Status>
             )}
@@ -262,8 +307,8 @@ export function AssessmentSession({
                 <button
                   key={item.questionInstanceId}
                   aria-current={index === position ? 'step' : undefined}
-                  aria-label={`Soal ${position + 1}${answers[item.questionInstanceId] ? ', terjawab' : ', kosong'}${flags[item.questionInstanceId] ? ', ragu' : ''}`}
-                  className={`${answers[item.questionInstanceId] ? 'is-answered' : ''} ${flags[item.questionInstanceId] ? 'is-flagged' : ''}`}
+                  aria-label={`Soal ${position + 1}${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? ', belum lengkap' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? ', terjawab' : ', kosong'}${flags[item.questionInstanceId] ? ', ragu' : ''}`}
+                  className={`${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? 'is-incomplete' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? 'is-answered' : ''} ${flags[item.questionInstanceId] ? 'is-flagged' : ''}`}
                   onClick={() => setIndex(position)}
                 >
                   {position + 1}
@@ -304,14 +349,15 @@ export function AssessmentSession({
         <SubmitConfirmation
           open={confirmationOpen && !submit.isSuccess && !deadline.expired}
           title={
-            sessionKind === 'tryout' ? 'Kumpulkan Tryout Sekarang?' : 'Kumpulkan Latihan Sekarang?'
+            sessionKind === 'pretest' ? 'Kumpulkan Pretest Sekarang?' : sessionKind === 'tryout' ? 'Kumpulkan Tryout Sekarang?' : 'Kumpulkan Latihan Sekarang?'
           }
           onClose={() => setConfirmationOpen(false)}
           onConfirm={() => {
-            if (!unsaved && !saving.current) finalize();
+            if (!pendingAnswer.current && !saving.current) finalize();
           }}
           total={questions.length}
           empty={empty}
+          incomplete={incomplete}
           flagged={flagged}
           description={confirmMessage(emptyCount)}
           pending={submit.isPending}
@@ -340,7 +386,7 @@ export function AssessmentSession({
           </span>
         )}
         <span role="status" className={saveError ? 'text-red-700' : 'text-slate-700'}>
-          {save.isPending ? 'Menyimpan…' : saveError ? 'Belum tersimpan' : 'Tersimpan'}
+          {saveError ? 'Belum tersimpan' : save.isPending || unsaved ? 'Menyimpan…' : 'Tersimpan'}
         </span>
       </Panel>
       <ProgressBar
@@ -353,34 +399,24 @@ export function AssessmentSession({
         <h2 className="text-lg font-bold">
           <MathText value={question.stem} />
         </h2>
-        <fieldset
+        <QuestionChoices
+          kind={question.type ?? 'SINGLE_CHOICE'}
+          name={`answer-${question.questionInstanceId}`}
+          options={question.options}
+          statements={question.options}
+          categories={question.categories ?? []}
+          value={choiceValue(answers[question.questionInstanceId] ?? null)}
           disabled={
-            save.isPending ||
             deadline.expired ||
             submit.isPending ||
             submit.isSuccess ||
             (!!unsaved && unsaved.questionId !== question.questionInstanceId)
           }
-          className="mt-6 space-y-3"
-        >
-          <legend className="sr-only">Pilihan jawaban</legend>
-          {question.options.map((option) => (
-            <label
-              key={option.id}
-              className={`assessment-option flex min-h-12 cursor-pointer items-center gap-3 rounded-xl border p-3 ${answers[question.questionInstanceId] === option.id ? 'border-[var(--numora-purple)] bg-purple-50' : 'border-slate-300'}`}
-            >
-              <input
-                type="radio"
-                name={`answer-${question.questionInstanceId}`}
-                checked={answers[question.questionInstanceId] === option.id}
-                onChange={() => void choose(question.questionInstanceId, option.id)}
-              />
-              <span className="font-bold">{option.id}.</span>
-              <MathText value={option.text} />
-            </label>
-          ))}
-        </fieldset>
-        {answers[question.questionInstanceId] && (
+          onChange={(value) =>
+            void choose(question.questionInstanceId, answerFromChoice(question.type, value))
+          }
+        />
+        {!emptyAnswer(answers[question.questionInstanceId] ?? null) && (
           <button
             className="mt-3 min-h-11 text-sm font-semibold text-[var(--numora-purple)] underline"
             disabled={
@@ -401,7 +437,7 @@ export function AssessmentSession({
           <p role="alert">{saveError}</p>
           <button
             className="mt-3 min-h-11 font-semibold text-[var(--numora-purple)] underline"
-            onClick={() => unsaved && void choose(unsaved.questionId, unsaved.optionId)}
+            onClick={() => unsaved && void choose(unsaved.questionId, unsaved.answer)}
           >
             Coba simpan lagi
           </button>
@@ -412,7 +448,7 @@ export function AssessmentSession({
           <button
             key={item.questionInstanceId}
             aria-current={index === position ? 'step' : undefined}
-            aria-label={`Soal ${position + 1}${answers[item.questionInstanceId] ? ', terjawab' : ', kosong'}`}
+            aria-label={`Soal ${position + 1}${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? ', belum lengkap' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? ', terjawab' : ', kosong'}`}
             className={`min-h-11 min-w-11 rounded-lg border font-semibold ${index === position ? 'border-[var(--numora-purple)] bg-purple-100' : 'border-slate-300 bg-white'}`}
             onClick={() => setIndex(position)}
           >

@@ -103,7 +103,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
           requestId,
         );
       if (event === 'match:reconnect') state = await engine.reconnect(user.id, String(p.matchId));
-      if (event === 'room:leave') state = await engine.leave(user.id, String(p.matchId));
+      if (event === 'room:leave') state = await engine.leave(user.id, String(p.matchId), requestId);
       if (event === 'room:cancel') state = await engine.cancelRoom(user.id, String(p.matchId));
       if (event === 'invitation:send') {
         response = await engine.invite(

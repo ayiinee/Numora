@@ -71,6 +71,11 @@ export const assessmentPackages = pgTable(
     variantIndex: integer('variant_index'),
     durationSeconds: integer('duration_seconds'),
     isDemo: boolean('is_demo').notNull().default(false),
+    curriculumApproval: jsonb('curriculum_approval').$type<{
+      reference: string;
+      approvedAt: string;
+      manifestDigest: string;
+    }>(),
     scoringPolicyVersionId: uuid('scoring_policy_version_id').references(
       () => scoringPolicyVersions.id,
       { onDelete: 'restrict' },
@@ -199,8 +204,15 @@ export const assessmentAttempts = pgTable(
     stars: integer('stars'),
     drillPolicyVersion: integer('drill_policy_version'),
     tryoutXpPolicyVersion: integer('tryout_xp_policy_version'),
+    pretestResult: jsonb('pretest_result').$type<{
+      correctCount: number; initialLevel: number; mappingStatus: 'applied' | 'unavailable';
+      unlockedLevels: { id: string; title: string }[];
+    }>(),
   },
   (table) => [
+    uniqueIndex('assessment_attempts_pretest_active_uq')
+      .on(table.studentId, table.chapterIdAtStart)
+      .where(sql`${table.assessmentType} = 'PRETEST' and ${table.status} = 'IN_PROGRESS'`),
     uniqueIndex('assessment_attempts_pretest_once_uq')
       .on(table.studentId, table.chapterIdAtStart)
       .where(
@@ -341,6 +353,7 @@ export const attemptAnswers = pgTable(
       .references(() => attemptItems.id, { onDelete: 'restrict' }),
     answer: jsonb('answer').notNull(),
     savedAt: timestamp('saved_at', { withTimezone: true }).notNull().defaultNow(),
+    revision: integer('revision').notNull().default(0),
     awardedPoints: numeric('awarded_points', { precision: 10, scale: 2 }),
     scoreCategory: integer('score_category'),
     fullyCorrect: boolean('fully_correct'),
@@ -349,6 +362,7 @@ export const attemptAnswers = pgTable(
   },
   (table) => [
     uniqueIndex('attempt_answers_attempt_item_uq').on(table.attemptItemId),
+    check('attempt_answers_revision_ck', sql`${table.revision} >= 0`),
     check(
       'attempt_answers_points_ck',
       sql`${table.awardedPoints} is null or ${table.awardedPoints} >= 0`,
@@ -359,6 +373,13 @@ export const attemptAnswers = pgTable(
     ),
   ],
 ).enableRLS();
+
+// Skip is an entry decision, not an attempt completion or cancellation.
+export const pretestChapterStates = pgTable('pretest_chapter_states', {
+  studentId: uuid('student_id').notNull().references(() => users.id, { onDelete: 'restrict' }),
+  chapterId: uuid('chapter_id').notNull().references(() => chapters.id, { onDelete: 'restrict' }),
+  skippedAt: timestamp('skipped_at', { withTimezone: true }).notNull().defaultNow(),
+}, (table) => [uniqueIndex('pretest_chapter_states_student_chapter_uq').on(table.studentId, table.chapterId)]).enableRLS();
 
 export const levelProgress = pgTable(
   'level_progress',

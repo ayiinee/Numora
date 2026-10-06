@@ -19,11 +19,15 @@ import {
   pvpMatches,
   pvpMatchQuestions,
   pvpPlayers,
+  pvpActiveRooms,
   questionVersions,
+  questions,
+  questionVariants,
+  classes,
   scoringPolicyVersions,
   users,
 } from '@tka/database';
-import { and, asc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
 import { decodeSingleChoice } from '../learning/single-choice.policy';
 import {
   PVP_POLICY,
@@ -44,14 +48,159 @@ const failure = (code: string, detail: string) => new ConflictException({ code, 
 export class PvpEngineService {
   /** Injectable clock is supplied directly by fixture tests, never from a request. */
   readonly now: () => Date = () => new Date();
+  private schedulerReady = false;
   constructor(@Inject(PVP_POLICY) private readonly policy: PvpPolicy | null) {}
 
-  availability() {
+  setSchedulerReady(ready: boolean) {
+    this.schedulerReady = ready;
+  }
+  get dataMode() {
+    return this.policy ? (this.policy.mode ?? 'demo') : 'official';
+  }
+  private get transportReady() {
+    return this.policy?.mode === undefined || this.schedulerReady;
+  }
+  private get newRoomsEnabled() {
+    return process.env.PVP_NEW_MATCHES_ENABLED !== 'false';
+  }
+  async availability(studentId?: string) {
+    const difficulties = await Promise.all(
+      (['easy', 'medium', 'hard'] as const).map(async (difficulty) => {
+        let reasonCode: string | null = !this.policy
+          ? 'PVP_POLICY_OPEN'
+          : !this.newRoomsEnabled
+            ? 'PVP_NEW_MATCHES_DISABLED'
+            : !this.transportReady
+              ? 'PVP_SCHEDULER_UNAVAILABLE'
+              : null;
+        if (!reasonCode) {
+          try {
+            await this.selectPackage(getDatabase().db, difficulty);
+          } catch (error) {
+            if (!(
+              error instanceof ConflictException || error instanceof ServiceUnavailableException
+            ))
+              throw error;
+            reasonCode =
+              (error.getResponse() as { code?: string }).code ?? 'PVP_CONTENT_UNAVAILABLE';
+          }
+        }
+        return { difficulty, available: reasonCode === null, reasonCode };
+      }),
+    );
+    const available = difficulties.some((d) => d.available);
     return {
-      available: !!this.policy,
-      reasonCode: this.policy ? null : 'PVP_POLICY_OPEN',
-      message: this.policy ? 'PvP tersedia.' : 'PvP belum tersedia.',
+      available,
+      reasonCode: available ? null : difficulties[0]!.reasonCode,
+      message: available
+        ? this.dataMode === 'demo'
+          ? 'PvP DEMO tersedia.'
+          : 'PvP tersedia.'
+        : 'PvP belum tersedia.',
+      dataMode: this.dataMode,
+      difficulties,
+      activeMatchId: studentId ? await this.activeRoom(studentId) : null,
     };
+  }
+
+  async activeRoom(studentId: string) {
+    const { db } = getDatabase();
+    const [room] = await db
+      .select()
+      .from(pvpActiveRooms)
+      .where(eq(pvpActiveRooms.studentId, studentId));
+    return room?.matchId ?? null;
+  }
+
+  private async selectPackage(tx: Database | Transaction, difficulty: Difficulty) {
+    const policy = requirePvpPolicy(this.policy);
+    const [version] = await tx
+      .select()
+      .from(scoringPolicyVersions)
+      .where(
+        and(
+          eq(scoringPolicyVersions.id, policy.policyVersionId),
+          eq(scoringPolicyVersions.status, 'PUBLISHED'),
+        ),
+      );
+    if (!version)
+      throw new ServiceUnavailableException({
+        code: 'PVP_POLICY_UNAVAILABLE',
+        detail: 'Kebijakan pertandingan belum tersedia.',
+      });
+    const candidates = await tx
+      .select()
+      .from(assessmentPackages)
+      .where(
+        and(
+          eq(assessmentPackages.assessmentType, 'PVP'),
+          eq(assessmentPackages.status, 'PUBLISHED'),
+          eq(assessmentPackages.isDemo, this.dataMode === 'demo'),
+          eq(assessmentPackages.scoringPolicyVersionId, policy.policyVersionId),
+          lte(assessmentPackages.releaseAt, this.now()),
+          sql`(${assessmentPackages.closeAt} is null or ${assessmentPackages.closeAt} > ${this.now().toISOString()})`,
+        ),
+      )
+      .orderBy(desc(assessmentPackages.releaseAt), asc(assessmentPackages.id));
+    for (const pack of candidates) {
+      if (policy.mode && (!pack.frozenAt || !pack.manifestDigest)) continue;
+      if (
+        this.dataMode === 'official' &&
+        (!pack.frozenAt ||
+          !pack.manifestDigest ||
+          !pack.curriculumApproval?.reference?.trim() ||
+          !Number.isFinite(Date.parse(pack.curriculumApproval.approvedAt)) ||
+          pack.curriculumApproval.manifestDigest !== pack.manifestDigest)
+      )
+        continue;
+      const items = await tx
+        .select({ item: packageItems, version: questionVersions, contentStatus: questions.status })
+        .from(packageItems)
+        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+        .where(eq(packageItems.packageId, pack.id))
+        .orderBy(asc(packageItems.displayOrder));
+      if (
+        items.length !== 10 ||
+        items.some(
+          ({ item, version: v, contentStatus }, i) =>
+            item.displayOrder !== i + 1 ||
+            v.difficulty?.toLowerCase() !== difficulty ||
+            contentStatus !== 'READY',
+        )
+      )
+        continue;
+      try {
+        items.forEach(({ version: v }) => decodeSingleChoice(v));
+      } catch (error) {
+        if (error instanceof ServiceUnavailableException) continue;
+        throw error;
+      }
+      return { pack, items, version };
+    }
+    throw new ServiceUnavailableException({
+      code: 'PVP_CONTENT_UNAVAILABLE',
+      detail: 'Paket PvP valid untuk kesulitan ini belum tersedia.',
+    });
+  }
+
+  private async assertRoomAvailable(tx: Transaction, studentId: string, matchId?: string) {
+    await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${studentId}))`);
+    const [room] = await tx
+      .select()
+      .from(pvpActiveRooms)
+      .where(eq(pvpActiveRooms.studentId, studentId));
+    if (room && room.matchId !== matchId)
+      throw failure(
+        'PVP_ACTIVE_ROOM_EXISTS',
+        'Selesaikan atau keluar dari room aktif sebelum bergabung lagi.',
+      );
+  }
+
+  private pinnedDuration(match: Match) {
+    const value = (match.scoringSnapshot as { durationSeconds?: number }).durationSeconds;
+    return value ?? durationSeconds(match.difficulty as Difficulty);
   }
 
   private async locked(tx: Transaction, matchId: string): Promise<Match> {
@@ -67,11 +216,24 @@ export class PvpEngineService {
       });
     return match;
   }
-  private async member(tx: Database | Transaction, matchId: string, studentId: string) {
+  private async member(
+    tx: Database | Transaction,
+    matchId: string,
+    studentId: string,
+    active = true,
+  ) {
     const [player] = await tx
       .select()
       .from(pvpPlayers)
-      .where(and(eq(pvpPlayers.matchId, matchId), eq(pvpPlayers.studentId, studentId)));
+      .where(
+        and(
+          eq(pvpPlayers.matchId, matchId),
+          eq(pvpPlayers.studentId, studentId),
+          active ? isNull(pvpPlayers.leftAt) : undefined,
+        ),
+      )
+      .orderBy(desc(sql`${pvpPlayers.leftAt} is null`), desc(pvpPlayers.id))
+      .limit(1);
     if (!player)
       throw new ForbiddenException({
         code: 'MATCH_ACCESS_DENIED',
@@ -79,19 +241,30 @@ export class PvpEngineService {
       });
     return player;
   }
-  private async event(tx: Transaction, match: Match, eventName: string) {
+  private async event(
+    tx: Transaction,
+    match: Match,
+    eventName: string,
+    context: Record<string, unknown> = {},
+    actorId = match.creatorStudentId,
+  ) {
     await tx.insert(analyticsOutbox).values({
       eventName,
       entityType: 'pvp_match',
       entityId: match.id,
-      actorUserId: match.creatorStudentId,
+      actorUserId: actorId,
       occurredAt: this.now(),
-      payload: { difficulty: match.difficulty },
+      payload: { difficulty: match.difficulty, ...context },
     });
   }
 
   async create(studentId: string, difficulty: Difficulty, requestId: string) {
     const policy = requirePvpPolicy(this.policy);
+    if (!this.transportReady)
+      throw new ServiceUnavailableException({
+        code: 'PVP_SCHEDULER_UNAVAILABLE',
+        detail: 'Penjadwal pertandingan belum tersedia.',
+      });
     const { db } = getDatabase();
     const matchId = await db.transaction(async (tx) => {
       await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${studentId}))`);
@@ -104,53 +277,15 @@ export class PvpEngineService {
             eq(pvpMatches.createRequestId, requestId),
           ),
         );
-      if (existing) return existing.id;
-      const [version] = await tx
-        .select()
-        .from(scoringPolicyVersions)
-        .where(
-          and(
-            eq(scoringPolicyVersions.id, policy.policyVersionId),
-            eq(scoringPolicyVersions.status, 'PUBLISHED'),
-          ),
-        );
-      if (!version)
-        throw new ServiceUnavailableException({
-          code: 'PVP_POLICY_UNAVAILABLE',
-          detail: 'Kebijakan pertandingan belum tersedia.',
-        });
-      const [pack] = await tx
-        .select()
-        .from(assessmentPackages)
-        .where(
-          and(
-            eq(assessmentPackages.assessmentType, 'PVP'),
-            eq(assessmentPackages.status, 'PUBLISHED'),
-            eq(assessmentPackages.scoringPolicyVersionId, policy.policyVersionId),
-            lte(assessmentPackages.releaseAt, this.now()),
-            sql`(${assessmentPackages.closeAt} is null or ${assessmentPackages.closeAt} > ${this.now().toISOString()})`,
-            sql`exists (select 1 from package_items i join question_versions v on v.id = i.question_version_id where i.package_id = ${assessmentPackages.id} and lower(v.difficulty) = ${difficulty})`,
-          ),
-        )
-        .orderBy(asc(assessmentPackages.id))
-        .limit(1);
-      if (!pack)
-        throw new ServiceUnavailableException({
-          code: 'PVP_CONTENT_UNAVAILABLE',
-          detail: 'Paket PvP belum tersedia.',
-        });
-      const items = await tx
-        .select({ item: packageItems, version: questionVersions })
-        .from(packageItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
-        .where(eq(packageItems.packageId, pack.id))
-        .orderBy(asc(packageItems.displayOrder));
-      if (
-        items.length !== 10 ||
-        items.some(({ version: v }) => v.difficulty?.toLowerCase() !== difficulty)
-      )
-        throw failure('PVP_CONTENT_INVALID', 'Paket harus berisi 10 soal setara.');
-      items.forEach(({ version: v }) => decodeSingleChoice(v));
+      if (existing) {
+        if (existing.difficulty !== difficulty)
+          throw failure('REQUEST_ID_REUSED', 'Request ID sudah digunakan untuk room lain.');
+        return existing.id;
+      }
+      if (!this.newRoomsEnabled)
+        throw failure('PVP_NEW_MATCHES_DISABLED', 'Pembuatan room baru sedang dinonaktifkan.');
+      await this.assertRoomAvailable(tx, studentId);
+      const { pack, items, version } = await this.selectPackage(tx, difficulty);
       const now = this.now();
       const [match] = await tx
         .insert(pvpMatches)
@@ -160,6 +295,7 @@ export class PvpEngineService {
           createRequestId: requestId,
           roomCode: randomBytes(6).toString('hex').toUpperCase(),
           difficulty,
+          dataMode: this.dataMode,
           createdAt: now,
           expiresAt: new Date(now.getTime() + policy.roomLifetimeSeconds * 1000),
           scoringPolicyVersionId: policy.policyVersionId,
@@ -191,7 +327,11 @@ export class PvpEngineService {
   }
 
   private async addPlayer(tx: Transaction, match: Match, studentId: string) {
-    const players = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, match.id));
+    await this.assertRoomAvailable(tx, studentId, match.id);
+    const players = await tx
+      .select()
+      .from(pvpPlayers)
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
     if (players.some((p) => p.studentId === studentId)) return;
     if (match.status !== 'WAITING' || (match.expiresAt && match.expiresAt <= this.now()))
       throw failure('ROOM_CLOSED', 'Room sudah ditutup.');
@@ -210,6 +350,7 @@ export class PvpEngineService {
           gt(pvpInvites.expiresAt, this.now()),
         ),
       );
+    await this.closeInvites(tx, match.id);
   }
   async join(studentId: string, roomCode: string) {
     requirePvpPolicy(this.policy);
@@ -242,10 +383,30 @@ export class PvpEngineService {
         throw failure('MATCH_CLOSED', 'Pertandingan sudah ditutup.');
       if (match.expiresAt && match.expiresAt <= this.now())
         throw failure('ROOM_CLOSED', 'Room sudah kedaluwarsa.');
+      if (player.connectionStatus !== 'CONNECTED')
+        throw failure('PLAYER_DISCONNECTED', 'Sambungkan kembali sebelum Ready.');
       await tx.update(pvpPlayers).set({ ready: true }).where(eq(pvpPlayers.id, player.id));
-      const players = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, matchId));
+      const players = await tx
+        .select()
+        .from(pvpPlayers)
+        .where(and(eq(pvpPlayers.matchId, matchId), isNull(pvpPlayers.leftAt)));
+      const activeUsers = await tx
+        .select({ id: users.id })
+        .from(users)
+        .where(
+          and(
+            inArray(
+              users.id,
+              players.map((p) => p.studentId),
+            ),
+            eq(users.role, 'STUDENT'),
+            eq(users.status, 'ACTIVE'),
+          ),
+        )
+        .for('share');
       if (
         players.length === 2 &&
+        activeUsers.length === 2 &&
         players.every((p) => p.ready && p.connectionStatus === 'CONNECTED')
       ) {
         await tx
@@ -253,6 +414,7 @@ export class PvpEngineService {
           .set({ status: 'RUNNING', startedAt: this.now() })
           .where(eq(pvpMatches.id, matchId));
         await this.startQuestion(tx, match, 1);
+        await this.closeInvites(tx, match.id);
         await this.event(tx, match, 'pvp_match_started');
       }
     });
@@ -265,9 +427,7 @@ export class PvpEngineService {
       .set({
         status: 'ACTIVE',
         startedAt: now,
-        deadlineAt: new Date(
-          now.getTime() + durationSeconds(match.difficulty as Difficulty) * 1000,
-        ),
+        deadlineAt: new Date(now.getTime() + this.pinnedDuration(match) * 1000),
       })
       .where(
         and(eq(pvpMatchQuestions.matchId, match.id), eq(pvpMatchQuestions.displayOrder, order)),
@@ -299,6 +459,18 @@ export class PvpEngineService {
       if (previous) return; // The original answer remains immutable, including retries after timeout.
       if (match.status !== 'RUNNING' || player.connectionStatus !== 'CONNECTED')
         throw failure('MATCH_NOT_RUNNING', 'Pertandingan tidak sedang berjalan.');
+      const disconnected = await tx
+        .select()
+        .from(pvpPlayers)
+        .where(
+          and(
+            eq(pvpPlayers.matchId, matchId),
+            isNull(pvpPlayers.leftAt),
+            eq(pvpPlayers.connectionStatus, 'DISCONNECTED'),
+          ),
+        );
+      if (disconnected.some((p) => p.reconnectDeadlineAt && p.reconnectDeadlineAt < this.now()))
+        throw failure('RECONNECT_EXPIRED', 'Pertandingan menunggu finalisasi reconnect server.');
       const [item] = await tx
         .select({ question: pvpMatchQuestions, version: questionVersions })
         .from(pvpMatchQuestions)
@@ -317,7 +489,7 @@ export class PvpEngineService {
       const points = pvpPoints(
         optionId === content.correctOptionId,
         item.question.deadlineAt.getTime() - this.now().getTime(),
-        durationSeconds(match.difficulty as Difficulty) * 1000,
+        this.pinnedDuration(match) * 1000,
       );
       await tx.insert(pvpAnswers).values({
         playerId: player.id,
@@ -344,7 +516,10 @@ export class PvpEngineService {
     question: typeof pvpMatchQuestions.$inferSelect,
   ) {
     if (question.status !== 'ACTIVE') return;
-    const players = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, match.id));
+    const players = await tx
+      .select()
+      .from(pvpPlayers)
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
     for (const player of players) {
       await tx
         .insert(pvpAnswers)
@@ -373,7 +548,10 @@ export class PvpEngineService {
       .where(eq(pvpMatchQuestions.id, question.id));
     if (question.displayOrder < 10) await this.startQuestion(tx, match, question.displayOrder + 1);
     else {
-      const final = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, match.id));
+      const final = await tx
+        .select()
+        .from(pvpPlayers)
+        .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
       const top = Math.max(...final.map((p) => Number(p.totalPoints)));
       const draw = final.every((p) => Number(p.totalPoints) === top);
       for (const p of final)
@@ -409,15 +587,57 @@ export class PvpEngineService {
     await this.closeInvites(tx, match.id);
     await this.event(tx, match, 'pvp_match_cancelled');
   }
-  async leave(studentId: string, matchId: string) {
+  async leave(studentId: string, matchId: string, requestId?: string) {
     const { db } = getDatabase();
     await db.transaction(async (tx) => {
       const match = await this.locked(tx, matchId);
-      await this.member(tx, matchId, studentId);
+      const player = await this.member(tx, matchId, studentId, false);
+      if (requestId) {
+        const [receipt] = await tx
+          .select({ id: analyticsOutbox.id })
+          .from(analyticsOutbox)
+          .where(
+            and(
+              eq(analyticsOutbox.entityId, matchId),
+              eq(analyticsOutbox.eventName, 'pvp_guest_left'),
+              eq(analyticsOutbox.actorUserId, studentId),
+              sql`${analyticsOutbox.payload}->>'requestId'=${requestId}`,
+            ),
+          )
+          .limit(1);
+        if (receipt) return;
+      }
+      if (match.status === 'FINISHED' || match.status === 'CANCELLED' || player.leftAt) return;
       if (match.status === 'RUNNING') await this.forfeit(tx, match, studentId);
-      else await this.cancel(tx, match, 'PLAYER_LEFT');
+      else if (match.creatorStudentId === studentId) await this.cancel(tx, match, 'HOST_LEFT');
+      else await this.releaseGuest(tx, match, player.id, requestId, studentId);
     });
     return this.snapshot(studentId, matchId);
+  }
+  private async releaseGuest(
+    tx: Transaction,
+    match: Match,
+    playerId: string,
+    requestId?: string,
+    studentId?: string,
+  ) {
+    await tx
+      .update(pvpPlayers)
+      .set({ leftAt: this.now(), ready: false, reconnectDeadlineAt: null })
+      .where(eq(pvpPlayers.id, playerId));
+    await tx
+      .update(pvpPlayers)
+      .set({ ready: false })
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
+    await tx.update(pvpMatches).set({ status: 'WAITING' }).where(eq(pvpMatches.id, match.id));
+    await this.closeInvites(tx, match.id);
+    await this.event(
+      tx,
+      match,
+      'pvp_guest_left',
+      { playerId, requestId: requestId ?? null },
+      studentId ?? match.creatorStudentId,
+    );
   }
   async cancelRoom(studentId: string, matchId: string) {
     await getDatabase().db.transaction(async (tx) => {
@@ -433,7 +653,10 @@ export class PvpEngineService {
   }
   private async forfeit(tx: Transaction, match: Match, studentId: string) {
     if (match.status !== 'RUNNING') return;
-    const players = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, match.id));
+    const players = await tx
+      .select()
+      .from(pvpPlayers)
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
     for (const p of players)
       await tx
         .update(pvpPlayers)
@@ -464,6 +687,7 @@ export class PvpEngineService {
         .update(pvpPlayers)
         .set({
           connectionStatus: 'DISCONNECTED',
+          ...(match.status !== 'RUNNING' ? { ready: false } : {}),
           disconnectedAt: this.now(),
           reconnectDeadlineAt: new Date(this.now().getTime() + 20_000),
         })
@@ -474,9 +698,22 @@ export class PvpEngineService {
     const { db } = getDatabase();
     await db.transaction(async (tx) => {
       const match = await this.locked(tx, matchId);
-      const player = await this.member(tx, matchId, studentId);
+      await this.member(tx, matchId, studentId, false);
       await this.advance(tx, match);
-      if (player.reconnectDeadlineAt && player.reconnectDeadlineAt <= this.now()) return;
+      const [current] = await tx.select().from(pvpMatches).where(eq(pvpMatches.id, matchId));
+      if (!current || current.status === 'FINISHED' || current.status === 'CANCELLED') return;
+      const [player] = await tx
+        .select()
+        .from(pvpPlayers)
+        .where(
+          and(
+            eq(pvpPlayers.matchId, matchId),
+            eq(pvpPlayers.studentId, studentId),
+            isNull(pvpPlayers.leftAt),
+          ),
+        );
+      if (!player || (player.reconnectDeadlineAt && player.reconnectDeadlineAt < this.now()))
+        return;
       await tx
         .update(pvpPlayers)
         .set({ connectionStatus: 'CONNECTED', disconnectedAt: null, reconnectDeadlineAt: null })
@@ -486,12 +723,40 @@ export class PvpEngineService {
   }
   private async advance(tx: Transaction, match: Match) {
     if (match.status === 'FINISHED' || match.status === 'CANCELLED') return;
-    const players = await tx.select().from(pvpPlayers).where(eq(pvpPlayers.matchId, match.id));
-    const disconnected = players.filter((p) => p.connectionStatus === 'DISCONNECTED');
-    if (disconnected.some((p) => p.reconnectDeadlineAt && p.reconnectDeadlineAt <= this.now())) {
-      if (disconnected.length === 2 || match.status !== 'RUNNING')
-        await this.cancel(tx, match, 'RECONNECT_EXPIRED');
-      else await this.forfeit(tx, match, disconnected[0]!.studentId);
+    if (match.status !== 'RUNNING' && match.expiresAt && match.expiresAt <= this.now()) {
+      await this.cancel(tx, match, 'ROOM_EXPIRED');
+      return;
+    }
+    const players = await tx
+      .select()
+      .from(pvpPlayers)
+      .where(and(eq(pvpPlayers.matchId, match.id), isNull(pvpPlayers.leftAt)));
+    const disconnected = players
+      .filter((p) => p.connectionStatus === 'DISCONNECTED')
+      .sort((a, b) => a.reconnectDeadlineAt!.getTime() - b.reconnectDeadlineAt!.getTime());
+    if (disconnected[0]?.reconnectDeadlineAt && disconnected[0].reconnectDeadlineAt < this.now()) {
+      const first = disconnected[0];
+      if (match.status !== 'RUNNING') {
+        if (first.studentId === match.creatorStudentId)
+          await this.cancel(tx, match, 'HOST_RECONNECT_EXPIRED');
+        else {
+          await this.releaseGuest(tx, match, first.id);
+          const host = disconnected.find((p) => p.studentId === match.creatorStudentId);
+          if (host?.reconnectDeadlineAt && host.reconnectDeadlineAt < this.now())
+            await this.cancel(tx, match, 'HOST_RECONNECT_EXPIRED');
+        }
+      } else {
+        const pinned = match.scoringSnapshot as { policy?: PvpPolicy };
+        const equal =
+          disconnected.length === 2 &&
+          disconnected[1]!.reconnectDeadlineAt!.getTime() === first.reconnectDeadlineAt!.getTime();
+        if (
+          equal ||
+          (disconnected.length === 2 && pinned.policy?.simultaneousDisconnect === 'cancel')
+        )
+          await this.cancel(tx, match, 'SIMULTANEOUS_DISCONNECT');
+        else await this.forfeit(tx, match, first.studentId);
+      }
       return;
     }
     if (match.status !== 'RUNNING') {
@@ -562,6 +827,7 @@ export class PvpEngineService {
           and(
             inArray(classMemberships.studentUserId, [studentId, recipientId]),
             isNull(classMemberships.leftAt),
+            sql`exists(select 1 from ${classes} c where c.id=${classMemberships.classId} and c.archived_at is null)`,
           ),
         )
         .for('share');
@@ -640,8 +906,11 @@ export class PvpEngineService {
         .from(pvpInvites)
         .where(eq(pvpInvites.id, invitation.id))
         .for('update');
-      if (current!.status === 'ACCEPTED' && accept) return match.id;
-      if (current!.status !== 'PENDING' || !current!.expiresAt || current!.expiresAt <= this.now())
+      const replayAccepted = current!.status === 'ACCEPTED' && accept;
+      if (
+        !replayAccepted &&
+        (current!.status !== 'PENDING' || !current!.expiresAt || current!.expiresAt <= this.now())
+      )
         throw failure('INVITE_CLOSED', 'Undangan sudah berakhir.');
       const members = await tx
         .select()
@@ -651,6 +920,7 @@ export class PvpEngineService {
             inArray(classMemberships.studentUserId, [studentId, current!.senderStudentId]),
             eq(classMemberships.classId, current!.classIdAtInvite),
             isNull(classMemberships.leftAt),
+            sql`exists(select 1 from ${classes} c where c.id=${classMemberships.classId} and c.archived_at is null)`,
           ),
         )
         .for('share');
@@ -659,6 +929,15 @@ export class PvpEngineService {
           code: 'CLASSMATE_REQUIRED',
           detail: 'Undangan hanya berlaku untuk kelas yang sama.',
         });
+      if (replayAccepted) {
+        if (
+          !['WAITING', 'READY', 'RUNNING'].includes(match.status) ||
+          (match.status !== 'RUNNING' && match.expiresAt && match.expiresAt <= this.now())
+        )
+          throw failure('ROOM_CLOSED', 'Room undangan sudah berakhir.');
+        await this.member(tx, match.id, studentId);
+        return match.id;
+      }
       if (accept) await this.addPlayer(tx, match, studentId);
       else
         await tx
@@ -674,7 +953,7 @@ export class PvpEngineService {
     const { db } = getDatabase();
     // Consistent snapshot prevents a transition from mixing two question states.
     return db.transaction(async (tx) => {
-      await this.member(tx, matchId, studentId);
+      await this.member(tx, matchId, studentId, false);
       const match = await this.locked(tx, matchId);
       const [pack] = await tx
         .select({ isDemo: assessmentPackages.isDemo })
@@ -684,10 +963,10 @@ export class PvpEngineService {
         .select({ player: pvpPlayers, name: users.displayName })
         .from(pvpPlayers)
         .innerJoin(users, eq(users.id, pvpPlayers.studentId))
-        .where(eq(pvpPlayers.matchId, matchId))
+        .where(and(eq(pvpPlayers.matchId, matchId), isNull(pvpPlayers.leftAt)))
         .orderBy(asc(pvpPlayers.playerSlot));
       const [active] =
-        match.status === 'RUNNING'
+        match.status === 'RUNNING' && players.some((p) => p.player.studentId === studentId)
           ? await tx
               .select({ question: pvpMatchQuestions, version: questionVersions })
               .from(pvpMatchQuestions)
@@ -699,18 +978,19 @@ export class PvpEngineService {
                 and(eq(pvpMatchQuestions.matchId, matchId), eq(pvpMatchQuestions.status, 'ACTIVE')),
               )
           : [];
-      const self = players.find((p) => p.player.studentId === studentId)!;
-      const [answer] = active
-        ? await tx
-            .select()
-            .from(pvpAnswers)
-            .where(
-              and(
-                eq(pvpAnswers.playerId, self.player.id),
-                eq(pvpAnswers.matchQuestionId, active.question.id),
-              ),
-            )
-        : [];
+      const self = players.find((p) => p.player.studentId === studentId);
+      const [answer] =
+        active && self
+          ? await tx
+              .select()
+              .from(pvpAnswers)
+              .where(
+                and(
+                  eq(pvpAnswers.playerId, self.player.id),
+                  eq(pvpAnswers.matchQuestionId, active.question.id),
+                ),
+              )
+          : [];
       const content = active ? decodeSingleChoice(active.version) : null;
       if (active && content)
         await tx.execute(
@@ -725,6 +1005,8 @@ export class PvpEngineService {
         status: match.status,
         serverTime: this.now().toISOString(),
         isDemo: pack!.isDemo,
+        participantActive: !!self,
+        expiresAt: match.expiresAt?.toISOString() ?? null,
         recordEligible: match.recordEligible,
         endReason: match.endReason,
         players: players.map(({ player: p, name }) => ({
@@ -745,7 +1027,7 @@ export class PvpEngineService {
                 stem: content.stem,
                 options: content.options,
                 deadlineAt: active.question.deadlineAt!.toISOString(),
-                durationSeconds: durationSeconds(match.difficulty as Difficulty),
+                durationSeconds: this.pinnedDuration(match),
                 answered: !!answer,
                 selectedOptionId: value?.optionId ?? null,
               }

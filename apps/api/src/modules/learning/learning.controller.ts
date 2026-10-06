@@ -1,3 +1,4 @@
+import { assessmentAnswerInput } from './assessment-answer.input';
 import { MaterialsService } from './materials.service';
 import { StudentMaterialsDto } from './materials.dto';
 import {
@@ -139,7 +140,7 @@ export class LearningController {
       authorization,
       attemptId,
       questionInstanceId,
-      input.optionId,
+      assessmentAnswerInput(input),
     );
   }
 

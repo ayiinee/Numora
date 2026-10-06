@@ -12,6 +12,16 @@ export class PvpAvailabilityDto {
   @ApiProperty() available!: boolean;
   @ApiProperty({ type: String, nullable: true }) reasonCode!: string | null;
   @ApiProperty() message!: string;
+  @ApiProperty({ enum: ['demo', 'official'], required: false }) dataMode?: 'demo' | 'official';
+  @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) activeMatchId?:
+    string | null;
+  @ApiProperty({ type: () => [PvpDifficultyAvailabilityDto], required: false })
+  difficulties?: PvpDifficultyAvailabilityDto[];
+}
+export class PvpDifficultyAvailabilityDto {
+  @ApiProperty({ enum: ['easy', 'medium', 'hard'] }) difficulty!: Difficulty;
+  @ApiProperty() available!: boolean;
+  @ApiProperty({ type: String, nullable: true }) reasonCode!: string | null;
 }
 export class StudentPeerDto {
   @ApiProperty() studentId!: string;
@@ -46,6 +56,8 @@ export class PvpSnapshotDto {
   @ApiProperty({ enum: ['WAITING', 'READY', 'RUNNING', 'FINISHED', 'CANCELLED'] }) status!: string;
   @ApiProperty() serverTime!: string;
   @ApiProperty() isDemo!: boolean;
+  @ApiProperty({ required: false }) participantActive?: boolean;
+  @ApiProperty({ type: String, nullable: true, required: false }) expiresAt?: string | null;
   @ApiProperty() recordEligible!: boolean;
   @ApiProperty({ type: String, nullable: true }) endReason!: string | null;
   @ApiProperty({ type: [PvpPlayerDto] }) players!: PvpPlayerDto[];

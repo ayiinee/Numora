@@ -6,6 +6,10 @@ loadEnvConfig(path.resolve(process.cwd(), '../..'), process.env.NODE_ENV === 'de
 
 const nextConfig: NextConfig = {
   reactStrictMode: true,
+  // Reuse explicit development origins so LAN clients can load Next.js assets.
+  allowedDevOrigins: (process.env.CORS_ORIGINS ?? 'http://localhost:3000')
+    .split(',')
+    .map((origin) => new URL(origin.trim()).hostname),
   distDir: process.env.NUMORA_WEB_DIST_DIR ?? '.next',
   transpilePackages: ['@tka/ui'],
   agentRules: false,
