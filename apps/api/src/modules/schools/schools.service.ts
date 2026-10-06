@@ -40,13 +40,27 @@ const isTokenHashCollision = (error: unknown): boolean => {
 export class SchoolsService {
   constructor(private readonly identity: IdentityService) {}
 
-  private async role(authorization: string | undefined, role: 'TEACHER' | 'ADMIN') {
+  private async role(authorization: string | undefined, role: 'TEACHER') {
+    const profile = await this.identity.me(authorization);
+    if (profile.role !== role)
+      throw new ForbiddenException({ code: 'ROLE_FORBIDDEN', detail: 'Akses ditolak.' });
+    return profile.id;
+  }
+
+  private async adminForSchools(
+    authorization: string | undefined,
+    permission: 'schoolRead' | 'operations',
+  ) {
     const profile = await this.identity.me(authorization);
     if (
-      profile.role !== role ||
-      (role === 'ADMIN' && !adminAllows(profile.adminRole, 'operations'))
+      profile.role !== 'ADMIN' ||
+      profile.status !== 'ACTIVE' ||
+      !adminAllows(profile.adminRole, permission)
     )
-      throw new ForbiddenException({ code: 'ROLE_FORBIDDEN', detail: 'Akses ditolak.' });
+      throw new ForbiddenException({
+        code: 'ADMIN_PERMISSION_REQUIRED',
+        detail: 'Akses Admin sekolah tidak diizinkan.',
+      });
     return profile.id;
   }
 
@@ -76,14 +90,12 @@ export class SchoolsService {
         )
         .returning({ id: teacherSchoolMemberships.id });
       if (ended.length)
-        await tx
-          .insert(auditLogs)
-          .values({
-            actorUserId: teacherId,
-            action: 'teacher_left_school',
-            entityType: 'school',
-            entityId: schoolId,
-          });
+        await tx.insert(auditLogs).values({
+          actorUserId: teacherId,
+          action: 'teacher_left_school',
+          entityType: 'school',
+          entityId: schoolId,
+        });
       return { left: true };
     });
   }
@@ -161,7 +173,7 @@ export class SchoolsService {
   }
 
   async issueToken(authorization: string | undefined, schoolId: string) {
-    const adminId = await this.role(authorization, 'ADMIN');
+    const adminId = await this.adminForSchools(authorization, 'operations');
     const { db } = getDatabase();
     const [school] = await db
       .select({ id: schools.id })
@@ -240,7 +252,7 @@ export class SchoolsService {
   }
 
   async listForAdmin(authorization?: string) {
-    await this.role(authorization, 'ADMIN');
+    await this.adminForSchools(authorization, 'schoolRead');
     const { db } = getDatabase();
     return {
       items: await db
@@ -256,7 +268,7 @@ export class SchoolsService {
   }
 
   async createSchool(authorization: string | undefined, code: string, name: string) {
-    const adminId = await this.role(authorization, 'ADMIN');
+    const adminId = await this.adminForSchools(authorization, 'operations');
     const { db } = getDatabase();
     try {
       return await db.transaction(async (tx) => {
@@ -295,7 +307,7 @@ export class SchoolsService {
     schoolId: string,
     input: { name?: string; status?: 'ACTIVE' | 'INACTIVE' },
   ) {
-    const adminId = await this.role(authorization, 'ADMIN');
+    const adminId = await this.adminForSchools(authorization, 'operations');
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
       const [school] = await tx
@@ -329,7 +341,7 @@ export class SchoolsService {
   }
 
   async listTokens(authorization: string | undefined, schoolId: string) {
-    await this.role(authorization, 'ADMIN');
+    await this.adminForSchools(authorization, 'operations');
     const { db } = getDatabase();
     const items = await db
       .select({
@@ -344,7 +356,7 @@ export class SchoolsService {
   }
 
   async revokeToken(authorization: string | undefined, schoolId: string, tokenId: string) {
-    const adminId = await this.role(authorization, 'ADMIN');
+    const adminId = await this.adminForSchools(authorization, 'operations');
     const { db } = getDatabase();
     return db.transaction(async (tx) => {
       const [revoked] = await tx
@@ -375,7 +387,7 @@ export class SchoolsService {
   }
 
   async reissueToken(authorization: string | undefined, schoolId: string, tokenId: string) {
-    const adminId = await this.role(authorization, 'ADMIN');
+    const adminId = await this.adminForSchools(authorization, 'operations');
     return this.createToken(adminId, schoolId, tokenId);
   }
 }

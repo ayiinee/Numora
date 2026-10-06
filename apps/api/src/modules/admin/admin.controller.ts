@@ -37,6 +37,7 @@ export class AdminController {
     return this.admin.dashboard();
   }
   @Get('audit-logs')
+  @AdminAccess('audit')
   @ApiOkResponse({ type: AdminAuditListDto })
   audit(@Query() page: ContentPageDto) {
     return this.admin.audit(page);

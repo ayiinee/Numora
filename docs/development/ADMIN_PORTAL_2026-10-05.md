@@ -8,7 +8,9 @@ Navigasi awal mengelompokkan modul existing: Ringkasan, Sekolah & credential, Pe
 
 Preview soal hasil impor tetap menjadi alur internal Konten di `/admin/content/preview-sessions/:id`, bukan mock desain. Import tetap DRAFT, skor tetap null, dan feature flag/media gate existing tetap berlaku.
 
-**OPEN / implementation gap:** tahap ini menyatukan entry point dan navigasi, bukan menyelesaikan seluruh RBAC. Endpoint konten tetap dilindungi `ContentAdminGuard`; endpoint operasional existing masih memakai pemeriksaan Admin aktif dan memerlukan pembatasan subrole di server serta DTO view terbatas sebelum acceptance matriks v0.6. Menyembunyikan menu tidak memberi jaminan otorisasi tambahan. Pengelolaan akun/permission Super Admin, granular audit scope, dan limited operational view Content Admin belum tersedia. Tidak tampilkan aksi untuk modul yang belum dibuat.
+**ENGINEERING IMPLEMENTATION:** API now requires an active assigned subrole. Content/assessment, reports/moderation, and IRT routes allow Super Admin plus Content/Data/Moderation; school mutations, teacher credentials, and full user/class directories allow Super Admin plus Operations; the school list exposes only basic metadata to Content/Data/Moderation; the aggregate Admin dashboard allows all assigned subroles; the global audit log is Super Admin-only. These decisions are enforced by API guards, with an additional service-level check on school and credential actions. The QA account vault/provisioning assignment is separate from endpoint enforcement.
+
+**OPEN / implementation gap:** Content/Data/Moderation can read basic school ID/code/name/status, but its PRD-required limited class/membership view is not yet exposed; full-detail user/class directories and teacher credential history deny that role until limited-view DTOs are defined. Role-scoped audit views and Super Admin account/permission/emergency-access management remain unavailable. Hiding menus is not authorization. Do not show actions for modules that do not exist.
 
 ## Verifikasi
 

@@ -3317,6 +3317,32 @@
         ]
       }
     },
+    "/api/v1/admin/users/summary": {
+      "get": {
+        "operationId": "AdminOperationsController_usersSummary",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminUserSummaryDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-operations"
+        ]
+      }
+    },
     "/api/v1/admin/users/{userId}": {
       "get": {
         "operationId": "AdminOperationsController_user",
@@ -8111,19 +8137,24 @@
         "type": "object",
         "properties": {
           "schools": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "chapters": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "questions": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "readyVersions": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           },
           "openReports": {
-            "type": "number"
+            "type": "number",
+            "nullable": true
           }
         },
         "required": [
@@ -8238,6 +8269,33 @@
           "nextOffset"
         ]
       },
+      "AdminUserSummaryDto": {
+        "type": "object",
+        "properties": {
+          "total": {
+            "type": "number",
+            "nullable": true
+          },
+          "students": {
+            "type": "number",
+            "nullable": true
+          },
+          "teachers": {
+            "type": "number",
+            "nullable": true
+          },
+          "admins": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "total",
+          "students",
+          "teachers",
+          "admins"
+        ]
+      },
       "AdminClassDto": {
         "type": "object",
         "properties": {
@@ -8280,10 +8338,7 @@
         "required": [
           "id",
           "name",
-          "schoolId",
           "schoolName",
-          "teacherId",
-          "teacherName",
           "studentCount",
           "createdAt",
           "archivedAt"

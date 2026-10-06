@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { IdentityService } from './identity.service';
 import type { AdminRequest } from './admin.guard';
+import { adminAllows } from './admin-permissions';
 
 @Injectable()
 export class ContentAdminGuard implements CanActivate {
@@ -17,14 +18,14 @@ export class ContentAdminGuard implements CanActivate {
     if (
       profile.role !== 'ADMIN' ||
       profile.status !== 'ACTIVE' ||
-      !['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(profile.adminRole ?? '')
-    ) {
+      !adminAllows(profile.adminRole, 'content')
+    )
       throw new ForbiddenException({
         code: 'CONTENT_PERMISSION_REQUIRED',
         detail: 'Content Admin access is required.',
       });
-    }
     request.adminId = profile.id;
+    request.adminRole = profile.adminRole!;
     return true;
   }
 }
