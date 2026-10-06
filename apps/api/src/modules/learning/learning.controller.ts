@@ -21,6 +21,8 @@ import {
 } from '@nestjs/swagger';
 import { DrillAssessmentService } from './drill-assessment.service';
 import { AssessmentHistoryService } from './assessment-history.service';
+import { AssessmentMediaService } from './assessment-media.service';
+import { MediaLinksDto } from '../content/content-preview.dto';
 import { LearningCatalogService } from './learning-catalog.service';
 import { StudentDashboardService } from './student-dashboard.service';
 import { StudentDashboardDto } from './student-dashboard.dto';
@@ -47,7 +49,19 @@ export class LearningController {
     private readonly drillService: DrillAssessmentService,
     private readonly historyService: AssessmentHistoryService,
     private readonly dashboardService: StudentDashboardService,
+    private readonly mediaService: AssessmentMediaService,
   ) {}
+
+  @Get('assessment-items/:instanceId/media')
+  @ApiQuery({ name: 'phase', enum: ['WORK', 'REVIEW'] })
+  @ApiOkResponse({ type: MediaLinksDto })
+  media(
+    @Param('instanceId', ParseUUIDPipe) id: string,
+    @Query('phase') phase: string,
+    @Headers('authorization') auth?: string,
+  ) {
+    return this.mediaService.links(auth, id, phase);
+  }
 
   @Get('students/me/dashboard')
   @ApiOkResponse({ type: StudentDashboardDto })

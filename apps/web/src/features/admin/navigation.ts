@@ -57,6 +57,12 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
         icon: 'book',
       },
       {
+        href: '/admin/content/generator',
+        label: 'Generator paket',
+        description: 'Generate paket Tryout, Drill atau Pretest.',
+        icon: 'book',
+      },
+      {
         href: '/admin/content/imports',
         label: 'Impor soal',
         description: 'Validasi JSON, impor DRAFT, lalu tinjau soal dalam sesi internal.',

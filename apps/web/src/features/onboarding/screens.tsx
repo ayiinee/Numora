@@ -176,21 +176,11 @@ export function LoginScreen() {
             )}
           </>
         )}
-        <div className="demo-entry">
-          <Link className="demo-entry-admin" href="/admin/login">
+        <div className="auth-entry">
+          <Link className="auth-entry-admin" href="/admin/login">
             Masuk Admin
           </Link>
         </div>
-        {process.env.NODE_ENV === 'development' && (
-          <div className="demo-entry">
-            {process.env.NEXT_PUBLIC_SUPABASE_URL ===
-              'https://pkamenfnwmoeisccnrnk.supabase.co' && (
-              <Link className="demo-entry-admin" href="/qa/login">
-                Masuk dengan akun QA Development
-              </Link>
-            )}
-          </div>
-        )}
         <p className="auth-account-note">
           <Icon name="lock" width="16" height="16" /> Role dipilih sekali setelah login pertama.
         </p>

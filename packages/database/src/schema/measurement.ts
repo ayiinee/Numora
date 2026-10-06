@@ -178,7 +178,7 @@ export const candidateImports = pgTable(
   },
   (t) => [
     uniqueIndex('candidate_imports_candidate_uq').on(t.candidateId),
-    uniqueIndex('candidate_imports_version_uq').on(t.questionVersionId),
+    index('candidate_imports_version_idx').on(t.questionVersionId),
     check(
       'candidate_imports_actor_ck',
       sql`num_nonnulls(${t.importedByUserId}, ${t.importedByServiceId}) = 1`,

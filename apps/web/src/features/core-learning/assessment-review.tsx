@@ -7,10 +7,11 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge, Button, Card, Icon } from '@tka/ui';
 import { AssessmentHeader } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
+import { AssessmentRichText } from './assessment-rich-text';
 import { answerOf, choiceValue, questionTypeLabels } from './assessment-answers';
 import { learningApi, LearningApiError } from './api';
 import type { ReviewedQuestionDto, DrillResultDto, TryoutResultDto } from './generated-types';
-import { DataState, LearningFrame, MathText, Status, StudentGate } from './ui';
+import { DataState, LearningFrame, Status, StudentGate } from './ui';
 import { useLearningView } from './learning-interactions';
 import { QUESTION_REPORT_CATEGORIES, ReportForm } from './support';
 
@@ -79,7 +80,11 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
           {question.options.map((statement) => (
             <section className="practice-statement" key={statement.id}>
               <h3>
-                <MathText value={statement.text} />
+                <AssessmentRichText
+                  value={statement.text}
+                  instanceId={question.questionInstanceId}
+                  phase="REVIEW"
+                />
               </h3>
               <p>
                 <strong>Jawabanmu: </strong>
@@ -118,7 +123,12 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
             {selectedIds.length
               ? selectedIds.map((id) => (
                   <span className="review-option-text" key={id}>
-                    {id}. <MathText value={optionText(id)} />
+                    {id}.{' '}
+                    <AssessmentRichText
+                      value={optionText(id)}
+                      instanceId={question.questionInstanceId}
+                      phase="REVIEW"
+                    />
                   </span>
                 ))
               : 'Tidak dijawab'}
@@ -127,7 +137,12 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
             <strong>Jawaban benar: </strong>
             {expectedIds.map((id) => (
               <span className="review-option-text" key={id}>
-                {id}. <MathText value={optionText(id)} />
+                {id}.{' '}
+                <AssessmentRichText
+                  value={optionText(id)}
+                  instanceId={question.questionInstanceId}
+                  phase="REVIEW"
+                />
               </span>
             ))}
           </section>
@@ -148,7 +163,11 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
         <h3>
           <Icon name="info" width={18} height={18} /> Pembahasan Numora
         </h3>
-        <MathText value={question.explanation} />
+        <AssessmentRichText
+          value={question.explanation}
+          instanceId={question.questionInstanceId}
+          phase="REVIEW"
+        />
       </section>
     </div>
   );
@@ -199,9 +218,20 @@ export function AssessmentExplanation({
               <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
             </div>
             <h2 className="practice-stem">
-              <MathText value={question.stem} />
+              <AssessmentRichText
+                value={question.stem}
+                instanceId={question.questionInstanceId}
+                phase="REVIEW"
+              />
             </h2>
             <QuestionChoices
+              renderContent={(value) => (
+                <AssessmentRichText
+                  value={value}
+                  instanceId={question.questionInstanceId}
+                  phase="REVIEW"
+                />
+              )}
               kind={question.type ?? 'SINGLE_CHOICE'}
               name={`review-${question.questionInstanceId}`}
               options={question.options ?? []}

@@ -286,7 +286,7 @@ export function HomeActivity({
           {item.starsState === 'legacy' && (
             <small>Bintang tidak tercatat pada hasil versi lama</small>
           )}
-          {item.isDemo && <span>Demo</span>}
+
           {(item.xpState === 'pending' || item.starsState === 'pending') && (
             <small className="home-activity__pending">
               {item.xpState === 'pending' && item.starsState === 'pending'

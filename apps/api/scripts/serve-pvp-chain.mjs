@@ -20,6 +20,7 @@ Object.assign(process.env, {
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
   ALLOW_DEMO_SEED: 'true',
+  ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
   SUPABASE_PUBLISHABLE_KEY: 'job16-test-only-public-key',
   TEACHER_TOKEN_PEPPER: 'job16-isolated-test-only-pepper',
@@ -27,19 +28,13 @@ Object.assign(process.env, {
   IRT_ENABLED: 'false',
   R2_MEDIA_UPLOADS_ENABLED: 'false',
 });
-const {
-  getDatabase,
-  closeDatabaseConnection,
-  seedPvpDemo,
-  users,
-  schools,
-  classes,
-  classMemberships,
-} = await import('@tka/database');
+const { getDatabase, closeDatabaseConnection, users, schools, classes, classMemberships } =
+  await import('@tka/database');
+const { seedPvpTestScenarios } = await import('@tka/database/testing');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { projectClassLeaderboard } = await import('../../worker/dist/class-leaderboard.js');
 const { db, client } = getDatabase();
-await seedPvpDemo();
+await seedPvpTestScenarios();
 await seedDemoLearning(db);
 const actors = {};
 for (const alias of ['mandiri', 'school']) {

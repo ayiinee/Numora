@@ -2,19 +2,25 @@
 import { Fragment, useState } from 'react';
 import { Badge, Button, Card } from '@tka/ui';
 import { ContentRichText } from './content-rich-text';
-import type { ExcelParseDto, ExcelQuestionDto, ImportReportDto } from './generated-types';
+import type {
+  ExcelParseDto,
+  IntakeQuestionDto,
+  ExcelQuestionDto,
+  ImportReportDto,
+} from './generated-types';
 
-function QuestionEditor({
+function QuestionEditor<Q extends ExcelQuestionDto | IntakeQuestionDto>({
   question,
   save,
   cancel,
 }: {
-  question: ExcelQuestionDto;
-  save: (question: ExcelQuestionDto) => void;
+  question: Q;
+  save: (question: Q) => void;
   cancel: () => void;
 }) {
   const [draft, setDraft] = useState(() => structuredClone(question));
-  const update = (next: Partial<ExcelQuestionDto>) => setDraft({ ...draft, ...next });
+  const update = (next: Partial<ExcelQuestionDto | IntakeQuestionDto>) =>
+    setDraft({ ...draft, ...next } as Q);
   return (
     <form
       className="excel-question-editor"
@@ -23,11 +29,28 @@ function QuestionEditor({
         save(draft);
       }}
     >
-      <h3>Edit {question.externalId}</h3>
+      <h3>
+        Edit soal · {String(question.metadata.sourceSheet)} baris{' '}
+        {String(question.metadata.sourceRowNumber)}
+      </h3>
       <p>
         Rumus: {'$x^2$'}, {'\\(\\frac{1}{2}\\)'} atau {'$$x^2 + 2x + 1$$'}. Pertahankan penanda
         gambar [[asset:...]].
       </p>
+      <label>
+        Kesulitan
+        <select
+          value={draft.difficulty ?? ''}
+          onChange={(e) => update({ difficulty: e.target.value as ExcelQuestionDto['difficulty'] })}
+        >
+          <option value="" disabled>
+            Pilih kesulitan
+          </option>
+          <option value="EASY">Mudah</option>
+          <option value="MEDIUM">Sedang</option>
+          <option value="HARD">Sulit</option>
+        </select>
+      </label>
       <label>
         Teks soal
         <textarea
@@ -171,23 +194,31 @@ function QuestionEditor({
   );
 }
 
-export function ContentExcelPreview({
+export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionDto>({
   excel,
   selected,
   report,
   disabled,
+  hideIndicator = false,
+  sourceFormat = 'Excel',
   select,
   edit,
   retry,
   editingChanged,
   move,
 }: {
-  excel: ExcelParseDto;
+  excel: {
+    envelope: { questions: Q[] };
+    media: ExcelParseDto['media'];
+    issues: ExcelParseDto['issues'];
+  };
   selected: Set<string>;
   report: ImportReportDto | null;
   disabled: boolean;
+  hideIndicator?: boolean;
+  sourceFormat?: 'Excel' | 'JSON';
   select: (ids: Set<string>) => void;
-  edit: (question: ExcelQuestionDto) => void;
+  edit: (question: Q) => void;
   retry: () => void;
   editingChanged: (editing: boolean) => void;
   move?: (id: string, direction: -1 | 1) => void;
@@ -210,10 +241,11 @@ export function ContentExcelPreview({
     <Card className="content-import-card excel-preview-card">
       <div className="excel-preview-heading">
         <div>
-          <h2>Preview Excel sebelum simpan</h2>
+          <h2>Preview {sourceFormat} sebelum simpan</h2>
           <p>
-            Periksa soal, gambar, kunci, dan pembahasan. Pilih soal yang ingin diimpor atau edit
-            sebelum validasi.
+            {sourceFormat === 'JSON'
+              ? 'Periksa seluruh soal, kunci dan pembahasan dalam paket hasil generator.'
+              : 'Periksa soal, gambar, kunci, dan pembahasan. Pilih soal yang ingin diimpor atau edit sebelum validasi.'}
           </p>
         </div>
         <Badge variant="primary">
@@ -226,15 +258,17 @@ export function ContentExcelPreview({
           <Badge variant="danger">{imageIssues.length} masalah gambar</Badge>
         )}
         <span>
-          Gambar pada preview berasal dari file Excel. Status unggah ditampilkan terpisah.
+          {sourceFormat === 'JSON'
+            ? 'Preview memakai konten asli dari hasil generator.'
+            : 'Gambar pada preview berasal dari file Excel. Status unggah ditampilkan terpisah.'}
         </span>
       </div>
       {excel.issues.length > 0 && (
         <div className="excel-issues" role="alert">
           <h3>Perbaiki file sebelum menyimpan</h3>
           <p>
-            Baris yang tidak lolos parser belum masuk tabel. Semua masalah pada file harus
-            diselesaikan sebelum impor.
+            Periksa lokasi masalah. Koreksi konten pada preview; formula atau gambar yang tidak
+            terbaca perlu diperbaiki di Excel.
           </p>
           <ul>
             {excel.issues.map((issue, i) => (
@@ -264,7 +298,7 @@ export function ContentExcelPreview({
           tabIndex={0}
         >
           <table className="excel-preview-table">
-            <caption>Soal dari Excel — perubahan di sini belum disimpan ke database</caption>
+            <caption>Isi soal dari Excel</caption>
             <thead>
               <tr>
                 <th scope="col">
@@ -280,26 +314,26 @@ export function ContentExcelPreview({
                     />
                   </label>
                 </th>
-                <th scope="col">Soal & sumber</th>
-                <th scope="col">Teks & pilihan</th>
+                <th scope="col">Soal / gambar</th>
+                <th scope="col">Format / materi</th>
                 <th scope="col">Kunci</th>
-                <th scope="col">Pembahasan</th>
-                <th scope="col">Gambar & tindakan</th>
+                <th scope="col">Status</th>
+                <th scope="col">Tindakan</th>
               </tr>
             </thead>
             <tbody>
-              {questions.map((q) => {
+              {questions.map((q, number) => {
                 const media = q.metadata.assetManifest.flatMap((a) => {
-                  const bytes = excel.media.find(
+                  const source = excel.media.find(
                     (m) => m.externalId === q.externalId && m.assetId === a.assetId,
-                  )?.base64;
-                  return bytes
+                  );
+                  return source && (source.base64 || source.url)
                     ? [
                         {
                           instanceId: q.externalId,
                           assetId: a.assetId,
                           altText: a.altText,
-                          url: `data:${a.contentType};base64,${bytes}`,
+                          url: source.url ?? `data:${a.contentType};base64,${source.base64}`,
                           expiresAt: '',
                         },
                       ]
@@ -323,38 +357,25 @@ export function ContentExcelPreview({
                             onChange={() => toggle(q.externalId)}
                           />
                         </label>
+                        <span>{number + 1}</span>
                       </td>
                       <th scope="row">
-                        <span>No. {q.metadata.sourceOrder ?? 'Belum ditentukan'}</span>
-                        <strong>{q.externalId}</strong>
-                        {move && (
-                          <div className="admin-content-actions">
-                            <Button
-                              variant="secondary"
-                              disabled={
-                                disabled ||
-                                editing !== null ||
-                                questions[0]?.externalId === q.externalId
-                              }
-                              aria-label={`Naikkan soal ${q.externalId}`}
-                              onClick={() => move(q.externalId, -1)}
-                            >
-                              ↑
-                            </Button>
-                            <Button
-                              variant="secondary"
-                              disabled={
-                                disabled ||
-                                editing !== null ||
-                                questions.at(-1)?.externalId === q.externalId
-                              }
-                              aria-label={`Turunkan soal ${q.externalId}`}
-                              onClick={() => move(q.externalId, 1)}
-                            >
-                              ↓
-                            </Button>
-                          </div>
-                        )}
+                        <div className="excel-preview-stem">{rich(q.stem.text)}</div>
+                        <details>
+                          <summary>Pilihan dan pembahasan</summary>
+                          <ol className="excel-preview-options">
+                            {q.options.map((o) => (
+                              <li key={o.id}>
+                                <strong>{o.id}.</strong>
+                                <div>{rich(o.content.text)}</div>
+                              </li>
+                            ))}
+                          </ol>
+                          <strong>Pembahasan</strong>
+                          {rich(q.explanation.text)}
+                        </details>
+                      </th>
+                      <td>
                         <Badge>
                           {q.type === 'SINGLE_CHOICE'
                             ? 'PG'
@@ -362,23 +383,39 @@ export function ContentExcelPreview({
                               ? 'Kategori'
                               : 'MCMA'}
                         </Badge>
-                        <span>
-                          {q.metadata.sourceSheet} · baris {q.metadata.sourceRowNumber}
-                        </span>
-                        <span>
-                          {q.subchapterCode} · Level {q.metadata.sourceLevelNumber}
-                        </span>
-                      </th>
-                      <td>
-                        <div className="excel-preview-stem">{rich(q.stem.text)}</div>
-                        <ol className="excel-preview-options">
-                          {q.options.map((o) => (
-                            <li key={o.id}>
-                              <strong>{o.id}.</strong>
-                              <div>{rich(o.content.text)}</div>
-                            </li>
-                          ))}
-                        </ol>
+                        <p>
+                          {String(q.metadata.chapterName ?? q.chapterCode ?? 'Bab belum dipetakan')}
+                          <br />
+                          {String(
+                            q.metadata.subchapterName ??
+                              q.subchapterCode ??
+                              'Subbab belum dipetakan',
+                          )}
+                          {!hideIndicator && (
+                            <>
+                              <br />
+                              {String(
+                                q.metadata.competencyName ??
+                                  q.competencyCode ??
+                                  'Indikator belum dipetakan',
+                              )}
+                            </>
+                          )}
+                        </p>
+                        <small>
+                          Level {q.metadata.sourceLevelNumber ?? 'belum dipilih'} ·{' '}
+                          {q.difficulty === 'EASY'
+                            ? 'Mudah'
+                            : q.difficulty === 'MEDIUM'
+                              ? 'Sedang'
+                              : q.difficulty === 'HARD'
+                                ? 'Sulit'
+                                : 'Kesulitan belum diisi'}
+                        </small>
+                        <small>
+                          {String(q.metadata.sourceSheet)} · baris{' '}
+                          {String(q.metadata.sourceRowNumber)}
+                        </small>
                       </td>
                       <td>
                         {'optionId' in key ? (
@@ -404,7 +441,6 @@ export function ContentExcelPreview({
                           </ul>
                         )}
                       </td>
-                      <td>{rich(q.explanation.text)}</td>
                       <td>
                         <div className="excel-row-actions">
                           <Badge variant={q.metadata.assetManifest.length ? 'info' : 'default'}>
@@ -426,6 +462,39 @@ export function ContentExcelPreview({
                                 : 'Validasi lolos'
                               : 'Perlu validasi'}
                           </Badge>
+                        </div>
+                      </td>
+                      <td>
+                        <div className="excel-row-actions">
+                          {' '}
+                          {move && (
+                            <div className="admin-content-actions">
+                              <Button
+                                variant="secondary"
+                                disabled={
+                                  disabled ||
+                                  editing !== null ||
+                                  questions[0]?.externalId === q.externalId
+                                }
+                                aria-label={`Naikkan soal ${q.externalId}`}
+                                onClick={() => move(q.externalId, -1)}
+                              >
+                                ↑
+                              </Button>
+                              <Button
+                                variant="secondary"
+                                disabled={
+                                  disabled ||
+                                  editing !== null ||
+                                  questions.at(-1)?.externalId === q.externalId
+                                }
+                                aria-label={`Turunkan soal ${q.externalId}`}
+                                onClick={() => move(q.externalId, 1)}
+                              >
+                                ↓
+                              </Button>
+                            </div>
+                          )}
                           <Button
                             variant="secondary"
                             disabled={disabled || editing !== null}

@@ -1,0 +1,12 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:generator-service-v1:notification",
+  "type": "object", "additionalProperties": false,
+  "required": ["contractVersion", "requestId", "inputDigest", "dispatchGeneration"],
+  "properties": {
+    "contractVersion": {"type": "integer", "const": 3},
+    "requestId": {"type": "string", "format": "uuid", "not": {"const": "00000000-0000-0000-0000-000000000000"}},
+    "inputDigest": {"type": "string", "pattern": "^[a-f0-9]{64}$"},
+    "dispatchGeneration": {"type": "integer", "minimum": 1}
+  }
+}

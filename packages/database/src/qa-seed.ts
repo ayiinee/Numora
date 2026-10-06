@@ -3,7 +3,13 @@ import { createReadStream } from 'node:fs';
 import { readFile, stat, open } from 'node:fs/promises';
 import { isAbsolute } from 'node:path';
 import postgres from 'postgres';
-import { parseQaManifest, qaActors, requireQaTarget, type QaActor } from './qa-seed-input.js';
+import {
+  parseQaManifest,
+  qaActors,
+  qaDisplayNames,
+  requireQaTarget,
+  type QaActor,
+} from './qa-seed-input.js';
 
 const fail = (message: string): never => {
   throw new Error(`QA_SEED: ${message}`);
@@ -170,7 +176,7 @@ async function run() {
               profile.role !== qaActors[actor] ||
               profile.status !== 'ACTIVE' ||
               profile.email.toLowerCase() !== email.toLowerCase() ||
-              profile.displayName !== `DEMO-QA ${actor}`))
+              profile.displayName !== qaDisplayNames[actor]))
         ) {
           fail(`${actor} conflicts with an existing non-QA profile or role.`);
         }
@@ -180,7 +186,7 @@ async function run() {
         } else {
           const [created] = await tx<{ id: string }[]>`
             INSERT INTO public.users (auth_user_id, role, display_name, email)
-            VALUES (${manifest.actors[actor]}::uuid, ${qaActors[actor]}::public.user_role, ${`DEMO-QA ${actor}`}, ${email})
+            VALUES (${manifest.actors[actor]}::uuid, ${qaActors[actor]}::public.user_role, ${qaDisplayNames[actor]}, ${email})
             RETURNING id`;
           ids[actor] = created!.id;
           await tx`
@@ -198,7 +204,7 @@ async function run() {
         SELECT id, name, status FROM public.schools WHERE code = 'DEMO-QA-SCHOOL'`;
       if (
         existingSchool &&
-        (existingSchool.name !== 'DEMO-QA School' || existingSchool.status !== 'ACTIVE')
+        (existingSchool.name !== 'SMP Nusantara' || existingSchool.status !== 'ACTIVE')
       ) {
         fail('QA school code conflicts with existing data.');
       }
@@ -212,7 +218,7 @@ async function run() {
       const [school] = existingSchool
         ? [existingSchool]
         : await tx<{ id: string }[]>`
-        INSERT INTO public.schools (code, name) VALUES ('DEMO-QA-SCHOOL', 'DEMO-QA School') RETURNING id`;
+        INSERT INTO public.schools (code, name) VALUES ('DEMO-QA-SCHOOL', 'SMP Nusantara') RETURNING id`;
       if (!existingSchool)
         await tx`
         INSERT INTO public.audit_logs (actor_user_id, action, entity_type, entity_id, metadata)
@@ -282,7 +288,7 @@ async function run() {
         existingClass &&
         (existingClass.schoolId !== school!.id ||
           existingClass.teacherId !== ids.teacherA ||
-          existingClass.name !== 'DEMO-QA Class A' ||
+          existingClass.name !== 'Matematika IX A' ||
           existingClass.archivedAt)
       )
         fail('QA class code conflicts with existing data.');
@@ -297,7 +303,7 @@ async function run() {
         ? [existingClass]
         : await tx<{ id: string }[]>`
         INSERT INTO public.classes (school_id, teacher_user_id, name, join_code)
-        VALUES (${school!.id}::uuid, ${ids.teacherA}::uuid, 'DEMO-QA Class A', 'DEMO-QA-CLASS-A') RETURNING id`;
+        VALUES (${school!.id}::uuid, ${ids.teacherA}::uuid, 'Matematika IX A', 'DEMO-QA-CLASS-A') RETURNING id`;
       if (!existingClass)
         await tx`
         INSERT INTO public.audit_logs (actor_user_id, action, entity_type, entity_id, metadata)

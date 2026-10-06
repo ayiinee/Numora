@@ -1,4 +1,9 @@
 import { ServiceUnavailableException } from '@nestjs/common';
+import {
+  decodeSingleChoice,
+  AssessmentFinalizationError,
+  type SingleChoiceVersion,
+} from '@tka/assessment-engine';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 
@@ -77,59 +82,20 @@ export function explanationAvailable(completedAt: Date, now = new Date()) {
   return now.getTime() < completedAt.getTime() + 90 * 24 * 60 * 60 * 1000;
 }
 
-export type SingleChoiceContent = {
-  stem: string;
-  options: { id: string; text: string }[];
-  correctOptionId: string;
-  explanation: string;
-};
+export type SingleChoiceContent = SingleChoiceVersion;
 
-export function decodeSingleChoiceVersion(row: {
-  questionType: string;
-  stem: unknown;
-  optionsOrStatements: unknown;
-  answerKey: unknown;
-  explanation: unknown;
-}): SingleChoiceContent {
-  const textOf = (value: unknown) =>
-    value && typeof value === 'object' && 'text' in value && typeof value.text === 'string'
-      ? value.text
-      : null;
-  const stem = textOf(row.stem);
-  const explanation = textOf(row.explanation);
-  const answer =
-    row.answerKey && typeof row.answerKey === 'object' && 'optionId' in row.answerKey
-      ? row.answerKey.optionId
-      : null;
-  const options = Array.isArray(row.optionsOrStatements)
-    ? row.optionsOrStatements.map((item: unknown) => {
-        if (!item || typeof item !== 'object' || !('id' in item) || !('content' in item))
-          return null;
-        const content = textOf(item.content);
-        return typeof item.id === 'string' && content ? { id: item.id, text: content } : null;
-      })
-    : [];
-  const ids = options.map((item) => item?.id).sort();
-  if (
-    row.questionType !== 'SINGLE_CHOICE' ||
-    !stem ||
-    !explanation ||
-    typeof answer !== 'string' ||
-    !['A', 'B', 'C', 'D'].includes(answer) ||
-    options.length !== 4 ||
-    options.some((item) => item === null) ||
-    ids.join(',') !== 'A,B,C,D'
-  ) {
-    throw new ServiceUnavailableException(
-      problem('DRILL_CONTENT_INVALID', 'Konten Drill tidak valid.'),
-    );
+export function decodeSingleChoiceVersion(
+  row: Parameters<typeof decodeSingleChoice>[0],
+): SingleChoiceContent {
+  try {
+    return decodeSingleChoice(row);
+  } catch (error) {
+    if (error instanceof AssessmentFinalizationError)
+      throw new ServiceUnavailableException(
+        problem('DRILL_CONTENT_INVALID', 'Konten Drill tidak valid.'),
+      );
+    throw error;
   }
-  return {
-    stem,
-    options: options as { id: string; text: string }[],
-    correctOptionId: answer,
-    explanation,
-  };
 }
 
 export function selectedOptionId(answer: unknown): string | null {

@@ -1,3 +1,9 @@
+**ENGINEERING DECISION — owner approved, 6 October 2026:** unresolved Excel metadata remains in intake preview with immutable source provenance. Destination/scope is chosen before mapping validation. Preview progress is separate from final draft eligibility; non-ARCHIVED master may support draft, READY is required for every mapped master at Publish. Official taxonomy and PGK scoring remain dependencies. [Approved refinement](../content/UPLOAD_FIRST_WORKFLOW.md).
+
+**ENGINEERING DECISION — owner approved, 6 October 2026:** remove obsolete demo presentation; retain isolated synthetic fixtures and immutable academic history. The configured cloud project remains Development. This does not approve Curriculum content, PGK scoring or IRT policies. [Cleanup decision and verification](../development/DEMO_CLEANUP_2026-10-06.md).
+
+**ENGINEERING DECISION — owner approval, 6 October 2026:** content intake now starts with Excel upload, then preview/validation, destination/title, draft and one Publish confirmation. V5 uses material names and server-generated IDs; tracked upload sessions retain source workbooks in R2. Curriculum approval is recorded against the current composition at Publish. Counts 30/20/10 and PGK publication restriction remain. [Approved workflow](../content/UPLOAD_FIRST_WORKFLOW.md).
+
 **ENGINEERING DECISION — Aini, 6 October 2026:** Student result pages expose a Lihat pembahasan action leading to dedicated read-only question-layout pages. Typed PGK save/resume, server-derived review states, expandable reward details and Info nilai reuse the Student design system. This does not approve a PGK rubric or create an IRT/fallback publication policy. [Implementation boundary](../development/STUDENT_PGK_RESULT_UI.md).
 
 > **PRD RULE - 4 October 2026:** [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied by the project owner, supersedes conflicting earlier product rules. Relevant content rules: Admin content access requires Super Admin or Content/Data/Moderation; initial JSON import and R2 media; 5 levels per subchapter and 10 Drill items per level; one Drill variant per level for MVP; TryOut has 30 items. Historical decisions below remain evidence, not overriding policy.
@@ -15,6 +21,8 @@
 **ENGINEERING DECISION — owner approved, 6 October 2026:** JOB-16/17 resolves room/readiness/dual-disconnect behavior and ties: room/invite 600 seconds (PRD v0.6), one active room/account, replaceable waiting guest, earliest expired reconnect forfeits, equal deadlines cancel, dense rank 1,1,2. Labelled DEMO staging is approved; official content/difficulty remains Curriculum-dependent. Activity includes all posted Drill/Tryout XP; DEMO PvP stays separate. Thursday 00:00 WIB boundary and UI archives are approved. [Specification](../development/PVP_LEADERBOARDS_JOB16_17.md). Historical OPEN-07/tie proposals below are superseded; runtime/staging acceptance still requires evidence.
 
 **ENGINEERING UPDATE — owner instruction, 6 October 2026:** use the currently configured Development cloud environment for JOB-16/17 migration and DEMO activation. Migration/replay, additive seed/replay and authenticated QA availability/leaderboard checks now pass. [Evidence](../operations/PVP_CLOUD_ACTIVATION_2026-10-06.md). This resolves target selection for this Development operation; two Google-identity acceptance, public staging hosting and Curriculum approval remain separate dependencies.
+
+**ENGINEERING DECISION — klarifikasi pemilik, 6 Oktober 2026:** input soal melalui template Excel, periksa perubahan lalu satu tombol Simpan; review sebelum Publish. Hak akses mengikuti screenshot PRD tiga subrole. Pemilik menyebut approval tersedia pada Admin; database development belum memiliki blueprint, rubrik SEALED atau pin approval paket. R2 telah diuji nyata. Pemilik menyetujui pencatatan approval Curriculum terhadap susunan paket pada halaman paket; rubrik parsial PGK tetap memerlukan aturan numerik. [Bukti dan alur](../content/EXCEL_UPLOAD_WORKFLOW_2026-10-06.md).
 
 # Open Decisions Register
 
@@ -165,3 +173,31 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 ## UI feedback revision — 5 October 2026
 
 **ENGINEERING DECISION — owner approved:** follow the [UI feedback revision](../design/UI_FEEDBACK_REVISION_2026-10-05.md). Teacher navigation becomes Kelas / Profil, feedback requires an explicitly selected owned-Class student, and Teacher read-receipt presentation is hidden while Student unread/read behavior remains. Student Pretest loses only its unavailable Home shortcut. No API, database, academic policy or OPEN decision is resolved by this UI revision.
+
+
+## Keputusan pemilik — 7 Oktober 2026: indikator Tryout
+
+**ENGINEERING DECISION — disetujui pemilik:** Tryout mengabaikan indikator pada alur upload, draft dan Publish. Nilai asli Excel tetap disimpan sebagai provenance; indikator efektif kosong tidak menghalangi Tryout. Drill dan Pretest tetap wajib memiliki indikator sah. Bab, subbab, level, kesulitan, konten, media dan aturan Publish lain tetap diperiksa. Identitas soal/paket dibuat otomatis; sistem tidak mengarang materi akademik. Migrasi forward membolehkan primary_competency_id NULL hanya untuk keluarga TRYOUT; histori tidak ditulis ulang.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan aturan sebelumnya yang mengabaikan indikator Tryout):** Tryout mengizinkan subbab, indikator dan level sumber kosong (`null`) sampai Publish. Nilai yang diberikan tetap dipertahankan dan divalidasi terhadap master/induk. Bab dan kesulitan tetap wajib; Drill/Pretest, konten/kunci/pembahasan, jumlah, media, review, jadwal dan pembatasan PGK tidak dilonggarkan. Migrasi 0034 menambahkan referensi bab/subbab nullable pada keluarga soal agar Tryout tanpa level tetap tersimpan dan dapat dibaca; histori tidak diubah.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan kewajiban bab Tryout sebelumnya):** Bab, subbab, indikator dan level per soal maupun scope paket tidak wajib untuk Tryout campuran. Metadata materi kosong disimpan null sampai Publish. Admin dapat secara eksplisit melewati pemetaan materi tanpa menghapus sumber Excel; materi yang tetap dipakai divalidasi terhadap master. Kesulitan, konten, kunci, pembahasan dan gate Publish lain tetap berlaku; Drill/Pretest tetap memerlukan scope.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout boleh tanpa kesulitan serta tanpa pemetaan materi. Referensi Excel yang belum dapat dipetakan tetap menjadi provenance, dengan relasi efektif null; tidak mengarang materi atau kunci. Status DRAFT materi tidak menghalangi paket Tryout, tetapi materi ARCHIVED tidak dipakai. Rubrik PGK yang disetujui pemilik: MCMA dinilai per keputusan memilih/tidak memilih setiap opsi; Kategori per pernyataan tepat; jawaban kosong 0. Nilai proporsional dibulatkan ke dua desimal mengikuti kolom awarded_points; XP = jumlah benar ekuivalen ×10 dari poin tersimpan. Rubrik dipin melalui kebijakan baru TRYOUT_PGK_PARTIAL_V1 (migrasi 0035); paket/hasil lama tidak diubah. Urutan Tryout diacak server saat attempt dibuat dan disimpan tetap selama resume. Gambar diunggah dengan maksimal tiga pekerjaan paralel dan receipt R2 wajib diverifikasi. Konten, pilihan/pernyataan, kunci, pembahasan, otorisasi, review, jumlah, jadwal, dan integritas versi tetap divalidasi.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout dapat dipublish kapan saja, menggantikan batas Senin dan satu paket mingguan pada alur Admin. Tanggal rilis opsional: kosong berarti Publish sekarang; waktu lampau menjadi sekarang; waktu mendatang menjadwalkan akses. Batch tetap berjalan selama 7 hari dikurangi satu menit sejak rilis efektif, durasi attempt 10 menit dan IRT setelah batch tutup tetap berlaku. Paket dan attempt lama tidak diubah.
+
+
+**ENGINEERING DECISION — perbaikan akses, pemilik 7 Oktober 2026:** Publish Excel Tryout mengunci snapshot beserta scoring/blueprint pins secara atomik. Digest komposisi review dipertahankan sebagai compositionDigest; manifestDigest persetujuan mengikuti digest snapshot database. Distribusi paket Excel yang sudah direview/disetujui Admin tidak menunggu package_quality_results generator; jalur ini memeriksa 30 versi READY, provenance impor, persetujuan SEALED dan tetap menahan keputusan HOLD/RETIRED. Tidak membuat hasil statistik sintetis. Dua paket terbit tanpa attempt dipulihkan dengan backup; jadwal/histori attempt tidak diubah.
+
+## Generator service v1 — dependency activation
+
+**OPEN — Curriculum/Data:** original mapped, rubric/context SEALED, config register dan approval produksi belum boleh disimpulkan dari fixture TEST ONLY. Generator CONTENT_VALID hanya dapat diimpor DRAFT; tidak mengubah publication, scoring atau histori. **ENGINEERING DECISION:** integrasi lokal mengikuti [handoff generator v1](../content/GENERATOR_SERVICE_V1.md), flag default false.
+
+**ENGINEERING DECISION — generator paket, pemilik 7 Oktober 2026:** generate berdasarkan tujuan paket, hasil/download JSON dan impor dengan preview/validasi existing disetujui. **OPEN:** mapping/blueprint produksi tetap memerlukan handoff Curriculum; paket membutuhkan keluarga original mapped yang berbeda dan scope sesuai tujuan. Tidak mengarang original/approval untuk mengisi jumlah yang kurang.
+
+**ENGINEERING DECISION — owner request:** generator results share the generator workspace. Generated packages enter existing question-import URL at step 2 without manual file transfer; source approvals and publication dependencies remain unchanged.

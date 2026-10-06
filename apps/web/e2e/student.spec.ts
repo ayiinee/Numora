@@ -253,7 +253,7 @@ async function fixtures(
           detail: 'Bergabung ke kelas untuk mengakses peringkat kelas.',
         },
       });
-    else if (path === '/leaderboards/periods') data = {periods:[]};
+    else if (path === '/leaderboards/periods') data = { periods: [] };
     else if (path.startsWith('/leaderboards/'))
       data = {
         policyPending: true,
@@ -380,7 +380,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           title: 'Paket Tryout Mingguan #04 Rilis!',
           state: 'open',
           eligible: true,
-          questionCount: 35,
+          questionCount: 30,
           durationSeconds: 4800,
         },
       }),
@@ -660,7 +660,7 @@ test('home loading and independent Tryout errors preserve learning and pending c
               title: 'Paket pulih',
               state: 'open',
               eligible: true,
-              questionCount: 35,
+              questionCount: 30,
               durationSeconds: 4800,
             },
           },
@@ -853,9 +853,7 @@ test('history keeps zero/context, hides pending links and retries pagination wit
   await expect(zero.getByText('0', { exact: true })).toBeVisible();
   await expect(zero.getByText('Bilangan fixture · Pecahan fixture · Level 1')).toBeVisible();
   await expect(zero.getByText('XP dan bintang belum tersedia')).toBeVisible();
-  await expect(
-    page.getByRole('link', { name: /History waiting fixture/ }),
-  ).toHaveCount(0);
+  await expect(page.getByRole('link', { name: /History waiting fixture/ })).toHaveCount(0);
   await expect(page.getByRole('link', { name: /History Pretest fixture/ })).toHaveAttribute(
     'href',
     `/student/pretest/${subchapterId}/result`,
@@ -1346,7 +1344,7 @@ test('failed Drill save warns before refresh and can recover without claiming Sa
   await expect(page.getByRole('radio').first()).toBeChecked();
 });
 
-test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
+test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
   page,
 }) => {
   await fixtures(page);
@@ -1355,7 +1353,7 @@ test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and re
     { id: 'B', text: '3' },
   ];
   const ids = Array.from(
-    { length: 35 },
+    { length: 30 },
     (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
   );
   const answers = new Map<string, string | null>();
@@ -1412,7 +1410,7 @@ test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and re
   await page.goto(`/student/tryout/${attemptId}`);
   await expect(
     page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
-  ).toHaveCount(35);
+  ).toHaveCount(30);
   await page.getByRole('radio').first().check();
   await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
   const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
@@ -1695,7 +1693,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           id: chapterId,
           title: 'TO TKA Matematika SMP #04',
           eligible: true,
-          questionCount: 35,
+          questionCount: 30,
           durationSeconds: 4800,
         },
       }),
@@ -1931,7 +1929,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     let submits = 0;
     let released = false;
     const selected = new Map<string, string | null>();
-    const questions = Array.from({ length: 35 }, (_, index) => ({
+    const questions = Array.from({ length: 30 }, (_, index) => ({
       questionInstanceId: `99999999-9999-4999-8999-${String(index + 1).padStart(12, '0')}`,
       stem: 'Diketahui $x^2 + 6x + c = (x + 3)^2$. Nilai konstanta $c$ adalah…',
       options: [
@@ -1949,7 +1947,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       packageTitle: title,
       score: 85,
       correctCount: 30,
-      questionCount: 35,
+      questionCount: 30,
       explanation: questions.map((question, index) => ({
         questionInstanceId: question.questionInstanceId,
         stem: question.stem,
@@ -1971,7 +1969,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             state,
             eligible: state === 'open',
             attemptId: state === 'open' ? null : attemptId,
-            questionCount: 35,
+            questionCount: 30,
             durationSeconds: 4800,
           },
         });
@@ -2074,7 +2072,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('tab', { name: 'Berlangsung' }).click();
     await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
     await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toBeDisabled();
-    await expect(page.getByText('35 butir', { exact: true })).toBeVisible();
+    await expect(page.getByText('30 butir', { exact: true })).toBeVisible();
     await expect(page.getByText('80 menit', { exact: true })).toBeVisible();
     await page.getByLabel('Saya memahami aturan pengerjaan.').check();
     await capture('detail');
@@ -2087,11 +2085,11 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
     expect(starts).toBe(1);
     const navigator = page.getByRole('navigation', { name: 'Navigasi soal' });
-    await expect(navigator.getByRole('button')).toHaveCount(35);
+    await expect(navigator.getByRole('button')).toHaveCount(30);
     await navigator.getByRole('button', { name: /^Soal 3,/ }).click();
     await expect(page.getByRole('timer')).toBeVisible();
     await capture('attempt');
-    await navigator.getByRole('button', { name: /^Soal 35,/ }).click();
+    await navigator.getByRole('button', { name: /^Soal 30,/ }).click();
     await page.getByRole('button', { name: 'Kirim TryOut' }).click();
     const dialog = page.getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
     await expect(dialog).toBeVisible();
@@ -2118,89 +2116,176 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
 }
 
 for (const width of [320, 768, 1280]) {
-  test('TEST ONLY PGK save-resume and separate explanation at ' + width + 'px', async ({ page }, info) => {
-    await page.setViewportSize({ width, height: 900 });
-    await fixtures(page);
-    page.on('dialog', dialog => void dialog.accept());
-    const options = [{ id: 'A', text: 'Satu' }, { id: 'B', text: 'Dua' }];
-    const questions = [
-      { questionInstanceId: questionId, type: 'SINGLE_CHOICE', stem: 'TEST ONLY PG', options, categories: [], selectedOptionId: null, answer: null },
-      { questionInstanceId: chapterId, type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER', stem: 'TEST ONLY MCMA', options, categories: [], selectedOptionId: null, answer: null },
-      { questionInstanceId: subchapterId, type: 'CATEGORY', stem: 'TEST ONLY Kategori', options, categories: [{ id: 'Y', text: 'Ya' }, { id: 'N', text: 'Tidak' }], selectedOptionId: null, answer: null },
-    ];
-    const stored = new Map<string, unknown>();
-    let submitted = false;
-    await page.route('http://localhost:3301/api/v1/assessment-attempts/**', async route => {
-      const path = new URL(route.request().url()).pathname;
-      if (path.includes('/answers/')) {
-        const id = path.split('/').at(-1)!;
-        const body = route.request().postDataJSON();
-        const answer = 'answer' in body ? body.answer : body.optionId == null ? null : { optionId: body.optionId };
-        stored.set(id, answer);
-        return route.fulfill({ json: { questionInstanceId: id, answer, selectedOptionId: answer?.optionId ?? null } });
-      }
-      if (path.endsWith('/submit')) {
-        submitted = true;
-        return route.fulfill({ json: {} });
-      }
-      if (path.endsWith('/result')) return route.fulfill({ json: {
-        attemptId, levelId, levelTitle: 'TEST ONLY PGK', score: 60, correctCount: 1, questionCount: 3, mastered: false,
-        stars: 2, unlockedLevelId: null, isDemo: true, explanationState: 'available', recommendations: [],
-        reward: null, xp: null,
-        questions: questions.map((question, index) => ({
-          ...question, answer: stored.get(question.questionInstanceId) ?? null,
-          selectedOptionId: index === 0 ? 'A' : null, correctOptionId: index === 0 ? 'A' : null,
-          answerKey: index === 0 ? { optionId: 'A' } : index === 1 ? { optionIds: ['A', 'B'] } : { categoryByStatementId: { A: 'Y', B: 'N' } },
-          reviewStatus: index === 0 ? 'correct' : 'partial',
-          awardedPoints: index === 0 ? 1 : 0.5, maximumPoints: 1, correctEquivalent: null,
-          optionReview: options.map(o => ({ optionId: o.id, selected: o.id === 'A', isKey: true })),
-          statementReview: [{ statementId: 'A', status: 'correct' }, { statementId: 'B', status: 'unanswered' }],
-          explanation: 'TEST ONLY pembahasan $x^2$.\nBukan rubrik produksi.',
-        })),
-      } });
-      return route.fulfill({ json: {
-        id: attemptId, levelId, levelTitle: 'TEST ONLY PGK', status: submitted ? 'completed' : 'inProgress', isDemo: true,
-        startedAt: new Date().toISOString(), serverTime: new Date().toISOString(),
-        questions: questions.map(q => ({ ...q, answer: stored.get(q.questionInstanceId) ?? null })),
-      } });
-    });
-    await page.goto('/student/drill/' + attemptId);
-    await page.getByRole('radio', { name: /^A\s*\./ }).check();
-    await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: /^Soal 2,/ }).click();
-    await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
-    await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
-    await page.reload();
-    await page.getByRole('button', { name: /^Soal 2,/ }).click();
-    await expect(page.getByRole('checkbox', { name: /^A\s*\./ })).toBeChecked();
-    await page.getByRole('button', { name: 'Kosongkan jawaban' }).click();
-    await expect(page.getByRole('checkbox', { name: /^A\s*\./ })).not.toBeChecked();
-    await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
-    await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
-    await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: /^Soal 3,/ }).click();
-    await page.getByRole('group', { name: 'Satu', exact: true }).getByRole('radio', { name: 'Ya', exact: true }).check();
-    await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-    await page.screenshot({ path: info.outputPath('pgk-category.png'), fullPage: true });
-    await page.getByRole('button', { name: 'Kirim Drill' }).click();
-    const dialog = page.getByRole('dialog');
-    await expect(dialog.getByText(/belum lengkap/)).toBeVisible();
-    await dialog.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
-    await expect(page).toHaveURL('/student/drill/' + attemptId + '/result');
-    await expect(page.getByRole('navigation', { name: 'Navigasi pembahasan' })).toHaveCount(0);
-    await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toHaveCount(0);
-    await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
-    await expect(page).toHaveURL('/student/drill/' + attemptId + '/explanation');
-    await page.getByRole('button', { name: /^Pembahasan soal 2,/ }).click();
-    await expect(page.getByText('Sebagian benar', { exact: true })).toBeVisible();
-    await expect(page.getByRole('checkbox').first()).toBeDisabled();
-    await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
-    await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
-    expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(false);
-    await page.screenshot({ path: info.outputPath('pgk-explanation.png'), fullPage: true });
-    await page.getByRole('button', { name: 'Sebelumnya' }).focus();
-    await page.keyboard.press('Enter');
-    await expect(page.getByRole('heading', { name: 'TEST ONLY MCMA' })).toBeVisible();
-  });
+  test(
+    'TEST ONLY PGK save-resume and separate explanation at ' + width + 'px',
+    async ({ page }, info) => {
+      await page.setViewportSize({ width, height: 900 });
+      await fixtures(page);
+      page.on('dialog', (dialog) => void dialog.accept());
+      const options = [
+        { id: 'A', text: 'Satu' },
+        { id: 'B', text: 'Dua' },
+      ];
+      const questions = [
+        {
+          questionInstanceId: questionId,
+          type: 'SINGLE_CHOICE',
+          stem: 'TEST ONLY PG',
+          options,
+          categories: [],
+          selectedOptionId: null,
+          answer: null,
+        },
+        {
+          questionInstanceId: chapterId,
+          type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+          stem: 'TEST ONLY MCMA',
+          options,
+          categories: [],
+          selectedOptionId: null,
+          answer: null,
+        },
+        {
+          questionInstanceId: subchapterId,
+          type: 'CATEGORY',
+          stem: 'TEST ONLY Kategori',
+          options,
+          categories: [
+            { id: 'Y', text: 'Ya' },
+            { id: 'N', text: 'Tidak' },
+          ],
+          selectedOptionId: null,
+          answer: null,
+        },
+      ];
+      const stored = new Map<string, unknown>();
+      let submitted = false;
+      await page.route('http://localhost:3301/api/v1/assessment-attempts/**', async (route) => {
+        const path = new URL(route.request().url()).pathname;
+        if (path.includes('/answers/')) {
+          const id = path.split('/').at(-1)!;
+          const body = route.request().postDataJSON();
+          const answer =
+            'answer' in body
+              ? body.answer
+              : body.optionId == null
+                ? null
+                : { optionId: body.optionId };
+          stored.set(id, answer);
+          return route.fulfill({
+            json: { questionInstanceId: id, answer, selectedOptionId: answer?.optionId ?? null },
+          });
+        }
+        if (path.endsWith('/submit')) {
+          submitted = true;
+          return route.fulfill({ json: {} });
+        }
+        if (path.endsWith('/result'))
+          return route.fulfill({
+            json: {
+              attemptId,
+              levelId,
+              levelTitle: 'TEST ONLY PGK',
+              score: 60,
+              correctCount: 1,
+              questionCount: 3,
+              mastered: false,
+              stars: 2,
+              unlockedLevelId: null,
+              isDemo: true,
+              explanationState: 'available',
+              recommendations: [],
+              reward: null,
+              xp: null,
+              questions: questions.map((question, index) => ({
+                ...question,
+                answer: stored.get(question.questionInstanceId) ?? null,
+                selectedOptionId: index === 0 ? 'A' : null,
+                correctOptionId: index === 0 ? 'A' : null,
+                answerKey:
+                  index === 0
+                    ? { optionId: 'A' }
+                    : index === 1
+                      ? { optionIds: ['A', 'B'] }
+                      : { categoryByStatementId: { A: 'Y', B: 'N' } },
+                reviewStatus: index === 0 ? 'correct' : 'partial',
+                awardedPoints: index === 0 ? 1 : 0.5,
+                maximumPoints: 1,
+                correctEquivalent: null,
+                optionReview: options.map((o) => ({
+                  optionId: o.id,
+                  selected: o.id === 'A',
+                  isKey: true,
+                })),
+                statementReview: [
+                  { statementId: 'A', status: 'correct' },
+                  { statementId: 'B', status: 'unanswered' },
+                ],
+                explanation: 'TEST ONLY pembahasan $x^2$.\nBukan rubrik produksi.',
+              })),
+            },
+          });
+        return route.fulfill({
+          json: {
+            id: attemptId,
+            levelId,
+            levelTitle: 'TEST ONLY PGK',
+            status: submitted ? 'completed' : 'inProgress',
+            isDemo: true,
+            startedAt: new Date().toISOString(),
+            serverTime: new Date().toISOString(),
+            questions: questions.map((q) => ({
+              ...q,
+              answer: stored.get(q.questionInstanceId) ?? null,
+            })),
+          },
+        });
+      });
+      await page.goto('/student/drill/' + attemptId);
+      await page.getByRole('radio', { name: /^A\s*\./ }).check();
+      await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: /^Soal 2,/ }).click();
+      await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
+      await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      await page.reload();
+      await page.getByRole('button', { name: /^Soal 2,/ }).click();
+      await expect(page.getByRole('checkbox', { name: /^A\s*\./ })).toBeChecked();
+      await page.getByRole('button', { name: 'Kosongkan jawaban' }).click();
+      await expect(page.getByRole('checkbox', { name: /^A\s*\./ })).not.toBeChecked();
+      await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
+      await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      await page.getByRole('button', { name: /^Soal 3,/ }).click();
+      await page
+        .getByRole('group', { name: 'Satu', exact: true })
+        .getByRole('radio', { name: 'Ya', exact: true })
+        .check();
+      await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      );
+      await page.screenshot({ path: info.outputPath('pgk-category.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Kirim Drill' }).click();
+      const dialog = page.getByRole('dialog');
+      await expect(dialog.getByText(/belum lengkap/)).toBeVisible();
+      await dialog.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
+      await expect(page).toHaveURL('/student/drill/' + attemptId + '/result');
+      await expect(page.getByRole('navigation', { name: 'Navigasi pembahasan' })).toHaveCount(0);
+      await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toHaveCount(0);
+      await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
+      await expect(page).toHaveURL('/student/drill/' + attemptId + '/explanation');
+      await page.getByRole('button', { name: /^Pembahasan soal 2,/ }).click();
+      await expect(page.getByText('Sebagian benar', { exact: true })).toBeVisible();
+      await expect(page.getByRole('checkbox').first()).toBeDisabled();
+      await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
+      await expect(page.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
+      expect(await page.evaluate(() => document.documentElement.scrollWidth > innerWidth)).toBe(
+        false,
+      );
+      await page.screenshot({ path: info.outputPath('pgk-explanation.png'), fullPage: true });
+      await page.getByRole('button', { name: 'Sebelumnya' }).focus();
+      await page.keyboard.press('Enter');
+      await expect(page.getByRole('heading', { name: 'TEST ONLY MCMA' })).toBeVisible();
+    },
+  );
 }

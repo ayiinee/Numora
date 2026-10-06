@@ -248,7 +248,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
           xp={query.data.xp ?? null}
           closeAt={query.data.closeAt}
           resultDueAt={query.data.resultDueAt}
-          isDemo={query.data.isDemo}
+          resultPendingReason={query.data.resultPendingReason}
         />
       </>
     );
@@ -291,14 +291,8 @@ function TryoutForm({
         title={attempt.packageTitle}
         questions={attempt.questions}
         notice={
-          attempt.isDemo ? (
-            <Card fullWidth>
-              <p>
-                DEMO · Konten uji, bukan asesmen kemampuan TKA resmi.
-                {attempt.questions.some((question) => question.type !== 'SINGLE_CHOICE') &&
-                  ' Jawaban PGK disimpan tanpa nilai atau XP sampai rubrik disetujui.'}
-              </p>
-            </Card>
+          attempt.resultPendingReason ? (
+            <Card fullWidth>Penilaian belum tersedia. Jawaban tetap disimpan di server.</Card>
           ) : undefined
         }
         deadlineAt={attempt.deadlineAt}
@@ -381,7 +375,7 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
           xp={attempt.data?.xp ?? null}
           closeAt={attempt.data?.closeAt}
           resultDueAt={attempt.data?.resultDueAt}
-          isDemo={attempt.data?.isDemo}
+          resultPendingReason={attempt.data?.resultPendingReason}
           fetching={query.isFetching}
           onCheck={() => void query.refetch()}
         />

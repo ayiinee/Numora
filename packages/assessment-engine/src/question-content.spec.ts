@@ -5,6 +5,7 @@ import {
   presentAssessmentQuestion,
   presentAssessmentReview,
 } from './question-content.js';
+import { decodeSingleChoice } from './single-choice.js';
 
 const options = ['A', 'B', 'C'].map((id) => ({ id, content: { text: id } }));
 const base = { stem: { text: 'TEST ONLY' }, explanation: { text: 'TEST ONLY explanation' } };
@@ -34,6 +35,17 @@ function content(type: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CA
   });
 }
 describe('typed pinned content (TEST ONLY, no scoring policy)', () => {
+  it('grades the same PG content for legacy options and the Excel import envelope', () => {
+    const row = {
+      ...base,
+      questionType: 'SINGLE_CHOICE',
+      optionsOrStatements: options,
+      answerKey: { optionId: 'A' },
+    };
+    expect(
+      decodeSingleChoice({ ...row, optionsOrStatements: { options, categories: [] } }),
+    ).toEqual(decodeSingleChoice(row));
+  });
   it.each(['SINGLE_CHOICE', 'MULTIPLE_CHOICE_MULTIPLE_ANSWER', 'CATEGORY'] as const)(
     'decodes %s without leaking a key in active output',
     (type) => {
@@ -70,7 +82,7 @@ describe('typed pinned content (TEST ONLY, no scoring policy)', () => {
     expect(presentAssessmentReview(q, 'q', answer, '0', '3').reviewStatus).toBe('incorrect');
     expect(presentAssessmentReview(q, 'q', answer, '0.75', '3').reviewStatus).toBe('partial');
     expect(presentAssessmentReview(q, 'q', answer, null, '3').reviewStatus).toBeNull();
-    expect(presentAssessmentReview(q, 'q', answer, '0.75', '3').correctEquivalent).toBeNull();
+    expect(presentAssessmentReview(q, 'q', answer, '0.75', '3').correctEquivalent).toBe(0.25);
   });
   it.each([
     [null, '0', 'unanswered'],
@@ -85,5 +97,33 @@ describe('typed pinned content (TEST ONLY, no scoring policy)', () => {
     const q = content('CATEGORY');
     for (const points of ['NaN', 'Infinity', '-1', '4'])
       expect(presentAssessmentReview(q, 'q', null, points, '3').reviewStatus).toBeNull();
+  });
+});
+
+describe('historical fixture presentation', () => {
+  it('cleans a checked version after decoding without changing content, key, options or grading', () => {
+    const row = {
+      questionType: 'SINGLE_CHOICE',
+      stem: { text: 'DEMO 9: 9 + 9 = …' },
+      explanation: { text: 'DEMO: 9 + 9 = 18.' },
+      optionsOrStatements: options,
+      answerKey: { optionId: 'A' },
+    };
+    const decoded = decodeAssessmentContent(row);
+    const original = structuredClone(decoded);
+    const id = '1bebba3a-69a3-50f2-bd28-9a1f1c690658';
+    const active = presentAssessmentQuestion(decoded, 'instance', { optionId: 'B' }, id);
+    expect(active.stem).toBe('9 + 9 = …');
+    expect(active).not.toHaveProperty('answerKey');
+    const review = presentAssessmentReview(decoded, 'instance', { optionId: 'B' }, '0', '1', id);
+    expect(review.explanation).toBe('9 + 9 = 18.');
+    expect(review.answerKey).toEqual(original.answerKey);
+    expect(review.options).toEqual(original.options);
+    expect(review.reviewStatus).toBe('incorrect');
+    expect(decoded).toEqual(original);
+    expect(presentAssessmentQuestion(decoded, 'instance', null, 'unknown').stem).toBe(
+      row.stem.text,
+    );
+    expect(() => decodeAssessmentContent({ ...row, answerKey: { optionId: 'unknown' } })).toThrow();
   });
 });

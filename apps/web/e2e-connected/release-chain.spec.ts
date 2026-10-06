@@ -795,7 +795,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       );
     }
     await mandiri.goto('/student/assessment');
-    await expect(mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ })).toHaveCount(0);
+    await expect(mandiri.getByRole('link', { name: /Tryout Mingguan/ })).toHaveCount(0);
     const teacherPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/assessment-results`;
     const teacherHistory = await body<AssessmentHistoryDto>(request, 'teacher', teacherPath);
     expect(teacherHistory.records.find((r) => r.attemptId === affiliated.id)).toMatchObject({
@@ -837,7 +837,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect((await request.post(`${fixtureBase}/tryout-fixture/release`)).status()).toBe(200);
     await mandiri.reload();
-    await mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ }).click();
+    await mandiri.getByRole('link', { name: /Tryout Mingguan/ }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     const result = await body<TryoutResultDto>(
       request,
@@ -845,7 +845,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       `tryout/attempts/${independent.id}/result`,
     );
     expect(result.score).toBe(50);
-    expect(result.explanation).toHaveLength(2);
+    expect(result.explanation).toHaveLength(30);
     expect(result.resultMethod).toBeNull();
     await mandiri.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
     await expect(mandiri).toHaveURL(
@@ -864,7 +864,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(
       persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
     ).toHaveLength(2);
-    expect(persistence.pins).toHaveLength(4);
+    expect(persistence.pins).toHaveLength(60);
     expect(persistence.rewards).toHaveLength(2);
     const independentReward = persistence.rewards.find(
       (r: { attempt_id: string }) => r.attempt_id === independent.id,

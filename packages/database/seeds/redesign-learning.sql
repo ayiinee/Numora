@@ -16,18 +16,18 @@ BEGIN
     WHERE policy_code='DRILL_PG_DEMO' AND status='PUBLISHED' ORDER BY version DESC LIMIT 1;
   IF policy IS NULL THEN RAISE EXCEPTION 'Existing DEMO PG scoring policy required'; END IF;
   INSERT INTO chapters(id,code,slug,name,description,display_order,status)
-    SELECT chapter,'DEMO-UI-ALJABAR','demo-ui-aljabar','Bab Demo UI: Persamaan & Fungsi Kuadrat',
+    SELECT chapter,'DEMO-UI-ALJABAR','demo-ui-aljabar','Persamaan & Fungsi Kuadrat',
       'Data sintetis untuk pengujian UI. Belum ditinjau Curriculum.',coalesce(max(display_order),0)+1,'READY'
     FROM chapters ON CONFLICT DO NOTHING;
   INSERT INTO subchapters(id,chapter_id,code,slug,name,display_order,status)
-    VALUES(subchapter,chapter,'DEMO-UI-FAKTOR','demo-ui-faktor','Subbab Demo UI: Faktorisasi & Bentuk Kuadrat',1,'READY') ON CONFLICT DO NOTHING;
+    VALUES(subchapter,chapter,'DEMO-UI-FAKTOR','demo-ui-faktor','Faktorisasi & Bentuk Kuadrat',1,'READY') ON CONFLICT DO NOTHING;
   INSERT INTO competencies(id,subchapter_id,code,description,status)
     VALUES(competency,subchapter,'DEMO-UI-KUADRAT','Identitas kuadrat dan selisih kuadrat — DEMO', 'READY') ON CONFLICT DO NOTHING;
   FOR l IN 1..5 LOOP
     lvl := ('03000000-0000-4000-8000-'||lpad((110+l)::text,12,'0'))::uuid;
     title := (ARRAY['Pengenalan Suku & Faktor','Identitas Aljabar','Bentuk Kuadrat Sempurna','Selisih Kuadrat','Penguatan Faktorisasi'])[l];
     INSERT INTO levels(id,subchapter_id,level_number,description,status)
-      VALUES(lvl,subchapter,l,'Level '||l||' Demo: '||title,'READY') ON CONFLICT DO NOTHING;
+      VALUES(lvl,subchapter,l,'Level '||l||': '||title,'READY') ON CONFLICT DO NOTHING;
     FOR i IN 1..10 LOOP
       q := ('03000000-0000-4000-8000-'||lpad((200+l*20+i)::text,12,'0'))::uuid;
       INSERT INTO questions(id,primary_competency_id,source_ref,curriculum_level_number,status)

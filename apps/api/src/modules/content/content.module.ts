@@ -1,4 +1,8 @@
 import { Module } from '@nestjs/common';
+import { GeneratorController } from './generator.controller';
+import { GeneratorService } from './generator.service';
+import { GeneratorPackagesService } from './generator-packages.service';
+import { GeneratorPackagesController } from './generator-packages.controller';
 import { ContentPreviewController } from './content-preview.controller';
 import { ContentPreviewService } from './content-preview.service';
 import { ContentImportService } from './content-import.service';
@@ -16,19 +20,28 @@ import { ExcelImportController } from './excel-import.controller';
 import { ExcelImportService } from './excel-import.service';
 import { ContentPackagesController } from './content-packages.controller';
 import { ContentPackagesService } from './content-packages.service';
+import { ContentUploadsController, TrackedExcelInterceptor } from './content-uploads.controller';
+import { ContentUploadsService } from './content-uploads.service';
 
 @Module({
   imports: [IdentityModule, ConfigModule],
   controllers: [
+    GeneratorController,
+    GeneratorPackagesController,
     ContentController,
     DrillPackagesController,
     MediaUploadsController,
     ContentPreviewController,
     ExcelImportController,
     ContentPackagesController,
+    ContentUploadsController,
   ],
   providers: [
+    GeneratorService,
+    GeneratorPackagesService,
     ContentImportService,
+    ContentUploadsService,
+    TrackedExcelInterceptor,
     ExcelImportService,
     ContentPackagesService,
     ContentPreviewService,
@@ -38,6 +51,6 @@ import { ContentPackagesService } from './content-packages.service';
     MediaUploadsRepository,
     R2MediaStorage,
   ],
-  exports: [ContentService, DrillPackagesService],
+  exports: [ContentService, DrillPackagesService, R2MediaStorage],
 })
 export class ContentModule {}

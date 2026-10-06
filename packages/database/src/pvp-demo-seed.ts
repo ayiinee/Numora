@@ -1,6 +1,8 @@
-import { createHash } from 'node:crypto';
-import { and, eq, sql } from 'drizzle-orm';
+import { allowSyntheticContent } from './package-runtime.js';
+import { createHash, randomUUID } from 'node:crypto';
+import { and, desc, eq, sql } from 'drizzle-orm';
 import { getDatabase } from './client.js';
+import { presentFixtureText } from './fixture-presentation.js';
 import {
   assessmentPackages,
   chapters,
@@ -11,6 +13,7 @@ import {
   questionVersions,
   scoringPolicyVersions,
   subchapters,
+  users,
 } from './schema/index.js';
 
 const namespace = 'NUMORA-PVP-DEMO-V1';
@@ -22,28 +25,7 @@ export function pvpDemoId(label: string) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 export function assertPvpDemoTarget(env: NodeJS.ProcessEnv = process.env) {
-  if (env.ALLOW_DEMO_SEED !== 'true') throw new Error('Explicit ALLOW_DEMO_SEED=true is required.');
-  const target = new URL(env.DATABASE_URL ?? '');
-  if (
-    env.NODE_ENV === 'test' &&
-    ['localhost', '127.0.0.1'].includes(target.hostname) &&
-    /^\/numora_test(?:_|$)/.test(target.pathname)
-  )
-    return;
-  const ref = env.PVP_DEMO_SEED_PROJECT_REF;
-  if (
-    !ref ||
-    !/^[a-z]{20}$/.test(ref) ||
-    new URL(env.SUPABASE_URL ?? '').hostname !== `${ref}.supabase.co` ||
-    target.pathname !== '/postgres' ||
-    !['require', 'verify-full'].includes(target.searchParams.get('sslmode') ?? '') ||
-    !(
-      target.hostname === `db.${ref}.supabase.co` ||
-      (target.hostname.endsWith('.pooler.supabase.com') &&
-        decodeURIComponent(target.username).endsWith(`.${ref}`))
-    )
-  )
-    throw new Error('PvP DEMO seed requires an explicitly named isolated sandbox/staging target.');
+  if (!allowSyntheticContent(env)) throw new Error('Development/test fixture opt-in is required.');
 }
 
 /** Additive, opt-in fixtures: no accounts, XP, progress or official content publication. */
@@ -172,19 +154,17 @@ export async function seedPvpDemo() {
         .from(assessmentPackages)
         .where(eq(assessmentPackages.id, packageId));
       if (!existingPack)
-        await tx
-          .insert(assessmentPackages)
-          .values({
-            id: packageId,
-            familyCode: `${namespace}:${difficulty}`,
-            packageVersion: 1,
-            name: `PvP DEMO ${difficulty}`,
-            assessmentType: 'PVP',
-            isDemo: true,
-            status: 'DRAFT',
-            scoringPolicyVersionId: policy.id,
-            releaseAt: new Date('2026-01-01T00:00:00Z'),
-          });
+        await tx.insert(assessmentPackages).values({
+          id: packageId,
+          familyCode: `${namespace}:${difficulty}`,
+          packageVersion: 1,
+          name: `PvP DEMO ${difficulty}`,
+          assessmentType: 'PVP',
+          isDemo: true,
+          status: 'DRAFT',
+          scoringPolicyVersionId: policy.id,
+          releaseAt: new Date('2026-01-01T00:00:00Z'),
+        });
       const [pack] = await tx
         .select()
         .from(assessmentPackages)
@@ -196,17 +176,15 @@ export async function seedPvpDemo() {
       )
         throw new Error('PvP DEMO package drift; no data was overwritten.');
       if (!existingPack)
-        await tx
-          .insert(packageItems)
-          .values(
-            expected.map((v, i) => ({
-              id: pvpDemoId(`item:${difficulty}:${i + 1}`),
-              packageId,
-              questionVersionId: v.id,
-              displayOrder: i + 1,
-              maxPoints: '150',
-            })),
-          );
+        await tx.insert(packageItems).values(
+          expected.map((v, i) => ({
+            id: pvpDemoId(`item:${difficulty}:${i + 1}`),
+            packageId,
+            questionVersionId: v.id,
+            displayOrder: i + 1,
+            maxPoints: '150',
+          })),
+        );
       const items = await tx
         .select()
         .from(packageItems)
@@ -236,5 +214,90 @@ export async function seedPvpDemo() {
           .where(eq(assessmentPackages.id, packageId));
     }
     return { packages: 3, questions: 30, isDemo: true };
+  });
+}
+
+/** Fresh READY pools for connected localhost tests; immutable V1 content stays intact. */
+export async function seedPvpTestScenarios() {
+  if (process.env.NODE_ENV !== 'test' || !allowSyntheticContent())
+    throw new Error('READY PvP test scenarios require an isolated test database.');
+  await seedPvpDemo();
+  return getDatabase().db.transaction(async (tx) => {
+    const [reviewer] = await tx
+      .insert(users)
+      .values({
+        authUserId: randomUUID(),
+        role: 'ADMIN',
+        displayName: 'Fixture reviewer',
+        email: `${randomUUID()}@example.test`,
+      })
+      .returning();
+    const packages = new Map<string, string>();
+    for (const difficulty of ['easy', 'medium', 'hard']) {
+      const [source] = await tx
+        .select()
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, pvpDemoId(`package:${difficulty}`)));
+      const [pack] = await tx
+        .insert(assessmentPackages)
+        .values({
+          ...source!,
+          id: randomUUID(),
+          familyCode: `TEST_ONLY_${randomUUID()}`,
+          packageVersion: 1,
+          name: `PvP ${difficulty}`,
+          status: 'DRAFT',
+          frozenAt: null,
+        })
+        .returning();
+      const items = await tx
+        .select({ item: packageItems, version: questionVersions })
+        .from(packageItems)
+        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+        .where(eq(packageItems.packageId, source!.id));
+      if (items.length !== 10) throw new Error('PvP test pool must contain ten questions.');
+      for (const { item, version } of items) {
+        const [latest] = await tx
+          .select()
+          .from(questionVersions)
+          .where(eq(questionVersions.variantId, version.variantId))
+          .orderBy(desc(questionVersions.versionNumber))
+          .limit(1);
+        const stem = version.stem as { text: string },
+          explanation = version.explanation as { text: string };
+        const [ready] = await tx
+          .insert(questionVersions)
+          .values({
+            ...version,
+            id: randomUUID(),
+            versionNumber: latest!.versionNumber + 1,
+            stem: { ...stem, text: presentFixtureText(version.id, 'stem', stem.text) },
+            explanation: {
+              ...explanation,
+              text: presentFixtureText(version.id, 'explanation', explanation.text),
+            },
+            contentStatus: 'READY',
+            reviewedByUserId: reviewer!.id,
+            reviewedAt: new Date(),
+            revisedFromQuestionVersionId: version.id,
+            contentFingerprint: null,
+          })
+          .returning();
+        await tx
+          .insert(packageItems)
+          .values({
+            packageId: pack!.id,
+            questionVersionId: ready!.id,
+            displayOrder: item.displayOrder,
+            maxPoints: item.maxPoints,
+          });
+      }
+      await tx
+        .update(assessmentPackages)
+        .set({ status: 'PUBLISHED', frozenAt: new Date() })
+        .where(eq(assessmentPackages.id, pack!.id));
+      packages.set(difficulty, pack!.id);
+    }
+    return packages;
   });
 }

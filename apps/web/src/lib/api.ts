@@ -46,7 +46,11 @@ export async function apiRequest<T>(
   options?: RequestInit,
   responseType: 'json' | 'blob' = 'json',
 ): Promise<T> {
-  const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl;
+  // The isolated generator demo must not replace the application's other APIs.
+  const baseUrl =
+    process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' && !path.startsWith('admin/content/generator')
+      ? (process.env.NEXT_PUBLIC_MAIN_API_URL ?? fallbackBaseUrl)
+      : (process.env.NEXT_PUBLIC_API_URL ?? fallbackBaseUrl);
   if (process.env.NODE_ENV === 'development') {
     console.debug('[NUMORA API REQUEST]', {
       path,

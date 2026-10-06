@@ -11,6 +11,9 @@ import {
   listContentPackages,
   reviewImportedQuestion,
   updateContentPackage,
+  approveContentPackage,
+  publishContentPackage,
+  archiveContentPackage,
 } from './content-package-api';
 import type {
   AdminCurriculumDto,
@@ -48,6 +51,9 @@ export function ContentPackageWorkspace({
   const [error, setError] = useState('');
   const [reload, setReload] = useState(0);
   const [notes, setNotes] = useState('');
+  const [approvalReference, setApprovalReference] = useState('');
+  const [approvalConfirmed, setApprovalConfirmed] = useState(false);
+  const [releaseDate, setReleaseDate] = useState('');
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
   useEffect(() => {
     let active = true;
@@ -118,6 +124,9 @@ export function ContentPackageWorkspace({
     setDetail(next);
     onSelect(next);
     setNotes('');
+    setApprovalReference('');
+    setApprovalConfirmed(false);
+    setReleaseDate('');
     setMedia([]);
   };
   const clear = () => {
@@ -150,7 +159,7 @@ export function ContentPackageWorkspace({
       })(),
   );
   return (
-    <Card className="content-import-card">
+    <Card id="paket-soal" className="content-import-card">
       <h2>Tujuan & paket soal</h2>
       <p>
         Satu file untuk satu paket. PG, MCMA, dan Kategori adalah format jawaban dalam tujuan yang
@@ -235,7 +244,6 @@ export function ContentPackageWorkspace({
             {packages.map((p) => (
               <option key={p.id} value={p.id}>
                 {p.name} · {p.familyCode} v{p.packageVersion}
-                {p.isDemo ? ' · DEMO' : ''}
               </option>
             ))}
           </select>
@@ -287,7 +295,7 @@ export function ContentPackageWorkspace({
               packageVersion: Number(value('packageVersion')),
               name: value('name'),
               assessmentType: usage,
-              isDemo: f.get('isDemo') === 'on',
+              isDemo: false,
               source: {
                 sourceNamespace: value('sourceNamespace'),
                 sourceName: value('sourceName'),
@@ -381,10 +389,6 @@ export function ContentPackageWorkspace({
             Referensi sumber
             <textarea name="sourceReference" required maxLength={1000} rows={2} disabled={locked} />
           </label>
-          <label className="excel-choice">
-            <input name="isDemo" type="checkbox" disabled={locked} />
-            Konten DEMO / contoh pengujian
-          </label>
           <Button type="submit" disabled={locked}>
             Simpan paket DRAFT
           </Button>
@@ -394,7 +398,6 @@ export function ContentPackageWorkspace({
         <>
           <h3>
             {detail.name} <Badge>{detail.assessmentType}</Badge>{' '}
-            {detail.isDemo && <Badge variant="warning">DEMO</Badge>}
           </h3>
           <p>
             {detail.familyCode} · versi {detail.packageVersion} · revisi DRAFT{' '}
@@ -429,11 +432,114 @@ export function ContentPackageWorkspace({
               </li>
             ))}
           </ul>
+          {detail.curriculumApproval && (
+            <p>
+              Persetujuan Curriculum: {detail.curriculumApproval.reference} ·{' '}
+              {new Date(detail.curriculumApproval.approvedAt).toLocaleString('id-ID')}
+            </p>
+          )}
+          {['PUBLISHED', 'CLOSED'].includes(detail.status) && (
+            <Button
+              variant="secondary"
+              disabled={locked}
+              onClick={() =>
+                void run(async () => {
+                  await archiveContentPackage(token, detail.id, {
+                    expectedRevision: detail.contentRevision,
+                  });
+                  await choose(detail.id);
+                  setReload((n) => n + 1);
+                })
+              }
+            >
+              Arsipkan paket
+            </Button>
+          )}
           <p>
             Distribusi aktual:{' '}
             {detail.distribution.map((d) => `${d.dimension} ${d.value}: ${d.count}`).join(' · ') ||
               'Belum ada soal.'}
           </p>
+          {detail.status === 'DRAFT' && (
+            <div className="content-import-card">
+              <label>
+                Referensi persetujuan Curriculum
+                <input
+                  value={approvalReference}
+                  maxLength={1000}
+                  disabled={locked}
+                  onChange={(e) => setApprovalReference(e.target.value)}
+                  placeholder="Dokumen, rapat, atau tim yang menyetujui paket"
+                />
+              </label>
+              <label>
+                <input
+                  type="checkbox"
+                  checked={approvalConfirmed}
+                  disabled={locked}
+                  onChange={(e) => setApprovalConfirmed(e.target.checked)}
+                />
+                Susunan paket, kesulitan, kunci dan pembahasan sudah disetujui Curriculum.
+              </label>
+              <Button
+                variant="secondary"
+                disabled={locked || !approvalReference.trim() || !approvalConfirmed}
+                onClick={() =>
+                  void run(async () => {
+                    await approveContentPackage(token, detail.id, {
+                      expectedRevision: detail.contentRevision,
+                      reference: approvalReference,
+                      confirmed: true,
+                    });
+                    await choose(detail.id);
+                  })
+                }
+              >
+                Catat persetujuan paket
+              </Button>
+              {detail.assessmentType === 'TRYOUT' && (
+                <>
+                  <label>
+                    Tanggal dan jam rilis Tryout (WIB, opsional)
+                    <input
+                      type="datetime-local"
+                      value={releaseDate}
+                      disabled={locked}
+                      onChange={(e) => setReleaseDate(e.target.value)}
+                    />
+                  </label>
+                  <Button disabled={locked} onClick={() => setReleaseDate('')}>
+                    Gunakan waktu sekarang
+                  </Button>
+                  <p>
+                    Kosongkan untuk Publish sekarang. Durasi 10 menit; batch tutup 7 hari setelah
+                    rilis.
+                  </p>
+                </>
+              )}
+              <Button
+                disabled={locked || !detail.readiness.canPublish}
+                onClick={() =>
+                  void run(async () => {
+                    await publishContentPackage(token, detail.id, {
+                      expectedRevision: detail.contentRevision,
+                      ...(detail.assessmentType === 'TRYOUT' && releaseDate
+                        ? {
+                            releaseAt: `${releaseDate}:00+07:00`,
+                          }
+                        : {}),
+                    });
+                    await choose(detail.id);
+                    setReload((n) => n + 1);
+                  })
+                }
+              >
+                {detail.assessmentType === 'TRYOUT' && !releaseDate
+                  ? 'Publish sekarang'
+                  : 'Publish paket'}
+              </Button>
+            </div>
+          )}
           {detail.items.length > 0 && (
             <>
               {detail.items.some((i) => i.question?.metadata.assetManifest.length) && (
@@ -451,6 +557,32 @@ export function ContentPackageWorkspace({
                   disabled={locked || detail.status !== 'DRAFT'}
                 />
               </label>
+              <Button
+                variant="secondary"
+                disabled={
+                  locked ||
+                  !notes.trim() ||
+                  detail.status !== 'DRAFT' ||
+                  detail.items.some((i) => !i.question)
+                }
+                onClick={() =>
+                  void run(async () => {
+                    try {
+                      for (const item of detail.items.filter((i) => !i.reviewedAt))
+                        await reviewImportedQuestion(
+                          token,
+                          item.questionVersionId,
+                          notes,
+                          detail.id,
+                        );
+                    } finally {
+                      await choose(detail.id);
+                    }
+                  })
+                }
+              >
+                Catat review seluruh paket
+              </Button>
               <ul className="monitoring-list">
                 {detail.items.map((item) => (
                   <li key={item.questionVersionId}>

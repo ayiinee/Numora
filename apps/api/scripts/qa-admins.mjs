@@ -11,12 +11,12 @@ export const qaAdminRoles = {
   adminSuper: {
     email: 'numora-qa-adminsuper@example.invalid',
     role: 'SUPER_ADMIN',
-    name: 'DEMO-QA Super Admin',
+    name: 'Agus Wijaya',
   },
   adminOperations: {
     email: 'numora-qa-adminoperations@example.invalid',
     role: 'OPERATIONS',
-    name: 'DEMO-QA Admin Operasional',
+    name: 'Sinta Lestari',
   },
 };
 

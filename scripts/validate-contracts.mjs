@@ -9,6 +9,7 @@ const roots = [
   'packages/contracts/events',
   'packages/contracts/websocket',
   'packages/contracts/compute',
+  'packages/contracts/generator-service-v1',
 ];
 
 export async function loadContractValidators(directories = roots) {
@@ -18,6 +19,7 @@ export async function loadContractValidators(directories = roots) {
   for (const root of directories) {
     for (const name of (await readdir(root)).sort()) {
       if (extname(name) !== '.json') continue;
+      if (root.endsWith('generator-service-v1') && !name.endsWith('.schema.json')) continue;
       const file = join(root, name);
       ajv.addSchema(JSON.parse(await readFile(file, 'utf8')), file);
       files.push(file);
@@ -30,5 +32,7 @@ export async function loadContractValidators(directories = roots) {
 if (process.argv[1] && import.meta.url === pathToFileURL(process.argv[1]).href) {
   const validators = await loadContractValidators();
   for (const file of validators.keys()) console.log(`valid JSON Schema: ${file}`);
-  console.log(`Validated and compiled ${validators.size} contract schema(s). Payload rules remain limited to the committed schemas.`);
+  console.log(
+    `Validated and compiled ${validators.size} contract schema(s). Payload rules remain limited to the committed schemas.`,
+  );
 }

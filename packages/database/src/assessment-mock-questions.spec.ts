@@ -82,15 +82,18 @@ describe('DEMO assessment bank', () => {
   it('rejects production, unrecognized remote targets, missing opt-in and transaction poolers', () => {
     const local = {
       NODE_ENV: 'test',
-      ALLOW_DEMO_SEED: 'true',
-      DATABASE_URL: 'postgres://postgres@127.0.0.1:55442/test?sslmode=disable',
+      ALLOW_SYNTHETIC_CONTENT: 'true',
+      DATABASE_URL: 'postgres://postgres@127.0.0.1:55442/numora_test_fixture?sslmode=disable',
     };
     expect(() => assertAssessmentMockTarget(local)).not.toThrow();
-    expect(() => assertAssessmentMockTarget({ ...local, ALLOW_DEMO_SEED: 'false' })).toThrow();
+    expect(() =>
+      assertAssessmentMockTarget({ ...local, ALLOW_SYNTHETIC_CONTENT: 'false' }),
+    ).toThrow();
     expect(() => assertAssessmentMockTarget({ ...local, NODE_ENV: 'production' })).toThrow();
     const cloud = {
       NODE_ENV: 'development',
-      ALLOW_DEMO_SEED: 'true',
+      ALLOW_SYNTHETIC_CONTENT: 'true',
+      SUPABASE_PROJECT_REF: 'pkamenfnwmoeisccnrnk',
       SUPABASE_URL: 'https://pkamenfnwmoeisccnrnk.supabase.co',
       DATABASE_URL:
         'postgres://postgres.pkamenfnwmoeisccnrnk@aws-0-ap-southeast-1.pooler.supabase.com:5432/postgres?sslmode=require',

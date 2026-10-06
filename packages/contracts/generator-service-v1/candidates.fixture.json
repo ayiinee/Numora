@@ -1,0 +1,190 @@
+[
+  {
+    "name": "pg-latex",
+    "testOnly": true,
+    "payload": {
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "Tentukan nilai \\(x\\) jika \\(x+2=5\\)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionId": "B"
+      },
+      "explanation": {
+        "text": "\\[x=5-2=3\\]"
+      },
+      "media": [],
+      "difficulty": "EASY",
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001",
+      "contentFingerprint": "42271ddfad0f20ee80061ddc5c43a4e1a47a3b72cf18c7288afd461ec53b1bb2"
+    }
+  },
+  {
+    "name": "mcma",
+    "testOnly": true,
+    "payload": {
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "Pilih bilangan prima."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "explanation": {
+        "text": "2, 3, dan 5 adalah bilangan prima."
+      },
+      "media": [],
+      "difficulty": "EASY",
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001",
+      "contentFingerprint": "b7dcb9064e01e59099e0dde33ddfa0ce3f6a101e3bcc1b37f37a179a063dbf9f"
+    }
+  },
+  {
+    "name": "category-boolean",
+    "testOnly": true,
+    "payload": {
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "Kategorikan pernyataan berikut."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2 adalah bilangan prima."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4 adalah bilangan prima."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "true",
+            "label": "Benar"
+          },
+          {
+            "id": "false",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "true",
+          "B": "false"
+        }
+      },
+      "explanation": {
+        "text": "Pernyataan A benar dan B salah."
+      },
+      "media": [],
+      "difficulty": null,
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001",
+      "contentFingerprint": "66c8cb2153f28ed532eadfa869a3b82976878c7254c392e59d3de394df213b7c"
+    }
+  },
+  {
+    "name": "category-custom",
+    "testOnly": true,
+    "payload": {
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "Kategorikan pernyataan berikut."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2 adalah bilangan prima."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4 adalah bilangan prima."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "sesuai",
+            "label": "Sesuai"
+          },
+          {
+            "id": "tidak_sesuai",
+            "label": "Tidak Sesuai"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "sesuai",
+          "B": "tidak_sesuai"
+        }
+      },
+      "explanation": {
+        "text": "Pernyataan A sesuai dan B tidak sesuai."
+      },
+      "media": [],
+      "difficulty": null,
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001",
+      "contentFingerprint": "a5517f1fc41009c5115b9eabc82a41781667a279369faf014f6da9dd25f12a4a"
+    }
+  }
+]

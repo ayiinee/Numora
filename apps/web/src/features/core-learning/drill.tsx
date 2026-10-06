@@ -77,13 +77,6 @@ function DrillForm({
       title={attempt.levelTitle}
       questions={attempt.questions}
       headerExtra={<DrillTimer startedAt={attempt.startedAt} serverTime={attempt.serverTime} />}
-      notice={
-        attempt.isDemo ? (
-          <p className="rounded-xl bg-amber-100 px-4 py-3 text-sm font-semibold text-amber-950">
-            Soal demo untuk uji coba. Hasil bukan ukuran kemampuan TKA resmi.
-          </p>
-        ) : null
-      }
       submitLabel="Kirim Drill"
       confirmMessage={(emptyCount) =>
         emptyCount === 0
@@ -163,9 +156,7 @@ function ResultData({ token, attemptId }: { token: string; attemptId: string }) 
         status="Hasil tersimpan"
         progress={100}
       />
-      {result.isDemo && (
-        <p className="demo-notice">Hasil latihan demo, bukan ukuran kemampuan TKA resmi.</p>
-      )}
+
       <div className="drill-result__layout">
         <div className="drill-result__summary">
           <ResultSummary result={result} />

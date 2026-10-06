@@ -59,9 +59,9 @@ export type AssessmentRecordDto = { "attemptId": string; "activity": "drill" | "
 
 export type AssessmentHistoryDto = { "records": (AssessmentRecordDto)[]; "nextCursor": string | null; };
 
-export type CurrentTryoutDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "isDemo"?: boolean; "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; };
+export type CurrentTryoutDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "resultPendingReason"?: "CONTENT_PENDING" | "SCORING_PENDING" | null; "isDemo"?: boolean; "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; };
 
-export type TryoutPackageDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "isDemo"?: boolean; "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; "periodState": "ongoing" | "past" | "unavailable"; };
+export type TryoutPackageDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "resultPendingReason"?: "CONTENT_PENDING" | "SCORING_PENDING" | null; "isDemo"?: boolean; "id"?: string; "title"?: string; "releaseAt"?: string; "state": "unavailable" | "open" | "inProgress" | "waitingIrt" | "resultReady"; "eligible"?: boolean; "attemptId"?: string | null; "questionCount"?: number | null; "durationSeconds"?: number | null; "periodState": "ongoing" | "past" | "unavailable"; };
 
 export type TryoutPackagesDto = { "packages": (TryoutPackageDto)[]; "nextCursor": string | null; };
 
@@ -81,7 +81,7 @@ export type PretestUnlockedLevelDto = { "id": string; "title": string; };
 
 export type PretestResultDto = { "attemptId": string; "chapterId": string; "chapterTitle": string; "isDemo": boolean; "score": number | null; "correctCount": number | null; "questionCount": number; "initialLevel": number | null; "mappingStatus": "applied" | "unavailable"; "unlockedLevels": (PretestUnlockedLevelDto)[]; "completedAt"?: string | null; };
 
-export type TryoutAttemptDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "isDemo"?: boolean; "xp"?: number | null; "xpPolicyVersion"?: number | null; "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
+export type TryoutAttemptDto = { "closeAt"?: string | null; "resultDueAt"?: string | null; "resultPendingReason"?: "CONTENT_PENDING" | "SCORING_PENDING" | null; "isDemo"?: boolean; "xp"?: number | null; "xpPolicyVersion"?: number | null; "serverTime"?: string; "id": string; "packageId": string; "packageTitle": string; "status": "inProgress" | "submitted"; "deadlineAt": string | null; "questions": (DrillQuestionDto)[]; };
 
 export type TryoutSubmitDto = { "xpPolicyVersion"?: number | null; "state": "waitingIrt"; "xp"?: number | null; };
 

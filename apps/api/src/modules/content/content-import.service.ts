@@ -1,3 +1,4 @@
+import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
 import { randomUUID } from 'node:crypto';
 import {
   Inject,
@@ -8,7 +9,7 @@ import {
   ServiceUnavailableException,
 } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
-import { and, desc, eq, sql } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   auditLogs,
   chapters,
@@ -18,6 +19,7 @@ import {
   questions,
   questionVariants,
   questionVersions,
+  scoringRubricVersions,
   contentMediaUploads,
   contentImports,
   contentImportIdentities,
@@ -101,11 +103,40 @@ export class ContentImportService {
       });
   }
 
-  private async inspect(tx: AdminTransaction, body: ImportBodyDto, target?: ContentPackageDto) {
+  private async inspect(
+    tx: AdminTransaction,
+    body: ImportBodyDto,
+    target?: ContentPackageDto,
+    usage?: ContentPackageDto['assessmentType'],
+  ) {
     const records = [];
+    const externalIds = [
+      ...new Set(
+        body.questions
+          .map((q) => (q as ImportQuestion).externalId)
+          .filter((id): id is string => typeof id === 'string'),
+      ),
+    ];
+    const identities = externalIds.length
+      ? await tx
+          .select()
+          .from(contentImportIdentities)
+          .where(
+            and(
+              eq(contentImportIdentities.sourceNamespace, body.sourceNamespace),
+              inArray(contentImportIdentities.externalId, externalIds),
+            ),
+          )
+      : [];
+    const identityByExternalId = new Map(identities.map((i) => [i.externalId, i]));
+    const chapterCache = new Map<string, typeof chapters.$inferSelect | undefined>();
+    const subCache = new Map<string, typeof subchapters.$inferSelect | undefined>();
+    const levelCache = new Map<string, typeof levels.$inferSelect | undefined>();
+    const competencyCache = new Map<string, typeof competencies.$inferSelect | undefined>();
     const duplicate = new Set<string>();
     for (const input of body.questions) {
-      const errors = structuralErrors(input);
+      const tryout = (target?.assessmentType ?? usage) === 'TRYOUT';
+      const errors = structuralErrors(input, false, tryout);
       const q = input as ImportQuestion;
       const externalId = typeof q.externalId === 'string' ? q.externalId : '';
       if (duplicate.has(externalId)) errors.push('DUPLICATE_EXTERNAL_ID');
@@ -122,23 +153,82 @@ export class ContentImportService {
         });
         continue;
       }
-      const [level] = await tx
-        .select({ id: levels.id, competencyId: competencies.id })
-        .from(chapters)
-        .innerJoin(subchapters, eq(subchapters.chapterId, chapters.id))
-        .innerJoin(competencies, eq(competencies.subchapterId, subchapters.id))
-        .innerJoin(levels, eq(levels.subchapterId, subchapters.id))
-        .where(
-          and(
-            eq(chapters.code, q.chapterCode),
-            eq(subchapters.code, q.subchapterCode),
-            eq(competencies.code, q.competencyCode),
-            eq(levels.levelNumber, q.metadata.sourceLevelNumber),
-            sql`${chapters.status}<>'ARCHIVED' and ${subchapters.status}<>'ARCHIVED' and ${competencies.status}<>'ARCHIVED' and ${levels.status}<>'ARCHIVED'`,
-          ),
-        )
-        .for('share');
-      if (!level) errors.push('MASTER_SCOPE_NOT_FOUND');
+      const chapterKey = q.chapterCode ?? '';
+      if (chapterKey && !chapterCache.has(chapterKey)) {
+        const [row] = await tx
+          .select()
+          .from(chapters)
+          .where(and(eq(chapters.code, chapterKey), sql`${chapters.status}<>'ARCHIVED'`))
+          .for('share');
+        chapterCache.set(chapterKey, row);
+      }
+      const chapter = chapterCache.get(chapterKey);
+      const subKey = `${chapter?.id}:${q.subchapterCode}`;
+      if (chapter && q.subchapterCode && !subCache.has(subKey)) {
+        const [row] = await tx
+          .select()
+          .from(subchapters)
+          .where(
+            and(
+              eq(subchapters.chapterId, chapter.id),
+              eq(subchapters.code, q.subchapterCode),
+              sql`${subchapters.status}<>'ARCHIVED'`,
+            ),
+          )
+          .for('share');
+        subCache.set(subKey, row);
+      }
+      const sub = subCache.get(subKey);
+      const levelKey = `${sub?.id}:${q.metadata.sourceLevelNumber}`;
+      if (sub && q.metadata.sourceLevelNumber != null && !levelCache.has(levelKey)) {
+        const [row] = await tx
+          .select()
+          .from(levels)
+          .where(
+            and(
+              eq(levels.subchapterId, sub.id),
+              eq(levels.levelNumber, q.metadata.sourceLevelNumber),
+              sql`${levels.status}<>'ARCHIVED'`,
+            ),
+          )
+          .for('share');
+        levelCache.set(levelKey, row);
+      }
+      const level = levelCache.get(levelKey);
+      const competencyKey = `${sub?.id}:${q.competencyCode}`;
+      if (sub && q.competencyCode && !competencyCache.has(competencyKey)) {
+        const [row] = await tx
+          .select()
+          .from(competencies)
+          .where(
+            and(
+              eq(competencies.subchapterId, sub.id),
+              eq(competencies.code, q.competencyCode),
+              sql`${competencies.status}<>'ARCHIVED'`,
+            ),
+          )
+          .for('share');
+        competencyCache.set(competencyKey, row);
+      }
+      const competency = competencyCache.get(competencyKey);
+      const scope =
+        chapter || tryout
+          ? {
+              id: level?.id ?? null,
+              chapterId: chapter?.id ?? null,
+              subchapterId: sub?.id ?? null,
+              competencyId: competency?.id ?? null,
+            }
+          : null;
+      if (
+        !scope ||
+        (q.chapterCode && !chapter) ||
+        (q.subchapterCode && !sub) ||
+        (q.metadata.sourceLevelNumber != null && !level) ||
+        (q.competencyCode && !competency) ||
+        (!tryout && (!sub || !level || !competency))
+      )
+        errors.push('MASTER_SCOPE_NOT_FOUND');
       if (q.levelCode != null) errors.push('UNSUPPORTED_LEVEL_CODE');
       if (target) errors.push(...placementErrors(q, target));
       if (q.metadata.sourceQuestionId !== undefined) {
@@ -181,15 +271,7 @@ export class ContentImportService {
           .limit(1);
         if (!receipt) errors.push('MEDIA_RECEIPT_INVALID');
       }
-      const [identity] = await tx
-        .select()
-        .from(contentImportIdentities)
-        .where(
-          and(
-            eq(contentImportIdentities.sourceNamespace, body.sourceNamespace),
-            eq(contentImportIdentities.externalId, q.externalId),
-          ),
-        );
+      const identity = identityByExternalId.get(q.externalId);
       const [latest] = identity
         ? await tx
             .select({ version: questionVersions, hash: contentImportVersions.contentHash })
@@ -219,7 +301,9 @@ export class ContentImportService {
         )
           errors.push('SOURCE_QUESTION_IMMUTABLE');
         if (
-          family?.primaryCompetencyId !== level?.competencyId ||
+          (family?.chapterId != null && family.chapterId !== scope?.chapterId) ||
+          (family?.subchapterId != null && family.subchapterId !== scope?.subchapterId) ||
+          family?.primaryCompetencyId !== scope?.competencyId ||
           family?.curriculumLevelNumber !== q.metadata.sourceLevelNumber ||
           latest?.version.questionType !== q.type
         )
@@ -227,6 +311,7 @@ export class ContentImportService {
       }
       const hash = digest({
         snapshot: snapshot(q),
+        scoringPolicy: tryout && q.type !== 'SINGLE_CHOICE' ? TRYOUT_PARTIAL_POLICY : null,
         chapterCode: q.chapterCode,
         subchapterCode: q.subchapterCode,
         competencyCode: q.competencyCode,
@@ -237,7 +322,7 @@ export class ContentImportService {
         q,
         errors,
         ready,
-        level: level ?? null,
+        level: scope,
         identity: identity ?? null,
         latest: latest ?? null,
         hash,
@@ -274,9 +359,14 @@ export class ContentImportService {
       })),
     };
   }
-  async validateWithin(tx: AdminTransaction, body: ImportBodyDto, lock = false) {
+  async validateWithin(
+    tx: AdminTransaction,
+    body: ImportBodyDto,
+    lock = false,
+    usage?: ContentPackageDto['assessmentType'],
+  ) {
     const target = body.target ? await packageContext(tx, body.target.packageId, lock) : undefined;
-    const records = await this.inspect(tx, body, target);
+    const records = await this.inspect(tx, body, target, usage);
     const report = this.report(body, records);
     if (target) {
       const blockers: string[] = [];
@@ -362,7 +452,7 @@ export class ContentImportService {
     this.size(body);
     return getDatabase().db.transaction(async (tx) => (await this.validateWithin(tx, body)).report);
   }
-  private size(body: ImportBodyDto) {
+  size(body: ImportBodyDto) {
     if (Buffer.byteLength(JSON.stringify(body)) > 2 * 1024 * 1024)
       throw new HttpException(
         { code: 'IMPORT_TOO_LARGE', detail: 'Import body exceeds 2 MiB.' },
@@ -374,181 +464,228 @@ export class ContentImportService {
     key: string | undefined,
     body: ImportBodyDto,
   ): Promise<ImportReportDto> {
+    return getDatabase().db.transaction((tx) => this.importWithin(tx, actor, key, body));
+  }
+  async importWithin(
+    tx: AdminTransaction,
+    actor: string,
+    key: string | undefined,
+    body: ImportBodyDto,
+    uploadSaveFingerprint?: string,
+  ): Promise<ImportReportDto> {
     this.enabled();
     this.size(body);
     const op = operationKey(key);
     const fingerprint = digest(body);
-    return getDatabase().db.transaction(async (tx) => {
-      await operationLock(tx, `content-import:${actor}:${op}`);
-      const [existing] = await tx
-        .select()
-        .from(contentImports)
-        .where(and(eq(contentImports.actorUserId, actor), eq(contentImports.idempotencyKey, op)));
-      if (existing) {
-        if (existing.fingerprint !== fingerprint)
-          throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
-        return existing.report as ImportReportDto;
-      }
-      // Lock the package before identities; all package writers take this row lock.
-      const target = body.target
-        ? await packageContext(tx, body.target.packageId, true)
-        : undefined;
-      if (target) assertDraftRevision(target, body.target!.expectedRevision);
-      for (const id of [
-        ...new Set(
-          body.questions.map((q) =>
-            typeof (q as ImportQuestion).externalId === 'string'
-              ? (q as ImportQuestion).externalId
-              : '',
-          ),
+    await operationLock(tx, `content-import:${actor}:${op}`);
+    const [existing] = await tx
+      .select()
+      .from(contentImports)
+      .where(and(eq(contentImports.actorUserId, actor), eq(contentImports.idempotencyKey, op)));
+    if (existing) {
+      if (existing.fingerprint !== fingerprint)
+        throw new ConflictException({ code: 'IDEMPOTENCY_CONFLICT' });
+      return existing.report as ImportReportDto;
+    }
+    // Lock the package before identities; all package writers take this row lock.
+    const target = body.target ? await packageContext(tx, body.target.packageId, true) : undefined;
+    if (target) assertDraftRevision(target, body.target!.expectedRevision);
+    for (const id of [
+      ...new Set(
+        body.questions.map((q) =>
+          typeof (q as ImportQuestion).externalId === 'string'
+            ? (q as ImportQuestion).externalId
+            : '',
         ),
-      ].sort())
-        await operationLock(tx, `content-identity:${body.sourceNamespace}:${id}`);
-      const { records, report } = await this.validateWithin(tx, body);
-      if (target && records.some((r) => !r.ready))
-        throw new HttpException(
-          { code: 'MEDIA_NOT_READY', detail: 'Verifikasi seluruh gambar sebelum menyimpan paket.' },
-          422,
-        );
-      if (!report.canImportDraft)
-        throw new HttpException(
-          { code: 'IMPORT_VALIDATION_FAILED', detail: 'Import rejected atomically.', report },
-          422,
-        );
-      const id = randomUUID();
-      report.id = id;
-      await tx.insert(contentImports).values({
-        id,
-        actorUserId: actor,
-        idempotencyKey: op,
-        fingerprint,
-        sourceNamespace: body.sourceNamespace,
-        report: {},
-      });
-      const items: ImportItemDto[] = [];
-      for (const [i, r] of records.entries()) {
-        if (r.latest?.hash === r.hash) {
-          items.push({
-            ...report.items[i]!,
-            outcome: 'SKIPPED_UNCHANGED',
-            questionVersionId: r.latest.version.id,
-          });
-          continue;
-        }
-        let identity = r.identity;
-        let variantId = r.latest?.version.variantId;
-        if (!identity) {
-          const [family] = await tx
-            .insert(questions)
-            .values({
-              primaryCompetencyId: r.level!.competencyId,
-              curriculumLevelNumber: r.q.metadata.sourceLevelNumber,
-              sourceRef: r.q.externalId,
-              usageType: target?.assessmentType ?? null,
-              sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
-              status: 'DRAFT',
-            })
-            .returning();
-          const [variant] = await tx
-            .insert(questionVariants)
-            .values({
-              questionId: family!.id,
-              variantCode: 'ORIGINAL',
-              kind: 'ORIGINAL',
-              origin: 'JSON_IMPORT_V2',
-            })
-            .returning();
-          variantId = variant!.id;
-          const [createdIdentity] = await tx
-            .insert(contentImportIdentities)
-            .values({
-              sourceNamespace: body.sourceNamespace,
-              externalId: r.q.externalId,
-              questionId: family!.id,
-            })
-            .returning();
-          identity = createdIdentity!;
-        }
-        const data = snapshot(r.q);
-        const [version] = await tx
-          .insert(questionVersions)
-          .values({
-            variantId: variantId!,
-            versionNumber: (r.latest?.version.versionNumber ?? 0) + 1,
-            questionType: r.q.type,
-            stem: data.stem,
-            optionsOrStatements: { options: data.options, categories: data.categories },
-            answerKey: data.answerKey,
-            explanation: data.explanation,
-            media: data.assets,
-            difficulty: r.q.difficulty ?? null,
-            levelId: r.level!.id,
-            contentStatus: 'DRAFT',
-            validationState: 'DRAFT',
-            revisedFromQuestionVersionId: r.latest?.version!.id,
-          })
-          .returning();
-        await tx.insert(contentImportVersions).values({
-          questionVersionId: version!.id,
-          identityId: identity!.id,
-          importId: id,
-          contentHash: r.hash,
-          provenance: {
-            ...r.q.metadata,
-            ...(target
-              ? {
-                  packageId: target.id,
-                  usageType: target.assessmentType,
-                  packageSource: target.source,
-                  fileName: body.target?.fileName ?? null,
-                }
-              : {}),
-          },
-        });
+      ),
+    ].sort())
+      await operationLock(tx, `content-identity:${body.sourceNamespace}:${id}`);
+    const { records, report } = await this.validateWithin(tx, body);
+    if (target && records.some((r) => !r.ready))
+      throw new HttpException(
+        { code: 'MEDIA_NOT_READY', detail: 'Verifikasi seluruh gambar sebelum menyimpan paket.' },
+        422,
+      );
+    if (!report.canImportDraft)
+      throw new HttpException(
+        { code: 'IMPORT_VALIDATION_FAILED', detail: 'Import rejected atomically.', report },
+        422,
+      );
+    const id = randomUUID();
+    report.id = id;
+    await tx.insert(contentImports).values({
+      id,
+      actorUserId: actor,
+      idempotencyKey: op,
+      fingerprint,
+      sourceNamespace: body.sourceNamespace,
+      report: {},
+    });
+    const items: ImportItemDto[] = [];
+    for (const [i, r] of records.entries()) {
+      if (r.latest?.hash === r.hash) {
         items.push({
           ...report.items[i]!,
-          outcome: r.latest ? 'CREATED_REVISION' : 'CREATED',
-          questionVersionId: version!.id,
+          outcome: 'SKIPPED_UNCHANGED',
+          questionVersionId: r.latest.version.id,
         });
+        continue;
       }
-      report.items = items;
-      if (target) {
-        const ordered = items
-          .map((item, index) => ({ item, order: records[index]!.q.metadata.sourceOrder! }))
-          .sort((a, b) => a.order - b.order);
-        await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
-        await tx
-          .insert(packageItems)
-          .values(
-            ordered.map(({ item }, index) => ({
-              packageId: target.id,
-              questionVersionId: item.questionVersionId!,
-              displayOrder: index + 1,
-              maxPoints: '1',
-            })),
-          );
-        await tx
-          .update(assessmentPackages)
-          .set({ contentRevision: target.contentRevision + 1 })
-          .where(eq(assessmentPackages.id, target.id));
-        report.package!.contentRevision = target.contentRevision + 1;
+      let identity = r.identity;
+      let variantId = r.latest?.version.variantId;
+      if (!identity) {
+        const [family] = await tx
+          .insert(questions)
+          .values({
+            primaryCompetencyId: r.level!.competencyId,
+            chapterId: r.level!.chapterId,
+            subchapterId: r.level!.subchapterId,
+            curriculumLevelNumber: r.q.metadata.sourceLevelNumber,
+            sourceRef: r.q.externalId,
+            usageType: target?.assessmentType ?? null,
+            sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
+            status: 'DRAFT',
+          })
+          .returning();
+        const [variant] = await tx
+          .insert(questionVariants)
+          .values({
+            questionId: family!.id,
+            variantCode: 'ORIGINAL',
+            kind: 'ORIGINAL',
+            origin: 'JSON_IMPORT_V2',
+          })
+          .returning();
+        variantId = variant!.id;
+        const [createdIdentity] = await tx
+          .insert(contentImportIdentities)
+          .values({
+            sourceNamespace: body.sourceNamespace,
+            externalId: r.q.externalId,
+            questionId: family!.id,
+          })
+          .returning();
+        identity = createdIdentity!;
       }
-      // The row is invisible until this transaction commits with its complete report.
-      await tx.update(contentImports).set({ report }).where(eq(contentImports.id, id));
-      await tx.insert(auditLogs).values({
-        actorUserId: actor,
-        action: 'CONTENT_IMPORTED',
-        entityType: 'content_import',
-        entityId: id,
-        metadata: {
-          count: items.length,
-          packageId: target?.id ?? null,
-          usageType: target?.assessmentType ?? null,
-          fileName: body.target?.fileName ?? null,
+      let rubricId: string | undefined;
+      if (target?.assessmentType === 'TRYOUT' && r.q.type !== 'SINGLE_CHOICE') {
+        const count = r.q.options.length;
+        const code = `${TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
+        const definition = {
+          policyCode: TRYOUT_PARTIAL_POLICY,
+          version: 1,
+          questionType: r.q.type,
+          decisionCount: count,
+          categories: Array.from({ length: count + 1 }, (_, i) => i),
+          fullyCorrectCategory: count,
+          points: 'round(correctDecisions / decisionCount * maxPoints, 2)',
+          unanswered: 0,
+          approvedDecision: 'PROJECT_OWNER_2026_10_07',
+        };
+        await tx
+          .insert(scoringRubricVersions)
+          .values({
+            code,
+            version: 1,
+            questionType: r.q.type,
+            maximumScoreCategory: count,
+            definition,
+            digest: digest(definition),
+            status: 'SEALED',
+            approvedByUserId: actor,
+            approvedAt: new Date(),
+          })
+          .onConflictDoNothing();
+        const [rubric] = await tx
+          .select()
+          .from(scoringRubricVersions)
+          .where(and(eq(scoringRubricVersions.code, code), eq(scoringRubricVersions.version, 1)))
+          .for('share');
+        if (!rubric || rubric.status !== 'SEALED' || rubric.digest !== digest(definition))
+          throw new ConflictException({ code: 'SCORING_RUBRIC_NOT_READY' });
+        rubricId = rubric.id;
+      }
+      const data = snapshot(r.q);
+      const [version] = await tx
+        .insert(questionVersions)
+        .values({
+          variantId: variantId!,
+          versionNumber: (r.latest?.version.versionNumber ?? 0) + 1,
+          questionType: r.q.type,
+          scoringRubricVersionId: rubricId,
+          stem: data.stem,
+          optionsOrStatements: { options: data.options, categories: data.categories },
+          answerKey: data.answerKey,
+          explanation: data.explanation,
+          media: data.assets,
+          difficulty: r.q.difficulty ?? null,
+          levelId: r.level!.id,
+          contentStatus: 'DRAFT',
+          validationState: 'DRAFT',
+          revisedFromQuestionVersionId: r.latest?.version!.id,
+        })
+        .returning();
+      await tx.insert(contentImportVersions).values({
+        questionVersionId: version!.id,
+        identityId: identity!.id,
+        importId: id,
+        contentHash: r.hash,
+        provenance: {
+          ...r.q.metadata,
+          ...(target
+            ? {
+                packageId: target.id,
+                usageType: target.assessmentType,
+                packageSource: target.source,
+                fileName: body.target?.fileName ?? null,
+              }
+            : {}),
         },
       });
-      return report;
+      items.push({
+        ...report.items[i]!,
+        outcome: r.latest ? 'CREATED_REVISION' : 'CREATED',
+        questionVersionId: version!.id,
+      });
+    }
+    report.items = items;
+    if (target) {
+      const ordered = items
+        .map((item, index) => ({ item, order: records[index]!.q.metadata.sourceOrder! }))
+        .sort((a, b) => a.order - b.order);
+      await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
+      await tx.insert(packageItems).values(
+        ordered.map(({ item }, index) => ({
+          packageId: target.id,
+          questionVersionId: item.questionVersionId!,
+          displayOrder: index + 1,
+          maxPoints: '1',
+        })),
+      );
+      await tx
+        .update(assessmentPackages)
+        .set({ contentRevision: target.contentRevision + 1 })
+        .where(eq(assessmentPackages.id, target.id));
+      report.package!.contentRevision = target.contentRevision + 1;
+    }
+    // The row is invisible until this transaction commits with its complete report.
+    await tx
+      .update(contentImports)
+      .set({ report: { ...report, ...(uploadSaveFingerprint ? { uploadSaveFingerprint } : {}) } })
+      .where(eq(contentImports.id, id));
+    await tx.insert(auditLogs).values({
+      actorUserId: actor,
+      action: 'CONTENT_IMPORTED',
+      entityType: 'content_import',
+      entityId: id,
+      metadata: {
+        count: items.length,
+        packageId: target?.id ?? null,
+        usageType: target?.assessmentType ?? null,
+        fileName: body.target?.fileName ?? null,
+      },
     });
+    return report;
   }
   async get(actor: string, id: string): Promise<ImportReportDto> {
     this.enabled();

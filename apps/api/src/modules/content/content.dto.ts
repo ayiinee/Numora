@@ -232,7 +232,7 @@ export class AdminVersionDto {
   @ApiProperty({ required: false }) imported?: boolean;
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;
-  @ApiProperty() primaryCompetencyId!: string;
+  @ApiProperty({ type: String, nullable: true }) primaryCompetencyId!: string | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) curriculumLevelNumber?: number | null;
   @ApiProperty() variantId!: string;
   @ApiProperty() variantCode!: string;

@@ -23,6 +23,7 @@ integration('leaderboard current visibility, dense rank, mode and archive author
   let removedId: string;
   beforeAll(async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
     process.env.PVP_MODE = 'demo';
     fixture = await pvpFixture();
     service = new LeaderboardsService({
@@ -119,6 +120,7 @@ integration('leaderboard current visibility, dense rank, mode and archive author
     expect((await service.pvp('self', 'easy')).ownEntry?.points).toBe(550);
     process.env.PVP_MODE = 'official';
     expect((await service.pvp('self', 'easy')).ownEntry?.points).toBe(999);
+    process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
     process.env.PVP_MODE = 'demo';
   });
   it('preserves legacy archive ranks, requires current membership and rejects unknown periods/roles', async () => {

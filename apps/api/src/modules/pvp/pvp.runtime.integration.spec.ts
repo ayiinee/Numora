@@ -1,11 +1,11 @@
+import { pvpDemoId, seedPvpDemo, seedPvpTestScenarios } from '@tka/database/testing';
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
+  assessmentBlueprintVersions,
   assessmentPackages,
   closeDatabaseConnection,
   getDatabase,
-  pvpDemoId,
-  seedPvpDemo,
   packageItems,
 } from '@tka/database';
 import { eq, sql } from 'drizzle-orm';
@@ -18,10 +18,17 @@ const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('owner-approved runtime policy and DEMO publication boundary', () => {
   let fixture: Awaited<ReturnType<typeof pvpFixture>>;
   const testPackages: string[] = [];
+  const runtimePackages = new Map<string, string>();
   beforeAll(async () => {
+    process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
     process.env.ALLOW_DEMO_SEED = 'true';
     fixture = await pvpFixture();
+    const ready = await seedPvpTestScenarios();
+    for (const [difficulty, id] of ready) {
+      runtimePackages.set(difficulty, id);
+      testPackages.push(id);
+    }
   });
   afterAll(async () => {
     for (const id of testPackages)
@@ -91,7 +98,7 @@ integration('owner-approved runtime policy and DEMO publication boundary', () =>
     const [demo] = await db
       .select()
       .from(assessmentPackages)
-      .where(eq(assessmentPackages.id, pvpDemoId('package:easy')));
+      .where(eq(assessmentPackages.id, runtimePackages.get('easy')!));
     const [pack] = await db
       .insert(assessmentPackages)
       .values({
@@ -125,12 +132,23 @@ integration('owner-approved runtime policy and DEMO publication boundary', () =>
       .update(assessmentPackages)
       .set({ status: 'ARCHIVED' })
       .where(eq(assessmentPackages.id, pack!.id));
+    const [blueprint] = await db
+      .insert(assessmentBlueprintVersions)
+      .values({
+        code: `TEST_ONLY_${randomUUID()}`,
+        version: 1,
+        definition: { testOnly: true, assessmentType: 'PVP' },
+        digest: 'test-only-blueprint',
+        status: 'SEALED',
+      })
+      .returning();
     const [approved] = await db
       .insert(assessmentPackages)
       .values({
         familyCode: randomUUID(),
         packageVersion: 1,
         name: 'TEST ONLY approved boundary',
+        blueprintVersionId: blueprint!.id,
         assessmentType: 'PVP',
         isDemo: false,
         status: 'DRAFT',

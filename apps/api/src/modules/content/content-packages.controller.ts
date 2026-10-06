@@ -18,6 +18,9 @@ import { ContentMutationDto } from './content.dto';
 import { ContentPackagesService } from './content-packages.service';
 import {
   ClassifyQuestionDto,
+  ApproveContentPackageDto,
+  PublishContentPackageDto,
+  ArchiveContentPackageDto,
   ContentPackageDetailDto,
   ContentPackageQueryDto,
   ContentPackagesDto,
@@ -68,5 +71,26 @@ export class ContentPackagesController {
     @Body() body: ReviewImportedQuestionDto,
   ) {
     return this.packages.review(r.adminId, id, body);
+  }
+  @Post('packages/:id/approval') @ApiOkResponse({ type: ContentMutationDto }) approve(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ApproveContentPackageDto,
+  ) {
+    return this.packages.approve(r.adminId, id, body);
+  }
+  @Post('packages/:id/publish') @ApiOkResponse({ type: ContentMutationDto }) publish(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PublishContentPackageDto,
+  ) {
+    return this.packages.publish(r.adminId, id, body);
+  }
+  @Post('packages/:id/archive') @ApiOkResponse({ type: ContentMutationDto }) archive(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ArchiveContentPackageDto,
+  ) {
+    return this.packages.archive(r.adminId, id, body.expectedRevision);
   }
 }

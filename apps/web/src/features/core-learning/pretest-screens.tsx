@@ -4,7 +4,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Badge, Button, Card } from '@tka/ui';
+import { Button, Card } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
@@ -64,7 +64,6 @@ export function ChapterPretest({
   const current = state.data;
   return (
     <div className="pretest-entry">
-      {current.isDemo && <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>}
       {current.skipped && current.state === 'inProgress' && (
         <p>Pretest dilewati untuk sekarang. Jawaban tersimpan tetap dapat dilanjutkan.</p>
       )}
@@ -173,9 +172,6 @@ function PretestForm({
       onReload={onReload}
       notice={
         <Card>
-          {attempt.isDemo && (
-            <Badge variant="warning">DEMO · Pemetaan bab sintetis untuk pengujian</Badge>
-          )}
           <p>
             20 soal · Opsional · Tanpa XP. Jawaban tersimpan dapat dilanjutkan sebelum Pretest
             selesai.
@@ -245,7 +241,6 @@ export function PretestResultScreen() {
 export function PretestResult({ result }: { result: PretestResultDto }) {
   return (
     <Card fullWidth className="pretest-result">
-      {result.isDemo && <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>}
       <h1>Hasil Pretest {result.chapterTitle}</h1>
       <p>
         Pretest selesai. Bab ini tidak dapat di-pretest ulang. Tidak ada XP atau kontribusi

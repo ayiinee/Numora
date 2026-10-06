@@ -1,3 +1,5 @@
+import { decodeAssessmentContent } from '@tka/assessment-engine';
+import { presentFixtureText } from '@tka/database';
 import {
   BadRequestException,
   ConflictException,
@@ -76,6 +78,18 @@ function text(value: unknown): string {
     ? value.text
     : '';
 }
+function presentationText(
+  version: typeof questionVersions.$inferSelect,
+  field: 'stem' | 'explanation',
+) {
+  const value = text(version[field]);
+  try {
+    decodeAssessmentContent(version);
+  } catch {
+    return value;
+  } // Invalid drafts remain visible for correction without branding overrides.
+  return presentFixtureText(version.id, field, value);
+}
 function optionsFrom(value: unknown): { id: string; text: string }[] {
   if (value && typeof value === 'object' && 'options' in value) value = value.options;
   return Array.isArray(value)
@@ -94,7 +108,7 @@ function optionsFrom(value: unknown): { id: string; text: string }[] {
 }
 function versionValues(input: QuestionContentDto) {
   if (new Set(input.options.map((option) => option.id)).size !== 4)
-    throw new BadRequestException('Opsi A–D harus unik.');
+    throw new BadRequestException('Opsi Aâ€“D harus unik.');
   return {
     questionType: 'SINGLE_CHOICE' as const,
     stem: { text: input.stem.trim() },
@@ -263,8 +277,15 @@ export class ContentService {
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-      .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
-      .innerJoin(subchapters, eq(subchapters.id, competencies.subchapterId))
+      .leftJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+      .leftJoin(levels, eq(levels.id, questionVersions.levelId))
+      .leftJoin(
+        subchapters,
+        eq(
+          subchapters.id,
+          sql`coalesce(${questions.subchapterId},${levels.subchapterId},${competencies.subchapterId})`,
+        ),
+      )
       .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
       .leftJoin(
         contentImportVersions,
@@ -278,7 +299,9 @@ export class ContentService {
               ? eq(questions.usageType, page.usageType)
               : undefined,
           page.status ? eq(questionVersions.contentStatus, page.status) : undefined,
-          page.chapterId ? eq(subchapters.chapterId, page.chapterId) : undefined,
+          page.chapterId
+            ? sql`coalesce(${questions.chapterId},${subchapters.chapterId}) = ${page.chapterId}`
+            : undefined,
           page.source
             ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
             : undefined,
@@ -315,7 +338,7 @@ export class ContentService {
           variantCode: variant.variantCode,
           versionNumber: v.versionNumber,
           questionType: v.questionType,
-          stem: text(v.stem),
+          stem: presentationText(v, 'stem'),
           imported: imported !== null,
           variantKind: variant.kind,
           originalVariantId: variant.originalVariantId,
@@ -327,7 +350,7 @@ export class ContentService {
             typeof v.answerKey.optionId === 'string'
               ? v.answerKey.optionId
               : null,
-          explanation: text(v.explanation),
+          explanation: presentationText(v, 'explanation'),
           difficulty: v.difficulty,
           contentStatus: v.contentStatus,
           questionStatus: q.status,
@@ -464,6 +487,10 @@ export class ContentService {
             .values({
               ...values,
               variantId: source.variantId,
+              parentOriginalQuestionVersionId: source.parentOriginalQuestionVersionId,
+              scoringRubricVersionId: source.scoringRubricVersionId,
+              revisedFromQuestionVersionId: source.id,
+              levelId: source.levelId,
               versionNumber: (last?.number ?? 0) + 1,
             })
             .returning({ id: questionVersions.id })
@@ -518,7 +545,8 @@ export class ContentService {
         )
           throw new ConflictException({
             code: 'IMPORTED_VERSION_READ_ONLY',
-            detail: 'Imported content remains DRAFT; use JSON reimport for a new version.',
+            detail:
+              'Tinjau dan terbitkan soal impor melalui paket; unggah ulang Excel untuk revisi baru.',
           });
         if (version.contentStatus === status) return { id };
         if (status === 'DRAFT' || version.contentStatus === 'ARCHIVED')

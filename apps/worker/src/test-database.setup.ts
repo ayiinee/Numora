@@ -9,11 +9,9 @@ import { closeDatabaseConnection, getDatabase } from '@tka/database';
 const baseUrl = process.env.TEST_DATABASE_URL;
 if (baseUrl) {
   const isolatedUrl = new URL(baseUrl);
-  if (
-    process.env.NODE_ENV !== 'test' ||
-    !['localhost', '127.0.0.1'].includes(isolatedUrl.hostname)
-  ) throw new Error('Worker integration tests require a local test database.');
-  const name = `numora_worker_test_${randomBytes(6).toString('hex')}`;
+  if (process.env.NODE_ENV !== 'test' || !['localhost', '127.0.0.1'].includes(isolatedUrl.hostname))
+    throw new Error('Worker integration tests require a local test database.');
+  const name = `numora_test_worker_${randomBytes(6).toString('hex')}`;
   isolatedUrl.pathname = `/${name}`;
   const originalDatabaseUrl = process.env.DATABASE_URL;
   process.env.TEST_DATABASE_URL = isolatedUrl.toString();

@@ -218,6 +218,62 @@
       "when": 1791270982628,
       "tag": "0030_question_package_imports",
       "breakpoints": true
+    },
+    {
+      "idx": 31,
+      "version": "7",
+      "when": 1791270982629,
+      "tag": "0031_excel_package_publication",
+      "breakpoints": true
+    },
+    {
+      "idx": 32,
+      "version": "7",
+      "when": 1791296708267,
+      "tag": "0032_excel_upload_sessions",
+      "breakpoints": true
+    },
+    {
+      "idx": 33,
+      "version": "7",
+      "when": 1791320000000,
+      "tag": "0033_tryout_optional_indicator",
+      "breakpoints": true
+    },
+    {
+      "idx": 34,
+      "version": "7",
+      "when": 1791320000001,
+      "tag": "0034_tryout_optional_scope",
+      "breakpoints": true
+    },
+    {
+      "idx": 35,
+      "version": "7",
+      "when": 1791320000002,
+      "tag": "0035_tryout_pgk_partial",
+      "breakpoints": true
+    },
+    {
+      "idx": 36,
+      "version": "7",
+      "when": 1791320000003,
+      "tag": "0036_tryout_optional_difficulty",
+      "breakpoints": true
+    },
+    {
+      "idx": 37,
+      "version": "7",
+      "when": 1791320000004,
+      "tag": "0037_generator_service_v1",
+      "breakpoints": true
+    },
+    {
+      "idx": 38,
+      "version": "7",
+      "when": 1791324846965,
+      "tag": "0038_generator_packages",
+      "breakpoints": true
     }
   ]
 }

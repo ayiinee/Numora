@@ -11,13 +11,16 @@ import { destination } from '@/features/onboarding/destination';
 export function AdminLoginScreen() {
   const router = useRouter();
   const { state, refresh, logout } = useAuth();
-  const [email, setEmail] = useState('');
+  const [email, setEmail] = useState(process.env.NEXT_PUBLIC_GENERATOR_DEMO_QA_EMAIL ?? '');
   const [password, setPassword] = useState('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submitting = useRef(false);
   useEffect(() => {
-    if (state.status === 'ready' && state.profile.role === 'ADMIN') router.replace('/admin');
+    if (state.status === 'ready' && state.profile.role === 'ADMIN')
+      router.replace(
+        process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' ? '/admin/content/generator' : '/admin',
+      );
   }, [router, state]);
 
   async function submit(event: FormEvent<HTMLFormElement>) {

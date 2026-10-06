@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from './package-runtime.js';
 import { createHash } from 'node:crypto';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import { getDatabase } from './client.js';
@@ -38,27 +39,9 @@ export function mockId(label: string) {
   return `${h.slice(0, 8)}-${h.slice(8, 12)}-${h.slice(12, 16)}-${h.slice(16, 20)}-${h.slice(20)}`;
 }
 export function assertAssessmentMockTarget(env: NodeJS.ProcessEnv = process.env) {
-  if (env.ALLOW_DEMO_SEED !== 'true') throw new Error('Explicit ALLOW_DEMO_SEED=true is required.');
-  const target = new URL(env.DATABASE_URL ?? '');
-  if (env.NODE_ENV === 'test' && ['localhost', '127.0.0.1'].includes(target.hostname)) return;
-  const ref = 'pkamenfnwmoeisccnrnk';
-  if (
-    env.NODE_ENV !== 'development' ||
-    new URL(env.SUPABASE_URL ?? '').hostname !== `${ref}.supabase.co` ||
-    target.pathname !== '/postgres' ||
-    !['require', 'verify-full'].includes(target.searchParams.get('sslmode') ?? '') ||
-    !(
-      (target.hostname === `db.${ref}.supabase.co` &&
-        decodeURIComponent(target.username) === 'postgres') ||
-      (target.hostname.endsWith('.pooler.supabase.com') &&
-        target.port === '5432' &&
-        decodeURIComponent(target.username) === `postgres.${ref}`)
-    )
-  )
-    throw new Error(
-      'Only the designated development sandbox or isolated localhost test database is allowed.',
-    );
+  if (!allowSyntheticContent(env)) throw new Error('Development/test fixture opt-in is required.');
 }
+
 export function mockWeekRelease(now: Date) {
   const local = new Date(now.getTime() + 7 * 3600 * 1000);
   local.setUTCDate(local.getUTCDate() - ((local.getUTCDay() + 6) % 7));

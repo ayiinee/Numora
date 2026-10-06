@@ -54,7 +54,7 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
                   : 'Menunggu hasil'
                 : 'Terkunci · Belum dikerjakan'}
             </Badge>
-            {pack.isDemo && <Badge variant="warning">DEMO</Badge>}
+
             <h3>{pack.title}</h3>
             <p>
               {pack.questionCount} soal ·{' '}
@@ -123,9 +123,6 @@ export function TryoutPackageScreen() {
         />
       ) : (
         <>
-          {query.data.isDemo && (
-            <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>
-          )}
           {query.data.periodState === 'past' && (
             <Status title="Paket lampau">
               Paket ditutup {wib(query.data.closeAt)}. Pengerjaan paket lampau terkunci.

@@ -59,7 +59,8 @@ export async function pvpFixture() {
   const [chapter] = await db
     .insert(chapters)
     .values({
-      code: suffix, slug: (suffix).toLowerCase(),
+      code: suffix,
+      slug: suffix.toLowerCase(),
       name: 'PvP fixture chapter',
       displayOrder: Math.floor(Math.random() * 1_000_000_000) + 1,
       status: 'READY',
@@ -69,7 +70,8 @@ export async function pvpFixture() {
     .insert(subchapters)
     .values({
       chapterId: chapter!.id,
-      code: suffix, slug: (suffix).toLowerCase(),
+      code: suffix,
+      slug: suffix.toLowerCase(),
       name: 'PvP fixture subchapter',
       displayOrder: 1,
       status: 'READY',
@@ -106,6 +108,15 @@ export async function pvpFixture() {
       scoringPolicyVersionId: policy!.id,
     })
     .returning();
+  const [reviewer] = await db
+    .insert(users)
+    .values({
+      authUserId: randomUUID(),
+      role: 'ADMIN',
+      displayName: 'Fixture reviewer',
+      email: `${suffix}-reviewer@example.test`,
+    })
+    .returning();
   for (let order = 1; order <= 10; order++) {
     const [q] = await db
       .insert(questions)
@@ -134,16 +145,17 @@ export async function pvpFixture() {
         answerKey: { optionId: 'A' },
         explanation: { text: 'Test explanation' },
         difficulty: 'EASY',
+        contentStatus: 'READY',
+        reviewedByUserId: reviewer!.id,
+        reviewedAt: new Date(),
       })
       .returning();
-    await db
-      .insert(packageItems)
-      .values({
-        packageId: pack!.id,
-        questionVersionId: version!.id,
-        displayOrder: order,
-        maxPoints: '150',
-      });
+    await db.insert(packageItems).values({
+      packageId: pack!.id,
+      questionVersionId: version!.id,
+      displayOrder: order,
+      maxPoints: '150',
+    });
   }
   const fixturePolicy: PvpPolicy = {
     policyVersionId: policy!.id,

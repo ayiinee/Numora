@@ -95,11 +95,7 @@ export function PvpScreen() {
             </span>
           </div>
           <PvpHero />
-          {availability.data?.dataMode === 'demo' && (
-            <Status title="PvP DEMO">
-              Konten sintetis untuk pengujian. Rekor terpisah dari pertandingan resmi.
-            </Status>
-          )}
+
           {availability.data?.activeMatchId && (
             <Status title="Kamu memiliki room aktif">
               <Link
@@ -496,12 +492,7 @@ export function PvpMatchScreen() {
             Room berlaku {roomRemaining} detik lagi.
           </p>
         )}
-        {snapshot.isDemo && (
-          <p className="pvp-demo-notice">
-            <Icon name="info" width={16} height={16} />
-            Konten demo • Bukan pengukuran TKA resmi
-          </p>
-        )}
+
         {availability.isError && !closed && (
           <DataState
             pending={false}

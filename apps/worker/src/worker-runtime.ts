@@ -1,3 +1,5 @@
+import { getDatabase } from '@tka/database';
+import { pollGenerator } from '@tka/irt-orchestration';
 import { discoverNotificationReleases, drainNotificationBatch } from './notifications.js';
 import { Worker } from 'bullmq';
 import { Redis } from 'ioredis';
@@ -38,6 +40,8 @@ export async function runWorker(exit: (code: number) => void = (code) => process
   let irtQueue: ReturnType<typeof createIrtQueue> | undefined;
   let irtTimer: ReturnType<typeof setInterval> | undefined;
   let irtBusy = false;
+  let generatorTimer: ReturnType<typeof setInterval> | undefined;
+  let generatorBusy = false;
   let outboxTimer: ReturnType<typeof setInterval> | undefined;
   let leaderboardTimer: ReturnType<typeof setTimeout> | undefined;
   let tryoutTimer: ReturnType<typeof setInterval> | undefined;
@@ -60,6 +64,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (notificationTimer) clearInterval(notificationTimer);
     if (tryoutTimer) clearInterval(tryoutTimer);
     if (irtTimer) clearInterval(irtTimer);
+    if (generatorTimer) clearInterval(generatorTimer);
     if (leaderboardTimer) clearTimeout(leaderboardTimer);
     process.off('SIGINT', onSignal);
     process.off('SIGTERM', onSignal);
@@ -70,7 +75,14 @@ export async function runWorker(exit: (code: number) => void = (code) => process
             worker?.close(force),
             irtQueue?.close(),
             (async () => {
-              while (outboxBusy || leaderboardBusy || tryoutBusy || notificationBusy || irtBusy) {
+              while (
+                generatorBusy ||
+                outboxBusy ||
+                leaderboardBusy ||
+                tryoutBusy ||
+                notificationBusy ||
+                irtBusy
+              ) {
                 await new Promise((resolve) => setTimeout(resolve, 50));
               }
             })(),
@@ -167,6 +179,22 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       await pollIrt();
       if (stopping) return;
       irtTimer = setInterval(() => void pollIrt(), 5_000);
+    }
+
+    if (process.env.NUMORA_GENERATOR_ENABLED === 'true') {
+      const poll = async () => {
+        if (stopping || generatorBusy) return;
+        generatorBusy = true;
+        try {
+          await pollGenerator(getDatabase().client);
+        } catch {
+          reportError(new Error('GENERATOR_POLL_FAILED'));
+        } finally {
+          generatorBusy = false;
+        }
+      };
+      void poll();
+      generatorTimer = setInterval(() => void poll(), 5000);
     }
 
     const poll = async () => {

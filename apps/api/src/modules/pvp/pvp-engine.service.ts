@@ -1,3 +1,4 @@
+import { presentFixtureText } from '@tka/database';
 import {
   ConflictException,
   ForbiddenException,
@@ -10,6 +11,7 @@ import { randomBytes, randomUUID } from 'node:crypto';
 import {
   analyticsOutbox,
   assessmentPackages,
+  packageRuntimeEligibility,
   classMemberships,
   getDatabase,
   enqueueNotification,
@@ -92,11 +94,7 @@ export class PvpEngineService {
     return {
       available,
       reasonCode: available ? null : difficulties[0]!.reasonCode,
-      message: available
-        ? this.dataMode === 'demo'
-          ? 'PvP DEMO tersedia.'
-          : 'PvP tersedia.'
-        : 'PvP belum tersedia.',
+      message: available ? 'PvP tersedia.' : 'PvP belum tersedia.',
       dataMode: this.dataMode,
       difficulties,
       activeMatchId: studentId ? await this.activeRoom(studentId) : null,
@@ -135,6 +133,7 @@ export class PvpEngineService {
         and(
           eq(assessmentPackages.assessmentType, 'PVP'),
           eq(assessmentPackages.status, 'PUBLISHED'),
+          packageRuntimeEligibility(),
           eq(assessmentPackages.isDemo, this.dataMode === 'demo'),
           eq(assessmentPackages.scoringPolicyVersionId, policy.policyVersionId),
           lte(assessmentPackages.releaseAt, this.now()),
@@ -167,7 +166,8 @@ export class PvpEngineService {
           ({ item, version: v, contentStatus }, i) =>
             item.displayOrder !== i + 1 ||
             v.difficulty?.toLowerCase() !== difficulty ||
-            contentStatus !== 'READY',
+            contentStatus !== 'READY' ||
+            v.contentStatus !== 'READY',
         )
       )
         continue;
@@ -1024,7 +1024,7 @@ export class PvpEngineService {
             ? {
                 id: active.question.id,
                 order: active.question.displayOrder,
-                stem: content.stem,
+                stem: presentFixtureText(active.version.id, 'stem', content.stem),
                 options: content.options,
                 deadlineAt: active.question.deadlineAt!.toISOString(),
                 durationSeconds: this.pinnedDuration(match),

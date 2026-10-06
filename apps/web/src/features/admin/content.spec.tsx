@@ -329,42 +329,19 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     await screen.findByText('TEST offline');
     fireEvent.click(screen.getByRole('button', { name: 'Muat ulang data' }));
-    await screen.findByLabelText('Kompetensi');
+    await screen.findByRole('heading', { name: 'Versi soal' });
     expect(loadAdminWorkbench).toHaveBeenCalledTimes(2);
   });
-  it('sends a complete PG draft through the shared authenticated API client', async () => {
+  it('routes new questions through the Excel template instead of manual creation', async () => {
     render(<AdminContentScreen />);
-    fireEvent.change(await screen.findByLabelText('Kompetensi'), {
-      target: { value: 'competency-test' },
-    });
-    fireEvent.change(screen.getByLabelText('Tujuan soal permanen'), { target: { value: 'DRILL' } });
-    fireEvent.change(screen.getByLabelText('Kode varian unik'), { target: { value: 'ORIG-TEST' } });
-    fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
-      target: { value: 'TEST 1 + 1' },
-    });
-    for (const id of ['A', 'B', 'C', 'D'])
-      fireEvent.change(screen.getByLabelText(`Opsi ${id}`), { target: { value: `TEST ${id}` } });
-    fireEvent.change(screen.getByLabelText('Pembahasan'), {
-      target: { value: 'TEST explanation' },
-    });
-    fireEvent.submit(screen.getByRole('button', { name: 'Simpan versi DRAFT' }).closest('form')!);
-    await waitFor(() =>
-      expect(createQuestion).toHaveBeenCalledWith(
-        'test-token',
-        expect.objectContaining({
-          primaryCompetencyId: 'competency-test',
-          variantCode: 'ORIG-TEST',
-          stem: 'TEST 1 + 1',
-          answerOptionId: 'A',
-          options: ['A', 'B', 'C', 'D'].map((id) => ({ id, text: `TEST ${id}` })),
-        }),
-      ),
-    );
-    await screen.findByText('Perubahan tersimpan. ID: new-version-test');
+    const link = await screen.findByRole('link', { name: 'Upload soal dari template Excel' });
+    expect(link.getAttribute('href')).toBe('/admin/content/imports');
+    expect(screen.queryByRole('button', { name: 'Simpan versi DRAFT' })).toBeNull();
+    expect(createQuestion).not.toHaveBeenCalled();
   });
   it('preserves pinned versions outside the loaded page when editing a Tryout draft', async () => {
     render(<AdminContentScreen />);
-    await screen.findByLabelText('Kompetensi');
+    await screen.findByRole('heading', { name: 'Versi soal' });
     fireEvent.click(screen.getByRole('button', { name: 'Draf Tryout' }));
     fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), {
@@ -431,10 +408,10 @@ describe('Admin content UI', () => {
   });
   it('removes administrative data on logout and on an API access rejection', async () => {
     const result = render(<AdminContentScreen />);
-    await screen.findByLabelText('Kompetensi');
+    await screen.findByRole('heading', { name: 'Versi soal' });
     context.state = { status: 'signed_out' };
     result.rerender(<AdminContentScreen />);
-    expect(screen.queryByLabelText('Kompetensi')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Versi soal' })).toBeNull();
     context.state = {
       status: 'ready',
       profile: {
@@ -451,7 +428,7 @@ describe('Admin content UI', () => {
     );
     result.rerender(<AdminContentScreen />);
     await screen.findByText('TEST disabled');
-    expect(screen.queryByLabelText('Kompetensi')).toBeNull();
+    expect(screen.queryByRole('heading', { name: 'Versi soal' })).toBeNull();
   });
   it('hides cached forms when a mutation loses Admin access', async () => {
     vi.mocked(resolveReport).mockRejectedValueOnce(

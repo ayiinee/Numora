@@ -13,7 +13,6 @@ import {
   createCompetency,
   createDrillPackage,
   createLevel,
-  createQuestion,
   createSubchapter,
   createTryoutDraft,
   createVariant,
@@ -97,6 +96,10 @@ function AdminContentScreenContent() {
   const [revision, setRevision] = useState(0);
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState<View>('questions');
+  useEffect(() => {
+    if (new URLSearchParams(window.location.search).get('view') === 'curriculum')
+      setView('curriculum');
+  }, []);
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
@@ -267,20 +270,21 @@ function AdminContentScreenContent() {
               )}
               {view === 'questions' && (
                 <>
-                  <QuestionEditor
-                    key={editing?.id ?? 'new'}
-                    version={editing}
-                    data={current}
-                    token={token}
-                    busy={busy}
-                    run={run}
-                    close={() => setEditing(null)}
-                  />
+                  {editing && (
+                    <QuestionEditor
+                      key={editing.id}
+                      version={editing}
+                      data={current}
+                      token={token}
+                      busy={busy}
+                      run={run}
+                      close={() => setEditing(null)}
+                    />
+                  )}
                   <section>
                     <h2>Versi soal</h2>
-                    <Link href="/admin/content/imports">
-                      Impor Excel/JSON, paket & preview internal
-                    </Link>
+                    <Link href="/admin/content/generator">Generator varian</Link>
+                    <Link href="/admin/content/imports">Upload soal dari template Excel</Link>
                     <div className="excel-editor-options">
                       <label>
                         Tujuan soal
@@ -1076,8 +1080,8 @@ function DrillPackageEditor({
         />
       </Field>
       <small id="drill-policy-help">
-        API saat ini hanya dapat menerbitkan policy DRILL_PG_DEMO versi 1; masukkan ID policy yang
-        disediakan backend.
+        Publikasi memerlukan kebijakan DRILL_PRD_V06 versi 1; masukkan ID policy yang disediakan
+        backend.
       </small>
       <Field label="ID versi soal (pisahkan dengan baris baru atau koma)" name="questionVersionIds">
         <textarea
@@ -1265,17 +1269,15 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
 
 function QuestionEditor({
   version,
-  data,
   token,
   busy,
   run,
   close,
-}: EditorProps & { version: AdminVersionDto | null; close: () => void }) {
+}: EditorProps & { version: AdminVersionDto; close: () => void }) {
   const [variant, setVariant] = useState(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const form = e.currentTarget;
-    const f = new FormData(form);
+    const f = new FormData(e.currentTarget);
     const body: QuestionContentDto = {
       stem: field(f, 'stem'),
       options: ['A', 'B', 'C', 'D'].map((id) => ({ id, text: field(f, id) })),
@@ -1284,63 +1286,32 @@ function QuestionEditor({
       difficulty: field(f, 'difficulty'),
     };
     const result = await run(() =>
-      !version
-        ? createQuestion(token, {
+      variant
+        ? createVariant(token, version.questionId, {
             ...body,
-            primaryCompetencyId: field(f, 'competency'),
+            originalVariantId: version.originalVariantId ?? version.variantId,
             variantCode: field(f, 'variantCode'),
-            usageType: field(f, 'usageType') as 'DRILL' | 'PRETEST' | 'TRYOUT',
           })
-        : variant
-          ? createVariant(token, version.questionId, {
-              ...body,
-              originalVariantId: version.originalVariantId ?? version.variantId,
-              variantCode: field(f, 'variantCode'),
-            })
-          : reviseQuestion(token, version.id, body),
+        : reviseQuestion(token, version.id, body),
     );
-    if (result) {
-      if (version) close();
-      else form.reset();
-    }
+    if (result) close();
   }
   return (
     <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
-      <h2>
-        {version ? `Revisi ${version.variantCode} v${version.versionNumber}` : 'Buat soal PG'}
-      </h2>
+      <h2>{`Revisi ${version.variantCode} v${version.versionNumber}`}</h2>
       <p>
         Editor awal mendukung empat opsi A–D. Soal tersimpan sebagai DRAFT. PGK menunggu OPEN-04.
       </p>
-      {version ? (
-        <>
-          <Button variant="secondary" type="button" disabled={busy} onClick={close}>
-            Batal revisi
-          </Button>
-          <label>
-            <input
-              type="checkbox"
-              checked={variant}
-              onChange={(e) => setVariant(e.target.checked)}
-            />{' '}
-            Buat varian setara dalam keluarga soal ini
-          </label>
-        </>
-      ) : (
-        <Field label="Kompetensi" name="competency">
-          <select name="competency" defaultValue="" required>
-            <option value="">Pilih kompetensi</option>
-            {data.curriculum.items
-              .filter((r) => r.kind === 'COMPETENCY')
-              .map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.code}: {r.name}
-                </option>
-              ))}
-          </select>
-        </Field>
-      )}
-      {(!version || variant) && (
+      <>
+        <Button variant="secondary" type="button" disabled={busy} onClick={close}>
+          Batal revisi
+        </Button>
+        <label>
+          <input type="checkbox" checked={variant} onChange={(e) => setVariant(e.target.checked)} />{' '}
+          Buat varian setara dalam keluarga soal ini
+        </label>
+      </>
+      {variant && (
         <Field label="Kode varian unik" name="variantCode">
           <input
             name="variantCode"
@@ -1348,16 +1319,6 @@ function QuestionEditor({
             pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
             maxLength={64}
           />
-        </Field>
-      )}
-      {!version && (
-        <Field label="Tujuan soal permanen" name="usageType">
-          <select name="usageType" required defaultValue="">
-            <option value="">Pilih tujuan</option>
-            {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-              <option key={u}>{u}</option>
-            ))}
-          </select>
         </Field>
       )}
       <Field label="Teks soal (LaTeX inline diperbolehkan)" name="stem">
@@ -1389,17 +1350,9 @@ function QuestionEditor({
         />
       </Field>
       <Field label="Label kesulitan dari Curriculum" name="difficulty">
-        <input
-          name="difficulty"
-          required
-          maxLength={80}
-          defaultValue={version?.difficulty ?? 'DEMO'}
-        />
+        <input name="difficulty" required maxLength={80} defaultValue={version?.difficulty ?? ''} />
       </Field>
-      <Button
-        type="submit"
-        disabled={busy || (!version && !data.curriculum.items.some((r) => r.kind === 'COMPETENCY'))}
-      >
+      <Button type="submit" disabled={busy}>
         Simpan versi DRAFT
       </Button>
     </AdminEditorForm>

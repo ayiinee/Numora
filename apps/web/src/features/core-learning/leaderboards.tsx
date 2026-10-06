@@ -244,11 +244,7 @@ function RankingData({
             : 'Pertandingan PvP belum dibuka. Rekor akan tampil setelah fitur tersedia.'}
         </Status>
       )}
-      {data.dataMode === 'demo' && (
-        <Status title="Leaderboard PvP DEMO">
-          Rekor dari konten DEMO. Terpisah dari rekor pertandingan resmi.
-        </Status>
-      )}
+
       {data.available === false && !data.policyPending && (
         <Status title="Menunggu pembaruan peringkat">
           Proyeksi periode ini belum tersedia. Coba perbarui setelah worker selesai.

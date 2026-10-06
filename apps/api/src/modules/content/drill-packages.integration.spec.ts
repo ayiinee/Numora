@@ -213,6 +213,11 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     expect(
       (await request(`admin/content/drill-packages/${packageId}/publish`, 'POST')).status,
     ).toBe(201);
+    // This isolated TEST fixture has no academic approval; opt-in permits synthetic distribution.
+    await getDatabase()
+      .db.update(assessmentPackages)
+      .set({ isDemo: true })
+      .where(eq(assessmentPackages.id, packageId));
     const started = await request(
       'assessments/drill/attempts',
       'POST',
@@ -309,7 +314,7 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
         .where(eq(questionVersions.id, fixture.versionIds[0]!))
     )[0]!.optionsOrStatements;
     const copy = await copyVersion(fixture.versionIds[0]!, {
-      optionsOrStatements: (options as unknown[]).slice(0, 2),
+      optionsOrStatements: (options as unknown[]).slice(0, 1),
     });
     try {
       const invalid = await service.create(fixture.admin, {

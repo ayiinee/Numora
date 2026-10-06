@@ -4,12 +4,13 @@ import { useMutation } from '@tanstack/react-query';
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
 import { useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
-import { MathText, Panel, PrimaryButton, Status } from './ui';
+import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { useAssessmentDeadline } from './use-assessment-deadline';
 import { LearningApiError } from './api';
 import { AssessmentHeader, SubmitConfirmation } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
+import { AssessmentRichText } from './assessment-rich-text';
 
 import type { SavedAnswerDto } from './generated-types';
 import {
@@ -240,9 +241,15 @@ export function AssessmentSession({
                 <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
               </div>
               <h2 className="practice-stem">
-                <MathText value={question.stem} />
+                <AssessmentRichText
+                  value={question.stem}
+                  instanceId={question.questionInstanceId}
+                />
               </h2>
               <QuestionChoices
+                renderContent={(value) => (
+                  <AssessmentRichText value={value} instanceId={question.questionInstanceId} />
+                )}
                 kind={question.type ?? 'SINGLE_CHOICE'}
                 name={`answer-${question.questionInstanceId}`}
                 options={question.options}
@@ -417,9 +424,12 @@ export function AssessmentSession({
       />
       <Panel className="assessment-question">
         <h2 className="text-lg font-bold">
-          <MathText value={question.stem} />
+          <AssessmentRichText value={question.stem} instanceId={question.questionInstanceId} />
         </h2>
         <QuestionChoices
+          renderContent={(value) => (
+            <AssessmentRichText value={value} instanceId={question.questionInstanceId} />
+          )}
           kind={question.type ?? 'SINGLE_CHOICE'}
           name={`answer-${question.questionInstanceId}`}
           options={question.options}
