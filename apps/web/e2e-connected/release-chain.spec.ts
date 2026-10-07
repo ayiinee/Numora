@@ -1000,7 +1000,12 @@ test.describe.serial('JOB-06 connected release chain', () => {
       target: { packageId: targetPackage.id, expectedRevision: 0, fileName: 'questions.json' },
       questions: samples,
     };
-    const validation = await content<ImportReportDto>('import-validations', importBody);
+    const validation = await content<ImportReportDto>(
+      'import-validations',
+      importBody,
+      undefined,
+      200,
+    );
     expect(validation.canImportDraft).toBe(true);
     const report = await content<ImportReportDto>('imports', importBody, crypto.randomUUID());
     expect(report.items).toHaveLength(10);
