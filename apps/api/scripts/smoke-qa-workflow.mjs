@@ -2,7 +2,7 @@ import assert from 'node:assert/strict';
 import { resolve } from 'node:path';
 import { createClient } from '@supabase/supabase-js';
 import { assertCurrentTryoutResponse } from './qa-smoke-contract.mjs';
-import { readQaAccounts } from './qa-accounts.mjs';
+import { readQaAccounts, readQaAdminAccounts } from './qa-accounts.mjs';
 
 const ref = 'pkamenfnwmoeisccnrnk';
 assert.equal(process.env.NODE_ENV, 'development');
@@ -10,6 +10,12 @@ assert.equal(process.env.SUPABASE_URL, `https://${ref}.supabase.co`);
 assert.equal(process.env.NEXT_PUBLIC_SUPABASE_URL, process.env.SUPABASE_URL);
 const vault = await readQaAccounts(resolve(import.meta.dirname, '../../..'));
 assert.equal(vault.projectRef, ref);
+const adminVault = await readQaAdminAccounts(resolve(import.meta.dirname, '../../..'));
+assert.ok(
+  adminVault.accounts.adminOperations,
+  'Provision the Operations QA fixture with qa:admins first.',
+);
+Object.assign(vault.accounts, adminVault.accounts);
 const base = process.env.API_INTERNAL_URL;
 assert.ok(base === 'http://localhost:3001/api/v1', 'Use the local Development API.');
 
@@ -60,7 +66,7 @@ assert.equal((await api('studentA', '/admin/schools')).status, 403);
 const unauthenticated = await fetch(`${base}/identity/me`);
 assert.equal(unauthenticated.status, 401);
 
-const schools = await api('admin', '/admin/schools');
+const schools = await api('adminOperations', '/admin/schools');
 assert.equal(schools.status, 200);
 const school = schools.value.items.find((item) => item.code === 'DEMO-QA-SCHOOL');
 assert.ok(school);
@@ -70,7 +76,11 @@ assert.ok(teacherAClasses.value.items.some((item) => item.name === 'DEMO-QA Clas
 
 if (process.argv.includes('--apply')) {
   if (!identities.teacherB.teacherVerified) {
-    const issued = await api('admin', `/admin/schools/${school.id}/teacher-tokens`, 'POST');
+    const issued = await api(
+      'adminOperations',
+      `/admin/schools/${school.id}/teacher-tokens`,
+      'POST',
+    );
     assert.equal(issued.status, 201);
     const verified = await api('teacherB', `/schools/${school.id}/teacher-verifications`, 'POST', {
       token: issued.value.token,

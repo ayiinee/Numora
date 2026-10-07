@@ -6,6 +6,9 @@ import {
   IsArray,
   IsIn,
   IsInt,
+  IsISO8601,
+  IsOptional,
+  Equals,
   IsString,
   IsUUID,
   IsUrl,
@@ -58,6 +61,15 @@ export class ContentVersionQueryDto extends ContentPageDto {
   @IsString()
   @MaxLength(240)
   source?: string;
+  @ApiPropertyOptional({
+    enum: ['ALL', 'COMPACT_DEMO'],
+    default: 'ALL',
+    description:
+      'COMPACT_DEMO limits explicitly identified fixtures to ten distinct examples; historical versions remain available with ALL.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsIn(['ALL', 'COMPACT_DEMO'])
+  catalog: 'ALL' | 'COMPACT_DEMO' = 'ALL';
 }
 export class TaxonomyBaseDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) code!: string;
@@ -184,6 +196,7 @@ export class CreateVariantDto extends QuestionContentDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() originalVariantId!: string;
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) variantCode!: string;
 }
+const videoStatuses = statuses;
 export class CreateVideoDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(240) @Matches(/\S/) title!: string;
   @ApiProperty()
@@ -194,10 +207,10 @@ export class CreateVideoDto {
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) source!: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
   @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(100_000) recommendationOrder!: number;
-  @ApiPropertyOptional({ enum: statuses })
+  @ApiPropertyOptional({ enum: videoStatuses })
   @ValidateIf((_o, v) => v !== undefined)
-  @IsIn(statuses)
-  status?: ContentState;
+  @IsIn(videoStatuses)
+  status?: (typeof videoStatuses)[number];
 }
 export class UpdateVideoDto extends PartialType(CreateVideoDto, { skipNullProperties: false }) {}
 
@@ -252,6 +265,7 @@ export class AdminVersionDto {
 }
 export class AdminVersionsDto {
   @ApiProperty({ type: [AdminVersionDto] }) items!: AdminVersionDto[];
+  @ApiPropertyOptional({ type: Number, nullable: true }) nextOffset?: number | null;
 }
 export class AdminVideoDto {
   @ApiProperty() id!: string;
@@ -261,7 +275,7 @@ export class AdminVideoDto {
   @ApiProperty() url!: string;
   @ApiProperty() source!: string;
   @ApiProperty() recommendationOrder!: number;
-  @ApiProperty({ enum: statuses }) status!: ContentState;
+  @ApiProperty({ enum: videoStatuses }) status!: (typeof videoStatuses)[number];
 }
 export class AdminVideosDto {
   @ApiProperty({ type: [AdminVideoDto] }) items!: AdminVideoDto[];
@@ -295,4 +309,18 @@ export class AdminTryoutDraftDto {
 }
 export class AdminTryoutDraftsDto {
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
+}
+export class PublishTryoutPackageDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Matches(/\S/)
+  @MaxLength(1000)
+  curriculumApprovalReference?: string;
+  @ApiProperty({ format: 'uuid' }) @IsUUID() scoringPolicyVersionId!: string;
+  @ApiPropertyOptional({ format: 'date-time' })
+  @IsOptional()
+  @IsISO8601({ strict: true })
+  releaseAt?: string;
+  @ApiPropertyOptional({ enum: [600] }) @IsOptional() @Equals(600) durationSeconds?: 600;
 }

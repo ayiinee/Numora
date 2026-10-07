@@ -1,3 +1,6 @@
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import { ContentLifecycleService } from './content-lifecycle.service';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
@@ -241,7 +244,10 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     expect(logs[0]!.actorUserId).toBe(admin);
     const rollbackCode = `ROLLBACK-${suffix}`;
     await expect(
-      new ContentService().createChapter(randomUUID(), {
+      new ContentService(
+        new AssessmentPoliciesService(),
+        new AssessmentReadinessService(new ContentLifecycleService()),
+      ).createChapter(randomUUID(), {
         code: rollbackCode,
         name: `TEST rollback ${suffix}`,
         displayOrder: body.displayOrder + 1,
@@ -351,9 +357,13 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
       .from(packageItems)
       .where(eq(packageItems.packageId, p.id));
     expect(rows[0]!.questionVersionId).toBe(version);
-    const publish = await request(`admin/content/tryout-packages/${p.id}/publish`, 'POST');
+    const publish = await request(`admin/content/tryout-packages/${p.id}/publish`, 'POST', {
+      scoringPolicyVersionId: randomUUID(),
+      releaseAt: '2099-01-04T17:00:00.000Z',
+      durationSeconds: 600,
+    });
     expect(publish.status).toBe(409);
-    expect(await publish.json()).toMatchObject({ code: 'TRYOUT_POLICY_OPEN' });
+    expect(await publish.json()).toMatchObject({ code: 'ASSESSMENT_POLICY_APPROVAL_REQUIRED' });
     expect(
       (
         await request('admin/content/tryout-packages', 'POST', {
@@ -449,8 +459,22 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         await getDatabase().db.select().from(auditLogs).where(eq(auditLogs.entityId, report!.id))
       )[0]!.actorUserId,
     ).toBe(admin);
-    // General audit can include user identifiers; Content Admin gets only scoped content audit.
-    expect((await request('admin/audit-logs?limit=100')).status).toBe(403);
+    // Content sees only its domains, including when operational events exist.
+    const operationalId = randomUUID();
+    await getDatabase().db.insert(auditLogs).values({
+      actorUserId: admin,
+      action: 'TEST_SCHOOL_EVENT',
+      entityType: 'school',
+      entityId: operationalId,
+      metadata: {},
+    });
+    const auditResponse = await request('admin/audit-logs?limit=100');
+    expect(auditResponse.status).toBe(200);
+    const scopedAudit = await auditResponse.json();
+    expect(JSON.stringify(scopedAudit)).not.toContain(operationalId);
+    expect(
+      scopedAudit.items.some((item: { entityId: string }) => item.entityId === report!.id),
+    ).toBe(true);
     expect((await request('admin/reports?limit=0')).status).toBe(400);
     expect((await request('admin/irt?offset=-1')).status).toBe(400);
     expect((await request('admin/content/videos?limit=100000')).status).toBe(400);

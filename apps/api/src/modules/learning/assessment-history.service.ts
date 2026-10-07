@@ -121,14 +121,15 @@ export class AssessmentHistoryService {
       ...new Set(page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.packageId)),
     ];
     const releasedPackages = await this.releases.releasedPackageIds(tryoutIds);
-    const canonicalResults = await publishedTryoutAttemptResults(
+    const published = await publishedTryoutAttemptResults(
       page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.id),
     );
     return {
       records: page.map((row) => {
         const ready =
           row.assessmentType !== 'TRYOUT' ||
-          (row.status === 'GRADED' && releasedPackages.has(row.packageId));
+          (row.status === 'GRADED' &&
+            (row.isDemo ? releasedPackages.has(row.packageId) : published.has(row.id)));
         return {
           attemptId: row.id,
           activity: row.assessmentType.toLowerCase() as 'drill' | 'pretest' | 'tryout',
@@ -161,8 +162,12 @@ export class AssessmentHistoryService {
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
           score: ready
-            ? (canonicalResults.get(row.id)?.score ??
-              (row.score !== null ? Number(row.score) : null))
+            ? row.assessmentType === 'TRYOUT'
+              ? (published.get(row.id)?.score ??
+                (row.isDemo && row.score !== null ? Number(row.score) : null))
+              : row.score !== null
+                ? Number(row.score)
+                : null
             : null,
         };
       }),

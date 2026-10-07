@@ -1,0 +1,69 @@
+{
+  "version": "7",
+  "dialect": "postgresql",
+  "entries": [
+    {
+      "idx": 0,
+      "version": "7",
+      "when": 1791245263806,
+      "tag": "0028_admin_invitations",
+      "breakpoints": true
+    },
+    {
+      "idx": 1,
+      "version": "7",
+      "when": 1791245270006,
+      "tag": "0029_admin_recovery_operations",
+      "breakpoints": true
+    },
+    {
+      "idx": 2,
+      "version": "7",
+      "when": 1791245489591,
+      "tag": "0030_content_revision_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 3,
+      "version": "7",
+      "when": 1791245491190,
+      "tag": "0031_historical_report_context",
+      "breakpoints": true
+    },
+    {
+      "idx": 4,
+      "version": "7",
+      "when": 1791245822719,
+      "tag": "0032_assessment_policy_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 5,
+      "version": "7",
+      "when": 1791245878275,
+      "tag": "0033_partial_reward_provenance",
+      "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1791245879894,
+      "tag": "0034_admin_authored_package_pins",
+      "breakpoints": true
+    },
+    {
+      "idx": 7,
+      "version": "7",
+      "when": 1791245881584,
+      "tag": "0035_pretest_blueprint_approval",
+      "breakpoints": true
+    },
+    {
+      "idx": 8,
+      "version": "7",
+      "when": 1791245883267,
+      "tag": "0036_legacy_package_fixture_compatibility",
+      "breakpoints": true
+    }
+  ]
+}

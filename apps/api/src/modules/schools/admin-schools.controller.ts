@@ -1,18 +1,54 @@
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiProperty, ApiTags } from '@nestjs/swagger';
-import { IsIn, IsOptional, IsString, Length, Matches } from 'class-validator';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+  UseGuards,
+} from '@nestjs/common';
+import {
+  ApiBearerAuth,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiProperty,
+  ApiTags,
+} from '@nestjs/swagger';
+import {
+  IsIn,
+  IsOptional,
+  IsString,
+  Length,
+  Matches,
+  MaxLength,
+  ValidateIf,
+} from 'class-validator';
+import { AdminAccountQueryDto } from '../admin/accounts.dto';
+import { ContentPageDto } from '../content/content.dto';
 import { SchoolsService } from './schools.service';
+import { AdminGuard } from '../identity/admin.guard';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
 
 class AdminSchoolDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty() code!: string;
   @ApiProperty() name!: string;
+  @ApiProperty({ type: String, nullable: true }) address!: string | null;
   @ApiProperty({ enum: ['ACTIVE', 'INACTIVE'] }) status!: 'ACTIVE' | 'INACTIVE';
 }
 class AdminSchoolsDto {
   @ApiProperty({ type: [AdminSchoolDto] }) items!: AdminSchoolDto[];
+  @ApiProperty({ type: Number, nullable: true }) nextOffset!: number | null;
 }
 class CreateSchoolDto {
+  @ApiProperty({ required: false, maxLength: 500 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string;
   @ApiProperty({ minLength: 2, maxLength: 32 })
   @IsString()
   @Length(2, 32)
@@ -26,15 +62,20 @@ class CreateSchoolDto {
   name!: string;
 }
 class UpdateSchoolDto {
-  @ApiProperty({ required: false, minLength: 1, maxLength: 120 })
+  @ApiProperty({ required: false, type: String, nullable: true, maxLength: 500 })
   @IsOptional()
+  @IsString()
+  @MaxLength(500)
+  address?: string | null;
+  @ApiProperty({ required: false, minLength: 1, maxLength: 120 })
+  @ValidateIf((_o, value) => value !== undefined)
   @IsString()
   @Length(1, 120)
   @Matches(/\S/)
   name?: string;
 
   @ApiProperty({ required: false, enum: ['ACTIVE', 'INACTIVE'] })
-  @IsOptional()
+  @ValidateIf((_o, value) => value !== undefined)
   @IsIn(['ACTIVE', 'INACTIVE'])
   status?: 'ACTIVE' | 'INACTIVE';
 }
@@ -48,9 +89,14 @@ class TokenSummaryDto {
   @ApiProperty({ format: 'date-time' }) expiresAt!: Date;
   @ApiProperty({ type: String, nullable: true }) usedAt!: Date | null;
   @ApiProperty({ type: String, nullable: true }) revokedAt!: Date | null;
+  @ApiProperty({ format: 'date-time' }) createdAt!: string;
+  @ApiProperty({ type: String, nullable: true }) usedByUserId!: string | null;
+  @ApiProperty({ type: String, nullable: true }) usedByName!: string | null;
+  @ApiProperty({ enum: ['AVAILABLE', 'EXPIRED', 'USED', 'REVOKED'] }) status!: string;
 }
 class TokenListDto {
   @ApiProperty({ type: [TokenSummaryDto] }) items!: TokenSummaryDto[];
+  @ApiProperty({ type: Number, nullable: true }) nextOffset!: number | null;
 }
 class RevokedDto {
   @ApiProperty() revoked!: boolean;
@@ -58,20 +104,31 @@ class RevokedDto {
 
 @ApiTags('admin-schools')
 @ApiBearerAuth()
+@UseGuards(AdminGuard)
+@RequireAdminCapability('OPERATIONS_MANAGE')
 @Controller('admin/schools')
 export class AdminSchoolsController {
   constructor(private readonly schools: SchoolsService) {}
 
   @Get()
   @ApiOkResponse({ type: AdminSchoolsDto })
-  list(@Headers('authorization') authorization?: string) {
-    return this.schools.listForAdmin(authorization);
+  list(@Query() query: AdminAccountQueryDto, @Headers('authorization') authorization?: string) {
+    return this.schools.listForAdmin(authorization, query);
+  }
+  @Get(':schoolId') @ApiOkResponse({ type: AdminSchoolDto }) detail(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('schoolId', ParseUUIDPipe) schoolId: string,
+  ) {
+    return this.schools.schoolForAdmin(authorization, schoolId);
   }
 
   @Post()
   @ApiCreatedResponse({ type: AdminSchoolDto })
-  create(@Headers('authorization') authorization: string | undefined, @Body() body: CreateSchoolDto) {
-    return this.schools.createSchool(authorization, body.code, body.name);
+  create(
+    @Headers('authorization') authorization: string | undefined,
+    @Body() body: CreateSchoolDto,
+  ) {
+    return this.schools.createSchool(authorization, body.code, body.name, body.address);
   }
 
   @Patch(':schoolId')
@@ -89,8 +146,9 @@ export class AdminSchoolsController {
   tokens(
     @Headers('authorization') authorization: string | undefined,
     @Param('schoolId', ParseUUIDPipe) schoolId: string,
+    @Query() query: ContentPageDto,
   ) {
-    return this.schools.listTokens(authorization, schoolId);
+    return this.schools.listTokens(authorization, schoolId, query);
   }
 
   @Post(':schoolId/teacher-tokens')

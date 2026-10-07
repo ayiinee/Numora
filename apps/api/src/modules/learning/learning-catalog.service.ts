@@ -142,6 +142,7 @@ export class LearningCatalogService {
           latestScore: state?.latestScore ?? null,
           bestScore: state?.bestScore ?? null,
           latestStars: state?.latestStars ?? null,
+          bestStars: state?.bestStars ?? null,
         };
       }),
     };

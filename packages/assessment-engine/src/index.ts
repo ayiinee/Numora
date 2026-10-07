@@ -6,4 +6,7 @@ export * from './domain-events.js';
 export * from './database-time.js';
 export { DRILL_REWARD_POLICY, TRYOUT_REWARD_POLICY, drillXp } from './rewards.js';
 export * from './question-content.js';
+export * from './approved-policy.js';
+export * from './rich-question.js';
+export * from './assessment-deadline.js';
 export * from './tryout-partial.js';

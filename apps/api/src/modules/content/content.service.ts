@@ -1,9 +1,12 @@
+import { approveEditorialPackage } from './editorial-package-approval';
+import { compactDemoVersionIds, demoCatalogVersion } from './content-demo-catalog';
 import { decodeAssessmentContent } from '@tka/assessment-engine';
 import { presentFixtureText } from '@tka/database';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Inject,
   NotFoundException,
 } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
@@ -22,10 +25,16 @@ import {
   questionVersions,
   subchapters,
   videoSubchapterMappings,
+  tryoutBatches,
+  tryoutBatchCloseAt,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
 import { assertPackageUsage } from './content-package.rules';
+import { databaseTime } from '@tka/assessment-engine';
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
+import type { PublishTryoutPackageDto } from './content.dto';
 import type {
   AdminCurriculumDto,
   AdminVersionDto,
@@ -124,6 +133,10 @@ function versionValues(input: QuestionContentDto) {
 
 @Injectable()
 export class ContentService {
+  constructor(
+    @Inject(AssessmentPoliciesService) private readonly policies: AssessmentPoliciesService,
+    @Inject(AssessmentReadinessService) private readonly readiness: AssessmentReadinessService,
+  ) {}
   async curriculum(): Promise<AdminCurriculumDto> {
     const { db } = getDatabase();
     const [chapterRows, subRows, competencyRows, levelRows] = await Promise.all([
@@ -264,7 +277,9 @@ export class ContentService {
     );
   }
 
-  async versions(page: ContentVersionQueryDto): Promise<AdminVersionsDto> {
+  async versions(
+    page: ContentPageDto & Partial<ContentVersionQueryDto>,
+  ): Promise<AdminVersionsDto> {
     const rows = await getDatabase()
       .db.select({
         version: questionVersions,
@@ -305,59 +320,65 @@ export class ContentService {
           page.source
             ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
             : undefined,
+          page.catalog === 'COMPACT_DEMO'
+            ? sql`not ${demoCatalogVersion} or ${questionVersions.id} in (${compactDemoVersionIds})`
+            : undefined,
         ),
       )
       .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
-      .limit(page.limit)
+      .limit(page.limit + 1)
       .offset(page.offset);
     return {
-      items: rows.map(
-        ({
-          version: v,
-          variant,
-          question: q,
-          imported,
-          provenance,
-          sourceNamespace,
-        }): AdminVersionDto => ({
-          sourceName:
-            (provenance as { packageSource?: { sourceName?: string } } | null)?.packageSource
-              ?.sourceName ?? q.sourceRef,
-          sourceReference:
-            (provenance as { packageSource?: { sourceReference?: string } } | null)?.packageSource
-              ?.sourceReference ?? null,
-          sourceFileName: (provenance as { fileName?: string } | null)?.fileName ?? null,
-          sourceNamespace,
-          id: v.id,
-          questionId: q.id,
-          primaryCompetencyId: q.primaryCompetencyId,
-          curriculumLevelNumber: q.curriculumLevelNumber,
-          usageType: q.usageType,
-          sourceQuestionId: q.sourceQuestionId,
-          variantId: variant.id,
-          variantCode: variant.variantCode,
-          versionNumber: v.versionNumber,
-          questionType: v.questionType,
-          stem: presentationText(v, 'stem'),
-          imported: imported !== null,
-          variantKind: variant.kind,
-          originalVariantId: variant.originalVariantId,
-          options: optionsFrom(v.optionsOrStatements),
-          answerOptionId:
-            v.answerKey !== null &&
-            typeof v.answerKey === 'object' &&
-            'optionId' in v.answerKey &&
-            typeof v.answerKey.optionId === 'string'
-              ? v.answerKey.optionId
-              : null,
-          explanation: presentationText(v, 'explanation'),
-          difficulty: v.difficulty,
-          contentStatus: v.contentStatus,
-          questionStatus: q.status,
-          reviewedByUserId: v.reviewedByUserId,
-          reviewedAt: v.reviewedAt?.toISOString() ?? null,
-        }),
-      ),
+      nextOffset: rows.length > page.limit ? page.offset + page.limit : null,
+      items: rows
+        .slice(0, page.limit)
+        .map(
+          ({
+            version: v,
+            variant,
+            question: q,
+            imported,
+            provenance,
+            sourceNamespace,
+          }): AdminVersionDto => ({
+            sourceName:
+              (provenance as { packageSource?: { sourceName?: string } } | null)?.packageSource
+                ?.sourceName ?? q.sourceRef,
+            sourceReference:
+              (provenance as { packageSource?: { sourceReference?: string } } | null)?.packageSource
+                ?.sourceReference ?? null,
+            sourceFileName: (provenance as { fileName?: string } | null)?.fileName ?? null,
+            sourceNamespace,
+            id: v.id,
+            questionId: q.id,
+            primaryCompetencyId: q.primaryCompetencyId,
+            curriculumLevelNumber: q.curriculumLevelNumber,
+            usageType: q.usageType,
+            sourceQuestionId: q.sourceQuestionId,
+            variantId: variant.id,
+            variantCode: variant.variantCode,
+            versionNumber: v.versionNumber,
+            questionType: v.questionType,
+            stem: presentationText(v, 'stem'),
+            imported: imported !== null,
+            variantKind: variant.kind,
+            originalVariantId: variant.originalVariantId,
+            options: optionsFrom(v.optionsOrStatements),
+            answerOptionId:
+              v.answerKey !== null &&
+              typeof v.answerKey === 'object' &&
+              'optionId' in v.answerKey &&
+              typeof v.answerKey.optionId === 'string'
+                ? v.answerKey.optionId
+                : null,
+            explanation: presentationText(v, 'explanation'),
+            difficulty: v.difficulty,
+            contentStatus: v.contentStatus,
+            questionStatus: q.status,
+            reviewedByUserId: v.reviewedByUserId,
+            reviewedAt: v.reviewedAt?.toISOString() ?? null,
+          }),
+        ),
     };
   }
   createQuestion(actor: string, body: CreateQuestionDto) {
@@ -500,15 +521,20 @@ export class ContentService {
   }
   questionStatus(actor: string, id: string, status: ContentState) {
     return adminMutation(actor, 'question_status_changed', 'question', async (tx) => {
-      if (
-        (
-          await tx
-            .select()
-            .from(contentImportIdentities)
-            .where(eq(contentImportIdentities.questionId, id))
-        ).length
-      )
-        throw new ConflictException({ code: 'IMPORTED_VERSION_READ_ONLY' });
+      required((await tx.select().from(questions).where(eq(questions.id, id)).for('update'))[0]);
+      if (status !== 'READY') {
+        const active = await tx
+          .select({ id: assessmentPackages.id })
+          .from(packageItems)
+          .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+          .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+          .innerJoin(assessmentPackages, eq(assessmentPackages.id, packageItems.packageId))
+          .where(
+            and(eq(questionVariants.questionId, id), eq(assessmentPackages.status, 'PUBLISHED')),
+          );
+        if (active.length)
+          throw new ConflictException({ code: 'CONTENT_REFERENCED_BY_ACTIVE_PACKAGE' });
+      }
       return required(
         (
           await tx
@@ -549,6 +575,20 @@ export class ContentService {
               'Tinjau dan terbitkan soal impor melalui paket; unggah ulang Excel untuk revisi baru.',
           });
         if (version.contentStatus === status) return { id };
+        if (status !== 'READY') {
+          const active = await tx
+            .select({ id: assessmentPackages.id })
+            .from(packageItems)
+            .innerJoin(assessmentPackages, eq(assessmentPackages.id, packageItems.packageId))
+            .where(
+              and(
+                eq(packageItems.questionVersionId, id),
+                eq(assessmentPackages.status, 'PUBLISHED'),
+              ),
+            );
+          if (active.length)
+            throw new ConflictException({ code: 'CONTENT_REFERENCED_BY_ACTIVE_PACKAGE' });
+        }
         if (status === 'DRAFT' || version.contentStatus === 'ARCHIVED')
           throw new ConflictException(
             'Buat revisi baru; versi yang telah digunakan tidak dapat dikembalikan menjadi draf.',
@@ -837,11 +877,84 @@ export class ContentService {
       })),
     );
   }
-  publishPackage(): never {
-    throw new ConflictException({
-      code: 'TRYOUT_POLICY_OPEN',
-      detail:
-        'Publikasi Tryout menunggu konfigurasi resmi OPEN-05 serta kebijakan scoring/release yang disetujui. Draf tetap tersimpan.',
+  publishPackage(actor: string, id: string, body: PublishTryoutPackageDto) {
+    return adminMutation(actor, 'tryout_package_published', 'assessment_package', async (tx) => {
+      const now = await databaseTime(tx);
+      const requested = body.releaseAt ? new Date(body.releaseAt) : now;
+      if (!Number.isFinite(requested.getTime()))
+        throw new BadRequestException({ code: 'TRYOUT_SCHEDULE_INVALID' });
+      const releaseAt = requested > now ? requested : now;
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext('admin:tryout-publish'), hashtext(${releaseAt.toISOString()}))`,
+      );
+      const [row] = await tx
+        .select()
+        .from(assessmentPackages)
+        .where(and(eq(assessmentPackages.id, id), eq(assessmentPackages.assessmentType, 'TRYOUT')))
+        .for('update');
+      if (!row) throw new NotFoundException({ code: 'TRYOUT_PACKAGE_NOT_FOUND' });
+      if (row.status === 'PUBLISHED') {
+        if (
+          (body.releaseAt && row.releaseAt?.getTime() !== requested.getTime() && requested > now) ||
+          row.durationSeconds !== 600 ||
+          row.scoringPolicyVersionId !== body.scoringPolicyVersionId
+        )
+          throw new ConflictException({ code: 'TRYOUT_PUBLICATION_CONFLICT' });
+        return { id };
+      }
+      if (row.status !== 'DRAFT') throw new ConflictException({ code: 'TRYOUT_PACKAGE_IMMUTABLE' });
+      const policy = await this.policies.require(tx, body.scoringPolicyVersionId, 'TRYOUT');
+      const items = await tx
+        .select()
+        .from(packageItems)
+        .where(eq(packageItems.packageId, id))
+        .orderBy(asc(packageItems.displayOrder));
+      const pins = await this.readiness.items(
+        tx,
+        items.map((item) => item.questionVersionId),
+        30,
+        policy,
+      );
+      for (const pin of pins)
+        await tx
+          .update(packageItems)
+          .set({
+            maxPoints: pin.maxPoints,
+            rubricVersionId: pin.rubricVersionId,
+            maximumScoreCategory: pin.maximumScoreCategory,
+          })
+          .where(
+            and(
+              eq(packageItems.packageId, id),
+              eq(packageItems.questionVersionId, pin.questionVersionId),
+            ),
+          );
+      const closeAt = tryoutBatchCloseAt(releaseAt);
+      const approval = await approveEditorialPackage(
+        tx,
+        actor,
+        row,
+        body.curriculumApprovalReference,
+      );
+      await tx
+        .update(assessmentPackages)
+        .set({
+          status: 'PUBLISHED',
+          scoringPolicyVersionId: body.scoringPolicyVersionId,
+          releaseAt,
+          closeAt,
+          durationSeconds: 600,
+          ...approval,
+        })
+        .where(eq(assessmentPackages.id, id));
+      await tx.insert(tryoutBatches).values({
+        packageId: id,
+        startsAt: releaseAt,
+        closesAt: closeAt,
+        cutoffAt: closeAt,
+        resultDueAt: new Date(closeAt.getTime() + 72 * 60 * 60 * 1000),
+      });
+      return { id };
     });
   }
 }

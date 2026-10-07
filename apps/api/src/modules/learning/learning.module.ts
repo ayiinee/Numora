@@ -1,6 +1,9 @@
 import { MaterialsService } from './materials.service';
 import { PretestController } from './pretest.controller';
 import { PretestService } from './pretest.service';
+import { ConfigModule } from '@nestjs/config';
+import { AssessmentMediaController } from './assessment-media.controller';
+import { R2MediaStorage } from '../content/r2-media.storage';
 import { Module } from '@nestjs/common';
 import { IdentityModule } from '../identity/identity.module';
 import { PvpModule } from '../pvp/pvp.module';
@@ -16,11 +19,12 @@ import { AssessmentMediaService } from './assessment-media.service';
 import { ContentModule } from '../content/content.module';
 
 @Module({
-  imports: [IdentityModule, PvpModule, ContentModule],
-  controllers: [LearningController, TryoutController, PretestController],
+  imports: [IdentityModule, PvpModule, ConfigModule, ContentModule],
+  controllers: [LearningController, TryoutController, PretestController, AssessmentMediaController],
   providers: [
     MaterialsService,
     PretestService,
+    R2MediaStorage,
     LearningCatalogService,
     DrillAssessmentService,
     AssessmentHistoryService,

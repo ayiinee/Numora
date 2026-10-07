@@ -271,6 +271,31 @@ export class ContentImportService {
           .limit(1);
         if (!receipt) errors.push('MEDIA_RECEIPT_INVALID');
       }
+      if (q.metadata.scoringRubricVersionId !== undefined) {
+        const rubricId = q.metadata.scoringRubricVersionId;
+        if (
+          typeof rubricId !== 'string' ||
+          !/^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$/i.test(
+            rubricId,
+          )
+        )
+          errors.push('RUBRIC_ID_INVALID');
+        else {
+          const [rubric] = await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(eq(scoringRubricVersions.id, rubricId))
+            .for('share');
+          if (
+            !rubric ||
+            rubric.status !== 'SEALED' ||
+            !rubric.approvedAt ||
+            !rubric.approvedByUserId ||
+            rubric.questionType !== q.type
+          )
+            errors.push('APPROVED_PGK_RUBRIC_REQUIRED');
+        }
+      }
       const identity = identityByExternalId.get(q.externalId);
       const [latest] = identity
         ? await tx
@@ -501,6 +526,14 @@ export class ContentImportService {
     ].sort())
       await operationLock(tx, `content-identity:${body.sourceNamespace}:${id}`);
     const { records, report } = await this.validateWithin(tx, body);
+    if (
+      body.expectedSourceVersionId &&
+      (records.length !== 1 || records[0]?.latest?.version.id !== body.expectedSourceVersionId)
+    )
+      throw new ConflictException({
+        code: 'CONTENT_REVISION_CONFLICT',
+        detail: 'Reload the latest imported version before revising.',
+      });
     if (target && records.some((r) => !r.ready))
       throw new HttpException(
         { code: 'MEDIA_NOT_READY', detail: 'Verifikasi seluruh gambar sebelum menyimpan paket.' },
@@ -567,8 +600,11 @@ export class ContentImportService {
           .returning();
         identity = createdIdentity!;
       }
-      let rubricId: string | undefined;
-      if (target?.assessmentType === 'TRYOUT' && r.q.type !== 'SINGLE_CHOICE') {
+      let rubricId =
+        typeof r.q.metadata.scoringRubricVersionId === 'string'
+          ? r.q.metadata.scoringRubricVersionId
+          : undefined;
+      if (target?.assessmentType === 'TRYOUT' && r.q.type !== 'SINGLE_CHOICE' && !rubricId) {
         const count = r.q.options.length;
         const code = `${TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
         const definition = {
@@ -683,6 +719,9 @@ export class ContentImportService {
         packageId: target?.id ?? null,
         usageType: target?.assessmentType ?? null,
         fileName: body.target?.fileName ?? null,
+        ...(body.expectedSourceVersionId
+          ? { revisedFromId: body.expectedSourceVersionId, reason: body.revisionReason }
+          : {}),
       },
     });
     return report;

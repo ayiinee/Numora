@@ -53,6 +53,9 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `development/GIT_WORKFLOW.md`
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
+- `development/ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md` — pembersihan fixture Content pada Development, backup, data yang dipertahankan dan verifikasi reader kosong.
+- `development/ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan seluruh halaman Content, perbaikan form/pagination/retry/akses, bukti tes dan gate eksternal.
+- `development/ADMIN_OPERATIONS_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan sekolah/credential/pengguna/kelas, perbaikan eligibility transaksi, detail/retry, navigasi dan pencabutan akses.
 - `development/OWNERSHIP.md`
 
 ## Testing
@@ -82,3 +85,5 @@ See `adr/README.md` and the individual ADR files.
 - **ENGINEERING DECISION** — approved during technical alignment.
 - **PROPOSED** — recommendation pending approval.
 - **OPEN** — unresolved product/academic decision.
+
+- [Admin Content/Operations synchronization with main, 7 October 2026](development/ADMIN_MAIN_SYNC_2026-10-07.md) ? combined scope, migration compatibility and verification limits.

@@ -283,14 +283,12 @@ export async function seedPvpTestScenarios() {
             contentFingerprint: null,
           })
           .returning();
-        await tx
-          .insert(packageItems)
-          .values({
-            packageId: pack!.id,
-            questionVersionId: ready!.id,
-            displayOrder: item.displayOrder,
-            maxPoints: item.maxPoints,
-          });
+        await tx.insert(packageItems).values({
+          packageId: pack!.id,
+          questionVersionId: ready!.id,
+          displayOrder: item.displayOrder,
+          maxPoints: item.maxPoints,
+        });
       }
       await tx
         .update(assessmentPackages)

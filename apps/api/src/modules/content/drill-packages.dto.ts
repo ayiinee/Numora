@@ -1,9 +1,10 @@
-import { ApiProperty, OmitType } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional, OmitType } from '@nestjs/swagger';
 import {
   ArrayMaxSize,
   ArrayUnique,
   IsArray,
   IsInt,
+  IsOptional,
   IsString,
   IsUUID,
   Matches,
@@ -12,6 +13,17 @@ import {
   Min,
   MinLength,
 } from 'class-validator';
+
+export class PublishDrillPackageDto {
+  @ApiPropertyOptional({
+    description: 'Reference to the Curriculum approval for the reviewed composition.',
+  })
+  @IsOptional()
+  @IsString()
+  @Matches(/\S/)
+  @MaxLength(1000)
+  curriculumApprovalReference?: string;
+}
 
 export class CreateDrillPackageDto {
   @ApiProperty() @IsString() @Matches(/^[A-Za-z0-9-]{1,64}$/) familyCode!: string;

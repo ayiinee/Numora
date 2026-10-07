@@ -1,5 +1,6 @@
 'use client';
 import Link from 'next/link';
+import { JsonContentImportScreen } from './content-import-json';
 import { apiRequest } from '@/lib/api';
 import { MaterialChoices } from './content-mapping';
 import { ContentImportSteps } from './content-import-steps';
@@ -43,11 +44,21 @@ const labels: Record<string, string> = {
   ARCHIVED: 'Diarsipkan',
 };
 const typeLabels = { TRYOUT: 'Tryout', PRETEST: 'Pretest', DRILL: 'Drill' };
-export function ContentImportScreen({ generatorPackageId }: { generatorPackageId?: string } = {}) {
+export function ContentImportScreen({
+  generatorPackageId,
+  mode,
+}: { generatorPackageId?: string; mode?: string } = {}) {
   const { state } = useAuth();
+  if (mode === 'json') return <JsonContentImportScreen />;
   if (generatorPackageId)
     return <GeneratorImportWorkflow key={generatorPackageId} id={generatorPackageId} />;
-  return <UploadContent key={state.status === 'ready' ? state.profile.id : state.status} />;
+  return (
+    <UploadContent
+      key={
+        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+      }
+    />
+  );
 }
 function UploadContent() {
   const { state, refresh } = useAuth();
@@ -287,6 +298,7 @@ function UploadContent() {
       ) : (
         <div className="content-upload-workflow">
           <nav className="upload-tabs" aria-label="Pengelolaan unggahan">
+            <Link href="/admin/content/imports?mode=json">Impor JSON &amp; preview</Link>
             <button
               type="button"
               className={tab === 'upload' ? 'is-active' : ''}

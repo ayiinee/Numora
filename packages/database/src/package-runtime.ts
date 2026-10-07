@@ -43,7 +43,13 @@ export function allowSyntheticContent(env: NodeJS.ProcessEnv = process.env): boo
 /** New distribution only. Existing owned attempts retain their historical pins. */
 export function packageRuntimeEligibility() {
   const p = assessmentPackages;
-  const approved = sql`(not ${p.isDemo} and ${p.frozenAt} is not null
+  const approved = sql`(not ${p.isDemo} and (
+      ${p.frozenAt} is not null or (
+        ${p.frozenAt} is null and ${p.purpose}='REGULAR'
+        and ${p.assessmentType} in ('DRILL','TRYOUT')
+        and ${p.importSource} is null
+        and ${p.curriculumApproval}->>'source'='ADMIN_EDITORIAL_REVIEW_V1'
+      ))
     and ${p.curriculumApproval}->>'manifestDigest' = ${p.manifestDigest}
     and length(trim(${p.curriculumApproval}->>'reference')) > 0
     and length(trim(${p.curriculumApproval}->>'approvedAt')) > 0

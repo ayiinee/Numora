@@ -73,9 +73,11 @@ it('grades partial Category answers without treating omitted statements as corre
     gradeChapter3Answer(category, { categoryByStatementId: { A: 'foreign' } }),
   ).toThrow();
 });
-it('keeps ordinary Drill rewards strict; the one-off partial reward fits the integer ledger', () => {
+it('retains one-off base rounding while approved general partial rewards use the numeric ledger', () => {
   const start = new Date('2026-10-07T00:00:00Z');
-  expect(() => drillReward(8.5, 10, start, start)).toThrow();
+  expect(drillReward(8.55, 10, start, start)).toMatchObject({ baseXp: 85.5, totalXp: 136 });
+  expect(drillReward(8.55, 10, start, start, true)).toMatchObject({ baseXp: 86, totalXp: 136 });
+  expect(() => drillReward(Infinity, 10, start, start)).toThrow();
   expect(drillReward(8.5, 10, start, start, true)).toMatchObject({ baseXp: 85, totalXp: 135 });
   expect(() => drillReward(NaN, 10, start, start, true)).toThrow();
 });

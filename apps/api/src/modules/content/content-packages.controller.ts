@@ -25,7 +25,6 @@ import {
   ContentPackageQueryDto,
   ContentPackagesDto,
   CreateContentPackageDto,
-  ReviewImportedQuestionDto,
   UpdateContentPackageDto,
 } from './content-packages.dto';
 
@@ -64,13 +63,6 @@ export class ContentPackagesController {
     @Body() body: ClassifyQuestionDto,
   ) {
     return this.packages.classify(r.adminId, id, body);
-  }
-  @Post('versions/:id/review') @ApiOkResponse({ type: ContentMutationDto }) review(
-    @Req() r: AdminRequest,
-    @Param('id', ParseUUIDPipe) id: string,
-    @Body() body: ReviewImportedQuestionDto,
-  ) {
-    return this.packages.review(r.adminId, id, body);
   }
   @Post('packages/:id/approval') @ApiOkResponse({ type: ContentMutationDto }) approve(
     @Req() r: AdminRequest,

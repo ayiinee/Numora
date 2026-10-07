@@ -11,11 +11,28 @@ import {
   IsUUID,
   Matches,
   Min,
+  MaxLength,
+  MinLength,
+  ValidateIf,
 } from 'class-validator';
 import type { ContentAnswer, ContentKind } from '@tka/database';
 import { DirectedImportContextDto } from './package-context.dto';
 
 export class ImportBodyDto extends DirectedImportContextDto {
+  @ApiPropertyOptional({
+    format: 'uuid',
+    description: 'For one-item editorial revision, reject a stale source version.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @IsUUID('4')
+  expectedSourceVersionId?: string;
+  @ApiPropertyOptional()
+  @ValidateIf((o) => o.expectedSourceVersionId !== undefined || o.revisionReason !== undefined)
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  @Matches(/\S/)
+  revisionReason?: string;
   @ApiProperty({ pattern: '^[A-Za-z0-9_-]{1,128}$' })
   @Matches(/^[A-Za-z0-9_-]{1,128}$/)
   sourceNamespace!: string;

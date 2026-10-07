@@ -1,0 +1,238 @@
+/* Operations layout only. Shared AdminLTE palette is in admin-content.css. */
+.admin-operations-shell .admin-card,
+.admin-operations-shell .admin-operation-detail,
+.admin-operations-shell .admin-operation-detail-placeholder {
+  border: 1px solid var(--color-border-light);
+  box-shadow: var(--card-shadow);
+}
+.admin-operations-shell .admin-stats {
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+}
+.admin-operations-shell .admin-context-note {
+  max-width: none;
+  margin: 0;
+  padding: 14px 18px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-md);
+  font-size: 13px;
+}
+.admin-operations-shell .admin-context-note span {
+  font-size: 13px;
+  margin-bottom: 4px;
+}
+.admin-operations-shell .admin-operations {
+  gap: 20px;
+}
+.admin-operations-shell .admin-operations-grid {
+  gap: 24px;
+}
+.admin-operations-shell .admin-operations-grid > section > h2 {
+  margin-bottom: 6px;
+}
+.admin-operations-shell .admin-operations-filters {
+  padding: 18px;
+  gap: 14px;
+  border-radius: var(--radius-md);
+}
+.admin-operations-shell .admin-operations-filters .admin-content-actions {
+  border: 0;
+  padding: 0;
+  align-self: end;
+}
+.admin-operations-shell .admin-operations-filters .numora-button {
+  width: 100%;
+}
+.admin-operations-shell .admin-content-row[aria-selected='true'],
+.admin-operations-shell .admin-content-row:has(> button[aria-pressed='true']) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.admin-operations-shell .admin-operation-detail-placeholder {
+  min-height: 240px;
+  background: var(--color-surface);
+}
+.admin-operations-shell .admin-operation-detail {
+  padding: 20px;
+  gap: 20px;
+}
+.admin-operations-shell .admin-operation-detail h3 {
+  margin: 0;
+  font-size: 18px;
+}
+.admin-operations-shell .admin-operation-detail dl {
+  gap: 14px;
+}
+.admin-operations-shell .admin-operation-detail dd {
+  font-size: 13px;
+  line-height: 1.7;
+}
+.admin-operations-shell .admin-operation-detail section > .monitoring-list,
+.admin-operations-shell .admin-operation-detail .numora-card > .monitoring-list {
+  margin-block: 12px;
+}
+.admin-operations-shell .admin-operation-detail .monitoring-list > li {
+  padding: 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  background: var(--color-surface-muted);
+}
+.admin-operations-shell .admin-operation-detail .monitoring-list p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-block: 4px 0;
+}
+.admin-operations-shell .operations-create-disclosure {
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  overflow: clip;
+}
+.admin-operations-shell .operations-create-disclosure > summary {
+  padding: 16px 20px;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-operations-shell .operations-create-disclosure > summary::after {
+  content: '+';
+  margin-left: auto;
+}
+.admin-operations-shell .operations-create-disclosure[open] > summary::after {
+  content: '−';
+}
+.admin-operations-shell .operations-create-disclosure[open] > summary {
+  margin: 0;
+}
+.admin-operations-shell .operations-create-disclosure .admin-create-school {
+  border: 0;
+  border-radius: 0;
+  box-shadow: none;
+}
+.admin-operations-shell .admin-create-school .admin-section-heading {
+  display: none;
+}
+.admin-operations-shell .admin-form-fields {
+  border: 0 !important;
+  padding: 0 !important;
+}
+.admin-operations-shell .numora-input-wrapper > label {
+  display: block;
+}
+.admin-operations-shell .admin-school-list {
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+.admin-operations-shell .admin-school-list > form {
+  display: flex;
+  align-items: end;
+  gap: 12px;
+}
+.admin-operations-shell .admin-school-list > form > .numora-input-wrapper {
+  flex: 1;
+  min-width: 0;
+}
+.admin-operations-shell .admin-school-row {
+  padding: 14px;
+  border-radius: var(--radius-sm);
+  box-shadow: none;
+}
+.admin-operations-shell .admin-school-icon {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-sm);
+}
+.admin-operations-shell .admin-school-name strong {
+  font-size: 14px;
+}
+.admin-operations-shell .admin-school-name small {
+  font-size: 12px;
+}
+.admin-operations-shell .admin-school-detail {
+  padding: 20px;
+}
+.admin-operations-shell .admin-school-detail h2 {
+  margin: 0;
+}
+.admin-operations-shell .admin-school-detail > p {
+  font-size: 13px;
+}
+.admin-operations-shell .admin-token-section {
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-light);
+}
+.admin-operations-shell .admin-token-row {
+  padding: 14px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+}
+.admin-operations-shell .admin-issued-token {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary);
+  color: var(--color-text);
+  border-radius: var(--radius-sm);
+}
+.admin-operations-shell .admin-issued-token code {
+  color: var(--color-primary-strong);
+}
+.admin-operations-shell .admin-school-context,
+.admin-operations-shell .admin-operations-grid > section:nth-child(2) {
+  position: static;
+}
+@media (min-width: 700px) {
+  .admin-operations-shell .admin-operations-filters {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-operations-shell .admin-content-row {
+    grid-template-columns: minmax(0, 1fr) auto;
+    column-gap: 16px;
+  }
+  .admin-operations-shell .admin-content-row > :not(button) {
+    grid-column: 1;
+  }
+  .admin-operations-shell .admin-content-row > button {
+    grid-column: 2;
+    grid-row: 1 / 4;
+    align-self: center;
+    width: auto;
+    min-width: 112px;
+  }
+  .admin-operations-shell .admin-operation-detail dl {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-operations-shell .admin-operation-detail dl > div {
+    min-width: 0;
+  }
+}
+@media (min-width: 1200px) {
+  .admin-operations-shell .admin-schools-layout,
+  .admin-operations-shell .admin-operations-grid {
+    grid-template-columns: minmax(0, 1.25fr) minmax(340px, 0.9fr);
+    align-items: start;
+  }
+}
+@media (max-width: 1199px) {
+  .admin-operations-shell .admin-schools-layout,
+  .admin-operations-shell .admin-operations-grid {
+    grid-template-columns: minmax(0, 1fr);
+  }
+}
+@media (max-width: 699px) {
+  .admin-operations-shell .admin-school-list > form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-operations-shell .admin-context-note,
+  .admin-operations-shell .admin-operations-filters {
+    padding: 16px;
+  }
+  .admin-operations-shell .admin-operation-detail-placeholder {
+    min-height: 180px;
+  }
+}
