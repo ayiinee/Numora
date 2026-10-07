@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { groupDrillCandidates, sampleDrillFamilies, type DrillCandidate } from './pvp-drill-bank';
+import {
+  decodePvpSingleChoice,
+  groupDrillCandidates,
+  sampleDrillFamilies,
+  type DrillCandidate,
+} from './pvp-drill-bank';
 
 function candidate(n: number, family = `family-${n}`): DrillCandidate {
   return {
@@ -34,6 +39,26 @@ function candidate(n: number, family = `family-${n}`): DrillCandidate {
 }
 
 describe('PvP random Drill sampling', () => {
+  it('reads imported wrapped options consistently for eligibility, display and scoring', () => {
+    const imported = candidate(1);
+    imported.version.optionsOrStatements = {
+      options: imported.version.optionsOrStatements,
+      categories: [],
+    };
+    expect(groupDrillCandidates([imported])).toEqual([[imported]]);
+    expect(decodePvpSingleChoice(imported.version)).toMatchObject({
+      correctOptionId: 'A',
+      options: [
+        { id: 'A', text: '2' },
+        { id: 'B', text: '3' },
+      ],
+    });
+    const malformed = { ...imported.version, optionsOrStatements: { options: 'invalid' } };
+    expect(() => decodePvpSingleChoice(malformed)).toThrow();
+    expect(() =>
+      decodePvpSingleChoice({ ...imported.version, answerKey: { optionId: 'Z' } }),
+    ).toThrow();
+  });
   it.each([0, 9])('rejects %i distinct families without repeating or padding', (count) => {
     const families = groupDrillCandidates(Array.from({ length: count }, (_, i) => candidate(i)));
     expect(() => sampleDrillFamilies(families)).toThrow(

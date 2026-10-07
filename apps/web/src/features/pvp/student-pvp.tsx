@@ -175,6 +175,7 @@ export function PvpScreen() {
                           onChange={setDifficulty}
                           disabled={socket.busy || socket.uncertain}
                           availability={availability.data.difficulties}
+                          contentNotice={availability.data.contentNotice}
                         />
                         <Button
                           fullWidth
