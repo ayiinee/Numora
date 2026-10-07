@@ -87,6 +87,7 @@ export const assessmentPackages = pgTable(
       reference: string;
       approvedAt: string;
       manifestDigest: string;
+      compositionDigest?: string;
     }>(),
     scoringPolicyVersionId: uuid('scoring_policy_version_id').references(
       () => scoringPolicyVersions.id,

@@ -36,9 +36,6 @@ export function TryoutPackageCard({
           <Badge variant="primary">{stateLabels[current.state]}</Badge>
         </div>
         <h2>{current.title}</h2>
-        {current.isDemo && (
-          <Badge variant="warning">DEMO · Bukan asesmen kemampuan TKA resmi</Badge>
-        )}
       </div>
       <div className="tryout-catalog-card__body">
         <span className="tryout-package-symbol">
@@ -210,7 +207,10 @@ export function TryoutDetail({
               </li>
               <li>
                 <strong>Hasil simulasi:</strong> menunggu rilis IRT; nilai ini bukan nilai TKA
-                resmi. Nilai dan pembahasan tersedia bersama maksimal 72 jam setelah batch ditutup.
+                resmi.{' '}
+                {current.resultPendingReason
+                  ? 'Konten atau penilaian belum siap; jadwal hasil belum tersedia.'
+                  : 'Nilai dan pembahasan tersedia bersama maksimal 72 jam setelah batch ditutup.'}
                 {current.resultDueAt && (
                   <> Batas ketersediaan: {releaseDate(current.resultDueAt)}.</>
                 )}
@@ -271,7 +271,7 @@ export function TryoutWaiting({
   xp,
   closeAt,
   resultDueAt,
-  isDemo,
+  resultPendingReason,
 }: {
   submitted?: boolean;
   fetching?: boolean;
@@ -279,7 +279,7 @@ export function TryoutWaiting({
   xp?: number | null;
   closeAt?: string | null | undefined;
   resultDueAt?: string | null | undefined;
-  isDemo?: boolean | undefined;
+  resultPendingReason?: 'CONTENT_PENDING' | 'SCORING_PENDING' | null | undefined;
 }) {
   return (
     <Card fullWidth className="tryout-waiting">
@@ -288,7 +288,7 @@ export function TryoutWaiting({
       </span>
       <Badge variant="success">Jawaban tersimpan</Badge>
       <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil IRT'}</h2>
-      {isDemo && <Badge variant="warning">DEMO · Konten uji, bukan hasil TKA resmi</Badge>}
+
       {xp != null && (
         <p>
           <strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.
@@ -298,10 +298,10 @@ export function TryoutWaiting({
         Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
         selesai belum berarti hasil telah dirilis.
       </p>
-      {isDemo ? (
+      {resultPendingReason ? (
         <p>
-          Konten uji menyimpan jawaban di server. Rilis hasil DEMO menunggu persetujuan konten serta
-          rubrik terkait.
+          Jawaban tersimpan di server. Penilaian belum tersedia; hasil dan pembahasan menunggu
+          kesiapan konten serta penilaian.
         </p>
       ) : (
         <p>

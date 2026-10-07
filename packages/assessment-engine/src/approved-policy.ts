@@ -1,6 +1,7 @@
 import { isDeepStrictEqual } from 'node:util';
 import { tryoutXp } from './tryout-reward.js';
 import { AssessmentFinalizationError } from './errors.js';
+import { TRYOUT_PARTIAL_POLICY } from './tryout-partial.js';
 
 export type Rounding = 'FLOOR' | 'HALF_UP' | 'CEIL';
 export type ApprovedPolicy = {
@@ -14,6 +15,7 @@ export type ApprovedPolicy = {
   lowPartialStars?: 0 | 1;
   itemWeights: Record<string, number>;
   canonicalPgOnly?: boolean;
+  ownerTryoutPartial?: boolean;
 };
 export type PolicyRow = {
   policyCode: string;
@@ -63,6 +65,34 @@ export function readApprovedPolicy(
   type: 'DRILL' | 'TRYOUT',
   allowRetired = false,
 ): ApprovedPolicy {
+  if (
+    type === 'TRYOUT' &&
+    row.policyCode === TRYOUT_PARTIAL_POLICY &&
+    row.version === 1 &&
+    (row.status === 'PUBLISHED' || (allowRetired && row.status === 'ARCHIVED')) &&
+    isDeepStrictEqual(row.configuration, {
+      prdVersion: '0.6',
+      questionCount: 30,
+      rubric: 'OPTIONS_STATEMENTS_PARTIAL_V1',
+      mcma: 'correct_option_decisions/option_count',
+      category: 'correct_statements/statement_count',
+      unanswered: 0,
+      awardedPointsDecimals: 2,
+      equivalentCorrectXpMultiplier: 10,
+      approvedBy: 'PROJECT_OWNER',
+      approvedDate: '2026-10-07',
+    })
+  )
+    return {
+      contractVersion: 'NUMORA_ASSESSMENT_V1',
+      assessmentType: 'TRYOUT',
+      scoreRounding: 'HALF_UP',
+      xpRounding: 'CEIL',
+      itemPointRounding: 'HALF_UP',
+      tryoutXpMultiplier: 10,
+      ownerTryoutPartial: true,
+      itemWeights: { SINGLE_CHOICE: 1, MULTIPLE_CHOICE_MULTIPLE_ANSWER: 1, CATEGORY: 1 },
+    };
   if (
     isCanonicalPolicy(row, type) &&
     (row.status === 'PUBLISHED' || (allowRetired && row.status === 'ARCHIVED'))

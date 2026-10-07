@@ -1,3 +1,4 @@
+import { seedLifecycleDemo } from '@tka/database/testing';
 import { randomUUID } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
@@ -11,7 +12,6 @@ import {
   getDatabase,
   levelProgress,
   levels,
-  seedLifecycleDemo,
   subchapters,
   users,
   xpLedger,
@@ -50,6 +50,7 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
       !['localhost', '127.0.0.1'].includes(new URL(testUrl).hostname)
     )
       throw new Error('Isolated local PostgreSQL required.');
+    process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
     process.env.DATABASE_URL = testUrl;
     const db = getDatabase().db;
     const suffix = randomUUID();

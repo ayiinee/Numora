@@ -95,8 +95,12 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     const draft = ((await created.json()) as { id: string }).id;
     expect((await request('admin/content/drill-packages', 'POST', body)).status).toBe(409);
     const results = await Promise.all([
-      request(`admin/content/drill-packages/${draft}/publish`, 'POST'),
-      request(`admin/content/drill-packages/${draft}/publish`, 'POST'),
+      request(`admin/content/drill-packages/${draft}/publish`, 'POST', {
+        curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+      }),
+      request(`admin/content/drill-packages/${draft}/publish`, 'POST', {
+        curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+      }),
     ]);
     expect(results.map((r) => r.status)).toEqual([201, 201]);
     expect(
@@ -168,9 +172,13 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     expect((await request(`admin/content/drill-packages/${draft}/archive`, 'POST')).status).toBe(
       201,
     );
-    expect((await request(`admin/content/drill-packages/${draft}/publish`, 'POST')).status).toBe(
-      409,
-    );
+    expect(
+      (
+        await request(`admin/content/drill-packages/${draft}/publish`, 'POST', {
+          curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+        })
+      ).status,
+    ).toBe(409);
     expect(
       await getDatabase().db.select().from(packageItems).where(eq(packageItems.packageId, draft)),
     ).toHaveLength(10);
@@ -215,8 +223,17 @@ databaseSuite('Drill packages through HTTP/PostgreSQL', () => {
     });
     expect(draft.status).toBe(201);
     const { id: packageId } = (await draft.json()) as { id: string };
+    // This isolated TEST fixture has no academic approval; opt-in permits synthetic distribution.
+    await getDatabase()
+      .db.update(assessmentPackages)
+      .set({ isDemo: true })
+      .where(eq(assessmentPackages.id, packageId));
     expect(
-      (await request(`admin/content/drill-packages/${packageId}/publish`, 'POST')).status,
+      (
+        await request(`admin/content/drill-packages/${packageId}/publish`, 'POST', {
+          curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+        })
+      ).status,
     ).toBe(201);
     const started = await request(
       'assessments/drill/attempts',

@@ -1,5 +1,5 @@
 import { ConflictException, Inject, Injectable } from '@nestjs/common';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   competencies,
   questions,
@@ -11,6 +11,7 @@ import {
 import {
   decodeRuntimeQuestion,
   validateRubricCoverage,
+  validateTryoutPartialRubric,
   type ApprovedPolicy,
 } from '@tka/assessment-engine';
 import type { AdminTransaction } from '../audit/admin-mutation';
@@ -40,17 +41,20 @@ export class AssessmentReadinessService {
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-      .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
-      .innerJoin(subchapters, eq(subchapters.id, competencies.subchapterId))
+      .leftJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+      .leftJoin(
+        subchapters,
+        eq(subchapters.id, sql`coalesce(${questions.subchapterId},${competencies.subchapterId})`),
+      )
       .where(inArray(questionVersions.id, ids))
-      .for('share');
+      .for('share', { of: [questionVersions, questions] });
     if (rows.length !== count) throw new ConflictException({ code: 'ASSESSMENT_CONTENT_MISSING' });
     const pinned = [];
     for (const id of ids) {
       const r = rows.find((row) => row.version.id === id)!;
       if (
-        (scope?.chapterId && r.subchapter.chapterId !== scope.chapterId) ||
-        (scope?.subchapterId && r.competency.subchapterId !== scope.subchapterId) ||
+        (scope?.chapterId && r.subchapter?.chapterId !== scope.chapterId) ||
+        (scope?.subchapterId && r.competency?.subchapterId !== scope.subchapterId) ||
         (scope?.levelNumber && r.question.curriculumLevelNumber !== scope.levelNumber)
       )
         throw new ConflictException({ code: 'ASSESSMENT_CONTENT_SCOPE_INVALID' });
@@ -83,7 +87,8 @@ export class AssessmentReadinessService {
           )
           .for('share');
         try {
-          validateRubricCoverage(decoded, rubric);
+          if (policy?.ownerTryoutPartial) validateTryoutPartialRubric(decoded, rubric);
+          else validateRubricCoverage(decoded, rubric);
         } catch (error) {
           throw new ConflictException({
             code: 'PGK_RUBRIC_COVERAGE_REQUIRED',

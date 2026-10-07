@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { ForbiddenException, type INestApplication, UnauthorizedException } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
-import { afterAll, beforeAll, describe } from 'vitest';
+import { afterAll, beforeAll, describe, vi } from 'vitest';
 import { eq } from 'drizzle-orm';
 import {
   assessmentAttempts,
@@ -64,7 +64,8 @@ export function installFerdiFixture() {
       process.env.NODE_ENV !== 'test'
     )
       throw Error('Only a local test database is permitted.');
-    process.env.DATABASE_URL = url;
+    vi.stubEnv('DATABASE_URL', url);
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     process.env.IRT_PSEUDONYM_KEY = 'TEST_ONLY_NOT_A_REAL_PSEUDONYM_KEY_32';
     const { db } = getDatabase();
     const identities = await db
@@ -299,6 +300,7 @@ export function installFerdiFixture() {
   afterAll(async () => {
     if (app) await app.close();
     await closeDatabaseConnection();
+    vi.unstubAllEnvs();
     if (previousKey === undefined) delete process.env.IRT_PSEUDONYM_KEY;
     else process.env.IRT_PSEUDONYM_KEY = previousKey;
   });

@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from './package-runtime.js';
 import { eq } from 'drizzle-orm';
 import { closeDatabaseConnection, getDatabase } from './client.js';
 import { schools, users } from './schema/index.js';
@@ -10,9 +11,8 @@ const ids = {
 };
 
 async function seed() {
-  if (process.env.NODE_ENV !== 'development' || process.env.ALLOW_DEMO_SEED !== 'true') {
-    throw new Error('Demo seed requires NODE_ENV=development and ALLOW_DEMO_SEED=true.');
-  }
+  if (!allowSyntheticContent())
+    throw new Error('Isolated development/test fixture opt-in required.');
   const { db } = getDatabase();
   if (process.argv.includes('--learning-only')) {
     await db.transaction(async (tx) => seedDemoLearning(tx));
@@ -31,7 +31,7 @@ async function seed() {
 
   await db
     .insert(schools)
-    .values({ code: 'DEMO-SCHOOL', name: 'DEMO School' })
+    .values({ code: 'DEMO-SCHOOL', name: 'SMP Nusantara' })
     .onConflictDoNothing({ target: schools.code });
 
   const demoUsers = [
@@ -39,19 +39,19 @@ async function seed() {
       authUserId: ids.adminAuth,
       role: 'ADMIN' as const,
       adminRole: 'SUPER_ADMIN' as const,
-      displayName: 'DEMO Admin',
+      displayName: 'Dian Prasetyo',
       email: 'admin.demo@example.invalid',
     },
     {
       authUserId: ids.teacherAuth,
       role: 'TEACHER' as const,
-      displayName: 'DEMO Teacher',
+      displayName: 'Ratna Sari',
       email: 'teacher.demo@example.invalid',
     },
     {
       authUserId: ids.studentAuth,
       role: 'STUDENT' as const,
-      displayName: 'DEMO Student',
+      displayName: 'Alya Putri',
       email: 'student.demo@example.invalid',
     },
   ];

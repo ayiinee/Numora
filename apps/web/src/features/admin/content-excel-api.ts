@@ -1,7 +1,6 @@
 import { apiRequest, ApiProblem } from '@/lib/api';
 import type {
   ExcelAssetDto,
-  ExcelEnvelopeDto,
   ExcelParseDto,
   ExcelMediaDto,
   MediaUploadReceiptDto,
@@ -49,16 +48,21 @@ function verifyReceipt(asset: ExcelAssetDto, receipt: MediaUploadReceiptDto) {
   )
     throw Error('Receipt gambar tidak sesuai; soal belum disimpan.');
 }
-export async function uploadExcelMedia(
+export async function uploadExcelMedia<
+  T extends { questions: { metadata: { assetManifest: ExcelAssetDto[] } }[] },
+>(
   token: string,
-  envelope: ExcelEnvelopeDto,
+  envelope: T,
   media: ExcelMediaDto[],
   cache: UploadCache,
   progress: (message: string) => void,
-): Promise<ExcelEnvelopeDto> {
+): Promise<T> {
   const body = structuredClone(envelope);
   const assets = body.questions.flatMap((q) => q.metadata.assetManifest);
-  for (const [index, asset] of assets.entries()) {
+  let nextIndex = 0;
+  async function uploadAsset(index: number) {
+    const asset = assets[index]!;
+    if (asset.objectKey) return; // Save validates the existing receipt again on the server.
     progress(`Mengunggah dan memverifikasi gambar ${index + 1}/${assets.length}…`);
     const identity = `${asset.externalId}:${asset.assetId}:${asset.sha256}`;
     let entry = cache.get(identity);
@@ -79,7 +83,10 @@ export async function uploadExcelMedia(
         'admin/content/media/uploads',
         token,
         { method: 'POST', body: JSON.stringify(dto), headers: { 'Idempotency-Key': entry.key } },
-      );
+      ).catch((error: unknown) => {
+        if (error instanceof ApiProblem && error.status === 410) cache.delete(identity);
+        throw error;
+      });
       if (reserved.status === 'VERIFIED') entry.receipt = reserved;
       else {
         if (Date.parse(reserved.expiresAt) <= Date.now()) {
@@ -127,5 +134,9 @@ export async function uploadExcelMedia(
     asset.objectKey = entry.receipt.objectKey;
     asset.bucket = entry.receipt.bucket;
   }
+  async function worker() {
+    while (nextIndex < assets.length) await uploadAsset(nextIndex++);
+  }
+  await Promise.all(Array.from({ length: Math.min(3, assets.length) }, () => worker()));
   return body;
 }

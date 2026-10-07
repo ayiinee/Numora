@@ -1,4 +1,6 @@
 'use client';
+import { ADMIN_PAGE_SIZE } from './pagination';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 
 import Link from 'next/link';
 import { AssessmentPolicySelector } from './assessment-policy-selector';
@@ -10,14 +12,13 @@ import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import { classifyQuestion } from './content-package-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
-import { AdminPagination, useAdminPagination } from './admin-pagination';
 import {
   setChapterCategory,
   createChapter,
   createCompetency,
+  createQuestion,
   createDrillPackage,
   createLevel,
-  createQuestion,
   createSubchapter,
   createTryoutDraft,
   createVariant,
@@ -338,6 +339,10 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
       icon="book"
     >
       <div className="monitoring-frame admin-content">
+        <p className="admin-context-note">
+          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
+          tetap dipertahankan.
+        </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
           {views
             .filter((item) => item.id !== 'audit' || canReadAudit)
@@ -489,6 +494,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                         atas mencakup seluruh bank soal.
                       </p>
                     )}
+                    <Link href="/admin/content/generator">Generator varian</Link>
                     <Link href="/admin/content/imports">
                       Impor Excel/JSON, paket & preview internal
                     </Link>
@@ -702,30 +708,39 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                                 void run(() =>
                                   publishTryoutPackage(token, p.id, {
                                     scoringPolicyVersionId: field(form, 'scoringPolicyVersionId'),
-                                    releaseAt: new Date(
-                                      `${field(form, 'releaseAt')}:00+07:00`,
-                                    ).toISOString(),
-                                    durationSeconds: Number(field(form, 'durationSeconds')),
+                                    curriculumApprovalReference: field(
+                                      form,
+                                      'curriculumApprovalReference',
+                                    ),
+                                    ...(field(form, 'releaseAt')
+                                      ? {
+                                          releaseAt: new Date(
+                                            `${field(form, 'releaseAt')}:00+07:00`,
+                                          ).toISOString(),
+                                        }
+                                      : {}),
                                   }),
                                 );
                               }}
                             >
                               <AssessmentPolicySelector token={token} type="TRYOUT" />
-                              <Field label="Mulai batch (Senin 00:00 WIB)" name="releaseAt">
-                                <input type="datetime-local" name="releaseAt" required />
-                              </Field>
-                              <Field label="Durasi pengerjaan (detik)" name="durationSeconds">
+                              <Field
+                                label="Referensi persetujuan Curriculum"
+                                name="curriculumApprovalReference"
+                              >
                                 <input
-                                  type="number"
-                                  name="durationSeconds"
-                                  min={1}
-                                  max={604800}
+                                  name="curriculumApprovalReference"
                                   required
+                                  maxLength={1000}
                                 />
                               </Field>
+                              <Field label="Jadwal rilis (WIB, opsional)" name="releaseAt">
+                                <input type="datetime-local" name="releaseAt" />
+                              </Field>
                               <p>
-                                Batch berakhir setelah Minggu 23:59 WIB. Deadline mengikuti batas
-                                terawal durasi dan batch close.
+                                Kosong berarti rilis sekarang. Durasi pengerjaan 10 menit; batch
+                                berjalan 7 hari dikurangi 1 menit. Deadline mengikuti batas terawal
+                                durasi dan batch close.
                               </p>
                               <Button
                                 type="submit"
@@ -864,13 +879,28 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                 </section>
               )}
             </div>
-            {view !== 'curriculum' && view !== 'directedPackages' && (
-              <AdminPagination
-                offset={offset}
-                hasNext={hasNext}
-                disabled={busy || loading}
-                onChange={setOffset}
-              />
+            {view !== 'curriculum' && (
+              <nav className="admin-content-actions" aria-label="Halaman data">
+                <Button
+                  disabled={offset === 0 || busy || loading}
+                  onClick={() => {
+                    setLoading(true);
+                    setOffset(Math.max(0, offset - ADMIN_PAGE_SIZE));
+                  }}
+                >
+                  Sebelumnya
+                </Button>
+                <span>Halaman {offset / ADMIN_PAGE_SIZE + 1}</span>
+                <Button
+                  disabled={!hasNext || busy || loading}
+                  onClick={() => {
+                    setLoading(true);
+                    setOffset(offset + ADMIN_PAGE_SIZE);
+                  }}
+                >
+                  Berikutnya
+                </Button>
+              </nav>
             )}
           </>
         )}
@@ -981,7 +1011,7 @@ function Reports({
         Filter diterapkan server ke seluruh antrean. Detail target tidak bergantung pada halaman
         metadata.
       </p>
-      <div className="admin-search-toolbar">
+      <div className="admin-content-actions">
         <label>
           Jenis laporan
           <select
@@ -1268,19 +1298,35 @@ function DrillPackages({
                 <Button variant="secondary" disabled={busy} onClick={() => setDraft(pack)}>
                   Edit draf
                 </Button>
-                <Button
-                  disabled={busy}
-                  onClick={() => {
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const reference = field(
+                      new FormData(event.currentTarget),
+                      'curriculumApprovalReference',
+                    );
                     if (
                       window.confirm(
-                        'Terbitkan paket ini? API akan memvalidasi 10 soal, hasil review, materi, dan kebijakan penilaian.',
+                        'Terbitkan susunan paket yang sudah ditinjau dan disetujui Curriculum?',
                       )
                     )
-                      void run(() => publishDrillPackage(token, pack.id));
+                      void run(() =>
+                        publishDrillPackage(token, pack.id, {
+                          curriculumApprovalReference: reference,
+                        }),
+                      );
                   }}
                 >
-                  Publikasikan paket
-                </Button>
+                  <Field
+                    label="Referensi persetujuan Curriculum"
+                    name="curriculumApprovalReference"
+                  >
+                    <input name="curriculumApprovalReference" required maxLength={1000} />
+                  </Field>
+                  <Button type="submit" disabled={busy}>
+                    Publikasikan paket
+                  </Button>
+                </form>
               </div>
             )}
             {pack.status !== 'ARCHIVED' && (

@@ -7,6 +7,8 @@ import {
   IsIn,
   IsInt,
   IsISO8601,
+  IsOptional,
+  Equals,
   IsString,
   IsUUID,
   IsUrl,
@@ -243,7 +245,7 @@ export class AdminVersionDto {
   @ApiProperty({ required: false }) imported?: boolean;
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;
-  @ApiProperty() primaryCompetencyId!: string;
+  @ApiProperty({ type: String, nullable: true }) primaryCompetencyId!: string | null;
   @ApiPropertyOptional({ type: Number, nullable: true }) curriculumLevelNumber?: number | null;
   @ApiProperty() variantId!: string;
   @ApiProperty() variantCode!: string;
@@ -309,7 +311,16 @@ export class AdminTryoutDraftsDto {
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
 }
 export class PublishTryoutPackageDto {
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @Matches(/\S/)
+  @MaxLength(1000)
+  curriculumApprovalReference?: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() scoringPolicyVersionId!: string;
-  @ApiProperty({ format: 'date-time' }) @IsISO8601({ strict: true }) releaseAt!: string;
-  @ApiProperty() @IsInt() @Min(1) @Max(604800) durationSeconds!: number;
+  @ApiPropertyOptional({ format: 'date-time' })
+  @IsOptional()
+  @IsISO8601({ strict: true })
+  releaseAt?: string;
+  @ApiPropertyOptional({ enum: [600] }) @IsOptional() @Equals(600) durationSeconds?: 600;
 }

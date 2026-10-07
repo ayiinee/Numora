@@ -11,7 +11,7 @@ import { QuestionChoices } from './question-choices';
 import { answerOf, choiceValue, questionTypeLabels } from './assessment-answers';
 import { learningApi, LearningApiError } from './api';
 import type { ReviewedQuestionDto, DrillResultDto, TryoutResultDto } from './generated-types';
-import { DataState, LearningFrame, MathText, Status, StudentGate } from './ui';
+import { DataState, LearningFrame, Status, StudentGate, MathText } from './ui';
 import { useLearningView } from './learning-interactions';
 import { QUESTION_REPORT_CATEGORIES, ReportForm } from './support';
 

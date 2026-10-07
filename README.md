@@ -1,6 +1,6 @@
 # TKA Mathematics SMP Platform
 
-Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathematics SMP learning platform. Current product source of truth: team-approved PRD v0.5 (28 September 2026). See `docs/development/SPRINT_2_GOAL.md` for the first Student vertical slice and prototype trial scope.
+Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathematics SMP learning platform. Current product source of truth: owner-approved PRD v0.6 Final (4 October 2026), with the confirmed Tryout XP ×10 correction. See `docs/development/SPRINT_2_GOAL.md` for the first Student vertical slice and prototype trial scope.
 
 ## Architecture baseline
 
@@ -43,9 +43,11 @@ Fill `.env` with the development cloud values before `pnpm dev`; `.env` is ignor
 - Swagger UI: http://localhost:3001/api/docs
 - Supabase dashboard and Redis endpoints: use the development cloud resources supplied by the cloud team.
 
-### Prototype halaman Siswa
+### Alur produk dan data pengembangan
 
-Jalankan `corepack pnpm --filter @tka/web dev`, lalu buka `/demo/student`, `/demo/pvp`, atau `/demo/leaderboards` pada Web lokal. Halaman ini memakai identitas dan hasil fiktif tanpa login, API, Redis, atau database; PvP dan peringkatnya tidak menyimpan hasil nyata.
+Buka `/` untuk login Google atau `/admin/login` untuk Admin. `/qa/login` adalah alat internal yang tidak ditautkan dan hanya tersedia di project Development yang diizinkan.
+
+Paket sintetis memerlukan `ALLOW_SYNTHETIC_CONTENT=true` di server dengan identitas Auth/database Development yang cocok, atau database localhost `numora_test_*` dengan `NODE_ENV=test`. Nilai default `false`; staging pengguna nyata dan Production memakai konten yang disetujui. Jalankan `pnpm db:seed:scenarios` untuk paket skenario ber-versi setelah bootstrap fixture internal. Lihat [keputusan dan laporan cleanup](docs/development/DEMO_CLEANUP_2026-10-06.md) untuk manifest, backup dan replay.
 
 ## Normal development
 
@@ -71,7 +73,7 @@ pnpm run ci
 3. Review the generated SQL under `packages/database/drizzle`.
 4. Commit schema + migration together.
 5. A designated operator applies the reviewed migration with `DATABASE_MIGRATION_URL` against the intended isolated branch, then rehearses it before staging.
-6. Update seed if the new model needs fixtures. Run the `DEMO` seed only on the development sandbox with `ALLOW_DEMO_SEED=true`; never on staging with real users.
+6. Update seed if the new model needs fixtures. Run scenario seeders only with verified `ALLOW_SYNTHETIC_CONTENT=true` isolation; never on staging with real users.
 
 Do not make normal shared schema changes manually in Supabase Studio.
 
@@ -93,9 +95,13 @@ This repository includes the P0 walking skeleton and separate Student/PvP/leader
 - web/API/worker processes;
 - PostgreSQL and Redis connectivity;
 - foundational identity/school/class schema;
-- idempotent demo seed;
+- idempotent development scenario seed;
 - OpenAPI/Swagger bootstrap;
 - contract placeholders and JSON schemas;
 - CI baseline.
 
 It does **not** silently implement unresolved PRD OPEN items. See `docs/product/OPEN_DECISIONS.md`.
+
+## Handoff generator paket
+
+Untuk menjalankan generator di localhost:3000 dengan alur impor preview dan akun Super Admin Development yang sama, ikuti [panduan handoff](docs/development/GENERATOR_HANDOFF.md). Launcher permanen: `corepack pnpm dev:generator`. Service Python dan konfigurasi privat tim diperlukan; tidak ada ketergantungan pada PID atau lokasi temporary komputer pembuat PR.

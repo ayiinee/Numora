@@ -1,16 +1,15 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import {
   assessmentPackages,
   closeDatabaseConnection,
   getDatabase,
-  pvpDemoId,
-  seedPvpDemo,
   packageItems,
   questionVersions,
   questionVariants,
   questions,
 } from '@tka/database';
+import { seedPvpDemo, pvpDemoId } from '@tka/database/testing';
 import { eq } from 'drizzle-orm';
 import { pvpFixture } from './pvp.test-fixture';
 import { resolvePvpPolicy } from './pvp-runtime.policy';
@@ -23,23 +22,46 @@ integration('runtime policy and READY Drill publication boundary', () => {
   const testPackages: string[] = [];
   beforeAll(async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     process.env.ALLOW_DEMO_SEED = 'true';
     fixture = await pvpFixture();
     for (const difficulty of ['MEDIUM', 'HARD']) {
       for (let i = 0; i < 10; i++) {
-        const [q] = await getDatabase().db.insert(questions).values({
-          primaryCompetencyId: fixture.competency.id, usageType: 'DRILL', status: 'READY',
-        }).returning();
-        const [variant] = await getDatabase().db.insert(questionVariants).values({
-          questionId: q!.id, variantCode: randomUUID(), kind: 'ORIGINAL', origin: 'TEST',
-        }).returning();
-        await getDatabase().db.insert(questionVersions).values({
-          variantId: variant!.id, versionNumber: 1, questionType: 'SINGLE_CHOICE',
-          stem: { text: 'TEST ONLY: 1 + 1?' },
-          optionsOrStatements: [{ id: 'A', content: { text: '2' } }, { id: 'B', content: { text: '3' } }],
-          answerKey: { optionId: 'A' }, explanation: { text: 'TEST ONLY: 2' },
-          difficulty, contentStatus: 'READY', reviewedByUserId: fixture.contentAdmin.id, reviewedAt: new Date(),
-        });
+        const [q] = await getDatabase()
+          .db.insert(questions)
+          .values({
+            primaryCompetencyId: fixture.competency.id,
+            usageType: 'DRILL',
+            status: 'READY',
+          })
+          .returning();
+        const [variant] = await getDatabase()
+          .db.insert(questionVariants)
+          .values({
+            questionId: q!.id,
+            variantCode: randomUUID(),
+            kind: 'ORIGINAL',
+            origin: 'TEST',
+          })
+          .returning();
+        await getDatabase()
+          .db.insert(questionVersions)
+          .values({
+            variantId: variant!.id,
+            versionNumber: 1,
+            questionType: 'SINGLE_CHOICE',
+            stem: { text: 'TEST ONLY: 1 + 1?' },
+            optionsOrStatements: [
+              { id: 'A', content: { text: '2' } },
+              { id: 'B', content: { text: '3' } },
+            ],
+            answerKey: { optionId: 'A' },
+            explanation: { text: 'TEST ONLY: 2' },
+            difficulty,
+            contentStatus: 'READY',
+            reviewedByUserId: fixture.contentAdmin.id,
+            reviewedAt: new Date(),
+          });
       }
     }
   });
@@ -52,6 +74,7 @@ integration('runtime policy and READY Drill publication boundary', () => {
     delete process.env.PVP_MODE;
     delete process.env.ALLOW_DEMO_SEED;
     await closeDatabaseConnection();
+    vi.unstubAllEnvs();
   });
   it('defaults off, rejects invalid modes and seeds three immutable replay-safe DEMO packages', async () => {
     delete process.env.PVP_MODE;
@@ -109,8 +132,11 @@ integration('runtime policy and READY Drill publication boundary', () => {
     expect(state.difficulties.every((d) => d.available)).toBe(true);
     const room = await engine.create(fixture.students[0]!.id, 'easy', randomUUID());
     expect(room.isDemo).toBe(false);
-    const [match] = await getDatabase().client`select package_id from pvp_matches where id=${room.matchId}`;
-    const [pack] = await getDatabase().db.select().from(assessmentPackages)
+    const [match] = await getDatabase()
+      .client`select package_id from pvp_matches where id=${room.matchId}`;
+    const [pack] = await getDatabase()
+      .db.select()
+      .from(assessmentPackages)
       .where(eq(assessmentPackages.id, match!.package_id));
     expect(pack!.curriculumApproval).toBeNull();
     expect(pack!.frozenAt).not.toBeNull();

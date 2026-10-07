@@ -21,6 +21,7 @@ Object.assign(process.env, {
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
   ALLOW_DEMO_SEED: 'true',
+  ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
   SUPABASE_PUBLISHABLE_KEY: 'job16-test-only-public-key',
   TEACHER_TOKEN_PEPPER: 'job16-isolated-test-only-pepper',
@@ -31,8 +32,6 @@ Object.assign(process.env, {
 const {
   getDatabase,
   closeDatabaseConnection,
-  seedPvpDemo,
-  pvpDemoId,
   questions,
   questionVersions,
   users,
@@ -40,6 +39,7 @@ const {
   classes,
   classMemberships,
 } = await import('@tka/database');
+const { seedPvpDemo, pvpDemoId } = await import('@tka/database/testing');
 const { seedDemoLearning } = await import('../../../packages/database/dist/demo-learning.js');
 const { projectClassLeaderboard } = await import('../../worker/dist/class-leaderboard.js');
 const { db, client } = getDatabase();

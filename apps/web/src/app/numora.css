@@ -1483,7 +1483,7 @@ a.settings-row:hover {
   width: 100%;
   min-height: 52px;
 }
-.demo-entry {
+.auth-entry {
   border-top: 1px solid var(--color-border-light);
   padding-top: 20px;
   display: grid;
@@ -1491,14 +1491,14 @@ a.settings-row:hover {
   font-size: 12px;
   color: var(--color-text-muted);
 }
-.demo-entry-admin {
+.auth-entry-admin {
   min-height: 44px;
   display: flex;
   align-items: center;
   color: var(--color-primary);
   text-decoration: underline;
 }
-.demo-entry p {
+.auth-entry p {
   font-size: 12px;
 }
 .helper,
@@ -3949,14 +3949,6 @@ a.settings-row:hover {
   margin: 8px 0;
   font-size: 13px;
 }
-.demo-notice {
-  background: var(--color-warning-light);
-  color: var(--color-text-strong);
-  font-size: 12px;
-  padding: 12px;
-  border-radius: 12px;
-  margin: 12px 0;
-}
 @media (max-width: 959px) {
   .drill-result__layout {
     display: flex;
@@ -5312,13 +5304,6 @@ a.settings-row:hover {
   padding: 12px 16px 32px;
   display: grid;
   gap: 16px;
-}
-.pvp-demo-notice {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  font-size: 11px;
-  color: var(--color-text-muted);
 }
 .pvp-room-meta {
   text-align: center;
@@ -7168,10 +7153,10 @@ a.settings-row:hover {
 .auth-card .form-logout button {
   width: 100%;
 }
-.auth-card .demo-entry {
+.auth-card .auth-entry {
   padding-top: 12px;
 }
-.auth-card .demo-entry-admin {
+.auth-card .auth-entry-admin {
   color: var(--color-primary-strong);
 }
 @media (max-width: 359px) {
@@ -9079,4 +9064,665 @@ a.settings-row:hover {
   flex-wrap: wrap;
   gap: 12px;
   margin-block: 16px;
+}
+.content-import-card label {
+  display: grid;
+  gap: 8px;
+  margin-block: 16px;
+}
+.content-import-card input {
+  min-height: 44px;
+  max-width: 100%;
+}
+.content-rich-text {
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+}
+.content-preview-stem {
+  margin-block: 20px;
+}
+.content-preview-image {
+  max-width: 100%;
+  height: auto;
+  vertical-align: middle;
+}
+.content-rich-text .katex-display {
+  overflow-x: auto;
+  max-width: 100%;
+}
+.content-preview-card .admin-content-actions {
+  flex-wrap: wrap;
+  gap: 12px;
+  margin-block: 16px;
+}
+.excel-preview-card {
+  min-width: 0;
+}
+.excel-preview-heading,
+.excel-preview-summary {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.excel-preview-heading h2 {
+  margin-bottom: var(--space-2);
+}
+.excel-preview-heading p,
+.excel-preview-summary > span:last-child {
+  color: var(--color-text-muted);
+}
+.excel-preview-summary {
+  justify-content: flex-start;
+}
+.excel-preview-scroll {
+  max-width: 100%;
+  overflow-x: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+}
+.excel-preview-table {
+  width: 100%;
+  min-width: 1080px;
+  border-collapse: collapse;
+  table-layout: fixed;
+  font-size: var(--text-sm);
+  line-height: 1.65;
+}
+.excel-preview-table caption {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  color: var(--color-text-muted);
+  background: var(--color-surface);
+}
+.excel-preview-table th,
+.excel-preview-table td {
+  padding: var(--space-4);
+  vertical-align: top;
+  text-align: left;
+  border-bottom: 1px solid var(--color-border);
+  overflow-wrap: anywhere;
+}
+.excel-preview-table thead th {
+  background: var(--numora-purple-50);
+  color: var(--color-text);
+  font-weight: var(--font-semibold);
+}
+.excel-preview-table thead th:nth-child(1) {
+  width: 52px;
+}
+.excel-preview-table thead th:nth-child(2) {
+  width: 170px;
+}
+.excel-preview-table thead th:nth-child(3) {
+  width: 330px;
+}
+.excel-preview-table thead th:nth-child(4) {
+  width: 100px;
+}
+.excel-preview-table thead th:nth-child(5) {
+  width: 250px;
+}
+.excel-preview-table thead th:nth-child(6) {
+  width: 170px;
+}
+.excel-preview-table tbody tr:nth-child(even) {
+  background: var(--color-surface);
+}
+.excel-preview-table th[scope='row'] > * {
+  display: block;
+  margin-bottom: var(--space-2);
+}
+.excel-preview-table th[scope='row'] > span:not(.numora-badge) {
+  font-weight: normal;
+  color: var(--color-text-muted);
+}
+.excel-preview-table input[type='checkbox'],
+.excel-preview-table input[type='radio'] {
+  width: 20px;
+  height: 20px;
+  min-height: 20px;
+  accent-color: var(--color-primary);
+}
+.excel-preview-table th:first-child,
+.excel-preview-table td:first-child {
+  padding-inline: 4px;
+}
+.excel-preview-table label.excel-select-control {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  min-width: 44px;
+  min-height: 44px;
+  margin: 0;
+}
+.excel-row-unselected {
+  background: var(--color-surface);
+}
+.excel-preview-stem {
+  font-weight: var(--font-medium);
+  margin-bottom: var(--space-4);
+}
+.excel-preview-options,
+.excel-category-keys {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+}
+.excel-preview-options li {
+  display: flex;
+  align-items: start;
+  gap: var(--space-2);
+  padding-block: var(--space-2);
+}
+.excel-preview-options li > div {
+  min-width: 0;
+}
+.excel-preview-table .content-preview-image {
+  display: block;
+  max-height: 160px;
+  width: auto;
+  max-width: 100%;
+  object-fit: contain;
+  margin-block: var(--space-2);
+  border-radius: var(--radius-md);
+}
+.excel-answer-options {
+  display: flex;
+  flex-wrap: wrap;
+  gap: var(--space-2);
+}
+.excel-row-actions {
+  display: grid;
+  justify-items: start;
+  gap: var(--space-3);
+}
+.excel-row-actions > span:not(.numora-badge) {
+  color: var(--color-text-muted);
+}
+.excel-issues {
+  background: var(--color-warning-light);
+  padding: var(--space-4);
+  border-radius: var(--radius-lg);
+  margin-bottom: var(--space-4);
+}
+.excel-issues li {
+  margin-block: var(--space-3);
+}
+.excel-issues li > * {
+  display: block;
+}
+.excel-question-editor {
+  max-width: 960px;
+  padding: var(--space-4);
+}
+.excel-question-editor textarea,
+.excel-question-editor input:not([type='radio']):not([type='checkbox']),
+.excel-question-editor select {
+  width: 100%;
+  min-width: 0;
+  padding: var(--space-3);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  font: inherit;
+  background: var(--color-surface-strong);
+}
+.excel-editor-options {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: var(--space-4);
+}
+.excel-dropzone {
+  padding: var(--space-6);
+  border: 2px dashed var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+.excel-dropzone-active {
+  border-color: var(--color-primary);
+}
+.excel-dropzone[aria-disabled='true'] {
+  opacity: 0.6;
+}
+.excel-question-editor .excel-choice {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  min-height: 44px;
+}
+@media (max-width: 640px) {
+  .excel-preview-card {
+    padding: var(--space-4);
+  }
+  .excel-editor-options {
+    grid-template-columns: 1fr;
+  }
+  .excel-question-editor {
+    max-width: min(900px, calc(100vw - 96px));
+    padding: 0;
+  }
+}
+
+/* Content intake uses a conventional admin form and bounded tables. */
+.admin-redesign-shell:has(.content-upload-workflow) {
+  background: #f3f4f6;
+}
+.content-upload-workflow {
+  color: #253041;
+  font-size: 14px;
+  display: grid;
+  gap: 18px;
+}
+.content-upload-workflow .upload-panel,
+.content-upload-workflow .excel-preview-card {
+  background: #fff;
+  border: 1px solid #cbd2db;
+  border-radius: 5px;
+  padding: 20px;
+  box-shadow: none;
+}
+.content-upload-workflow h2 {
+  font-size: 18px;
+  margin: 0 0 12px;
+}
+.content-upload-workflow p {
+  margin: 8px 0 16px;
+  line-height: 1.6;
+}
+.content-upload-workflow label:not(.excel-choice):not(.excel-select-control):not(.upload-confirm) {
+  display: grid;
+  gap: 7px;
+  font-weight: 500;
+}
+.content-upload-workflow input:not([type='checkbox']):not([type='radio']),
+.content-upload-workflow select,
+.content-upload-workflow textarea {
+  width: 100%;
+  min-height: 40px;
+  padding: 8px 10px;
+  border: 1px solid #aeb8c5;
+  border-radius: 4px;
+  background: #fff;
+  color: #253041;
+  font: inherit;
+}
+.content-upload-workflow input:focus-visible,
+.content-upload-workflow select:focus-visible,
+.content-upload-workflow textarea:focus-visible,
+.content-upload-workflow button:focus-visible,
+.content-upload-workflow summary:focus-visible {
+  outline: 2px solid #2563eb;
+  outline-offset: 2px;
+}
+.content-upload-workflow [aria-invalid='true'] {
+  border-color: #b42318;
+}
+.content-upload-workflow input:disabled,
+.content-upload-workflow select:disabled,
+.content-upload-workflow textarea:disabled {
+  background: #f1f3f5;
+  color: #667085;
+}
+.content-upload-workflow button {
+  border-radius: 4px;
+  min-height: 36px;
+  padding: 8px 14px;
+  box-shadow: none;
+}
+.content-upload-workflow small {
+  display: block;
+  font-weight: 400;
+  color: #667085;
+  margin-top: 5px;
+}
+.upload-tabs {
+  display: flex;
+  gap: 4px;
+  border-bottom: 1px solid #bfc8d3;
+}
+.upload-tabs button {
+  border: 1px solid transparent;
+  background: transparent;
+  color: #465367;
+}
+.upload-tabs button.is-active {
+  background: #fff;
+  border-color: #bfc8d3;
+  border-bottom-color: #fff;
+  color: #1e40af;
+  font-weight: 600;
+}
+.upload-steps {
+  display: grid;
+  grid-template-columns: repeat(4, 1fr);
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  border: 1px solid #cbd2db;
+  background: #fff;
+}
+.upload-steps li {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  padding: 12px;
+  border-right: 1px solid #d7dde5;
+  color: #667085;
+}
+.upload-steps li:last-child {
+  border-right: 0;
+}
+.upload-steps li span {
+  display: grid;
+  place-items: center;
+  width: 26px;
+  height: 26px;
+  flex-shrink: 0;
+  border: 1px solid #cbd2db;
+  border-radius: 50%;
+}
+.upload-steps li[aria-current='step'] {
+  color: #1e40af;
+  background: #eff6ff;
+  font-weight: 600;
+}
+.upload-steps li[aria-current='step'] span {
+  background: #2563eb;
+  color: white;
+  border-color: #2563eb;
+}
+.upload-fields {
+  display: grid;
+  grid-template-columns: 220px 1fr;
+  gap: 18px;
+}
+.upload-actions,
+.upload-file-summary,
+.upload-history-heading {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-top: 16px;
+}
+.upload-file-summary {
+  padding: 12px 16px;
+  border: 1px solid #cbd2db;
+  background: #fff;
+  margin: 0;
+}
+.upload-file-summary button {
+  margin-left: auto;
+}
+.upload-alert {
+  border: 1px solid #f1aaa4;
+  padding: 12px;
+  background: #fff1f0;
+  color: #912018;
+  border-radius: 4px;
+}
+.upload-alert button {
+  margin-left: 12px;
+}
+.upload-progress {
+  padding: 10px;
+  background: #eff6ff;
+  border: 1px solid #bfdbfe;
+}
+.upload-history-heading {
+  justify-content: space-between;
+  margin-top: 0;
+  margin-bottom: 18px;
+}
+.upload-history-filters {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr;
+  gap: 16px;
+  margin-bottom: 20px;
+}
+.upload-history-scroll,
+.content-upload-workflow .excel-preview-scroll {
+  overflow-x: auto;
+  width: 100%;
+}
+.upload-history-table,
+.content-upload-workflow .excel-preview-table {
+  border-collapse: collapse;
+  width: 100%;
+  min-width: 760px;
+  font-size: 13px;
+}
+.upload-history-table th,
+.upload-history-table td,
+.content-upload-workflow .excel-preview-table th,
+.content-upload-workflow .excel-preview-table td {
+  border: 1px solid #d5dbe3;
+  padding: 10px;
+  vertical-align: top;
+  text-align: left;
+  font-weight: 400;
+}
+.upload-history-table thead th,
+.content-upload-workflow .excel-preview-table thead th {
+  background: #f1f3f5;
+  font-weight: 600;
+}
+.content-upload-workflow .excel-preview-table th:nth-child(2) {
+  min-width: 260px;
+  width: 40%;
+}
+.content-upload-workflow .excel-preview-table td:nth-child(3) {
+  min-width: 160px;
+}
+.content-upload-workflow .excel-preview-table caption {
+  padding: 8px;
+  text-align: left;
+  color: #667085;
+}
+.content-upload-workflow .excel-preview-table p {
+  margin: 6px 0;
+}
+.content-upload-workflow details {
+  margin-top: 10px;
+}
+.content-upload-workflow summary {
+  cursor: pointer;
+  color: #1e40af;
+  padding: 8px 0;
+}
+.content-upload-workflow .excel-dropzone {
+  border: 2px dashed #aeb8c5;
+  background: #f8fafc;
+  border-radius: 4px;
+  margin-top: 20px;
+  padding: 24px;
+}
+.content-upload-workflow .excel-dropzone-active {
+  border-color: #2563eb;
+  background: #eff6ff;
+}
+.content-upload-workflow .excel-row-actions {
+  display: grid;
+  gap: 8px;
+}
+.content-upload-workflow .excel-preview-table img {
+  max-width: 240px;
+  max-height: 180px;
+  object-fit: contain;
+}
+.upload-checklist {
+  list-style: none;
+  padding: 0;
+  margin: 16px 0;
+}
+.upload-checklist li {
+  display: flex;
+  gap: 12px;
+  padding: 9px 0;
+  border-bottom: 1px solid #e4e7ec;
+}
+.upload-checklist span,
+.upload-status {
+  display: inline-block;
+  border: 1px solid #cbd2db;
+  border-radius: 4px;
+  padding: 2px 7px;
+  font-size: 12px;
+  white-space: nowrap;
+}
+.upload-checklist .is-valid,
+.upload-status-published,
+.upload-status-validated {
+  color: #166534;
+  background: #f0fdf4;
+  border-color: #86c99b;
+}
+.upload-checklist .is-pending,
+.upload-status-invalid {
+  color: #92400e;
+  background: #fffbeb;
+  border-color: #e6bf75;
+}
+.upload-package-summary {
+  display: grid;
+  grid-template-columns: 2fr 1fr 1fr 1fr;
+  border: 1px solid #d5dbe3;
+  margin: 16px 0;
+}
+.upload-package-summary div {
+  padding: 12px;
+}
+.upload-package-summary dt {
+  color: #667085;
+  font-size: 12px;
+}
+.upload-package-summary dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+}
+.upload-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  margin-top: 20px;
+  line-height: 1.5;
+}
+.upload-confirm input {
+  margin-top: 4px;
+  flex-shrink: 0;
+}
+@media (max-width: 720px) {
+  .upload-steps {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .upload-steps li {
+    font-size: 12px;
+    border-bottom: 1px solid #d7dde5;
+  }
+  .upload-fields,
+  .upload-history-filters {
+    grid-template-columns: 1fr;
+  }
+  .upload-package-summary {
+    grid-template-columns: repeat(2, 1fr);
+  }
+  .content-upload-workflow .upload-panel,
+  .content-upload-workflow .excel-preview-card {
+    padding: 12px;
+  }
+  .upload-file-summary {
+    align-items: flex-start;
+  }
+}
+/* Override the former fixed six-column widths, which collapse the new stem column. */
+.content-upload-workflow,
+.content-upload-workflow .upload-panel,
+.content-upload-workflow .excel-preview-card {
+  min-width: 0;
+}
+.content-upload-workflow .excel-preview-table {
+  table-layout: auto;
+}
+.content-upload-workflow .excel-preview-table thead th:nth-child(n) {
+  width: auto;
+}
+.content-upload-workflow .excel-preview-table thead th:nth-child(1) {
+  width: 52px;
+}
+.content-upload-workflow .excel-preview-table thead th:nth-child(2) {
+  width: 36%;
+}
+.admin-redesign-shell:has(.content-upload-workflow) .admin-page-header {
+  background: #fff;
+  color: #253041;
+  border: 1px solid #cbd2db;
+  border-radius: 5px;
+  box-shadow: none;
+}
+.admin-redesign-shell:has(.content-upload-workflow) .admin-header-icon {
+  background: #eef2f7;
+  border-radius: 4px;
+}
+.admin-redesign-shell:has(.content-upload-workflow) .admin-page-header h1 {
+  font-size: 24px;
+  letter-spacing: normal;
+}
+.content-upload-workflow {
+  --radius-md: 4px;
+  --color-primary: #2563eb;
+  --color-primary-hover: #1d4ed8;
+  --color-primary-strong: #1e40af;
+  --color-primary-light: #eff6ff;
+}
+.content-upload-workflow .numora-button--secondary {
+  background: #fff;
+  color: #344054;
+  border: 1px solid #aeb8c5;
+}
+
+.content-upload-workflow .upload-mapping-panel {
+  border: 1px solid #cbd5e1;
+  border-radius: 4px;
+  padding: 14px;
+  margin: 12px 0;
+  background: #fff;
+}
+.content-upload-workflow .upload-mapping-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.content-upload-workflow .upload-mapping-panel .upload-fields {
+  margin-top: 12px;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 320px), 1fr));
+}
+
+.admin-generator-form {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.admin-generator-form select,
+.admin-generator-form input {
+  width: 100%;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  background: white;
+  color: inherit;
+}
+.admin-generator-history {
+  display: grid;
+  gap: 16px;
+  margin-top: 20px;
+}
+.admin-generator-link {
+  display: inline-flex;
+  align-items: center;
+  padding: 10px 16px;
+  border-radius: 8px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+  font-weight: 600;
 }

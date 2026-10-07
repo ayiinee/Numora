@@ -33,9 +33,12 @@ export class ExcelAssetDto implements ContentAsset {
 }
 export class ExcelMetadataDto {
   [key: string]: unknown;
-  @ApiProperty() sourceLevelNumber!: number;
+  @ApiProperty({ type: Number, nullable: true }) sourceLevelNumber!: number | null;
   @ApiPropertyOptional() sourceOrder?: number;
   @ApiPropertyOptional() sourceQuestionId?: string;
+  @ApiPropertyOptional({ type: String }) chapterName?: string | undefined;
+  @ApiPropertyOptional({ type: String }) subchapterName?: string | undefined;
+  @ApiPropertyOptional({ type: String }) competencyName?: string | undefined;
   @ApiProperty() sourceSheet!: string;
   @ApiProperty() sourceRowNumber!: number;
   @ApiProperty({ type: [ExcelAssetDto] }) assetManifest!: ExcelAssetDto[];
@@ -45,9 +48,9 @@ export class ExcelQuestionDto implements ImportQuestion {
   @ApiProperty() externalId!: string;
   @ApiProperty({ enum: ['SINGLE_CHOICE', 'MULTIPLE_CHOICE_MULTIPLE_ANSWER', 'CATEGORY'] })
   type!: ContentKind;
-  @ApiProperty() chapterCode!: string;
-  @ApiProperty() subchapterCode!: string;
-  @ApiProperty() competencyCode!: string;
+  @ApiProperty({ type: String, nullable: true }) chapterCode!: string | null;
+  @ApiProperty({ type: String, nullable: true }) subchapterCode!: string | null;
+  @ApiProperty({ type: String, nullable: true }) competencyCode!: string | null;
   @ApiProperty({ type: String, nullable: true, enum: ['EASY', 'MEDIUM', 'HARD'] })
   difficulty!: Exclude<ImportQuestion['difficulty'], undefined>;
   @ApiProperty({ type: RichContentDto }) stem!: RichContentDto;
@@ -70,6 +73,7 @@ export class ExcelIssueDto {
   @ApiProperty() detail!: string;
 }
 export class ExcelMediaDto {
+  @ApiPropertyOptional() url?: string;
   @ApiProperty() externalId!: string;
   @ApiProperty() assetId!: string;
   @ApiProperty({ description: 'Exact embedded bytes, separate from the import JSON.' })

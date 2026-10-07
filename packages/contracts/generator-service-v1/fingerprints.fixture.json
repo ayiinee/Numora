@@ -1,0 +1,232 @@
+[
+  {
+    "name": "pg-latex",
+    "input": {
+      "questionType": "SINGLE_CHOICE",
+      "stem": {
+        "text": "Tentukan nilai \\(x\\) jika \\(x+2=5\\)."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionId": "B"
+      },
+      "explanation": {
+        "text": "\\[x=5-2=3\\]"
+      },
+      "media": [],
+      "difficulty": "EASY",
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001"
+    },
+    "canonical": "{\"answerKey\":{\"optionId\":\"B\"},\"difficulty\":\"EASY\",\"explanation\":{\"text\":\"\\\\[x=5-2=3\\\\]\"},\"media\":[],\"optionsOrStatements\":{\"categories\":[],\"options\":[{\"content\":{\"text\":\"2\"},\"id\":\"A\"},{\"content\":{\"text\":\"3\"},\"id\":\"B\"},{\"content\":{\"text\":\"5\"},\"id\":\"C\"}]},\"questionType\":\"SINGLE_CHOICE\",\"rubricVersionId\":\"00000000-0000-4000-8000-000000000001\",\"stem\":{\"text\":\"Tentukan nilai \\\\(x\\\\) jika \\\\(x+2=5\\\\).\"}}",
+    "sha256": "42271ddfad0f20ee80061ddc5c43a4e1a47a3b72cf18c7288afd461ec53b1bb2"
+  },
+  {
+    "name": "mcma",
+    "input": {
+      "questionType": "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+      "stem": {
+        "text": "Pilih bilangan prima."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2"
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "3"
+            }
+          },
+          {
+            "id": "C",
+            "content": {
+              "text": "5"
+            }
+          }
+        ],
+        "categories": []
+      },
+      "answerKey": {
+        "optionIds": [
+          "A",
+          "B",
+          "C"
+        ]
+      },
+      "explanation": {
+        "text": "2, 3, dan 5 adalah bilangan prima."
+      },
+      "media": [],
+      "difficulty": "EASY",
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001"
+    },
+    "canonical": "{\"answerKey\":{\"optionIds\":[\"A\",\"B\",\"C\"]},\"difficulty\":\"EASY\",\"explanation\":{\"text\":\"2, 3, dan 5 adalah bilangan prima.\"},\"media\":[],\"optionsOrStatements\":{\"categories\":[],\"options\":[{\"content\":{\"text\":\"2\"},\"id\":\"A\"},{\"content\":{\"text\":\"3\"},\"id\":\"B\"},{\"content\":{\"text\":\"5\"},\"id\":\"C\"}]},\"questionType\":\"MULTIPLE_CHOICE_MULTIPLE_ANSWER\",\"rubricVersionId\":\"00000000-0000-4000-8000-000000000001\",\"stem\":{\"text\":\"Pilih bilangan prima.\"}}",
+    "sha256": "b7dcb9064e01e59099e0dde33ddfa0ce3f6a101e3bcc1b37f37a179a063dbf9f"
+  },
+  {
+    "name": "category-boolean",
+    "input": {
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "Kategorikan pernyataan berikut."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2 adalah bilangan prima."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4 adalah bilangan prima."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "true",
+            "label": "Benar"
+          },
+          {
+            "id": "false",
+            "label": "Salah"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "true",
+          "B": "false"
+        }
+      },
+      "explanation": {
+        "text": "Pernyataan A benar dan B salah."
+      },
+      "media": [],
+      "difficulty": null,
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001"
+    },
+    "canonical": "{\"answerKey\":{\"categoryByStatementId\":{\"A\":\"true\",\"B\":\"false\"}},\"difficulty\":null,\"explanation\":{\"text\":\"Pernyataan A benar dan B salah.\"},\"media\":[],\"optionsOrStatements\":{\"categories\":[{\"id\":\"true\",\"label\":\"Benar\"},{\"id\":\"false\",\"label\":\"Salah\"}],\"options\":[{\"content\":{\"text\":\"2 adalah bilangan prima.\"},\"id\":\"A\"},{\"content\":{\"text\":\"4 adalah bilangan prima.\"},\"id\":\"B\"}]},\"questionType\":\"CATEGORY\",\"rubricVersionId\":\"00000000-0000-4000-8000-000000000001\",\"stem\":{\"text\":\"Kategorikan pernyataan berikut.\"}}",
+    "sha256": "66c8cb2153f28ed532eadfa869a3b82976878c7254c392e59d3de394df213b7c"
+  },
+  {
+    "name": "category-custom",
+    "input": {
+      "questionType": "CATEGORY",
+      "stem": {
+        "text": "Kategorikan pernyataan berikut."
+      },
+      "optionsOrStatements": {
+        "options": [
+          {
+            "id": "A",
+            "content": {
+              "text": "2 adalah bilangan prima."
+            }
+          },
+          {
+            "id": "B",
+            "content": {
+              "text": "4 adalah bilangan prima."
+            }
+          }
+        ],
+        "categories": [
+          {
+            "id": "sesuai",
+            "label": "Sesuai"
+          },
+          {
+            "id": "tidak_sesuai",
+            "label": "Tidak Sesuai"
+          }
+        ]
+      },
+      "answerKey": {
+        "categoryByStatementId": {
+          "A": "sesuai",
+          "B": "tidak_sesuai"
+        }
+      },
+      "explanation": {
+        "text": "Pernyataan A sesuai dan B tidak sesuai."
+      },
+      "media": [],
+      "difficulty": null,
+      "rubricVersionId": "00000000-0000-4000-8000-000000000001"
+    },
+    "canonical": "{\"answerKey\":{\"categoryByStatementId\":{\"A\":\"sesuai\",\"B\":\"tidak_sesuai\"}},\"difficulty\":null,\"explanation\":{\"text\":\"Pernyataan A sesuai dan B tidak sesuai.\"},\"media\":[],\"optionsOrStatements\":{\"categories\":[{\"id\":\"sesuai\",\"label\":\"Sesuai\"},{\"id\":\"tidak_sesuai\",\"label\":\"Tidak Sesuai\"}],\"options\":[{\"content\":{\"text\":\"2 adalah bilangan prima.\"},\"id\":\"A\"},{\"content\":{\"text\":\"4 adalah bilangan prima.\"},\"id\":\"B\"}]},\"questionType\":\"CATEGORY\",\"rubricVersionId\":\"00000000-0000-4000-8000-000000000001\",\"stem\":{\"text\":\"Kategorikan pernyataan berikut.\"}}",
+    "sha256": "a5517f1fc41009c5115b9eabc82a41781667a279369faf014f6da9dd25f12a4a"
+  },
+  {
+    "name": "unicode",
+    "input": {
+      "text": "Soal: \\(x^2\\)\nSesuai — π 😀",
+      "categories": [
+        {
+          "id": "true",
+          "label": "Benar"
+        },
+        {
+          "id": "false",
+          "label": "Salah"
+        }
+      ]
+    },
+    "canonical": "{\"categories\":[{\"id\":\"true\",\"label\":\"Benar\"},{\"id\":\"false\",\"label\":\"Salah\"}],\"text\":\"Soal: \\\\(x^2\\\\)\\nSesuai — π 😀\"}",
+    "sha256": "c58e4b2799eeed3571f03cd75163bfd3be967defb68a7227ce353c908dd0c2a3"
+  },
+  {
+    "name": "keys",
+    "input": {
+      "z": true,
+      "a": null,
+      "n": 123,
+      "map": {
+        "2": "yes",
+        "1": "no"
+      }
+    },
+    "canonical": "{\"a\":null,\"map\":{\"1\":\"no\",\"2\":\"yes\"},\"n\":123,\"z\":true}",
+    "sha256": "c463affe1f5323c5fb5fcb75f45c26a4e5fcea741d947c86f71db4237ca56096"
+  },
+  {
+    "name": "utf16-order",
+    "input": {
+      "": "bmp",
+      "😀": "supplementary",
+      "line": "a\n\tb"
+    },
+    "canonical": "{\"line\":\"a\\n\\tb\",\"😀\":\"supplementary\",\"\":\"bmp\"}",
+    "sha256": "936b8c6ba96e9361b714f9af91a58b6e5faec43f81647bb19c0e5be027c3963c"
+  }
+]

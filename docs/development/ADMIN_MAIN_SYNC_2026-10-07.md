@@ -1,6 +1,6 @@
 # Admin Content and Operations - main synchronization
 
-**ENGINEERING UPDATE - 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72-#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `fe01103` (PR #93), including compact Student empty cards and the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
+**ENGINEERING UPDATE - 7 October 2026.** User-authorized consolidation of the Admin full-stack foundation, Content workspace (PR #89), and Operations workspace/functionality with main. This PR includes the still-unmerged foundation PRs #72-#79: it cannot be reviewed or deployed as a presentation-only change. Latest integrated main: `8d27bed` (PR #94), after PR #93 and #95, including compact Student empty cards and the owner-approved Chapter 3 Drill allowlist and bounded grading/reward exception; other packages retain approved-policy/rubric gates. Source branch `feat/admin-content-workspace` and backup branch are retained. Existing PRs are not closed or merged by this operation.
 
 ## Integration decisions
 
@@ -18,19 +18,19 @@
 
 ## Migration compatibility
 
-The canonical main migration prefix `0000`-`0030` is unchanged. Admin branch migrations are appended as follows; SQL bytes/hashes remain identical to the original branch.
+The canonical main migration prefix `0000`-`0038` is unchanged. Admin branch migrations are appended as follows; SQL bytes/hashes remain identical to the original branch.
 
 | Published Admin branch tag                  | Canonical appended tag                      |
 | ------------------------------------------- | ------------------------------------------- |
-| `0028_admin_invitations`                    | `0031_admin_invitations`                    |
-| `0029_admin_recovery_operations`            | `0032_admin_recovery_operations`            |
-| `0030_content_revision_guard`               | `0033_content_revision_guard`               |
-| `0031_historical_report_context`            | `0034_historical_report_context`            |
-| `0032_assessment_policy_approval`           | `0035_assessment_policy_approval`           |
-| `0033_partial_reward_provenance`            | `0036_partial_reward_provenance`            |
-| `0034_admin_authored_package_pins`          | `0037_admin_authored_package_pins`          |
-| `0035_pretest_blueprint_approval`           | `0038_pretest_blueprint_approval`           |
-| `0036_legacy_package_fixture_compatibility` | `0039_legacy_package_fixture_compatibility` |
+| `0028_admin_invitations`                    | `0039_admin_invitations`                    |
+| `0029_admin_recovery_operations`            | `0040_admin_recovery_operations`            |
+| `0030_content_revision_guard`               | `0041_content_revision_guard`               |
+| `0031_historical_report_context`            | `0042_historical_report_context`            |
+| `0032_assessment_policy_approval`           | `0043_assessment_policy_approval`           |
+| `0033_partial_reward_provenance`            | `0044_partial_reward_provenance`            |
+| `0034_admin_authored_package_pins`          | `0045_admin_authored_package_pins`          |
+| `0035_pretest_blueprint_approval`           | `0046_pretest_blueprint_approval`           |
+| `0036_legacy_package_fixture_compatibility` | `0047_legacy_package_fixture_compatibility` |
 
 The normal integrated migrator recognizes only the known published Admin fork (canonical prefix and known hashes/timestamps), uses the existing exclusive transaction lock, applies missing main DDL and records the canonical cursor for already-applied Admin hashes without replaying their DDL or rewriting old history rows. Unknown histories fail before mutation. Rehearsal fixture: `packages/database/staging/fixtures/admin-stack-branch`; it is not an alternate deployment command.
 
@@ -42,7 +42,7 @@ PR #92 consolidates this work against main `fe01103`. Verification below disting
 
 The Pretest Student consumer now exists in main; remaining Pretest gates concern approved blueprint/rubric pins and consumer/environment acceptance, not an absent frontend. Curriculum approvals, Data/AI respondent producer/mapping/fallback evidence, real SMTP/invite delivery, R2/CORS and independent sandbox QA remain external gates. No demo reseeding, credential rotation or live email/media write is included.
 
-### Recorded local checks
+### Historical local checks before PR #94 integration
 
 - Canonical migration SQL byte comparison: all 31 main files and nine original Admin files identical; unknown migration histories fail closed.
 - PostgreSQL: 52/52 database tests, including 18 migration/history scenarios; schema check 112 expected tables/columns and RLS; normal upgrade and historical Staging bridge checks pass. No additional DDL generated from the merged snapshots.
@@ -60,3 +60,17 @@ CI run `37546155211` on `39e9e5b` passed contracts, lint, typecheck, tests, conn
 Main subsequently advanced to `b508da0` (PR #95). The integration retains its opt-in DEMO PvP content mode and notice, imported option-wrapper compatibility and tests, alongside all Admin changes. The three context-document conflicts retain both Admin and PvP decisions. Contracts and generated types pass after this merge; final head CI remains the merge gate.
 
 Strict API typecheck exposed an implicit `any[]` in PR #95's temporary-bank integration fixture. An explicit array type derived from `addQuestion` fixes the test compilation without changing its assertions or production PvP behavior. The new head must pass the full connected CI before merge.
+
+### PR #94 integration and acceptance
+
+Main `8d27bed` adds upload-first Excel V5, tracked upload sessions/history/recovery, nullable Tryout material and difficulty, generator handoff/quality checks, and explicit synthetic-content opt-in. These paths are retained. The hardened JSON/internal-preview editor remains available at `/admin/content/imports?mode=json`; existing browser tests use that route, while upload-first tests retain the default route. Lifecycle and package review use their validated payload families on one route.
+
+Owner decisions dated 7 October in [UPLOAD_FIRST_WORKFLOW.md](../content/UPLOAD_FIRST_WORKFLOW.md) supersede the earlier Tryout schedule/partial-scoring assumptions: release now or at a future requested time, fixed 10-minute duration, seven days minus one minute per batch, nullable/non-archived material, and the exact version-1 `TRYOUT_PGK_PARTIAL_V1` rubric. Legacy Tryout authoring now follows those decisions too. Explicitly approved lookup rubrics remain supported for their pinned generic policy; the new owner rubric does not authorize Drill PGK or arbitrary scoring policy changes. Decimal Tryout XP is based on stored rounded points. Wrong/missing/changed policy or rubric pins fail closed.
+
+Legacy Drill/Tryout publication requires an explicit Curriculum approval reference, complete reviewed content and an approved scoring policy. Its transaction records a SEALED blueprint, approval reference/actor/time/digest and immutable editorial item pins. Editorial manifests are distinct from scientific frozen packages: no statistical quality result is fabricated and generator candidate READY/HOLD/RETIRED checks remain enforced through `package_can_distribute`. New distribution accepts only the explicit server-created `ADMIN_EDITORIAL_REVIEW_V1` approval source, matching manifest and SEALED blueprint; null assignment, unavailable approval and synthetic opt-out remain denied. Existing owned attempts retain historical pins.
+
+Canonical migration prefix: all 39 main SQL files unchanged; nine Admin SQL files appended as 0039–0047 with identical original bytes. Snapshots/journal reconcile to 114 schema tables without generating additional DDL. The isolated PostgreSQL rehearsal upgraded the previously applied Admin chain into this canonical chain: migrations succeeded, schema/RLS checks passed, and database tests passed 56/56. No Cloud migration, seed, email, media or credential mutation was performed.
+
+Pagination and existing Content/Operations role-scoped layouts are retained. The initial merged web run found one missing material pagination footer; the existing component was restored and its regression passed. The initial API run exposed the distinction between editorial approval and scientific frozen quality; the explicit editorial approval path above resolves it without inventing Data results. Tests now mark synthetic fixtures before publication rather than mutating immutable published provenance.
+
+Final combined head CI, connected PostgreSQL/Redis chains, browser suite, build and OpenAPI freshness are mandatory before merge. Earlier green CI `37551720373` on `430d017` certifies the previous PR #95 integration only. Current-head evidence must be verified independently. Cloud SMTP/R2/Data handoff and independent QA remain separate acceptance gates.

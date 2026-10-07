@@ -177,6 +177,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const bad = await fetch(`${url}/api/v1/leaderboards/pvp?difficulty=invalid`, { headers });
     expect(bad.status).toBe(400);
     const { db } = getDatabase();
+    process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
     process.env.PVP_MODE = 'demo';
     const p = leaderboardPeriod(new Date());
     await db.insert(leaderboardPeriods).values(p).onConflictDoNothing();

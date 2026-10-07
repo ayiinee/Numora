@@ -1,5 +1,7 @@
-import { editorialPackageDigest } from './editorial-package-digest';
+import { approveEditorialPackage } from './editorial-package-approval';
 import { compactDemoVersionIds, demoCatalogVersion } from './content-demo-catalog';
+import { decodeAssessmentContent } from '@tka/assessment-engine';
+import { presentFixtureText } from '@tka/database';
 import {
   BadRequestException,
   ConflictException,
@@ -24,11 +26,11 @@ import {
   subchapters,
   videoSubchapterMappings,
   tryoutBatches,
+  tryoutBatchCloseAt,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
 import { assertPackageUsage } from './content-package.rules';
-import { isJakartaMondayMidnight } from '../learning/tryout.policy';
 import { databaseTime } from '@tka/assessment-engine';
 import { AssessmentPoliciesService } from './assessment-policies.service';
 import { AssessmentReadinessService } from './assessment-readiness.service';
@@ -85,6 +87,18 @@ function text(value: unknown): string {
     ? value.text
     : '';
 }
+function presentationText(
+  version: typeof questionVersions.$inferSelect,
+  field: 'stem' | 'explanation',
+) {
+  const value = text(version[field]);
+  try {
+    decodeAssessmentContent(version);
+  } catch {
+    return value;
+  } // Invalid drafts remain visible for correction without branding overrides.
+  return presentFixtureText(version.id, field, value);
+}
 function optionsFrom(value: unknown): { id: string; text: string }[] {
   if (value && typeof value === 'object' && 'options' in value) value = value.options;
   return Array.isArray(value)
@@ -103,7 +117,7 @@ function optionsFrom(value: unknown): { id: string; text: string }[] {
 }
 function versionValues(input: QuestionContentDto) {
   if (new Set(input.options.map((option) => option.id)).size !== 4)
-    throw new BadRequestException('Opsi A–D harus unik.');
+    throw new BadRequestException('Opsi Aâ€“D harus unik.');
   return {
     questionType: 'SINGLE_CHOICE' as const,
     stem: { text: input.stem.trim() },
@@ -278,8 +292,15 @@ export class ContentService {
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-      .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
-      .innerJoin(subchapters, eq(subchapters.id, competencies.subchapterId))
+      .leftJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+      .leftJoin(levels, eq(levels.id, questionVersions.levelId))
+      .leftJoin(
+        subchapters,
+        eq(
+          subchapters.id,
+          sql`coalesce(${questions.subchapterId},${levels.subchapterId},${competencies.subchapterId})`,
+        ),
+      )
       .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
       .leftJoin(
         contentImportVersions,
@@ -293,7 +314,9 @@ export class ContentService {
               ? eq(questions.usageType, page.usageType)
               : undefined,
           page.status ? eq(questionVersions.contentStatus, page.status) : undefined,
-          page.chapterId ? eq(subchapters.chapterId, page.chapterId) : undefined,
+          page.chapterId
+            ? sql`coalesce(${questions.chapterId},${subchapters.chapterId}) = ${page.chapterId}`
+            : undefined,
           page.source
             ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
             : undefined,
@@ -336,7 +359,7 @@ export class ContentService {
             variantCode: variant.variantCode,
             versionNumber: v.versionNumber,
             questionType: v.questionType,
-            stem: text(v.stem),
+            stem: presentationText(v, 'stem'),
             imported: imported !== null,
             variantKind: variant.kind,
             originalVariantId: variant.originalVariantId,
@@ -348,7 +371,7 @@ export class ContentService {
               typeof v.answerKey.optionId === 'string'
                 ? v.answerKey.optionId
                 : null,
-            explanation: text(v.explanation),
+            explanation: presentationText(v, 'explanation'),
             difficulty: v.difficulty,
             contentStatus: v.contentStatus,
             questionStatus: q.status,
@@ -485,8 +508,11 @@ export class ContentService {
             .values({
               ...values,
               variantId: source.variantId,
-              versionNumber: (last?.number ?? 0) + 1,
+              parentOriginalQuestionVersionId: source.parentOriginalQuestionVersionId,
+              scoringRubricVersionId: source.scoringRubricVersionId,
               revisedFromQuestionVersionId: source.id,
+              levelId: source.levelId,
+              versionNumber: (last?.number ?? 0) + 1,
             })
             .returning({ id: questionVersions.id })
         )[0],
@@ -545,7 +571,8 @@ export class ContentService {
         )
           throw new ConflictException({
             code: 'IMPORTED_VERSION_READ_ONLY',
-            detail: 'Imported content remains DRAFT; use JSON reimport for a new version.',
+            detail:
+              'Tinjau dan terbitkan soal impor melalui paket; unggah ulang Excel untuk revisi baru.',
           });
         if (version.contentStatus === status) return { id };
         if (status !== 'READY') {
@@ -852,12 +879,11 @@ export class ContentService {
   }
   publishPackage(actor: string, id: string, body: PublishTryoutPackageDto) {
     return adminMutation(actor, 'tryout_package_published', 'assessment_package', async (tx) => {
-      const releaseAt = new Date(body.releaseAt);
-      if (!isJakartaMondayMidnight(releaseAt))
-        throw new ConflictException({
-          code: 'TRYOUT_BATCH_WINDOW_INVALID',
-          detail: 'Batch harus mulai Senin 00:00 WIB.',
-        });
+      const now = await databaseTime(tx);
+      const requested = body.releaseAt ? new Date(body.releaseAt) : now;
+      if (!Number.isFinite(requested.getTime()))
+        throw new BadRequestException({ code: 'TRYOUT_SCHEDULE_INVALID' });
+      const releaseAt = requested > now ? requested : now;
       await tx.execute(
         sql`select pg_advisory_xact_lock(hashtext('admin:tryout-publish'), hashtext(${releaseAt.toISOString()}))`,
       );
@@ -869,22 +895,14 @@ export class ContentService {
       if (!row) throw new NotFoundException({ code: 'TRYOUT_PACKAGE_NOT_FOUND' });
       if (row.status === 'PUBLISHED') {
         if (
-          row.releaseAt?.getTime() !== releaseAt.getTime() ||
-          row.durationSeconds !== body.durationSeconds ||
+          (body.releaseAt && row.releaseAt?.getTime() !== requested.getTime() && requested > now) ||
+          row.durationSeconds !== 600 ||
           row.scoringPolicyVersionId !== body.scoringPolicyVersionId
         )
           throw new ConflictException({ code: 'TRYOUT_PUBLICATION_CONFLICT' });
         return { id };
       }
       if (row.status !== 'DRAFT') throw new ConflictException({ code: 'TRYOUT_PACKAGE_IMMUTABLE' });
-      const now = await databaseTime(tx);
-      if (releaseAt < now) throw new ConflictException({ code: 'TRYOUT_BATCH_ALREADY_STARTED' });
-      const [sameBatch] = await tx
-        .select({ id: tryoutBatches.id })
-        .from(tryoutBatches)
-        .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatches.packageId))
-        .where(and(eq(tryoutBatches.startsAt, releaseAt), eq(assessmentPackages.isDemo, false)));
-      if (sameBatch) throw new ConflictException({ code: 'TRYOUT_BATCH_PACKAGE_EXISTS' });
       const policy = await this.policies.require(tx, body.scoringPolicyVersionId, 'TRYOUT');
       const items = await tx
         .select()
@@ -911,7 +929,13 @@ export class ContentService {
               eq(packageItems.questionVersionId, pin.questionVersionId),
             ),
           );
-      const closeAt = new Date(releaseAt.getTime() + 7 * 24 * 60 * 60 * 1000);
+      const closeAt = tryoutBatchCloseAt(releaseAt);
+      const approval = await approveEditorialPackage(
+        tx,
+        actor,
+        row,
+        body.curriculumApprovalReference,
+      );
       await tx
         .update(assessmentPackages)
         .set({
@@ -919,8 +943,8 @@ export class ContentService {
           scoringPolicyVersionId: body.scoringPolicyVersionId,
           releaseAt,
           closeAt,
-          durationSeconds: body.durationSeconds,
-          manifestDigest: await editorialPackageDigest(tx, id),
+          durationSeconds: 600,
+          ...approval,
         })
         .where(eq(assessmentPackages.id, id));
       await tx.insert(tryoutBatches).values({

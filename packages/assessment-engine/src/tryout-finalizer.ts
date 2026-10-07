@@ -22,6 +22,11 @@ import {
 } from './rich-question.js';
 import { readApprovedPolicy, roundPolicy } from './approved-policy.js';
 import { TRYOUT_XP_POLICY } from './tryout-reward.js';
+import {
+  TRYOUT_PARTIAL_POLICY,
+  tryoutCorrectFraction,
+  validateTryoutPartialRubric,
+} from './tryout-partial.js';
 
 type Request =
   | { kind: 'manual'; attemptId: string; studentId: string }
@@ -75,6 +80,7 @@ export async function finalizeTryout(request: Request) {
         id: attemptItems.id,
         maxPoints: attemptItems.maxPoints,
         rubricVersionId: attemptItems.rubricVersionId,
+        versionRubricVersionId: questionVersions.scoringRubricVersionId,
         questionType: questionVersions.questionType,
         stem: questionVersions.stem,
         optionsOrStatements: questionVersions.optionsOrStatements,
@@ -88,7 +94,21 @@ export async function finalizeTryout(request: Request) {
       .where(eq(attemptItems.attemptId, attempt.id));
     if (!rows.length)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.');
-    if (packageRow?.isDemo && rows.some((row) => row.questionType !== 'SINGLE_CHOICE')) {
+    const [policyRow] = attempt.scoringPolicyVersionId
+      ? await tx
+          .select()
+          .from(scoringPolicyVersions)
+          .where(eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId))
+      : [];
+    const partialPolicy =
+      policyRow?.policyCode === TRYOUT_PARTIAL_POLICY
+        ? readApprovedPolicy(policyRow, 'TRYOUT', true).ownerTryoutPartial === true
+        : false;
+    if (
+      !partialPolicy &&
+      packageRow?.isDemo &&
+      rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
+    ) {
       const [pack] = await tx
         .select({ isDemo: assessmentPackages.isDemo })
         .from(assessmentPackages)
@@ -130,30 +150,22 @@ export async function finalizeTryout(request: Request) {
         },
         now,
       );
-      await tx
-        .insert(analyticsOutbox)
-        .values({
-          eventName: 'tryout_completed',
-          actorUserId: attempt.studentId,
-          entityType: 'assessmentAttempt',
-          entityId: attempt.id,
-          correlationId: attempt.id,
-          occurredAt: now,
-          payload: {
-            packageId: attempt.packageId,
-            gradingState: 'WAITING_RUBRIC',
-            isDemo: true,
-            xp: null,
-          },
-        });
+      await tx.insert(analyticsOutbox).values({
+        eventName: 'tryout_completed',
+        actorUserId: attempt.studentId,
+        entityType: 'assessmentAttempt',
+        entityId: attempt.id,
+        correlationId: attempt.id,
+        occurredAt: now,
+        payload: {
+          packageId: attempt.packageId,
+          gradingState: 'WAITING_RUBRIC',
+          isDemo: true,
+          xp: null,
+        },
+      });
       return { finalized: true, reason: expired ? ('deadline' as const) : ('manual' as const) };
     }
-    const [policyRow] = attempt.scoringPolicyVersionId
-      ? await tx
-          .select()
-          .from(scoringPolicyVersions)
-          .where(eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId))
-      : [];
     if (!packageRow?.isDemo && !policyRow)
       throw new AssessmentFinalizationError(
         'ASSESSMENT_POLICY_APPROVAL_REQUIRED',
@@ -164,7 +176,12 @@ export async function finalizeTryout(request: Request) {
         ? null
         : readApprovedPolicy(policyRow!, 'TRYOUT', true);
     const rubricIds = [
-      ...new Set(rows.flatMap((row) => (row.rubricVersionId ? [row.rubricVersionId] : []))),
+      ...new Set(
+        rows.flatMap((row) => {
+          const id = row.rubricVersionId ?? (partialPolicy ? row.versionRubricVersionId : null);
+          return id ? [id] : [];
+        }),
+      ),
     ];
     const rubrics = rubricIds.length
       ? await tx
@@ -173,6 +190,27 @@ export async function finalizeTryout(request: Request) {
           .where(inArray(scoringRubricVersions.id, rubricIds))
       : [];
     const grades = rows.map((row) => {
+      if (partialPolicy) {
+        const content = decodeAssessmentContent(row);
+        if (content.type !== 'SINGLE_CHOICE')
+          validateTryoutPartialRubric(
+            content,
+            rubrics.find((r) => r.id === (row.rubricVersionId ?? row.versionRubricVersionId)),
+          );
+        const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
+        const fraction = tryoutCorrectFraction(content, answer);
+        return {
+          id: row.id,
+          answer,
+          maximum: Number(row.maxPoints),
+          equivalent: fraction,
+          correct: fraction === 1,
+          scoreCategory: Math.round(
+            fraction * (content.type === 'SINGLE_CHOICE' ? 1 : content.options.length),
+          ),
+          points: Math.round(fraction * Number(row.maxPoints) * 100) / 100,
+        };
+      }
       const content = decodeRuntimeQuestion(row),
         answer = validateRuntimeAnswer(content, row.answer ?? null);
       const maximum = Number(row.maxPoints);
@@ -244,7 +282,14 @@ export async function finalizeTryout(request: Request) {
       from public.attempt_items ai join public.attempt_answers aa on aa.attempt_item_id=ai.id where ai.attempt_id=${attempt.id}
     `)
         : [];
-    const xp = reward ? Number(reward.xp) : null;
+    const xp =
+      partialPolicy && attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version
+        ? Number(
+            (grades.reduce((sum, grade) => sum + grade.points / grade.maximum, 0) * 10).toFixed(6),
+          )
+        : reward
+          ? Number(reward.xp)
+          : null;
     if (xp !== null)
       await tx.insert(xpLedger).values({
         studentId: attempt.studentId,

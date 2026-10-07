@@ -1,7 +1,7 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
 import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
 import { ContentPreviewScreen } from './content-preview';
-import { ContentImportScreen } from './content-import';
+import { JsonContentImportScreen as ContentImportScreen } from './content-import-json';
 import { ContentRichText } from './content-rich-text';
 import { ApiProblem } from '@/lib/api';
 import {
@@ -13,7 +13,7 @@ import {
   submitPreview,
   validateImport,
 } from './content-preview-api';
-import type { PreviewSessionDto, ExcelQuestionDto } from './generated-types';
+import type { PreviewSessionDto, ExcelQuestionDto, ExcelEnvelopeDto } from './generated-types';
 import { downloadFile, parseExcelFile, uploadExcelMedia } from './content-excel-api';
 vi.mock('./content-package-workspace', () => ({
   ContentPackageWorkspace: ({ onSelect }: { onSelect: (p: unknown) => void }) => (
@@ -242,7 +242,9 @@ describe('internal content preview and importer', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Impor sebagai DRAFT' }));
     await screen.findByText('Laporan impor');
     expect(
-      vi.mocked(uploadExcelMedia).mock.calls[0]![1].questions.map((q) => q.externalId),
+      (vi.mocked(uploadExcelMedia).mock.calls[0]![1] as ExcelEnvelopeDto).questions.map(
+        (q) => q.externalId,
+      ),
     ).toEqual(['TEST-SECOND']);
     expect(vi.mocked(importContent).mock.calls[0]![1].questions).toEqual(exported.questions);
     expect((screen.getByLabelText('Pilih soal TEST-FIRST') as HTMLInputElement).disabled).toBe(
@@ -327,11 +329,12 @@ describe('internal content preview and importer', () => {
     expect(importContent).not.toHaveBeenCalled();
     const uploaded = structuredClone(question);
     uploaded.metadata.assetManifest[0]!.objectKey = 'key';
-    vi.mocked(uploadExcelMedia).mockResolvedValue({
+    const uploadedEnvelope = {
       schemaVersion: 2,
       sourceNamespace: report.sourceNamespace,
       questions: [uploaded],
-    });
+    } satisfies ExcelEnvelopeDto;
+    vi.mocked(uploadExcelMedia).mockResolvedValue(uploadedEnvelope);
     vi.mocked(validateImport).mockResolvedValue({
       ...report,
       items: [{ ...report.items[0]!, canPreview: true, blockers: [] }],

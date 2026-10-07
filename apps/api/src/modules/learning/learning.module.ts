@@ -15,9 +15,11 @@ import { TryoutReleaseService } from './tryout-release.service';
 import { TryoutController } from './tryout.controller';
 import { TryoutService } from './tryout.service';
 import { StudentDashboardService } from './student-dashboard.service';
+import { AssessmentMediaService } from './assessment-media.service';
+import { ContentModule } from '../content/content.module';
 
 @Module({
-  imports: [IdentityModule, PvpModule, ConfigModule],
+  imports: [IdentityModule, PvpModule, ConfigModule, ContentModule],
   controllers: [LearningController, TryoutController, PretestController, AssessmentMediaController],
   providers: [
     MaterialsService,
@@ -29,6 +31,7 @@ import { StudentDashboardService } from './student-dashboard.service';
     TryoutReleaseService,
     TryoutService,
     StudentDashboardService,
+    AssessmentMediaService,
   ],
   exports: [LearningCatalogService, DrillAssessmentService, AssessmentHistoryService],
 })

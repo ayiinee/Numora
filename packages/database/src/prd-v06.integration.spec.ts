@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { resolve } from 'node:path';
 import postgres from 'postgres';
-import { describe, expect, it } from 'vitest';
+import { afterEach, describe, expect, it, vi } from 'vitest';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrateIntegratedDatabase } from './integrated-migrations.js';
 import { seedPrdV06Demo } from './prd-v06-demo.js';
@@ -9,13 +9,16 @@ import { seedDemoLearning } from './demo-learning.js';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 describe.skipIf(!testUrl)('PRD v0.6 database race and demo replay', () => {
+  afterEach(() => vi.unstubAllEnvs());
   it('serializes joins at five memberships, blocks banned rejoin and keeps legacy demo policy pins', async () => {
     const url = new URL(testUrl!);
     if (process.env.NODE_ENV !== 'test' || !['localhost', '127.0.0.1'].includes(url.hostname))
       throw new Error('Isolated local PostgreSQL required.');
-    const name = `numora_prdv06_${randomUUID().replaceAll('-', '')}`;
+    const name = `numora_test_prdv06_${randomUUID().replaceAll('-', '')}`;
     const admin = postgres(testUrl!, { max: 1, onnotice: () => {} });
     url.pathname = `/${name}`;
+    vi.stubEnv('DATABASE_URL', url.toString());
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const client = postgres(url.toString(), { max: 4, onnotice: () => {} });
     let created = false;
     try {

@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, desc, eq, inArray } from 'drizzle-orm';
+import { and, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   auditLogs,
@@ -47,9 +47,15 @@ export class ContentLifecycleService {
       .from(questionVersions)
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-      .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
-      .innerJoin(subchapters, eq(subchapters.id, competencies.subchapterId))
-      .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
+      .leftJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+      .leftJoin(
+        subchapters,
+        eq(subchapters.id, sql`coalesce(${questions.subchapterId},${competencies.subchapterId})`),
+      )
+      .leftJoin(
+        chapters,
+        eq(chapters.id, sql`coalesce(${questions.chapterId},${subchapters.chapterId})`),
+      )
       .leftJoin(levels, eq(levels.id, questionVersions.levelId))
       .leftJoin(
         contentImportVersions,
@@ -73,9 +79,9 @@ export class ContentLifecycleService {
     const payload: ImportQuestion = {
       externalId: r.identity?.externalId ?? v.id,
       type: v.questionType,
-      chapterCode: r.chapter.code,
-      subchapterCode: r.subchapter.code,
-      competencyCode: r.competency.code,
+      chapterCode: r.chapter?.code ?? null,
+      subchapterCode: r.subchapter?.code ?? null,
+      competencyCode: r.competency?.code ?? null,
       difficulty: v.difficulty as Exclude<ImportQuestion['difficulty'], undefined>,
       stem: v.stem as ImportQuestion['stem'],
       options: Array.isArray(v.optionsOrStatements)
@@ -85,20 +91,30 @@ export class ContentLifecycleService {
       explanation: v.explanation as ImportQuestion['explanation'],
       metadata: {
         ...((r.imported?.provenance as Record<string, unknown>) ?? {}),
-        sourceLevelNumber: r.question.curriculumLevelNumber ?? r.level?.levelNumber ?? 0,
+        sourceLevelNumber:
+          r.question.curriculumLevelNumber ??
+          r.level?.levelNumber ??
+          (r.question.usageType === 'TRYOUT' ? null : 0),
         ...(data.categories?.length ? { categories: data.categories } : {}),
         assetManifest: (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
       },
     };
-    const blockers = structuralErrors(payload);
-    if (!v.difficulty) blockers.push('DIFFICULTY_REQUIRED');
+    const tryout = r.question.usageType === 'TRYOUT';
+    const blockers = structuralErrors(payload, false, tryout);
+    if (!tryout && !v.difficulty) blockers.push('DIFFICULTY_REQUIRED');
     if (
-      [r.chapter.status, r.subchapter.status, r.competency.status, r.question.status].some(
-        (s) => s !== 'READY',
+      [r.chapter?.status, r.subchapter?.status, r.competency?.status].some((s) =>
+        tryout ? s === 'ARCHIVED' : s !== 'READY',
       )
     )
       blockers.push('TAXONOMY_NOT_READY');
-    if (r.imported && (!r.level || r.level.status !== 'READY')) blockers.push('LEVEL_NOT_READY');
+    if (r.question.status !== 'READY') blockers.push('QUESTION_NOT_READY');
+    if (
+      r.imported &&
+      ((!tryout && !r.level) ||
+        (r.level && (tryout ? r.level.status === 'ARCHIVED' : r.level.status !== 'READY')))
+    )
+      blockers.push('LEVEL_NOT_READY');
     for (const a of payload.metadata.assetManifest ?? []) {
       const [receipt] = await tx
         .select({ id: contentMediaUploads.id })

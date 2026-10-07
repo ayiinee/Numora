@@ -1,0 +1,533 @@
+{
+  "openapi": "3.1.0",
+  "info": {
+    "title": "Numora Generator",
+    "version": "1.0.0",
+    "description": "generator-service-v1. Compute v3 notification only; one text candidate per request."
+  },
+  "paths": {
+    "/health/live": {
+      "get": {
+        "summary": "Live",
+        "operationId": "live_health_live_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Stable failure code; no raw exception or content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": []
+      }
+    },
+    "/health/ready": {
+      "get": {
+        "summary": "Ready",
+        "operationId": "ready_health_ready_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Stable failure code; no raw exception or content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/generators": {
+      "get": {
+        "summary": "Generators",
+        "operationId": "generators_api_v1_generators_get",
+        "responses": {
+          "200": {
+            "description": "Successful Response",
+            "content": {
+              "application/json": {
+                "schema": {}
+              }
+            }
+          },
+          "default": {
+            "description": "Stable failure code; no raw exception or content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceBearer": []
+          }
+        ]
+      }
+    },
+    "/api/v1/compute/execute": {
+      "post": {
+        "summary": "Execute",
+        "operationId": "execute_api_v1_compute_execute_post",
+        "responses": {
+          "200": {
+            "description": "Terminal execution (SUCCEEDED, FAILED or EXPIRED)",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                }
+              }
+            }
+          },
+          "202": {
+            "description": "Existing RUNNING execution; wait via Numora",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Response"
+                }
+              }
+            }
+          },
+          "default": {
+            "description": "Stable failure code; no raw exception or content",
+            "content": {
+              "application/problem+json": {
+                "schema": {
+                  "$ref": "#/components/schemas/Problem"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "ServiceBearer": []
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/Notification"
+              }
+            }
+          }
+        }
+      }
+    }
+  },
+  "servers": [
+    {
+      "url": "http://127.0.0.1:8770",
+      "description": "Local service; TLS proxy for remote worker"
+    }
+  ],
+  "components": {
+    "schemas": {
+      "Notification": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "contractVersion",
+          "requestId",
+          "inputDigest",
+          "dispatchGeneration"
+        ],
+        "properties": {
+          "contractVersion": {
+            "type": "integer",
+            "const": 3
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          },
+          "inputDigest": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "dispatchGeneration": {
+            "type": "integer",
+            "minimum": 1
+          }
+        }
+      },
+      "Response": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "serviceContract",
+          "requestId",
+          "dispatchGeneration",
+          "executionId",
+          "status",
+          "failureCode",
+          "artifactId",
+          "artifactDigest",
+          "candidateIds"
+        ],
+        "properties": {
+          "serviceContract": {
+            "const": "generator-service-v1"
+          },
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "executionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "dispatchGeneration": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "status": {
+            "enum": [
+              "RUNNING",
+              "SUCCEEDED",
+              "FAILED",
+              "EXPIRED"
+            ]
+          },
+          "failureCode": {
+            "type": [
+              "string",
+              "null"
+            ]
+          },
+          "artifactId": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "format": "uuid"
+          },
+          "artifactDigest": {
+            "type": [
+              "string",
+              "null"
+            ],
+            "pattern": "^[a-f0-9]{64}$"
+          },
+          "candidateIds": {
+            "type": "array",
+            "maxItems": 1,
+            "uniqueItems": true,
+            "items": {
+              "type": "string",
+              "format": "uuid"
+            }
+          }
+        }
+      },
+      "Candidate": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "questionType",
+          "stem",
+          "optionsOrStatements",
+          "answerKey",
+          "explanation",
+          "media",
+          "difficulty",
+          "rubricVersionId",
+          "contentFingerprint"
+        ],
+        "properties": {
+          "questionType": {
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/Candidate/$defs/text"
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/Candidate/$defs/text"
+          },
+          "optionsOrStatements": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "options",
+              "categories"
+            ],
+            "properties": {
+              "options": {
+                "type": "array",
+                "minItems": 2,
+                "maxItems": 100,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "content"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/components/schemas/Candidate/$defs/id"
+                    },
+                    "content": {
+                      "$ref": "#/components/schemas/Candidate/$defs/text"
+                    }
+                  }
+                }
+              },
+              "categories": {
+                "type": "array",
+                "maxItems": 2,
+                "items": {
+                  "type": "object",
+                  "additionalProperties": false,
+                  "required": [
+                    "id",
+                    "label"
+                  ],
+                  "properties": {
+                    "id": {
+                      "$ref": "#/components/schemas/Candidate/$defs/id"
+                    },
+                    "label": {
+                      "type": "string",
+                      "minLength": 1,
+                      "maxLength": 1000
+                    }
+                  }
+                }
+              }
+            }
+          },
+          "answerKey": {
+            "oneOf": [
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "optionId"
+                ],
+                "properties": {
+                  "optionId": {
+                    "$ref": "#/components/schemas/Candidate/$defs/id"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "optionIds"
+                ],
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "minItems": 1,
+                    "uniqueItems": true,
+                    "items": {
+                      "$ref": "#/components/schemas/Candidate/$defs/id"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "minProperties": 2,
+                    "additionalProperties": {
+                      "$ref": "#/components/schemas/Candidate/$defs/id"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "media": {
+            "type": "array",
+            "maxItems": 0
+          },
+          "difficulty": {
+            "enum": [
+              null,
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "rubricVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          },
+          "contentFingerprint": {
+            "type": "string",
+            "pattern": "^[a-f0-9]{64}$"
+          }
+        },
+        "$defs": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Za-z0-9_-]{1,128}$"
+          },
+          "text": {
+            "type": "object",
+            "additionalProperties": false,
+            "required": [
+              "text"
+            ],
+            "properties": {
+              "text": {
+                "type": "string",
+                "minLength": 1,
+                "maxLength": 100000
+              }
+            }
+          }
+        }
+      },
+      "Registration": {
+        "$schema": "https://json-schema.org/draft/2020-12/schema",
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "serviceContract",
+          "items"
+        ],
+        "properties": {
+          "serviceContract": {
+            "const": "generator-service-v1"
+          },
+          "items": {
+            "type": "array",
+            "minItems": 1,
+            "maxItems": 100,
+            "items": {
+              "type": "object",
+              "additionalProperties": false,
+              "required": [
+                "questionExternalId",
+                "configVersion",
+                "parentQuestionVersionId",
+                "familyId",
+                "rubricVersionId",
+                "contextId"
+              ],
+              "properties": {
+                "questionExternalId": {
+                  "type": "string",
+                  "minLength": 1,
+                  "maxLength": 128
+                },
+                "configVersion": {
+                  "type": "integer",
+                  "minimum": 1
+                },
+                "parentQuestionVersionId": {
+                  "$ref": "#/components/schemas/Registration/$defs/uuid"
+                },
+                "familyId": {
+                  "$ref": "#/components/schemas/Registration/$defs/uuid"
+                },
+                "rubricVersionId": {
+                  "$ref": "#/components/schemas/Registration/$defs/uuid"
+                },
+                "contextId": {
+                  "$ref": "#/components/schemas/Registration/$defs/uuid"
+                }
+              }
+            }
+          }
+        },
+        "$defs": {
+          "uuid": {
+            "type": "string",
+            "format": "uuid",
+            "not": {
+              "const": "00000000-0000-0000-0000-000000000000"
+            }
+          }
+        }
+      },
+      "Problem": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "type",
+          "title",
+          "status",
+          "code"
+        ],
+        "properties": {
+          "type": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "status": {
+            "type": "integer"
+          }
+        }
+      }
+    },
+    "securitySchemes": {
+      "ServiceBearer": {
+        "type": "http",
+        "scheme": "bearer"
+      }
+    }
+  }
+}

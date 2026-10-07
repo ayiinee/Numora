@@ -1,6 +1,6 @@
 {
-  "id": "0c5595d2-9163-4927-8ccf-a5c3ce880a3c",
-  "prevId": "5fe0be6e-453b-4184-8333-eda1fac3aac8",
+  "id": "bdf3a5b8-9430-4d31-b34f-b42452f329e3",
+  "prevId": "9aaa05d7-2997-4610-8740-6a16453cf3e6",
   "version": "7",
   "dialect": "postgresql",
   "tables": {
@@ -2024,10 +2024,6 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
-        "question_versions_ready_difficulty_ck": {
-          "name": "question_versions_ready_difficulty_ck",
-          "value": "\"question_versions\".\"content_status\" <> 'READY' or (\"question_versions\".\"difficulty\" is not null and length(trim(\"question_versions\".\"difficulty\")) > 0)"
-        },
         "question_versions_number_ck": {
           "name": "question_versions_number_ck",
           "value": "\"question_versions\".\"version_number\" > 0"
@@ -2050,11 +2046,23 @@
           "notNull": true,
           "default": "gen_random_uuid()"
         },
+        "chapter_id": {
+          "name": "chapter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "subchapter_id": {
+          "name": "subchapter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
         "primary_competency_id": {
           "name": "primary_competency_id",
           "type": "uuid",
           "primaryKey": false,
-          "notNull": true
+          "notNull": false
         },
         "curriculum_level_number": {
           "name": "curriculum_level_number",
@@ -2156,6 +2164,32 @@
         }
       },
       "foreignKeys": {
+        "questions_chapter_id_chapters_id_fk": {
+          "name": "questions_chapter_id_chapters_id_fk",
+          "tableFrom": "questions",
+          "tableTo": "chapters",
+          "columnsFrom": [
+            "chapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "questions_subchapter_id_subchapters_id_fk": {
+          "name": "questions_subchapter_id_subchapters_id_fk",
+          "tableFrom": "questions",
+          "tableTo": "subchapters",
+          "columnsFrom": [
+            "subchapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
         "questions_primary_competency_id_competencies_id_fk": {
           "name": "questions_primary_competency_id_competencies_id_fk",
           "tableFrom": "questions",
@@ -2187,6 +2221,10 @@
       "uniqueConstraints": {},
       "policies": {},
       "checkConstraints": {
+        "questions_competency_required_ck": {
+          "name": "questions_competency_required_ck",
+          "value": "\"questions\".\"primary_competency_id\" is not null or \"questions\".\"usage_type\" is not distinct from 'TRYOUT'"
+        },
         "questions_usage_ck": {
           "name": "questions_usage_ck",
           "value": "\"questions\".\"usage_type\" is null or \"questions\".\"usage_type\" in ('DRILL','PRETEST','TRYOUT')"
@@ -3097,6 +3135,206 @@
         "content_preview_state_ck": {
           "name": "content_preview_state_ck",
           "value": "(\"content_preview_sessions\".\"state\"='IN_PROGRESS' and \"content_preview_sessions\".\"submitted_at\" is null and \"content_preview_sessions\".\"submit_key\" is null) or (\"content_preview_sessions\".\"state\"='SUBMITTED' and \"content_preview_sessions\".\"submitted_at\" is not null and \"content_preview_sessions\".\"submit_key\" is not null)"
+        }
+      },
+      "isRLSEnabled": true
+    },
+    "public.content_upload_sessions": {
+      "name": "content_upload_sessions",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_name": {
+          "name": "file_name",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "file_sha256": {
+          "name": "file_sha256",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "byte_length": {
+          "name": "byte_length",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "object_key": {
+          "name": "object_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "state": {
+          "name": "state",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'RECEIVED'"
+        },
+        "revision": {
+          "name": "revision",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true,
+          "default": 0
+        },
+        "preview": {
+          "name": "preview",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "report": {
+          "name": "report",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "error": {
+          "name": "error",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "package_id": {
+          "name": "package_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "import_id": {
+          "name": "import_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "content_upload_operation_uq": {
+          "name": "content_upload_operation_uq",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "content_upload_created_idx": {
+          "name": "content_upload_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "content_upload_sessions_actor_user_id_users_id_fk": {
+          "name": "content_upload_sessions_actor_user_id_users_id_fk",
+          "tableFrom": "content_upload_sessions",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "content_upload_sessions_package_id_assessment_packages_id_fk": {
+          "name": "content_upload_sessions_package_id_assessment_packages_id_fk",
+          "tableFrom": "content_upload_sessions",
+          "tableTo": "assessment_packages",
+          "columnsFrom": [
+            "package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "content_upload_sessions_import_id_content_imports_id_fk": {
+          "name": "content_upload_sessions_import_id_content_imports_id_fk",
+          "tableFrom": "content_upload_sessions",
+          "tableTo": "content_imports",
+          "columnsFrom": [
+            "import_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "content_upload_state_ck": {
+          "name": "content_upload_state_ck",
+          "value": "\"content_upload_sessions\".\"state\" in ('RECEIVED','INVALID','PREVIEW','VALIDATED','SAVED')"
+        },
+        "content_upload_revision_ck": {
+          "name": "content_upload_revision_ck",
+          "value": "\"content_upload_sessions\".\"revision\" >= 0 and \"content_upload_sessions\".\"byte_length\" >= 0"
         }
       },
       "isRLSEnabled": true
@@ -10988,8 +11226,8 @@
           "method": "btree",
           "with": {}
         },
-        "candidate_imports_version_uq": {
-          "name": "candidate_imports_version_uq",
+        "candidate_imports_version_idx": {
+          "name": "candidate_imports_version_idx",
           "columns": [
             {
               "expression": "question_version_id",
@@ -10998,7 +11236,7 @@
               "nulls": "last"
             }
           ],
-          "isUnique": true,
+          "isUnique": false,
           "concurrently": false,
           "method": "btree",
           "with": {}
@@ -16305,6 +16543,210 @@
       },
       "isRLSEnabled": true
     },
+    "public.generator_packages": {
+      "name": "generator_packages",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_key": {
+          "name": "operation_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "operation_fingerprint": {
+          "name": "operation_fingerprint",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "assessment_type": {
+          "name": "assessment_type",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "title": {
+          "name": "title",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "expected_count": {
+          "name": "expected_count",
+          "type": "integer",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "chapter_id": {
+          "name": "chapter_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "level_id": {
+          "name": "level_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "mapping_ids": {
+          "name": "mapping_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "request_ids": {
+          "name": "request_ids",
+          "type": "jsonb",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "canonical_package_id": {
+          "name": "canonical_package_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "generator_packages_operation_uq": {
+          "name": "generator_packages_operation_uq",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "operation_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        },
+        "generator_packages_created_idx": {
+          "name": "generator_packages_created_idx",
+          "columns": [
+            {
+              "expression": "created_at",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": false,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "generator_packages_actor_user_id_users_id_fk": {
+          "name": "generator_packages_actor_user_id_users_id_fk",
+          "tableFrom": "generator_packages",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "generator_packages_chapter_id_chapters_id_fk": {
+          "name": "generator_packages_chapter_id_chapters_id_fk",
+          "tableFrom": "generator_packages",
+          "tableTo": "chapters",
+          "columnsFrom": [
+            "chapter_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "generator_packages_level_id_levels_id_fk": {
+          "name": "generator_packages_level_id_levels_id_fk",
+          "tableFrom": "generator_packages",
+          "tableTo": "levels",
+          "columnsFrom": [
+            "level_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "generator_packages_canonical_package_id_assessment_packages_id_fk": {
+          "name": "generator_packages_canonical_package_id_assessment_packages_id_fk",
+          "tableFrom": "generator_packages",
+          "tableTo": "assessment_packages",
+          "columnsFrom": [
+            "canonical_package_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {
+        "generator_packages_type_ck": {
+          "name": "generator_packages_type_ck",
+          "value": "\"generator_packages\".\"assessment_type\" in ('DRILL','PRETEST','TRYOUT')"
+        },
+        "generator_packages_title_ck": {
+          "name": "generator_packages_title_ck",
+          "value": "length(trim(\"generator_packages\".\"title\")) between 1 and 160"
+        },
+        "generator_packages_arrays_ck": {
+          "name": "generator_packages_arrays_ck",
+          "value": "jsonb_typeof(\"generator_packages\".\"mapping_ids\")='array' and jsonb_typeof(\"generator_packages\".\"request_ids\")='array'"
+        },
+        "generator_packages_count_ck": {
+          "name": "generator_packages_count_ck",
+          "value": "\"generator_packages\".\"expected_count\"=case \"generator_packages\".\"assessment_type\" when 'DRILL' then 10 when 'PRETEST' then 20 when 'TRYOUT' then 30 end and jsonb_array_length(\"generator_packages\".\"mapping_ids\")=\"generator_packages\".\"expected_count\" and jsonb_array_length(\"generator_packages\".\"request_ids\")=\"generator_packages\".\"expected_count\""
+        },
+        "generator_packages_scope_ck": {
+          "name": "generator_packages_scope_ck",
+          "value": "(\"generator_packages\".\"assessment_type\"='TRYOUT' and \"generator_packages\".\"chapter_id\" is null and \"generator_packages\".\"level_id\" is null) or (\"generator_packages\".\"assessment_type\"='DRILL' and \"generator_packages\".\"chapter_id\" is not null and \"generator_packages\".\"level_id\" is not null) or (\"generator_packages\".\"assessment_type\"='PRETEST' and \"generator_packages\".\"chapter_id\" is not null and \"generator_packages\".\"level_id\" is null)"
+        }
+      },
+      "isRLSEnabled": true
+    },
     "public.admin_invitations": {
       "name": "admin_invitations",
       "schema": "",
@@ -16501,6 +16943,127 @@
           "value": "\"admin_invitations\".\"status\" <> 'ACCEPTED' or (\"admin_invitations\".\"user_id\" is not null and \"admin_invitations\".\"auth_user_id\" is not null and \"admin_invitations\".\"accepted_at\" is not null)"
         }
       },
+      "isRLSEnabled": true
+    },
+    "public.admin_recovery_operations": {
+      "name": "admin_recovery_operations",
+      "schema": "",
+      "columns": {
+        "id": {
+          "name": "id",
+          "type": "uuid",
+          "primaryKey": true,
+          "notNull": true,
+          "default": "gen_random_uuid()"
+        },
+        "actor_user_id": {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "user_id": {
+          "name": "user_id",
+          "type": "uuid",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "idempotency_key": {
+          "name": "idempotency_key",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": true
+        },
+        "status": {
+          "name": "status",
+          "type": "admin_recovery_status",
+          "typeSchema": "public",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "'RESERVED'"
+        },
+        "failure_code": {
+          "name": "failure_code",
+          "type": "text",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "lease_until": {
+          "name": "lease_until",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": false
+        },
+        "created_at": {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        },
+        "updated_at": {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "primaryKey": false,
+          "notNull": true,
+          "default": "now()"
+        }
+      },
+      "indexes": {
+        "admin_recovery_actor_key_uq": {
+          "name": "admin_recovery_actor_key_uq",
+          "columns": [
+            {
+              "expression": "actor_user_id",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            },
+            {
+              "expression": "idempotency_key",
+              "isExpression": false,
+              "asc": true,
+              "nulls": "last"
+            }
+          ],
+          "isUnique": true,
+          "concurrently": false,
+          "method": "btree",
+          "with": {}
+        }
+      },
+      "foreignKeys": {
+        "admin_recovery_operations_actor_user_id_users_id_fk": {
+          "name": "admin_recovery_operations_actor_user_id_users_id_fk",
+          "tableFrom": "admin_recovery_operations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "actor_user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        },
+        "admin_recovery_operations_user_id_users_id_fk": {
+          "name": "admin_recovery_operations_user_id_users_id_fk",
+          "tableFrom": "admin_recovery_operations",
+          "tableTo": "users",
+          "columnsFrom": [
+            "user_id"
+          ],
+          "columnsTo": [
+            "id"
+          ],
+          "onDelete": "restrict",
+          "onUpdate": "no action"
+        }
+      },
+      "compositePrimaryKeys": {},
+      "uniqueConstraints": {},
+      "policies": {},
+      "checkConstraints": {},
       "isRLSEnabled": true
     }
   },
@@ -16776,6 +17339,16 @@
         "FAILED",
         "ACCEPTED",
         "CANCELLED"
+      ]
+    },
+    "public.admin_recovery_status": {
+      "name": "admin_recovery_status",
+      "schema": "public",
+      "values": [
+        "RESERVED",
+        "SENDING",
+        "SENT",
+        "FAILED"
       ]
     }
   },

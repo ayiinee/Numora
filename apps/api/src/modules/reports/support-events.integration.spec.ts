@@ -1,7 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { expect, it } from 'vitest';
 import { and, eq, sql } from 'drizzle-orm';
-import { analyticsOutbox, getDatabase, questionReports } from '@tka/database';
+import { analyticsOutbox, assessmentPackages, getDatabase, questionReports } from '@tka/database';
 import { databaseSuite, installFerdiFixture } from '../content/ferdi-content.fixture';
 
 databaseSuite('gated support interactions and transactional events', () => {
@@ -132,6 +132,11 @@ databaseSuite('gated support interactions and transactional events', () => {
       );
       expect(created.status).toBe(201);
       const { id: packageId } = await created.json();
+      // Isolated fixture has no academic approval; explicitly retain synthetic provenance.
+      await getDatabase()
+        .db.update(assessmentPackages)
+        .set({ isDemo: true })
+        .where(eq(assessmentPackages.id, packageId));
       expect(
         (
           await fixture.request(
@@ -142,6 +147,7 @@ databaseSuite('gated support interactions and transactional events', () => {
           )
         ).status,
       ).toBe(201);
+
       const responses = await Promise.all(
         Array.from({ length: 2 }, () =>
           fixture.request(

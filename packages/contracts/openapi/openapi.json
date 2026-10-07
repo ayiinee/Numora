@@ -429,6 +429,61 @@
         ]
       }
     },
+    "/api/v1/assessment-items/{instanceId}/media": {
+      "get": {
+        "operationId": "LearningController_media",
+        "parameters": [
+          {
+            "name": "instanceId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "phase",
+            "required": true,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "WORK",
+                "REVIEW"
+              ],
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/MediaLinksDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/students/me/dashboard": {
       "get": {
         "operationId": "LearningController_dashboard",
@@ -1636,540 +1691,6 @@
         ]
       }
     },
-    "/api/v1/classes/{classId}/students/{studentId}/progress": {
-      "get": {
-        "operationId": "MonitoringController_read",
-        "parameters": [
-          {
-            "name": "classId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "studentId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TeacherStudentProgressDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "monitoring"
-        ]
-      }
-    },
-    "/api/v1/schools": {
-      "get": {
-        "operationId": "SchoolsController_list",
-        "parameters": [
-          {
-            "name": "authorization",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/SchoolListDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "schools"
-        ]
-      }
-    },
-    "/api/v1/schools/{schoolId}/teacher-verifications": {
-      "post": {
-        "operationId": "SchoolsController_verify",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/VerifyTeacherDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/VerifiedDto"
-                }
-              }
-            }
-          },
-          "429": {
-            "description": "Attempt limit exceeded.",
-            "headers": {
-              "Retry-After": {
-                "schema": {
-                  "type": "integer"
-                }
-              }
-            }
-          },
-          "503": {
-            "description": "Attempt limiter unavailable."
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "schools"
-        ]
-      }
-    },
-    "/api/v1/schools/{schoolId}/leave": {
-      "post": {
-        "operationId": "SchoolsController_leave",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/LeftSchoolDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "schools"
-        ]
-      }
-    },
-    "/api/v1/admin/schools": {
-      "get": {
-        "operationId": "AdminSchoolsController_list",
-        "parameters": [
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "maximum": 100,
-              "default": 20,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
-            }
-          },
-          {
-            "name": "search",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "authorization",
-            "required": true,
-            "in": "header",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSchoolsDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      },
-      "post": {
-        "operationId": "AdminSchoolsController_create",
-        "parameters": [],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/CreateSchoolDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSchoolDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      }
-    },
-    "/api/v1/admin/schools/{schoolId}": {
-      "get": {
-        "operationId": "AdminSchoolsController_detail",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSchoolDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      },
-      "patch": {
-        "operationId": "AdminSchoolsController_update",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "requestBody": {
-          "required": true,
-          "content": {
-            "application/json": {
-              "schema": {
-                "$ref": "#/components/schemas/UpdateSchoolDto"
-              }
-            }
-          }
-        },
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/AdminSchoolDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      }
-    },
-    "/api/v1/admin/schools/{schoolId}/teacher-tokens": {
-      "get": {
-        "operationId": "AdminSchoolsController_tokens",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "offset",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "default": 0,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
-            }
-          },
-          {
-            "name": "limit",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "maximum": 100,
-              "default": 20,
-              "allOf": [
-                {
-                  "$ref": "#/components/schemas/Object"
-                }
-              ]
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenListDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      },
-      "post": {
-        "operationId": "AdminSchoolsController_issue",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      }
-    },
-    "/api/v1/admin/schools/{schoolId}/teacher-tokens/{tokenId}/reissue": {
-      "post": {
-        "operationId": "AdminSchoolsController_reissue",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tokenId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "201": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/TokenDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      }
-    },
-    "/api/v1/admin/schools/{schoolId}/teacher-tokens/{tokenId}/revoke": {
-      "post": {
-        "operationId": "AdminSchoolsController_revoke",
-        "parameters": [
-          {
-            "name": "schoolId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          },
-          {
-            "name": "tokenId",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "$ref": "#/components/schemas/RevokedDto"
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-schools"
-        ]
-      }
-    },
     "/api/v1/admin/content/pretest-packages/blueprints": {
       "get": {
         "operationId": "PretestController_blueprints",
@@ -2588,6 +2109,655 @@
         ],
         "tags": [
           "admin-content"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/catalog": {
+      "get": {
+        "operationId": "GeneratorController_catalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorCatalogDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/requests": {
+      "post": {
+        "operationId": "GeneratorController_prepare",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareGeneratorDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      },
+      "get": {
+        "operationId": "GeneratorController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorRequestsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/requests/{id}": {
+      "get": {
+        "operationId": "GeneratorController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/requests/{id}/retry": {
+      "post": {
+        "operationId": "GeneratorController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorRequestDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/requests/{id}/preview": {
+      "get": {
+        "operationId": "GeneratorController_preview",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/requests/{id}/draft": {
+      "post": {
+        "operationId": "GeneratorController_save",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorDraftDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/content-package": {
+      "get": {
+        "operationId": "GeneratorPackagesController_contentPackage",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentPackageDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/publish": {
+      "post": {
+        "operationId": "GeneratorPackagesController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorDraftDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/catalog": {
+      "get": {
+        "operationId": "GeneratorPackagesController_catalog",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageCatalogDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages": {
+      "get": {
+        "operationId": "GeneratorPackagesController_list",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackagesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      },
+      "post": {
+        "operationId": "GeneratorPackagesController_prepare",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateGeneratorPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}": {
+      "get": {
+        "operationId": "GeneratorPackagesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/file": {
+      "get": {
+        "operationId": "GeneratorPackagesController_file",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageFileDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/retry": {
+      "post": {
+        "operationId": "GeneratorPackagesController_retry",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "202": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorPackageDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/validate-json": {
+      "post": {
+        "operationId": "GeneratorPackagesController_validate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateGeneratorJsonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorJsonPreviewDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/generator/packages/{id}/import-json": {
+      "post": {
+        "operationId": "GeneratorPackagesController_import",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ValidateGeneratorJsonDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/GeneratorDraftDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-generator-packages"
         ]
       }
     },
@@ -3786,6 +3956,16 @@
             }
           }
         ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishDrillPackageDto"
+              }
+            }
+          }
+        },
         "responses": {
           "201": {
             "description": "",
@@ -4629,6 +4809,965 @@
         ],
         "tags": [
           "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/packages/{id}/approval": {
+      "post": {
+        "operationId": "ContentPackagesController_approve",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ApproveContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/packages/{id}/publish": {
+      "post": {
+        "operationId": "ContentPackagesController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PublishContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/packages/{id}/archive": {
+      "post": {
+        "operationId": "ContentPackagesController_archive",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
+    "/api/v1/admin/content/upload-template": {
+      "get": {
+        "operationId": "ContentUploadsController_template",
+        "parameters": [],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/vnd.openxmlformats-officedocument.spreadsheetml.sheet": {
+                "schema": {
+                  "type": "string",
+                  "format": "binary"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/admin/content/uploads": {
+      "get": {
+        "operationId": "ContentUploadsController_list",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "assessmentType",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "DRILL",
+                "PRETEST",
+                "TRYOUT"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "$ref": "#/components/schemas/Object"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      },
+      "post": {
+        "operationId": "ContentUploadsController_receive",
+        "parameters": [
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  },
+                  "fileName": {
+                    "type": "string"
+                  },
+                  "byteLength": {
+                    "type": "string"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/admin/content/uploads/{id}": {
+      "get": {
+        "operationId": "ContentUploadsController_get",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/admin/content/uploads/{id}/preview": {
+      "patch": {
+        "operationId": "ContentUploadsController_validate",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateUploadPreviewDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/admin/content/uploads/{id}/draft": {
+      "post": {
+        "operationId": "ContentUploadsController_save",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "Idempotency-Key",
+            "in": "header",
+            "required": true,
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveUploadDraftDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/UploadDetailDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-uploads"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/students/{studentId}/progress": {
+      "get": {
+        "operationId": "MonitoringController_read",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "studentId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TeacherStudentProgressDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "monitoring"
+        ]
+      }
+    },
+    "/api/v1/schools": {
+      "get": {
+        "operationId": "SchoolsController_list",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
+    "/api/v1/schools/{schoolId}/teacher-verifications": {
+      "post": {
+        "operationId": "SchoolsController_verify",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/VerifyTeacherDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/VerifiedDto"
+                }
+              }
+            }
+          },
+          "429": {
+            "description": "Attempt limit exceeded.",
+            "headers": {
+              "Retry-After": {
+                "schema": {
+                  "type": "integer"
+                }
+              }
+            }
+          },
+          "503": {
+            "description": "Attempt limiter unavailable."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
+    "/api/v1/schools/{schoolId}/leave": {
+      "post": {
+        "operationId": "SchoolsController_leave",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/LeftSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
+    "/api/v1/admin/schools": {
+      "get": {
+        "operationId": "AdminSchoolsController_list",
+        "parameters": [
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSchoolsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      },
+      "post": {
+        "operationId": "AdminSchoolsController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CreateSchoolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      }
+    },
+    "/api/v1/admin/schools/{schoolId}": {
+      "get": {
+        "operationId": "AdminSchoolsController_detail",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminSchoolsController_update",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateSchoolDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/AdminSchoolDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      }
+    },
+    "/api/v1/admin/schools/{schoolId}/teacher-tokens": {
+      "get": {
+        "operationId": "AdminSchoolsController_tokens",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "maximum": 100,
+              "default": 20,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      },
+      "post": {
+        "operationId": "AdminSchoolsController_issue",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      }
+    },
+    "/api/v1/admin/schools/{schoolId}/teacher-tokens/{tokenId}/reissue": {
+      "post": {
+        "operationId": "AdminSchoolsController_reissue",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tokenId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TokenDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
+        ]
+      }
+    },
+    "/api/v1/admin/schools/{schoolId}/teacher-tokens/{tokenId}/revoke": {
+      "post": {
+        "operationId": "AdminSchoolsController_revoke",
+        "parameters": [
+          {
+            "name": "schoolId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "tokenId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/RevokedDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-schools"
         ]
       }
     },
@@ -7422,6 +8561,49 @@
           "items"
         ]
       },
+      "PreviewMediaDto": {
+        "type": "object",
+        "properties": {
+          "instanceId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "url": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "instanceId",
+          "assetId",
+          "altText",
+          "url",
+          "expiresAt"
+        ]
+      },
+      "MediaLinksDto": {
+        "type": "object",
+        "properties": {
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewMediaDto"
+            }
+          }
+        },
+        "required": [
+          "media"
+        ]
+      },
       "DashboardClassDto": {
         "type": "object",
         "properties": {
@@ -8768,6 +9950,14 @@
             "format": "date-time",
             "nullable": true
           },
+          "resultPendingReason": {
+            "type": "string",
+            "enum": [
+              "CONTENT_PENDING",
+              "SCORING_PENDING"
+            ],
+            "nullable": true
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -8826,6 +10016,14 @@
           "resultDueAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "resultPendingReason": {
+            "type": "string",
+            "enum": [
+              "CONTENT_PENDING",
+              "SCORING_PENDING"
+            ],
             "nullable": true
           },
           "isDemo": {
@@ -8926,6 +10124,14 @@
           "resultDueAt": {
             "type": "string",
             "format": "date-time",
+            "nullable": true
+          },
+          "resultPendingReason": {
+            "type": "string",
+            "enum": [
+              "CONTENT_PENDING",
+              "SCORING_PENDING"
+            ],
             "nullable": true
           },
           "isDemo": {
@@ -9731,49 +10937,6 @@
           "assetIds"
         ]
       },
-      "PreviewMediaDto": {
-        "type": "object",
-        "properties": {
-          "instanceId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "assetId": {
-            "type": "string"
-          },
-          "altText": {
-            "type": "string"
-          },
-          "url": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "instanceId",
-          "assetId",
-          "altText",
-          "url",
-          "expiresAt"
-        ]
-      },
-      "MediaLinksDto": {
-        "type": "object",
-        "properties": {
-          "media": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PreviewMediaDto"
-            }
-          }
-        },
-        "required": [
-          "media"
-        ]
-      },
       "PvpDifficultyAvailabilityDto": {
         "type": "object",
         "properties": {
@@ -10073,381 +11236,6 @@
           "endReason",
           "players",
           "question"
-        ]
-      },
-      "ClassDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
-      "StudentDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "displayName": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "displayName"
-        ]
-      },
-      "MonitoredLevelDto": {
-        "type": "object",
-        "properties": {
-          "levelId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "chapterLabel": {
-            "type": "string"
-          },
-          "subchapterLabel": {
-            "type": "string"
-          },
-          "levelLabel": {
-            "type": "string"
-          },
-          "accessStatus": {
-            "type": "string",
-            "enum": [
-              "LOCKED",
-              "UNLOCKED"
-            ]
-          },
-          "inProgress": {
-            "type": "boolean"
-          },
-          "latestDrillScore": {
-            "type": "number",
-            "nullable": true
-          },
-          "bestDrillScore": {
-            "type": "number",
-            "nullable": true
-          }
-        },
-        "required": [
-          "levelId",
-          "chapterLabel",
-          "subchapterLabel",
-          "levelLabel",
-          "accessStatus",
-          "inProgress",
-          "latestDrillScore",
-          "bestDrillScore"
-        ]
-      },
-      "TeacherStudentProgressDto": {
-        "type": "object",
-        "properties": {
-          "class": {
-            "$ref": "#/components/schemas/ClassDto"
-          },
-          "student": {
-            "$ref": "#/components/schemas/StudentDto"
-          },
-          "latestDrillScore": {
-            "type": "number",
-            "nullable": true
-          },
-          "levels": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/MonitoredLevelDto"
-            }
-          }
-        },
-        "required": [
-          "class",
-          "student",
-          "latestDrillScore",
-          "levels"
-        ]
-      },
-      "SchoolDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "name": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "name"
-        ]
-      },
-      "SchoolListDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/SchoolDto"
-            }
-          }
-        },
-        "required": [
-          "items"
-        ]
-      },
-      "VerifyTeacherDto": {
-        "type": "object",
-        "properties": {
-          "token": {
-            "type": "string",
-            "minLength": 8,
-            "maxLength": 128,
-            "pattern": "^(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{32,128})$"
-          }
-        },
-        "required": [
-          "token"
-        ]
-      },
-      "VerifiedDto": {
-        "type": "object",
-        "properties": {
-          "verified": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "verified"
-        ]
-      },
-      "LeftSchoolDto": {
-        "type": "object",
-        "properties": {
-          "left": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "left"
-        ]
-      },
-      "Object": {
-        "type": "object",
-        "properties": {}
-      },
-      "AdminSchoolDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "code": {
-            "type": "string"
-          },
-          "name": {
-            "type": "string"
-          },
-          "address": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "code",
-          "name",
-          "address",
-          "status"
-        ]
-      },
-      "AdminSchoolsDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/AdminSchoolDto"
-            }
-          },
-          "nextOffset": {
-            "type": "number",
-            "nullable": true
-          }
-        },
-        "required": [
-          "items",
-          "nextOffset"
-        ]
-      },
-      "CreateSchoolDto": {
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "maxLength": 500
-          },
-          "code": {
-            "type": "string",
-            "minLength": 2,
-            "maxLength": 32
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          }
-        },
-        "required": [
-          "code",
-          "name"
-        ]
-      },
-      "UpdateSchoolDto": {
-        "type": "object",
-        "properties": {
-          "address": {
-            "type": "string",
-            "nullable": true,
-            "maxLength": 500
-          },
-          "name": {
-            "type": "string",
-            "minLength": 1,
-            "maxLength": 120
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "ACTIVE",
-              "INACTIVE"
-            ]
-          }
-        }
-      },
-      "TokenSummaryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "expiresAt": {
-            "format": "date-time",
-            "type": "string"
-          },
-          "usedAt": {
-            "type": "string",
-            "nullable": true
-          },
-          "revokedAt": {
-            "type": "string",
-            "nullable": true
-          },
-          "createdAt": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "usedByUserId": {
-            "type": "string",
-            "nullable": true
-          },
-          "usedByName": {
-            "type": "string",
-            "nullable": true
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "AVAILABLE",
-              "EXPIRED",
-              "USED",
-              "REVOKED"
-            ]
-          }
-        },
-        "required": [
-          "id",
-          "expiresAt",
-          "usedAt",
-          "revokedAt",
-          "createdAt",
-          "usedByUserId",
-          "usedByName",
-          "status"
-        ]
-      },
-      "TokenListDto": {
-        "type": "object",
-        "properties": {
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/TokenSummaryDto"
-            }
-          },
-          "nextOffset": {
-            "type": "number",
-            "nullable": true
-          }
-        },
-        "required": [
-          "items",
-          "nextOffset"
-        ]
-      },
-      "TokenDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "token": {
-            "type": "string"
-          },
-          "expiresAt": {
-            "type": "string",
-            "format": "date-time"
-          }
-        },
-        "required": [
-          "id",
-          "token",
-          "expiresAt"
-        ]
-      },
-      "RevokedDto": {
-        "type": "object",
-        "properties": {
-          "revoked": {
-            "type": "boolean"
-          }
-        },
-        "required": [
-          "revoked"
         ]
       },
       "PretestBlueprintDto": {
@@ -10824,6 +11612,1140 @@
           "packageId",
           "confirmed",
           "notes"
+        ]
+      },
+      "GeneratorMappingDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "originalQuestionVersionId": {
+            "type": "string"
+          },
+          "contextId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "originalQuestionVersionId",
+          "contextId"
+        ]
+      },
+      "GeneratorCatalogDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorMappingDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PrepareGeneratorDto": {
+        "type": "object",
+        "properties": {
+          "mappingId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "mappingId"
+        ]
+      },
+      "GeneratorRequestDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "dispatchGeneration": {
+            "type": "number"
+          },
+          "executionStatus": {
+            "type": "string",
+            "nullable": true
+          },
+          "failureCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "leaseExpired": {
+            "type": "boolean"
+          },
+          "accepted": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "id",
+          "label",
+          "status",
+          "dispatchGeneration",
+          "executionStatus",
+          "failureCode",
+          "leaseExpired",
+          "accepted"
+        ]
+      },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "GeneratorRequestsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorRequestDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "PreviewCategoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "label": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "label"
+        ]
+      },
+      "GeneratorPreviewDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "scoringStatus": {
+            "type": "string",
+            "enum": [
+              "NOT_SCORED"
+            ]
+          },
+          "score": {
+            "type": "number",
+            "nullable": true
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "answerKey": {
+            "nullable": true,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          }
+        },
+        "required": [
+          "id",
+          "scoringStatus",
+          "score",
+          "type",
+          "stem",
+          "options",
+          "categories",
+          "answerKey",
+          "explanation"
+        ]
+      },
+      "GeneratorDraftDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "PackageApprovalDto": {
+        "type": "object",
+        "properties": {
+          "reference": {
+            "type": "string"
+          },
+          "approvedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "reference",
+          "approvedAt"
+        ]
+      },
+      "PackageSourceDto": {
+        "type": "object",
+        "properties": {
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "sourceName": {
+            "type": "string"
+          },
+          "sourceReference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sourceNamespace",
+          "sourceName",
+          "sourceReference"
+        ]
+      },
+      "ExcelAssetDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "assetId": {
+            "type": "string"
+          },
+          "textMarker": {
+            "type": "string"
+          },
+          "placement": {
+            "type": "string",
+            "enum": [
+              "STEM",
+              "OPTION",
+              "STATEMENT",
+              "EXPLANATION"
+            ]
+          },
+          "itemId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assetOrder": {
+            "type": "number"
+          },
+          "altText": {
+            "type": "string"
+          },
+          "objectKey": {
+            "type": "string",
+            "nullable": true
+          },
+          "sha256": {
+            "type": "string"
+          },
+          "contentType": {
+            "type": "string"
+          },
+          "byteLength": {
+            "type": "number"
+          },
+          "bucket": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "externalId",
+          "assetId",
+          "textMarker",
+          "placement",
+          "itemId",
+          "assetOrder",
+          "altText",
+          "objectKey",
+          "sha256",
+          "contentType",
+          "byteLength",
+          "bucket"
+        ]
+      },
+      "ExcelMetadataDto": {
+        "type": "object",
+        "properties": {
+          "sourceLevelNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceOrder": {
+            "type": "number"
+          },
+          "sourceQuestionId": {
+            "type": "string"
+          },
+          "chapterName": {
+            "type": "string"
+          },
+          "subchapterName": {
+            "type": "string"
+          },
+          "competencyName": {
+            "type": "string"
+          },
+          "sourceSheet": {
+            "type": "string"
+          },
+          "sourceRowNumber": {
+            "type": "number"
+          },
+          "assetManifest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelAssetDto"
+            }
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          }
+        },
+        "required": [
+          "sourceLevelNumber",
+          "sourceSheet",
+          "sourceRowNumber",
+          "assetManifest"
+        ]
+      },
+      "ExcelQuestionDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "competencyCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "answer": {
+            "nullable": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/ExcelMetadataDto"
+          }
+        },
+        "required": [
+          "externalId",
+          "type",
+          "chapterCode",
+          "subchapterCode",
+          "competencyCode",
+          "difficulty",
+          "stem",
+          "options",
+          "answer",
+          "explanation",
+          "metadata"
+        ]
+      },
+      "ContentPackageItemDto": {
+        "type": "object",
+        "properties": {
+          "questionVersionId": {
+            "type": "string"
+          },
+          "questionId": {
+            "type": "string"
+          },
+          "displayOrder": {
+            "type": "number"
+          },
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ],
+            "nullable": true
+          },
+          "contentStatus": {
+            "type": "string"
+          },
+          "reviewedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "reviewedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "question": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExcelQuestionDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "questionVersionId",
+          "questionId",
+          "displayOrder",
+          "usageType",
+          "contentStatus",
+          "reviewedAt",
+          "reviewedByUserId",
+          "question"
+        ]
+      },
+      "PackageCheckDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "passed": {
+            "type": "boolean"
+          },
+          "detail": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "code",
+          "passed",
+          "detail"
+        ]
+      },
+      "PackageValidationDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "canSaveDraft": {
+            "type": "boolean"
+          },
+          "canPublish": {
+            "type": "boolean"
+          },
+          "expectedCount": {
+            "type": "number"
+          },
+          "actualCount": {
+            "type": "number"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "removedVersionIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PackageCheckDto"
+            }
+          }
+        },
+        "required": [
+          "packageId",
+          "contentRevision",
+          "canSaveDraft",
+          "canPublish",
+          "expectedCount",
+          "actualCount",
+          "blockers",
+          "removedVersionIds",
+          "checks"
+        ]
+      },
+      "ContentDistributionDto": {
+        "type": "object",
+        "properties": {
+          "dimension": {
+            "type": "string"
+          },
+          "value": {
+            "type": "string"
+          },
+          "count": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "dimension",
+          "value",
+          "count"
+        ]
+      },
+      "ContentPackageDetailDto": {
+        "type": "object",
+        "properties": {
+          "curriculumApproval": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PackageApprovalDto"
+              }
+            ]
+          },
+          "id": {
+            "type": "string"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          },
+          "name": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "contentRevision": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string"
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "source": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PackageSourceDto"
+              }
+            ]
+          },
+          "chapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "chapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterName": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentPackageItemDto"
+            }
+          },
+          "readiness": {
+            "$ref": "#/components/schemas/PackageValidationDto"
+          },
+          "distribution": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ContentDistributionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "familyCode",
+          "packageVersion",
+          "name",
+          "assessmentType",
+          "contentRevision",
+          "status",
+          "isDemo",
+          "source",
+          "chapterId",
+          "levelId",
+          "chapterCode",
+          "chapterName",
+          "subchapterCode",
+          "subchapterName",
+          "levelNumber",
+          "items",
+          "readiness",
+          "distribution"
+        ]
+      },
+      "PublishContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "confirmed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "expectedRevision": {
+            "type": "number"
+          },
+          "releaseAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "expectedRevision"
+        ]
+      },
+      "GeneratorPackageOptionDto": {
+        "type": "object",
+        "properties": {
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "scopeId": {
+            "type": "string",
+            "nullable": true
+          },
+          "scopeLabel": {
+            "type": "string"
+          },
+          "availableCount": {
+            "type": "number"
+          },
+          "requiredCount": {
+            "type": "number"
+          },
+          "canGenerate": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "assessmentType",
+          "scopeId",
+          "scopeLabel",
+          "availableCount",
+          "requiredCount",
+          "canGenerate"
+        ]
+      },
+      "GeneratorPackageCatalogDto": {
+        "type": "object",
+        "properties": {
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorPackageOptionDto"
+            }
+          }
+        },
+        "required": [
+          "options"
+        ]
+      },
+      "GeneratorPackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "expectedCount": {
+            "type": "number"
+          },
+          "completedCount": {
+            "type": "number"
+          },
+          "failedCount": {
+            "type": "number"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "GENERATING",
+              "FAILED",
+              "READY",
+              "IMPORTED"
+            ]
+          },
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "requests": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorRequestDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "assessmentType",
+          "title",
+          "expectedCount",
+          "completedCount",
+          "failedCount",
+          "status",
+          "packageId",
+          "createdAt",
+          "requests"
+        ]
+      },
+      "GeneratorPackagesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorPackageDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "CreateGeneratorPackageDto": {
+        "type": "object",
+        "properties": {
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "scopeId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "assessmentType",
+          "title"
+        ]
+      },
+      "GeneratorPackageFileItemDto": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string"
+          },
+          "candidateId": {
+            "type": "string"
+          },
+          "question": {
+            "$ref": "#/components/schemas/ExcelQuestionDto"
+          },
+          "content": {
+            "type": "object",
+            "description": "Exact immutable generator-service-v1 candidate payload"
+          }
+        },
+        "required": [
+          "requestId",
+          "candidateId",
+          "question",
+          "content"
+        ]
+      },
+      "GeneratorPackageFileDto": {
+        "type": "object",
+        "properties": {
+          "contractVersion": {
+            "type": "string",
+            "enum": [
+              "numora-generator-package-v1"
+            ]
+          },
+          "generatorPackageId": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "expectedCount": {
+            "type": "number"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/GeneratorPackageFileItemDto"
+            }
+          }
+        },
+        "required": [
+          "contractVersion",
+          "generatorPackageId",
+          "assessmentType",
+          "title",
+          "expectedCount",
+          "items"
+        ]
+      },
+      "ValidateGeneratorJsonDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/GeneratorPackageFileDto"
+          }
+        },
+        "required": [
+          "file"
+        ]
+      },
+      "ImportIssueDto": {
+        "type": "object",
+        "properties": {
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "sheet": {
+            "type": "string",
+            "nullable": true
+          },
+          "row": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "code",
+          "detail",
+          "sheet",
+          "row"
+        ]
+      },
+      "ImportItemDto": {
+        "type": "object",
+        "properties": {
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportIssueDto"
+            }
+          },
+          "externalId": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "canPreview": {
+            "type": "boolean"
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "outcome": {
+            "type": "string",
+            "enum": [
+              "VALIDATED",
+              "CREATED",
+              "CREATED_REVISION",
+              "SKIPPED_UNCHANGED",
+              "INVALID"
+            ]
+          },
+          "questionVersionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          },
+          "change": {
+            "type": "string",
+            "enum": [
+              "ADD",
+              "REVISE",
+              "KEEP",
+              "REUSE",
+              "INVALID"
+            ]
+          }
+        },
+        "required": [
+          "externalId",
+          "canImportDraft",
+          "canPreview",
+          "blockers",
+          "outcome",
+          "questionVersionId"
+        ]
+      },
+      "ImportReportDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "nullable": true,
+            "format": "uuid"
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "canImportDraft": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ImportItemDto"
+            }
+          },
+          "package": {
+            "$ref": "#/components/schemas/PackageValidationDto"
+          }
+        },
+        "required": [
+          "id",
+          "sourceNamespace",
+          "canImportDraft",
+          "items"
+        ]
+      },
+      "GeneratorJsonPreviewDto": {
+        "type": "object",
+        "properties": {
+          "file": {
+            "$ref": "#/components/schemas/GeneratorPackageFileDto"
+          },
+          "report": {
+            "$ref": "#/components/schemas/ImportReportDto"
+          }
+        },
+        "required": [
+          "file",
+          "report"
         ]
       },
       "AdminAssessmentPolicyDto": {
@@ -11269,7 +13191,8 @@
             "type": "string"
           },
           "primaryCompetencyId": {
-            "type": "string"
+            "type": "string",
+            "nullable": true
           },
           "curriculumLevelNumber": {
             "type": "number",
@@ -11754,6 +13677,9 @@
       "PublishTryoutPackageDto": {
         "type": "object",
         "properties": {
+          "curriculumApprovalReference": {
+            "type": "string"
+          },
           "scoringPolicyVersionId": {
             "type": "string",
             "format": "uuid"
@@ -11763,13 +13689,14 @@
             "format": "date-time"
           },
           "durationSeconds": {
-            "type": "number"
+            "type": "number",
+            "enum": [
+              600
+            ]
           }
         },
         "required": [
-          "scoringPolicyVersionId",
-          "releaseAt",
-          "durationSeconds"
+          "scoringPolicyVersionId"
         ]
       },
       "AdminDrillPackageDto": {
@@ -11912,6 +13839,15 @@
           "scoringPolicyVersionId",
           "questionVersionIds"
         ]
+      },
+      "PublishDrillPackageDto": {
+        "type": "object",
+        "properties": {
+          "curriculumApprovalReference": {
+            "type": "string",
+            "description": "Reference to the Curriculum approval for the reviewed composition."
+          }
+        }
       },
       "CreateMediaUploadDto": {
         "type": "object",
@@ -12144,193 +14080,6 @@
           "questions"
         ]
       },
-      "ImportIssueDto": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "detail": {
-            "type": "string"
-          },
-          "sheet": {
-            "type": "string",
-            "nullable": true
-          },
-          "row": {
-            "type": "number",
-            "nullable": true
-          }
-        },
-        "required": [
-          "code",
-          "detail",
-          "sheet",
-          "row"
-        ]
-      },
-      "ImportItemDto": {
-        "type": "object",
-        "properties": {
-          "issues": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ImportIssueDto"
-            }
-          },
-          "externalId": {
-            "type": "string"
-          },
-          "canImportDraft": {
-            "type": "boolean"
-          },
-          "canPreview": {
-            "type": "boolean"
-          },
-          "blockers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "outcome": {
-            "type": "string",
-            "enum": [
-              "VALIDATED",
-              "CREATED",
-              "CREATED_REVISION",
-              "SKIPPED_UNCHANGED",
-              "INVALID"
-            ]
-          },
-          "questionVersionId": {
-            "type": "string",
-            "format": "uuid",
-            "nullable": true
-          },
-          "change": {
-            "type": "string",
-            "enum": [
-              "ADD",
-              "REVISE",
-              "KEEP",
-              "REUSE",
-              "INVALID"
-            ]
-          }
-        },
-        "required": [
-          "externalId",
-          "canImportDraft",
-          "canPreview",
-          "blockers",
-          "outcome",
-          "questionVersionId"
-        ]
-      },
-      "PackageCheckDto": {
-        "type": "object",
-        "properties": {
-          "code": {
-            "type": "string"
-          },
-          "passed": {
-            "type": "boolean"
-          },
-          "detail": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "code",
-          "passed",
-          "detail"
-        ]
-      },
-      "PackageValidationDto": {
-        "type": "object",
-        "properties": {
-          "packageId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "contentRevision": {
-            "type": "number"
-          },
-          "canSaveDraft": {
-            "type": "boolean"
-          },
-          "canPublish": {
-            "type": "boolean"
-          },
-          "expectedCount": {
-            "type": "number"
-          },
-          "actualCount": {
-            "type": "number"
-          },
-          "blockers": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "removedVersionIds": {
-            "type": "array",
-            "items": {
-              "type": "string"
-            }
-          },
-          "checks": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PackageCheckDto"
-            }
-          }
-        },
-        "required": [
-          "packageId",
-          "contentRevision",
-          "canSaveDraft",
-          "canPublish",
-          "expectedCount",
-          "actualCount",
-          "blockers",
-          "removedVersionIds",
-          "checks"
-        ]
-      },
-      "ImportReportDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string",
-            "nullable": true,
-            "format": "uuid"
-          },
-          "sourceNamespace": {
-            "type": "string"
-          },
-          "canImportDraft": {
-            "type": "boolean"
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ImportItemDto"
-            }
-          },
-          "package": {
-            "$ref": "#/components/schemas/PackageValidationDto"
-          }
-        },
-        "required": [
-          "id",
-          "sourceNamespace",
-          "canImportDraft",
-          "items"
-        ]
-      },
       "CreatePreviewDto": {
         "type": "object",
         "properties": {
@@ -12345,21 +14094,6 @@
         },
         "required": [
           "questionVersionIds"
-        ]
-      },
-      "PreviewCategoryDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "label": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id",
-          "label"
         ]
       },
       "PreviewItemDto": {
@@ -12756,216 +14490,6 @@
           "isDemo"
         ]
       },
-      "ExcelAssetDto": {
-        "type": "object",
-        "properties": {
-          "externalId": {
-            "type": "string"
-          },
-          "assetId": {
-            "type": "string"
-          },
-          "textMarker": {
-            "type": "string"
-          },
-          "placement": {
-            "type": "string",
-            "enum": [
-              "STEM",
-              "OPTION",
-              "STATEMENT",
-              "EXPLANATION"
-            ]
-          },
-          "itemId": {
-            "type": "string",
-            "nullable": true
-          },
-          "assetOrder": {
-            "type": "number"
-          },
-          "altText": {
-            "type": "string"
-          },
-          "objectKey": {
-            "type": "string",
-            "nullable": true
-          },
-          "sha256": {
-            "type": "string"
-          },
-          "contentType": {
-            "type": "string"
-          },
-          "byteLength": {
-            "type": "number"
-          },
-          "bucket": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "externalId",
-          "assetId",
-          "textMarker",
-          "placement",
-          "itemId",
-          "assetOrder",
-          "altText",
-          "objectKey",
-          "sha256",
-          "contentType",
-          "byteLength",
-          "bucket"
-        ]
-      },
-      "ExcelMetadataDto": {
-        "type": "object",
-        "properties": {
-          "sourceLevelNumber": {
-            "type": "number"
-          },
-          "sourceOrder": {
-            "type": "number"
-          },
-          "sourceQuestionId": {
-            "type": "string"
-          },
-          "sourceSheet": {
-            "type": "string"
-          },
-          "sourceRowNumber": {
-            "type": "number"
-          },
-          "assetManifest": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ExcelAssetDto"
-            }
-          },
-          "categories": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PreviewCategoryDto"
-            }
-          }
-        },
-        "required": [
-          "sourceLevelNumber",
-          "sourceSheet",
-          "sourceRowNumber",
-          "assetManifest"
-        ]
-      },
-      "ExcelQuestionDto": {
-        "type": "object",
-        "properties": {
-          "externalId": {
-            "type": "string"
-          },
-          "type": {
-            "type": "string",
-            "enum": [
-              "SINGLE_CHOICE",
-              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
-              "CATEGORY"
-            ]
-          },
-          "chapterCode": {
-            "type": "string"
-          },
-          "subchapterCode": {
-            "type": "string"
-          },
-          "competencyCode": {
-            "type": "string"
-          },
-          "difficulty": {
-            "type": "string",
-            "nullable": true,
-            "enum": [
-              "EASY",
-              "MEDIUM",
-              "HARD"
-            ]
-          },
-          "stem": {
-            "$ref": "#/components/schemas/RichContentDto"
-          },
-          "options": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/PreviewOptionDto"
-            }
-          },
-          "answer": {
-            "nullable": false,
-            "oneOf": [
-              {
-                "type": "object",
-                "required": [
-                  "optionId"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "optionId": {
-                    "type": "string"
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "required": [
-                  "optionIds"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "optionIds": {
-                    "type": "array",
-                    "items": {
-                      "type": "string"
-                    }
-                  }
-                }
-              },
-              {
-                "type": "object",
-                "required": [
-                  "categoryByStatementId"
-                ],
-                "additionalProperties": false,
-                "properties": {
-                  "categoryByStatementId": {
-                    "type": "object",
-                    "additionalProperties": {
-                      "type": "string"
-                    }
-                  }
-                }
-              }
-            ]
-          },
-          "explanation": {
-            "$ref": "#/components/schemas/RichContentDto"
-          },
-          "metadata": {
-            "$ref": "#/components/schemas/ExcelMetadataDto"
-          }
-        },
-        "required": [
-          "externalId",
-          "type",
-          "chapterCode",
-          "subchapterCode",
-          "competencyCode",
-          "difficulty",
-          "stem",
-          "options",
-          "answer",
-          "explanation",
-          "metadata"
-        ]
-      },
       "ExcelEnvelopeDto": {
         "type": "object",
         "properties": {
@@ -12997,6 +14521,9 @@
       "ExcelMediaDto": {
         "type": "object",
         "properties": {
+          "url": {
+            "type": "string"
+          },
           "externalId": {
             "type": "string"
           },
@@ -13076,28 +14603,18 @@
           "report"
         ]
       },
-      "PackageSourceDto": {
-        "type": "object",
-        "properties": {
-          "sourceNamespace": {
-            "type": "string"
-          },
-          "sourceName": {
-            "type": "string"
-          },
-          "sourceReference": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "sourceNamespace",
-          "sourceName",
-          "sourceReference"
-        ]
-      },
       "ContentPackageDto": {
         "type": "object",
         "properties": {
+          "curriculumApproval": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/PackageApprovalDto"
+              }
+            ]
+          },
           "id": {
             "type": "string"
           },
@@ -13227,7 +14744,8 @@
             "format": "uuid"
           },
           "isDemo": {
-            "type": "boolean"
+            "type": "boolean",
+            "default": false
           },
           "source": {
             "$ref": "#/components/schemas/PackageSourceDto"
@@ -13238,187 +14756,7 @@
           "packageVersion",
           "name",
           "assessmentType",
-          "isDemo",
           "source"
-        ]
-      },
-      "ContentPackageItemDto": {
-        "type": "object",
-        "properties": {
-          "questionVersionId": {
-            "type": "string"
-          },
-          "questionId": {
-            "type": "string"
-          },
-          "displayOrder": {
-            "type": "number"
-          },
-          "usageType": {
-            "type": "string",
-            "enum": [
-              "DRILL",
-              "PRETEST",
-              "TRYOUT"
-            ],
-            "nullable": true
-          },
-          "contentStatus": {
-            "type": "string"
-          },
-          "reviewedAt": {
-            "type": "string",
-            "nullable": true
-          },
-          "reviewedByUserId": {
-            "type": "string",
-            "nullable": true
-          },
-          "question": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/ExcelQuestionDto"
-              }
-            ]
-          }
-        },
-        "required": [
-          "questionVersionId",
-          "questionId",
-          "displayOrder",
-          "usageType",
-          "contentStatus",
-          "reviewedAt",
-          "reviewedByUserId",
-          "question"
-        ]
-      },
-      "ContentDistributionDto": {
-        "type": "object",
-        "properties": {
-          "dimension": {
-            "type": "string"
-          },
-          "value": {
-            "type": "string"
-          },
-          "count": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "dimension",
-          "value",
-          "count"
-        ]
-      },
-      "ContentPackageDetailDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          },
-          "familyCode": {
-            "type": "string"
-          },
-          "packageVersion": {
-            "type": "number"
-          },
-          "name": {
-            "type": "string"
-          },
-          "assessmentType": {
-            "type": "string",
-            "enum": [
-              "DRILL",
-              "PRETEST",
-              "TRYOUT"
-            ]
-          },
-          "contentRevision": {
-            "type": "number"
-          },
-          "status": {
-            "type": "string"
-          },
-          "isDemo": {
-            "type": "boolean"
-          },
-          "source": {
-            "nullable": true,
-            "type": "object",
-            "allOf": [
-              {
-                "$ref": "#/components/schemas/PackageSourceDto"
-              }
-            ]
-          },
-          "chapterId": {
-            "type": "string",
-            "nullable": true
-          },
-          "levelId": {
-            "type": "string",
-            "nullable": true
-          },
-          "chapterCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "chapterName": {
-            "type": "string",
-            "nullable": true
-          },
-          "subchapterCode": {
-            "type": "string",
-            "nullable": true
-          },
-          "subchapterName": {
-            "type": "string",
-            "nullable": true
-          },
-          "levelNumber": {
-            "type": "number",
-            "nullable": true
-          },
-          "items": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContentPackageItemDto"
-            }
-          },
-          "readiness": {
-            "$ref": "#/components/schemas/PackageValidationDto"
-          },
-          "distribution": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/ContentDistributionDto"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "familyCode",
-          "packageVersion",
-          "name",
-          "assessmentType",
-          "contentRevision",
-          "status",
-          "isDemo",
-          "source",
-          "chapterId",
-          "levelId",
-          "chapterCode",
-          "chapterName",
-          "subchapterCode",
-          "subchapterName",
-          "levelNumber",
-          "items",
-          "readiness",
-          "distribution"
         ]
       },
       "UpdateContentPackageDto": {
@@ -13457,6 +14795,1061 @@
         },
         "required": [
           "usageType"
+        ]
+      },
+      "ApproveContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "confirmed": {
+            "type": "boolean",
+            "enum": [
+              true
+            ]
+          },
+          "reference": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "confirmed",
+          "reference"
+        ]
+      },
+      "ArchiveContentPackageDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "expectedRevision"
+        ]
+      },
+      "UploadQueryDto": {
+        "type": "object",
+        "properties": {
+          "search": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "status": {
+            "type": "string"
+          },
+          "offset": {
+            "type": "object"
+          },
+          "limit": {
+            "type": "object"
+          }
+        }
+      },
+      "UploadSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "validationResult": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "assessmentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "fileName",
+          "createdAt",
+          "actorName",
+          "revision",
+          "state",
+          "status",
+          "questionCount",
+          "title",
+          "assessmentType",
+          "packageId",
+          "error"
+        ]
+      },
+      "UploadListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/UploadSummaryDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
+      "SourceMaterialDto": {
+        "type": "object",
+        "properties": {
+          "chapter": {
+            "type": "string"
+          },
+          "subchapter": {
+            "type": "string"
+          },
+          "competency": {
+            "type": "string"
+          },
+          "level": {
+            "type": "string"
+          },
+          "naming": {
+            "type": "string",
+            "enum": [
+              "NAME",
+              "CODE"
+            ]
+          }
+        },
+        "required": [
+          "chapter",
+          "subchapter",
+          "competency",
+          "level",
+          "naming"
+        ]
+      },
+      "MaterialIdsDto": {
+        "type": "object",
+        "properties": {
+          "chapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "competencyId": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "chapterId",
+          "subchapterId",
+          "competencyId",
+          "levelId"
+        ]
+      },
+      "IntakeMetadataDto": {
+        "type": "object",
+        "properties": {
+          "sourceSheet": {
+            "type": "string"
+          },
+          "sourceRowNumber": {
+            "type": "number"
+          },
+          "assetManifest": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelAssetDto"
+            }
+          },
+          "sourceOrder": {
+            "type": "number"
+          },
+          "sourceQuestionId": {
+            "type": "string"
+          },
+          "chapterName": {
+            "type": "string"
+          },
+          "subchapterName": {
+            "type": "string"
+          },
+          "competencyName": {
+            "type": "string"
+          },
+          "categories": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewCategoryDto"
+            }
+          },
+          "sourceLevelNumber": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceMaterial": {
+            "$ref": "#/components/schemas/SourceMaterialDto"
+          },
+          "materialIds": {
+            "$ref": "#/components/schemas/MaterialIdsDto"
+          },
+          "materialOrigins": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string",
+              "enum": [
+                "EXCEL",
+                "AUTO",
+                "USER"
+              ]
+            }
+          },
+          "materialReferences": {
+            "type": "object",
+            "additionalProperties": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "sourceSheet",
+          "sourceRowNumber",
+          "assetManifest",
+          "sourceLevelNumber"
+        ]
+      },
+      "IntakeQuestionDto": {
+        "type": "object",
+        "properties": {
+          "externalId": {
+            "type": "string"
+          },
+          "type": {
+            "type": "string",
+            "enum": [
+              "SINGLE_CHOICE",
+              "MULTIPLE_CHOICE_MULTIPLE_ANSWER",
+              "CATEGORY"
+            ]
+          },
+          "difficulty": {
+            "type": "string",
+            "nullable": true,
+            "enum": [
+              "EASY",
+              "MEDIUM",
+              "HARD"
+            ]
+          },
+          "stem": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "options": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/PreviewOptionDto"
+            }
+          },
+          "answer": {
+            "nullable": false,
+            "oneOf": [
+              {
+                "type": "object",
+                "required": [
+                  "optionId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionId": {
+                    "type": "string"
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "optionIds"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "optionIds": {
+                    "type": "array",
+                    "items": {
+                      "type": "string"
+                    }
+                  }
+                }
+              },
+              {
+                "type": "object",
+                "required": [
+                  "categoryByStatementId"
+                ],
+                "additionalProperties": false,
+                "properties": {
+                  "categoryByStatementId": {
+                    "type": "object",
+                    "additionalProperties": {
+                      "type": "string"
+                    }
+                  }
+                }
+              }
+            ]
+          },
+          "explanation": {
+            "$ref": "#/components/schemas/RichContentDto"
+          },
+          "chapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "competencyCode": {
+            "type": "string",
+            "nullable": true
+          },
+          "metadata": {
+            "$ref": "#/components/schemas/IntakeMetadataDto"
+          }
+        },
+        "required": [
+          "externalId",
+          "type",
+          "difficulty",
+          "stem",
+          "options",
+          "answer",
+          "explanation",
+          "chapterCode",
+          "subchapterCode",
+          "competencyCode",
+          "metadata"
+        ]
+      },
+      "IntakeEnvelopeDto": {
+        "type": "object",
+        "properties": {
+          "intakeVersion": {
+            "type": "number",
+            "enum": [
+              1
+            ]
+          },
+          "sourceNamespace": {
+            "type": "string"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntakeQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "intakeVersion",
+          "sourceNamespace",
+          "questions"
+        ]
+      },
+      "IntakeIssueDto": {
+        "type": "object",
+        "properties": {
+          "sheet": {
+            "type": "string"
+          },
+          "row": {
+            "type": "number"
+          },
+          "cell": {
+            "type": "string"
+          },
+          "code": {
+            "type": "string"
+          },
+          "detail": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string",
+            "enum": [
+              "CONTENT",
+              "METADATA",
+              "MAPPING"
+            ]
+          },
+          "field": {
+            "type": "string"
+          },
+          "externalId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "sheet",
+          "row",
+          "cell",
+          "code",
+          "detail",
+          "category",
+          "field"
+        ]
+      },
+      "ExcelIntakeDto": {
+        "type": "object",
+        "properties": {
+          "envelope": {
+            "$ref": "#/components/schemas/IntakeEnvelopeDto"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelMediaDto"
+            }
+          },
+          "issues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/ExcelIssueDto"
+            }
+          },
+          "mappingIssues": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntakeIssueDto"
+            }
+          },
+          "report": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ImportReportDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "envelope",
+          "media",
+          "issues",
+          "mappingIssues",
+          "report"
+        ]
+      },
+      "UploadDestinationDto": {
+        "type": "object",
+        "properties": {
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          },
+          "title": {
+            "type": "string"
+          },
+          "chapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "subchapterId": {
+            "type": "string",
+            "nullable": true
+          },
+          "levelId": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "assessmentType",
+          "title",
+          "chapterId",
+          "subchapterId",
+          "levelId"
+        ]
+      },
+      "UploadDetailDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "fileName": {
+            "type": "string"
+          },
+          "createdAt": {
+            "type": "string"
+          },
+          "actorName": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "questionCount": {
+            "type": "number"
+          },
+          "validationResult": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string",
+            "nullable": true
+          },
+          "assessmentType": {
+            "type": "string",
+            "nullable": true
+          },
+          "packageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "error": {
+            "type": "string",
+            "nullable": true
+          },
+          "canEditPreview": {
+            "type": "boolean"
+          },
+          "excel": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ExcelIntakeDto"
+              }
+            ]
+          },
+          "destination": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UploadDestinationDto"
+              }
+            ]
+          },
+          "selectedIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "package": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/ContentPackageDetailDto"
+              }
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "fileName",
+          "createdAt",
+          "actorName",
+          "revision",
+          "state",
+          "status",
+          "questionCount",
+          "title",
+          "assessmentType",
+          "packageId",
+          "error",
+          "excel",
+          "destination",
+          "selectedIds",
+          "package"
+        ]
+      },
+      "UpdateUploadPreviewDto": {
+        "type": "object",
+        "properties": {
+          "destination": {
+            "nullable": true,
+            "type": "object",
+            "allOf": [
+              {
+                "$ref": "#/components/schemas/UploadDestinationDto"
+              }
+            ]
+          },
+          "expectedRevision": {
+            "type": "number"
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/IntakeQuestionDto"
+            }
+          },
+          "selectedIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "questions",
+          "selectedIds"
+        ]
+      },
+      "SaveUploadDraftDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "title": {
+            "type": "string"
+          },
+          "assessmentType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ]
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "title",
+          "assessmentType"
+        ]
+      },
+      "ClassDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "StudentDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "displayName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "displayName"
+        ]
+      },
+      "MonitoredLevelDto": {
+        "type": "object",
+        "properties": {
+          "levelId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "chapterLabel": {
+            "type": "string"
+          },
+          "subchapterLabel": {
+            "type": "string"
+          },
+          "levelLabel": {
+            "type": "string"
+          },
+          "accessStatus": {
+            "type": "string",
+            "enum": [
+              "LOCKED",
+              "UNLOCKED"
+            ]
+          },
+          "inProgress": {
+            "type": "boolean"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "bestDrillScore": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "levelId",
+          "chapterLabel",
+          "subchapterLabel",
+          "levelLabel",
+          "accessStatus",
+          "inProgress",
+          "latestDrillScore",
+          "bestDrillScore"
+        ]
+      },
+      "TeacherStudentProgressDto": {
+        "type": "object",
+        "properties": {
+          "class": {
+            "$ref": "#/components/schemas/ClassDto"
+          },
+          "student": {
+            "$ref": "#/components/schemas/StudentDto"
+          },
+          "latestDrillScore": {
+            "type": "number",
+            "nullable": true
+          },
+          "levels": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/MonitoredLevelDto"
+            }
+          }
+        },
+        "required": [
+          "class",
+          "student",
+          "latestDrillScore",
+          "levels"
+        ]
+      },
+      "SchoolDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "name": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "name"
+        ]
+      },
+      "SchoolListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/SchoolDto"
+            }
+          }
+        },
+        "required": [
+          "items"
+        ]
+      },
+      "VerifyTeacherDto": {
+        "type": "object",
+        "properties": {
+          "token": {
+            "type": "string",
+            "minLength": 8,
+            "maxLength": 128,
+            "pattern": "^(?:[A-Za-z0-9]{8}|[A-Za-z0-9_-]{32,128})$"
+          }
+        },
+        "required": [
+          "token"
+        ]
+      },
+      "VerifiedDto": {
+        "type": "object",
+        "properties": {
+          "verified": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "verified"
+        ]
+      },
+      "LeftSchoolDto": {
+        "type": "object",
+        "properties": {
+          "left": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "left"
+        ]
+      },
+      "AdminSchoolDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "code": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "address": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "code",
+          "name",
+          "address",
+          "status"
+        ]
+      },
+      "AdminSchoolsDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminSchoolDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "CreateSchoolDto": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "maxLength": 500
+          },
+          "code": {
+            "type": "string",
+            "minLength": 2,
+            "maxLength": 32
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "code",
+          "name"
+        ]
+      },
+      "UpdateSchoolDto": {
+        "type": "object",
+        "properties": {
+          "address": {
+            "type": "string",
+            "nullable": true,
+            "maxLength": 500
+          },
+          "name": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "ACTIVE",
+              "INACTIVE"
+            ]
+          }
+        }
+      },
+      "TokenSummaryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "expiresAt": {
+            "format": "date-time",
+            "type": "string"
+          },
+          "usedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "revokedAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "createdAt": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "usedByUserId": {
+            "type": "string",
+            "nullable": true
+          },
+          "usedByName": {
+            "type": "string",
+            "nullable": true
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "AVAILABLE",
+              "EXPIRED",
+              "USED",
+              "REVOKED"
+            ]
+          }
+        },
+        "required": [
+          "id",
+          "expiresAt",
+          "usedAt",
+          "revokedAt",
+          "createdAt",
+          "usedByUserId",
+          "usedByName",
+          "status"
+        ]
+      },
+      "TokenListDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TokenSummaryDto"
+            }
+          },
+          "nextOffset": {
+            "type": "number",
+            "nullable": true
+          }
+        },
+        "required": [
+          "items",
+          "nextOffset"
+        ]
+      },
+      "TokenDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "token": {
+            "type": "string"
+          },
+          "expiresAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "id",
+          "token",
+          "expiresAt"
+        ]
+      },
+      "RevokedDto": {
+        "type": "object",
+        "properties": {
+          "revoked": {
+            "type": "boolean"
+          }
+        },
+        "required": [
+          "revoked"
         ]
       },
       "AdminAnalyticsMetricDto": {

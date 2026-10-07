@@ -8,6 +8,10 @@
     ".": {
       "types": "./dist/index.d.ts",
       "default": "./dist/index.js"
+    },
+    "./testing": {
+      "types": "./dist/testing.d.ts",
+      "default": "./dist/testing.js"
     }
   },
   "scripts": {
@@ -30,7 +34,9 @@
     "db:seed:lifecycle": "tsx src/seed-lifecycle-demo.ts",
     "db:seed:pvp": "tsx src/seed-pvp-demo.ts",
     "db:seed:assessments:mock": "tsx src/seed-assessment-mocks.ts",
-    "db:studio": "drizzle-kit studio"
+    "db:studio": "drizzle-kit studio",
+    "db:seed:scenarios": "tsx src/seed-development-scenarios.ts",
+    "db:cleanup:development": "tsx src/development-cleanup.ts"
   },
   "dependencies": {
     "drizzle-orm": "0.45.3",
@@ -42,5 +48,12 @@
     "tsx": "^4.23.0",
     "typescript": "5.9.3",
     "vitest": "5.0.2"
+  },
+  "typesVersions": {
+    "*": {
+      "testing": [
+        "dist/testing.d.ts"
+      ]
+    }
   }
 }

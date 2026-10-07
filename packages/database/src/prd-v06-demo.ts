@@ -1,6 +1,7 @@
 import { createHash } from 'node:crypto';
 import { and, eq, like, or } from 'drizzle-orm';
 import { getDatabase } from './client.js';
+import { allowSyntheticContent } from './package-runtime.js';
 import { assessmentPackages, packageItems, scoringPolicyVersions } from './schema/index.js';
 
 function fixtureId(label: string) {
@@ -18,6 +19,8 @@ function fixtureId(label: string) {
 export async function seedPrdV06Demo(
   db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'>,
 ) {
+  if (!allowSyntheticContent())
+    throw new Error('Isolated development/test fixture opt-in required.');
   const [policy] = await db
     .select()
     .from(scoringPolicyVersions)

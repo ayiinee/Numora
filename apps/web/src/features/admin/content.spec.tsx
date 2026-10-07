@@ -541,9 +541,16 @@ describe('Admin content UI', () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Publikasikan paket' }));
+    fireEvent.change(await screen.findByLabelText('Referensi persetujuan Curriculum'), {
+      target: { value: 'TEST_ONLY_APPROVAL' },
+    });
+    fireEvent.submit(
+      (await screen.findByRole('button', { name: 'Publikasikan paket' })).closest('form')!,
+    );
     await waitFor(() =>
-      expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
+      expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test', {
+        curriculumApprovalReference: 'TEST_ONLY_APPROVAL',
+      }),
     );
     expect(
       await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.'),

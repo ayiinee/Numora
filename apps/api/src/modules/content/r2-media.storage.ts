@@ -113,6 +113,66 @@ export class R2MediaStorage {
     }
   }
 
+  async storeWorkbook(id: string, bytes: Buffer) {
+    const { bucket } = this.settings();
+    const objectKey = `excel-uploads/${id}/source.xlsx`;
+    const client = this.client(bucket);
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: objectKey,
+          Body: bytes,
+          ContentType: 'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',
+          ContentLength: bytes.length,
+          Metadata: { sha256: createHash('sha256').update(bytes).digest('hex') },
+        }),
+        { abortSignal: AbortSignal.timeout(15_000) },
+      );
+      return objectKey;
+    } catch {
+      throw new ServiceUnavailableException({
+        code: 'R2_UNAVAILABLE',
+        detail: 'Excel belum tersimpan di R2. Coba upload kembali.',
+      });
+    } finally {
+      client.destroy();
+    }
+  }
+
+  async readWorkbook(id: string, sha256: string) {
+    const { bucket } = this.settings(true);
+    const client = this.client(bucket, true);
+    try {
+      const object = await client.send(
+        new GetObjectCommand({ Bucket: bucket, Key: `excel-uploads/${id}/source.xlsx` }),
+        { abortSignal: AbortSignal.timeout(15_000) },
+      );
+      const body = object.Body as AsyncIterable<Uint8Array> & { destroy?: () => void };
+      const chunks: Buffer[] = [];
+      let size = 0;
+      try {
+        for await (const chunk of body) {
+          size += chunk.length;
+          if (size > 10 * 1024 * 1024) throw invalidObject();
+          chunks.push(Buffer.from(chunk));
+        }
+      } finally {
+        body.destroy?.();
+      }
+      const bytes = Buffer.concat(chunks);
+      if (createHash('sha256').update(bytes).digest('hex') !== sha256) throw invalidObject();
+      return bytes;
+    } catch {
+      throw new ServiceUnavailableException({
+        code: 'UPLOAD_SOURCE_UNAVAILABLE',
+        detail: 'File asal belum dapat dibaca. Coba muat ulang.',
+      });
+    } finally {
+      client.destroy();
+    }
+  }
+
   async presign(row: MediaUpload) {
     const client = this.client(row.bucket);
     const seconds = Math.floor((row.expiresAt.getTime() - Date.now()) / 1000);

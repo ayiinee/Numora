@@ -1,3 +1,4 @@
+import { presentFixtureText } from '@tka/database';
 import { ForbiddenException, Injectable, Optional } from '@nestjs/common';
 import { PvpService } from '../pvp/pvp.service';
 import {
@@ -58,6 +59,7 @@ export class StudentDashboardService {
           attemptId: assessmentAttempts.id,
           levelId: assessmentAttempts.levelIdAtStart,
           title: assessmentPackages.name,
+          packageId: assessmentPackages.id,
         })
         .from(assessmentAttempts)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
@@ -89,7 +91,9 @@ export class StudentDashboardService {
       latestDrillScore: progress.latestScore,
       bestDrillScore: best[0]?.score == null ? null : Number(best[0].score),
       activities: history.records.slice(0, 5),
-      activeDrill: active[0] ?? null,
+      activeDrill: active[0]
+        ? { ...active[0], title: presentFixtureText(active[0].packageId, 'name', active[0].title) }
+        : null,
       features: {
         drill: true,
         tryout: true,

@@ -1,5 +1,5 @@
 import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, ApiProblem } from '@/lib/api';
 import { parseExcelFile, uploadExcelMedia, type UploadCache } from './content-excel-api';
 import type { ExcelEnvelopeDto, MediaUploadReservationDto } from './generated-types';
 vi.mock('@/lib/api', async (original) => ({
@@ -114,6 +114,70 @@ describe('Excel multipart and verified-media orchestration', () => {
     vi.mocked(apiRequest).mockResolvedValue({ ...verified, sha256: 'b'.repeat(64) });
     await expect(uploadExcelMedia('TEST', envelope, media, new Map(), vi.fn())).rejects.toThrow(
       'Receipt',
+    );
+  });
+  it('replaces an expired reservation key on retry instead of repeating the same 410', async () => {
+    vi.mocked(apiRequest)
+      .mockRejectedValueOnce(new ApiProblem(410, 'MEDIA_UPLOAD_EXPIRED', 'TEST ONLY expired'))
+      .mockResolvedValue(verified);
+    const cache: UploadCache = new Map();
+    await expect(uploadExcelMedia('TEST', envelope, media, cache, vi.fn())).rejects.toMatchObject({
+      status: 410,
+    });
+    const uploaded = await uploadExcelMedia('TEST', envelope, media, cache, vi.fn());
+    expect(vi.mocked(apiRequest).mock.calls[0]![2]!.headers).not.toEqual(
+      vi.mocked(apiRequest).mock.calls[1]![2]!.headers,
+    );
+    expect(uploaded.questions[0]!.metadata.assetManifest[0]!.objectKey).toBe(verified.objectKey);
+  });
+  it('uploads at most three images concurrently and returns only verified object keys', async () => {
+    const assets = Array.from({ length: 7 }, (_, i) => ({
+      ...asset,
+      assetId: `image-${i}`,
+      textMarker: `[[asset:image-${i}]]`,
+    }));
+    const input = structuredClone(envelope);
+    input.questions[0]!.metadata.assetManifest = assets;
+    const extracted = assets.map((a) => ({
+      externalId: a.externalId,
+      assetId: a.assetId,
+      base64: 'AQID',
+    }));
+    let active = 0,
+      peak = 0;
+    vi.stubGlobal(
+      'fetch',
+      vi.fn(async () => {
+        active++;
+        peak = Math.max(peak, active);
+        await new Promise((resolve) => setTimeout(resolve, 5));
+        active--;
+        return { ok: true };
+      }),
+    );
+    vi.mocked(apiRequest).mockImplementation(async (path, _token, options) => {
+      const id = path.endsWith('/complete')
+        ? path.split('/').at(-2)!
+        : JSON.parse(options!.body as string).assetId;
+      return {
+        ...pending,
+        assetId: id,
+        uploadId: id,
+        objectKey: `question-media/${id}.png`,
+        ...(path.endsWith('/complete')
+          ? { status: 'VERIFIED', verifiedAt: verified.verifiedAt }
+          : {}),
+      };
+    });
+    const result = await uploadExcelMedia('TEST', input, extracted, new Map(), vi.fn());
+    expect(peak).toBe(3);
+    expect(
+      result.questions[0]!.metadata.assetManifest.every(
+        (a) => a.objectKey === `question-media/${a.assetId}.png`,
+      ),
+    ).toBe(true);
+    expect(input.questions[0]!.metadata.assetManifest.every((a) => a.objectKey === null)).toBe(
+      true,
     );
   });
 });

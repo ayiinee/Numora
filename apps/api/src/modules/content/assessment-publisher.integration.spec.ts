@@ -59,9 +59,16 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     });
     expect(created.status).toBe(201);
     const p = await created.json();
-    expect((await request(`admin/content/drill-packages/${p.id}/publish`, 'POST')).status).toBe(
-      201,
-    );
+    const unapproved = await request(`admin/content/drill-packages/${p.id}/publish`, 'POST');
+    expect(unapproved.status).toBe(409);
+    expect(await unapproved.json()).toMatchObject({ code: 'CURRICULUM_APPROVAL_REQUIRED' });
+    expect(
+      (
+        await request(`admin/content/drill-packages/${p.id}/publish`, 'POST', {
+          curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+        })
+      ).status,
+    ).toBe(201);
     const zeroStart = await (
       await request('assessments/drill/attempts', 'POST', { levelId: fixture.level }, 'other')
     ).json();
@@ -138,7 +145,11 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
       })
     ).json();
     expect(
-      (await request(`admin/content/drill-packages/${replacement.id}/publish`, 'POST')).status,
+      (
+        await request(`admin/content/drill-packages/${replacement.id}/publish`, 'POST', {
+          curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
+        })
+      ).status,
     ).toBe(201);
     expect(
       (await db.select().from(assessmentPackages).where(eq(assessmentPackages.id, p.id)))[0]!
@@ -213,7 +224,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
       (await fixture.request('admin/content/pretest-packages', 'GET', undefined, 'student')).status,
     ).toBe(403);
   });
-  it('publishes a weekly thirty-item Tryout and finalizes batch-close races with exactly one XP entry', async () => {
+  it('publishes a thirty-item Tryout with the owner-approved schedule and finalizes batch-close races with exactly one XP entry', async () => {
     const ids = await bank(),
       { db } = getDatabase();
     const tryoutIds: string[] = [];
@@ -276,8 +287,9 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
       'POST',
       {
         scoringPolicyVersionId: policy!.id,
+        curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL',
         releaseAt: release.toISOString(),
-        durationSeconds: 3600,
+        durationSeconds: 600,
       },
     );
     expect(publish.status, await publish.text()).toBe(201);
@@ -292,7 +304,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
         scoringPolicyVersionId: policy!.id,
         releaseAt: new Date(Date.now() - 8 * 86400000),
         closeAt: new Date(Date.now() - 1000),
-        durationSeconds: 3600,
+        durationSeconds: 600,
       })
       .returning();
     const items = await db
@@ -593,7 +605,11 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     });
     expect(created.status).toBe(201);
     const p = await created.json();
-    const published = await fixture.request(`admin/content/drill-packages/${p.id}/publish`, 'POST');
+    const published = await fixture.request(
+      `admin/content/drill-packages/${p.id}/publish`,
+      'POST',
+      { curriculumApprovalReference: 'TEST_ONLY_NOT_CURRICULUM_APPROVAL' },
+    );
     expect(published.status, await published.text()).toBe(201);
     const a = await (
       await fixture.request(

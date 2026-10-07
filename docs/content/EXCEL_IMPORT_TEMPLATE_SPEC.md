@@ -1,3 +1,7 @@
+> **ENGINEERING DECISION — 6 October 2026:** the owner-approved [V5 upload-first workflow](UPLOAD_FIRST_WORKFLOW.md) supersedes package-first UI and required source/code fields below. Existing parser contracts remain readable for new copies.
+
+**ENGINEERING DECISION — 6 Oktober 2026:** [alur upload terbaru](EXCEL_UPLOAD_WORKFLOW_2026-10-06.md) menggantikan langkah manual JSON pada portal. Input baru hanya Excel; satu tombol Simpan menjalankan validasi/media/impor. API JSON tetap menjadi transport internal. Uraian ekspor/input JSON di bawah adalah konteks kompatibilitas historis.
+
 # Excel import V4 with V3 compatibility
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** V4 extends V3 with a `Paket` key/value sheet and `source_question_id`. Authenticated template GET accepts `packageId` and optional `examples=true` (DEMO only). Binding contains templateVersion=4, package UUID/family/version/assessmentType, chapter/subchapter/source level, source namespace/name/reference and isDemo. It is checked against server metadata; mismatches block import. `no` is a positive integer unique across PG/MCMA/Kategori. Examples contain 10/20/30 globally ordered rows with empty image columns. They demonstrate syntax only, not an approved blueprint.

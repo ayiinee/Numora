@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from './package-runtime.js';
 import { readFile } from 'node:fs/promises';
 import postgres from 'postgres';
 import { resolve } from 'node:path';
@@ -6,6 +7,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { seedPrdV06Demo } from './prd-v06-demo.js';
 
 async function run() {
+  if (!allowSyntheticContent()) throw new Error('Verified development fixture isolation required.');
   const ref = 'pkamenfnwmoeisccnrnk';
   const url = new URL(process.env.DATABASE_URL ?? '');
   if (

@@ -1,3 +1,4 @@
+import { presentFixtureText } from '@tka/database';
 import { AssessmentFinalizationError } from './errors.js';
 
 export type AssessmentAnswer =
@@ -134,12 +135,13 @@ export function presentAssessmentQuestion(
   content: AssessmentContent,
   id: string,
   rawAnswer: unknown,
+  questionVersionId?: string,
 ) {
   const answer = normalizeAssessmentAnswer(content, rawAnswer ?? null);
   return {
     questionInstanceId: id,
     type: content.type,
-    stem: content.stem,
+    stem: presentFixtureText(questionVersionId, 'stem', content.stem),
     options: content.options,
     categories: content.categories,
     answer,
@@ -153,8 +155,9 @@ export function presentAssessmentReview(
   rawAnswer: unknown,
   awardedPoints: string | number | null,
   maxPoints: string | number,
+  questionVersionId?: string,
 ) {
-  const active = presentAssessmentQuestion(content, id, rawAnswer);
+  const active = presentAssessmentQuestion(content, id, rawAnswer, questionVersionId);
   const maximum = Number(maxPoints),
     awarded = awardedPoints === null ? null : Number(awardedPoints);
   const valid =
@@ -220,10 +223,10 @@ export function presentAssessmentReview(
     statementReview,
     answerKey: content.answerKey,
     correctOptionId: 'optionId' in content.answerKey ? content.answerKey.optionId : null,
-    explanation: content.explanation,
+    explanation: presentFixtureText(questionVersionId, 'explanation', content.explanation),
     reviewStatus,
     awardedPoints: valid ? awarded : null,
     maximumPoints: valid ? maximum : null,
-    correctEquivalent: valid && content.type === 'SINGLE_CHOICE' ? awarded / maximum : null,
+    correctEquivalent: valid ? awarded / maximum : null,
   };
 }

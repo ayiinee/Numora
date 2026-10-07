@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from '@tka/database';
 import { ConflictException } from '@nestjs/common';
 
 export type Difficulty = 'easy' | 'medium' | 'hard';
@@ -18,6 +19,12 @@ export function pvpMode(env: NodeJS.ProcessEnv = process.env): PvpMode {
   const mode = env.PVP_MODE ?? 'disabled';
   if (mode !== 'disabled' && mode !== 'demo' && mode !== 'official')
     throw new Error('PVP_MODE must be disabled, demo or official.');
+  if (
+    mode === 'demo' &&
+    pvpContentMode(env) !== 'temporary-owner-accepted' &&
+    !allowSyntheticContent(env)
+  )
+    throw new Error('Synthetic PvP requires isolated Development/test opt-in.');
   return mode;
 }
 export interface PvpPolicy {

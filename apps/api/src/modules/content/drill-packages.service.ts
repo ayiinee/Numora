@@ -1,4 +1,4 @@
-import { editorialPackageDigest } from './editorial-package-digest';
+import { approveEditorialPackage } from './editorial-package-approval';
 import {
   BadRequestException,
   ConflictException,
@@ -283,7 +283,7 @@ export class DrillPackagesService {
       return { id };
     });
   }
-  publish(actor: string, id: string) {
+  publish(actor: string, id: string, curriculumApprovalReference?: string) {
     return adminMutation(actor, 'drill_package_published', 'assessment_package', async (tx) => {
       const [target] = await tx
         .select({ levelId: assessmentPackages.levelId })
@@ -339,6 +339,7 @@ export class DrillPackagesService {
               eq(packageItems.questionVersionId, pin.questionVersionId),
             ),
           );
+      const approval = await approveEditorialPackage(tx, actor, row, curriculumApprovalReference);
       await tx
         .update(assessmentPackages)
         .set({ status: 'ARCHIVED' })
@@ -355,7 +356,7 @@ export class DrillPackagesService {
         .set({
           status: 'PUBLISHED',
           releaseAt: new Date(),
-          manifestDigest: await editorialPackageDigest(tx, id),
+          ...approval,
         })
         .where(eq(assessmentPackages.id, id));
       return { id };

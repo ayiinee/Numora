@@ -1,5 +1,6 @@
 import { eq } from 'drizzle-orm';
 import { getDatabase } from './client.js';
+import { allowSyntheticContent } from './package-runtime.js';
 import { seedPrdV06Demo } from './prd-v06-demo.js';
 import {
   chapters,
@@ -25,13 +26,15 @@ const competencyId = uuid(104);
 export async function seedDemoLearning(
   db: Pick<ReturnType<typeof getDatabase>['db'], 'insert' | 'select'> = getDatabase().db,
 ) {
+  if (!allowSyntheticContent())
+    throw new Error('Isolated development/test fixture opt-in required.');
   await db
     .insert(chapters)
     .values({
       id: chapterId,
       code: 'DEMO-BILANGAN',
       slug: 'DEMO-BILANGAN'.toLowerCase(),
-      name: 'Bab Demo: Bilangan',
+      name: 'Bilangan',
       displayOrder: 1,
       status: 'READY',
     })
@@ -43,7 +46,7 @@ export async function seedDemoLearning(
       chapterId,
       code: 'DEMO-OPERASI',
       slug: 'DEMO-OPERASI'.toLowerCase(),
-      name: 'Subbab Demo: Operasi Bilangan',
+      name: 'Operasi Bilangan',
       displayOrder: 1,
       status: 'READY',
     })
@@ -54,14 +57,14 @@ export async function seedDemoLearning(
       {
         id: levelOneId,
         subchapterId,
-        description: 'Level 1 Demo',
+        description: 'Level 1',
         levelNumber: 1,
         status: 'READY',
       },
       {
         id: levelTwoId,
         subchapterId,
-        description: 'Level 2 Demo',
+        description: 'Level 2',
         levelNumber: 2,
         status: 'READY',
       },

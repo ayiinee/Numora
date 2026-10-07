@@ -1,0 +1,17 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:generator-service-v1:response",
+  "type": "object", "additionalProperties": false,
+  "required": ["serviceContract", "requestId", "dispatchGeneration", "executionId", "status", "failureCode", "artifactId", "artifactDigest", "candidateIds"],
+  "properties": {
+    "serviceContract": {"const": "generator-service-v1"},
+    "requestId": {"type": "string", "format": "uuid"},
+    "executionId": {"type": "string", "format": "uuid"},
+    "dispatchGeneration": {"type": "integer", "minimum": 1},
+    "status": {"enum": ["RUNNING", "SUCCEEDED", "FAILED", "EXPIRED"]},
+    "failureCode": {"type": ["string", "null"]},
+    "artifactId": {"type": ["string", "null"], "format": "uuid"},
+    "artifactDigest": {"type": ["string", "null"], "pattern": "^[a-f0-9]{64}$"},
+    "candidateIds": {"type": "array", "maxItems": 1, "uniqueItems": true, "items": {"type": "string", "format": "uuid"}}
+  }
+}

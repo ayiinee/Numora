@@ -8,9 +8,13 @@ export function isJakartaMondayMidnight(instant: Date): boolean {
     hourCycle: 'h23',
   }).formatToParts(instant);
   const value = (type: string) => parts.find((part) => part.type === type)?.value;
-  return value('weekday') === 'Monday' && value('hour') === '00' &&
-    value('minute') === '00' && value('second') === '00' &&
-    instant.getUTCMilliseconds() === 0;
+  return (
+    value('weekday') === 'Monday' &&
+    value('hour') === '00' &&
+    value('minute') === '00' &&
+    value('second') === '00' &&
+    instant.getUTCMilliseconds() === 0
+  );
 }
 
 export function normalizedScore(awarded: number, maximum: number) {
@@ -18,6 +22,12 @@ export function normalizedScore(awarded: number, maximum: number) {
   return Math.round((awarded * 100) / maximum);
 }
 
-export function tryoutAttemptDeadline(startAt: Date, durationSeconds: number | null, closeAt: Date | null) {
-  return durationSeconds ? new Date(Math.min(startAt.getTime() + durationSeconds * 1000, closeAt?.getTime() ?? Infinity)) : closeAt;
+export function tryoutAttemptDeadline(
+  startAt: Date,
+  durationSeconds: number | null,
+  closeAt: Date | null,
+) {
+  return durationSeconds
+    ? new Date(Math.min(startAt.getTime() + durationSeconds * 1000, closeAt?.getTime() ?? Infinity))
+    : closeAt;
 }

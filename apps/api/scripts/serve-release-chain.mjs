@@ -3,6 +3,7 @@ import 'reflect-metadata';
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
 import { fileURLToPath } from 'node:url';
+import { eq, desc } from 'drizzle-orm';
 import { requireIsolatedServices, releaseSha } from './release-chain-guard.mjs';
 
 const root = fileURLToPath(new URL('../../../', import.meta.url));
@@ -10,6 +11,7 @@ requireIsolatedServices();
 const sha = releaseSha(root);
 Object.assign(process.env, {
   NODE_ENV: 'test',
+  ALLOW_SYNTHETIC_CONTENT: 'true',
   DATABASE_URL: process.env.TEST_DATABASE_URL,
   DATABASE_MIGRATION_URL: process.env.TEST_DATABASE_URL,
   REDIS_URL: process.env.TEST_REDIS_URL,
@@ -50,29 +52,6 @@ if (!drillPolicy || !tryoutPolicy) throw new Error('PRD v0.6 fixture policies ar
 
 // Explicit TEST-ONLY DEMO continuation; not a Curriculum approval or shared seed mutation.
 const levelTwo = '00000000-0000-4000-8000-000000000103';
-const continuationId = randomUUID();
-await db.insert(assessmentPackages).values({
-  id: continuationId,
-  familyCode: `JOB06-TEST-${continuationId}`,
-  packageVersion: 1,
-  name: 'JOB06 TEST ONLY DEMO Level 2',
-  assessmentType: 'DRILL',
-  levelId: levelTwo,
-  chapterId: '00000000-0000-4000-8000-000000000100',
-  variantIndex: 1,
-  isDemo: true,
-  scoringPolicyVersionId: drillPolicy,
-  releaseAt: new Date(),
-  status: 'PUBLISHED',
-});
-await db.insert(packageItems).values(
-  Array.from({ length: 10 }, (_, i) => ({
-    packageId: continuationId,
-    questionVersionId: `00000000-0000-4000-8000-${String(301 + i * 2).padStart(12, '0')}`,
-    displayOrder: i + 1,
-    maxPoints: '1',
-  })),
-);
 
 const actors = {};
 for (const [alias, role] of [
@@ -127,7 +106,67 @@ for (const [alias, role] of [
   };
 }
 
-// TEST ONLY access/release fixture: two PG items, not an approved 30-item package or IRT model.
+// Versioned READY Drill pools; preserve existing immutable bootstrap content.
+const readyDrillVersions = [];
+for (let i = 0; i < 10; i++) {
+  const [source] = await db
+    .select()
+    .from(questionVersions)
+    .where(
+      eq(questionVersions.id, `00000000-0000-4000-8000-${String(301 + i * 2).padStart(12, '0')}`),
+    );
+  const [latest] = await db
+    .select()
+    .from(questionVersions)
+    .where(eq(questionVersions.variantId, source.variantId))
+    .orderBy(desc(questionVersions.versionNumber))
+    .limit(1);
+  const [ready] = await db
+    .insert(questionVersions)
+    .values({
+      ...source,
+      id: randomUUID(),
+      versionNumber: latest.versionNumber + 1,
+      revisedFromQuestionVersionId: source.id,
+      contentStatus: 'READY',
+      reviewedByUserId: actors.admin.profileId,
+      reviewedAt: new Date(),
+    })
+    .returning();
+  readyDrillVersions.push(ready.id);
+}
+await client`update assessment_packages set status='ARCHIVED' where level_id='00000000-0000-4000-8000-000000000102' and is_demo=true and status='PUBLISHED'`;
+for (const levelId of ['00000000-0000-4000-8000-000000000102', levelTwo]) {
+  const id = randomUUID();
+  await db
+    .insert(assessmentPackages)
+    .values({
+      id,
+      familyCode: `JOB06-DRILL-TEST-${id}`,
+      packageVersion: 1,
+      name: `Drill Level ${levelId === levelTwo ? 2 : 1}`,
+      assessmentType: 'DRILL',
+      chapterId: '00000000-0000-4000-8000-000000000100',
+      levelId,
+      variantIndex: 1,
+      isDemo: true,
+      scoringPolicyVersionId: drillPolicy,
+      releaseAt: new Date(),
+      status: 'PUBLISHED',
+    });
+  await db
+    .insert(packageItems)
+    .values(
+      readyDrillVersions.map((questionVersionId, i) => ({
+        packageId: id,
+        questionVersionId,
+        displayOrder: i + 1,
+        maxPoints: '1',
+      })),
+    );
+}
+
+// TEST ONLY access/release fixture: 30 PG items; no approved academic bank or IRT model.
 // Archive only prior fixtures created by this guarded harness so reruns cannot select stale packages.
 await client`update assessment_packages set status = 'ARCHIVED'
   where family_code like 'JOB06-TRYOUT-TEST-%' and is_demo = true and status = 'PUBLISHED'`;
@@ -139,7 +178,7 @@ await db.insert(assessmentPackages).values({
   id: tryoutId,
   familyCode: `JOB06-TRYOUT-TEST-${tryoutId}`,
   packageVersion: 1,
-  name: 'JOB06 TEST ONLY DEMO TryOut',
+  name: 'Tryout Mingguan',
   assessmentType: 'TRYOUT',
   isDemo: true,
   chapterId: '00000000-0000-4000-8000-000000000100',
@@ -151,7 +190,7 @@ await db.insert(assessmentPackages).values({
 });
 // Dedicated READY test versions; do not mutate the existing DRAFT demo versions or historical pins.
 const tryoutVersions = [];
-for (let i = 0; i < 2; i++) {
+for (let i = 0; i < 30; i++) {
   const questionId = randomUUID();
   const variantId = randomUUID();
   const versionId = randomUUID();
@@ -311,7 +350,8 @@ const authServer = createServer(async (req, res) => {
       where actor_user_id = ${actors.student.profileId} and event_name = 'drill_completed'`;
     const pins = await client`select ai.attempt_id, ai.question_version_id from attempt_items ai
       join assessment_attempts a on a.id = ai.attempt_id where a.student_id = ${actors.student.profileId}`;
-    const rewards = await client`select attempt_id, xp_amount, base_xp, bonus_xp, duration_seconds, policy_version
+    const rewards =
+      await client`select attempt_id, xp_amount, base_xp, bonus_xp, duration_seconds, policy_version
       from xp_ledger where student_id = ${actors.student.profileId} order by occurred_at, attempt_id`;
     return send(200, { attempts, events, pins, rewards });
   }

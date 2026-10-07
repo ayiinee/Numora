@@ -52,6 +52,67 @@ function fill(
 }
 const bytes = async (workbook: ExcelJS.Workbook) => Buffer.from(await workbook.xlsx.writeBuffer());
 describe('Excel import at the trust boundary', { timeout: 20_000 }, () => {
+  it('keeps all intake rows and native image bytes when metadata is blank or content needs correction', async () => {
+    const workbook = await book();
+    const sheet = workbook.getWorksheet('PG')!;
+    fill(sheet, 2, {
+      chapter_code: '',
+      subchapter_code: '',
+      competency_code: '',
+      source_level: '',
+      answer: 'Z',
+    });
+    const image = workbook.addImage({ buffer: png as unknown as ExcelJS.Buffer, extension: 'png' });
+    let col = 0;
+    sheet.getRow(1).eachCell((cell, i) => {
+      if (cell.text === 'img_stem') col = i - 1;
+    });
+    sheet.addImage(image, { tl: { col, row: 1 }, ext: { width: 10, height: 10 } });
+    const result = await parseExcel(await bytes(workbook), 'TEST_INTAKE', 'test', {
+      id: 'test-upload',
+      curriculum: { items: [] },
+    });
+    expect(result.envelope.questions).toHaveLength(1);
+    expect(result.envelope.questions[0]!.metadata.sourceLevelNumber).toBeNull();
+    expect(result.envelope.questions[0]!.metadata.sourceMaterial).toMatchObject({
+      competency: '',
+      level: '',
+    });
+    expect(result.media).toHaveLength(1);
+    expect(Buffer.from(result.media[0]!.base64, 'base64')).toEqual(png);
+    expect(result.issues.some((i) => i.code === 'INVALID_KEY')).toBe(true);
+  });
+  it.skipIf(!process.env.NUMORA_REAL_XLSX_DIR)(
+    'reads the supplied academic workbooks without discarding unresolved metadata',
+    async () => {
+      for (const [file, count, images] of [
+        ['TryOut.xlsx', 30, 5],
+        ['NUMORA_Pretest_Aljabar_10_Soal_V3.xlsx', 10, 3],
+      ] as const) {
+        const result = await parseExcel(
+          await readFile(resolve(process.env.NUMORA_REAL_XLSX_DIR!, file)),
+          'TEST_REAL_SOURCE',
+          'test',
+          { id: 'test-real-source', curriculum: { items: [] } },
+        );
+        expect(result.envelope.questions).toHaveLength(count);
+        expect(result.media).toHaveLength(images);
+        expect(result.issues).toEqual([]);
+        if (file === 'TryOut.xlsx')
+          expect(
+            result.envelope.questions.every(
+              (q) =>
+                q.metadata.sourceLevelNumber === null &&
+                q.metadata.sourceMaterial?.competency === '',
+            ),
+          ).toBe(true);
+        else
+          expect(
+            result.envelope.questions.every((q) => q.metadata.sourceMaterial?.chapter === 'CH-ALG'),
+          ).toBe(true);
+      }
+    },
+  );
   it('reads PG/MCMA/Category and floating pictures by native row/column despite gaps and fractions', async () => {
     const workbook = await book();
     const id = workbook.addImage({ buffer: png as unknown as ExcelJS.Buffer, extension: 'png' });

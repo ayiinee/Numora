@@ -22,6 +22,7 @@ export class AssessmentPoliciesService {
             'TRYOUT_PRD_V06',
             'NUMORA_DRILL_V06',
             'NUMORA_TRYOUT_V06',
+            'TRYOUT_PGK_PARTIAL_V1',
           ]),
         ),
       )
@@ -44,7 +45,9 @@ export class AssessmentPoliciesService {
             approvedAt: row.approvedAt?.toISOString() ?? null,
             approvalReference: isCanonicalPolicy(row, type)
               ? CANONICAL_POLICY_APPROVAL
-              : row.approvalReference!,
+              : row.policyCode === 'TRYOUT_PGK_PARTIAL_V1'
+                ? 'Project owner, 7 October 2026; docs/content/UPLOAD_FIRST_WORKFLOW.md'
+                : row.approvalReference!,
           },
         ];
       }),

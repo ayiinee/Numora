@@ -111,9 +111,11 @@ export const questions = pgTable(
   'questions',
   {
     id: uuid('id').defaultRandom().primaryKey(),
-    primaryCompetencyId: uuid('primary_competency_id')
-      .notNull()
-      .references(() => competencies.id, { onDelete: 'restrict' }),
+    chapterId: uuid('chapter_id').references(() => chapters.id, { onDelete: 'restrict' }),
+    subchapterId: uuid('subchapter_id').references(() => subchapters.id, { onDelete: 'restrict' }),
+    primaryCompetencyId: uuid('primary_competency_id').references(() => competencies.id, {
+      onDelete: 'restrict',
+    }),
     // Source level within an indicator; learner progress remains scoped to subchapter levels.
     curriculumLevelNumber: integer('curriculum_level_number'),
     sourceRef: text('source_ref'),
@@ -125,6 +127,10 @@ export const questions = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [
+    check(
+      'questions_competency_required_ck',
+      sql`${table.primaryCompetencyId} is not null or ${table.usageType} is not distinct from 'TRYOUT'`,
+    ),
     index('questions_competency_idx').on(table.primaryCompetencyId),
     index('questions_usage_competency_idx').on(table.usageType, table.primaryCompetencyId),
     check(
@@ -225,10 +231,6 @@ export const questionVersions = pgTable(
     uniqueIndex('question_versions_id_variant_uq').on(table.id, table.variantId),
     uniqueIndex('question_versions_variant_version_uq').on(table.variantId, table.versionNumber),
     index('question_versions_status_idx').on(table.contentStatus),
-    check(
-      'question_versions_ready_difficulty_ck',
-      sql`${table.contentStatus} <> 'READY' or (${table.difficulty} is not null and length(trim(${table.difficulty})) > 0)`,
-    ),
     check('question_versions_number_ck', sql`${table.versionNumber} > 0`),
     index('question_versions_fingerprint_idx').on(table.contentFingerprint),
     check(

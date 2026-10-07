@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from './package-runtime.js';
 import { createHash } from 'node:crypto';
 import { readFile, mkdir, writeFile } from 'node:fs/promises';
 import { resolve, join } from 'node:path';
@@ -346,6 +347,7 @@ async function run() {
     requireDemoTarget(env: NodeJS.ProcessEnv): string;
     verifyBackup(env: NodeJS.ProcessEnv): Promise<void>;
   } = await import(pathToFileURL(join(root, 'apps/api/scripts/teacher-demo-accounts.mjs')).href);
+  if (!allowSyntheticContent()) fail('Verified development fixture isolation required.');
   const url = safety.requireDemoTarget(process.env);
   const roster: Roster = JSON.parse(
     await readFile(join(root, 'packages/database/seeds/teacher-demo-roster.json'), 'utf8'),

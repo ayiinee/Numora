@@ -413,7 +413,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           title: 'Paket Tryout Mingguan #04 Rilis!',
           state: 'open',
           eligible: true,
-          questionCount: 35,
+          questionCount: 30,
           durationSeconds: 4800,
         },
       }),
@@ -847,7 +847,7 @@ test('home loading and independent Tryout errors preserve learning and pending c
               title: 'Paket pulih',
               state: 'open',
               eligible: true,
-              questionCount: 35,
+              questionCount: 30,
               durationSeconds: 4800,
             },
           },
@@ -1547,7 +1547,7 @@ test('failed Drill save warns before refresh and can recover without claiming Sa
   await expect(page.getByRole('radio').first()).toBeChecked();
 });
 
-test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
+test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and recovers a lost auto-submit acknowledgement', async ({
   page,
 }) => {
   await fixtures(page);
@@ -1556,7 +1556,7 @@ test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and re
     { id: 'B', text: '3' },
   ];
   const ids = Array.from(
-    { length: 35 },
+    { length: 30 },
     (_, index) => `88888888-8888-4888-8888-${String(index + 1).padStart(12, '0')}`,
   );
   const answers = new Map<string, string | null>();
@@ -1613,7 +1613,7 @@ test('TEST ONLY TryOut with 35 PG questions preserves countdown on reload and re
   await page.goto(`/student/tryout/${attemptId}`);
   await expect(
     page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
-  ).toHaveCount(35);
+  ).toHaveCount(30);
   await page.getByRole('radio').first().check();
   await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
   const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
@@ -1912,7 +1912,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           id: chapterId,
           title: 'TO TKA Matematika SMP #04',
           eligible: true,
-          questionCount: 35,
+          questionCount: 30,
           durationSeconds: 4800,
         },
       }),
@@ -2148,7 +2148,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     let submits = 0;
     let released = false;
     const selected = new Map<string, string | null>();
-    const questions = Array.from({ length: 35 }, (_, index) => ({
+    const questions = Array.from({ length: 30 }, (_, index) => ({
       questionInstanceId: `99999999-9999-4999-8999-${String(index + 1).padStart(12, '0')}`,
       stem: 'Diketahui $x^2 + 6x + c = (x + 3)^2$. Nilai konstanta $c$ adalah…',
       options: [
@@ -2166,7 +2166,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       packageTitle: title,
       score: 85,
       correctCount: 30,
-      questionCount: 35,
+      questionCount: 30,
       explanation: questions.map((question, index) => ({
         questionInstanceId: question.questionInstanceId,
         stem: question.stem,
@@ -2188,7 +2188,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             state,
             eligible: state === 'open',
             attemptId: state === 'open' ? null : attemptId,
-            questionCount: 35,
+            questionCount: 30,
             durationSeconds: 4800,
           },
         });
@@ -2291,7 +2291,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('tab', { name: 'Berlangsung' }).click();
     await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
     await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toBeDisabled();
-    await expect(page.getByText('35 butir', { exact: true })).toBeVisible();
+    await expect(page.getByText('30 butir', { exact: true })).toBeVisible();
     await expect(page.getByText('80 menit', { exact: true })).toBeVisible();
     await page.getByLabel('Saya memahami aturan pengerjaan.').check();
     await capture('detail');
@@ -2304,11 +2304,11 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
     expect(starts).toBe(1);
     const navigator = page.getByRole('navigation', { name: 'Navigasi soal' });
-    await expect(navigator.getByRole('button')).toHaveCount(35);
+    await expect(navigator.getByRole('button')).toHaveCount(30);
     await navigator.getByRole('button', { name: /^Soal 3,/ }).click();
     await expect(page.getByRole('timer')).toBeVisible();
     await capture('attempt');
-    await navigator.getByRole('button', { name: /^Soal 35,/ }).click();
+    await navigator.getByRole('button', { name: /^Soal 30,/ }).click();
     await page.getByRole('button', { name: 'Kirim TryOut' }).click();
     const dialog = page.getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
     await expect(dialog).toBeVisible();

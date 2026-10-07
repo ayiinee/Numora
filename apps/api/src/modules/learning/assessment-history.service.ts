@@ -1,3 +1,4 @@
+import { presentFixtureText } from '@tka/database';
 import { publishedTryoutAttemptResults } from '@tka/database';
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {
@@ -132,7 +133,7 @@ export class AssessmentHistoryService {
         return {
           attemptId: row.id,
           activity: row.assessmentType.toLowerCase() as 'drill' | 'pretest' | 'tryout',
-          title: row.title,
+          title: presentFixtureText(row.packageId, 'name', row.title),
           isDemo: row.isDemo,
           chapterId: row.chapterId,
           chapterTitle: row.chapterTitle,
