@@ -128,6 +128,29 @@ it('does not connect or expose create commands when server availability is false
   expect(screen.queryByRole('button', { name: 'Buat room' })).toBeNull();
 });
 
+it('shows the server temporary-content notice without claiming calibrated question difficulty', async () => {
+  const notice = 'Soal sementara; pilihan tingkat mengatur waktu 30, 45, dan 60 detik.';
+  vi.mocked(request).mockImplementation(async (_token, path) =>
+    path === '/pvp/availability'
+      ? { available: true, dataMode: 'demo', contentNotice: notice }
+      : path.startsWith('/leaderboards/')
+        ? { policyPending: false, entries: [], ownEntry: null }
+        : { invites: [] },
+  );
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  await screen.findByText(notice);
+  expect(screen.getAllByText('Soal dari bank sementara')).toHaveLength(3);
+  expect(screen.queryByText('Duel matematika tingkat mudah')).toBeNull();
+  expect(screen.getByText('30 dtk / soal')).toBeTruthy();
+  await waitFor(() =>
+    expect(screen.getByRole('button', { name: 'Buat room' }).hasAttribute('disabled')).toBe(false),
+  );
+});
+
 it('ignores an old connection acknowledgement and preserves its request ID across token renewal', async () => {
   let resolveOld!: (value: unknown) => void;
   mocks.emit.mockImplementationOnce(

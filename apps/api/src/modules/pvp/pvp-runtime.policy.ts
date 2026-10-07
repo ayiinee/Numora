@@ -1,9 +1,10 @@
 import { getDatabase, scoringPolicyVersions } from '@tka/database';
 import { and, eq } from 'drizzle-orm';
-import { pvpMode, type PvpPolicy } from './pvp.policy';
+import { pvpContentMode, pvpMode, type PvpPolicy } from './pvp.policy';
 
 /** Server-only resolver. Published policy identity is never supplied by a client. */
 export async function resolvePvpPolicy(): Promise<PvpPolicy | null> {
+  pvpContentMode();
   const mode = pvpMode();
   if (mode === 'disabled') return null;
   const [version] = await getDatabase()

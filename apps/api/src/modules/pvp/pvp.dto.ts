@@ -12,6 +12,7 @@ export class PvpAvailabilityDto {
   @ApiProperty() available!: boolean;
   @ApiProperty({ type: String, nullable: true }) reasonCode!: string | null;
   @ApiProperty() message!: string;
+  @ApiProperty({ type: String, required: false }) contentNotice?: string;
   @ApiProperty({ enum: ['demo', 'official'], required: false }) dataMode?: 'demo' | 'official';
   @ApiProperty({ type: String, format: 'uuid', nullable: true, required: false }) activeMatchId?:
     string | null;

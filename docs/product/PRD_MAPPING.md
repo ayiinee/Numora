@@ -1,3 +1,5 @@
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** opt-in DEMO-only PvP temporarily uses accepted uncalibrated READY single-choice Drill content. The three choices share the pool and retain server timers; calibrated academic difficulty remains pending. [Activation and owner replacement checklist](../development/PVP_TEMPORARY_READY_CONTENT.md).
+
 **ENGINEERING DECISION — instruksi pemilik proyek, 7 Oktober 2026:** penerimaan langsung khusus 120 original Drill Bab 3 indikator 16–19, Paket 1 level 1–3; 12 paket PUBLISHED dengan policy allowlist. Review impor lainnya tetap berlaku; tidak mengklaim pengesahan Curriculum/IRT. [Scope dan verifikasi](../development/DRILL_CHAPTER3_OWNER_EXCEPTION.md).
 
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents across responsive widths while retaining interactive targets and server-provided ranking behavior. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).

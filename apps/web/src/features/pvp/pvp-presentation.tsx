@@ -75,17 +75,20 @@ export function DifficultyChoices({
   onChange,
   disabled,
   availability,
+  contentNotice,
 }: {
   value: Difficulty;
   onChange: (value: Difficulty) => void;
   disabled: boolean;
   availability?: { difficulty: Difficulty; available: boolean }[] | undefined;
+  contentNotice?: string | undefined;
 }) {
   return (
     <fieldset className="pvp-difficulties" disabled={disabled}>
       <legend>
         Pilih Tingkat Kesulitan <small>10 Soal • Poin PvP</small>
       </legend>
+      {contentNotice && <p className="pvp-demo-notice">{contentNotice}</p>}
       {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
         <label
           key={difficulty}
@@ -115,7 +118,11 @@ export function DifficultyChoices({
                   : `${durations[difficulty]} dtk / soal`}
               </small>
             </span>
-            <span>Duel matematika tingkat {difficultyLabels[difficulty].toLowerCase()}</span>
+            <span>
+              {contentNotice
+                ? 'Soal dari bank sementara'
+                : `Duel matematika tingkat ${difficultyLabels[difficulty].toLowerCase()}`}
+            </span>
             <span className="pvp-difficulty__points">
               100 Poin Dasar <span>Bonus s.d +50 Poin</span>
             </span>
