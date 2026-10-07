@@ -909,6 +909,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const source = resolve(root, 'docs/data/samples/2026-10-03');
     const masters = JSON.parse(readFileSync(resolve(source, 'master-data.proposed.json'), 'utf8'));
     const samples = JSON.parse(readFileSync(resolve(source, 'questions.draft.json'), 'utf8'));
+    for (const [index, question] of samples.entries()) question.metadata.sourceOrder = index + 1;
     const curriculum = await (await call(request, 'admin', 'admin/content/curriculum')).json();
     const chapters = new Map<string, string>();
     const subs = new Map<string, string>();
@@ -1006,7 +1007,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
       undefined,
       200,
     );
-    expect(validation.canImportDraft).toBe(true);
+    expect(
+      validation.canImportDraft,
+      JSON.stringify({
+        packageBlockers: validation.package?.blockers,
+        questionBlockers: validation.items.map((item) => item.blockers),
+      }),
+    ).toBe(true);
     const report = await content<ImportReportDto>('imports', importBody, crypto.randomUUID());
     expect(report.items).toHaveLength(10);
     expect(report.items.every((i) => i.canPreview)).toBe(true);
