@@ -1,0 +1,23 @@
+[
+  {
+    "purpose": "DRILL",
+    "packageId": "2215014d-2796-4d28-8e37-1f7c1ed57371",
+    "familyCode": "DEMO-EXCEL-V4-DRILL-20261006",
+    "file": "NUMORA_EXCEL_V4_DRILL_CONTOH.xlsx",
+    "questionCount": 10
+  },
+  {
+    "purpose": "PRETEST",
+    "packageId": "4fc19c5b-4250-4a21-8a22-43651f6af09e",
+    "familyCode": "DEMO-EXCEL-V4-PRETEST-20261006",
+    "file": "NUMORA_EXCEL_V4_PRETEST_CONTOH.xlsx",
+    "questionCount": 20
+  },
+  {
+    "purpose": "TRYOUT",
+    "packageId": "23a7fa38-74cb-410b-8ed8-132fd72e6c53",
+    "familyCode": "DEMO-EXCEL-V4-TRYOUT-20261006",
+    "file": "NUMORA_EXCEL_V4_TRYOUT_CONTOH.xlsx",
+    "questionCount": 30
+  }
+]

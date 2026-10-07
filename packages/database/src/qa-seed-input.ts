@@ -10,14 +10,20 @@ export const qaActors = {
 } as const;
 
 export type QaActor = keyof typeof qaActors;
-export type QaManifest = { projectRef: string; mode: 'GOOGLE' | 'EMAIL_QA'; actors: Record<QaActor, string> };
+export type QaManifest = {
+  projectRef: string;
+  mode: 'GOOGLE' | 'EMAIL_QA';
+  actors: Record<QaActor, string>;
+};
 
 export function parseQaManifest(value: unknown): QaManifest {
   if (!value || typeof value !== 'object' || Array.isArray(value))
     throw new Error('Invalid QA manifest.');
   const object = value as Record<string, unknown>;
   if (
-    !['actors,projectRef', 'actors,mode,projectRef'].includes(Object.keys(object).sort().join(',')) ||
+    !['actors,projectRef', 'actors,mode,projectRef'].includes(
+      Object.keys(object).sort().join(','),
+    ) ||
     object.projectRef !== QA_PROJECT_REF
   ) {
     throw new Error('QA manifest must target the allowed Development project.');
@@ -72,3 +78,12 @@ export function requireQaTarget(env: NodeJS.ProcessEnv) {
   }
   return env.DATABASE_URL;
 }
+
+export const qaDisplayNames = {
+  admin: 'Dian Prasetyo',
+  teacherA: 'Ratna Sari',
+  teacherB: 'Budi Santoso',
+  studentA: 'Alya Putri',
+  studentB: 'Raka Saputra',
+  studentC: 'Nabila Azzahra',
+} as const;

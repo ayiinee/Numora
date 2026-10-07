@@ -9,7 +9,77 @@ import {
 } from '@tka/database';
 import { BadRequestException } from '@nestjs/common';
 
-const validate = new Ajv({ strict: true, allErrors: true }).compile(contentImportSchema);
+const ajv = new Ajv({ strict: true, allErrors: true });
+const validate = ajv.compile(contentImportSchema);
+const tryoutSchema = structuredClone(contentImportSchema);
+Object.assign(tryoutSchema.properties.competencyCode, { minLength: 0, pattern: undefined });
+for (const field of ['chapterCode', 'subchapterCode', 'competencyCode'] as const)
+  Object.assign(tryoutSchema.properties[field], { type: ['string', 'null'] });
+Object.assign(tryoutSchema.properties.metadata.properties.sourceLevelNumber, {
+  type: ['integer', 'null'],
+});
+const validateTryout = ajv.compile({ ...tryoutSchema, $id: 'urn:numora:tryout-import:1' });
+// Intake changes only academic nullability; final imports still use the original schema.
+const intakeSchema = structuredClone(contentImportSchema);
+for (const field of ['chapterCode', 'subchapterCode', 'competencyCode'] as const)
+  Object.assign(intakeSchema.properties[field], {
+    type: ['string', 'null'],
+    minLength: 0,
+    pattern: undefined,
+  });
+Object.assign(intakeSchema.properties.metadata.properties.sourceLevelNumber, {
+  type: ['integer', 'null'],
+});
+const validateIntake = new Ajv({ strict: true, allErrors: true }).compile({
+  ...intakeSchema,
+  $id: 'urn:numora:intake:1',
+});
+const shapeSchema = structuredClone(intakeSchema);
+Object.assign(shapeSchema.properties.options, { minItems: 0 });
+Object.assign(shapeSchema.properties.metadata.properties.categories, { minItems: 0 });
+Object.assign(shapeSchema.properties.metadata.properties.assetManifest.items.properties.altText, {
+  minLength: 0,
+});
+Object.assign(shapeSchema.properties.answer, {
+  oneOf: [
+    {
+      type: 'object',
+      required: ['optionId'],
+      additionalProperties: false,
+      properties: { optionId: { type: 'string' } },
+    },
+    {
+      type: 'object',
+      required: ['optionIds'],
+      additionalProperties: false,
+      properties: { optionIds: { type: 'array', items: { type: 'string' } } },
+    },
+    {
+      type: 'object',
+      required: ['categoryByStatementId'],
+      additionalProperties: false,
+      properties: {
+        categoryByStatementId: { type: 'object', additionalProperties: { type: 'string' } },
+      },
+    },
+  ],
+});
+for (const clause of shapeSchema.allOf) Object.assign(clause.then.properties, { answer: {} });
+const validateIntakeShape = new Ajv({ strict: true, allErrors: true }).compile({
+  ...shapeSchema,
+  $id: 'urn:numora:intake-shape:1',
+});
+export function intakeShapeValid(input: unknown) {
+  return validateIntakeShape(input);
+}
+export function schemaIssues(input: unknown, intake = false) {
+  const check = intake ? validateIntake : validate;
+  check(input);
+  return (check.errors ?? []).map((e) => ({
+    field: e.instancePath || String(e.params.missingProperty ?? ''),
+    detail: e.message ?? 'Nilai tidak sesuai format.',
+  }));
+}
 export function canonical(value: unknown): string {
   if (Array.isArray(value)) return '[' + value.map(canonical).join(',') + ']';
   if (value && typeof value === 'object')
@@ -60,8 +130,9 @@ export function snapshot(q: ImportQuestion): PreviewSnapshot {
     assets: (q.metadata.assetManifest ?? []).map(cleanAsset),
   };
 }
-export function structuralErrors(input: unknown): string[] {
-  if (!validate(input)) return ['INVALID_SCHEMA'];
+export function structuralErrors(input: unknown, intake = false, tryout = false): string[] {
+  if (!(intake ? validateIntake : tryout ? validateTryout : validate)(input))
+    return ['INVALID_SCHEMA'];
   const q = input as ImportQuestion;
   const errors: string[] = [];
   if (

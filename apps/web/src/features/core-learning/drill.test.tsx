@@ -53,14 +53,27 @@ const result: DrillResult = {
 
 describe('ringkasan hasil Drill', () => {
   it('renders persisted XP and zero stars without treating zero as missing', async () => {
-    vi.spyOn(learningApi, 'result').mockResolvedValue({ ...result, stars: 0, reward: {
-      policyCode: 'DRILL_PRD_V06', policyVersion: 2, baseXp: 80, bonusXp: 16.666666666667,
-      totalXp: 97, durationSeconds: 600,
-    } });
+    vi.spyOn(learningApi, 'result').mockResolvedValue({
+      ...result,
+      stars: 0,
+      reward: {
+        policyCode: 'DRILL_PRD_V06',
+        policyVersion: 2,
+        baseXp: 80,
+        bonusXp: 16.666666666667,
+        totalXp: 97,
+        durationSeconds: 600,
+      },
+    });
     vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
-    render(<StudentAccess><ResultScreen /></StudentAccess>);
+    render(
+      <StudentAccess>
+        <ResultScreen />
+      </StudentAccess>,
+    );
     expect(await screen.findByText('97 XP')).toBeTruthy();
     expect(screen.getByText('Bintang: 0')).toBeTruthy();
+    expect(screen.queryByText(/demo/i)).toBeNull();
     expect(screen.queryByText(/Formula reward menunggu/)).toBeNull();
   });
   it('uses server time instead of a skewed browser clock for count-up', () => {
@@ -73,17 +86,15 @@ describe('ringkasan hasil Drill', () => {
     async (mastered) => {
       vi.spyOn(learningApi, 'result').mockResolvedValue({ ...result, mastered });
       vi.spyOn(learningApi, 'videos').mockResolvedValue({ items: [] });
-      const start = vi
-        .spyOn(learningApi, 'start')
-        .mockResolvedValue({
-          id: 'retry-attempt',
-          levelId: 'level',
-          levelTitle: 'Level 1',
-          status: 'inProgress',
-          startedAt: new Date().toISOString(),
-          isDemo: true,
-          questions: [],
-        });
+      const start = vi.spyOn(learningApi, 'start').mockResolvedValue({
+        id: 'retry-attempt',
+        levelId: 'level',
+        levelTitle: 'Level 1',
+        status: 'inProgress',
+        startedAt: new Date().toISOString(),
+        isDemo: true,
+        questions: [],
+      });
       render(
         <StudentAccess>
           <ResultScreen />
@@ -123,9 +134,7 @@ describe('ringkasan hasil Drill', () => {
     expect(await screen.findByText('80', { exact: true })).toBeTruthy();
     expect(screen.getByText('Hasil tersimpan')).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Pembahasan tidak tersedia' })).toBeTruthy();
-    expect(
-      screen.getByText(/Nilai dan riwayat hasil tetap tersimpan/),
-    ).toBeTruthy();
+    expect(screen.getByText(/Nilai dan riwayat hasil tetap tersimpan/)).toBeTruthy();
     expect(screen.queryByRole('navigation', { name: 'Matriks jawaban' })).toBeNull();
   });
   it('retries a unavailable next-level package and navigates using the server attempt ID', async () => {

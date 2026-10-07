@@ -9,6 +9,7 @@ import {
   IsDefined,
   IsIn,
   IsInt,
+  IsISO8601,
   IsOptional,
   IsString,
   IsUUID,
@@ -31,7 +32,7 @@ export class CreateContentPackageDto {
   @ApiProperty({ enum: usages }) @IsIn(usages) assessmentType!: QuestionUsage;
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() chapterId?: string;
   @ApiPropertyOptional({ format: 'uuid' }) @IsOptional() @IsUUID() levelId?: string;
-  @ApiProperty() @IsBoolean() isDemo!: boolean;
+  @ApiPropertyOptional({ default: false }) @IsOptional() @IsBoolean() isDemo?: boolean;
   @ApiProperty({ type: PackageSourceDto })
   @IsDefined()
   @ValidateNested()
@@ -56,6 +57,16 @@ export class ReviewImportedQuestionDto {
   @ApiProperty({ enum: [true] }) @Equals(true) confirmed!: boolean;
   @ApiProperty() @IsString() @Matches(/\S/) @MaxLength(1000) notes!: string;
 }
+export class ApproveContentPackageDto {
+  @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
+  @ApiProperty({ enum: [true] }) @Equals(true) confirmed!: boolean;
+  @ApiProperty() @IsString() @Matches(/\S/) @MaxLength(1000) reference!: string;
+}
+export class PublishContentPackageDto {
+  @ApiPropertyOptional({ enum: [true] }) @IsOptional() @Equals(true) confirmed?: true;
+  @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
+  @ApiPropertyOptional({ format: 'date-time' }) @IsOptional() @IsISO8601() releaseAt?: string;
+}
 export class ContentPackageQueryDto {
   @ApiPropertyOptional({ enum: usages }) @IsOptional() @IsIn(usages) usageType?: QuestionUsage;
   @ApiPropertyOptional()
@@ -79,7 +90,16 @@ export class ContentPackageQueryDto {
   @Max(100)
   limit?: number;
 }
+export class ArchiveContentPackageDto {
+  @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
+}
+export class PackageApprovalDto {
+  @ApiProperty() reference!: string;
+  @ApiProperty({ format: 'date-time' }) approvedAt!: string;
+}
 export class ContentPackageDto {
+  @ApiPropertyOptional({ type: PackageApprovalDto, nullable: true })
+  curriculumApproval?: PackageApprovalDto | null;
   @ApiProperty() id!: string;
   @ApiProperty() familyCode!: string;
   @ApiProperty() packageVersion!: number;

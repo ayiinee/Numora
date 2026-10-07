@@ -2,10 +2,12 @@ import {
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
+  allowSyntheticContent,
   attemptAnswers,
   attemptItems,
   getDatabase,
   questionVersions,
+  scoringPolicyVersions,
   xpLedger,
 } from '@tka/database';
 import { eq } from 'drizzle-orm';
@@ -15,6 +17,7 @@ import { recordDomainEvent } from './domain-events.js';
 import { decodeAssessmentContent, normalizeAssessmentAnswer } from './question-content.js';
 import { decodeSingleChoice } from './single-choice.js';
 import { pgTryoutReward, TRYOUT_XP_POLICY } from './tryout-reward.js';
+import { TRYOUT_PARTIAL_POLICY, tryoutCorrectFraction } from './tryout-partial.js';
 
 type Request =
   | { kind: 'manual'; attemptId: string; studentId: string }
@@ -69,24 +72,98 @@ export async function finalizeTryout(request: Request) {
       .where(eq(attemptItems.attemptId, attempt.id));
     if (!rows.length)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Paket Tryout kosong.');
-    if (rows.some((row) => row.questionType !== 'SINGLE_CHOICE')) {
-      const [pack] = await tx.select({ isDemo: assessmentPackages.isDemo }).from(assessmentPackages).where(eq(assessmentPackages.id, attempt.packageId));
-      if (!pack?.isDemo) throw new AssessmentFinalizationError('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.');
+    const [policy] = attempt.scoringPolicyVersionId
+      ? await tx
+          .select()
+          .from(scoringPolicyVersions)
+          .where(eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId))
+      : [];
+    const partialPolicy =
+      policy?.policyCode === TRYOUT_PARTIAL_POLICY &&
+      policy.version === 1 &&
+      policy.status === 'PUBLISHED';
+    if (!partialPolicy && rows.some((row) => row.questionType !== 'SINGLE_CHOICE')) {
+      const [pack] = await tx
+        .select({ isDemo: assessmentPackages.isDemo })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, attempt.packageId));
+      if (!pack?.isDemo || !allowSyntheticContent())
+        throw new AssessmentFinalizationError(
+          'PGK_SCORING_PENDING',
+          'Rubrik penilaian PGK belum disahkan.',
+        );
       // DEMO transport acceptance only: freeze raw answers without grading or XP.
       let answeredCount = 0;
       for (const row of rows) {
         const content = decodeAssessmentContent(row);
         const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
         if (answer) answeredCount++;
-        const empty = content.type === 'CATEGORY' ? { categoryByStatementId: {} } : content.type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' ? { optionIds: [] } : { optionId: null };
-        await tx.insert(attemptAnswers).values({ attemptItemId: row.id, answer: answer ?? empty, savedAt: now }).onConflictDoNothing();
+        const empty =
+          content.type === 'CATEGORY'
+            ? { categoryByStatementId: {} }
+            : content.type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER'
+              ? { optionIds: [] }
+              : { optionId: null };
+        await tx
+          .insert(attemptAnswers)
+          .values({ attemptItemId: row.id, answer: answer ?? empty, savedAt: now })
+          .onConflictDoNothing();
       }
-      await tx.update(assessmentAttempts).set({ status: 'SUBMITTED', finishedAt: now }).where(eq(assessmentAttempts.id, attempt.id));
-      await recordDomainEvent(tx, attempt.id, { eventName: 'tryout_submitted', submissionType: expired ? 'deadline' : 'manual', questionCount: rows.length, answeredCount }, now);
-      await tx.insert(analyticsOutbox).values({ eventName: 'tryout_completed', actorUserId: attempt.studentId, entityType: 'assessmentAttempt', entityId: attempt.id, correlationId: attempt.id, occurredAt: now, payload: { packageId: attempt.packageId, gradingState: 'WAITING_RUBRIC', isDemo: true, xp: null } });
-      return { finalized: true, reason: expired ? 'deadline' as const : 'manual' as const };
+      await tx
+        .update(assessmentAttempts)
+        .set({ status: 'SUBMITTED', finishedAt: now })
+        .where(eq(assessmentAttempts.id, attempt.id));
+      await recordDomainEvent(
+        tx,
+        attempt.id,
+        {
+          eventName: 'tryout_submitted',
+          submissionType: expired ? 'deadline' : 'manual',
+          questionCount: rows.length,
+          answeredCount,
+        },
+        now,
+      );
+      await tx.insert(analyticsOutbox).values({
+        eventName: 'tryout_completed',
+        actorUserId: attempt.studentId,
+        entityType: 'assessmentAttempt',
+        entityId: attempt.id,
+        correlationId: attempt.id,
+        occurredAt: now,
+        payload: {
+          packageId: attempt.packageId,
+          gradingState: 'WAITING_RUBRIC',
+          isDemo: true,
+          xp: null,
+        },
+      });
+      return { finalized: true, reason: expired ? ('deadline' as const) : ('manual' as const) };
     }
     const grades = rows.map((row) => {
+      if (partialPolicy) {
+        const content = decodeAssessmentContent(row);
+        const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
+        return {
+          id: row.id,
+          answer:
+            answer ??
+            (content.type === 'CATEGORY'
+              ? { categoryByStatementId: {} }
+              : content.type === 'SINGLE_CHOICE'
+                ? { optionId: null }
+                : { optionIds: [] }),
+          maximum: Number(row.maxPoints),
+          scoreCategory: Math.round(
+            tryoutCorrectFraction(content, answer) *
+              (content.type === 'SINGLE_CHOICE' ? 1 : content.options.length),
+          ),
+          fullyCorrect: tryoutCorrectFraction(content, answer) === 1,
+          responseState: answer ? ('RESPONDED' as const) : ('OMITTED' as const),
+          points:
+            Math.round(tryoutCorrectFraction(content, answer) * Number(row.maxPoints) * 100) / 100,
+        };
+      }
       const content = decodeSingleChoice(row);
       const answer = row.answer ?? { optionId: null };
       const option =
@@ -98,9 +175,13 @@ export async function finalizeTryout(request: Request) {
         points: option === content.correctOptionId ? Number(row.maxPoints) : 0,
       };
     });
-    const raw = grades.reduce((sum, grade) => sum + grade.points, 0);
+    const raw = Number(grades.reduce((sum, grade) => sum + grade.points, 0).toFixed(2));
     const xp =
-      attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version ? pgTryoutReward(grades) : null;
+      attempt.tryoutXpPolicyVersion === TRYOUT_XP_POLICY.version
+        ? partialPolicy
+          ? Number((grades.reduce((sum, g) => sum + g.points / g.maximum, 0) * 10).toFixed(6))
+          : pgTryoutReward(grades)
+        : null;
     const maximum = grades.reduce((sum, grade) => sum + grade.maximum, 0);
     if (!Number.isFinite(maximum) || maximum <= 0)
       throw new AssessmentFinalizationError('TRYOUT_PACKAGE_INVALID', 'Poin paket tidak valid.');
@@ -113,11 +194,28 @@ export async function finalizeTryout(request: Request) {
           savedAt: now,
           awardedPoints: String(grade.points),
           gradedAt: now,
+          ...(partialPolicy
+            ? {
+                scoreCategory: grade.scoreCategory,
+                fullyCorrect: grade.fullyCorrect,
+                responseState: grade.responseState,
+              }
+            : {}),
         })
         .onConflictDoUpdate({
           target: attemptAnswers.attemptItemId,
           // Preserve the raw answer and its original save timestamp.
-          set: { awardedPoints: String(grade.points), gradedAt: now },
+          set: {
+            awardedPoints: String(grade.points),
+            gradedAt: now,
+            ...(partialPolicy
+              ? {
+                  scoreCategory: grade.scoreCategory,
+                  fullyCorrect: grade.fullyCorrect,
+                  responseState: grade.responseState,
+                }
+              : {}),
+          },
         });
     await tx
       .update(assessmentAttempts)
@@ -148,12 +246,13 @@ export async function finalizeTryout(request: Request) {
         eventName: 'tryout_submitted',
         submissionType: expired ? 'deadline' : 'manual',
         questionCount: rows.length,
-        answeredCount: rows.filter(
-          (row) =>
-            row.answer &&
-            typeof row.answer === 'object' &&
-            'optionId' in row.answer &&
-            typeof row.answer.optionId === 'string',
+        answeredCount: rows.filter((row) =>
+          partialPolicy
+            ? normalizeAssessmentAnswer(decodeAssessmentContent(row), row.answer ?? null) !== null
+            : row.answer &&
+              typeof row.answer === 'object' &&
+              'optionId' in row.answer &&
+              typeof row.answer.optionId === 'string',
         ).length,
       },
       now,

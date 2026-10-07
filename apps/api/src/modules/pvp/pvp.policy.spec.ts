@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import { describe, expect, it } from 'vitest';
-import { pvpPoints, durationSeconds, pvpContentMode } from './pvp.policy';
+import { pvpPoints, durationSeconds, pvpContentMode, pvpMode } from './pvp.policy';
 import { PvpEngineService } from './pvp-engine.service';
 import { validateCommand } from './pvp.protocol';
 
@@ -16,6 +16,12 @@ describe('PvP policy and boundaries', () => {
         pvpContentMode({ PVP_MODE: mode, PVP_CONTENT_MODE: 'temporary-owner-accepted' }),
       ).toThrow('requires PVP_MODE=demo');
     expect(() => pvpContentMode({ PVP_MODE: 'demo', PVP_CONTENT_MODE: 'anything' })).toThrow();
+  });
+  it('keeps owner-accepted real content available without enabling synthetic fixtures', () => {
+    expect(pvpMode({ PVP_MODE: 'demo', PVP_CONTENT_MODE: 'temporary-owner-accepted' })).toBe(
+      'demo',
+    );
+    expect(() => pvpMode({ PVP_MODE: 'demo' })).toThrow('Synthetic PvP requires');
   });
   it('keeps real accounts gated without an approved policy', async () => {
     const engine = new PvpEngineService(null);

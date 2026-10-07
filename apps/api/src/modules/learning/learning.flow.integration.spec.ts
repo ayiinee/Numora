@@ -213,6 +213,9 @@ integration('Drill lifecycle against PostgreSQL', () => {
             answerKey: { optionId: 'A' },
             explanation: { text: 'Demo' },
             difficulty: 'EASY',
+            contentStatus: 'READY',
+            reviewedAt: new Date(),
+            reviewedByUserId: student!.id,
           })
           .returning({ id: questionVersions.id });
         await db.insert(packageItems).values({
@@ -246,19 +249,13 @@ integration('Drill lifecycle against PostgreSQL', () => {
         (level) => level.id === nextLevel!.id,
       )?.status,
     ).toBe('locked');
-    // Draft content is restricted to explicitly labeled demo packages.
-    await db
-      .update(assessmentPackages)
-      .set({ isDemo: false })
-      .where(eq(assessmentPackages.id, firstPackage!.id));
+    // Synthetic provenance cannot authorize distribution without isolated opt-in.
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'false');
     await expect(learning.start('student', firstLevel!.id)).rejects.toMatchObject({
       status: 503,
-      response: { code: 'DRILL_CONTENT_NOT_READY' },
+      response: { code: 'DRILL_PACKAGE_UNAVAILABLE' },
     });
-    await db
-      .update(assessmentPackages)
-      .set({ isDemo: true })
-      .where(eq(assessmentPackages.id, firstPackage!.id));
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     vi.stubEnv('DOMAIN_ANALYTICS_ENABLED', 'false');
     const untracked = await learning.start('stranger', firstLevel!.id);
     await learning.saveAnswer(
@@ -365,16 +362,32 @@ integration('Drill lifecycle against PostgreSQL', () => {
     expect(resultA).toMatchObject({ score: 80, mastered: true, unlockedLevelId: nextLevel!.id });
     expect(resultA.levelTitle).toBe('Level 1');
     expect(resultB).toMatchObject({ attemptId: attempt.id, score: 80 });
-    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId,attempt.id));
+    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id));
     expect(rewards).toHaveLength(1);
     expect(resultA.xp).toBe(rewards[0]?.xpAmount);
     expect(resultA.xp).toBeGreaterThanOrEqual(80);
     expect(resultA.xp).toBeLessThanOrEqual(130);
-    expect(await db.select().from(notificationOutbox).where(and(eq(notificationOutbox.recipientId, student!.id), eq(notificationOutbox.kind, 'LEVEL_UNLOCKED')))).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(notificationOutbox)
+        .where(
+          and(
+            eq(notificationOutbox.recipientId, student!.id),
+            eq(notificationOutbox.kind, 'LEVEL_UNLOCKED'),
+          ),
+        ),
+    ).toHaveLength(1);
     expect(resultA.recommendations).toEqual([]);
-    expect(resultA).toMatchObject({ drillPolicyVersion: 2, stars: 2, reward: { policyVersion: 2, baseXp: 80 } });
+    expect(resultA).toMatchObject({
+      drillPolicyVersion: 2,
+      stars: 2,
+      reward: { policyVersion: 2, baseXp: 80 },
+    });
     expect(resultB.reward).toEqual(resultA.reward);
-    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(1);
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(
+      1,
+    );
     expect((await history.list('student')).records[0]).toMatchObject({
       attemptId: attempt.id,
       activity: 'drill',
@@ -554,14 +567,12 @@ integration('Drill lifecycle against PostgreSQL', () => {
       );
     expect(nextProgress?.unlockingAttemptId).toBe(attempt.id);
     // A later valid completion must not emit an unlock for a level already open.
-    await db
-      .insert(levelProgress)
-      .values({
-        studentId: stranger!.id,
-        levelId: nextLevel!.id,
-        unlockedAt: new Date(),
-        unlockSource: 'PRETEST',
-      });
+    await db.insert(levelProgress).values({
+      studentId: stranger!.id,
+      levelId: nextLevel!.id,
+      unlockedAt: new Date(),
+      unlockSource: 'PRETEST',
+    });
     for (const item of untracked.questions)
       await learning.saveAnswer('stranger', untracked.id, item.questionInstanceId, 'A');
     await learning.submit('stranger', untracked.id);

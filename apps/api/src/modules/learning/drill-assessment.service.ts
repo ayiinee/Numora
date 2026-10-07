@@ -10,7 +10,9 @@ import {
 import {
   analyticsOutbox,
   assessmentAttempts,
+  allowSyntheticContent,
   assessmentPackages,
+  packageRuntimeEligibility,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -109,8 +111,9 @@ export class DrillAssessmentService {
         if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
       }
       const [existing] = await tx
-        .select({ id: assessmentAttempts.id })
+        .select({ id: assessmentAttempts.id, isDemo: assessmentPackages.isDemo })
         .from(assessmentAttempts)
+        .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
         .where(
           and(
             eq(assessmentAttempts.studentId, studentId),
@@ -121,7 +124,16 @@ export class DrillAssessmentService {
           ),
         )
         .limit(1);
-      if (existing) return existing.id;
+      if (existing) {
+        if (existing.isDemo && !allowSyntheticContent())
+          throw new ServiceUnavailableException(
+            problem(
+              'SYNTHETIC_CONTENT_FORBIDDEN',
+              'Paket latihan belum tersedia di lingkungan ini.',
+            ),
+          );
+        return existing.id;
+      }
 
       const availablePackages = await tx
         .select({
@@ -143,6 +155,7 @@ export class DrillAssessmentService {
             eq(assessmentPackages.assessmentType, 'DRILL'),
             eq(assessmentPackages.purpose, 'REGULAR'),
             sql`public.package_can_distribute(${assessmentPackages.id})`,
+            packageRuntimeEligibility(),
             eq(assessmentPackages.levelId, levelId),
             eq(assessmentPackages.status, 'PUBLISHED'),
             or(isNull(assessmentPackages.releaseAt), lte(assessmentPackages.releaseAt, new Date())),
@@ -212,15 +225,7 @@ export class DrillAssessmentService {
           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
       items.forEach(ownerOverride ? decodeAssessmentContent : decodeSingleChoiceVersion);
-      if (
-        items.some(
-          (item) =>
-            item.contentStatus === 'ARCHIVED' ||
-            item.questionStatus === 'ARCHIVED' ||
-            (!selected.isDemo &&
-              (item.contentStatus !== 'READY' || item.questionStatus !== 'READY')),
-        )
-      ) {
+      if (items.some((item) => !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'))) {
         throw new ServiceUnavailableException(
           problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
         );
@@ -291,6 +296,7 @@ export class DrillAssessmentService {
         displayOrder: attemptItems.displayOrder,
         maxPoints: attemptItems.maxPoints,
         questionType: questionVersions.questionType,
+        questionVersionId: questionVersions.id,
         stem: questionVersions.stem,
         optionsOrStatements: questionVersions.optionsOrStatements,
         answerKey: questionVersions.answerKey,
@@ -344,7 +350,12 @@ export class DrillAssessmentService {
       serverTime: (await databaseTime(db)).toISOString(),
       isDemo: attempt.isDemo,
       questions: rows.map((row) =>
-        presentAssessmentQuestion(decodeAssessmentContent(row), row.id, row.answer),
+        presentAssessmentQuestion(
+          decodeAssessmentContent(row),
+          row.id,
+          row.answer,
+          row.questionVersionId,
+        ),
       ),
     };
   }
@@ -783,6 +794,7 @@ export class DrillAssessmentService {
           row.answer,
           row.awardedPoints,
           row.maxPoints,
+          row.questionVersionId,
         ),
       ),
     };

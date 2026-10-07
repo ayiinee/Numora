@@ -33,9 +33,11 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
   afterAll(async () => {
     vi.useRealTimers();
     await closeDatabaseConnection();
+    vi.unstubAllEnvs();
   });
   it('posts once, rolls back all effects on failure, retries a single package and leaves legacy XP untouched', async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const { db } = getDatabase();
     const suffix = randomUUID();
     const [student, legacyStudent] = await db
@@ -125,7 +127,11 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     for (let i = 1; i <= 10; i++) {
       const [q] = await db
         .insert(questions)
-        .values({ primaryCompetencyId: competency!.id, sourceRef: `${suffix}-${i}` })
+        .values({
+          primaryCompetencyId: competency!.id,
+          sourceRef: `${suffix}-${i}`,
+          status: 'READY',
+        })
         .returning();
       const [variant] = await db
         .insert(questionVariants)
@@ -147,16 +153,17 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
           answerKey: { optionId: 'A' },
           explanation: { text: 'TEST ONLY' },
           difficulty: 'EASY',
+          contentStatus: 'READY',
+          reviewedAt: new Date(),
+          reviewedByUserId: student!.id,
         })
         .returning();
-      await db
-        .insert(packageItems)
-        .values({
-          packageId: pack!.id,
-          questionVersionId: version!.id,
-          displayOrder: i,
-          maxPoints: '1',
-        });
+      await db.insert(packageItems).values({
+        packageId: pack!.id,
+        questionVersionId: version!.id,
+        displayOrder: i,
+        maxPoints: '1',
+      });
     }
     const items = await db.select().from(packageItems).where(eq(packageItems.packageId, pack!.id));
     const [legacy] = await db
@@ -170,18 +177,16 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
         scoringPolicyVersionId: policy!.id,
       })
       .returning();
-    await db
-      .insert(attemptItems)
-      .values(
-        items.map((i) => ({
-          attemptId: legacy!.id,
-          packageId: pack!.id,
-          packageItemId: i.id,
-          questionVersionId: i.questionVersionId,
-          displayOrder: i.displayOrder,
-          maxPoints: i.maxPoints,
-        })),
-      );
+    await db.insert(attemptItems).values(
+      items.map((i) => ({
+        attemptId: legacy!.id,
+        packageId: pack!.id,
+        packageItemId: i.id,
+        questionVersionId: i.questionVersionId,
+        displayOrder: i.displayOrder,
+        maxPoints: i.maxPoints,
+      })),
+    );
     expect((await service.start('legacy', level!.id)).id).toBe(legacy!.id);
     await expect(
       db

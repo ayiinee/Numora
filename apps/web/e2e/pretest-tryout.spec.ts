@@ -60,12 +60,7 @@ async function fixture(page: Page, mixedTryout = false) {
           : index === 1
             ? 'CATEGORY'
             : 'SINGLE_CHOICE',
-      stem:
-        index === 0
-          ? 'DEMO pilih bilangan genap'
-          : index === 1
-            ? 'DEMO kategori bilangan'
-            : 'DEMO 1 + 1?',
+      stem: index === 0 ? 'pilih bilangan genap' : index === 1 ? 'kategori bilangan' : '1 + 1?',
       options:
         index === 1
           ? [
@@ -91,7 +86,7 @@ async function fixture(page: Page, mixedTryout = false) {
     Array.from({ length: 20 }, (_, index) => ({
       questionInstanceId: `66666666-6666-4666-8666-${String(index + 1).padStart(12, '0')}`,
       type: 'SINGLE_CHOICE',
-      stem: `DEMO soal ${index + 1}: 1 + 1?`,
+      stem: `soal ${index + 1}: 1 + 1?`,
       options: [
         { id: 'A', text: '2' },
         { id: 'B', text: '3' },
@@ -102,12 +97,13 @@ async function fixture(page: Page, mixedTryout = false) {
     })).map((question) => ({ ...question, ...answers.get(question.questionInstanceId) }));
   const packageData = {
     id: past,
-    title: 'DEMO Paket lampau belum dikerjakan',
+    title: 'Paket lampau belum dikerjakan',
     state: 'unavailable',
     periodState: 'past',
     eligible: false,
     attemptId: null,
     isDemo: true,
+    resultPendingReason: 'SCORING_PENDING',
     questionCount: 30,
     durationSeconds: 600,
     releaseAt: '2026-09-27T17:00:00Z',
@@ -186,7 +182,7 @@ async function fixture(page: Page, mixedTryout = false) {
             state: tryoutSubmitted ? 'waitingIrt' : 'open',
             periodState: 'ongoing',
             eligible: !tryoutSubmitted,
-            title: 'DEMO Tryout PGK',
+            title: 'Tryout PGK',
             closeAt: tryoutDeadline,
             resultDueAt: null,
             attemptId: tryoutSubmitted ? attempt : null,
@@ -198,8 +194,9 @@ async function fixture(page: Page, mixedTryout = false) {
       json = {
         id: attempt,
         packageId: past,
-        packageTitle: 'DEMO Tryout PGK',
+        packageTitle: 'Tryout PGK',
         isDemo: true,
+        resultPendingReason: 'SCORING_PENDING',
         closeAt: tryoutDeadline,
         resultDueAt: null,
         xp: null,
@@ -244,6 +241,7 @@ async function fixture(page: Page, mixedTryout = false) {
         attemptId: started ? attempt : null,
         skipped,
         isDemo: true,
+        resultPendingReason: 'SCORING_PENDING',
       };
     } else if (path === 'pretest/attempts' || path === `pretest/attempts/${attempt}`) {
       started = true;
@@ -252,6 +250,7 @@ async function fixture(page: Page, mixedTryout = false) {
         chapterId: chapter,
         chapterTitle: 'Bab Fixture',
         isDemo: true,
+        resultPendingReason: 'SCORING_PENDING',
         status: completed ? 'completed' : 'inProgress',
         startedAt: '2026-10-06T01:00:00Z',
         questions: completed ? [] : questions(),
@@ -285,6 +284,7 @@ async function fixture(page: Page, mixedTryout = false) {
         chapterId: chapter,
         chapterTitle: 'Bab Fixture',
         isDemo: true,
+        resultPendingReason: 'SCORING_PENDING',
         score: 5,
         correctCount: 1,
         questionCount: 20,
@@ -298,9 +298,7 @@ async function fixture(page: Page, mixedTryout = false) {
   return rawTryoutAnswers;
 }
 
-test('DEMO Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', async ({
-  page,
-}) => {
+test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 850 });
   const raw = await fixture(page, true);
   await page.goto('/student/tryout');
@@ -333,9 +331,7 @@ test('DEMO Tryout delivers 30 items, resumes PGK raw answers and waits for rubri
   await expect(
     page.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
   ).toBeVisible();
-  await expect(
-    page.getByText('Konten uji menyimpan jawaban di server.', { exact: false }),
-  ).toBeVisible();
+  await expect(page.getByText(/hasil dan pembahasan menunggu/)).toBeVisible();
   await expect(page.getByText(/XP sudah tercatat/)).toHaveCount(0);
   await screenshot(page, 'tryout-pgk-waiting-390');
 });
@@ -395,7 +391,7 @@ for (const width of [390, 1280]) {
     await page.goto('/student/tryout');
     await page.getByRole('tab', { name: 'Terlewat' }).click();
     await expect(
-      page.getByRole('heading', { name: 'DEMO Paket lampau belum dikerjakan' }),
+      page.getByRole('heading', { name: 'Paket lampau belum dikerjakan' }),
     ).toBeVisible();
     await expect(page.getByText('Terkunci · Belum dikerjakan', { exact: true })).toBeVisible();
     await screenshot(page, `tryout-past-${width}`);

@@ -49,7 +49,7 @@ export function TeacherAssessmentHistory({
                       ? 'Pretest'
                       : 'Tryout'}
                 </Badge>
-                {record.isDemo && <Badge variant="warning">Demo</Badge>}
+
                 <h3>{record.title}</h3>
                 {record.levelTitle && <p>{record.levelTitle}</p>}
                 <time dateTime={record.submittedAt}>

@@ -1,3 +1,6 @@
+import { presentFixtureText } from '@tka/database';
+import { randomInt } from 'node:crypto';
+import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
 import {
   BadRequestException,
   ConflictException,
@@ -13,6 +16,8 @@ import {
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
+  allowSyntheticContent,
+  packageRuntimeEligibility,
   attemptAnswers,
   attemptItems,
   classMemberships,
@@ -57,6 +62,42 @@ export class TryoutService {
     return user.id;
   }
 
+  private async pendingReason(
+    packageId: string,
+  ): Promise<'CONTENT_PENDING' | 'SCORING_PENDING' | null> {
+    const db = getDatabase().db;
+    const [pack] = await db
+      .select()
+      .from(assessmentPackages)
+      .where(eq(assessmentPackages.id, packageId));
+    if (
+      !pack?.curriculumApproval ||
+      !pack.blueprintVersionId ||
+      !pack.frozenAt ||
+      pack.curriculumApproval.manifestDigest !== pack.manifestDigest
+    )
+      return 'CONTENT_PENDING';
+    const rows = await db
+      .select({ type: questionVersions.questionType, status: questionVersions.contentStatus })
+      .from(packageItems)
+      .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+      .where(eq(packageItems.packageId, packageId));
+    if (rows.length !== 30 || rows.some((row) => row.status !== 'READY')) return 'CONTENT_PENDING';
+    const [policy] = pack.scoringPolicyVersionId
+      ? await db
+          .select()
+          .from(scoringPolicyVersions)
+          .where(eq(scoringPolicyVersions.id, pack.scoringPolicyVersionId))
+      : [];
+    return (rows.some((row) => row.type !== 'SINGLE_CHOICE') &&
+      policy?.policyCode !== TRYOUT_PARTIAL_POLICY) ||
+      ![TRYOUT_REWARD_POLICY, TRYOUT_PARTIAL_POLICY].includes(policy?.policyCode ?? '') ||
+      policy?.status !== 'PUBLISHED' ||
+      policy?.version !== 1
+      ? 'SCORING_PENDING'
+      : null;
+  }
+
   private currentPackage() {
     return currentTryoutPackage();
   }
@@ -89,9 +130,10 @@ export class TryoutService {
       .select({ total: sql<number>`count(*)::integer` })
       .from(packageItems)
       .where(eq(packageItems.packageId, current.id));
+    const pendingReason = released ? null : await this.pendingReason(current.id);
     return {
       id: current.id,
-      title: current.name,
+      title: presentFixtureText(current.id, 'name', current.name),
       releaseAt: current.releaseAt!.toISOString(),
       state: !attempt
         ? ('open' as const)
@@ -105,10 +147,12 @@ export class TryoutService {
       questionCount: count?.total ?? 0,
       durationSeconds: current.durationSeconds,
       isDemo: current.isDemo,
+      resultPendingReason: pendingReason,
       closeAt: current.closeAt?.toISOString() ?? null,
-      resultDueAt: current.closeAt
-        ? new Date(current.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
-        : null,
+      resultDueAt:
+        !pendingReason && current.closeAt
+          ? new Date(current.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+          : null,
     };
   }
 
@@ -146,17 +190,20 @@ export class TryoutService {
       .select({ total: sql<number>`count(*)::integer` })
       .from(packageItems)
       .where(eq(packageItems.packageId, pack.id));
+    const pendingReason = released ? null : await this.pendingReason(pack.id);
     return {
       id: pack.id,
-      title: pack.name,
+      title: presentFixtureText(pack.id, 'name', pack.name),
       releaseAt: pack.releaseAt!.toISOString(),
       closeAt: pack.closeAt?.toISOString() ?? null,
-      resultDueAt: pack.closeAt
-        ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
-        : null,
+      resultDueAt:
+        !pendingReason && pack.closeAt
+          ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+          : null,
       questionCount: count?.total ?? 0,
       durationSeconds: pack.durationSeconds,
       isDemo: pack.isDemo,
+      resultPendingReason: pendingReason,
       attemptId: attempt?.id ?? null,
       periodState: past
         ? ('past' as const)
@@ -192,6 +239,7 @@ export class TryoutService {
             eq(assessmentPackages.assessmentType, 'TRYOUT'),
             eq(assessmentPackages.purpose, 'REGULAR'),
             sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+            sql`((${assessmentPackages.status} <> 'ARCHIVED' and ${packageRuntimeEligibility()}) or exists (select 1 from assessment_attempts owned where owned.package_id = ${assessmentPackages.id} and owned.student_id = ${studentId}::uuid))`,
             sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
           ),
         );
@@ -207,6 +255,7 @@ export class TryoutService {
           eq(assessmentPackages.assessmentType, 'TRYOUT'),
           eq(assessmentPackages.purpose, 'REGULAR'),
           sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+          sql`((${assessmentPackages.status} <> 'ARCHIVED' and ${packageRuntimeEligibility()}) or exists (select 1 from assessment_attempts owned where owned.package_id = ${assessmentPackages.id} and owned.student_id = ${studentId}::uuid))`,
           sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
           cursorClause,
         ),
@@ -232,6 +281,7 @@ export class TryoutService {
           eq(assessmentPackages.assessmentType, 'TRYOUT'),
           eq(assessmentPackages.purpose, 'REGULAR'),
           sql`${assessmentPackages.status} in ('PUBLISHED','CLOSED','ARCHIVED')`,
+          sql`((${assessmentPackages.status} <> 'ARCHIVED' and ${packageRuntimeEligibility()}) or exists (select 1 from assessment_attempts owned where owned.package_id = ${assessmentPackages.id} and owned.student_id = ${studentId}::uuid))`,
           sql`${assessmentPackages.releaseAt} <= ${now.toISOString()}::timestamptz`,
         ),
       );
@@ -249,6 +299,7 @@ export class TryoutService {
         id: attemptItems.id,
         maxPoints: attemptItems.maxPoints,
         questionType: questionVersions.questionType,
+        questionVersionId: questionVersions.id,
         stem: questionVersions.stem,
         optionsOrStatements: questionVersions.optionsOrStatements,
         answerKey: questionVersions.answerKey,
@@ -298,22 +349,34 @@ export class TryoutService {
       await getDatabase().db.execute(
         sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`,
       );
+    const pendingReason = (await this.releases.releasedPackageIds([attempt.packageId])).has(
+      attempt.packageId,
+    )
+      ? null
+      : await this.pendingReason(attempt.packageId);
     return {
       id: attempt.id,
       packageId: attempt.packageId,
-      packageTitle: attempt.title,
+      packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       closeAt: attempt.closeAt?.toISOString() ?? null,
-      resultDueAt: attempt.closeAt
-        ? new Date(attempt.closeAt.getTime() + 72 * 3600_000).toISOString()
-        : null,
+      resultDueAt:
+        !pendingReason && attempt.closeAt
+          ? new Date(attempt.closeAt.getTime() + 72 * 3600_000).toISOString()
+          : null,
       isDemo: attempt.isDemo,
+      resultPendingReason: pendingReason,
       status: attempt.status === 'IN_PROGRESS' ? ('inProgress' as const) : ('submitted' as const),
       deadlineAt: attempt.deadlineAt?.toISOString() ?? null,
       serverTime: (await databaseTime(getDatabase().db)).toISOString(),
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
       questions: rows.map((row) =>
-        presentAssessmentQuestion(decodeAssessmentContent(row), row.id, row.answer),
+        presentAssessmentQuestion(
+          decodeAssessmentContent(row),
+          row.id,
+          row.answer,
+          row.questionVersionId,
+        ),
       ),
     };
   }
@@ -356,10 +419,10 @@ export class TryoutService {
         .from(scoringPolicyVersions)
         .where(eq(scoringPolicyVersions.id, current.scoringPolicyVersionId));
       if (
-        !current.isDemo &&
-        (policy?.policyCode !== TRYOUT_REWARD_POLICY ||
-          policy.version !== 1 ||
-          policy.status !== 'PUBLISHED')
+        !(current.isDemo && allowSyntheticContent()) &&
+        (![TRYOUT_REWARD_POLICY, TRYOUT_PARTIAL_POLICY].includes(policy?.policyCode ?? '') ||
+          policy?.version !== 1 ||
+          policy?.status !== 'PUBLISHED')
       )
         throw new ServiceUnavailableException(
           problem('TRYOUT_POLICY_OLD', 'Terbitkan versi paket dengan kebijakan PRD v0.6.'),
@@ -386,13 +449,17 @@ export class TryoutService {
         .orderBy(asc(packageItems.displayOrder));
       if (
         !items.length ||
-        (!current.isDemo && items.length !== 30) ||
+        items.length !== 30 ||
         items.some((item) => item.contentStatus !== 'READY' || item.questionStatus !== 'READY')
       )
         throw new ServiceUnavailableException(
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
-      if (!current.isDemo && items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
+      if (
+        !(current.isDemo && allowSyntheticContent()) &&
+        policy?.policyCode !== TRYOUT_PARTIAL_POLICY &&
+        items.some((item) => item.questionType !== 'SINGLE_CHOICE')
+      )
         throw new ServiceUnavailableException(
           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
@@ -413,9 +480,11 @@ export class TryoutService {
           studentId,
           packageId,
           assessmentType: 'TRYOUT',
-          tryoutXpPolicyVersion: items.some((item) => item.questionType !== 'SINGLE_CHOICE')
-            ? null
-            : TRYOUT_XP_POLICY.version,
+          tryoutXpPolicyVersion:
+            policy?.policyCode !== TRYOUT_PARTIAL_POLICY &&
+            items.some((item) => item.questionType !== 'SINGLE_CHOICE')
+              ? null
+              : TRYOUT_XP_POLICY.version,
           classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
@@ -423,13 +492,18 @@ export class TryoutService {
         })
         .returning({ id: assessmentAttempts.id });
       if (!attempt) throw new Error('Tryout attempt creation failed.');
+      // Shuffle once on the server; the persisted order is reused on resume/retry.
+      for (let i = items.length - 1; i > 0; i--) {
+        const j = randomInt(i + 1);
+        [items[i], items[j]] = [items[j]!, items[i]!];
+      }
       await tx.insert(attemptItems).values(
-        items.map((item) => ({
+        items.map((item, index) => ({
           attemptId: attempt.id,
           packageId,
           packageItemId: item.id,
           questionVersionId: item.questionVersionId,
-          displayOrder: item.displayOrder,
+          displayOrder: index + 1,
           maxPoints: item.maxPoints,
         })),
       );
@@ -587,7 +661,7 @@ export class TryoutService {
     const xp = await this.storedXp(attemptId);
     return {
       attemptId,
-      packageTitle: attempt.title,
+      packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
       score: canonical?.score ?? Number(score?.score ?? 0),
@@ -598,17 +672,33 @@ export class TryoutService {
       resultMethod: canonical?.resultMethod ?? null,
       resultMethodReason: canonical?.reason ?? null,
       xpDetail:
-        xp === null || rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
+        xp === null
           ? null
           : {
-              calculationMode: 'FULL_CORRECT_ONLY' as const,
+              calculationMode: rows.some((row) => row.questionType !== 'SINGLE_CHOICE')
+                ? ('PARTIAL_INCLUDED' as const)
+                : ('FULL_CORRECT_ONLY' as const),
               fullCorrectCount: rows.filter(
                 (row) => Number(row.awardedPoints) === Number(row.maxPoints),
               ).length,
-              partialCorrectEquivalent: 0,
-              correctEquivalent: rows.filter(
-                (row) => Number(row.awardedPoints) === Number(row.maxPoints),
-              ).length,
+              partialCorrectEquivalent: Number(
+                rows
+                  .filter(
+                    (row) =>
+                      Number(row.awardedPoints) > 0 &&
+                      Number(row.awardedPoints) < Number(row.maxPoints),
+                  )
+                  .reduce((sum, row) => sum + Number(row.awardedPoints) / Number(row.maxPoints), 0)
+                  .toFixed(6),
+              ),
+              correctEquivalent: Number(
+                rows
+                  .reduce(
+                    (sum, row) => sum + Number(row.awardedPoints ?? 0) / Number(row.maxPoints),
+                    0,
+                  )
+                  .toFixed(6),
+              ),
               fallbackReason: null,
             },
       explanation: rows.map((row) =>
@@ -618,6 +708,7 @@ export class TryoutService {
           row.answer,
           row.awardedPoints,
           row.maxPoints,
+          row.questionVersionId,
         ),
       ),
     };

@@ -1,6 +1,7 @@
 import { drizzle } from 'drizzle-orm/postgres-js';
 import postgres from 'postgres';
 import * as schema from './schema/index.js';
+import { allowSyntheticContent } from './package-runtime.js';
 
 type DatabaseConnection = {
   client: ReturnType<typeof postgres>;
@@ -16,7 +17,8 @@ export function requireTlsDatabaseUrl(url: string) {
     process.env.NODE_ENV === 'test' &&
     ['localhost', '127.0.0.1'].includes(parsed.hostname) &&
     sslMode === 'disable'
-  ) return url;
+  )
+    return url;
   if (sslMode !== 'require' && sslMode !== 'verify-full') {
     throw new Error('PostgreSQL URL must set sslmode=require or sslmode=verify-full.');
   }
@@ -24,6 +26,7 @@ export function requireTlsDatabaseUrl(url: string) {
 }
 
 export function getDatabase(): DatabaseConnection {
+  allowSyntheticContent();
   if (connection) return connection;
 
   const databaseUrl = process.env.DATABASE_URL;

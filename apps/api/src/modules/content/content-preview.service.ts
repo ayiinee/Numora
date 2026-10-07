@@ -1,3 +1,5 @@
+import { decodeAssessmentContent } from '@tka/assessment-engine';
+import { presentFixtureText } from '@tka/database';
 import {
   Inject,
   Injectable,
@@ -165,28 +167,48 @@ export class ContentPreviewService {
       scoringStatus: 'NOT_SCORED',
       score: null,
       media,
-      items: view.items.map(({ item, answer }) => ({
-        instanceId: item!.id,
-        questionVersionId: item.questionVersionId,
-        externalId: item.snapshot.externalId,
-        type: item.snapshot.type,
-        stem: { text: item.snapshot.stem.text },
-        options: item.snapshot.options.map((o) => ({
-          id: o.id,
-          content: { text: o.content.text },
-        })),
-        categories: item.snapshot.categories,
-        answer: answer.answer,
-        revision: answer.revision,
-        serverSavedAt: answer.savedAt.toISOString(),
-        score: null,
-        ...(review
-          ? {
-              answerKey: item.snapshot.answerKey,
-              explanation: { text: item.snapshot.explanation.text },
-            }
-          : {}),
-      })),
+      items: view.items.map(({ item, answer }) => {
+        decodeAssessmentContent({
+          questionType: item.snapshot.type,
+          stem: item.snapshot.stem,
+          optionsOrStatements: {
+            options: item.snapshot.options,
+            categories: item.snapshot.categories,
+          },
+          answerKey: item.snapshot.answerKey,
+          explanation: item.snapshot.explanation,
+        });
+        return {
+          instanceId: item!.id,
+          questionVersionId: item.questionVersionId,
+          externalId: item.snapshot.externalId,
+          type: item.snapshot.type,
+          stem: {
+            text: presentFixtureText(item.questionVersionId, 'stem', item.snapshot.stem.text),
+          },
+          options: item.snapshot.options.map((o) => ({
+            id: o.id,
+            content: { text: o.content.text },
+          })),
+          categories: item.snapshot.categories,
+          answer: answer.answer,
+          revision: answer.revision,
+          serverSavedAt: answer.savedAt.toISOString(),
+          score: null,
+          ...(review
+            ? {
+                answerKey: item.snapshot.answerKey,
+                explanation: {
+                  text: presentFixtureText(
+                    item.questionVersionId,
+                    'explanation',
+                    item.snapshot.explanation.text,
+                  ),
+                },
+              }
+            : {}),
+        };
+      }),
     };
   }
   async save(

@@ -12,6 +12,8 @@ All three choices use the same temporary pool. Mudah/Sedang/Sulit select server 
 
 Temporary content requires `PVP_MODE=demo`, preserving the existing DEMO result/leaderboard dimension. Published scoring policy, ten-question count, server scoring, reconnect, authorization and idempotency remain unchanged. Strict eligibility is the default.
 
+**ENGINEERING INTEGRATION — 7 October 2026:** the generator/Tryout integration preserves this owner-accepted real-content exception without enabling synthetic fixtures. Strict DEMO mode still requires the verified `ALLOW_SYNTHETIC_CONTENT` opt-in. Policy and Drill-bank regression tests cover both boundaries.
+
 ## Activation
 
 PvP also normalizes the existing imported PG storage shape `{ options: [...] }` for eligibility, snapshots and answer scoring. Legacy option arrays remain supported. The shared single-choice validator still rejects invalid options/keys and non-text content. This compatibility fix does not rewrite stored versions and remains useful after temporary mode is removed.

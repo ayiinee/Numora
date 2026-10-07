@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto';
 import { and, eq } from 'drizzle-orm';
 import { getDatabase } from './client.js';
+import { allowSyntheticContent } from './package-runtime.js';
 import { tryoutBatchCloseAt } from './tryout-visibility.js';
 import {
   assessmentPackages,
@@ -20,6 +21,7 @@ import {
 export async function seedLifecycleDemo(namespace = randomUUID()) {
   const target = new URL(process.env.DATABASE_URL ?? '');
   if (
+    !allowSyntheticContent() ||
     !['127.0.0.1', 'localhost'].includes(target.hostname) ||
     !['test', 'development'].includes(process.env.NODE_ENV ?? '')
   )

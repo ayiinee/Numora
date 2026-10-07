@@ -339,7 +339,7 @@ integration(
     });
 
     it('uses only the accepted uncalibrated pool in temporary DEMO mode and preserves room pins', async () => {
-      const temporary = [];
+      const temporary: Awaited<ReturnType<typeof addQuestion>>[] = [];
       const importedOptions = {
         options: [
           { id: 'A', content: { text: '2' } },

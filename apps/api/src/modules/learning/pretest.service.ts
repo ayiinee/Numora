@@ -10,7 +10,10 @@ import { and, asc, desc, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox,
   assessmentAttempts,
+  allowSyntheticContent,
+  scoringPolicyVersions,
   assessmentPackages,
+  packageRuntimeEligibility,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -68,13 +71,38 @@ export class PretestService {
           eq(assessmentPackages.assessmentType, 'PRETEST'),
           eq(assessmentPackages.purpose, 'REGULAR'),
           eq(assessmentPackages.status, 'PUBLISHED'),
-          eq(assessmentPackages.isDemo, true),
           sql`public.package_can_distribute(${assessmentPackages.id})`,
+          packageRuntimeEligibility(),
         ),
       )
-      .orderBy(desc(assessmentPackages.packageVersion), desc(assessmentPackages.id))
+      .orderBy(
+        asc(assessmentPackages.isDemo),
+        desc(assessmentPackages.packageVersion),
+        desc(assessmentPackages.id),
+      )
       .limit(1);
+    if (!row || !(await this.supportedPolicy(row.scoringPolicyVersionId, row.isDemo)))
+      return undefined;
     return row;
+  }
+  private async supportedPolicy(id: string | null, synthetic: boolean) {
+    if (!id) return false;
+    const [policy] = await getDatabase()
+      .db.select()
+      .from(scoringPolicyVersions)
+      .where(eq(scoringPolicyVersions.id, id));
+    const configuration = policy?.configuration as Record<string, unknown> | null;
+    return (
+      policy?.status === 'PUBLISHED' &&
+      policy.version === 1 &&
+      (policy.policyCode === 'PRETEST_PRD_V06' ||
+        (synthetic &&
+          allowSyntheticContent() &&
+          (policy.policyCode === 'NUMORA-ASSESSMENT-MOCK-V1-PRETEST' ||
+            (policy.policyCode.startsWith('PRETEST_PG_DEMO_') &&
+              configuration?.testOnly === true &&
+              configuration?.questionCount === 20))))
+    );
   }
   private async state(studentId: string, chapterId: string) {
     const chapter = await this.readyChapter(chapterId);
@@ -250,6 +278,17 @@ export class PretestService {
           ),
         );
       if (existing) {
+        const [pinned] = await tx
+          .select({ isDemo: assessmentPackages.isDemo })
+          .from(assessmentPackages)
+          .where(eq(assessmentPackages.id, existing.packageId));
+        if (pinned?.isDemo && !allowSyntheticContent())
+          throw new ServiceUnavailableException(
+            problem(
+              'SYNTHETIC_CONTENT_FORBIDDEN',
+              'Paket Pretest belum tersedia di lingkungan ini.',
+            ),
+          );
         if (existing.status !== 'IN_PROGRESS')
           throw new ConflictException(
             problem('PRETEST_COMPLETED', 'Pretest bab ini sudah selesai dan tidak dapat diulang.'),
@@ -282,10 +321,7 @@ export class PretestService {
         )
       )
         throw new ServiceUnavailableException(
-          problem(
-            'PRETEST_CONTENT_PENDING',
-            'Paket demo Pretest memerlukan tepat 20 soal PG siap.',
-          ),
+          problem('PRETEST_CONTENT_PENDING', 'Pretest memerlukan tepat 20 soal PG siap.'),
         );
       rows.forEach((row) => decodeAssessmentContent(row.version));
       const [attempt] = await tx
@@ -314,7 +350,7 @@ export class PretestService {
         entityType: 'assessmentAttempt',
         entityId: attempt!.id,
         correlationId: attempt!.id,
-        payload: { chapterId, packageId: selected.id, isDemo: true },
+        payload: { chapterId, packageId: selected.id, isDemo: selected.isDemo },
       });
       return attempt!.id;
     });
@@ -366,7 +402,12 @@ export class PretestService {
       startedAt: row.attempt.startedAt.toISOString(),
       questions: active
         ? (await this.rows(attemptId)).map(({ item, version, answer, revision }) => ({
-            ...presentAssessmentQuestion(decodeAssessmentContent(version), item.id, answer),
+            ...presentAssessmentQuestion(
+              decodeAssessmentContent(version),
+              item.id,
+              answer,
+              version.id,
+            ),
             revision: revision ?? 0,
           }))
         : [],
@@ -474,7 +515,7 @@ export class PretestService {
         .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
         .where(eq(attemptItems.attemptId, attemptId));
       if (
-        !owned.isDemo ||
+        !(await this.supportedPolicy(attempt!.scoringPolicyVersionId, owned.isDemo)) ||
         rows.length !== 20 ||
         rows.some((row) => row.version.questionType !== 'SINGLE_CHOICE')
       )
@@ -540,7 +581,7 @@ export class PretestService {
           chapterId: attempt!.chapterIdAtStart,
           correctCount,
           initialLevel,
-          isDemo: true,
+          isDemo: owned.isDemo,
         },
       });
     });

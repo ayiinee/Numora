@@ -54,7 +54,7 @@ describe('leaderboard scopes, archives and ties', () => {
         period: { ...period, status: archive ? 'ARCHIVED' : 'ACTIVE' },
         updatedAt: '2026-10-01T01:00:00Z',
         entries,
-          ownEntry: { studentId: 'self', displayName: 'Kamu', rank: 12, points: 5.123456 },
+        ownEntry: { studentId: 'self', displayName: 'Kamu', rank: 12, points: 5.123456 },
       } as T;
     });
     render(
@@ -68,6 +68,7 @@ describe('leaderboard scopes, archives and ties', () => {
     expect(within(tied).getAllByLabelText('Peringkat 1')).toHaveLength(2);
     expect(document.querySelector('.leaderboard-podium__pedestal')).toBeNull();
     expect(screen.getByText('#12')).toBeTruthy();
+    expect(screen.queryByText(/demo/i)).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Aktivitas Global' }));
     await waitFor(() =>
       expect(request).toHaveBeenCalledWith('TEST_ONLY_TOKEN', '/leaderboards/activity?'),

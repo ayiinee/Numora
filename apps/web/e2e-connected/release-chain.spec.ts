@@ -747,7 +747,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       ),
     );
     expect(submissions).toEqual(Array(3).fill({ state: 'waitingIrt', xp: 0, xpPolicyVersion: 1 }));
-    await mandiri.getByRole('button', { name: /^Soal 2,/ }).click();
+    await mandiri.getByRole('button', { name: /^Soal 30,/ }).click();
     await mandiri.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
     await mandiri
       .getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?', exact: true })
@@ -795,7 +795,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       );
     }
     await mandiri.goto('/student/assessment');
-    await expect(mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ })).toHaveCount(0);
+    await expect(mandiri.getByRole('link', { name: /Tryout Mingguan/ })).toHaveCount(0);
     const teacherPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/assessment-results`;
     const teacherHistory = await body<AssessmentHistoryDto>(request, 'teacher', teacherPath);
     expect(teacherHistory.records.find((r) => r.attemptId === affiliated.id)).toMatchObject({
@@ -837,15 +837,15 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect((await request.post(`${fixtureBase}/tryout-fixture/release`)).status()).toBe(200);
     await mandiri.reload();
-    await mandiri.getByRole('link', { name: /JOB06 TEST ONLY DEMO TryOut/ }).click();
+    await mandiri.getByRole('link', { name: /Tryout Mingguan/ }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     const result = await body<TryoutResultDto>(
       request,
       'otherStudent',
       `tryout/attempts/${independent.id}/result`,
     );
-    expect(result.score).toBe(50);
-    expect(result.explanation).toHaveLength(2);
+    expect(result.score).toBe(3);
+    expect(result.explanation).toHaveLength(30);
     expect(result.resultMethod).toBeNull();
     await mandiri.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
     await expect(mandiri).toHaveURL(
@@ -864,7 +864,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(
       persistence.events.filter((e: { event_name: string }) => e.event_name === 'tryout_completed'),
     ).toHaveLength(2);
-    expect(persistence.pins).toHaveLength(4);
+    expect(persistence.pins).toHaveLength(60);
     expect(persistence.rewards).toHaveLength(2);
     const independentReward = persistence.rewards.find(
       (r: { attempt_id: string }) => r.attempt_id === independent.id,
@@ -892,7 +892,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
   });
 
-  test('DRAFT JSON importer -> ten three-format previews -> server save/resume -> unscored review', async ({
+  test('DRAFT JSON API import -> ten three-format browser previews -> server save/resume -> unscored review', async ({
     browser,
     request,
   }) => {
@@ -909,6 +909,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const source = resolve(root, 'docs/data/samples/2026-10-03');
     const masters = JSON.parse(readFileSync(resolve(source, 'master-data.proposed.json'), 'utf8'));
     const samples = JSON.parse(readFileSync(resolve(source, 'questions.draft.json'), 'utf8'));
+    for (const [index, question] of samples.entries()) question.metadata.sourceOrder = index + 1;
     const curriculum = await (await call(request, 'admin', 'admin/content/curriculum')).json();
     const chapters = new Map<string, string>();
     const subs = new Map<string, string>();
@@ -994,29 +995,34 @@ test.describe.serial('JOB-06 connected release chain', () => {
         sourceReference: 'docs/data/samples/2026-10-03',
       },
     });
-    await admin.goto('/admin/content/imports');
-    await admin.getByLabel('Tujuan unggah').selectOption('TRYOUT');
-    await admin.getByLabel('Paket tujuan').selectOption(targetPackage.id);
-    await expect(
-      admin.getByRole('heading', { name: /TEST ONLY mixed-format DRAFT preview/ }),
-    ).toBeVisible();
-    await admin.getByLabel('File soal JSON').setInputFiles({
-      name: 'questions.json',
-      mimeType: 'application/json',
-      buffer: Buffer.from(JSON.stringify(samples)),
-    });
-    await admin.getByRole('button', { name: 'Konversi ke paket terpilih', exact: true }).click();
-    await admin.getByRole('button', { name: 'Validasi JSON', exact: true }).click();
-    await expect(admin.getByRole('heading', { name: 'Laporan validasi' })).toBeVisible();
-    const imported = admin.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/content/imports'),
+    // JSON remains an internal API transport; the Admin intake UI now starts with Excel.
+    const importBody = {
+      sourceNamespace: 'CURRICULUM_SHEETS_SAMPLE',
+      target: { packageId: targetPackage.id, expectedRevision: 0, fileName: 'questions.json' },
+      questions: samples,
+    };
+    const validation = await content<ImportReportDto>(
+      'import-validations',
+      importBody,
+      undefined,
+      200,
     );
-    await admin.getByRole('button', { name: 'Impor sebagai DRAFT', exact: true }).click();
-    const report = (await (await imported).json()) as ImportReportDto;
+    expect(
+      validation.canImportDraft,
+      JSON.stringify({
+        packageBlockers: validation.package?.blockers,
+        questionBlockers: validation.items.map((item) => item.blockers),
+      }),
+    ).toBe(true);
+    const report = await content<ImportReportDto>('imports', importBody, crypto.randomUUID());
     expect(report.items).toHaveLength(10);
     expect(report.items.every((i) => i.canPreview)).toBe(true);
-    await admin.getByRole('button', { name: 'Preview soal siap (10)', exact: true }).click();
-    await admin.getByRole('link', { name: 'Buka sesi preview', exact: true }).click();
+    const preview = await content<PreviewSessionDto>(
+      'preview-sessions',
+      { questionVersionIds: report.items.map((item) => item.questionVersionId) },
+      crypto.randomUUID(),
+    );
+    await admin.goto(`/admin/content/preview-sessions/${preview.id}`);
     await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
     await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;

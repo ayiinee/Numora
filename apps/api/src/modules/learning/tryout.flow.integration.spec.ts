@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it, vi } from 'vitest';
+import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
 import { and, eq } from 'drizzle-orm';
 import { ForbiddenException, UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { Test } from '@nestjs/testing';
@@ -33,7 +33,10 @@ import { LearningModule } from './learning.module';
 import { AssessmentHistoryService } from './assessment-history.service';
 import { TryoutReleaseService } from './tryout-release.service';
 import { TryoutService } from './tryout.service';
-import { discoverNotificationReleases, drainNotificationBatch } from '../../../../worker/src/notifications';
+import {
+  discoverNotificationReleases,
+  drainNotificationBatch,
+} from '../../../../worker/src/notifications';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 const integration = testUrl ? describe : describe.skip;
@@ -47,6 +50,7 @@ function currentMondayWib() {
 }
 
 integration('Tryout lifecycle against PostgreSQL', () => {
+  afterEach(() => vi.unstubAllEnvs());
   let app: INestApplication | undefined;
   afterAll(async () => {
     await app?.close();
@@ -62,7 +66,8 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       throw new Error(
         'Tryout integration requires isolated localhost PostgreSQL and NODE_ENV=test.',
       );
-    process.env.DATABASE_URL = testUrl;
+    vi.stubEnv('DATABASE_URL', testUrl);
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const { db } = getDatabase();
     const suffix = randomUUID().slice(0, 8);
     const [student, independent, teacher, admin] = await db
@@ -169,8 +174,10 @@ integration('Tryout lifecycle against PostgreSQL', () => {
         status: 'READY',
       })
       .returning({ id: competencies.id });
-    const [policy] = await db.select({ id: scoringPolicyVersions.id }).from(scoringPolicyVersions)
-      .where(eq(scoringPolicyVersions.policyCode,'TRYOUT_PRD_V06'));
+    const [policy] = await db
+      .select({ id: scoringPolicyVersions.id })
+      .from(scoringPolicyVersions)
+      .where(eq(scoringPolicyVersions.policyCode, 'TRYOUT_PRD_V06'));
     const releaseAt = currentMondayWib();
     await db
       .update(assessmentPackages)
@@ -211,7 +218,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       }),
     ).rejects.toMatchObject({ cause: { code: '23505' } });
     const versionIds: string[] = [];
-    for (let index = 1; index <= 2; index++) {
+    for (let index = 1; index <= 30; index++) {
       const [question] = await db
         .insert(questions)
         .values({
@@ -272,14 +279,19 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       id: selectedPackage!.id,
       state: 'open',
       eligible: true,
-      questionCount: 2,
+      questionCount: 30,
     });
     const [a, b] = await Promise.all([
       tryout.start('student', selectedPackage!.id),
       tryout.start('student', selectedPackage!.id),
     ]);
     expect(a.id).toBe(b.id);
-    expect((await tryout.start('student', selectedPackage!.id)).id).toBe(a.id);
+    const resumedStart = await tryout.start('student', selectedPackage!.id);
+    expect(resumedStart.id).toBe(a.id);
+    expect(resumedStart.questions.map((q) => q.questionInstanceId)).toEqual(
+      a.questions.map((q) => q.questionInstanceId),
+    );
+    expect(new Set(a.questions.map((q) => q.questionInstanceId)).size).toBe(30);
     for (const attempt of [a, mandiri]) {
       expect(
         await db
@@ -392,7 +404,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     } finally {
       vi.useRealTimers();
     }
-    expect(a.questions).toHaveLength(2);
+    expect(a.questions).toHaveLength(30);
     expect(a.questions[0]).not.toHaveProperty('correctOptionId');
     await tryout.saveAnswer('student', a.id, a.questions[0]!.questionInstanceId, 'A');
     expect((await tryout.attempt('student', a.id)).questions[0]?.selectedOptionId).toBe('A');
@@ -430,7 +442,11 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .set({ deadlineAt: mandiriDeadline })
       .where(eq(assessmentAttempts.id, mandiri.id));
     expect(await tryout.attempt('independent', mandiri.id)).toMatchObject({
-      status: 'submitted', questions: [], deadlineAt: mandiriDeadline.toISOString(), xp: 0, xpPolicyVersion: 1,
+      status: 'submitted',
+      questions: [],
+      deadlineAt: mandiriDeadline.toISOString(),
+      xp: 0,
+      xpPolicyVersion: 1,
     });
     expect(await tryout.current('independent')).toMatchObject({ state: 'waitingIrt' });
     await expect(tryout.result('independent', mandiri.id)).rejects.toMatchObject({
@@ -453,7 +469,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     ]);
     expect(firstSubmit).toEqual({ state: 'waitingIrt', xp: 10, xpPolicyVersion: 1 });
     expect(duplicateSubmit).toEqual(firstSubmit);
-    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId,a.id));
+    const rewards = await db.select().from(xpLedger).where(eq(xpLedger.attemptId, a.id));
     expect(rewards).toHaveLength(1);
     expect(rewards[0]?.xpAmount).toBe(10);
     expect(await tryout.current('student')).toMatchObject({ state: 'waitingIrt', eligible: false });
@@ -464,7 +480,7 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       .where(eq(assessmentAttempts.id, a.id));
     expect(stored).toMatchObject({
       status: 'GRADED',
-      score0To100: '50.00',
+      score0To100: '3.00',
       classIdAtStart: schoolClass!.id,
     });
     expect(
@@ -486,7 +502,9 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       attemptId: a.id,
       resultState: 'waitingIrt',
       score: null,
-      xpState: 'ready', xp: 10, tryoutXpPolicyVersion: 1,
+      xpState: 'ready',
+      xp: 10,
+      tryoutXpPolicyVersion: 1,
     });
     const [batch] = await db
       .insert(irtBatches)
@@ -503,22 +521,28 @@ integration('Tryout lifecycle against PostgreSQL', () => {
       versionIds.map((versionId, index) => ({
         batchId: batch!.id,
         questionVersionId: versionId,
-        sampleSize: index === 0 ? 30 : 29,
-        dataStatus: index === 0 ? 'SUFFICIENT' : 'INSUFFICIENT',
+        sampleSize: index === 1 ? 29 : 30,
+        dataStatus: index === 1 ? 'INSUFFICIENT' : 'SUFFICIENT',
       })),
     );
     await expect(tryout.result('student', a.id)).rejects.toMatchObject({ status: 409 });
     await discoverNotificationReleases();
-    expect(await db.select().from(notificationOutbox).where(eq(notificationOutbox.sourceKey, `TRYOUT_RESULT_READY:${a.id}`))).toHaveLength(0);
+    expect(
+      await db
+        .select()
+        .from(notificationOutbox)
+        .where(eq(notificationOutbox.sourceKey, `TRYOUT_RESULT_READY:${a.id}`)),
+    ).toHaveLength(0);
     await db
       .update(irtItemResults)
       .set({ sampleSize: 30, dataStatus: 'SUFFICIENT' })
       .where(eq(irtItemResults.questionVersionId, versionIds[1]!));
     expect(await tryout.result('student', a.id)).toMatchObject({
-      score: 50,
+      score: 3,
       correctCount: 1,
-      questionCount: 2,
-      xp: 10, xpPolicyVersion: 1,
+      questionCount: 30,
+      xp: 10,
+      xpPolicyVersion: 1,
     });
     expect(await tryout.current('student')).toMatchObject({
       state: 'resultReady',
@@ -527,21 +551,58 @@ integration('Tryout lifecycle against PostgreSQL', () => {
     expect((await history.list('student')).records[0]).toMatchObject({
       attemptId: a.id,
       resultState: 'ready',
-      score: 50,
+      score: 3,
     });
     await expect(tryout.result('independent', a.id)).rejects.toMatchObject({ status: 404 });
     expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, a.id))).toHaveLength(1);
-    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, mandiri.id))).toHaveLength(1);
-    const waitingResponse = await request(`tryout/attempts/${mandiri.id}`, 'GET', undefined, 'independent');
+    expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, mandiri.id))).toHaveLength(
+      1,
+    );
+    const waitingResponse = await request(
+      `tryout/attempts/${mandiri.id}`,
+      'GET',
+      undefined,
+      'independent',
+    );
     const waitingBody = await waitingResponse.json();
     expect(waitingBody).toMatchObject({ xp: 0, status: 'submitted', questions: [] });
     expect(waitingBody).not.toHaveProperty('score');
     await discoverNotificationReleases();
     await discoverNotificationReleases();
     await drainNotificationBatch(100);
-    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${a.id}`), eq(notifications.recipientId, student!.id)))).toHaveLength(1);
-    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${mandiri.id}`), eq(notifications.recipientId, independent!.id)))).toHaveLength(1);
-    expect(await db.select().from(notifications).where(and(eq(notifications.sourceKey, `TRYOUT_OPENED:${selectedPackage!.id}`), eq(notifications.recipientId, independent!.id)))).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${a.id}`),
+            eq(notifications.recipientId, student!.id),
+          ),
+        ),
+    ).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${mandiri.id}`),
+            eq(notifications.recipientId, independent!.id),
+          ),
+        ),
+    ).toHaveLength(1);
+    expect(
+      await db
+        .select()
+        .from(notifications)
+        .where(
+          and(
+            eq(notifications.sourceKey, `TRYOUT_OPENED:${selectedPackage!.id}`),
+            eq(notifications.recipientId, independent!.id),
+          ),
+        ),
+    ).toHaveLength(1);
     // Availability must never be inferred from class affiliation, including an expired current package.
     for (const unavailable of [
       { status: 'DRAFT' as const },

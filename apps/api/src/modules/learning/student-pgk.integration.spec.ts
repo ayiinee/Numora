@@ -1,6 +1,6 @@
 import { randomUUID } from 'node:crypto';
 import postgres from 'postgres';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, describe, expect, it, vi } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { closeDatabaseConnection } from '@tka/database';
@@ -17,6 +17,7 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
     await app?.close();
     await closeDatabaseConnection();
     await db?.end();
+    vi.unstubAllEnvs();
   });
   it('saves/resumes three shapes, preserves release/ownership and refuses unapproved PGK grading', async () => {
     if (
@@ -26,6 +27,7 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
     )
       throw new Error('Isolated local PostgreSQL required.');
     process.env.DATABASE_URL = testUrl;
+    vi.stubEnv('ALLOW_SYNTHETIC_CONTENT', 'true');
     const connection = (db = postgres(testUrl, { max: 1, onnotice: () => {} }));
     const row = async (query: string, params: (string | number | null)[] = []) =>
       (await connection.unsafe(query, params))[0]!;
@@ -236,7 +238,7 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
     );
     const result = await (await call(path + '/result')).json();
     expect(result.questions[2].reviewStatus).toBe('partial');
-    expect(result.questions[2].correctEquivalent).toBeNull();
+    expect(result.questions[2].correctEquivalent).toBe(0.5);
     expect(result.reward).toBeNull();
     expect((await call(path + '/answers/' + itemIds[2], 'PATCH', { answer: null })).status).toBe(
       409,

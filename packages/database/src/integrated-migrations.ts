@@ -22,6 +22,23 @@ export async function migrateIntegratedDatabase(
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
+      const moved = migrations.filter(
+        (entry) => hashes.has(entry.hash) && entry.folderMillis > cursor,
+      );
+      if (
+        moved.length &&
+        migrations
+          .slice(3)
+          .filter((entry) => entry.folderMillis <= moved.at(-1)!.folderMillis)
+          .every((entry) => hashes.has(entry.hash))
+      ) {
+        // An exact applied hash with an earlier branch cursor must never replay its DDL.
+        // Only a complete canonical prefix can advance the cursor; retain original rows.
+        for (const entry of moved)
+          await tx`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+            VALUES(${entry.hash},${entry.folderMillis})`;
+        return;
+      }
       // Published Excel branch DDL is archived unchanged; canonical main remains intact.
       const forkFolder = resolve(
         migrationsFolder,

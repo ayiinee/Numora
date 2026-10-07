@@ -10,7 +10,10 @@ const selfId = '11111111-1111-4111-8111-111111111111';
 const matchId = '77777777-7777-4777-8777-777777777777';
 const roomCode = 'NMR842ABC123';
 const http = createServer();
-const transportOptions = { serveClient: false, cors: { origin: 'http://localhost:3300' } };
+const transportOptions = {
+  serveClient: false,
+  cors: { origin: process.env.NUMORA_E2E_BASE_URL ?? 'http://localhost:3300' },
+};
 const transport = new Server(http, transportOptions);
 const namespace = transport.of('/pvp');
 let snapshot: PvpSnapshotDto;

@@ -1,4 +1,5 @@
 import { getDatabase } from './client.js';
+import { tryoutDistributionEligibility, packageRuntimeEligibility } from './package-runtime.js';
 import {
   irtBatches,
   irtItemResults,
@@ -9,26 +10,7 @@ import {
   tryoutAttemptResults,
 } from './schema/index.js';
 import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
-export function isJakartaMondayMidnight(instant: Date): boolean {
-  const parts = new Intl.DateTimeFormat('en-US', {
-    timeZone: 'Asia/Jakarta',
-    weekday: 'long',
-    hour: '2-digit',
-    minute: '2-digit',
-    second: '2-digit',
-    hourCycle: 'h23',
-  }).formatToParts(instant);
-  const value = (type: string) => parts.find((part) => part.type === type)?.value;
-  return (
-    value('weekday') === 'Monday' &&
-    value('hour') === '00' &&
-    value('minute') === '00' &&
-    value('second') === '00' &&
-    instant.getUTCMilliseconds() === 0
-  );
-}
-
-/** Monday 00:00 through the start of Sunday 23:59, Asia/Jakarta. */
+/** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
 }
@@ -134,7 +116,8 @@ export async function currentTryoutPackage() {
       and(
         eq(assessmentPackages.assessmentType, 'TRYOUT'),
         eq(assessmentPackages.purpose, 'REGULAR'),
-        sql`public.package_can_distribute(${assessmentPackages.id})`,
+        tryoutDistributionEligibility(),
+        packageRuntimeEligibility(),
         eq(assessmentPackages.status, 'PUBLISHED'),
         lte(assessmentPackages.releaseAt, now),
       ),
@@ -144,7 +127,6 @@ export async function currentTryoutPackage() {
   if (
     !row ||
     !row.releaseAt ||
-    !isJakartaMondayMidnight(row.releaseAt) ||
     (!row.isDemo &&
       (row.durationSeconds !== 600 ||
         row.closeAt?.getTime() !== tryoutBatchCloseAt(row.releaseAt).getTime())) ||

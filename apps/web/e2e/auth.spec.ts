@@ -188,6 +188,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     const { state, errors } = await setup(page, true);
     // Explicitly clear the synthetic session to view the signed-out login first.
     await page.goto('/');
+    await expect(page.locator('a[href="/qa/login"]')).toHaveCount(0);
     await expect(page).toHaveURL(/onboarding/);
     await page.getByRole('button', { name: 'Keluar', exact: true }).click();
     await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();

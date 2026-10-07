@@ -1,3 +1,4 @@
+import { allowSyntheticContent } from '@tka/database';
 import { createHash } from 'node:crypto';
 import { Inject, Injectable, BadRequestException } from '@nestjs/common';
 import { ConfigService } from '@nestjs/config';
@@ -18,7 +19,8 @@ import {
   sheetImages,
   xml,
 } from './excel-images';
-import { structuralErrors } from './content-import.validation';
+import { structuralErrors, schemaIssues } from './content-import.validation';
+import type { ExcelIntakeDto, IntakeQuestionDto } from './content-intake.dto';
 import { matchesImageSignature } from './r2-media.storage';
 
 const kinds: Record<string, ContentKind> = {
@@ -50,6 +52,12 @@ const aliases: Record<string, string> = {
   pembahasan: 'explanation',
   difficulty: 'difficulty',
   gambar: 'img_stem',
+  bab: 'chapter_code',
+  subbab: 'subchapter_code',
+  indikator: 'competency_code',
+  soal: 'stem',
+  kunci: 'answer',
+  kesulitan: 'difficulty',
 };
 function header(value: string) {
   const clean = value.toLowerCase().replace(/[^a-z0-9]/g, '');
@@ -73,11 +81,23 @@ function text(cell: ExcelJS.Cell): string {
       .trim();
   return '';
 }
+export function parseExcel(
+  buffer: Buffer,
+  sourceNamespace: string,
+  bucket: string,
+  intake: { id: string; curriculum: AdminCurriculumDto },
+): Promise<ExcelIntakeDto>;
+export function parseExcel(
+  buffer: Buffer,
+  sourceNamespace: string,
+  bucket: string,
+): Promise<ExcelParseDto>;
 export async function parseExcel(
   buffer: Buffer,
   sourceNamespace: string,
   bucket: string,
-): Promise<ExcelParseDto> {
+  intake?: { id: string; curriculum: AdminCurriculumDto },
+): Promise<ExcelParseDto | ExcelIntakeDto> {
   if (!/^[A-Za-z0-9_-]{1,128}$/.test(sourceNamespace))
     excelError(
       'EXCEL_NAMESPACE_INVALID',
@@ -90,13 +110,14 @@ export async function parseExcel(
   } catch {
     return excelError('EXCEL_FORMAT_INVALID', 'Workbook tidak dapat dibaca.');
   }
-  const result: ExcelParseDto = {
-    envelope: { schemaVersion: 2, sourceNamespace, questions: [] },
+  const result: ExcelIntakeDto = {
+    envelope: { intakeVersion: 1, sourceNamespace, questions: [] },
+    mappingIssues: [],
     media: [],
     issues: [],
     report: null,
   };
-  const paket = workbook.getWorksheet('Paket');
+  const paket = intake ? undefined : workbook.getWorksheet('Paket');
   if (paket) {
     const fields = new Map<string, string>();
     paket.eachRow((row, index) => {
@@ -111,7 +132,7 @@ export async function parseExcel(
         detail: 'Gunakan template paket V4.',
       });
     const get = (name: string) => fields.get(name) ?? '';
-    result.envelope.binding = {
+    (result.envelope as unknown as ExcelParseDto['envelope']).binding = {
       packageId: get('packageId'),
       familyCode: get('familyCode'),
       packageVersion: Number(get('packageVersion')),
@@ -164,16 +185,15 @@ export async function parseExcel(
     if (sheet.rowCount > 10_000 || sheet.columnCount > 512)
       excelError('EXCEL_SHEET_TOO_LARGE', 'Sheet melebihi 10.000 baris atau 512 kolom.');
     const columns = new Map<string, number>();
+    let readable = false;
     sheet.getRow(1).eachCell((cell, col) => {
+      if (text(cell).toLowerCase() === 'bab') readable = true;
       const name = header(text(cell));
       if (columns.has(name)) issue(1, col, 'DUPLICATE_HEADER', `Header ${name} berulang.`);
       columns.set(name, col);
     });
     const required = [
-      'chapter_code',
-      'subchapter_code',
-      'competency_code',
-      'source_level',
+      ...(!intake ? ['chapter_code', 'subchapter_code', 'competency_code', 'source_level'] : []),
       'stem',
       'explanation',
       ...(type === 'CATEGORY' ? ['category_1', 'category_2'] : ['answer']),
@@ -244,13 +264,16 @@ export async function parseExcel(
           issue(rowNum, col, 'CELL_ERROR', 'Sel berisi error Excel.');
       });
       const level = Number(get('source_level'));
-      if (!/^\d+$/.test(get('source_level')) || !Number.isSafeInteger(level) || level < 1)
+      if (
+        !intake &&
+        (!/^\d+$/.test(get('source_level')) || !Number.isSafeInteger(level) || level < 1)
+      )
         cellIssue(
           'source_level',
           'LEVEL_INVALID',
           'Level sumber harus bilangan bulat positif dari master kurikulum.',
         );
-      const no = get('no');
+      const no = intake ? String(questionRows) : get('no');
       if (paket) {
         if (!/^[1-9]\d*$/.test(no) || !Number.isSafeInteger(Number(no)) || Number(no) > 2147483647)
           cellIssue(
@@ -266,15 +289,16 @@ export async function parseExcel(
           );
         orders.add(Number(no));
       }
-      const externalId =
-        get('external_id') ||
-        [
-          get('chapter_code'),
-          get('subchapter_code'),
-          get('competency_code'),
-          `L${get('source_level')}`,
-          `Q${no}`,
-        ].join('-');
+      const externalId = intake
+        ? `Q-${createHash('sha256').update(`${intake.id}:${sheet.name}:${rowNum}`).digest('hex').slice(0, 32)}`
+        : get('external_id') ||
+          [
+            get('chapter_code'),
+            get('subchapter_code'),
+            get('competency_code'),
+            `L${get('source_level')}`,
+            `Q${no}`,
+          ].join('-');
       if (!get('external_id') && !/^[1-9]\d*$/.test(no))
         cellIssue(
           'no',
@@ -287,9 +311,7 @@ export async function parseExcel(
         cellIssue('external_id', 'DUPLICATE_EXTERNAL_ID', 'ID soal berulang dalam file.');
       identities.add(externalId);
       for (const name of [
-        'chapter_code',
-        'subchapter_code',
-        'competency_code',
+        ...(!intake ? ['chapter_code', 'subchapter_code', 'competency_code'] : []),
         'stem',
         'explanation',
       ])
@@ -301,13 +323,66 @@ export async function parseExcel(
             (i) => i.row === rowNum && columns.get('img_' + name.split('_')[1]) === i.col,
           ),
       );
-      const q: ExcelQuestionDto = {
+      const normalize = (v: string) => v.normalize('NFC').trim().toLocaleLowerCase('id-ID');
+      // Try to find curriculum item by code first, then by name (case-insensitive)
+      const findMaterial = (
+        kind: 'CHAPTER' | 'SUBCHAPTER' | 'COMPETENCY',
+        field: string,
+        parentId?: string,
+      ) => {
+        const raw = get(field);
+        if (!raw) return undefined;
+        const candidates =
+          intake?.curriculum.items.filter(
+            (item) => item.kind === kind && (kind === 'CHAPTER' || item.parentId === parentId),
+          ) ?? [];
+        // Try exact code match first
+        const codeMatch = candidates.find((item) => item.code === raw);
+        if (codeMatch) return codeMatch;
+        // Try exact name match (case-insensitive)
+        const nameMatch = candidates.find((item) => normalize(item.name) === normalize(raw));
+        if (nameMatch) return nameMatch;
+        // Try partial name match
+        const rawLower = normalize(raw);
+        const partialMatches = candidates.filter(
+          (item) =>
+            normalize(item.name).includes(rawLower) || rawLower.includes(normalize(item.name)),
+        );
+        // Only return if exactly one partial match
+        if (partialMatches.length === 1) return partialMatches[0];
+        // Return undefined if no match or ambiguous
+        return undefined;
+      };
+      // Find level by number (source_level)
+      const findLevel = (subchapterId?: string) => {
+        if (!intake || !get('source_level')) return undefined;
+        const levelNum = Number(get('source_level'));
+        if (!Number.isSafeInteger(levelNum) || levelNum < 1) return undefined;
+        const candidates = intake.curriculum.items.filter(
+          (item) =>
+            item.kind === 'LEVEL' &&
+            item.code === String(levelNum) &&
+            (!subchapterId || item.parentId === subchapterId),
+        );
+        return candidates.length === 1 ? candidates[0] : undefined;
+      };
+      const chapter = intake ? findMaterial('CHAPTER', 'chapter_code') : undefined;
+      const sub = intake ? findMaterial('SUBCHAPTER', 'subchapter_code', chapter?.id) : undefined;
+      const competency = intake
+        ? findMaterial('COMPETENCY', 'competency_code', sub?.id)
+        : undefined;
+      const mappedLevel = intake ? findLevel(sub?.id) : undefined;
+      const difficulty = get('difficulty').toUpperCase();
+      const q: IntakeQuestionDto = {
         externalId,
         type,
-        chapterCode: get('chapter_code'),
-        subchapterCode: get('subchapter_code'),
-        competencyCode: get('competency_code'),
-        difficulty: (get('difficulty').toUpperCase() || null) as ExcelQuestionDto['difficulty'],
+        chapterCode: chapter?.code ?? (get('chapter_code') || null),
+        subchapterCode: sub?.code ?? (get('subchapter_code') || null),
+        competencyCode: competency?.code ?? (get('competency_code') || null),
+        difficulty: (({ MUDAH: 'EASY', SEDANG: 'MEDIUM', SULIT: 'HARD' } as Record<string, string>)[
+          difficulty
+        ] ??
+          (difficulty || null)) as ExcelQuestionDto['difficulty'],
         stem: { text: get('stem') },
         options: activeOptions.map(([name]) => ({
           id: name.split('_')[1]!,
@@ -332,9 +407,41 @@ export async function parseExcel(
                   ),
                 },
         metadata: {
-          sourceLevelNumber: level,
+          sourceLevelNumber:
+            get('source_level') && Number.isSafeInteger(level) && level > 0 ? level : null,
           ...(/^[1-9]\d*$/.test(no) ? { sourceOrder: Number(no) } : {}),
-          ...(get('source_question_id') ? { sourceQuestionId: get('source_question_id') } : {}),
+          ...(!intake && get('source_question_id')
+            ? { sourceQuestionId: get('source_question_id') }
+            : {}),
+          ...(intake
+            ? {
+                originalExternalId: get('external_id') || null,
+                sourceMaterial: {
+                  chapter: get('chapter_code'),
+                  subchapter: get('subchapter_code'),
+                  competency: get('competency_code'),
+                  level: get('source_level'),
+                  naming: readable ? 'NAME' : 'CODE',
+                },
+                chapterName: chapter?.name,
+                subchapterName: sub?.name,
+                competencyName: competency?.name,
+                materialIds: {
+                  chapterId: chapter?.id ?? null,
+                  subchapterId: sub?.id ?? null,
+                  competencyId: competency?.id ?? null,
+                  levelId: mappedLevel?.id ?? null,
+                },
+                materialOrigins: chapter
+                  ? {
+                      chapterId: 'EXCEL',
+                      subchapterId: 'EXCEL',
+                      competencyId: 'EXCEL',
+                      levelId: 'EXCEL',
+                    }
+                  : {},
+              }
+            : {}),
           sourceSheet: sheet.name,
           sourceRowNumber: rowNum,
           categories:
@@ -392,7 +499,7 @@ export async function parseExcel(
           }
           if (mediaBytes > 20 * 1024 * 1024)
             excelError('EXCEL_MEDIA_TOO_LARGE', 'Total gambar melebihi 20 MiB.');
-          if (!alt) {
+          if (!alt && !intake) {
             cellIssue(
               'img_' + p.column,
               'IMAGE_ALT_REQUIRED',
@@ -420,9 +527,26 @@ export async function parseExcel(
           result.media.push({ externalId, assetId, base64: image.bytes.toString('base64') });
         }
       }
-      for (const code of structuralErrors(q))
-        cellIssue('answer', code, 'Konten atau kunci jawaban tidak sesuai kontrak soal v2.');
-      if (result.issues.length === startIssues) result.envelope.questions.push(q);
+      for (const code of structuralErrors(q, !!intake)) {
+        if (code === 'INVALID_SCHEMA')
+          for (const e of schemaIssues(q, !!intake))
+            cellIssue(
+              e.field.includes('metadata')
+                ? 'source_level'
+                : e.field.includes('options')
+                  ? 'stem'
+                  : 'answer',
+              code,
+              `${e.field}: ${e.detail}`,
+            );
+        else
+          cellIssue(
+            code.includes('ASSET') ? 'img_stem' : code.includes('CONTENT') ? 'stem' : 'answer',
+            code,
+            `Periksa ${code.includes('KEY') ? 'kunci jawaban' : 'konten soal'} (${code}).`,
+          );
+      }
+      if (intake || result.issues.length === startIssues) result.envelope.questions.push(q);
     }
     for (const image of images)
       if (!handledImages.has(image))
@@ -446,7 +570,20 @@ export async function parseExcel(
   );
   if (Buffer.byteLength(JSON.stringify(result.envelope)) > 2 * 1024 * 1024)
     excelError('EXCEL_JSON_TOO_LARGE', 'JSON soal melebihi 2 MiB.');
-  return result;
+  if (intake) return result;
+  return {
+    envelope: {
+      schemaVersion: 2,
+      sourceNamespace,
+      questions: result.envelope.questions as ExcelQuestionDto[],
+      ...(paket
+        ? { binding: (result.envelope as unknown as ExcelParseDto['envelope']).binding }
+        : {}),
+    },
+    media: result.media,
+    issues: result.issues,
+    report: result.report,
+  };
 }
 
 export function workbookBinding(p: ContentPackageDto): WorkbookBindingDto {
@@ -585,10 +722,10 @@ export async function excelTemplate(
     c.width = 28;
   });
   if (examples && target) {
-    if (!target.isDemo)
+    if (!target.isDemo || !allowSyntheticContent())
       throw new BadRequestException({
         code: 'EXAMPLES_DEMO_ONLY',
-        detail: 'Contoh hanya boleh diunduh untuk paket berlabel DEMO.',
+        detail: 'Contoh sintetis hanya tersedia di lingkungan pengembangan terisolasi.',
       });
     const competency = curriculum.items.find(
       (item) =>
@@ -620,7 +757,7 @@ export async function excelTemplate(
     if (!competency || !sub || !chapter || !level)
       throw new BadRequestException({ code: 'EXAMPLE_MASTER_REQUIRED' });
     guide.addRow([
-      'DEMO: contoh aritmetika untuk pengujian pipeline, belum ditinjau Curriculum. Gambar sengaja kosong.',
+      'Contoh aritmetika untuk memeriksa format. Curriculum perlu meninjau konten sebelum publikasi.',
     ]);
     const exampleRows = new Map<string, number>();
     for (let no = 1; no <= packageCounts[target.assessmentType]; no++) {
@@ -636,7 +773,7 @@ export async function excelTemplate(
       };
       if (sheet.name === 'PG')
         Object.assign(values, {
-          stem: `DEMO: hasil $${no}+${no}$ adalah ....`,
+          stem: `Hasil $${no}+${no}$ adalah ....`,
           opt_A: String(no * 2),
           opt_B: String(no * 2 + 1),
           opt_C: String(no * 2 + 2),
@@ -646,7 +783,7 @@ export async function excelTemplate(
         });
       else if (sheet.name === 'MCMA')
         Object.assign(values, {
-          stem: 'DEMO: pilih semua bilangan genap berikut.',
+          stem: 'Pilih semua bilangan genap berikut.',
           opt_A: String(no * 2),
           opt_B: String(no * 2 + 1),
           opt_C: String(no * 2 + 2),
@@ -656,7 +793,7 @@ export async function excelTemplate(
         });
       else
         Object.assign(values, {
-          stem: 'DEMO: tentukan benar atau salah setiap pernyataan.',
+          stem: 'Tentukan benar atau salah setiap pernyataan.',
           statement_A: `$${no}+0=${no}$`,
           statement_B: `$${no}\\times1=${no}$`,
           statement_C: `$${no}+1=${no}$`,

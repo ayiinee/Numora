@@ -1,3 +1,7 @@
+> **ENGINEERING DECISION — 6 October 2026:** the owner-approved [V5 upload-first workflow](UPLOAD_FIRST_WORKFLOW.md) supersedes package-first UI and required source/code fields below. Existing parser contracts remain readable for new copies.
+
+**ENGINEERING DECISION — 6 Oktober 2026:** [alur upload terbaru](EXCEL_UPLOAD_WORKFLOW_2026-10-06.md) menggantikan langkah manual JSON pada portal. Input baru hanya Excel; satu tombol Simpan menjalankan validasi/media/impor. API JSON tetap menjadi transport internal. Uraian ekspor/input JSON di bawah adalah konteks kompatibilitas historis.
+
 # Directed question import and package readiness
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** one upload targets one package and one assessment use (DRILL, PRETEST, TRYOUT). A question family retains that use across revisions. Cross-use copies require a new identity and an explicit source-question reference. Unclassified legacy content is retained, not inferred or silently republished.

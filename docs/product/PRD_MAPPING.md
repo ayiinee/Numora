@@ -1,5 +1,12 @@
 **ENGINEERING DECISION — owner instruction, 7 October 2026:** opt-in DEMO-only PvP temporarily uses accepted uncalibrated READY single-choice Drill content. The three choices share the pool and retain server timers; calibrated academic difficulty remains pending. [Activation and owner replacement checklist](../development/PVP_TEMPORARY_READY_CONTENT.md).
 
+**ENGINEERING DECISION — owner approved, 6 October 2026:** unresolved Excel metadata remains in intake preview with immutable source provenance. Destination/scope is chosen before mapping validation. Preview progress is separate from final draft eligibility; non-ARCHIVED master may support draft, READY is required for every mapped master at Publish. Official taxonomy and PGK scoring remain dependencies. [Approved refinement](../content/UPLOAD_FIRST_WORKFLOW.md).
+
+**ENGINEERING DECISION — owner approved, 6 October 2026:** remove obsolete demo presentation; retain isolated synthetic fixtures and immutable academic history. The configured cloud project remains Development. This does not approve Curriculum content, PGK scoring or IRT policies. [Cleanup decision and verification](../development/DEMO_CLEANUP_2026-10-06.md).
+
+**ENGINEERING DECISION — owner approval, 6 October 2026:** content intake now starts with Excel upload, then preview/validation, destination/title, draft and one Publish confirmation. V5 uses material names and server-generated IDs; tracked upload sessions retain source workbooks in R2. Curriculum approval is recorded against the current composition at Publish. Counts 30/20/10 and PGK publication restriction remain. [Approved workflow](../content/UPLOAD_FIRST_WORKFLOW.md).
+
+**ENGINEERING DECISION — permintaan dan klarifikasi pemilik, 6 Oktober 2026:** input soal baru memakai template Excel; drag-and-drop/pemilih file → parser NestJS → preview perubahan → satu tombol Simpan → verifikasi R2 → transaksi importer JSON v2 → review → catat persetujuan Curriculum → Publish PG. Super Admin/Content/Data/Moderation saja. Backend memeriksa ulang approval terhadap susunan/versi, menyegel blueprint aktual, mem-pin kebijakan scoring dan menyediakan gambar attempt siswa. PGK menunggu rubrik skor parsial; IRT/release hasil existing tetap berlaku. Migrasi 0031 dan smoke nyata DEMO selesai pada development. [Pipeline dan batas aktivasi](../content/EXCEL_UPLOAD_WORKFLOW_2026-10-06.md).
 **ENGINEERING DECISION — instruksi pemilik proyek, 7 Oktober 2026:** penerimaan langsung khusus 120 original Drill Bab 3 indikator 16–19, Paket 1 level 1–3; 12 paket PUBLISHED dengan policy allowlist. Review impor lainnya tetap berlaku; tidak mengklaim pengesahan Curriculum/IRT. [Scope dan verifikasi](../development/DRILL_CHAPTER3_OWNER_EXCEPTION.md).
 
 **ENGINEERING DECISION - owner UI request, 7 October 2026:** compact the PvP leaderboard contents across responsive widths while retaining interactive targets and server-provided ranking behavior. [Presentation scope](../development/PVP_LEADERBOARDS_JOB16_17.md#approved-behavior).
@@ -160,3 +167,33 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 ## Materi / notification extension — 4 October 2026
 
 **ENGINEERING DECISION:** owner-approved [scope](MATERIALS_NOTIFICATIONS_2026-10-04.md) adds explicit category metadata, inline material navigation and durable event-driven in-app notifications, with 30-day archive. It does not resolve academic, scoring, reward or PvP OPEN policies.
+
+
+## Keputusan pemilik — 7 Oktober 2026: indikator Tryout
+
+**ENGINEERING DECISION — disetujui pemilik:** Tryout mengabaikan indikator pada alur upload, draft dan Publish. Nilai asli Excel tetap disimpan sebagai provenance; indikator efektif kosong tidak menghalangi Tryout. Drill dan Pretest tetap wajib memiliki indikator sah. Bab, subbab, level, kesulitan, konten, media dan aturan Publish lain tetap diperiksa. Identitas soal/paket dibuat otomatis; sistem tidak mengarang materi akademik. Migrasi forward membolehkan primary_competency_id NULL hanya untuk keluarga TRYOUT; histori tidak ditulis ulang.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan aturan sebelumnya yang mengabaikan indikator Tryout):** Tryout mengizinkan subbab, indikator dan level sumber kosong (`null`) sampai Publish. Nilai yang diberikan tetap dipertahankan dan divalidasi terhadap master/induk. Bab dan kesulitan tetap wajib; Drill/Pretest, konten/kunci/pembahasan, jumlah, media, review, jadwal dan pembatasan PGK tidak dilonggarkan. Migrasi 0034 menambahkan referensi bab/subbab nullable pada keluarga soal agar Tryout tanpa level tetap tersimpan dan dapat dibaca; histori tidak diubah.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan kewajiban bab Tryout sebelumnya):** Bab, subbab, indikator dan level per soal maupun scope paket tidak wajib untuk Tryout campuran. Metadata materi kosong disimpan null sampai Publish. Admin dapat secara eksplisit melewati pemetaan materi tanpa menghapus sumber Excel; materi yang tetap dipakai divalidasi terhadap master. Kesulitan, konten, kunci, pembahasan dan gate Publish lain tetap berlaku; Drill/Pretest tetap memerlukan scope.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout boleh tanpa kesulitan serta tanpa pemetaan materi. Referensi Excel yang belum dapat dipetakan tetap menjadi provenance, dengan relasi efektif null; tidak mengarang materi atau kunci. Status DRAFT materi tidak menghalangi paket Tryout, tetapi materi ARCHIVED tidak dipakai. Rubrik PGK yang disetujui pemilik: MCMA dinilai per keputusan memilih/tidak memilih setiap opsi; Kategori per pernyataan tepat; jawaban kosong 0. Nilai proporsional dibulatkan ke dua desimal mengikuti kolom awarded_points; XP = jumlah benar ekuivalen ×10 dari poin tersimpan. Rubrik dipin melalui kebijakan baru TRYOUT_PGK_PARTIAL_V1 (migrasi 0035); paket/hasil lama tidak diubah. Urutan Tryout diacak server saat attempt dibuat dan disimpan tetap selama resume. Gambar diunggah dengan maksimal tiga pekerjaan paralel dan receipt R2 wajib diverifikasi. Konten, pilihan/pernyataan, kunci, pembahasan, otorisasi, review, jumlah, jadwal, dan integritas versi tetap divalidasi.
+
+
+**ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout dapat dipublish kapan saja, menggantikan batas Senin dan satu paket mingguan pada alur Admin. Tanggal rilis opsional: kosong berarti Publish sekarang; waktu lampau menjadi sekarang; waktu mendatang menjadwalkan akses. Batch tetap berjalan selama 7 hari dikurangi satu menit sejak rilis efektif, durasi attempt 10 menit dan IRT setelah batch tutup tetap berlaku. Paket dan attempt lama tidak diubah.
+
+
+**ENGINEERING DECISION — perbaikan akses, pemilik 7 Oktober 2026:** Publish Excel Tryout mengunci snapshot beserta scoring/blueprint pins secara atomik. Digest komposisi review dipertahankan sebagai compositionDigest; manifestDigest persetujuan mengikuti digest snapshot database. Distribusi paket Excel yang sudah direview/disetujui Admin tidak menunggu package_quality_results generator; jalur ini memeriksa 30 versi READY, provenance impor, persetujuan SEALED dan tetap menahan keputusan HOLD/RETIRED. Tidak membuat hasil statistik sintetis. Dua paket terbit tanpa attempt dipulihkan dengan backup; jadwal/histori attempt tidak diubah.
+
+## Generator service v1 — 7 Oktober 2026
+
+**ENGINEERING DECISION — handoff implementasi:** Admin Generate → preview read-only → Simpan VARIANT DRAFT mengikuti compute v3 dan approval main-owned. CONTENT_VALID tidak berarti READY atau approval akademik. Default flag false; activation menunggu mapping/rubric/context Curriculum dan restricted runtime staging. Detail: [GENERATOR_SERVICE_V1.md](../content/GENERATOR_SERVICE_V1.md).
+
+## Generator paket — keputusan pemilik 7 Oktober 2026
+
+**ENGINEERING DECISION — permintaan pemilik:** Admin memilih Tryout/Drill/Pretest dan generate satu paket sesuai jumlah existing (30/10/20). Hasil memiliki halaman/navbar tersendiri, dapat dilihat atau diunduh JSON, kemudian diimpor melalui halaman impor dengan preview dan validasi yang sama. Generate/export belum membuat canonical DRAFT atau publication. Generator service v1 tetap satu kandidat per request; pusat mengelompokkan request durable secara atomik. Source, rubric, context dan approval tetap dipin; jumlah dan scope paket mengikuti validasi impor existing. Kandidat tetap VARIANT dengan lineage, bukan ORIGINAL baru. Dependency akademik tidak diselesaikan oleh perubahan UX ini.
+
+**ENGINEERING DECISION — owner request:** combine package generation and results in one menu; completion opens /admin/content/imports directly at Preview & tujuan (step 2). Reuse import validation and guarded publication; generated lineage stays immutable.

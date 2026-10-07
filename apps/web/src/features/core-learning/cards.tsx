@@ -72,7 +72,6 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
       <div className="row-copy">
         <span className="eyebrow">
           {drill ? 'Drill' : item.activity === 'pretest' ? 'Pretest' : 'Tryout'}{' '}
-          {item.isDemo && <Badge>Demo</Badge>}
         </span>
         <h3>{item.title}</h3>
         {[item.chapterTitle, item.subchapterTitle, item.levelTitle].some(Boolean) && (
@@ -116,9 +115,7 @@ export function ActivityRow({ item }: { item: AssessmentRecord }) {
           </>
         )}
       </div>
-      {item.resultState === 'ready' && (
-        <Icon name="chevron" width={18} height={18} />
-      )}
+      {item.resultState === 'ready' && <Icon name="chevron" width={18} height={18} />}
     </>
   );
   return item.resultState !== 'ready' ? (

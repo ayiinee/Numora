@@ -1,3 +1,4 @@
+import { presentFixtureText } from '@tka/database';
 import { BadRequestException, ConflictException, NotFoundException } from '@nestjs/common';
 import { and, eq, inArray } from 'drizzle-orm';
 import {
@@ -43,12 +44,15 @@ export async function packageContext(
     id: p.id,
     familyCode: p.familyCode,
     packageVersion: p.packageVersion,
-    name: p.name,
+    name: presentFixtureText(p.id, 'name', p.name),
     assessmentType: p.assessmentType as QuestionUsage,
     contentRevision: p.contentRevision,
     status: p.status,
     isDemo: p.isDemo,
     source: p.importSource,
+    curriculumApproval: p.curriculumApproval
+      ? { reference: p.curriculumApproval.reference, approvedAt: p.curriculumApproval.approvedAt }
+      : null,
     chapterId: scope?.chapter.id ?? chapter?.id ?? null,
     levelId: p.levelId,
     chapterCode: scope?.chapter.code ?? chapter?.code ?? null,

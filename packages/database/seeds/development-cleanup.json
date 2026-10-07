@@ -1,0 +1,1525 @@
+{
+  "projectRef": "pkamenfnwmoeisccnrnk",
+  "decision": "DEMO_CLEANUP_2026-10-06",
+  "changes": [
+    {
+      "table": "chapters",
+      "field": "name",
+      "id": "00000000-0000-4000-8000-000000000100",
+      "original": "Bab Demo: Bilangan",
+      "replacement": "Bilangan"
+    },
+    {
+      "table": "chapters",
+      "field": "name",
+      "id": "03000000-0000-4000-8000-000000000100",
+      "original": "Bab Demo UI: Persamaan & Fungsi Kuadrat",
+      "replacement": "Persamaan & Fungsi Kuadrat"
+    },
+    {
+      "table": "chapters",
+      "field": "name",
+      "id": "04000000-0000-4000-8000-000000000200",
+      "original": "Bab DEMO: Statistika & Peluang Soal TKA",
+      "replacement": "Statistika & Peluang"
+    },
+    {
+      "table": "chapters",
+      "field": "name",
+      "id": "ab758b21-4fbe-5ce4-8045-489b558dd29f",
+      "original": "PvP DEMO — bukan bank resmi",
+      "replacement": "Aritmetika"
+    },
+    {
+      "table": "chapters",
+      "field": "name",
+      "id": "04000000-0000-4000-8000-000000000100",
+      "original": "Bab DEMO: Teorema Pythagoras & Geometri Ruang",
+      "replacement": "Teorema Pythagoras & Geometri Ruang"
+    },
+    {
+      "table": "subchapters",
+      "field": "name",
+      "id": "00000000-0000-4000-8000-000000000101",
+      "original": "Subbab Demo: Operasi Bilangan",
+      "replacement": "Operasi Bilangan"
+    },
+    {
+      "table": "subchapters",
+      "field": "name",
+      "id": "03000000-0000-4000-8000-000000000101",
+      "original": "Subbab Demo UI: Faktorisasi & Bentuk Kuadrat",
+      "replacement": "Faktorisasi & Bentuk Kuadrat"
+    },
+    {
+      "table": "subchapters",
+      "field": "name",
+      "id": "04000000-0000-4000-8000-000000000101",
+      "original": "Subbab DEMO: Pythagoras dan Volume",
+      "replacement": "Pythagoras dan Volume"
+    },
+    {
+      "table": "subchapters",
+      "field": "name",
+      "id": "04000000-0000-4000-8000-000000000201",
+      "original": "Subbab DEMO: Rata-rata dan Peluang",
+      "replacement": "Rata-rata dan Peluang"
+    },
+    {
+      "table": "subchapters",
+      "field": "name",
+      "id": "896053e1-db8a-5b4d-b58f-b6064ea16753",
+      "original": "DEMO transport pertandingan",
+      "replacement": "Operasi Bilangan"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "00000000-0000-4000-8000-000000000102",
+      "original": "Level 1 Demo",
+      "replacement": "Level 1"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "00000000-0000-4000-8000-000000000103",
+      "original": "Level 2 Demo",
+      "replacement": "Level 2"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000111",
+      "original": "Level 1 Demo: Pengenalan Suku & Faktor",
+      "replacement": "Level 1: Pengenalan Suku & Faktor"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000112",
+      "original": "Level 2 Demo: Identitas Aljabar",
+      "replacement": "Level 2: Identitas Aljabar"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000113",
+      "original": "Level 3 Demo: Bentuk Kuadrat Sempurna",
+      "replacement": "Level 3: Bentuk Kuadrat Sempurna"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000114",
+      "original": "Level 4 Demo: Selisih Kuadrat",
+      "replacement": "Level 4: Selisih Kuadrat"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000115",
+      "original": "Level 5 Demo: Penguatan Faktorisasi",
+      "replacement": "Level 5: Penguatan Faktorisasi"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000111",
+      "original": "Level 1 DEMO",
+      "replacement": "Level 1"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000112",
+      "original": "Level 2 DEMO",
+      "replacement": "Level 2"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000113",
+      "original": "Level 3 DEMO",
+      "replacement": "Level 3"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000114",
+      "original": "Level 4 DEMO",
+      "replacement": "Level 4"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000115",
+      "original": "Level 5 DEMO",
+      "replacement": "Level 5"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000211",
+      "original": "Level 1 DEMO",
+      "replacement": "Level 1"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000212",
+      "original": "Level 2 DEMO",
+      "replacement": "Level 2"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000213",
+      "original": "Level 3 DEMO",
+      "replacement": "Level 3"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000214",
+      "original": "Level 4 DEMO",
+      "replacement": "Level 4"
+    },
+    {
+      "table": "levels",
+      "field": "description",
+      "id": "04000000-0000-4000-8000-000000000215",
+      "original": "Level 5 DEMO",
+      "replacement": "Level 5"
+    },
+    {
+      "table": "competencies",
+      "field": "description",
+      "id": "03000000-0000-4000-8000-000000000104",
+      "original": "Identitas kuadrat dan selisih kuadrat — DEMO",
+      "replacement": "Identitas kuadrat dan selisih kuadrat"
+    },
+    {
+      "table": "competencies",
+      "field": "description",
+      "id": "00809397-35e8-51e8-9bf9-b979485f04d3",
+      "original": "DEMO ONLY: difficulty sintetis untuk QA; bukan pengesahan Curriculum.",
+      "replacement": "Operasi bilangan dasar"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "533b578a-f76d-44ca-85c3-69f3ea7482f3",
+      "original": "DEMO-QA teacherA",
+      "replacement": "Ratna Sari"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "0c768b79-e56d-4c96-a8b8-6b41a528b382",
+      "original": "DEMO-QA teacherB",
+      "replacement": "Budi Santoso"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "8614c8ae-d613-4ac4-99bf-5e1702acead8",
+      "original": "DEMO-QA studentA",
+      "replacement": "Alya Putri"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "776e124d-f4ac-4b1c-85e3-38971470dbd8",
+      "original": "DEMO-QA studentB",
+      "replacement": "Raka Saputra"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "746ae149-82dc-485c-99fd-97dcbbc9609f",
+      "original": "DEMO-QA studentC",
+      "replacement": "Nabila Azzahra"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+      "original": "DEMO-QA admin",
+      "replacement": "Dian Prasetyo"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "b8220380-5cbe-4b1f-a2ce-6b381082b572",
+      "original": "DEMO-QA Super Admin",
+      "replacement": "Agus Wijaya"
+    },
+    {
+      "table": "users",
+      "field": "display_name",
+      "id": "78810aa9-0c4e-4703-ac39-4cb7502b5d60",
+      "original": "DEMO-QA Admin Operasional",
+      "replacement": "Sinta Lestari"
+    },
+    {
+      "table": "schools",
+      "field": "name",
+      "id": "3db8edcb-1c96-406d-b6f4-e30d5a1c8e03",
+      "original": "DEMO-QA School",
+      "replacement": "SMP Nusantara"
+    },
+    {
+      "table": "classes",
+      "field": "name",
+      "id": "de0625a9-001c-4396-9e16-977aa2b18f3e",
+      "original": "DEMO-QA Class A",
+      "replacement": "Matematika IX A"
+    },
+    {
+      "table": "classes",
+      "field": "name",
+      "id": "afed46a3-9be1-4b27-9fa7-99fc6d17eeeb",
+      "original": "DEMO-QA Class B",
+      "replacement": "Matematika IX B"
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000001",
+      "original": "DEMO — Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian.",
+      "replacement": "Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000002",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000003",
+      "original": "DEMO — Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian.",
+      "replacement": "Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000004",
+      "original": "DEMO — Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian.",
+      "replacement": "Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000005",
+      "original": "DEMO — Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya.",
+      "replacement": "Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000006",
+      "original": "DEMO — Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB.",
+      "replacement": "Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000007",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000008",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000009",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000010",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000011",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000012",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000013",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000014",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000015",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000016",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000017",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000018",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000019",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000020",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000021",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000022",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000023",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000024",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000025",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000026",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000027",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000028",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000029",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000030",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000031",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000032",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000033",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000034",
+      "original": "DEMO — Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya.",
+      "replacement": "Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000035",
+      "original": "DEMO — Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB.",
+      "replacement": "Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000036",
+      "original": "DEMO — Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian.",
+      "replacement": "Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000037",
+      "original": "DEMO — Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian.",
+      "replacement": "Apresiasi: latihanmu konsisten dan hasilmu baik. Pertahankan kebiasaan memeriksa langkah penyelesaian."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000038",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000039",
+      "original": "DEMO — Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya.",
+      "replacement": "Remedial Drill: coba kembali Level 1 Aljabar. Pelajari pembahasan dan kerjakan perlahan; kita evaluasi latihan berikutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000040",
+      "original": "DEMO — Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB.",
+      "replacement": "Pengingat Tryout Batch #02: kamu belum mengirim jawaban. Selesaikan sebelum 5 Oktober 2026 pukul 00.00 WIB."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000041",
+      "original": "DEMO — Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya.",
+      "replacement": "Instruksi khusus: tinjau pembahasan geometri dan catat langkah yang belum dipahami untuk latihan selanjutnya."
+    },
+    {
+      "table": "feedback",
+      "field": "body",
+      "id": "04000000-0000-4000-8000-000005000042",
+      "original": "DEMO — Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap.",
+      "replacement": "Motivasi: mulai dari satu level yang sudah terbuka dan lanjutkan latihan secara bertahap."
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "51eff3c4-cac8-4fcb-8280-817d580bb861",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "d3e27214-d376-4b7e-a1b6-a8eceea368fc",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "70ab34e3-209c-47ca-b188-e531e06dc4b4",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "c8637304-bc39-4954-9df2-a73e890d4c53",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b7bcb13f-5460-4f5e-adbf-c7e6048f20ab",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "eb7a5121-a405-4f40-a8dc-a133d2765041",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "d7a1f97f-3932-4122-a940-3ac66df15229",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0389ec87-3297-4651-95da-52411c15b959",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "9aab621f-4b70-498b-aa89-8da75f6ecdb8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "92c8af8d-4d45-41fd-8c48-f5fcaae247ae",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "841f920c-62c2-44a4-b325-a26a41a236e2",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0367325c-fa35-4f02-8b40-45e1180b0135",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "26bb77d7-49d7-436d-b1d7-b8054258ea7b",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "93333797-9cec-40d8-8f19-5c29083d7332",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "6f5d20c0-1bb5-48b1-a88b-14731f786c1d",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "c7e00dfe-cbc7-4995-af69-aaf740a2b127",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "cd6741dc-72b4-4329-a8a3-988f0f03fa8c",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5ccab919-5f94-46c9-8223-ac19121168fd",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "29176d6c-c3e9-427b-9945-0135a576b765",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0f8661f8-9926-4efb-ba81-4542af43cec1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "9fd0cb71-cbb6-40cd-9e88-a4674802e7fe",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "6745eb2b-fb69-46c2-98b5-b24f21e933e1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "60278eda-8451-41ed-b063-cb1384c170f4",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "496bc976-dba6-4c9c-9b0b-63fed0f42f19",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "a22ed2d8-4ba0-4e39-92bd-cb03fa786b06",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b344e007-3d84-4399-b5f7-608b1c950687",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "2e533d14-bb94-44e6-ab3c-785c40301e89",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "bf7edc36-843e-4ac2-8b4e-a83d8cfd41c1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "63490083-3951-412d-b574-d82a26e803b5",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "e907f18b-141c-4717-a682-7ff662fa8fdd",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "bc2eaeed-8127-4db5-aa22-3d0a18ab4e1d",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "22e3b7d6-0f15-4f8d-843a-07ea19032803",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "45194224-e3a7-481d-b00e-8d235e3c3120",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b73782bf-aaf1-4509-8ebe-1080bed0d578",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "6b62213c-1abe-4d4b-b02d-d7e99e2c65bc",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "23e4aa33-1a12-4731-a7ab-2b884307beea",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "4be20d1d-df00-4051-8829-af6de0d2b41a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "16c151ae-2ed3-4354-98cf-91d779182d43",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "41e510aa-edde-40f9-9c7a-ebf9d606f430",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "859fa1ec-55fe-4e6a-ba35-1b63c12345c6",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "530bbc43-f77d-48b4-a67b-191ba515b494",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "55496d06-f476-4650-96db-5c06443062de",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ef858145-aa00-4d22-9e34-fd0b0ad4e2f8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "fb5d04ef-fd20-487b-a0b1-90512b2df493",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0cb76108-fbd5-4bc1-bd06-92de221d71da",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "72d905e8-fc41-4967-afed-8cb12e6ec346",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "9e59a8ad-e867-4af9-8361-3bede802904e",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "403ddc54-2b3a-4e83-afe7-47741e11e403",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "cbdb64d3-e55b-4e21-b36b-2c8ea68f7902",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "3ea05dce-eee1-4ccb-afc8-814e478fc4de",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "26027e67-7125-46c1-870a-2fc4d54366a1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "303d660e-deb6-43b8-aa83-4ef48cb41930",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "f584be2b-749b-4936-af56-58b620dcbb76",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "2306dafa-5298-44f6-bf5b-4ff549227746",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ecfa0be4-f55b-4f2f-9d8d-a3e04572a2fb",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "a188a60d-b652-49d3-87fe-20d55cc13967",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "c7f9dede-de94-4394-81ec-d2bbdd8cd162",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "e148927b-8c0f-44c4-b888-18cd6f8a4414",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "431b9e09-61dd-4975-b9ea-5a7ffc805eb8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "2f0ac3b6-a5a1-45b9-a091-c0186da39aee",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5399c7f4-d19f-4bab-901c-181ecc7f5360",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ebdd17e3-5d9f-4ff4-aaa4-f43323c51d6a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b1fffc7d-61b0-496b-8369-04b52d7cea88",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "1b48a8c1-7933-4d80-8d5c-0c84c9c227ce",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "6bb869b4-32e3-4000-bba6-e1b5c9f767fa",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "9c4cc33d-44da-4d22-8ca3-7bbde594936d",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "84b326a6-7955-42a9-ae08-e2f348fe19a1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "303ffa15-479a-45fa-ace0-a01f759ce710",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "f519eff4-2e17-4d71-a75f-3ec9db8c7b75",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "4a32ddba-e13a-44e5-8163-17d3ba1041f2",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b384e5dc-a023-4136-bfbb-e6faef50db9f",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5582a3e7-cdfc-4cd4-a0a7-83aa7f98ff0f",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "7ac53d35-fdcd-4639-9d8f-32e9f27cda27",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "fb1d70f1-4d40-4094-8519-d983d2da0599",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "20b8e1e7-3816-4ae8-8ac8-224fc47cbc86",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0692a6a9-c70d-4f8c-a75b-bb80fa5c8471",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "60e48cb9-5f4d-474d-8ed2-648bb234229a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "45330bd1-2323-4961-97a5-93b62bd4352c",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "203b79d1-fe20-4028-86f8-9b176209bbf3",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "2220e988-4bc6-4027-8adc-3c582fb2471a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "1c90c90f-a81b-4af1-91fb-7c9af901cf49",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "7ac46506-cd15-4e56-b060-3fcfe9519985",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "16d76120-2cc0-454e-9ff5-9690be256d91",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ca34c480-bd3f-4982-b5d6-6ef893fc273f",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "45ac505a-8edf-4426-81fd-f9fde28f831a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "e146ebd0-1670-4cdb-8ed0-5d0b7ce399d8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "d9ff1619-7de6-4cac-b8af-a54b4c68d0fb",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "35ba8fbb-4802-42fa-8d56-6fe7e7df2a01",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5619f9ad-9374-4cbf-b6eb-e28355104fd8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "866178fe-17be-4d12-9c10-c35f534867f1",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ff40552e-7d9a-4094-a053-163e511eec31",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5f9c960b-7335-4ae6-9835-d10a9a71162c",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "0b4a25aa-c451-45a7-88fd-c946ab8ba67c",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5b45d737-f2f1-4649-b20d-f82dc152d37f",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "7448b4a2-bbd1-4030-96b2-72ac6b1948b7",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "ec9fd210-2cf2-4987-9120-6d0d49101656",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "7264dd0f-dd5a-47d8-a836-49ff0e341d90",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "e58bb4f7-0e63-4fc8-821f-5731f528dc81",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "686a9ad8-7ab0-44dd-a9a4-0ed21aac23e0",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "16c15902-0366-4731-9970-80c8c118cdb2",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "8d9f36bd-6ed5-40c2-aae3-3713017238ee",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "453b7838-41c9-46f7-8df2-83e81fd57fb7",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "e96ef3b8-766a-4d04-a424-8caa83f30b14",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "b82fc609-9000-4f4e-8483-c577baa7a576",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "db4e4552-fa91-4432-8b95-ad1aec8af2b8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "38a1d0ee-2eed-4247-b3a0-7f8efcd84eda",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "5ef3637b-23da-4501-a008-b36f5856c66f",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "42753b63-995d-4074-bc9b-6f13ef9e955a",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "98e3d337-6b04-47b6-b445-ff354da6d8f8",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "notifications",
+      "field": "title",
+      "id": "a465f519-7392-4271-a8ba-9f3daa6a9581",
+      "original": "DEMO Mock Tryout · 2026-10-05 · 30 soal",
+      "replacement": "Tryout · 2026-10-05"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "00000000-0000-4000-8000-000000000502",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "03000000-0000-4000-8000-000000003012",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "03000000-0000-4000-8000-000000003022",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "03000000-0000-4000-8000-000000003032",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "03000000-0000-4000-8000-000000003042",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "03000000-0000-4000-8000-000000003052",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050112",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050122",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050132",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050142",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050152",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050212",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050222",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050232",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050242",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000050252",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000000701",
+      "original": "CLOSED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "04000000-0000-4000-8000-000000000702",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "2215014d-2796-4d28-8e37-1f7c1ed57371",
+      "original": "DRAFT",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "4fc19c5b-4250-4a21-8a22-43651f6af09e",
+      "original": "DRAFT",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "23a7fa38-74cb-410b-8ed8-132fd72e6c53",
+      "original": "DRAFT",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "0f4b11c0-cad8-4697-8105-a1c6bf944d5a",
+      "original": "DRAFT",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "65fe3589-b810-4a91-be83-8879fc1ff5f6",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "assessment_packages",
+      "field": "status",
+      "id": "5ad749bb-611b-4f05-a65e-dd3bbe35bc97",
+      "original": "PUBLISHED",
+      "replacement": "ARCHIVED"
+    },
+    {
+      "table": "notifications",
+      "field": "body",
+      "id": "465a144f-735e-4db2-93c0-2ac7865c59f4",
+      "original": "Lanjutkan latihan Subbab Demo: Operasi Bilangan pada level yang baru terbuka.",
+      "replacement": "Lanjutkan latihan Operasi Bilangan pada level yang baru terbuka."
+    }
+  ]
+}

@@ -13,6 +13,8 @@ export class CurrentTryoutDto {
     string | null;
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) resultDueAt?:
     string | null;
+  @ApiPropertyOptional({ enum: ['CONTENT_PENDING', 'SCORING_PENDING'], nullable: true })
+  resultPendingReason?: 'CONTENT_PENDING' | 'SCORING_PENDING' | null;
   @ApiPropertyOptional() isDemo?: boolean;
   @ApiProperty({ type: String, format: 'uuid', required: false }) id?: string;
   @ApiProperty({ required: false }) title?: string;
@@ -40,6 +42,8 @@ export class TryoutAttemptDto {
     string | null;
   @ApiPropertyOptional({ type: String, format: 'date-time', nullable: true }) resultDueAt?:
     string | null;
+  @ApiPropertyOptional({ enum: ['CONTENT_PENDING', 'SCORING_PENDING'], nullable: true })
+  resultPendingReason?: 'CONTENT_PENDING' | 'SCORING_PENDING' | null;
   @ApiPropertyOptional() isDemo?: boolean;
   @ApiProperty({
     type: Number,
