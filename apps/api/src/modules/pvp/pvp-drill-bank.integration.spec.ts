@@ -338,6 +338,108 @@ integration(
       ).toBe(true);
     });
 
+    it('uses only the accepted uncalibrated pool in temporary DEMO mode and preserves room pins', async () => {
+      const temporary = [];
+      const importedOptions = {
+        options: [
+          { id: 'A', content: { text: '2' } },
+          { id: 'B', content: { text: '3' } },
+        ],
+        categories: [],
+      };
+      for (let i = 0; i < 9; i++)
+        temporary.push(
+          await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', {
+            optionsOrStatements: importedOptions,
+          }),
+        );
+      const excluded = [
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', {}, { usageType: 'TRYOUT' }),
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { contentStatus: 'DRAFT' }),
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { questionType: 'CATEGORY' }),
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { answerKey: { optionId: 'Z' } }),
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { media: [{ url: '/TEST.png' }] }),
+        await addQuestion('UNKNOWN_DIFFICULTY'),
+      ];
+      expect(
+        (await bank.families(db(), 'easy'))
+          .flat()
+          .some((c) => temporary.some((t) => t.version.id === c.version.id)),
+      ).toBe(false);
+      vi.stubEnv('PVP_MODE', 'demo');
+      vi.stubEnv('PVP_CONTENT_MODE', 'temporary-owner-accepted');
+      try {
+        const current = new PvpEngineService({ ...fixture.policy, mode: 'demo' });
+        current.setSchedulerReady(true);
+        expect((await current.availability()).difficulties.every((d) => !d.available)).toBe(true);
+        const before = await counts();
+        await expect(current.create(host(), 'easy', randomUUID())).rejects.toMatchObject({
+          response: { code: 'PVP_CONTENT_UNAVAILABLE' },
+        });
+        expect(await counts()).toEqual(before);
+        temporary.push(
+          await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', {
+            optionsOrStatements: importedOptions,
+          }),
+        );
+        const eligibleIds = new Set(temporary.map((c) => c.version.id));
+        const temporaryBank = new PvpDrillBank();
+        for (const difficulty of ['easy', 'medium', 'hard'] as const) {
+          const families = await temporaryBank.families(db(), difficulty);
+          expect(new Set(families.flat().map((c) => c.version.id))).toEqual(eligibleIds);
+          expect(
+            families.flat().some((c) => excluded.some((t) => t.version.id === c.version.id)),
+          ).toBe(false);
+          const key = randomUUID();
+          const room = await current.create(host(), difficulty, key);
+          expect(room.isDemo).toBe(true);
+          expect((await current.create(host(), difficulty, key)).matchId).toBe(room.matchId);
+          const saved = await db()
+            .select()
+            .from(pvpMatchQuestions)
+            .where(eq(pvpMatchQuestions.matchId, room.matchId));
+          expect(new Set(saved.map((q) => q.questionVersionId))).toEqual(eligibleIds);
+          await current.join(fixture.students[1]!.id, room.roomCode);
+          await current.ready(host(), room.matchId);
+          const running = await current.ready(fixture.students[1]!.id, room.matchId);
+          expect(running.question!.durationSeconds).toBe(
+            { easy: 30, medium: 45, hard: 60 }[difficulty],
+          );
+          expect(JSON.stringify(running)).not.toMatch(/answerKey|correctOptionId|explanation/);
+          const answered = await current.answer(
+            host(),
+            room.matchId,
+            running.question!.id,
+            'A',
+            randomUUID(),
+          );
+          expect(answered.question!.answered).toBe(true);
+          await current.answer(
+            fixture.students[1]!.id,
+            room.matchId,
+            running.question!.id,
+            'A',
+            randomUUID(),
+          );
+          const settled = await current.snapshot(host(), room.matchId);
+          expect(
+            settled.players.find((player) => player.studentId === host())!.points,
+          ).toBeGreaterThanOrEqual(100);
+          await current.leave(host(), room.matchId);
+        }
+        expect(await current.availability()).toMatchObject({
+          available: true,
+          dataMode: 'demo',
+          contentNotice: expect.stringContaining('30, 45, dan 60'),
+        });
+        expect(() => new PvpEngineService({ ...fixture.policy, mode: 'official' })).toThrow(
+          'requires a DEMO policy',
+        );
+      } finally {
+        vi.unstubAllEnvs();
+      }
+    });
+
     it('revalidates selected content and rolls back all package/room writes on downstream failure', async () => {
       const original = PvpDrillBank.prototype.lockSelection;
       const selection = vi

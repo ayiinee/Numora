@@ -8045,6 +8045,9 @@
           "message": {
             "type": "string"
           },
+          "contentNotice": {
+            "type": "string"
+          },
           "dataMode": {
             "type": "string",
             "enum": [

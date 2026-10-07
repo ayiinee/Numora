@@ -1,5 +1,7 @@
 # Kontrak area siswa
 
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** availability optionally returns `contentNotice` for the DEMO-only temporary accepted READY Drill pool. The UI shows that all difficulty choices share uncalibrated content and select server timers. Strict mode omits the notice. [Activation and replacement steps](../development/PVP_TEMPORARY_READY_CONTENT.md).
+
 **ENGINEERING UPDATE — 6 October 2026:** [JOB-16/17](../development/PVP_LEADERBOARDS_JOB16_17.md) supersedes historical pending-PvP and proposed tie rules in this document. Server-only activation defaults disabled; initial DEMO matches and mode-separated Best Poin use the published policy. Class/global activity uses posted Drill/Tryout account XP, Top 10 + self and dense rank. Generated contracts include per-difficulty availability, active-room recovery, `periodId`, authorized period listing, mode/rank provenance and update/stale metadata. Official activation still requires Curriculum approval; local fixture E2E is separate from staging sign-off.
 
 Status 1 Oktober 2026. **ENGINEERING DECISION:** tampilan prototipe dipindahkan ke `/student`; semua data produk melewati NestJS. Route pratinjau lama dihapus dan mengembalikan 404 tanpa redirect.

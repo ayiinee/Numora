@@ -14,7 +14,7 @@ import {
 import { and, asc, eq, gt, inArray, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
 import { alias } from 'drizzle-orm/pg-core';
 import { decodeSingleChoice } from '../learning/single-choice.policy';
-import type { Difficulty } from './pvp.policy';
+import { pvpContentMode, type Difficulty, type PvpContentMode } from './pvp.policy';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -29,13 +29,23 @@ export const unavailableDrillBank = () =>
     detail: 'Minimal 10 soal Drill READY yang valid diperlukan untuk kesulitan ini.',
   });
 
+/** Imported PG versions wrap their option array; legacy snapshots store it directly. */
+export function decodePvpSingleChoice(row: Parameters<typeof decodeSingleChoice>[0]) {
+  const payload = row.optionsOrStatements;
+  const options =
+    !Array.isArray(payload) && payload && typeof payload === 'object' && 'options' in payload
+      ? payload.options
+      : payload;
+  return decodeSingleChoice({ ...row, optionsOrStatements: options });
+}
+
 export function groupDrillCandidates(candidates: DrillCandidate[]) {
   const families = new Map<string, DrillCandidate[]>();
   for (const candidate of candidates) {
     const media = candidate.version.media;
     if (media !== null && (!Array.isArray(media) || media.length !== 0)) continue;
     try {
-      decodeSingleChoice(candidate.version);
+      decodePvpSingleChoice(candidate.version);
     } catch (error) {
       if (error instanceof ServiceUnavailableException) continue;
       throw error;
@@ -70,6 +80,7 @@ export function sampleDrillFamilies(
 
 /** Shared eligibility for read-only availability and transactional room creation. */
 export class PvpDrillBank {
+  constructor(readonly contentMode: PvpContentMode = pvpContentMode()) {}
   private query(db: Database | Transaction, difficulty: Difficulty, ids?: string[]) {
     const newer = alias(questionVersions, 'newer_ready_drill_version');
     return db
@@ -95,7 +106,9 @@ export class PvpDrillBank {
           eq(chapters.status, 'READY'),
           or(isNull(questionVersions.levelId), eq(levels.status, 'READY')),
           eq(questionVersions.questionType, 'SINGLE_CHOICE'),
-          sql`upper(btrim(${questionVersions.difficulty})) = ${difficulty.toUpperCase()}`,
+          this.contentMode === 'temporary-owner-accepted'
+            ? eq(questionVersions.difficulty, 'OWNER_ACCEPTED_UNCALIBRATED')
+            : sql`upper(btrim(${questionVersions.difficulty})) = ${difficulty.toUpperCase()}`,
           or(
             and(
               isNotNull(questionVersions.reviewedAt),
