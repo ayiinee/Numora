@@ -26,9 +26,9 @@ import {
   users,
 } from '@tka/database';
 import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
-import { decodeSingleChoice } from '../learning/single-choice.policy';
 import {
   PVP_POLICY,
+  TEMPORARY_PVP_CONTENT_NOTICE,
   durationSeconds,
   pvpPoints,
   requirePvpPolicy,
@@ -36,7 +36,12 @@ import {
   type PvpPolicy,
 } from './pvp.policy';
 import type { PvpSnapshotDto } from './pvp.dto';
-import { PvpDrillBank, sampleDrillFamilies, unavailableDrillBank } from './pvp-drill-bank';
+import {
+  PvpDrillBank,
+  sampleDrillFamilies,
+  unavailableDrillBank,
+  decodePvpSingleChoice as decodeSingleChoice,
+} from './pvp-drill-bank';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -49,7 +54,10 @@ export class PvpEngineService {
   readonly now: () => Date = () => new Date();
   private schedulerReady = false;
   private readonly drillBank = new PvpDrillBank();
-  constructor(@Inject(PVP_POLICY) private readonly policy: PvpPolicy | null) {}
+  constructor(@Inject(PVP_POLICY) private readonly policy: PvpPolicy | null) {
+    if (this.drillBank.contentMode === 'temporary-owner-accepted' && policy?.mode !== 'demo')
+      throw new Error('Temporary PvP content requires a DEMO policy.');
+  }
 
   setSchedulerReady(ready: boolean) {
     this.schedulerReady = ready;
@@ -100,6 +108,9 @@ export class PvpEngineService {
           : 'PvP tersedia.'
         : 'PvP belum tersedia.',
       dataMode: this.dataMode,
+      ...(this.drillBank.contentMode === 'temporary-owner-accepted'
+        ? { contentNotice: TEMPORARY_PVP_CONTENT_NOTICE }
+        : {}),
       difficulties,
       activeMatchId: studentId ? await this.activeRoom(studentId) : null,
     };

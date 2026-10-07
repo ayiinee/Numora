@@ -1,5 +1,7 @@
 # PvP random Drill bank
 
+**ENGINEERING DECISION — temporary owner exception, 7 October 2026:** [temporary READY content mode](PVP_TEMPORARY_READY_CONTENT.md) permits the existing accepted uncalibrated single-choice pool in DEMO only. Explicit activation replaces difficulty matching with the exact owner-accepted marker. Strict mode remains the default; the linked document includes replacement steps.
+
 **ENGINEERING DECISION — owner approved, 7 October 2026:** new PvP rooms draw ten questions directly from the READY Drill bank across all chapters, using the host's PvP difficulty selection. This supersedes the separately published PvP-package/Curriculum-manifest requirement for new rooms in both DEMO and official modes. Existing server mode, policy, scoring and historical result dimensions remain intact. No new question flag or UI choice is introduced.
 
 ## Eligible content

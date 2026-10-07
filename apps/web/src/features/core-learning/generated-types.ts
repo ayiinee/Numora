@@ -107,7 +107,7 @@ export type StudentFeaturesDto = { "drill": boolean; "tryout": boolean; "pretest
 
 export type StudentDashboardDto = { "displayName": string; "totalXp": number; "affiliation": "MANDIRI" | "SCHOOL"; "class": DashboardClassDto | null; "classes"?: (DashboardClassDto)[]; "completedLevels": number; "availableLevels": number; "latestDrillScore": number | null; "bestDrillScore": number | null; "activities": (AssessmentRecordDto)[]; "activeDrill": DashboardDrillDto | null; "features": StudentFeaturesDto; };
 
-export type PvpAvailabilityDto = { "available": boolean; "reasonCode": string | null; "message": string; "dataMode"?: "demo" | "official"; "activeMatchId"?: string | null; "difficulties"?: (PvpDifficultyAvailabilityDto)[]; };
+export type PvpAvailabilityDto = { "available": boolean; "reasonCode": string | null; "message": string; "contentNotice"?: string; "dataMode"?: "demo" | "official"; "activeMatchId"?: string | null; "difficulties"?: (PvpDifficultyAvailabilityDto)[]; };
 
 export type PvpDifficultyAvailabilityDto = { "difficulty": "easy" | "medium" | "hard"; "available": boolean; "reasonCode": string | null; };
 
