@@ -360,7 +360,7 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
     const publish = await request(`admin/content/tryout-packages/${p.id}/publish`, 'POST', {
       scoringPolicyVersionId: randomUUID(),
       releaseAt: '2099-01-04T17:00:00.000Z',
-      durationSeconds: 3600,
+      durationSeconds: 600,
     });
     expect(publish.status).toBe(409);
     expect(await publish.json()).toMatchObject({ code: 'ASSESSMENT_POLICY_APPROVAL_REQUIRED' });
