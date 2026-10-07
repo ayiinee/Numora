@@ -1,3 +1,5 @@
+**ENGINEERING DECISION — owner instruction, 7 October 2026:** opt-in DEMO-only PvP temporarily uses accepted uncalibrated READY single-choice Drill content. The three choices share the pool and retain server timers; calibrated academic difficulty remains pending. [Activation and owner replacement checklist](../development/PVP_TEMPORARY_READY_CONTENT.md).
+
 **ENGINEERING DECISION — owner approved, 6 October 2026:** Excel intake preserves unresolved academic mapping and source provenance. Destination precedes mapping validation; incomplete preview progress persists independently of final draft. Final imports remain strict; Publish rechecks all master relations and per-question levels. [Approved refinement](../content/UPLOAD_FIRST_WORKFLOW.md).
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** remove obsolete demo presentation; retain isolated synthetic fixtures and immutable academic history. The configured cloud project remains Development. This does not approve Curriculum content, PGK scoring or IRT policies. [Cleanup decision and verification](../development/DEMO_CLEANUP_2026-10-06.md).
