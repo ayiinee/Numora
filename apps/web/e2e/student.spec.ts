@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import type { TryoutResultDto } from '../src/features/core-learning/generated-types';
 
 const browserErrors = new WeakMap<Page, string[]>();
 test.beforeEach(({ page }) => {
@@ -945,12 +946,13 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
             {
               questionInstanceId: questionId,
               stem: 'Fixture: 1 + 1?',
+              options: attempt.questions[0]!.options,
               selectedOptionId: 'A',
               correctOptionId: 'A',
               explanation: 'Fixture explanation',
             },
           ],
-        },
+        } satisfies TryoutResultDto,
       });
     return route.fallback();
   });

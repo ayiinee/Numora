@@ -52,3 +52,7 @@ The Pretest Student consumer now exists in main; remaining Pretest gates concern
 - First combined browser runs exposed stale fixture menu/capability names, the old 20-row roster cursor and unbound JSON import; these fixtures now follow server capabilities and main's five-row/directed import contracts. A cold development hydration timeout passed in the isolated rerun without changing the expectation. Fixture browser success is not Cloud Auth/R2/email acceptance.
 
 Admin runtime code baseline for these checks: `9291f530a8274dc856c6e7b32dadd1c16c1a5e4d`. Main PR #93 was then merged at `f13d0cf`; root lint/typecheck and the isolated Excel browser rerun passed after that merge. Subsequent evidence-only documentation commits do not change runtime code. CI and final browser results for the PR head must be checked on GitHub; do not infer approval or deployment from this ledger.
+
+### Merge preparation
+
+CI run `37546155211` on `39e9e5b` passed contracts, lint, typecheck, tests, connected IRT and the connected release chain, but browser E2E finished with 226 passed and one failed. The Mandiri Tryout result fixture omitted the required `options` field consumed by the shared explanation renderer; the server already supplies that field. The fixture now includes the actual attempt options and uses `satisfies TryoutResultDto` to enforce the generated contract. The unchanged browser scenario passed locally (1/1), with web typecheck and formatting passing. A new head CI is required before merge; this fixture correction changes no production behavior or Cloud data.
