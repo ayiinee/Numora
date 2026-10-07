@@ -108,7 +108,7 @@ export class ContentLifecycleService {
       )
     )
       blockers.push('TAXONOMY_NOT_READY');
-    if (r.question.status !== 'READY') blockers.push('QUESTION_NOT_READY');
+    if (r.question.status === 'ARCHIVED') blockers.push('QUESTION_ARCHIVED');
     if (
       r.imported &&
       ((!tryout && !r.level) ||
@@ -136,6 +136,7 @@ export class ContentLifecycleService {
     }
     if (v.contentStatus === 'ARCHIVED') blockers.push('VERSION_ARCHIVED');
     const publication = [...new Set(blockers)];
+    if (r.question.status !== 'READY') publication.push('QUESTION_NOT_READY');
     if (v.contentStatus !== 'READY' || !v.reviewedByUserId || !v.reviewedAt)
       publication.push('REVIEW_REQUIRED');
     if (v.questionType !== 'SINGLE_CHOICE') {
@@ -238,6 +239,12 @@ export class ContentLifecycleService {
         .update(questionVersions)
         .set({ contentStatus: body.status, reviewedByUserId: actor, reviewedAt: new Date() })
         .where(eq(questionVersions.id, id));
+      // A complete reviewed version can promote its draft family. Publication still requires package approval.
+      if (body.status === 'READY')
+        await tx
+          .update(questions)
+          .set({ status: 'READY' })
+          .where(and(eq(questions.id, detail.questionId), eq(questions.status, 'DRAFT')));
       // Review reasons contain editorial context, never learner answers or credentials.
       await tx.insert(auditLogs).values({
         actorUserId: actor,

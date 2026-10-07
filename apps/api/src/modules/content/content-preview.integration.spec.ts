@@ -2270,9 +2270,7 @@ describe.skipIf(!testUrl)(
         const detail = await ok<import('./content-lifecycle.dto').ContentVersionDetailDto>(
           `admin/content/versions/${id}`,
         );
-        await ok(`admin/content/questions/${detail.questionId}/status`, 'PATCH', {
-          status: 'READY',
-        });
+        expect(detail.readiness.canReviewReady).toBe(true);
         const decisions = await Promise.all([
           request(`admin/content/versions/${id}/review`, 'POST', {
             status: 'READY',
