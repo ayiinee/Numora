@@ -56,3 +56,5 @@ Admin runtime code baseline for these checks: `9291f530a8274dc856c6e7b32dadd1c16
 ### Merge preparation
 
 CI run `37546155211` on `39e9e5b` passed contracts, lint, typecheck, tests, connected IRT and the connected release chain, but browser E2E finished with 226 passed and one failed. The Mandiri Tryout result fixture omitted the required `options` field consumed by the shared explanation renderer; the server already supplies that field. The fixture now includes the actual attempt options and uses `satisfies TryoutResultDto` to enforce the generated contract. The unchanged browser scenario passed locally (1/1), with web typecheck and formatting passing. A new head CI is required before merge; this fixture correction changes no production behavior or Cloud data.
+
+Main subsequently advanced to `b508da0` (PR #95). The integration retains its opt-in DEMO PvP content mode and notice, imported option-wrapper compatibility and tests, alongside all Admin changes. The three context-document conflicts retain both Admin and PvP decisions. Contracts and generated types pass after this merge; final head CI remains the merge gate.

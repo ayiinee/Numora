@@ -1,4 +1,3 @@
-<<<<<<< HEAD
 # Current source — PRD v0.6 Final
 
 **PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
@@ -26,9 +25,8 @@ Current rules: three fixed Admin subroles and action-level permissions; maximum 
 | Assessment        | 10 Drill/20 Pretest/30 Tryout, approved pins, retry, batch close, XP                    | Rubric/precision approval + consumer   |
 | IRT/publication   | Existing requests, respondent contract, SLA, immutable release                          | Data pipeline/quality/mapping          |
 | Analytics         | Authorized aggregate queries over durable truth                                         | Unavailable metrics explicitly marked  |
-=======
+
 **ENGINEERING DECISION — owner instruction, 7 October 2026:** opt-in DEMO-only PvP temporarily uses accepted uncalibrated READY single-choice Drill content. The three choices share the pool and retain server timers; calibrated academic difficulty remains pending. [Activation and owner replacement checklist](../development/PVP_TEMPORARY_READY_CONTENT.md).
->>>>>>> origin/main
 
 **ENGINEERING DECISION — instruksi pemilik proyek, 7 Oktober 2026:** penerimaan langsung khusus 120 original Drill Bab 3 indikator 16–19, Paket 1 level 1–3; 12 paket PUBLISHED dengan policy allowlist. Review impor lainnya tetap berlaku; tidak mengklaim pengesahan Curriculum/IRT. [Scope dan verifikasi](../development/DRILL_CHAPTER3_OWNER_EXCEPTION.md).
 
