@@ -53,6 +53,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `development/GIT_WORKFLOW.md`
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
+- [Development recovery, 6 October 2026](development/DEV_SCHEMA_RECOVERY_2026-10-06.md) — historical schema-recovery evidence, API watcher fix, and later migration mapping; not a migration runbook.
 - `development/OWNERSHIP.md`
 
 ## Testing

@@ -13,6 +13,9 @@
     "baseUrl": "./",
     "incremental": true
   },
+  "watchOptions": {
+    "excludeDirectories": ["./dist"]
+  },
   "include": ["src/**/*.ts"],
   "exclude": ["node_modules", "dist"]
 }
