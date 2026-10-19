@@ -814,8 +814,13 @@ for (const width of [390, 1280]) {
         await capture(page, `portal-${role}`, width);
         await link.focus();
         await page.keyboard.press('Enter');
-        await expect(page).toHaveURL(/\/admin\/content\/imports$/);
-        await expect(page.getByRole('heading', { name: 'Upload soal Excel' })).toBeVisible();
+        if (role === 'CONTENT_DATA_MODERATION') {
+          await expect(page).toHaveURL(/\/admin\/content\/imports\?mode=json$/);
+          await expect(page.getByRole('heading', { name: 'File sumber soal' })).toBeVisible();
+        } else {
+          await expect(page).toHaveURL(/\/admin\/content\/imports$/);
+          await expect(page.getByRole('heading', { name: '1. Upload Excel' })).toBeVisible();
+        }
         if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
         const nav =
           width < 960
@@ -1109,8 +1114,10 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   ])
     if (list) list.items = [];
   await page.goto('/admin/content');
-  await expect(page.getByRole('link', { name: 'Upload soal dari template Excel' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toHaveCount(0);
+  await expect(
+    page.getByRole('link', { name: 'Impor Excel/JSON, paket & preview internal' }),
+  ).toHaveAttribute('href', '/admin/content/imports');
+  await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toBeDisabled();
   for (const [label, name] of panels) {
     await page.getByRole('button', { name: label, exact: true }).click();
     await capture(page, `empty-${name}`, 390);
@@ -1507,7 +1514,7 @@ for (const width of [390, 1280])
           body: '',
         }),
       );
-      await page.goto('/admin/content/imports?mode=json');
+      await page.goto('/admin/content/imports');
       await expect(page.getByLabel('File soal Excel')).toBeEnabled();
       await expect(page.getByLabel('Paket tujuan')).toHaveCount(0);
       const out = resolve('../../.tmp/upload-first-browser');
@@ -1548,9 +1555,15 @@ for (const width of [390, 1280])
       if (usage === 'TRYOUT' && width === 1280) {
         await expect(
           mappingPanel.getByRole('combobox', { name: 'Indikator', exact: true }),
-        ).toHaveCount(0);
-        for (const [index, masterId] of [id(1), id(2), id(4)].entries())
-          await mappingPanel.locator('select').nth(index).selectOption(masterId);
+        ).toBeVisible();
+        for (const [label, masterId] of [
+          ['Bab', id(1)],
+          ['Subbab', id(2)],
+          ['Level', id(4)],
+        ] as const)
+          await mappingPanel
+            .getByRole('combobox', { name: label, exact: true })
+            .selectOption(masterId);
         await expect(
           page.getByRole('button', { name: 'Simpan draft', exact: true }),
         ).toBeDisabled();
@@ -1572,9 +1585,15 @@ for (const width of [390, 1280])
       }
       await expect(page.getByRole('heading', { name: '4. Periksa dan Publish' })).toBeVisible();
       expect(saves).toBe(1);
-      await expect(page.getByRole('button', { name: 'Publish paket' })).toBeDisabled();
+      await expect(
+        page.getByRole('button', {
+          name: usage === 'TRYOUT' ? 'Publish sekarang' : 'Publish paket',
+          exact: true,
+        }),
+      ).toBeDisabled();
       await page.getByLabel('Saya telah meninjau').check();
-      if (usage === 'TRYOUT') await page.getByLabel('Tanggal rilis Tryout').fill('2099-01-05');
+      if (usage === 'TRYOUT')
+        await page.getByLabel(/^Tanggal dan jam rilis Tryout/).fill('2099-01-05T00:00');
       await page.getByRole('button', { name: 'Publish paket' }).click();
       await expect(page.getByRole('link', { name: 'Lihat bank soal' })).toBeVisible();
       await page.getByRole('button', { name: 'Riwayat unggahan' }).click();

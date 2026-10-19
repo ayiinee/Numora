@@ -371,7 +371,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
             <p>{viewGuidance[view].description}</p>
           </div>
           {view === 'questions' && (
-            <Link className="content-primary-link" href="/admin/content/imports">
+            <Link className="content-primary-link" href="/admin/content/imports?mode=json">
               Impor JSON
             </Link>
           )}

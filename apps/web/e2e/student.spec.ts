@@ -1708,8 +1708,10 @@ for (const width of [390, 1440]) {
         } else if (path === `admin/content/drill-packages/${packageId}`) {
           expect(body.questionVersionIds).toEqual(ids);
           pack = { ...pack, ...body };
-        } else if (path.endsWith('/publish')) pack = { ...pack, status: 'PUBLISHED' };
-        else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
+        } else if (path.endsWith('/publish')) {
+          expect(body.curriculumApprovalReference).toBe('TEST_ONLY_BROWSER_APPROVAL');
+          pack = { ...pack, status: 'PUBLISHED' };
+        } else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
         else if (path === `admin/reports/QUESTION/${questionId}`) {
           expect(body.status).toBe('RESOLVED');
           expect(body.followUp).toBe('Tindak lanjut fixture');
@@ -1819,6 +1821,9 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture direvisi');
     await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
     await expect(page.getByText('Paket fixture direvisi', { exact: true })).toBeVisible();
+    await page
+      .getByLabel('Referensi persetujuan Curriculum', { exact: true })
+      .fill('TEST_ONLY_BROWSER_APPROVAL');
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
     await expect(page.getByText(/DEMO-E2E.*PUBLISHED/)).toBeVisible();
