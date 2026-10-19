@@ -1,15 +1,17 @@
 'use client';
 
-import { useEffect, useState, type FormEvent } from 'react';
+import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import Link from 'next/link';
 
 import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
-import { AdminPagination, useAdminPagination } from './admin-pagination';
+import { AdminPagination } from './admin-pagination';
 import {
   ApiProblem,
   createSchool,
+  getAdminSchool,
   issueTeacherToken,
   listAdminSchools,
   listTeacherTokens,
@@ -21,9 +23,19 @@ import {
   type TeacherTokenSummary,
 } from '@/lib/api';
 
+const tokenStatusLabels = {
+  AVAILABLE: 'Belum dipakai',
+  USED: 'Terpakai',
+  REVOKED: 'Dicabut',
+  EXPIRED: 'Kedaluwarsa',
+} satisfies Record<TeacherTokenSummary['status'], string>;
+
 export function AdminSchoolsScreen() {
   const { state } = useAuth();
-  const accountKey = state.status === 'ready' ? state.profile.id : state.status;
+  const accountKey =
+    state.status === 'ready'
+      ? `${state.profile.id}:${state.profile.adminRole}:${state.profile.status}:${state.profile.capabilities?.includes('OPERATIONS_MANAGE')}`
+      : state.status;
   return <AdminSchoolsScreenContent key={accountKey} />;
 }
 
@@ -31,22 +43,48 @@ function AdminSchoolsScreenContent() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const token =
-    state.status === 'ready' && state.profile.role === 'ADMIN' ? state.session.access_token : null;
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.status === 'ACTIVE' &&
+    state.profile.capabilities?.includes('OPERATIONS_MANAGE')
+      ? state.session.access_token
+      : null;
   const [schools, setSchools] = useState<AdminSchool[] | null>(null);
   const [selected, setSelected] = useState('');
   const [tokens, setTokens] = useState<TeacherTokenSummary[] | null>(null);
   const [issued, setIssued] = useState<IssuedTeacherToken | null>(null);
   const [code, setCode] = useState('');
   const [name, setName] = useState('');
+  const [address, setAddress] = useState('');
+  const [editAddress, setEditAddress] = useState('');
+  const [search, setSearch] = useState('');
+  const [filter, setFilter] = useState('');
+  const [offset, setOffset] = useState(0);
+  const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [tokenOffset, setTokenOffset] = useState(0);
+  const [tokenNextOffset, setTokenNextOffset] = useState<number | null>(null);
+  const [selectedSchool, setSelectedSchool] = useState<AdminSchool | null>(null);
   const [editName, setEditName] = useState('');
   const [error, setError] = useState('');
   const [schoolError, setSchoolError] = useState('');
   const [tokenError, setTokenError] = useState('');
+  const [detailError, setDetailError] = useState('');
+  const [detailLoading, setDetailLoading] = useState(false);
+  const initializedSchool = useRef('');
   const [accessError, setAccessError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
-  const schoolPage = useAdminPagination(schools ?? []);
-  const tokenPage = useAdminPagination(tokens ?? [], selected);
+  const denyAccess = useCallback((cause: unknown) => {
+    if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) {
+      setAccessError(true);
+      setSchools(null);
+      setSelected('');
+      setSelectedSchool(null);
+      setTokens(null);
+      setIssued(null);
+      initializedSchool.current = '';
+    }
+  }, []);
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -57,43 +95,84 @@ function AdminSchoolsScreenContent() {
     if (!token) return;
     let active = true;
     setSchoolError('');
-    listAdminSchools(token).then(
+    setSchools(null);
+    setNextOffset(null);
+    listAdminSchools(token, { offset, search: filter }).then(
       (result) => {
-        if (active) setSchools(result.items);
+        if (active) {
+          setSchools(result.items);
+          setNextOffset(result.nextOffset);
+        }
       },
       (cause: unknown) => {
         if (active) {
           setSchoolError(message(cause));
-          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
-            setAccessError(true);
+          denyAccess(cause);
         }
       },
     );
     return () => {
       active = false;
     };
-  }, [token, revision]);
+  }, [token, revision, offset, filter, denyAccess]);
+  useEffect(() => {
+    if (!token || !selected) {
+      setSelectedSchool(null);
+      return;
+    }
+    let active = true;
+    setDetailError('');
+    setDetailLoading(true);
+    void getAdminSchool(token, selected)
+      .then((value) => {
+        if (active) {
+          setSelectedSchool(value);
+          setDetailLoading(false);
+          if (initializedSchool.current !== selected) {
+            setEditName(value.name);
+            setEditAddress(value.address ?? '');
+            initializedSchool.current = selected;
+          }
+        }
+      })
+      .catch((cause) => {
+        if (active) {
+          setDetailError(message(cause));
+          setDetailLoading(false);
+          setSelectedSchool(null);
+          setIssued(null);
+          denyAccess(cause);
+        }
+      });
+    return () => {
+      active = false;
+    };
+  }, [token, selected, revision, denyAccess]);
   useEffect(() => {
     if (!token || !selected) return;
     let active = true;
     setTokenError('');
-    listTeacherTokens(token, selected).then(
+    setTokens(null);
+    setTokenNextOffset(null);
+    listTeacherTokens(token, selected, tokenOffset).then(
       (result) => {
-        if (active) setTokens(result.items);
+        if (active) {
+          setTokens(result.items);
+          setTokenNextOffset(result.nextOffset);
+        }
       },
       (cause: unknown) => {
         if (active) {
           setTokenError(message(cause));
-          if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
-            setAccessError(true);
+          denyAccess(cause);
         }
       },
     );
     return () => {
       active = false;
     };
-  }, [token, selected, revision]);
-  const current = schools?.find((school) => school.id === selected);
+  }, [token, selected, revision, tokenOffset, denyAccess]);
+  const current = selectedSchool;
   async function run(action: () => Promise<unknown>) {
     if (busy) return;
     setBusy(true);
@@ -103,7 +182,7 @@ function AdminSchoolsScreenContent() {
       setRevision((value) => value + 1);
     } catch (cause) {
       setError(message(cause));
-      if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setAccessError(true);
+      denyAccess(cause);
     } finally {
       setBusy(false);
     }
@@ -111,20 +190,37 @@ function AdminSchoolsScreenContent() {
   async function addSchool(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
     if (!token) return;
+    if (!code.trim() || !name.trim()) {
+      setError('Isi kode dan nama sekolah dengan karakter selain spasi.');
+      return;
+    }
     await run(async () => {
-      const created = await createSchool(token, code.trim(), name.trim());
+      const created = await createSchool(token, code.trim(), name.trim(), address.trim());
+      setSelectedSchool(created);
       setSelected(created.id);
       setEditName(name.trim());
+      setEditAddress(address.trim());
+      setTokenOffset(0);
       setIssued(null);
       setTokens(null);
       setCode('');
       setName('');
+      setAddress('');
     });
   }
   async function saveName(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
+    if (!editName.trim()) {
+      setError('Nama sekolah tidak boleh kosong.');
+      return;
+    }
     if (token && current && editName.trim())
-      await run(() => updateSchool(token, current.id, { name: editName.trim() }));
+      await run(() =>
+        updateSchool(token, current.id, {
+          name: editName.trim(),
+          address: editAddress.trim() || null,
+        }),
+      );
   }
   const retry = () => {
     setAccessError(false);
@@ -146,10 +242,10 @@ function AdminSchoolsScreenContent() {
             error
             message={
               accessError
-                ? error || schoolError || tokenError || 'Akses Admin belum tersedia.'
+                ? error || schoolError || tokenError || detailError || 'Akses Admin belum tersedia.'
                 : state.status === 'error'
                   ? (state.message ?? 'Akun belum dapat diperiksa.')
-                  : 'Halaman ini hanya tersedia untuk Admin yang aktif.'
+                  : 'Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.'
             }
             login
             retry={() => {
@@ -160,15 +256,58 @@ function AdminSchoolsScreenContent() {
         )}
       </AdminFrame>
     );
+  const operationsRole = state.status === 'ready' && state.profile.adminRole === 'OPERATIONS';
+  const schoolForm = (
+    <Card className="admin-card admin-create-school">
+      <div className="admin-section-heading">
+        <Icon name="school" />
+        <h2>Tambah sekolah</h2>
+      </div>
+      <p className="admin-helper">Daftarkan sekolah sebelum menerbitkan token guru.</p>
+      <form onSubmit={(event) => void addSchool(event)}>
+        <fieldset disabled={busy} className="admin-form-fields">
+          <Input
+            label="Kode sekolah"
+            id="school-code"
+            value={code}
+            onChange={(event) => setCode(event.target.value)}
+            minLength={2}
+            maxLength={32}
+            pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
+            required
+            helper="Huruf/angka dan tanda hubung; server menyimpan kode dalam huruf kapital."
+          />
+          <Input
+            label="Nama sekolah"
+            id="school-name"
+            value={name}
+            onChange={(event) => setName(event.target.value)}
+            maxLength={120}
+            required
+          />
+          <Input
+            label="Alamat sekolah"
+            id="school-address"
+            value={address}
+            onChange={(event) => setAddress(event.target.value)}
+            maxLength={500}
+          />
+          <Button type="submit" disabled={busy} fullWidth>
+            Simpan sekolah
+          </Button>
+        </fieldset>
+      </form>
+    </Card>
+  );
   return (
     <AdminFrame {...frame}>
       {error && <AdminMessage error message={error} />}
       {schools && (
         <AdminStats
           items={[
-            { label: 'Sekolah terdaftar', value: schools.length, icon: 'school' },
+            { label: 'Sekolah pada halaman ini', value: schools.length, icon: 'school' },
             {
-              label: 'Sekolah aktif',
+              label: 'Aktif pada halaman ini',
               value: schools.filter((s) => s.status === 'ACTIVE').length,
               icon: 'check',
             },
@@ -177,40 +316,35 @@ function AdminSchoolsScreenContent() {
       )}
       <div className="admin-schools-layout">
         <div className="admin-schools-main">
-          <Card className="admin-card admin-create-school">
-            <div className="admin-section-heading">
-              <Icon name="school" />
-              <h2>Tambah sekolah</h2>
-            </div>
-            <p className="admin-helper">Daftarkan sekolah sebelum menerbitkan token guru.</p>
-            <form onSubmit={(event) => void addSchool(event)}>
-              <fieldset disabled={busy} className="admin-form-fields">
-                <Input
-                  label="Kode sekolah"
-                  id="school-code"
-                  value={code}
-                  onChange={(event) => setCode(event.target.value)}
-                  minLength={2}
-                  maxLength={32}
-                  pattern="[a-zA-Z0-9]+(-[a-zA-Z0-9]+)*"
-                  required
-                  helper="Huruf/angka dan tanda hubung; kapitalisasi tetap disimpan."
-                />
-                <Input
-                  label="Nama sekolah"
-                  id="school-name"
-                  value={name}
-                  onChange={(event) => setName(event.target.value)}
-                  maxLength={120}
-                  required
-                />
-                <Button type="submit" disabled={busy} fullWidth>
-                  Simpan sekolah
-                </Button>
-              </fieldset>
-            </form>
-          </Card>
+          {operationsRole ? (
+            <details className="operations-create-disclosure">
+              <summary>
+                <Icon name="school" /> Tambah sekolah
+              </summary>
+              {schoolForm}
+            </details>
+          ) : (
+            schoolForm
+          )}
           <section className="admin-school-list" aria-label="Daftar sekolah">
+            <form
+              onSubmit={(event) => {
+                event.preventDefault();
+                setFilter(search.trim());
+                setOffset(0);
+              }}
+            >
+              <Input
+                label="Cari sekolah"
+                id="school-search"
+                value={search}
+                onChange={(event) => setSearch(event.target.value)}
+                maxLength={120}
+              />
+              <Button variant="secondary" type="submit">
+                Cari sekolah
+              </Button>
+            </form>
             <div className="admin-section-heading">
               <h2>Sekolah terdaftar</h2>
               {schools && <Badge variant="default">{schools.length} sekolah</Badge>}
@@ -228,7 +362,7 @@ function AdminSchoolsScreenContent() {
               </Card>
             ) : (
               <ul className="admin-school-rows">
-                {schoolPage.items.map((school) => (
+                {schools.slice(0, 5).map((school) => (
                   <li key={school.id}>
                     <button
                       className="admin-school-row"
@@ -236,8 +370,11 @@ function AdminSchoolsScreenContent() {
                       disabled={busy}
                       aria-pressed={selected === school.id}
                       onClick={() => {
+                        if (selected === school.id) return;
                         setSelected(school.id);
-                        setEditName(school.name);
+                        setSelectedSchool(null);
+                        setDetailError('');
+                        setTokenOffset(0);
                         setIssued(null);
                         setTokens(null);
                         setTokenError('');
@@ -259,17 +396,37 @@ function AdminSchoolsScreenContent() {
                 ))}
               </ul>
             )}
-            {schools && !schoolError && (
-              <AdminPagination {...schoolPage.pagination} disabled={busy} label="Halaman sekolah" />
-            )}
+            <AdminPagination
+              offset={offset}
+              hasNext={nextOffset !== null}
+              disabled={busy || schools === null}
+              onChange={setOffset}
+              label="Halaman sekolah"
+              previousLabel="Sekolah sebelumnya"
+              nextLabel="Sekolah berikutnya"
+            />
           </section>
         </div>
         <aside className="admin-school-context" aria-label="Detail sekolah dan token">
-          {current ? (
+          {detailError ? (
+            <AdminMessage error message={detailError} retry={retry} />
+          ) : selected && (detailLoading || !current) ? (
+            <AdminLoading message="Memuat detail sekolah…" />
+          ) : current ? (
             <Card className="admin-card admin-school-detail">
               <span className="admin-eyebrow">Sekolah dipilih</span>
               <h2>{current.name}</h2>
               <p>Status: {current.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}</p>
+              <p>Alamat: {current.address ?? 'Belum dicatat'}</p>
+              <p>
+                <Link href={`/admin/operations?schoolId=${current.id}&role=TEACHER`}>
+                  Lihat Guru sekolah
+                </Link>{' '}
+                ·{' '}
+                <Link href={`/admin/operations?schoolId=${current.id}&view=classes`}>
+                  Lihat kelas sekolah
+                </Link>
+              </p>
               <form onSubmit={(event) => void saveName(event)}>
                 <fieldset disabled={busy} className="admin-form-fields">
                   <Input
@@ -280,8 +437,15 @@ function AdminSchoolsScreenContent() {
                     maxLength={120}
                     required
                   />
+                  <Input
+                    label="Ubah alamat"
+                    id="edit-school-address"
+                    value={editAddress}
+                    onChange={(event) => setEditAddress(event.target.value)}
+                    maxLength={500}
+                  />
                   <Button variant="secondary" type="submit" disabled={busy} fullWidth>
-                    Simpan nama
+                    Simpan perubahan
                   </Button>
                 </fieldset>
               </form>
@@ -341,27 +505,44 @@ function AdminSchoolsScreenContent() {
                   <p className="admin-empty-inline">Belum ada token.</p>
                 ) : (
                   <ul className="admin-token-list">
-                    {tokenPage.items.map((item) => (
+                    {tokens.slice(0, 5).map((item) => (
                       <li key={item.id} className="admin-token-row">
                         <div>
-                          <Badge
-                            variant={
-                              item.usedAt ||
-                              item.revokedAt ||
-                              new Date(item.expiresAt) <= new Date()
-                                ? 'default'
-                                : 'success'
-                            }
-                          >
-                            {item.usedAt
-                              ? 'Terpakai'
-                              : item.revokedAt
-                                ? 'Dicabut'
-                                : new Date(item.expiresAt) <= new Date()
-                                  ? 'Kedaluwarsa'
-                                  : 'Belum dipakai'}
+                          <Badge variant={item.status === 'AVAILABLE' ? 'success' : 'default'}>
+                            {tokenStatusLabels[item.status]}
                           </Badge>
                           <small className="admin-token-id">{item.id}</small>
+                          <small>
+                            Diterbitkan{' '}
+                            {new Date(item.createdAt).toLocaleString('id-ID', {
+                              timeZone: 'Asia/Jakarta',
+                            })}{' '}
+                            WIB
+                          </small>
+                          {item.usedAt && (
+                            <small>
+                              Dipakai{' '}
+                              {new Date(item.usedAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
+                              })}{' '}
+                              WIB oleh{' '}
+                              {item.usedByName ?? item.usedByUserId ?? 'Guru tidak tersedia'}
+                            </small>
+                          )}
+                          {item.usedByUserId && (
+                            <Link href={`/admin/operations?userId=${item.usedByUserId}`}>
+                              Detail Guru pemakai
+                            </Link>
+                          )}
+                          {item.revokedAt && (
+                            <small>
+                              Dicabut{' '}
+                              {new Date(item.revokedAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
+                              })}{' '}
+                              WIB
+                            </small>
+                          )}
                           <small>
                             Kedaluwarsa{' '}
                             {new Date(item.expiresAt).toLocaleString('id-ID', {
@@ -374,7 +555,7 @@ function AdminSchoolsScreenContent() {
                           <div className="admin-content-actions">
                             <Button
                               variant="secondary"
-                              disabled={busy}
+                              disabled={busy || current.status !== 'ACTIVE'}
                               onClick={() =>
                                 void run(async () =>
                                   setIssued(await reissueTeacherToken(token, current.id, item.id)),
@@ -401,13 +582,15 @@ function AdminSchoolsScreenContent() {
                     ))}
                   </ul>
                 )}
-                {tokens && !tokenError && (
-                  <AdminPagination
-                    {...tokenPage.pagination}
-                    disabled={busy}
-                    label="Halaman token Guru"
-                  />
-                )}
+                <AdminPagination
+                  offset={tokenOffset}
+                  hasNext={tokenNextOffset !== null}
+                  disabled={busy || tokens === null}
+                  onChange={setTokenOffset}
+                  label="Halaman token Guru"
+                  previousLabel="Token sebelumnya"
+                  nextLabel="Token berikutnya"
+                />
               </div>
             </Card>
           ) : (

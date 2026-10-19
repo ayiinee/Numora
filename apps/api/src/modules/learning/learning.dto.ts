@@ -2,6 +2,7 @@ import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { Allow, IsUUID } from 'class-validator';
 import type { AssessmentAnswer } from '@tka/assessment-engine';
 import { assessmentAnswerSchema } from './assessment-answer.schema';
+import { RichContentDto, PreviewOptionDto } from '../content/content-preview.dto';
 
 export class StartDrillDto {
   @ApiProperty({ format: 'uuid' })
@@ -57,6 +58,8 @@ export class LevelDto {
     description: 'Stars from the latest completed attempt, not best stars.',
   })
   latestStars?: number | null;
+  @ApiPropertyOptional({ type: Number, nullable: true, minimum: 0, maximum: 3 })
+  bestStars?: number | null;
 }
 
 export class CatalogDto {
@@ -85,6 +88,8 @@ export class DrillQuestionDto {
   type?: 'SINGLE_CHOICE' | 'MULTIPLE_CHOICE_MULTIPLE_ANSWER' | 'CATEGORY';
   @ApiPropertyOptional({ ...assessmentAnswerSchema, nullable: true }) answer?: AssessmentAnswer;
   @ApiPropertyOptional({ type: [OptionDto] }) categories?: OptionDto[];
+  @ApiPropertyOptional({ type: RichContentDto }) richStem?: RichContentDto;
+  @ApiPropertyOptional({ type: [PreviewOptionDto] }) richOptions?: PreviewOptionDto[];
   @ApiProperty({ format: 'uuid' }) questionInstanceId!: string;
   @ApiProperty() stem!: string;
   @ApiProperty({ type: [OptionDto] }) options!: OptionDto[];
@@ -138,6 +143,8 @@ export class ReviewedQuestionDto extends DrillQuestionDto {
   statementReview?: ReviewStatementDto[];
   @ApiProperty({ type: String, nullable: true }) correctOptionId!: string | null;
   @ApiProperty() explanation!: string;
+  @ApiPropertyOptional({ type: RichContentDto }) richExplanation?: RichContentDto;
+  @ApiPropertyOptional() fullyCorrect?: boolean;
 }
 export class RecommendedVideoDto {
   @ApiProperty({ format: 'uuid' }) id!: string;

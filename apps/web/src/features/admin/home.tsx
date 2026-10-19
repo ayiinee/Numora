@@ -17,6 +17,14 @@ export function AdminHomeScreen() {
     if (state.status === 'ready' && state.profile.role !== 'ADMIN') {
       router.replace(destination(state.profile));
     }
+    if (
+      state.status === 'ready' &&
+      state.profile.role === 'ADMIN' &&
+      state.profile.status === 'ACTIVE'
+    ) {
+      if (state.profile.adminRole === 'CONTENT_DATA_MODERATION') router.replace('/admin/content');
+      if (state.profile.adminRole === 'OPERATIONS') router.replace('/admin/schools');
+    }
   }, [router, state]);
 
   const profile =
@@ -24,6 +32,8 @@ export function AdminHomeScreen() {
       ? state.profile
       : null;
   const modules = adminNavigation(profile).filter(({ href }) => href !== '/admin');
+  if (profile?.adminRole === 'CONTENT_DATA_MODERATION' || profile?.adminRole === 'OPERATIONS')
+    return null;
   return (
     <AdminFrame
       title="Ringkasan Admin"

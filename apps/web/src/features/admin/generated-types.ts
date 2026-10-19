@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type ImportBodyDto = { "target"?: PackageTargetDto; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
+export type ImportBodyDto = { "target"?: PackageTargetDto; "expectedSourceVersionId"?: string; "revisionReason"?: string; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
 export type UploadSummaryDto = { "id": string; "fileName": string; "createdAt": string; "actorName": string; "revision": number; "state": string; "status": string; "questionCount": number; "validationResult"?: string; "title": string | null; "assessmentType": string | null; "packageId": string | null; "error": string | null; };
 
@@ -81,11 +81,43 @@ export type ExcelIssueDto = { "sheet": string; "row": number; "cell": string; "c
 
 export type ExcelMediaDto = { "url"?: string; "externalId": string; "assetId": string; "base64": string; };
 
+export type PretestDraftDto = { "familyCode": string; "packageVersion": number; "name": string; "chapterId": string; "blueprintVersionId"?: Record<string, unknown> | null; "questionVersionIds": (string)[]; };
+
+export type PretestEditDto = { "name": string; "blueprintVersionId"?: Record<string, unknown> | null; "questionVersionIds": (string)[]; };
+
+export type PretestReviewDto = { "reason": string; };
+
+export type PretestDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "chapterId": string; "blueprintVersionId": string | null; "state": "DRAFT" | "REVIEWED" | "ARCHIVED"; "manifestDigest": string | null; "questionVersionIds": (string)[]; "reviewBlockers": (string)[]; "publicationBlockers": (string)[]; };
+
+export type PretestsDto = { "items": (PretestDto)[]; };
+
+export type PretestBlueprintDto = { "id": string; "code": string; "version": number; "approvalReference": string; "approvedAt": string; };
+
+export type PretestBlueprintsDto = { "items": (PretestBlueprintDto)[]; };
+
+export type AdminAssessmentPolicyDto = { "id": string; "code": string; "version": number; "assessmentType": "DRILL" | "TRYOUT"; "approvedByUserId": string | null; "approvedAt": string | null; "approvalReference": string; };
+
+export type AdminAssessmentPoliciesDto = { "items": (AdminAssessmentPolicyDto)[]; };
+
+export type PublishTryoutPackageDto = { "curriculumApprovalReference"?: string; "scoringPolicyVersionId": string; "releaseAt"?: string; "durationSeconds"?: 600; };
+
+export type ReviewContentDto = { "status": "READY" | "REVISION" | "ARCHIVED"; "expectedStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reason": string; };
+
+export type AdminReportDetailDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; "question": ContentVersionDetailDto | null; "video": AdminVideoReportTargetDto | null; "revisionQuestionVersionId": string | null; };
+
+export type AdminVideoReportTargetDto = { "title": string; "url": string; "source": string; "videoId": string; "subchapterId": string; "recommendationOrder": number; "evidence": "REPORT_SNAPSHOT" | "CURRENT_METADATA"; };
+
+export type ContentReadinessDto = { "canReviewReady": boolean; "contentBlockers": (string)[]; "publicationBlockers": (string)[]; };
+
+export type ContentReviewEventDto = { "id": string; "actorId": string | null; "at": string; "status": string; "reason": string; };
+
+export type ContentVersionDetailDto = { "reviews": (ContentReviewEventDto)[]; "id": string; "questionId": string; "versionNumber": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "revisedFromId": string | null; "sourceNamespace": string | null; "reviewedByUserId": string | null; "reviewedAt": string | null; "payload": Record<string, unknown>; "readiness": ContentReadinessDto; };
+
 export type CreateMediaUploadDto = { "externalId": string; "assetId": string; "contentVersion"?: number; "contentType": "image/png" | "image/jpeg" | "image/webp"; "byteLength": number; "sha256": string; };
 
 export type MediaUploadReceiptDto = { "uploadId": string; "status": "PENDING" | "VERIFIED"; "externalId": string; "assetId": string; "bucket": string; "objectKey": string; "contentType": string; "byteLength": number; "sha256": string; "verifiedAt": string | null; };
 
-export type MediaUploadReservationDto = { "uploadId": string; "status": "PENDING" | "VERIFIED"; "externalId": string; "assetId": string; "bucket": string; "objectKey": string; "contentType": string; "byteLength": number; "sha256": string; "verifiedAt": string | null; "uploadUrl": string | null; "method": "PUT" | null; "headers": Record<string, unknown> | null; "expiresAt": string; };
+export type MediaUploadReservationDto = { "uploadId": string; "status": "PENDING" | "VERIFIED"; "externalId": string; "assetId": string; "bucket": string; "objectKey": string; "contentType": string; "byteLength": number; "sha256": string; "verifiedAt": string | null; "uploadUrl": string | null; "method": "PUT" | null; "headers": Record<string, string> | null; "expiresAt": string; };
 
 export type ImportItemDto = { "issues"?: (ImportIssueDto)[]; "externalId": string; "canImportDraft": boolean; "canPreview": boolean; "blockers": (string)[]; "outcome": "VALIDATED" | "CREATED" | "CREATED_REVISION" | "SKIPPED_UNCHANGED" | "INVALID"; "questionVersionId": string | null; "change"?: "ADD" | "REVISE" | "KEEP" | "REUSE" | "INVALID"; };
 
@@ -121,9 +153,41 @@ export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "num
 
 export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
+export type AdminUserDetailDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; "email": string; "affiliation": "MANDIRI" | "SCHOOL" | null; "teacherVerified": boolean | null; };
+
+export type AdminMembershipDto = { "id": string; "schoolId": string; "schoolName": string; "classId": string | null; "className": string | null; "startedAt": string; "endedAt": string | null; "active": boolean; };
+
+export type AdminMembershipsDto = { "items": (AdminMembershipDto)[]; "nextOffset": number | null; };
+
+export type AdminRosterMemberDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; "membershipId": string; "joinedAt": string; "leftAt": string | null; };
+
+export type AdminRosterDto = { "items": (AdminRosterMemberDto)[]; "nextOffset": number | null; };
+
+export type AdminStructureSchoolDto = { "id": string; "name": string; "code": string; "status": "ACTIVE" | "INACTIVE"; "classCount": number; "activeTeacherCount": number; "availableCredentialCount": number; "usedCredentialCount": number; "expiredCredentialCount": number; "revokedCredentialCount": number; "studentCount": number; };
+
+export type AdminStructureSchoolsDto = { "items": (AdminStructureSchoolDto)[]; "nextOffset": number | null; };
+
+export type AdminStructureClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "studentCount": number; "teacherActive": boolean; "createdAt": string; "archivedAt": string | null; };
+
+export type AdminStructureClassesDto = { "items": (AdminStructureClassDto)[]; "nextOffset": number | null; };
+
+export type AdminAccountDto = { "id": string; "displayName": string; "email": string; "adminRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
+
+export type AdminAccountsDto = { "items": (AdminAccountDto)[]; "nextOffset": number | null; };
+
+export type AdminInvitationDto = { "id": string; "email": string; "displayName": string; "targetRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; "status": "RESERVED" | "SENDING" | "INVITED" | "FAILED" | "ACCEPTED" | "CANCELLED"; "userId": string | null; "failureCode": string | null; "createdAt": string; "updatedAt": string; };
+
+export type AdminRecoveryDto = { "id": string; "status": "RESERVED" | "SENDING" | "SENT" | "FAILED"; "failureCode": string | null; };
+
+export type AdminInvitationsDto = { "items": (AdminInvitationDto)[]; "nextOffset": number | null; };
+
+export type InviteAdminDto = { "email": string; "displayName": string; "adminRole": "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; };
+
+export type UpdateAdminAccountDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION"; "status"?: "ACTIVE" | "DISABLED"; };
+
 export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; };
 
-export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
+export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "teacherActive": boolean; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
 
 export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": number | null; };
 
@@ -131,7 +195,7 @@ export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
 export type AdminVersionDto = { "sourceName"?: string | null; "sourceReference"?: string | null; "sourceNamespace"?: string | null; "sourceFileName"?: string | null; "usageType"?: "DRILL" | "PRETEST" | "TRYOUT" | null; "sourceQuestionId"?: string | null; "imported"?: boolean; "id": string; "questionId": string; "primaryCompetencyId": string | null; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string | null; "contentStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
 
-export type AdminVersionsDto = { "items": (AdminVersionDto)[]; };
+export type AdminVersionsDto = { "items": (AdminVersionDto)[]; "nextOffset"?: number | null; };
 
 export type AdminVideoDto = { "id": string; "mappingId": string; "subchapterId": string; "title": string; "url": string; "source": string; "recommendationOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
 
@@ -167,9 +231,21 @@ export type UpdateVideoDto = { "title"?: string; "url"?: string; "source"?: stri
 
 export type AdminReportDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; };
 
-export type AdminReportsDto = { "items": (AdminReportDto)[]; };
+export type AdminReportsDto = { "items": (AdminReportDto)[]; "nextOffset": number | null; };
 
-export type ResolveReportDto = { "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
+export type ResolveReportDto = { "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
+
+export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "STUDENTS" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
+
+export type AdminAnalyticsDto = { "generatedAt": string; "source": "POSTGRESQL"; "metrics": (AdminAnalyticsMetricDto)[]; };
+
+export type IrtApprovedConfigurationDto = { "approvalId": string; "digest": string; "code": string; "version": number; "kind": string; "contextId": string | null; "approvedAt": string; };
+
+export type IrtBatchHealthDto = { "id": string; "packageId": string; "title": string; "status": string; "contextId": string | null; "closesAt": string; "dueAt": string; "overdue": boolean; "activeAttemptCount": number; "finalizedAttemptCount": number; "publicationMode": string | null; "publicationVersion": number | null; "publishedAt": string | null; "prepareBlockers": (string)[]; "publicationBlockers": (string)[]; };
+
+export type IrtOperationalOptionsDto = { "enabled": boolean; "configurations": (IrtApprovedConfigurationDto)[]; };
+
+export type IrtBatchHealthListDto = { "items": (IrtBatchHealthDto)[]; };
 
 export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersionId": string; "modelVersion": string; "batchStatus": string; "sampleSize": number; "dataStatus": string; "difficultyB": string | null; "discriminationA": string | null; "guessingC": string | null; };
 
@@ -183,7 +259,7 @@ export type IrtRequestExecutionDto = { "id": string; "status": "RUNNING" | "SUCC
 
 export type IrtRequestArtifactDto = { "id": string; "digest": string; "scientificDecision": string; };
 
-export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
+export type IrtRequestDto = { "id": string; "contractVersion": 3; "contextId": string; "configurationPins": (IrtConfigurationPinDto)[]; "packageId": string; "status": "PENDING" | "RUNNING" | "COMPLETED" | "FAILED" | "CANCELLED"; "inputDigest": string; "snapshotId": string; "snapshotDigest": string; "rowCount": number; "dispatchGeneration": number; "dueAt": string; "overdue": boolean; "acceptedExecutionId": string | null; "execution": IrtRequestExecutionDto | null; "failureCode": string | null; "artifacts": (IrtRequestArtifactDto)[]; };
 
 export type IrtRequestsDto = { "items": (IrtRequestDto)[]; };
 
@@ -195,7 +271,7 @@ export type AdminAuditDto = { "id": string; "actorUserId": string | null; "actio
 
 export type AdminAuditListDto = { "items": (AdminAuditDto)[]; };
 
-export type AdminDashboardDto = { "schools": number; "chapters": number; "questions": number; "readyVersions": number; "openReports": number; };
+export type AdminDashboardDto = { "schools": number; "chapters": number | null; "questions": number | null; "readyVersions": number | null; "openReports": number | null; };
 
 export type CreateTryoutDraftDto = { "familyCode": string; "packageVersion": number; "name": string; "questionVersionIds": (string)[]; };
 
@@ -206,6 +282,8 @@ export type AdminTryoutDraftDto = { "id": string; "familyCode": string; "package
 export type AdminTryoutDraftsDto = { "items": (AdminTryoutDraftDto)[]; };
 
 export type CreateDrillPackageDto = { "familyCode": string; "packageVersion": number; "name": string; "levelId": string; "variantIndex": number; "scoringPolicyVersionId": string; "questionVersionIds": (string)[]; };
+
+export type PublishDrillPackageDto = { "curriculumApprovalReference"?: string; };
 
 export type UpdateDrillPackageDto = { "name": string; "scoringPolicyVersionId": string; "questionVersionIds": (string)[]; };
 

@@ -210,10 +210,14 @@ integration('Student typed answer HTTP → PostgreSQL and published result reads
     ).toBe(200);
     expect((await (await call(path)).json()).questions[1].answer).toBeNull();
     for (const index of [1, 2]) {
-      expect((await call(path + '/answers/' + itemIds[index], 'PATCH', { answer: null })).status).toBe(200);
+      expect(
+        (await call(path + '/answers/' + itemIds[index], 'PATCH', { answer: null })).status,
+      ).toBe(200);
       expect((await (await call(path)).json()).questions[index].answer).toBeNull();
     }
-    expect((await call(path + '/answers/' + itemIds[2], 'PATCH', { answer: answers[2] })).status).toBe(200);
+    expect(
+      (await call(path + '/answers/' + itemIds[2], 'PATCH', { answer: answers[2] })).status,
+    ).toBe(200);
     const submission = await call(path + '/submit', 'POST');
     expect(submission.status).toBe(503);
     expect((await submission.json()).code).toBe('PGK_SCORING_PENDING');

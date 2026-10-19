@@ -1,0 +1,859 @@
+/* Owner-supplied AdminLTE reference, 6 October 2026. Shared opt-in theme for Content and Operations; Super retains its theme. */
+.admin-workspace-shell {
+  --color-primary: #6200d9;
+  --color-primary-hover: #5000b5;
+  --color-primary-strong: #5000b5;
+  --color-primary-light: #f1eaff;
+  --color-secondary-light: #f7f8fa;
+  --color-selected: #f1eaff;
+  --color-bg: #f7f8fa;
+  --color-surface-muted: #f7f8fa;
+  --color-surface-cool: #f2f4f8;
+  --color-surface: #ffffff;
+  --color-surface-raised: #ffffff;
+  --color-text: #30333c;
+  --color-text-strong: #1e2028;
+  --color-text-muted: #626875;
+  --color-warning: #885800;
+  --color-border: #d9dce5;
+  --color-border-light: #e9ebf1;
+  --radius-sm: 6px;
+  --radius-md: 8px;
+  --radius-lg: 12px;
+  --radius-xl: 12px;
+  --card-shadow: 0 2px 6px rgb(30 32 40 / 3%);
+  background: var(--color-bg);
+  color: var(--color-text);
+  font-size: 14px;
+  --card-padding: 24px;
+  --card-radius: var(--radius-lg);
+}
+.admin-workspace-shell .app-sidebar {
+  border-color: var(--color-border-light);
+  padding: 0 12px 18px;
+  overflow-y: auto;
+}
+.admin-workspace-shell .app-brand {
+  min-height: 68px;
+  display: flex;
+  align-items: center;
+  margin: 0 8px 24px;
+}
+.admin-workspace-shell .nav-caption {
+  font-size: 10px;
+  padding: 0 12px;
+  letter-spacing: 1px;
+}
+.admin-workspace-shell .app-sidebar nav {
+  gap: 4px;
+}
+.admin-workspace-shell .app-sidebar nav a {
+  font-size: 13px;
+  min-height: 48px;
+  gap: 10px;
+  padding: 10px 12px;
+  border-radius: var(--radius-sm);
+}
+.admin-workspace-shell .app-sidebar nav a svg {
+  width: 20px;
+  height: 20px;
+}
+.admin-workspace-shell .sidebar-account {
+  margin-top: auto;
+}
+.admin-workspace-shell .app-content {
+  max-width: 1440px;
+  padding: 24px 28px 40px;
+}
+.admin-workspace-shell .app-topbar.numora-top-bar--context {
+  min-height: 68px;
+  padding: 10px 28px;
+  background: var(--color-surface);
+  color: var(--color-text);
+}
+.admin-workspace-shell .desktop-context {
+  font-size: 13px;
+}
+.admin-workspace-shell .topbar-actions {
+  gap: 20px;
+}
+.admin-workspace-shell .content-topbar-account {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+}
+.admin-workspace-shell .content-topbar-account strong {
+  display: block;
+  max-width: 200px;
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  font-size: 12px;
+}
+.admin-workspace-shell .content-topbar-account small {
+  font-size: 10px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .account-avatar {
+  width: 34px;
+  height: 34px;
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+.admin-workspace-shell .app-topbar .text-button {
+  font-size: 12px;
+  min-height: 44px;
+}
+.admin-workspace-shell .app-topbar :focus-visible {
+  outline-color: var(--color-primary);
+}
+.admin-workspace-shell .admin-redesign-frame {
+  gap: 20px;
+}
+.admin-workspace-shell .admin-page-header {
+  background: transparent;
+  color: var(--color-text);
+  border-radius: 0;
+  box-shadow: none;
+  padding: 0 0 24px;
+  border-bottom: 1px solid var(--color-border);
+  align-items: center;
+}
+.admin-workspace-shell .admin-header-icon {
+  width: 48px;
+  height: 48px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  color: var(--color-primary);
+}
+.admin-workspace-shell .admin-eyebrow,
+.admin-workspace-shell .content-kicker {
+  font-size: 10px;
+  line-height: 1.6;
+  font-weight: 750;
+  letter-spacing: 1px;
+  color: var(--color-primary-strong);
+  text-transform: uppercase;
+}
+.admin-workspace-shell .admin-page-header h1 {
+  font-size: clamp(24px, 3vw, 30px);
+  margin: 6px 0;
+}
+.admin-workspace-shell .admin-page-header p {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  max-width: 70ch;
+}
+.admin-workspace-shell h2 {
+  font-size: 19px;
+  line-height: 1.4;
+}
+.admin-workspace-shell h3 {
+  font-size: 15px;
+  line-height: 1.5;
+}
+.admin-workspace-shell p {
+  line-height: 1.75;
+}
+.admin-workspace-shell .content-welcome {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 24px;
+  --card-background: linear-gradient(110deg, var(--color-surface), var(--color-primary-light));
+  --card-padding: 28px;
+  border: 1px solid var(--color-border-light);
+  padding: 28px;
+}
+.admin-workspace-shell .content-welcome h2 {
+  font-size: clamp(22px, 2.6vw, 28px);
+  letter-spacing: -0.6px;
+  margin: 8px 0;
+}
+.admin-workspace-shell .content-welcome p {
+  max-width: 68ch;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.admin-workspace-shell .content-primary-link {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 10px;
+  padding: 12px 18px;
+  min-height: 44px;
+  border-radius: var(--radius-sm);
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+  font-size: 12px;
+  font-weight: 700;
+  text-decoration: none;
+  flex-shrink: 0;
+}
+.admin-workspace-shell .content-primary-link:hover {
+  background: var(--color-primary-hover);
+}
+.admin-workspace-shell .content-section-title {
+  margin-bottom: 16px;
+}
+.admin-workspace-shell .content-section-title p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin-top: 4px;
+}
+.admin-workspace-shell .content-workflow {
+  list-style: none;
+  margin: 0;
+  padding: 0;
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 12px;
+}
+.admin-workspace-shell .content-workflow li {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+  padding: 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+}
+.admin-workspace-shell .content-step-number {
+  color: var(--color-primary);
+  font-size: 12px;
+  font-weight: 800;
+  background: var(--color-primary-light);
+  width: 32px;
+  height: 32px;
+  display: grid;
+  place-items: center;
+  border-radius: var(--radius-sm);
+  margin-bottom: 4px;
+}
+.admin-workspace-shell .content-workflow p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-workflow a {
+  margin-top: auto;
+  padding-top: 8px;
+  min-height: 44px;
+  color: var(--color-primary-strong);
+  font-size: 12px;
+  font-weight: 750;
+}
+.admin-workspace-shell .content-workflow li[aria-current] {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-sm);
+}
+.admin-workspace-shell .content-tool-card {
+  --card-shadow: none;
+  gap: 10px;
+}
+.admin-workspace-shell .content-tool-card p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-tool-card a {
+  text-decoration: none;
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+}
+.admin-workspace-shell .content-tool-card:has(a:hover) {
+  border-color: var(--color-primary);
+}
+.admin-workspace-shell .content-boundary {
+  display: flex;
+  gap: 16px;
+  --card-background: var(--color-surface-cool);
+}
+.admin-workspace-shell .content-boundary > svg {
+  flex-shrink: 0;
+  color: var(--color-primary);
+}
+.admin-workspace-shell .content-boundary p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+  margin: 8px 0;
+}
+.admin-workspace-shell .content-boundary a {
+  color: var(--color-primary);
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  font-size: 12px;
+  font-weight: 700;
+}
+.admin-workspace-shell .admin-content-nav {
+  flex-wrap: nowrap;
+  overflow-x: auto;
+  scrollbar-width: thin;
+  gap: 6px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  padding: 8px;
+  border-radius: var(--radius-md);
+}
+.admin-workspace-shell .admin-view-button {
+  flex: 0 0 auto;
+  box-shadow: none;
+  font-size: 12px;
+  padding: 10px 12px;
+  min-height: 44px;
+}
+.admin-workspace-shell .admin-view-button .numora-button__text {
+  white-space: nowrap;
+}
+.admin-workspace-shell .numora-button {
+  --shadow-button: none;
+  --shadow-button-hover: none;
+}
+.admin-workspace-shell .admin-view-button:not([aria-current]) {
+  background: transparent;
+  border-color: transparent;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .admin-view-button:not([aria-current]):hover {
+  background: var(--color-surface-muted);
+  color: var(--color-primary);
+}
+.admin-workspace-shell .content-view-intro {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+}
+.admin-workspace-shell .content-view-intro h2 {
+  margin: 0 0 6px;
+}
+.admin-workspace-shell .content-view-intro .content-kicker {
+  display: none;
+}
+.admin-workspace-shell .content-view-intro p {
+  max-width: 84ch;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.admin-workspace-shell .admin-stats {
+  gap: 12px;
+}
+.admin-workspace-shell .admin-stat {
+  flex-direction: row;
+  align-items: center;
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  box-shadow: none;
+}
+.admin-workspace-shell .admin-stat strong {
+  font-size: 24px;
+  color: var(--color-text-strong);
+}
+.admin-workspace-shell .admin-stat-icon {
+  border-radius: 50%;
+  width: 40px;
+  height: 40px;
+}
+.admin-workspace-shell .admin-stat:nth-child(2) .admin-stat-icon {
+  background: var(--color-success-light);
+  color: var(--color-success);
+}
+.admin-workspace-shell .admin-stat:nth-child(3) .admin-stat-icon {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.admin-workspace-shell .admin-stat > div > span {
+  font-size: 12px;
+}
+.admin-workspace-shell .admin-content-view {
+  gap: 20px;
+  align-items: start;
+}
+.admin-workspace-shell .admin-content-view > section {
+  min-width: 0;
+}
+.admin-workspace-shell .admin-content-view > section > h2 {
+  margin-bottom: 8px;
+}
+.admin-workspace-shell .admin-content-view > section > a {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  font-size: 12px;
+  color: var(--color-primary);
+}
+.admin-workspace-shell .monitoring-list {
+  gap: 12px;
+}
+.admin-workspace-shell .monitoring-notice,
+.admin-workspace-shell .content-import-card {
+  padding: 24px;
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface);
+  box-shadow: none;
+  border-radius: var(--radius-lg);
+}
+.admin-workspace-shell .admin-content-row {
+  padding: 18px 20px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.admin-workspace-shell .admin-content-row > strong {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.admin-workspace-shell .admin-content-row > small {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .admin-content-row > p {
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-question-summary {
+  display: grid;
+  gap: 8px;
+  min-width: 0;
+}
+.admin-workspace-shell .content-question-summary > strong {
+  font-size: 14px;
+  line-height: 1.7;
+}
+.admin-workspace-shell .content-question-summary > small {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-question-summary > ul {
+  padding-left: 20px;
+  font-size: 13px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .admin-content-actions {
+  gap: 8px;
+  padding-top: 8px;
+  border-top: 1px solid var(--color-border-light);
+}
+.admin-workspace-shell .content-status-pair {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.admin-workspace-shell .content-status-pair span,
+.admin-workspace-shell .content-item-status {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  padding: 3px 8px;
+  font-size: 11px;
+  font-weight: 650;
+  border-radius: 4px;
+  background: var(--color-surface-cool);
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-status-pair [data-status='READY'],
+.admin-workspace-shell .content-item-status[data-status='READY'] {
+  background: var(--color-success-light);
+  color: var(--color-success-text);
+}
+.admin-workspace-shell .content-status-pair [data-status='REVISION'],
+.admin-workspace-shell .content-item-status[data-status='REVISION'] {
+  background: var(--color-warning-light);
+  color: var(--color-warning);
+}
+.admin-workspace-shell .admin-content-actions a {
+  min-height: 44px;
+  display: inline-flex;
+  align-items: center;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+  font-size: 12px;
+}
+.admin-workspace-shell .admin-content-actions > span {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell form,
+.admin-workspace-shell .content-import-card {
+  display: grid;
+  gap: 16px;
+  min-width: 0;
+}
+.admin-workspace-shell form p,
+.admin-workspace-shell .content-import-card > p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell label {
+  display: grid;
+  gap: 8px;
+  font-size: 13px;
+  font-weight: 650;
+  min-width: 0;
+}
+.admin-workspace-shell label:has(input[type='checkbox']),
+.admin-workspace-shell label:has(input[type='radio']) {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-workspace-shell .app-content input:not([type='checkbox']):not([type='radio']),
+.admin-workspace-shell .app-content select,
+.admin-workspace-shell .app-content textarea {
+  width: 100%;
+  min-width: 0;
+  max-width: 100%;
+  padding: 12px;
+  min-height: 44px;
+  background: var(--color-surface);
+  color: var(--color-text);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  font: inherit;
+  font-weight: 500;
+}
+.admin-workspace-shell textarea {
+  resize: vertical;
+  line-height: 1.7;
+  min-height: 110px;
+}
+.admin-workspace-shell .app-content input:disabled,
+.admin-workspace-shell .app-content select:disabled,
+.admin-workspace-shell .app-content textarea:disabled {
+  background: var(--color-surface-muted);
+}
+.admin-workspace-shell fieldset {
+  min-width: 0;
+}
+.admin-workspace-shell form > fieldset:not(.admin-editor-fields),
+.admin-workspace-shell .admin-editor-fields > fieldset {
+  padding: 16px;
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 12px;
+}
+.admin-workspace-shell legend {
+  font-size: 12px;
+  padding: 0 6px;
+  font-weight: 700;
+}
+.admin-workspace-shell form .numora-button {
+  justify-self: start;
+}
+.admin-workspace-shell details {
+  font-size: 13px;
+  min-width: 0;
+}
+.admin-workspace-shell summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding: 12px 0;
+  font-weight: 700;
+  color: var(--color-primary-strong);
+}
+.admin-workspace-shell details[open] > summary {
+  margin-bottom: 12px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-workspace-shell details small {
+  display: block;
+  overflow-wrap: anywhere;
+  line-height: 1.8;
+}
+.admin-workspace-shell .content-media-disclosure {
+  padding: 12px 24px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+.admin-workspace-shell .content-editor-disclosure {
+  padding: 8px 20px;
+  background: var(--color-surface);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-lg);
+}
+.admin-workspace-shell .content-editor-disclosure > p {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-bottom: 16px;
+}
+.admin-workspace-shell .content-editor-disclosure > form {
+  border: 0;
+  padding: 0;
+  border-radius: 0;
+}
+.admin-workspace-shell .content-media-disclosure > p {
+  margin-bottom: 16px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-payload {
+  display: grid;
+  gap: 24px;
+}
+.admin-workspace-shell .content-payload section h3 {
+  margin-bottom: 12px;
+}
+.admin-workspace-shell .content-payload-meta {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+}
+.admin-workspace-shell .content-payload-meta span {
+  font-size: 11px;
+  padding: 4px 8px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 6px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-question-stem {
+  font-size: 16px;
+}
+.admin-workspace-shell .content-options {
+  list-style: none;
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  margin: 0;
+}
+.admin-workspace-shell .content-options li {
+  display: flex;
+  align-items: start;
+  gap: 12px;
+  padding: 12px 16px;
+  background: var(--color-surface-muted);
+  border-radius: var(--radius-sm);
+  font-size: 13px;
+}
+.admin-workspace-shell .content-options li > span:first-child {
+  font-weight: 800;
+  color: var(--color-primary);
+}
+.admin-workspace-shell .content-answer-section {
+  padding: 20px;
+  background: var(--color-surface-cool);
+  border-radius: var(--radius-md);
+}
+.admin-workspace-shell .content-answer-section dl > div {
+  display: flex;
+  gap: 16px;
+  font-size: 12px;
+}
+.admin-workspace-shell .content-answer-section dt {
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .content-answer-section dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.admin-workspace-shell pre {
+  overflow-x: auto;
+  max-width: 100%;
+  white-space: pre-wrap;
+  overflow-wrap: anywhere;
+  font-size: 11px;
+  padding: 16px;
+  background: var(--color-surface-muted);
+  border: 1px solid var(--color-border-light);
+  border-radius: var(--radius-sm);
+}
+.admin-workspace-shell .content-readiness {
+  padding: 20px;
+  border: 1px solid var(--color-border);
+  border-left: 3px solid var(--color-primary);
+  border-radius: var(--radius-sm);
+  display: grid;
+  gap: 12px;
+}
+.admin-workspace-shell .content-readiness p {
+  font-size: 12px;
+}
+.admin-workspace-shell .content-blocker-list {
+  padding: 0;
+  list-style: none;
+  display: grid;
+  gap: 12px;
+}
+.admin-workspace-shell .content-blocker-list li {
+  padding: 14px;
+  background: var(--color-warning-light);
+  border-radius: var(--radius-sm);
+}
+.admin-workspace-shell .content-blocker-list small {
+  display: block;
+  font-size: 10px;
+  color: var(--color-text-muted);
+  overflow-wrap: anywhere;
+  margin-top: 6px;
+}
+.admin-workspace-shell .content-metric {
+  display: grid;
+  gap: 12px;
+  border: 1px solid var(--color-border-light);
+}
+.admin-workspace-shell .content-metric strong {
+  font-size: 28px;
+  color: var(--color-text-strong);
+}
+.admin-workspace-shell .content-metric p {
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-workspace-shell .admin-panel {
+  display: grid;
+  gap: 20px;
+}
+.admin-workspace-shell .admin-panel > ul {
+  list-style: none;
+  padding: 0;
+  display: grid;
+  gap: 12px;
+}
+@media (min-width: 1200px) {
+  .admin-workspace-shell .content-workflow {
+    grid-template-columns: repeat(4, minmax(0, 1fr));
+  }
+  .admin-workspace-shell .admin-content-view[data-view='questions'] {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-workspace-shell .admin-content-view[data-view='questions'] > section {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .admin-workspace-shell .admin-content-view[data-view='questions'] > form,
+  .admin-workspace-shell .admin-content-view[data-view='questions'] > .content-editor-disclosure {
+    grid-column: 1;
+    grid-row: 2;
+  }
+}
+@media (min-width: 960px) {
+  .admin-workspace-shell .app-sidebar {
+    width: 224px;
+  }
+  .admin-workspace-shell .app-workspace {
+    margin-left: 224px;
+  }
+  .admin-workspace-shell .admin-content-row:has(> .content-question-summary) {
+    grid-template-columns: minmax(0, 1fr) 250px;
+    gap: 24px;
+  }
+  .admin-workspace-shell .content-question-summary + .admin-content-actions {
+    flex-direction: column;
+    align-items: stretch;
+    justify-content: center;
+    padding: 0 0 0 20px;
+    border-top: 0;
+    border-left: 1px solid var(--color-border-light);
+  }
+  .admin-workspace-shell .content-question-summary + .admin-content-actions > a {
+    justify-content: center;
+    text-decoration: none;
+    border: 1px solid var(--color-border);
+    border-radius: var(--radius-sm);
+  }
+}
+@media (max-width: 959px) {
+  .admin-workspace-shell .app-topbar.numora-top-bar--context {
+    padding-inline: 20px;
+  }
+  .admin-workspace-shell .content-menu-toggle {
+    margin-right: 10px;
+  }
+  .admin-workspace-shell .app-topbar .menu-toggle {
+    background: transparent;
+    border-color: transparent;
+    color: var(--color-text);
+  }
+  .admin-workspace-shell .mobile-menu {
+    padding: 12px 20px;
+  }
+  .admin-workspace-shell .content-topbar-account > div {
+    display: none;
+  }
+  .admin-workspace-shell .app-topbar .numora-brand {
+    color: var(--color-primary);
+  }
+}
+@media (min-width: 700px) {
+  .admin-workspace-shell .content-home .admin-home-grid {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+}
+@media (max-width: 699px) {
+  .admin-workspace-shell {
+    --card-padding: 20px;
+  }
+  .admin-workspace-shell .app-content {
+    padding: 20px 16px;
+  }
+  .admin-workspace-shell .app-topbar.numora-top-bar--context {
+    padding-inline: 12px;
+    gap: 6px;
+  }
+  .admin-workspace-shell .topbar-actions {
+    gap: 8px;
+  }
+  .admin-workspace-shell .content-menu-toggle {
+    margin-right: 2px;
+  }
+  .admin-workspace-shell .content-topbar-account {
+    display: none;
+  }
+  .admin-workspace-shell .content-view-intro {
+    gap: 12px;
+  }
+  .admin-workspace-shell .content-view-intro p {
+    font-size: 12px;
+  }
+  .admin-workspace-shell .admin-header-icon {
+    display: none;
+  }
+  .admin-workspace-shell .content-welcome,
+  .admin-workspace-shell .content-view-intro {
+    flex-direction: column;
+    align-items: stretch;
+  }
+  .admin-workspace-shell .content-welcome {
+    --card-padding: 20px;
+  }
+  .admin-workspace-shell .content-workflow {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-workspace-shell .content-import-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-workspace-shell .content-import-steps li {
+    padding: 14px;
+  }
+  .admin-workspace-shell .admin-stat {
+    flex-direction: column;
+    align-items: start;
+    padding: 12px;
+  }
+  .admin-workspace-shell .admin-stat strong {
+    font-size: 22px;
+  }
+  .admin-workspace-shell .admin-stat-icon {
+    width: 28px;
+    height: 28px;
+  }
+  .admin-workspace-shell .monitoring-notice,
+  .admin-workspace-shell .content-import-card {
+    padding: 20px;
+  }
+  .admin-workspace-shell .admin-content-nav {
+    white-space: normal;
+  }
+  .admin-workspace-shell .admin-view-button {
+    font-size: 12px;
+    padding: 8px 10px;
+  }
+  .admin-workspace-shell .content-boundary {
+    padding: 20px;
+  }
+}

@@ -1,6 +1,6 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { ApiProblem } from '@/lib/api';
+import { apiRequest, ApiProblem } from '@/lib/api';
 import { AdminContentScreen } from './content';
 import {
   createQuestion,
@@ -11,8 +11,22 @@ import {
   publishDrillPackage,
   resolveReport,
   updateTryoutDraft,
+  createTryoutDraft,
 } from './content-api';
 
+vi.mock('@/lib/api', async (original) => ({
+  ...(await original<object>()),
+  apiRequest: vi.fn(),
+}));
+
+vi.mock('./assessment-policy-selector', () => ({
+  AssessmentPolicySelector: ({ defaultValue = '' }: { defaultValue?: string }) => (
+    <label>
+      Versi kebijakan penilaian
+      <input name="scoringPolicyVersionId" required defaultValue={defaultValue} />
+    </label>
+  ),
+}));
 const context = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/admin/content',
@@ -31,6 +45,7 @@ vi.mock('./content-api', async (original) => ({
   publishDrillPackage: vi.fn(),
   resolveReport: vi.fn(),
   updateTryoutDraft: vi.fn(),
+  createTryoutDraft: vi.fn(),
 }));
 // Explicitly fictional UI test fixtures; no production login bypass or Supabase write.
 const data = {
@@ -98,6 +113,7 @@ const data = {
   },
   reports: {
     hasNext: false,
+    nextOffset: null,
     items: [
       {
         id: 'question-report-test',
@@ -191,13 +207,14 @@ beforeEach(() => {
       id: 'admin-test',
       role: 'ADMIN',
       status: 'ACTIVE',
-      adminRole: 'SUPER_ADMIN',
-      capabilities: ['CONTENT_MANAGE'],
+      capabilities: ['CONTENT_MANAGE', 'AUDIT_READ'],
       displayName: 'Admin test',
     },
     session: { access_token: 'test-token' },
   };
   vi.mocked(loadAdminWorkbench).mockResolvedValue(data);
+  vi.mocked(apiRequest).mockResolvedValue({ ...data.versions, nextOffset: null });
+  vi.mocked(createTryoutDraft).mockResolvedValue({ id: 'new-package-test' });
   vi.mocked(createQuestion).mockResolvedValue({ id: 'new-version-test' });
   vi.mocked(createDrillPackage).mockResolvedValue({ id: 'new-drill-test' });
   vi.mocked(updateDrillPackage).mockResolvedValue({ id: 'drill-package-test' });
@@ -211,52 +228,117 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Admin content UI', () => {
-  it('changes question pages without clearing the unsaved editor', async () => {
-    const versions = Array.from({ length: 6 }, (_, i) => ({
-      ...data.versions.items[0]!,
-      id: `version-${i}`,
-      stem: `Soal halaman ${i}`,
+  it('assembles all thirty Tryout questions across independent selector pages without losing selection', async () => {
+    const questions = Array.from({ length: 30 }, (_, i) => ({
+      ...data.versions.items[0],
+      id: `ready-${i}`,
+      stem: `Question ${i + 1}`,
     }));
-    vi.mocked(loadAdminWorkbench).mockImplementation(async (_token, offset) => ({
-      ...data,
-      versions: { items: versions.slice(offset, offset + 5), hasNext: offset === 0 },
-    }));
-    render(<AdminContentScreen />);
-    await screen.findByText('Soal halaman 0');
-    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
-    fireEvent.click(screen.getAllByRole('button', { name: 'Buat revisi / varian' })[0]!);
-    fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
-      target: { value: 'Draf belum disimpan' },
+    vi.mocked(apiRequest).mockImplementation(async (path) =>
+      path.includes('offset=20')
+        ? { items: questions.slice(20), nextOffset: null }
+        : { items: questions.slice(0, 20), nextOffset: 20 },
+    );
+    render(<AdminContentScreen initialView="packages" />);
+    await screen.findByLabelText(/Question 1$/);
+    screen.getAllByRole('checkbox').forEach((item) => fireEvent.click(item));
+    fireEvent.click(screen.getByRole('button', { name: 'Soal berikutnya' }));
+    await screen.findByLabelText(/Question 30$/);
+    screen.getAllByRole('checkbox').forEach((item) => fireEvent.click(item));
+    expect(screen.getByText('Versi READY (30 versi dipilih)')).toBeTruthy();
+    fireEvent.click(screen.getByRole('button', { name: 'Soal sebelumnya' }));
+    expect(((await screen.findByLabelText(/Question 1$/)) as HTMLInputElement).checked).toBe(true);
+    fireEvent.change(screen.getByLabelText('Kode keluarga paket'), {
+      target: { value: 'TEST-30' },
     });
-    fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
-    await screen.findByText('Soal halaman 5');
-    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(1);
-    expect(
-      (screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)') as HTMLTextAreaElement)
-        .value,
-    ).toBe('Draf belum disimpan');
-    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, '', true);
+    fireEvent.change(screen.getByLabelText('Versi paket'), { target: { value: '1' } });
+    fireEvent.change(screen.getByLabelText('Nama paket'), {
+      target: { value: 'Thirty questions' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
+    await waitFor(() =>
+      expect(createTryoutDraft).toHaveBeenCalledWith('test-token', {
+        familyCode: 'TEST-30',
+        packageVersion: 1,
+        name: 'Thirty questions',
+        questionVersionIds: questions.map((q) => q.id),
+      }),
+    );
   });
-  it('loads Content Admin workbench without audit access or audit controls', async () => {
+  it('restricts the level form to the five levels specified by the PRD', async () => {
+    render(<AdminContentScreen initialView="curriculum" />);
+    fireEvent.change(await screen.findByLabelText('Jenis materi'), { target: { value: 'LEVEL' } });
+    const field = screen.getByLabelText('Nomor level') as HTMLInputElement;
+    expect(field.max).toBe('5');
+    fireEvent.change(field, { target: { value: '6' } });
+    expect(field.validity.rangeOverflow).toBe(true);
+  });
+  it('shows six demo taxonomy entries in pages of five, retains real material and allows inspecting remaining fixtures', async () => {
     context.state.profile = {
-      id: 'admin-test',
-      role: 'ADMIN',
-      status: 'ACTIVE',
+      ...(context.state.profile as object),
       adminRole: 'CONTENT_DATA_MODERATION',
-      capabilities: ['CONTENT_MANAGE'],
-      displayName: 'Admin test',
     };
     vi.mocked(loadAdminWorkbench).mockResolvedValue({
       ...data,
-      audit: { items: [], hasNext: false },
+      curriculum: {
+        items: Array.from({ length: 9 }, (_, i) => ({
+          id: `material-${i}`,
+          kind: 'CHAPTER' as const,
+          parentId: null,
+          code: i === 8 ? 'CURRICULUM-REAL' : `DEMO-MATERIAL-${i}`,
+          name: i === 8 ? 'Materi resmi' : `Materi demo ${i + 1}`,
+          displayOrder: i,
+          status: 'DRAFT' as const,
+        })),
+      },
     });
+    render(<AdminContentScreen initialView="curriculum" />);
+    const list = await screen.findByRole('list', { name: 'Daftar materi' });
+    const pager = screen.getByRole('navigation', { name: 'Halaman materi' });
+    expect(within(list).getAllByRole('listitem')).toHaveLength(5);
+    expect(screen.getByText(/7 entri materi/)).toBeTruthy();
+    fireEvent.click(within(pager).getByRole('button', { name: 'Berikutnya' }));
+    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
+    expect(within(list).getByText('Materi demo 6')).toBeTruthy();
+    expect(within(list).getByText('Materi resmi')).toBeTruthy();
+    expect(within(pager).getByRole('button', { name: 'Berikutnya' }).hasAttribute('disabled')).toBe(
+      true,
+    );
+    fireEvent.click(screen.getByRole('checkbox', { name: /Tampilkan seluruh materi demo/ }));
+    expect(screen.getByText(/9 entri materi/)).toBeTruthy();
+    expect(within(pager).getByText('Halaman 1')).toBeTruthy();
+  });
+  it('uses five-item bank pages and server nextOffset so a full final page cannot open an empty page', async () => {
+    context.state.profile = {
+      ...(context.state.profile as object),
+      adminRole: 'CONTENT_DATA_MODERATION',
+    };
+    vi.mocked(loadAdminWorkbench).mockImplementation(async (_t, offset) => ({
+      ...data,
+      versions: {
+        items: Array.from({ length: 5 }, (_, i) => ({
+          ...data.versions.items[0]!,
+          id: `version-${offset + i}`,
+          stem: `Soal ${offset + i + 1}`,
+        })),
+        nextOffset: offset === 0 ? 5 : null,
+        hasNext: offset === 0,
+      },
+    }));
     render(<AdminContentScreen />);
-    await screen.findByRole('button', { name: 'Verifikasi & riwayat' });
-    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
-    expect(screen.queryByRole('button', { name: 'Audit' })).toBeNull();
-    fireEvent.click(screen.getByRole('button', { name: 'Verifikasi & riwayat' }));
-    expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
-    expect(screen.queryByText('Riwayat perubahan Admin')).toBeNull();
+    await screen.findByText('Soal 1');
+    const pager = screen.getByRole('navigation', { name: 'Halaman data' });
+    fireEvent.click(within(pager).getByRole('button', { name: 'Berikutnya' }));
+    await screen.findByText('Soal 6');
+    expect(screen.queryByText('Soal 1')).toBeNull();
+    const secondPager = screen.getByRole('navigation', { name: 'Halaman data' });
+    expect(within(secondPager).getByText('Halaman 2')).toBeTruthy();
+    expect(
+      within(secondPager).getByRole('button', { name: 'Berikutnya' }).hasAttribute('disabled'),
+    ).toBe(true);
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, 'questions', {}, true);
+    fireEvent.click(within(secondPager).getByRole('button', { name: 'Sebelumnya' }));
+    await screen.findByText('Soal 1');
   });
   it('does not fetch administrative data for a disabled Admin', () => {
     context.state = {
@@ -293,12 +375,14 @@ describe('Admin content UI', () => {
     });
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.change(screen.getByLabelText('Kode keluarga'), { target: { value: 'DEMO-L1' } });
+    fireEvent.change(await screen.findByLabelText('Kode keluarga'), {
+      target: { value: 'DEMO-L1' },
+    });
     fireEvent.change(screen.getByLabelText('Versi paket'), { target: { value: '2' } });
     fireEvent.change(screen.getByLabelText('Level'), { target: { value: 'level-test' } });
-    fireEvent.change(screen.getByLabelText('Indeks varian'), { target: { value: '2' } });
+    expect((screen.getByLabelText(/^Indeks varian/) as HTMLInputElement).value).toBe('1');
     fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Draf baru' } });
-    fireEvent.change(screen.getByLabelText('ID versi kebijakan penilaian'), {
+    fireEvent.change(screen.getByLabelText('Versi kebijakan penilaian'), {
       target: { value: 'policy-test' },
     });
     fireEvent.change(
@@ -312,7 +396,7 @@ describe('Admin content UI', () => {
         packageVersion: 2,
         name: 'Draf baru',
         levelId: 'level-test',
-        variantIndex: 2,
+        variantIndex: 1,
         scoringPolicyVersionId: 'policy-test',
         questionVersionIds: ['version-test', 'pinned-outside-page', 'third-version'],
       }),
@@ -338,7 +422,7 @@ describe('Admin content UI', () => {
     );
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Revisi draf' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
     await screen.findByText('TEST package rejection');
@@ -351,7 +435,7 @@ describe('Admin content UI', () => {
       scoringPolicyVersionId: 'policy-test',
       questionVersionIds: ['version-test', 'pinned-outside-page'],
     });
-    await screen.findByText('Perubahan tersimpan. ID: drill-package-test');
+    await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
   });
   it('requires confirmation before archiving a Drill package', async () => {
     const confirm = vi
@@ -360,9 +444,9 @@ describe('Admin content UI', () => {
       .mockReturnValueOnce(true);
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arsipkan paket' }));
     expect(archiveDrillPackage).not.toHaveBeenCalled();
-    fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Arsipkan paket' }));
     await waitFor(() =>
       expect(archiveDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
     );
@@ -385,21 +469,43 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     await screen.findByText('TEST offline');
     fireEvent.click(screen.getByRole('button', { name: 'Muat ulang data' }));
-    await screen.findByRole('heading', { name: 'Versi soal' });
+    await screen.findByLabelText('Kompetensi');
     expect(loadAdminWorkbench).toHaveBeenCalledTimes(2);
   });
-  it('routes new questions through the Excel template instead of manual creation', async () => {
+  it('sends a complete PG draft through the shared authenticated API client', async () => {
     render(<AdminContentScreen />);
-    const link = await screen.findByRole('link', { name: 'Upload soal dari template Excel' });
-    expect(link.getAttribute('href')).toBe('/admin/content/imports');
-    expect(screen.queryByRole('button', { name: 'Simpan versi DRAFT' })).toBeNull();
-    expect(createQuestion).not.toHaveBeenCalled();
+    fireEvent.change(await screen.findByLabelText('Kompetensi'), {
+      target: { value: 'competency-test' },
+    });
+    fireEvent.change(screen.getByLabelText('Kode varian unik'), { target: { value: 'ORIG-TEST' } });
+    fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
+      target: { value: 'TEST 1 + 1' },
+    });
+    for (const id of ['A', 'B', 'C', 'D'])
+      fireEvent.change(screen.getByLabelText(`Opsi ${id}`), { target: { value: `TEST ${id}` } });
+    fireEvent.change(screen.getByLabelText('Pembahasan'), {
+      target: { value: 'TEST explanation' },
+    });
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan versi DRAFT' }).closest('form')!);
+    await waitFor(() =>
+      expect(createQuestion).toHaveBeenCalledWith(
+        'test-token',
+        expect.objectContaining({
+          primaryCompetencyId: 'competency-test',
+          variantCode: 'ORIG-TEST',
+          stem: 'TEST 1 + 1',
+          answerOptionId: 'A',
+          options: ['A', 'B', 'C', 'D'].map((id) => ({ id, text: `TEST ${id}` })),
+        }),
+      ),
+    );
+    await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
   });
   it('preserves pinned versions outside the loaded page when editing a Tryout draft', async () => {
     render(<AdminContentScreen />);
-    await screen.findByRole('heading', { name: 'Versi soal' });
+    await screen.findByLabelText('Kompetensi');
     fireEvent.click(screen.getByRole('button', { name: 'Draf Tryout' }));
-    fireEvent.click(screen.getByRole('button', { name: 'Edit draf' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), {
       target: { value: 'TEST revised package' },
     });
@@ -411,34 +517,44 @@ describe('Admin content UI', () => {
       }),
     );
   });
-  it('keeps general audit hidden from Content Admin', async () => {
-    const ready = context.state as { profile: { adminRole: string } };
-    ready.profile.adminRole = 'CONTENT_DATA_MODERATION';
+  it('can remove a pinned version that no longer appears among READY choices', async () => {
+    render(<AdminContentScreen initialView="packages" />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
+    fireEvent.click(
+      screen.getByRole('button', { name: 'Keluarkan versi pinned-id-outside-current-page' }),
+    );
+    fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
+    await waitFor(() =>
+      expect(updateTryoutDraft).toHaveBeenCalledWith('test-token', 'package-test', {
+        name: 'Paket fiktif',
+        questionVersionIds: [],
+      }),
+    );
+  });
+  it('shows verification metadata and read-only audit history', async () => {
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
     expect(await screen.findByText('Reviewer: reviewer-test')).toBeTruthy();
-    expect(screen.queryByText('drill_package_published')).toBeNull();
-    expect(screen.queryByRole('button', { name: 'Audit' })).toBeNull();
-    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', false);
-  });
-  it('shows general audit to Super Admin', async () => {
-    const ready = context.state as { profile: { adminRole: string } };
-    ready.profile.adminRole = 'SUPER_ADMIN';
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Verifikasi & riwayat' }));
-    expect(await screen.findByText('drill_package_published')).toBeTruthy();
-    expect(screen.getByRole('button', { name: 'Audit' })).toBeTruthy();
-    expect(loadAdminWorkbench).toHaveBeenCalledWith('test-token', 0, '', true);
+    expect(screen.getByText('drill_package_published')).toBeTruthy();
   });
   it('publishes a Drill draft through the existing Admin endpoint', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
-    fireEvent.click(await screen.findByRole('button', { name: 'Publikasikan paket' }));
-    await waitFor(() =>
-      expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
+    fireEvent.change(await screen.findByLabelText('Referensi persetujuan Curriculum'), {
+      target: { value: 'TEST_ONLY_APPROVAL' },
+    });
+    fireEvent.submit(
+      (await screen.findByRole('button', { name: 'Publikasikan paket' })).closest('form')!,
     );
-    expect(await screen.findByText('Perubahan tersimpan. ID: drill-package-test')).toBeTruthy();
+    await waitFor(() =>
+      expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test', {
+        curriculumApprovalReference: 'TEST_ONLY_APPROVAL',
+      }),
+    );
+    expect(
+      await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.'),
+    ).toBeTruthy();
   });
   it('shows IRT batch status separately from result release state', async () => {
     render(<AdminContentScreen />);
@@ -464,30 +580,70 @@ describe('Admin content UI', () => {
       }),
     );
   });
-  it('filters video reports and shows their mapped destination context', async () => {
+  it('filters video reports on the server and links the independent target detail', async () => {
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
     fireEvent.change(await screen.findByLabelText('Jenis laporan'), { target: { value: 'VIDEO' } });
     const report = await screen.findByTestId('report-video-report-test');
-    expect(within(report).getByText(/Video demo.*YouTube.*Subbab demo/)).toBeTruthy();
     expect(
-      within(report).getByRole('link', { name: 'Buka video terkait' }).getAttribute('href'),
-    ).toBe('https://www.youtube.com/watch?v=demo');
+      within(report).getByRole('link', { name: 'Detail target & resolution' }).getAttribute('href'),
+    ).toBe('/admin/reports/VIDEO/video-report-test');
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith(
+      'test-token',
+      0,
+      'reports',
+      {
+        kind: 'VIDEO',
+      },
+      false,
+    );
     expect(screen.queryByTestId('report-question-report-test')).toBeNull();
+  });
+  it('retains applied report filters after reloading and when changing report kind', async () => {
+    render(<AdminContentScreen initialView="reports" />);
+    fireEvent.change(await screen.findByLabelText('Kategori laporan'), {
+      target: { value: 'ANSWER_KEY' },
+    });
+    fireEvent.change(screen.getByLabelText('Dari waktu'), {
+      target: { value: '2026-10-01T10:15' },
+    });
+    fireEvent.submit(
+      screen.getByRole('button', { name: 'Terapkan filter server' }).closest('form')!,
+    );
+    expect(((await screen.findByLabelText('Kategori laporan')) as HTMLInputElement).value).toBe(
+      'ANSWER_KEY',
+    );
+    expect((screen.getByLabelText('Dari waktu') as HTMLInputElement).value).toBe(
+      '2026-10-01T10:15',
+    );
+    fireEvent.change(screen.getByLabelText('Jenis laporan'), { target: { value: 'VIDEO' } });
+    await waitFor(() =>
+      expect(loadAdminWorkbench).toHaveBeenLastCalledWith(
+        'test-token',
+        0,
+        'reports',
+        {
+          category: 'ANSWER_KEY',
+          from: new Date('2026-10-01T10:15').toISOString(),
+          kind: 'VIDEO',
+        },
+        false,
+      ),
+    );
   });
   it('removes administrative data on logout and on an API access rejection', async () => {
     const result = render(<AdminContentScreen />);
-    await screen.findByRole('heading', { name: 'Versi soal' });
+    await screen.findByLabelText('Kompetensi');
     context.state = { status: 'signed_out' };
     result.rerender(<AdminContentScreen />);
-    expect(screen.queryByRole('heading', { name: 'Versi soal' })).toBeNull();
+    expect(screen.queryByLabelText('Kompetensi')).toBeNull();
     context.state = {
       status: 'ready',
       profile: {
         id: 'another-admin-test',
         role: 'ADMIN',
         status: 'ACTIVE',
-        capabilities: ['CONTENT_MANAGE'],
+        capabilities: ['CONTENT_MANAGE', 'AUDIT_READ'],
         displayName: 'Admin lain',
       },
       session: { access_token: 'expired-test' },
@@ -497,7 +653,7 @@ describe('Admin content UI', () => {
     );
     result.rerender(<AdminContentScreen />);
     await screen.findByText('TEST disabled');
-    expect(screen.queryByRole('heading', { name: 'Versi soal' })).toBeNull();
+    expect(screen.queryByLabelText('Kompetensi')).toBeNull();
   });
   it('hides cached forms when a mutation loses Admin access', async () => {
     vi.mocked(resolveReport).mockRejectedValueOnce(
@@ -513,5 +669,34 @@ describe('Admin content UI', () => {
     await screen.findByText('TEST session expired');
     expect(screen.queryByTestId('report-question-report-test')).toBeNull();
     expect(screen.getByRole('link', { name: 'Ke halaman masuk' })).toBeTruthy();
+  });
+  it('changes question pages without clearing the unsaved editor', async () => {
+    const versions = Array.from({ length: 6 }, (_, i) => ({
+      ...data.versions.items[0]!,
+      id: `version-${i}`,
+      stem: `Soal halaman ${i}`,
+    }));
+    vi.mocked(loadAdminWorkbench).mockImplementation(async (_token, offset) => ({
+      ...data,
+      versions: {
+        items: versions.slice(offset, offset + 5),
+        hasNext: offset === 0,
+        nextOffset: offset === 0 ? 5 : null,
+      },
+    }));
+    render(<AdminContentScreen />);
+    await screen.findByText('Soal halaman 0');
+    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
+    fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
+      target: { value: 'Draf belum disimpan' },
+    });
+    fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
+    await screen.findByText('Soal halaman 5');
+    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(1);
+    expect(
+      (screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)') as HTMLTextAreaElement)
+        .value,
+    ).toBe('Draf belum disimpan');
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, 'questions', {}, false);
   });
 });

@@ -1,6 +1,6 @@
 import { presentFixtureText } from '@tka/database';
 import { randomInt } from 'node:crypto';
-import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
+import { TRYOUT_PARTIAL_POLICY, validateTryoutPartialRubric } from '@tka/assessment-engine';
 import {
   BadRequestException,
   ConflictException,
@@ -16,7 +16,6 @@ import {
   analyticsOutbox,
   assessmentAttempts,
   assessmentPackages,
-  allowSyntheticContent,
   packageRuntimeEligibility,
   attemptAnswers,
   attemptItems,
@@ -27,10 +26,16 @@ import {
   questionVariants,
   questionVersions,
   scoringPolicyVersions,
+  scoringRubricVersions,
   xpLedger,
 } from '@tka/database';
 import {
   AssessmentFinalizationError,
+  readApprovedPolicy,
+  earlierDeadline,
+  decodeRuntimeQuestion,
+  activeRuntimeQuestion,
+  validateRuntimeAnswer,
   databaseTime,
   finalizeTryout,
   saveAssessmentAnswerWithEvent,
@@ -39,7 +44,6 @@ import {
   presentAssessmentQuestion,
   presentAssessmentReview,
   TRYOUT_XP_POLICY,
-  TRYOUT_REWARD_POLICY,
 } from '@tka/assessment-engine';
 import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
@@ -89,13 +93,15 @@ export class TryoutService {
           .from(scoringPolicyVersions)
           .where(eq(scoringPolicyVersions.id, pack.scoringPolicyVersionId))
       : [];
-    return (rows.some((row) => row.type !== 'SINGLE_CHOICE') &&
-      policy?.policyCode !== TRYOUT_PARTIAL_POLICY) ||
-      ![TRYOUT_REWARD_POLICY, TRYOUT_PARTIAL_POLICY].includes(policy?.policyCode ?? '') ||
-      policy?.status !== 'PUBLISHED' ||
-      policy?.version !== 1
-      ? 'SCORING_PENDING'
-      : null;
+    try {
+      if (!policy) return 'SCORING_PENDING';
+      const approved = readApprovedPolicy(policy, 'TRYOUT');
+      return approved.canonicalPgOnly && rows.some((row) => row.type !== 'SINGLE_CHOICE')
+        ? 'SCORING_PENDING'
+        : null;
+    } catch {
+      return 'SCORING_PENDING';
+    }
   }
 
   private currentPackage() {
@@ -306,6 +312,7 @@ export class TryoutService {
         explanation: questionVersions.explanation,
         answer: attemptAnswers.answer,
         awardedPoints: attemptAnswers.awardedPoints,
+        fullyCorrect: attemptAnswers.fullyCorrect,
       })
       .from(attemptItems)
       .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
@@ -335,7 +342,7 @@ export class TryoutService {
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
-    return attempt;
+    return { ...attempt, deadlineAt: earlierDeadline(attempt.deadlineAt, attempt.closeAt) };
   }
 
   private async presentAttempt(studentId: string, attemptId: string) {
@@ -370,14 +377,18 @@ export class TryoutService {
       serverTime: (await databaseTime(getDatabase().db)).toISOString(),
       xp: await this.storedXp(attemptId),
       xpPolicyVersion: attempt.xpPolicyVersion,
-      questions: rows.map((row) =>
-        presentAssessmentQuestion(
+      questions: rows.map((row) => ({
+        ...activeRuntimeQuestion(
+          decodeRuntimeQuestion(row),
+          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
+        ),
+        ...presentAssessmentQuestion(
           decodeAssessmentContent(row),
           row.id,
           row.answer,
           row.questionVersionId,
         ),
-      ),
+      })),
     };
   }
 
@@ -418,21 +429,31 @@ export class TryoutService {
         .select()
         .from(scoringPolicyVersions)
         .where(eq(scoringPolicyVersions.id, current.scoringPolicyVersionId));
-      if (
-        !(current.isDemo && allowSyntheticContent()) &&
-        (![TRYOUT_REWARD_POLICY, TRYOUT_PARTIAL_POLICY].includes(policy?.policyCode ?? '') ||
-          policy?.version !== 1 ||
-          policy?.status !== 'PUBLISHED')
-      )
-        throw new ServiceUnavailableException(
-          problem('TRYOUT_POLICY_OLD', 'Terbitkan versi paket dengan kebijakan PRD v0.6.'),
-        );
+      if (!current.isDemo) {
+        if (!policy)
+          throw new ServiceUnavailableException(
+            problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
+          );
+        try {
+          readApprovedPolicy(policy, 'TRYOUT');
+        } catch {
+          throw new ServiceUnavailableException(
+            problem(
+              'TRYOUT_POLICY_OLD',
+              'Terbitkan versi paket dengan kebijakan PRD v0.6 yang disahkan.',
+            ),
+          );
+        }
+      }
       const items = await tx
         .select({
           id: packageItems.id,
           displayOrder: packageItems.displayOrder,
           questionVersionId: packageItems.questionVersionId,
           maxPoints: packageItems.maxPoints,
+          rubricVersionId: packageItems.rubricVersionId,
+          versionRubricVersionId: questionVersions.scoringRubricVersionId,
+          maximumScoreCategory: packageItems.maximumScoreCategory,
           contentStatus: questionVersions.contentStatus,
           questionStatus: questions.status,
           questionType: questionVersions.questionType,
@@ -455,15 +476,32 @@ export class TryoutService {
         throw new ServiceUnavailableException(
           problem('TRYOUT_CONTENT_NOT_READY', 'Konten Tryout belum siap.'),
         );
+      items.forEach(decodeRuntimeQuestion);
       if (
-        !(current.isDemo && allowSyntheticContent()) &&
-        policy?.policyCode !== TRYOUT_PARTIAL_POLICY &&
-        items.some((item) => item.questionType !== 'SINGLE_CHOICE')
-      )
-        throw new ServiceUnavailableException(
-          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
-        );
-      items.forEach(decodeAssessmentContent);
+        policy?.policyCode === TRYOUT_PARTIAL_POLICY &&
+        readApprovedPolicy(policy, 'TRYOUT').ownerTryoutPartial
+      ) {
+        for (const item of items) {
+          if (item.questionType === 'SINGLE_CHOICE') continue;
+          const rubricId = item.rubricVersionId ?? item.versionRubricVersionId;
+          const [rubric] = rubricId
+            ? await tx
+                .select()
+                .from(scoringRubricVersions)
+                .where(eq(scoringRubricVersions.id, rubricId))
+                .for('share')
+            : [];
+          try {
+            validateTryoutPartialRubric(decodeRuntimeQuestion(item), rubric);
+          } catch {
+            throw new ServiceUnavailableException(
+              problem('TRYOUT_RUBRIC_NOT_READY', 'Rubrik Tryout yang dipin belum siap.'),
+            );
+          }
+          item.rubricVersionId = rubric!.id;
+          item.maximumScoreCategory = rubric!.maximumScoreCategory;
+        }
+      }
       const now = await databaseTime(tx);
       if (current.closeAt && current.closeAt <= now)
         throw new ConflictException(
@@ -505,6 +543,8 @@ export class TryoutService {
           questionVersionId: item.questionVersionId,
           displayOrder: index + 1,
           maxPoints: item.maxPoints,
+          rubricVersionId: item.rubricVersionId,
+          maximumScoreCategory: item.maximumScoreCategory,
         })),
       );
       await tx.insert(analyticsOutbox).values({
@@ -544,7 +584,12 @@ export class TryoutService {
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Tryout tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Tryout sudah selesai.'));
-      if (attempt.deadlineAt && attempt.deadlineAt <= (await databaseTime(tx)))
+      const [pkg] = await tx
+        .select({ closeAt: assessmentPackages.closeAt })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, attempt.packageId));
+      const deadlineAt = earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
+      if (deadlineAt && deadlineAt <= (await databaseTime(tx)))
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       const [item] = await tx
         .select({
@@ -576,7 +621,7 @@ export class TryoutService {
         throw error;
       }
       const now = await databaseTime(tx);
-      if (attempt.deadlineAt && attempt.deadlineAt <= now)
+      if (deadlineAt && deadlineAt <= now)
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       try {
         await saveAssessmentAnswerWithEvent(tx, {
@@ -585,7 +630,7 @@ export class TryoutService {
           answer,
           questionFormat: content.type,
           now,
-          deadlineAt: attempt.deadlineAt,
+          deadlineAt,
         });
       } catch (error) {
         if (error instanceof AssessmentFinalizationError && error.code === 'TRYOUT_DEADLINE_PASSED')
@@ -635,7 +680,7 @@ export class TryoutService {
       .from(xpLedger)
       .where(eq(xpLedger.attemptId, attemptId))
       .limit(1);
-    return reward?.xp ?? null;
+    return reward ? Number(reward.xp) : null;
   }
 
   async result(authorization: string | undefined, attemptId: string) {
@@ -654,7 +699,16 @@ export class TryoutService {
       .from(assessmentAttempts)
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
+    const [packageRow] = await db
+      .select({ isDemo: assessmentPackages.isDemo })
+      .from(assessmentPackages)
+      .where(eq(assessmentPackages.id, attempt.packageId))
+      .limit(1);
     const canonical = (await publishedTryoutAttemptResults([attemptId])).get(attemptId);
+    if (!packageRow?.isDemo && !canonical)
+      throw new ConflictException(
+        problem('TRYOUT_RESULT_PENDING', 'Finalisasi hasil peserta belum dipublikasikan.'),
+      );
     const rows = await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
@@ -665,6 +719,8 @@ export class TryoutService {
       xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
       score: canonical?.score ?? Number(score?.score ?? 0),
+      mode: canonical?.mode ?? 'DEMO',
+      publicationVersion: canonical?.version ?? null,
       correctCount: rows.filter(
         (row) => row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints),
       ).length,
@@ -701,8 +757,16 @@ export class TryoutService {
               ),
               fallbackReason: null,
             },
-      explanation: rows.map((row) =>
-        presentAssessmentReview(
+      explanation: rows.map((row) => ({
+        ...activeRuntimeQuestion(
+          decodeRuntimeQuestion(row),
+          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
+        ),
+        richExplanation: decodeRuntimeQuestion(row).explanation,
+        fullyCorrect:
+          row.fullyCorrect ??
+          (row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints)),
+        ...presentAssessmentReview(
           decodeAssessmentContent(row),
           row.id,
           row.answer,
@@ -710,7 +774,7 @@ export class TryoutService {
           row.maxPoints,
           row.questionVersionId,
         ),
-      ),
+      })),
     };
   }
 }
