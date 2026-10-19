@@ -39,7 +39,9 @@ if (process.env.DATABASE_URL) {
       problems.push('DATABASE_URL must use the PostgreSQL protocol');
     if (process.env.SUPABASE_URL) {
       const auth = new URL(process.env.SUPABASE_URL);
-      if (auth.hostname.endsWith('.supabase.co')) {
+      const isLocalDatabase = process.env.LOCAL_DATABASE === 'true' &&
+        ['localhost', '127.0.0.1'].includes(database.hostname);
+      if (auth.hostname.endsWith('.supabase.co') && !isLocalDatabase) {
         const ref = auth.hostname.split('.')[0];
         const direct = database.hostname === `db.${ref}.supabase.co` && database.username === 'postgres';
         const pooler = database.hostname.endsWith('.pooler.supabase.com') && decodeURIComponent(database.username) === `postgres.${ref}`;
