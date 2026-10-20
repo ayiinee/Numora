@@ -136,6 +136,27 @@ Status: **READY — butuh keputusan pemilik file.** Prioritas usulan: **P1**, ka
 
 **Kenapa tidak saya kerjakan sekarang.** `features/onboarding/class-join.tsx` adalah sisi Siswa. Joblist §7 memberi Saya "bagian Teacher/onboarding" dan memberi Avicenna seluruh route/komponen Siswa, jadi kepemilikan file ini ambigu. Aturan tim menyebut satu temuan satu pelaksana, dan mengubah layar Siswa tanpa kesepakatan bisa menabrak AV-01 yang sedang berjalan. Keputusan pemilik file diperlukan lebih dulu.
 
+## GF-07 — `main` tidak hijau: 8 tes browser Admin gagal (di luar area Guru)
+
+Status: **READY untuk pemilik area Admin.** Prioritas usulan: **P1**, karena gerbang akhir joblist §2 menuntut alur **Admin → Guru → Student** dapat dijalankan QA.
+
+Hasil regresi browser penuh pada `feat/teacher-polishv1` (194 tes): **150 lulus, 8 gagal, 36 tidak jalan**, dan `globalTimeout` 900 detik tercapai sehingga suite terpotong. Seluruh kegagalan ada di `e2e/admin.spec.ts`:
+
+| Grup | Jumlah | Error pertama |
+| --- | --- | --- |
+| `admin.spec.ts:516` five-row pagination and horizontal filters | 2 | `locator.fill` timeout pada `getByLabel('Teks soal (LaTeX inline diperbolehkan)')` — label field tidak lagi cocok dengan UI |
+| `admin.spec.ts:590` Unified Admin portal per subrole | 4 | kegagalan pada grup yang sama setelah assertion navigasi |
+| `admin.spec.ts:883` Upload-first TRYOUT preview→publish | 2 | `mappingPanel.getByRole('combobox', { name: 'Indikator', exact: true })` diharapkan `toHaveCount(0)`, ditemukan 1 |
+
+**Bukan akibat pekerjaan Guru di branch ini.** Dua bukti:
+
+1. Dua tes `Upload-first TRYOUT` dijalankan ulang pada `main` bersih (`6ba9638`) dan **gagal identik**, jadi sudah ada sebelum branch ini.
+2. Diff branch ini hanya menyentuh `features/monitoring/*`, `features/onboarding/screens.tsx`, `features/onboarding/teacher-profile.tsx`, `e2e/teacher.spec.ts`, `numora.css`, dan dua file docs. Tidak ada file Admin, kontrak, atau API. Untuk `numora.css`: satu-satunya kelas Admin yang berdekatan dengan penghapusan saya adalah `.monitoring-list`, dan assertion `.admin-content-view .monitoring-list > li` **lulus** pada tes yang gagal — rule itu memang ditahan. Sisanya (`toHaveCount`, `getByLabel`) berbasis DOM, bukan gaya, sehingga CSS tidak dapat mengubah hasilnya.
+
+Batas klaim: yang saya reproduksi langsung di `main` adalah 2 dari 8. Enam lainnya ada di file yang sama, pada run yang sama, dan tidak menyentuh modul apa pun yang saya ubah.
+
+**Yang dibutuhkan.** Pemilik Admin (Ferdi untuk layar FE, Tangguh untuk alur konten) menentukan apakah label field dan ekspektasi panel pemetaan itu yang usang atau UI-nya yang menyimpang dari keputusan pemilik 7 Oktober bahwa Tryout boleh tanpa pemetaan materi dan tanpa indikator. Selain itu `globalTimeout` 900 detik tidak cukup untuk 194 tes pada mesin development Windows 16 GB — angka itu perlu diukur ulang oleh Aini (AI-04), bukan dinaikkan tanpa data.
+
 ## Ringkasan tindak lanjut
 
 | Tiket | Pemilik tindak lanjut | Butuh keputusan sebelum FE kerja |
@@ -146,5 +167,6 @@ Status: **READY — butuh keputusan pemilik file.** Prioritas usulan: **P1**, ka
 | GF-04 | Ferdi (FD-06) bersama Aliwafa | Ya, untuk penghapusan |
 | GF-05 | Aliwafa (selesai di branch ini); Ferdi mereview sebagai reviewer FE | Tidak |
 | GF-06 | Avicenna sebagai pemilik layar Siswa, atau Aliwafa bila Ferdi menyerahkan file ini | Ya, pemilik file |
+| GF-07 | Ferdi (layar Admin) dan Tangguh (alur konten); Aini untuk `globalTimeout` CI | Tidak untuk melapor, ya untuk perbaikan |
 
 Pekerjaan polish yang tidak bergantung pada keempat tiket ini sudah berjalan di branch `feat/teacher-polishv1` dan dicatat pada PR-nya masing-masing.
