@@ -48,6 +48,7 @@ Farel tidak perlu menyentuh file berikut selama `feat/teacher-polishv1` berjalan
 
 - `apps/web/src/features/monitoring/**` (layar Guru, helper query, gate, feedback)
 - `apps/web/src/features/onboarding/screens.tsx` dan `teacher-profile.tsx` (hanya bagian Guru)
+- `apps/web/src/features/onboarding/teacher-session.ts` — pembungkus lock/pesan gagal keluar dari `TeacherShell` dan Profil. Ia memakai `logout()` apa adanya dan tidak mengubah `auth.ts`, yang tetap masuk koordinasi Andi dan handoff Farel (§7 joblist).
 - `apps/web/src/components/shell/teacher-*.tsx`
 - `apps/web/e2e/teacher.spec.ts`
 - bagian `.teacher-*` di `apps/web/src/app/numora.css` dan `teacher.css`
