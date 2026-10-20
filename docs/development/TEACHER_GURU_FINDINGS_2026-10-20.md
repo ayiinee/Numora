@@ -157,6 +157,24 @@ Batas klaim: yang saya reproduksi langsung di `main` adalah 2 dari 8. Enam lainn
 
 **Yang dibutuhkan.** Pemilik Admin (Ferdi untuk layar FE, Tangguh untuk alur konten) menentukan apakah label field dan ekspektasi panel pemetaan itu yang usang atau UI-nya yang menyimpang dari keputusan pemilik 7 Oktober bahwa Tryout boleh tanpa pemetaan materi dan tanpa indikator. Selain itu `globalTimeout` 900 detik tidak cukup untuk 194 tes pada mesin development Windows 16 GB — angka itu perlu diukur ulang oleh Aini (AI-04), bukan dinaikkan tanpa data.
 
+## GF-08 — `POST /classes` tidak idempotent, satu klik ganda dapat menghasilkan dua kelas asli
+
+Status: **Lapor ke Andi (AD-02/03).** FE sudah punya mitigasi di branch ini; perbaikan sebenarnya ada di server.
+
+Bukti pada `main`:
+
+- `apps/api/src/modules/classes/classes.controller.ts:88` — `@Post()` create tidak memakai `@CodeAttempt`, sedangkan takeover (`:97`, guard `:98`), leave (`:108`), ban (`:117`) dan unban (`:127`) dipasangi guard.
+- Body create tidak menerima `clientRequestId`; bandingkan feedback Guru yang memang menerimanya untuk retry yang sama.
+- `apps/api/src/modules/classes/classes.service.ts` `create()` langsung `insert` tanpa cek kepemilikan/nama, dan `packages/database/src/schema/classes.ts:20` hanya punya `classes_join_code_uq` atas kode acak — tidak ada constraint yang menolak kelas kedua dengan nama sama dari Guru yang sama.
+
+Akibatnya: permintaan yang hilang di jaringan (respons tidak pernah sampai) membuat FE tidak tahu apakah kelas sudah terbentuk. Klik "Buat kelas" lagi membuat kelas kedua dengan **kode join berbeda**, dan Guru harus ban manual kelas yang salah — jalur ban sendiri belum ada di UI (GF-01). Ini melanggar `AGENTS.md` "Sensitive state-changing operations must be idempotent or protected by equivalent database constraints/transactions".
+
+Mitigasi FE (`8556a51`): bila request tidak mendapat jawaban (`ApiProblem.status === 0`), Guru tidak ditawari retry buta. Form dikosongkan, muncul pesan "Pengiriman tidak dapat dipastikan", dan daftar kelas dimuat ulang agar Guru melihat apakah kelasnya sudah ada. Responserror server (mis. 503) tetap mempertahankan nama yang diketik karena jelas belum dibuat.
+
+**Yang dibutuhkan dari Andi:** `clientRequestId` pada create (satu use case dengan guard feedback) **atau** `@CodeAttempt` + constraint unik `(teacherId, name)` untuk MVP. Setelah itu ada, FE tinggal meneruskan UUID dan menghapus pesan ketidakpastian.
+
+Batas klaim: saya tidak membuat kelas duplikat di DB bersama karena itu menulis ke data tim; rangkaiannya dibaca dari kode controller/service/schema.
+
 ## Ringkasan tindak lanjut
 
 | Tiket | Pemilik tindak lanjut | Butuh keputusan sebelum FE kerja |
@@ -168,5 +186,6 @@ Batas klaim: yang saya reproduksi langsung di `main` adalah 2 dari 8. Enam lainn
 | GF-05 | Aliwafa (selesai di branch ini); Ferdi mereview sebagai reviewer FE | Tidak |
 | GF-06 | Avicenna sebagai pemilik layar Siswa, atau Aliwafa bila Ferdi menyerahkan file ini | Ya, pemilik file |
 | GF-07 | Ferdi (layar Admin) dan Tangguh (alur konten); Aini untuk `globalTimeout` CI | Tidak untuk melapor, ya untuk perbaikan |
+| GF-08 | Andi (idempotensi create) → Aliwafa (menghapus pesan ketidakpastian FE) | Tidak |
 
-Pekerjaan polish yang tidak bergantung pada keempat tiket ini sudah berjalan di branch `feat/teacher-polishv1` dan dicatat pada PR-nya masing-masing.
+Pekerjaan polish yang tidak bergantung pada semua tiket ini sudah berjalan di branch `feat/teacher-polishv1` dan dicatat pada PR-nya masing-masing.
