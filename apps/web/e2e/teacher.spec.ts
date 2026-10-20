@@ -52,7 +52,7 @@ async function setup(page: Page) {
     failSchools: false,
     emptySchools: false,
     failVerify: false,
-    verifyStatus: 400,
+    verifyStatus: 403,
     failCreate: false,
     emptyClass: false,
     denied: 0,
@@ -82,10 +82,10 @@ async function setup(page: Page) {
     ],
   };
   await page.route('https://numora-e2e.supabase.co/**', (route) => route.fulfill({ json: {} }));
-  const fail = (status: number, detail: string) => ({
+  const fail = (status: number, detail: string, code = 'FIXTURE_ERROR') => ({
     status,
     contentType: 'application/problem+json',
-    json: { status, code: 'FIXTURE_ERROR', detail },
+    json: { status, code, detail },
   });
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
@@ -106,7 +106,15 @@ async function setup(page: Page) {
     } else if (path === `/schools/${schoolId}/teacher-verifications`) {
       state.verifyTokens.push(route.request().postDataJSON().token);
       if (state.failVerify)
-        return route.fulfill(fail(state.verifyStatus, 'Token kedaluwarsa atau sudah digunakan.'));
+        return route.fulfill(
+          fail(
+            state.verifyStatus,
+            // Mirrors schools.service.ts: an unusable token is one collapsed 403 whose
+            // detail names every cause together, so the client cannot probe which one.
+            'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+            'INVALID_TEACHER_TOKEN',
+          ),
+        );
       state.verified = true;
       data = { verified: true };
     } else if (path === '/classes') {
@@ -429,7 +437,12 @@ test('Teacher failed verification and school loading remain retryable without op
   await page.getByLabel('Token verifikasi').fill('Ab2345Cd');
   state.failVerify = true;
   await page.getByRole('button', { name: 'Verifikasi dan lanjutkan' }).click();
-  await expect(page.locator('main').getByRole('alert')).toContainText('Token kedaluwarsa');
+  const tokenAlert = page.locator('#teacher-token-error');
+  await expect(tokenAlert).toHaveAttribute('role', 'alert');
+  await expect(tokenAlert).toContainText(
+    'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+  );
+  await expect(tokenAlert).toContainText('Minta credential baru dari Admin sekolah.');
   await expect(page.getByLabel('Token verifikasi')).toHaveValue('Ab2345Cd');
   await expect(page).toHaveURL(/verification-required$/);
   await capture(page, 'verification-token-error', 390);
