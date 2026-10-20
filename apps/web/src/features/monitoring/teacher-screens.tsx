@@ -26,6 +26,7 @@ import {
   ApiProblem,
 } from '@/lib/api';
 import { MonitoredLevelCard, TeacherClassCard, TeacherStudentRow } from './teacher-presentation';
+import { teacherKeys } from './teacher-query';
 import { useTeacherRosterCounts } from './teacher-data';
 import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
 import { TeacherInviteContent } from './teacher-class-tools';
@@ -47,7 +48,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   const [search, setSearch] = useState('');
   const cache = useQueryClient();
   const query = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   const counts = useTeacherRosterCounts(token, query.isSuccess ? query.data.items : undefined);
@@ -61,7 +62,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       const result = await createTeacherClass(token, name.trim());
       setCreatedCode(result.joinCode);
       setName('');
-      await cache.invalidateQueries({ queryKey: ['teacher-classes'] });
+      await cache.invalidateQueries({ queryKey: teacherKeys.classes() });
     } catch (err) {
       setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
       setErrorStatus(err instanceof ApiProblem ? err.status : 0);
@@ -225,12 +226,12 @@ function ClassStudentsContent({
   const [sort, setSort] = useState('asc');
   const [inviteOpen, setInviteOpen] = useState(false);
   const classes = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   const cls = classes.data?.items.find((value) => value.id === classId);
   const query = useQuery({
-    queryKey: ['class-students', classId],
+    queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
   });
   const filtered = query.data?.items
@@ -395,7 +396,7 @@ function StudentProgressContent({
   studentId: string;
 }) {
   const query = useQuery({
-    queryKey: ['student-progress', classId, studentId],
+    queryKey: teacherKeys.progress(classId, studentId),
     queryFn: () => getTeacherStudentProgress(token, classId, studentId),
   });
   return (

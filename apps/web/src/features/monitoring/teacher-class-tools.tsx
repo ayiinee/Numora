@@ -10,6 +10,7 @@ import { getClassStudents, getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
+import { teacherKeys } from './teacher-query';
 
 export function TeacherInviteContent({ name, code }: { name: string; code: string | undefined }) {
   const [qr, setQr] = useState('');
@@ -127,11 +128,11 @@ function ClassTools({
   classId: string;
 }) {
   const classes = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   const roster = useQuery({
-    queryKey: ['class-students', classId],
+    queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
   });
   const cls = classes.data?.items.find((value) => value.id === classId);

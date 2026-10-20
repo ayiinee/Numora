@@ -2,19 +2,10 @@
 
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Badge, Button, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
-import { apiRequest, ApiProblem } from '@/lib/api';
+import { apiRequest } from '@/lib/api';
 import type { AssessmentHistoryDto } from '@/features/core-learning/generated-types';
 import { DataState } from '@/features/core-learning/ui';
-
-/**
- * Built once per module: the previous inline construction created a formatter for every
- * record on every render. Business time stays Asia/Jakarta while durable stamps are UTC.
- */
-const submittedAt = new Intl.DateTimeFormat('id-ID', {
-  timeZone: 'Asia/Jakarta',
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
+import { jakartaTime, teacherAccessFailure, teacherKeys } from './teacher-query';
 
 export function TeacherAssessmentHistory({
   token,
@@ -26,7 +17,7 @@ export function TeacherAssessmentHistory({
   studentId: string;
 }) {
   const query = useInfiniteQuery({
-    queryKey: ['teacher-assessments', classId, studentId],
+    queryKey: teacherKeys.assessments(classId, studentId),
     initialPageParam: undefined as string | undefined,
     queryFn: ({ pageParam }) =>
       apiRequest<AssessmentHistoryDto>(
@@ -36,8 +27,7 @@ export function TeacherAssessmentHistory({
     getNextPageParam: (last) => last.nextCursor ?? undefined,
   });
   const records = query.data?.pages.flatMap((page) => page.records) ?? [];
-  const accessFailure =
-    query.error instanceof ApiProblem && [401, 403, 404].includes(query.error.status);
+  const accessFailure = teacherAccessFailure(query.error);
   return (
     <section className="teacher-page-stack">
       <SectionHeader title="Riwayat asesmen" subtitle="Hasil sesuai akses dan waktu rilis sistem" />
@@ -63,7 +53,7 @@ export function TeacherAssessmentHistory({
                 <h3>{record.title}</h3>
                 {record.levelTitle && <p>{record.levelTitle}</p>}
                 <time dateTime={record.submittedAt}>
-                  {submittedAt.format(new Date(record.submittedAt))} WIB
+                  {jakartaTime.format(new Date(record.submittedAt))} WIB
                 </time>
               </div>
               <div className="teacher-assessment-record__result">

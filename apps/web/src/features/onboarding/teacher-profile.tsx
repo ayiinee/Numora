@@ -11,6 +11,7 @@ import { useAuth } from './auth';
 import { getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherAnnouncement } from '@/features/monitoring/teacher-ui';
+import { teacherKeys } from '@/features/monitoring/teacher-query';
 
 export function TeacherProfileScreen() {
   return (
@@ -26,7 +27,7 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const classes = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   if (state.status !== 'ready') return null;
