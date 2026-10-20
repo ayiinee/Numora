@@ -118,7 +118,7 @@ it('keeps the class search result and its no-match notice on the same rule', asy
     ],
   });
   render(<TeacherDashboardScreen />);
-  expect(await screen.findAllByRole('link', { name: /Lihat siswa/ })).toHaveLength(2);
+  expect(await screen.findAllByRole('link', { name: /^Buka Kelas/ })).toHaveLength(2);
   fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'pendampingan' } });
   expect(screen.getByText('Kelas Pendampingan')).toBeTruthy();
   expect(screen.queryByText('Kelas IX A')).toBeNull();
@@ -126,7 +126,7 @@ it('keeps the class search result and its no-match notice on the same rule', asy
 
   fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'tidak-ada' } });
   expect(screen.getByText('Kelas tidak ditemukan')).toBeTruthy();
-  expect(screen.queryAllByRole('link', { name: /Lihat siswa/ })).toHaveLength(0);
+  expect(screen.queryAllByRole('link', { name: /^Buka Kelas/ })).toHaveLength(0);
 });
 it('preserves zero, distinct best/latest, null and authoritative access state as read-only values', async () => {
   vi.mocked(getTeacherStudentProgress).mockResolvedValue({
