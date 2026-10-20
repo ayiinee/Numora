@@ -48,6 +48,7 @@ async function setup(page: Page, signedIn = false) {
     role: '' as '' | 'STUDENT' | 'TEACHER' | 'ADMIN',
     verified: false,
     identityError: 0,
+    identityNetworkFailures: 0,
     failRegister: false,
     failExchange: false,
     failPassword: false,
@@ -90,6 +91,10 @@ async function setup(page: Page, signedIn = false) {
       });
     let data: unknown = {};
     if (path === '/identity/me') {
+      if (route.request().method() === 'GET' && state.identityNetworkFailures > 0) {
+        state.identityNetworkFailures--;
+        return route.abort('connectionrefused');
+      }
       if (state.identityWait) await state.identityWait;
       if (route.request().method() === 'POST') {
         const body = route.request().postDataJSON();
@@ -297,12 +302,26 @@ for (const role of ['STUDENT', 'TEACHER'] as const) {
     expect(errors).toEqual([]);
   });
 }
+test('identity reconnects automatically after a connection refusal without another login', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page, true);
+  state.role = 'STUDENT';
+  state.identityNetworkFailures = 1;
+  await page.goto('/');
+  await expect(page.getByText('Koneksi ke server gagal. Coba lagi.')).toBeVisible();
+  await expect(page).toHaveURL(/\/student$/);
+  expect(state.identityNetworkFailures).toBe(0);
+  expect(state.posts).toEqual([]);
+  expect(errors).toEqual([]);
+});
+
 test('identity retry, disabled account logout, and expired session retain recovery', async ({
   page,
 }) => {
   await page.setViewportSize({ width: 390, height: 900 });
   const { state, errors } = await setup(page, true);
-  state.identityError = 503;
+  state.identityError = 500;
   await page.goto('/');
   await expect(page.getByText('Akun belum dapat diperiksa.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeDisabled();
