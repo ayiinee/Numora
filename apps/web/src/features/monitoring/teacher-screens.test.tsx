@@ -89,6 +89,24 @@ it('provides a login destination after a create request reports an expired sessi
   );
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('IX A');
 });
+it('does not invite a blind retry when the create request never got an answer', async () => {
+  vi.mocked(createTeacherClass).mockRejectedValue(
+    new ApiProblem(0, 'NETWORK_ERROR', 'Koneksi ke server gagal. Coba lagi.'),
+  );
+  render(<TeacherDashboardScreen />);
+  await screen.findByRole('heading', { name: 'Kelas saya' });
+  fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX Terputus' } });
+  const initialCalls = vi.mocked(getTeacherClasses).mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+
+  await screen.findByText(/Pengiriman tidak dapat dipastikan/);
+  // The class may exist server-side, so the form must not offer the same name again.
+  expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('');
+  await waitFor(() =>
+    expect(vi.mocked(getTeacherClasses).mock.calls.length).toBeGreaterThan(initialCalls),
+  );
+});
+
 it('filters and sorts names without mutating or replacing server identities', async () => {
   vi.mocked(getClassStudents).mockResolvedValue({
     class: { id: 'class-test', name: 'IX A' },

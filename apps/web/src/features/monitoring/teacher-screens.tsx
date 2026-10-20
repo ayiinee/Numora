@@ -77,8 +77,24 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       setName('');
       await cache.invalidateQueries({ queryKey: teacherKeys.classes() });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
-      setErrorStatus(err instanceof ApiProblem ? err.status : 0);
+      const status = err instanceof ApiProblem ? err.status : 0;
+      setErrorStatus(status);
+      // apiRequest reports an unanswered call as ApiProblem with status 0, and only that
+      // case is genuinely indeterminate: the insert may still have committed, and classes
+      // have no idempotency key or unique (teacher, name), so a blind retry would create a
+      // second class under a different join code. Reload the list and let the Teacher read
+      // the truth. A real server response (4xx/5xx) refused before creating, so the typed
+      // name stays for retry.
+      const uncertain = err instanceof ApiProblem && err.status === 0;
+      if (uncertain) {
+        setError(
+          'Pengiriman tidak dapat dipastikan. Daftar kelas dimuat ulang, periksa sebelum mencoba lagi.',
+        );
+        setName('');
+        await cache.invalidateQueries({ queryKey: teacherKeys.classes() });
+      } else {
+        setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
+      }
     } finally {
       setBusy(false);
     }
