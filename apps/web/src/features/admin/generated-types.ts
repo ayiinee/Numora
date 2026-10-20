@@ -39,7 +39,7 @@ export type UpdateContentPackageDto = { "expectedRevision": number; "name": stri
 
 export type ContentPackageDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
 
-export type ContentPackagesDto = { "items": (ContentPackageDto)[]; };
+export type ContentPackagesDto = { "items": (ContentPackageDto)[]; "total": number; };
 
 export type ContentPackageDetailDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
 
@@ -121,21 +121,21 @@ export type AdminTaxonDto = { "materialCategory"?: "algebra" | "geometry" | "num
 
 export type AdminUserDto = { "id": string; "displayName": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "status": "ACTIVE" | "DISABLED"; "createdAt": string; };
 
-export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; };
+export type AdminUserListDto = { "items": (AdminUserDto)[]; "nextOffset": number | null; "total": number; };
 
 export type AdminClassDto = { "id": string; "name": string; "schoolId": string; "schoolName": string; "teacherId": string | null; "teacherName": string | null; "studentCount": number; "createdAt": string; "archivedAt": string | null; };
 
-export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": number | null; };
+export type AdminClassListDto = { "items": (AdminClassDto)[]; "nextOffset": number | null; "total": number; };
 
 export type AdminCurriculumDto = { "items": (AdminTaxonDto)[]; };
 
 export type AdminVersionDto = { "sourceName"?: string | null; "sourceReference"?: string | null; "sourceNamespace"?: string | null; "sourceFileName"?: string | null; "usageType"?: "DRILL" | "PRETEST" | "TRYOUT" | null; "sourceQuestionId"?: string | null; "imported"?: boolean; "id": string; "questionId": string; "primaryCompetencyId": string | null; "curriculumLevelNumber"?: number | null; "variantId": string; "variantCode": string; "variantKind": "ORIGINAL" | "VARIANT"; "originalVariantId": string | null; "versionNumber": number; "questionType": string; "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string | null; "explanation": string; "difficulty": string | null; "contentStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "questionStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reviewedByUserId": string | null; "reviewedAt": string | null; };
 
-export type AdminVersionsDto = { "items": (AdminVersionDto)[]; };
+export type AdminVersionsDto = { "items": (AdminVersionDto)[]; "total": number; };
 
 export type AdminVideoDto = { "id": string; "mappingId": string; "subchapterId": string; "title": string; "url": string; "source": string; "recommendationOrder": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
 
-export type AdminVideosDto = { "items": (AdminVideoDto)[]; };
+export type AdminVideosDto = { "items": (AdminVideoDto)[]; "total": number; };
 
 export type ContentMutationDto = { "id": string; };
 
@@ -167,13 +167,13 @@ export type UpdateVideoDto = { "title"?: string; "url"?: string; "source"?: stri
 
 export type AdminReportDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; };
 
-export type AdminReportsDto = { "items": (AdminReportDto)[]; };
+export type AdminReportsDto = { "items": (AdminReportDto)[]; "total": number; };
 
 export type ResolveReportDto = { "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
 
 export type AdminIrtItemDto = { "id": string; "batchId": string; "questionVersionId": string; "modelVersion": string; "batchStatus": string; "sampleSize": number; "dataStatus": string; "difficultyB": string | null; "discriminationA": string | null; "guessingC": string | null; };
 
-export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; };
+export type AdminIrtDto = { "items": (AdminIrtItemDto)[]; "total": number; };
 
 export type IrtConfigurationPinDto = { "approvalId": string; "digest": string; };
 
@@ -189,11 +189,11 @@ export type IrtRequestsDto = { "items": (IrtRequestDto)[]; };
 
 export type AdminIrtBatchDto = { "id": string; "packageId": string | null; "batchKind": string; "modelVersion": string; "status": "PENDING" | "RUNNING" | "SUCCEEDED" | "FAILED"; "startedAt": string; "finishedAt": string | null; "resultReleasedAt": string | null; "failureCode": string | null; };
 
-export type AdminIrtBatchesDto = { "items": (AdminIrtBatchDto)[]; };
+export type AdminIrtBatchesDto = { "items": (AdminIrtBatchDto)[]; "total": number; };
 
 export type AdminAuditDto = { "id": string; "actorUserId": string | null; "action": string; "entityType": string; "entityId": string | null; "createdAt": string; };
 
-export type AdminAuditListDto = { "items": (AdminAuditDto)[]; };
+export type AdminAuditListDto = { "items": (AdminAuditDto)[]; "total": number; };
 
 export type AdminDashboardDto = { "schools": number; "chapters": number; "questions": number; "readyVersions": number; "openReports": number; };
 
@@ -203,7 +203,7 @@ export type UpdateTryoutDraftDto = { "name": string; "questionVersionIds": (stri
 
 export type AdminTryoutDraftDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "status": string; "questionVersionIds": (string)[]; };
 
-export type AdminTryoutDraftsDto = { "items": (AdminTryoutDraftDto)[]; };
+export type AdminTryoutDraftsDto = { "items": (AdminTryoutDraftDto)[]; "total": number; };
 
 export type CreateDrillPackageDto = { "familyCode": string; "packageVersion": number; "name": string; "levelId": string; "variantIndex": number; "scoringPolicyVersionId": string; "questionVersionIds": (string)[]; };
 
@@ -211,7 +211,7 @@ export type UpdateDrillPackageDto = { "name": string; "scoringPolicyVersionId": 
 
 export type AdminDrillPackageDto = { "id": string; "familyCode": string; "packageVersion": number; "name": string; "levelId": string; "variantIndex": number | null; "scoringPolicyVersionId": string | null; "status": "DRAFT" | "PUBLISHED" | "CLOSED" | "ARCHIVED"; "releaseAt": string | null; "questionVersionIds": (string)[]; };
 
-export type AdminDrillPackagesDto = { "items": (AdminDrillPackageDto)[]; };
+export type AdminDrillPackagesDto = { "items": (AdminDrillPackageDto)[]; "total": number; };
 
 export type GeneratorMappingDto = { "id": string; "label": string; "originalQuestionVersionId": string; "contextId": string; };
 

@@ -101,6 +101,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     versions: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(10),
@@ -131,6 +132,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     videos: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(13),
@@ -146,6 +148,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     reports: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(15),
@@ -161,6 +164,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     irt: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(22),
@@ -178,6 +182,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     irtBatches: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(16),
@@ -194,6 +199,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     audit: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(17),
@@ -208,6 +214,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     dashboard: { schools: 3, chapters: 1, questions: 1, readyVersions: 1, openReports: 1 },
     packages: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(18),
@@ -221,6 +228,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     drillPackages: {
       hasNext: false,
+      total: 1,
       items: [
         {
           id: id(19),
@@ -420,16 +428,42 @@ async function setup(page: Page) {
     else if (path.endsWith('/teacher-tokens')) data = { items: state.tokens };
     else if (path === '/admin/users' || path === '/admin/classes') {
       const term = (url.searchParams.get('search') ?? '').toLowerCase();
+      const role = url.searchParams.get('role');
+      const status = url.searchParams.get('status');
+      const schoolId = url.searchParams.get('schoolId');
+      const teacherId = url.searchParams.get('teacherId');
+      const classState = url.searchParams.get('state');
       const rows =
         path === '/admin/users'
-          ? state.users.filter((u) => u.displayName.toLowerCase().includes(term))
-          : state.classes.filter((c) => c.name.toLowerCase().includes(term));
+          ? state.users.filter(
+              (u) =>
+                u.displayName.toLowerCase().includes(term) &&
+                (!role || u.role === role) &&
+                (!status || u.status === status),
+            )
+          : state.classes.filter(
+              (c) =>
+                c.name.toLowerCase().includes(term) &&
+                (!schoolId || c.schoolId === schoolId) &&
+                (!teacherId || c.teacherId === teacherId) &&
+                (!classState || (classState === 'active' ? !c.archivedAt : !!c.archivedAt)),
+            );
       const offset = Number(url.searchParams.get('offset') ?? 0);
       const limit = Number(url.searchParams.get('limit') ?? 20);
       data = {
         items: rows.slice(offset, offset + limit),
         nextOffset: offset + limit < rows.length ? offset + limit : null,
+        total: rows.length,
       };
+    } else if (path === '/admin/reports') {
+      const kind = url.searchParams.get('kind');
+      const status = url.searchParams.get('status');
+      const rows = state.data.reports.items.filter(
+        (report) => (!kind || report.kind === kind) && (!status || report.status === status),
+      );
+      const offset = Number(url.searchParams.get('offset') ?? 0);
+      const limit = Number(url.searchParams.get('limit') ?? 20);
+      data = { items: rows.slice(offset, offset + limit), total: rows.length };
     } else {
       const mapping: Record<string, unknown> = {
         '/admin/content/curriculum': state.data.curriculum,
@@ -442,6 +476,7 @@ async function setup(page: Page) {
         '/admin/dashboard': state.data.dashboard,
         '/admin/content/tryout-packages': state.data.packages,
         '/admin/content/drill-packages': state.data.drillPackages,
+        '/admin/content/packages': { items: [], total: 0 },
       };
       if (path === '/admin/content/versions')
         state.offsets.push(url.searchParams.get('offset') ?? '0');
@@ -449,7 +484,10 @@ async function setup(page: Page) {
       const limit = Number(url.searchParams.get('limit') ?? 0);
       if (limit && typeof data === 'object' && data !== null && 'items' in data) {
         const offset = Number(url.searchParams.get('offset') ?? 0);
-        data = { items: (data.items as unknown[]).slice(offset, offset + limit) };
+        data = {
+          ...data,
+          items: (data.items as unknown[]).slice(offset, offset + limit),
+        };
       }
     }
     await route.fulfill({ json: data });
@@ -525,11 +563,11 @@ for (const width of [390, 1280]) {
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
     expect(new URL((await nextRequest).url()).searchParams.get('limit')).toBe('5');
     await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
-    await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Halaman 2/)).toBeVisible();
     await expect(page.getByRole('button', { name: 'Berikutnya', exact: true })).toBeDisabled();
     await page.getByLabel('Nama pengguna').fill('TEST 1');
     await page.getByRole('button', { name: /Terapkan filter/ }).click();
-    await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
+    await expect(page.getByText(/Halaman 1/)).toBeVisible();
     await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
     if (width === 1280) {
       const name = await page.getByLabel('Nama pengguna').boundingBox();
@@ -551,8 +589,10 @@ for (const width of [390, 1280]) {
       id: id(300 + n),
       stem: `Soal TEST ${n + 1}`,
     }));
+    state.data.versions.total = state.data.versions.items.length;
     await page.goto('/admin/content');
     await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Buat revisi / varian' }).first().click();
     await page
       .getByLabel('Teks soal (LaTeX inline diperbolehkan)')
       .fill('Draf TEST belum disimpan');
@@ -562,11 +602,9 @@ for (const width of [390, 1280]) {
       'Draf TEST belum disimpan',
     );
     if (width === 1280) {
-      const toolbar = await page
-        .locator('.admin-content-view > .admin-search-toolbar')
-        .boundingBox();
-      const area = await page.locator('.admin-content-view').boundingBox();
-      expect(toolbar!.width).toBeGreaterThan(area!.width * 0.95);
+      const toolbar = await page.locator('.admin-content-view .excel-editor-options').boundingBox();
+      const section = await page.locator('.admin-content-view > section').boundingBox();
+      expect(toolbar!.width).toBeGreaterThan(section!.width * 0.95);
     }
     await capture(page, 'pagination-questions', width);
 
@@ -662,6 +700,28 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         'aria-current',
         'page',
       );
+      if (name === 'curriculum') {
+        const filterBox = await page.locator('.admin-curriculum-filters').boundingBox();
+        const formBox = await page.locator('.admin-content-form').boundingBox();
+        const listBox = await page
+          .locator('.admin-curriculum-panel .monitoring-list')
+          .boundingBox();
+        expect(filterBox).not.toBeNull();
+        expect(formBox).not.toBeNull();
+        expect(listBox).not.toBeNull();
+        expect(filterBox!.y).toBeLessThan(formBox!.y);
+        if (width < 700) {
+          expect(listBox!.y).toBeLessThan(formBox!.y);
+        } else if (width >= 1200) {
+          const paginationBox = await page
+            .locator('.admin-curriculum-panel .admin-pagination')
+            .boundingBox();
+          expect(paginationBox).not.toBeNull();
+          expect(listBox!.x).toBeGreaterThan(formBox!.x);
+          expect(paginationBox!.y).toBeGreaterThanOrEqual(listBox!.y + listBox!.height);
+          expect(Math.abs(paginationBox!.x - listBox!.x)).toBeLessThan(2);
+        }
+      }
       await capture(page, name, width);
     }
     await expect(page.getByText('question_version_reviewed', { exact: true })).toBeVisible();
@@ -802,12 +862,13 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
     ...state.data.versions.items[0]!,
     id: id(300 + n),
   }));
+  state.data.versions.total = state.data.versions.items.length;
   await page.goto('/admin/content');
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Halaman 2/)).toBeVisible();
   expect(state.offsets).toContain('5');
   await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
-  await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
+  await expect(page.getByText(/Halaman 1/)).toBeVisible();
   for (const list of [
     state.data.curriculum,
     state.data.versions,

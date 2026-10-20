@@ -7,7 +7,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   allowSyntheticContent,
   assessmentPackages,
@@ -63,29 +63,31 @@ export class ContentPackagesService {
   async list(query: ContentPackageQueryDto): Promise<ContentPackagesDto> {
     this.importer.enabled();
     return getDatabase().db.transaction(async (tx) => {
-      const rows = await tx
-        .select({ id: assessmentPackages.id })
-        .from(assessmentPackages)
-        .where(
-          and(
-            inArray(assessmentPackages.assessmentType, ['DRILL', 'PRETEST', 'TRYOUT']),
-            eq(assessmentPackages.purpose, 'REGULAR'),
-            query.usageType ? eq(assessmentPackages.assessmentType, query.usageType) : undefined,
-            query.status ? sql`${assessmentPackages.status}::text = ${query.status}` : undefined,
-            query.chapterId
-              ? sql`(${assessmentPackages.chapterId} = ${query.chapterId} or ${assessmentPackages.levelId} in (select l.id from levels l join subchapters s on s.id=l.subchapter_id where s.chapter_id=${query.chapterId}))`
-              : undefined,
-            query.source
-              ? sql`position(lower(${query.source}) in lower(coalesce(${assessmentPackages.importSource}->>'sourceName',''))) > 0`
-              : undefined,
-          ),
-        )
-        .orderBy(desc(assessmentPackages.packageVersion), asc(assessmentPackages.familyCode))
-        .limit(query.limit ?? 100)
-        .offset(query.offset ?? 0);
+      const where = and(
+        inArray(assessmentPackages.assessmentType, ['DRILL', 'PRETEST', 'TRYOUT']),
+        eq(assessmentPackages.purpose, 'REGULAR'),
+        query.usageType ? eq(assessmentPackages.assessmentType, query.usageType) : undefined,
+        query.status ? sql`${assessmentPackages.status}::text = ${query.status}` : undefined,
+        query.chapterId
+          ? sql`(${assessmentPackages.chapterId} = ${query.chapterId} or ${assessmentPackages.levelId} in (select l.id from levels l join subchapters s on s.id=l.subchapter_id where s.chapter_id=${query.chapterId}))`
+          : undefined,
+        query.source
+          ? sql`position(lower(${query.source}) in lower(coalesce(${assessmentPackages.importSource}->>'sourceName',''))) > 0`
+          : undefined,
+      );
+      const [rows, [total]] = await Promise.all([
+        tx
+          .select({ id: assessmentPackages.id })
+          .from(assessmentPackages)
+          .where(where)
+          .orderBy(desc(assessmentPackages.packageVersion), asc(assessmentPackages.familyCode))
+          .limit(query.limit ?? 100)
+          .offset(query.offset ?? 0),
+        tx.select({ total: count() }).from(assessmentPackages).where(where),
+      ]);
       const items = [];
       for (const row of rows) items.push(await packageContext(tx, row.id));
-      return { items };
+      return { items, total: total!.total };
     });
   }
   create(actor: string, body: CreateContentPackageDto) {

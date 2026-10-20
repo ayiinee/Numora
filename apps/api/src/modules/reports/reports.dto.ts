@@ -1,5 +1,19 @@
-import { ApiProperty } from '@nestjs/swagger';
-import { IsIn, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
+import { IsIn, IsOptional, IsString, Matches, MaxLength, MinLength } from 'class-validator';
+import { ContentPageDto } from '../content/content.dto';
+
+export class AdminReportQueryDto extends ContentPageDto {
+  @ApiPropertyOptional({ enum: ['QUESTION', 'VIDEO'] })
+  @IsOptional()
+  @IsIn(['QUESTION', 'VIDEO'])
+  kind?: 'QUESTION' | 'VIDEO';
+
+  @ApiPropertyOptional({ enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] })
+  @IsOptional()
+  @IsIn(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'])
+  status?: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED';
+}
+
 export class ResolveReportDto {
   @ApiProperty({ enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] })
   @IsIn(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'])
@@ -18,4 +32,5 @@ export class AdminReportDto {
 }
 export class AdminReportsDto {
   @ApiProperty({ type: [AdminReportDto] }) items!: AdminReportDto[];
+  @ApiProperty() total!: number;
 }

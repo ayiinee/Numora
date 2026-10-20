@@ -252,6 +252,7 @@ export class AdminVersionDto {
 }
 export class AdminVersionsDto {
   @ApiProperty({ type: [AdminVersionDto] }) items!: AdminVersionDto[];
+  @ApiProperty() total!: number;
 }
 export class AdminVideoDto {
   @ApiProperty() id!: string;
@@ -265,6 +266,7 @@ export class AdminVideoDto {
 }
 export class AdminVideosDto {
   @ApiProperty({ type: [AdminVideoDto] }) items!: AdminVideoDto[];
+  @ApiProperty() total!: number;
 }
 export class ContentMutationDto {
   @ApiProperty() id!: string;
@@ -295,4 +297,5 @@ export class AdminTryoutDraftDto {
 }
 export class AdminTryoutDraftsDto {
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
+  @ApiProperty() total!: number;
 }

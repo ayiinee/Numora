@@ -43,20 +43,27 @@ export class AdminService {
     };
   }
   async audit(page: ContentPageDto): Promise<AdminAuditListDto> {
-    const rows = await getDatabase()
-      .db.select({
-        id: auditLogs.id,
-        actorUserId: auditLogs.actorUserId,
-        action: auditLogs.action,
-        entityType: auditLogs.entityType,
-        entityId: auditLogs.entityId,
-        createdAt: auditLogs.createdAt,
-      })
-      .from(auditLogs)
-      .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-      .limit(page.limit)
-      .offset(page.offset);
+    const { db } = getDatabase();
+    const [rows, [total]] = await Promise.all([
+      db
+        .select({
+          id: auditLogs.id,
+          actorUserId: auditLogs.actorUserId,
+          action: auditLogs.action,
+          entityType: auditLogs.entityType,
+          entityId: auditLogs.entityId,
+          createdAt: auditLogs.createdAt,
+        })
+        .from(auditLogs)
+        .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      db.select({ total: count() }).from(auditLogs),
+    ]);
     // Metadata from legacy token events is deliberately excluded from this general list.
-    return { items: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) };
+    return {
+      items: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+      total: total!.total,
+    };
   }
 }

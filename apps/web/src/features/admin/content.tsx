@@ -1,6 +1,4 @@
 'use client';
-import { ADMIN_PAGE_SIZE } from './pagination';
-
 import Link from 'next/link';
 import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { Badge, Button } from '@tka/ui';
@@ -8,6 +6,7 @@ import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
 import { classifyQuestion } from './content-package-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import {
   setChapterCategory,
   createChapter,
@@ -112,18 +111,26 @@ function AdminContentScreenContent() {
   const [versionStatus, setVersionStatus] = useState('');
   const [versionChapter, setVersionChapter] = useState('');
   const [versionSource, setVersionSource] = useState('');
+  const [reportFilters, setReportFilters] = useState<{
+    kind: 'ALL' | 'QUESTION' | 'VIDEO';
+    status: 'ALL' | 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED';
+  }>({ kind: 'ALL', status: 'ALL' });
   const versionQuery = new URLSearchParams({
     ...(versionUsage ? { usageType: versionUsage } : {}),
     ...(versionStatus ? { status: versionStatus } : {}),
     ...(versionChapter ? { chapterId: versionChapter } : {}),
     ...(versionSource ? { source: versionSource } : {}),
   }).toString();
+  const reportQuery = new URLSearchParams({
+    ...(reportFilters.kind !== 'ALL' ? { kind: reportFilters.kind } : {}),
+    ...(reportFilters.status !== 'ALL' ? { status: reportFilters.status } : {}),
+  }).toString();
   useEffect(() => {
     if (!token) return;
     let active = true;
     setLoading(true);
     setError('');
-    loadAdminWorkbench(token, offset, versionQuery, canReadAudit).then(
+    loadAdminWorkbench(token, offset, versionQuery, canReadAudit, reportQuery).then(
       (result) => {
         if (active) {
           setData(result);
@@ -142,7 +149,7 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, versionQuery, canReadAudit]);
+  }, [token, offset, revision, versionQuery, reportQuery, canReadAudit]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
@@ -217,6 +224,20 @@ function AdminContentScreenContent() {
         audit: current.audit.hasNext,
       }[view]
     : false;
+  const totalItems = current
+    ? {
+        curriculum: current.curriculum.items.length,
+        questions: current.versions.total,
+        verification: current.versions.total + (canReadAudit ? current.audit.total : 0),
+        videos: current.videos.total,
+        packages: current.packages.total,
+        drillPackages: current.drillPackages.total,
+        directedPackages: 0,
+        reports: current.reports.total,
+        irt: current.irt.total + current.irtBatches.total,
+        audit: current.audit.total,
+      }[view]
+    : 0;
   return (
     <AdminFrame
       title="Konten & assessment"
@@ -293,8 +314,10 @@ function AdminContentScreenContent() {
                   )}
                   <section>
                     <h2>Versi soal</h2>
-                    <Link href="/admin/content/generator">Generator varian</Link>
-                    <Link href="/admin/content/imports">Upload soal dari template Excel</Link>
+                    <div className="admin-content-actions">
+                      <Link href="/admin/content/generator">Generator varian</Link>
+                      <Link href="/admin/content/imports">Upload soal dari template Excel</Link>
+                    </div>
                     <div className="excel-editor-options">
                       <label>
                         Tujuan soal
@@ -353,6 +376,7 @@ function AdminContentScreenContent() {
                         Sumber soal
                         <input
                           value={versionSource}
+                          placeholder="Cari nama sumber atau file"
                           maxLength={240}
                           disabled={busy}
                           onChange={(e) => {
@@ -538,7 +562,18 @@ function AdminContentScreenContent() {
                 />
               )}
               {view === 'reports' && (
-                <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
+                <Reports
+                  data={current}
+                  token={token}
+                  busy={busy}
+                  run={run}
+                  navigate={navigate}
+                  filters={reportFilters}
+                  onFiltersChange={(filters) => {
+                    setReportFilters(filters);
+                    setOffset(0);
+                  }}
+                />
               )}
               {view === 'irt' && (
                 <section>
@@ -619,28 +654,14 @@ function AdminContentScreenContent() {
                 </section>
               )}
             </div>
-            {view !== 'curriculum' && (
-              <nav className="admin-content-actions" aria-label="Halaman data">
-                <Button
-                  disabled={offset === 0 || busy || loading}
-                  onClick={() => {
-                    setLoading(true);
-                    setOffset(Math.max(0, offset - ADMIN_PAGE_SIZE));
-                  }}
-                >
-                  Sebelumnya
-                </Button>
-                <span>Halaman {offset / ADMIN_PAGE_SIZE + 1}</span>
-                <Button
-                  disabled={!hasNext || busy || loading}
-                  onClick={() => {
-                    setLoading(true);
-                    setOffset(offset + ADMIN_PAGE_SIZE);
-                  }}
-                >
-                  Berikutnya
-                </Button>
-              </nav>
+            {view !== 'curriculum' && view !== 'directedPackages' && (
+              <AdminPagination
+                offset={offset}
+                hasNext={hasNext}
+                totalItems={totalItems}
+                disabled={busy || loading}
+                onChange={setOffset}
+              />
             )}
           </>
         )}
@@ -665,27 +686,36 @@ function Reports({
   busy,
   run,
   navigate,
-}: EditorProps & { navigate: (view: View) => void }) {
+  filters,
+  onFiltersChange,
+}: EditorProps & {
+  navigate: (view: View) => void;
+  filters: {
+    kind: 'ALL' | 'QUESTION' | 'VIDEO';
+    status: 'ALL' | 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED';
+  };
+  onFiltersChange: (filters: {
+    kind: 'ALL' | 'QUESTION' | 'VIDEO';
+    status: 'ALL' | 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED';
+  }) => void;
+}) {
   type Report = Workbench['reports']['items'][number];
-  const [kind, setKind] = useState<Report['kind'] | 'ALL'>('ALL');
-  const [status, setStatus] = useState<Report['status'] | 'ALL'>('ALL');
-  const visible = data.reports.items.filter(
-    (report) =>
-      (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
-  );
+  const visible = data.reports.items;
   return (
     <section>
       <h2>Laporan soal dan video</h2>
       <p>
-        Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.
+        Cari laporan berdasarkan jenis atau status. Jumlah hasil dan halaman mengikuti filter aktif.
       </p>
       <div className="admin-content-actions">
         <label>
           Jenis laporan
           <select
             aria-label="Jenis laporan"
-            value={kind}
-            onChange={(event) => setKind(event.target.value as typeof kind)}
+            value={filters.kind}
+            onChange={(event) =>
+              onFiltersChange({ ...filters, kind: event.target.value as typeof filters.kind })
+            }
           >
             <option value="ALL">Semua jenis</option>
             <option value="QUESTION">Soal</option>
@@ -696,8 +726,10 @@ function Reports({
           Status laporan
           <select
             aria-label="Filter status laporan"
-            value={status}
-            onChange={(event) => setStatus(event.target.value as typeof status)}
+            value={filters.status}
+            onChange={(event) =>
+              onFiltersChange({ ...filters, status: event.target.value as typeof filters.status })
+            }
           >
             <option value="ALL">Semua status</option>
             {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
@@ -1122,6 +1154,43 @@ function DrillPackageEditor({
 
 function Curriculum({ data, token, busy, run }: EditorProps) {
   const [kind, setKind] = useState<AdminTaxonDto['kind']>('CHAPTER');
+  const [search, setSearch] = useState('');
+  const [filterKind, setFilterKind] = useState<AdminTaxonDto['kind'] | 'ALL'>('ALL');
+  const [filterStatus, setFilterStatus] = useState<AdminTaxonDto['status'] | 'ALL'>('ALL');
+  const [filterChapter, setFilterChapter] = useState('ALL');
+  const filterKey = `${search.trim().toLocaleLowerCase('id-ID')}|${filterKind}|${filterStatus}|${filterChapter}`;
+  const taxonsById = new Map(data.curriculum.items.map((taxon) => [taxon.id, taxon]));
+  const chapters = data.curriculum.items.filter((taxon) => taxon.kind === 'CHAPTER');
+  const filteredTaxons = data.curriculum.items.filter((taxon) => {
+    const query = search.trim().toLocaleLowerCase('id-ID');
+    if (filterKind !== 'ALL' && taxon.kind !== filterKind) return false;
+    if (filterStatus !== 'ALL' && taxon.status !== filterStatus) return false;
+    if (query) {
+      const parentName = data.curriculum.items.find((parent) => parent.id === taxon.parentId)?.name;
+      if (
+        ![taxon.name, taxon.code, parentName].some((value) =>
+          value?.toLocaleLowerCase('id-ID').includes(query),
+        )
+      )
+        return false;
+    }
+    if (filterChapter !== 'ALL') {
+      let current: AdminTaxonDto | undefined = taxon;
+      const visited = new Set<string>();
+      while (
+        current &&
+        current.kind !== 'CHAPTER' &&
+        current.parentId &&
+        !visited.has(current.id)
+      ) {
+        visited.add(current.id);
+        current = taxonsById.get(current.parentId);
+      }
+      if (current?.id !== filterChapter) return false;
+    }
+    return true;
+  });
+  const taxonPage = useAdminPagination(filteredTaxons, filterKey);
   const parents = data.curriculum.items.filter(
     (r) => r.kind === (kind === 'SUBCHAPTER' ? 'CHAPTER' : 'SUBCHAPTER'),
   );
@@ -1158,7 +1227,7 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
     LEVEL: 'levels',
   } as const;
   return (
-    <section>
+    <section className="admin-curriculum-panel">
       <h2>Materi dan kompetensi</h2>
       <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
         <Field label="Jenis materi" name="kind">
@@ -1215,68 +1284,140 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
           Simpan draf materi
         </Button>
       </AdminEditorForm>
-      {!data.curriculum.items.length && <p>Belum ada materi. Mulai dengan Bab.</p>}
-      <ul className="monitoring-list">
-        {data.curriculum.items.map((r) => (
-          <li key={r.id} className="monitoring-notice admin-content-row">
-            <strong>{r.name}</strong>
-            <small>
-              {r.kind} · {r.code} · {r.status} · Induk:{' '}
-              {data.curriculum.items.find((p) => p.id === r.parentId)?.name ?? '—'}
-            </small>
-            {r.kind === 'CHAPTER' && (
-              <label>
-                Kategori bab: {r.name}
-                <CategorySelect
-                  value={r.materialCategory ?? ''}
-                  disabled={busy}
-                  onChange={(e) =>
-                    void run(() => setChapterCategory(token, r.id, e.target.value || null))
-                  }
-                />
-              </label>
-            )}
-            <div className="admin-content-actions">
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() => {
-                  const name = window.prompt('Nama / deskripsi baru', r.name);
-                  if (name?.trim()) void run(() => renameTaxon(token, r, name.trim()));
-                }}
-              >
-                Ubah nama / deskripsi
-              </Button>
-              {r.status !== 'READY' && (
-                <Button
-                  disabled={busy}
-                  onClick={() =>
-                    void run(() => setContentStatus(token, resources[r.kind], r.id, 'READY'))
-                  }
-                >
-                  Atur READY
-                </Button>
-              )}
-              {r.status !== 'ARCHIVED' && (
-                <Button
-                  variant="danger-outline"
-                  disabled={busy}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Arsipkan materi ini? Materi dapat hilang dari katalog untuk pengerjaan baru.',
-                      )
-                    )
-                      void run(() => setContentStatus(token, resources[r.kind], r.id, 'ARCHIVED'));
-                  }}
-                >
-                  Arsipkan
-                </Button>
-              )}
-            </div>
-          </li>
-        ))}
-      </ul>
+      <div className="admin-content-actions admin-curriculum-filters" aria-label="Filter materi">
+        <label>
+          Cari materi
+          <input
+            type="search"
+            aria-label="Cari materi"
+            placeholder="Nama, kode, atau induk"
+            value={search}
+            onChange={(event) => setSearch(event.target.value)}
+          />
+        </label>
+        <label>
+          Jenis materi
+          <select
+            aria-label="Filter jenis materi"
+            value={filterKind}
+            onChange={(event) => setFilterKind(event.target.value as AdminTaxonDto['kind'] | 'ALL')}
+          >
+            <option value="ALL">Semua jenis</option>
+            {(['CHAPTER', 'SUBCHAPTER', 'COMPETENCY', 'LEVEL'] as const).map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Status materi
+          <select
+            aria-label="Filter status materi"
+            value={filterStatus}
+            onChange={(event) =>
+              setFilterStatus(event.target.value as AdminTaxonDto['status'] | 'ALL')
+            }
+          >
+            <option value="ALL">Semua status</option>
+            {(['DRAFT', 'READY', 'REVISION', 'ARCHIVED'] as const).map((value) => (
+              <option key={value} value={value}>
+                {value}
+              </option>
+            ))}
+          </select>
+        </label>
+        <label>
+          Bab
+          <select
+            aria-label="Filter bab materi"
+            value={filterChapter}
+            onChange={(event) => setFilterChapter(event.target.value)}
+          >
+            <option value="ALL">Semua bab</option>
+            {chapters.map((chapter) => (
+              <option key={chapter.id} value={chapter.id}>
+                {chapter.name}
+              </option>
+            ))}
+          </select>
+        </label>
+        <span role="status" aria-live="polite">
+          {filteredTaxons.length} materi cocok
+        </span>
+      </div>
+      {!data.curriculum.items.length ? (
+        <p className="admin-curriculum-empty">Belum ada materi. Mulai dengan Bab.</p>
+      ) : !filteredTaxons.length ? (
+        <p className="admin-curriculum-empty">Tidak ada materi yang cocok dengan filter ini.</p>
+      ) : (
+        <>
+          <ul className="monitoring-list">
+            {taxonPage.items.map((r) => (
+              <li key={r.id} className="monitoring-notice admin-content-row">
+                <strong>{r.name}</strong>
+                <small>
+                  {r.kind} · {r.code} · {r.status} · Induk:{' '}
+                  {data.curriculum.items.find((p) => p.id === r.parentId)?.name ?? '—'}
+                </small>
+                {r.kind === 'CHAPTER' && (
+                  <label>
+                    Kategori bab: {r.name}
+                    <CategorySelect
+                      value={r.materialCategory ?? ''}
+                      disabled={busy}
+                      onChange={(e) =>
+                        void run(() => setChapterCategory(token, r.id, e.target.value || null))
+                      }
+                    />
+                  </label>
+                )}
+                <div className="admin-content-actions">
+                  <Button
+                    variant="secondary"
+                    disabled={busy}
+                    onClick={() => {
+                      const name = window.prompt('Nama / deskripsi baru', r.name);
+                      if (name?.trim()) void run(() => renameTaxon(token, r, name.trim()));
+                    }}
+                  >
+                    Ubah nama / deskripsi
+                  </Button>
+                  {r.status !== 'READY' && (
+                    <Button
+                      disabled={busy}
+                      onClick={() =>
+                        void run(() => setContentStatus(token, resources[r.kind], r.id, 'READY'))
+                      }
+                    >
+                      Atur READY
+                    </Button>
+                  )}
+                  {r.status !== 'ARCHIVED' && (
+                    <Button
+                      variant="danger-outline"
+                      disabled={busy}
+                      onClick={() => {
+                        if (
+                          window.confirm(
+                            'Arsipkan materi ini? Materi dapat hilang dari katalog untuk pengerjaan baru.',
+                          )
+                        )
+                          void run(() =>
+                            setContentStatus(token, resources[r.kind], r.id, 'ARCHIVED'),
+                          );
+                      }}
+                    >
+                      Arsipkan
+                    </Button>
+                  )}
+                </div>
+              </li>
+            ))}
+          </ul>
+          <AdminPagination {...taxonPage.pagination} label="Pagination materi" disabled={busy} />
+        </>
+      )}
     </section>
   );
 }

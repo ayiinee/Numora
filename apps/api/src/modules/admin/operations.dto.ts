@@ -46,6 +46,7 @@ export class AdminUserDto {
 export class AdminUserListDto {
   @ApiProperty({ type: [AdminUserDto] }) items!: AdminUserDto[];
   @ApiProperty({ type: Number, nullable: true }) nextOffset!: number | null;
+  @ApiProperty() total!: number;
 }
 export class AdminClassDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
@@ -61,4 +62,5 @@ export class AdminClassDto {
 export class AdminClassListDto {
   @ApiProperty({ type: [AdminClassDto] }) items!: AdminClassDto[];
   @ApiProperty({ type: Number, nullable: true }) nextOffset!: number | null;
+  @ApiProperty() total!: number;
 }

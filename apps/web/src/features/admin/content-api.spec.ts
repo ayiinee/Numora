@@ -7,12 +7,12 @@ vi.mock('@/lib/api', () => ({ apiRequest: vi.fn() }));
 describe('admin workbench loading', () => {
   beforeEach(() => {
     vi.mocked(apiRequest).mockReset();
-    vi.mocked(apiRequest).mockResolvedValue({ items: [] });
+    vi.mocked(apiRequest).mockResolvedValue({ items: [], total: 0 });
   });
 
   it('does not request general audit for Content Admin', async () => {
     const result = await loadAdminWorkbench('test-token', 0);
-    expect(result.audit).toEqual({ items: [], hasNext: false });
+    expect(result.audit).toEqual({ items: [], hasNext: false, total: 0 });
     expect(
       vi.mocked(apiRequest).mock.calls.some(([path]) => path.startsWith('admin/audit-logs')),
     ).toBe(false);
@@ -23,14 +23,23 @@ describe('admin workbench loading', () => {
     expect(apiRequest).toHaveBeenCalledWith('admin/audit-logs?limit=6&offset=0', 'test-token');
   });
 
+  it('applies report filters to the server-side query', async () => {
+    await loadAdminWorkbench('test-token', 0, '', false, 'kind=VIDEO&status=OPEN');
+    expect(apiRequest).toHaveBeenCalledWith(
+      'admin/reports?limit=6&offset=0&kind=VIDEO&status=OPEN',
+      'test-token',
+    );
+  });
+
   it('uses an extra row to show only five records and detect whether another page exists', async () => {
     const rows = Array.from({ length: 6 }, (_, id) => ({ id }));
-    vi.mocked(apiRequest).mockResolvedValue({ items: rows });
+    vi.mocked(apiRequest).mockResolvedValue({ items: rows, total: rows.length });
     const first = await loadAdminWorkbench('test-token', 0);
     expect(first.versions.items).toEqual(rows.slice(0, 5));
     expect(first.versions.hasNext).toBe(true);
+    expect(first.versions.total).toBe(6);
 
-    vi.mocked(apiRequest).mockResolvedValue({ items: rows.slice(1) });
+    vi.mocked(apiRequest).mockResolvedValue({ items: rows.slice(1), total: 6 });
     const last = await loadAdminWorkbench('test-token', 5);
     expect(apiRequest).toHaveBeenCalledWith(
       'admin/content/versions?limit=6&offset=5',
@@ -38,5 +47,6 @@ describe('admin workbench loading', () => {
     );
     expect(last.versions.items).toHaveLength(5);
     expect(last.versions.hasNext).toBe(false);
+    expect(last.versions.total).toBe(6);
   });
 });

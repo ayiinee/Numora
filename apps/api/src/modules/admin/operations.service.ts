@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, ilike, isNotNull, isNull, ne, sql } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, isNotNull, isNull, ne, sql } from 'drizzle-orm';
 import { classes, classMemberships, getDatabase, schools, users } from '@tka/database';
 import type {
   AdminClassDto,
@@ -36,23 +36,27 @@ function userDto(
 export class AdminOperationsService {
   async users(query: AdminUserQueryDto, includeAdminAccounts = false) {
     const term = search(query.search);
-    const rows = await getDatabase()
-      .db.select(userFields)
-      .from(users)
-      .where(
-        and(
-          includeAdminAccounts ? undefined : ne(users.role, 'ADMIN'),
-          term ? ilike(users.displayName, term) : undefined,
-          query.role ? eq(users.role, query.role) : undefined,
-          query.status ? eq(users.status, query.status) : undefined,
-        ),
-      )
-      .orderBy(desc(users.createdAt), desc(users.id))
-      .limit(query.limit + 1)
-      .offset(query.offset);
+    const where = and(
+      includeAdminAccounts ? undefined : ne(users.role, 'ADMIN'),
+      term ? ilike(users.displayName, term) : undefined,
+      query.role ? eq(users.role, query.role) : undefined,
+      query.status ? eq(users.status, query.status) : undefined,
+    );
+    const { db } = getDatabase();
+    const [rows, [total]] = await Promise.all([
+      db
+        .select(userFields)
+        .from(users)
+        .where(where)
+        .orderBy(desc(users.createdAt), desc(users.id))
+        .limit(query.limit + 1)
+        .offset(query.offset),
+      db.select({ total: count() }).from(users).where(where),
+    ]);
     return {
       items: rows.slice(0, query.limit).map(userDto),
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
+      total: total!.total,
     };
   }
   async user(id: string, includeAdminAccounts = false) {
@@ -82,22 +86,25 @@ export class AdminOperationsService {
   }
   async classes(query: AdminClassQueryDto) {
     const term = search(query.search);
-    const rows = await this.classQuery()
-      .where(
-        and(
-          term ? ilike(classes.name, term) : undefined,
-          query.schoolId ? eq(classes.schoolId, query.schoolId) : undefined,
-          query.teacherId ? eq(classes.teacherUserId, query.teacherId) : undefined,
-          query.state === 'active'
-            ? isNull(classes.archivedAt)
-            : query.state === 'archived'
-              ? isNotNull(classes.archivedAt)
-              : undefined,
-        ),
-      )
-      .orderBy(desc(classes.createdAt), desc(classes.id))
-      .limit(query.limit + 1)
-      .offset(query.offset);
+    const where = and(
+      term ? ilike(classes.name, term) : undefined,
+      query.schoolId ? eq(classes.schoolId, query.schoolId) : undefined,
+      query.teacherId ? eq(classes.teacherUserId, query.teacherId) : undefined,
+      query.state === 'active'
+        ? isNull(classes.archivedAt)
+        : query.state === 'archived'
+          ? isNotNull(classes.archivedAt)
+          : undefined,
+    );
+    const { db } = getDatabase();
+    const [rows, [total]] = await Promise.all([
+      this.classQuery()
+        .where(where)
+        .orderBy(desc(classes.createdAt), desc(classes.id))
+        .limit(query.limit + 1)
+        .offset(query.offset),
+      db.select({ total: count() }).from(classes).where(where),
+    ]);
     return {
       items: rows.slice(0, query.limit).map((r): AdminClassDto => ({
         ...r,
@@ -105,6 +112,7 @@ export class AdminOperationsService {
         archivedAt: r.archivedAt?.toISOString() ?? null,
       })),
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
+      total: total!.total,
     };
   }
   async class(id: string): Promise<AdminClassDto> {

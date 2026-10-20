@@ -6,7 +6,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   chapters,
@@ -265,8 +265,9 @@ export class ContentService {
   }
 
   async versions(page: ContentVersionQueryDto): Promise<AdminVersionsDto> {
-    const rows = await getDatabase()
-      .db.select({
+    const { db } = getDatabase();
+    const fromVersions = db
+      .select({
         version: questionVersions,
         variant: questionVariants,
         question: questions,
@@ -285,32 +286,55 @@ export class ContentService {
           subchapters.id,
           sql`coalesce(${questions.subchapterId},${levels.subchapterId},${competencies.subchapterId})`,
         ),
-      )
-      .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
-      .leftJoin(
-        contentImportVersions,
-        eq(contentImportVersions.questionVersionId, questionVersions.id),
-      )
-      .where(
-        and(
-          page.usageType === 'UNCLASSIFIED'
-            ? isNull(questions.usageType)
-            : page.usageType
-              ? eq(questions.usageType, page.usageType)
-              : undefined,
-          page.status ? eq(questionVersions.contentStatus, page.status) : undefined,
-          page.chapterId
-            ? sql`coalesce(${questions.chapterId},${subchapters.chapterId}) = ${page.chapterId}`
-            : undefined,
-          page.source
-            ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
-            : undefined,
-        ),
-      )
-      .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
-      .limit(page.limit)
-      .offset(page.offset);
+      );
+    const where = and(
+      page.usageType === 'UNCLASSIFIED'
+        ? isNull(questions.usageType)
+        : page.usageType
+          ? eq(questions.usageType, page.usageType)
+          : undefined,
+      page.status ? eq(questionVersions.contentStatus, page.status) : undefined,
+      page.chapterId
+        ? sql`coalesce(${questions.chapterId},${subchapters.chapterId}) = ${page.chapterId}`
+        : undefined,
+      page.source
+        ? sql`position(lower(${page.source}) in lower(coalesce(${contentImportVersions.provenance}->'packageSource'->>'sourceName',${questions.sourceRef},''))) > 0`
+        : undefined,
+    );
+    const [rows, [total]] = await Promise.all([
+      fromVersions
+        .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
+        .leftJoin(
+          contentImportVersions,
+          eq(contentImportVersions.questionVersionId, questionVersions.id),
+        )
+        .where(where)
+        .orderBy(desc(questionVersions.createdAt), desc(questionVersions.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      db
+        .select({ total: count() })
+        .from(questionVersions)
+        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+        .leftJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
+        .leftJoin(levels, eq(levels.id, questionVersions.levelId))
+        .leftJoin(
+          subchapters,
+          eq(
+            subchapters.id,
+            sql`coalesce(${questions.subchapterId},${levels.subchapterId},${competencies.subchapterId})`,
+          ),
+        )
+        .leftJoin(contentImportIdentities, eq(contentImportIdentities.questionId, questions.id))
+        .leftJoin(
+          contentImportVersions,
+          eq(contentImportVersions.questionVersionId, questionVersions.id),
+        )
+        .where(where),
+    ]);
     return {
+      total: total!.total,
       items: rows.map(
         ({
           version: v,
@@ -614,14 +638,19 @@ export class ContentService {
   }
 
   async videos(page: ContentPageDto): Promise<AdminVideosDto> {
-    const rows = await getDatabase()
-      .db.select({ video: learningVideos, mapping: videoSubchapterMappings })
-      .from(videoSubchapterMappings)
-      .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId))
-      .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(videoSubchapterMappings.id))
-      .limit(page.limit)
-      .offset(page.offset);
+    const { db } = getDatabase();
+    const [rows, [total]] = await Promise.all([
+      db
+        .select({ video: learningVideos, mapping: videoSubchapterMappings })
+        .from(videoSubchapterMappings)
+        .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId))
+        .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(videoSubchapterMappings.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      db.select({ total: count() }).from(videoSubchapterMappings),
+    ]);
     return {
+      total: total!.total,
       items: rows.map(({ video: v, mapping: m }) => ({
         id: v.id,
         mappingId: m.id,
@@ -723,13 +752,19 @@ export class ContentService {
 
   async packages(page: ContentPageDto): Promise<AdminTryoutDraftsDto> {
     const { db } = getDatabase();
-    const rows = await db
-      .select()
-      .from(assessmentPackages)
-      .where(eq(assessmentPackages.assessmentType, 'TRYOUT'))
-      .orderBy(asc(assessmentPackages.familyCode), desc(assessmentPackages.packageVersion))
-      .limit(page.limit)
-      .offset(page.offset);
+    const [rows, [total]] = await Promise.all([
+      db
+        .select()
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.assessmentType, 'TRYOUT'))
+        .orderBy(asc(assessmentPackages.familyCode), desc(assessmentPackages.packageVersion))
+        .limit(page.limit)
+        .offset(page.offset),
+      db
+        .select({ total: count() })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.assessmentType, 'TRYOUT')),
+    ]);
     const items = rows.length
       ? await db
           .select()
@@ -743,6 +778,7 @@ export class ContentService {
           .orderBy(asc(packageItems.displayOrder))
       : [];
     return {
+      total: total!.total,
       items: rows.map((r) => ({
         id: r.id,
         familyCode: r.familyCode,

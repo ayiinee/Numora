@@ -33,8 +33,10 @@ export async function loadAdminWorkbench(
   offset: number,
   versionQuery = '',
   includeAudit = false,
+  reportQuery = '',
 ) {
   const page = `?limit=${ADMIN_PAGE_SIZE + 1}&offset=${offset}`;
+  const reportPage = `admin/reports${page}${reportQuery ? `&${reportQuery}` : ''}`;
   const [
     curriculum,
     versions,
@@ -53,27 +55,33 @@ export async function loadAdminWorkbench(
       token,
     ),
     apiRequest<AdminVideosDto>(`admin/content/videos${page}`, token),
-    apiRequest<AdminReportsDto>(`admin/reports${page}`, token),
+    apiRequest<AdminReportsDto>(reportPage, token),
     apiRequest<AdminIrtDto>(`admin/irt${page}`, token),
     apiRequest<AdminIrtBatchesDto>(`admin/irt/batches${page}`, token),
     includeAudit
       ? apiRequest<AdminAuditListDto>(`admin/audit-logs${page}`, token)
-      : Promise.resolve({ items: [] } satisfies AdminAuditListDto),
+      : Promise.resolve({ items: [], total: 0 } satisfies AdminAuditListDto),
     apiRequest<AdminDashboardDto>('admin/dashboard', token),
     apiRequest<AdminTryoutDraftsDto>(`admin/content/tryout-packages${page}`, token),
     apiRequest<AdminDrillPackagesDto>(`admin/content/drill-packages${page}`, token),
   ]);
   return {
     curriculum,
-    versions: adminPage(versions.items),
-    videos: adminPage(videos.items),
-    reports: adminPage(reports.items),
-    irt: adminPage(irt.items),
-    irtBatches: adminPage(irtBatches.items),
-    audit: adminPage(audit.items),
+    versions: { ...adminPage(versions.items, versions.total, offset), total: versions.total },
+    videos: { ...adminPage(videos.items, videos.total, offset), total: videos.total },
+    reports: { ...adminPage(reports.items, reports.total, offset), total: reports.total },
+    irt: { ...adminPage(irt.items, irt.total, offset), total: irt.total },
+    irtBatches: {
+      ...adminPage(irtBatches.items, irtBatches.total, offset),
+      total: irtBatches.total,
+    },
+    audit: { ...adminPage(audit.items, audit.total, offset), total: audit.total },
     dashboard,
-    packages: adminPage(packages.items),
-    drillPackages: adminPage(drillPackages.items),
+    packages: { ...adminPage(packages.items, packages.total, offset), total: packages.total },
+    drillPackages: {
+      ...adminPage(drillPackages.items, drillPackages.total, offset),
+      total: drillPackages.total,
+    },
   };
 }
 function mutation(token: string, path: string, body: object, method = 'POST') {
