@@ -65,22 +65,12 @@
   --card-padding: 20px;
   color: var(--color-text-inverse);
 }
-.teacher-identity-person {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  margin-top: 16px;
-}
-.teacher-identity-person > div:last-child {
-  min-width: 0;
-}
 .teacher-kicker {
   display: block;
   font-size: 11px;
   font-weight: 600;
   line-height: 1.5;
 }
-.teacher-identity-person h2,
 .teacher-profile-identity h2 {
   font-size: 20px;
   line-height: 1.35;
@@ -88,7 +78,6 @@
   overflow-wrap: anywhere;
   margin: 4px 0;
 }
-.teacher-identity-person p,
 .teacher-profile-identity p {
   font-size: 12px;
   line-height: 1.6;
@@ -683,11 +672,6 @@
 .teacher-bottom-nav a:active {
   background: var(--color-secondary-light);
 }
-.teacher-nav-unavailable {
-  font-size: 9px;
-  line-height: 12px;
-  font-weight: var(--font-normal);
-}
 .teacher-shell--gated .teacher-shell__content {
   padding-bottom: var(--space-8);
 }
@@ -908,10 +892,6 @@
   --card-shadow: none;
   color: var(--color-text);
 }
-.teacher-redesign-shell .teacher-dashboard-layout .teacher-identity-person {
-  margin-top: 8px;
-}
-.teacher-redesign-shell .teacher-dashboard-layout .teacher-identity-person .numora-avatar,
 .teacher-redesign-shell .teacher-dashboard-layout .teacher-kicker,
 .teacher-redesign-shell .teacher-dashboard-layout .teacher-identity-foot {
   display: none;
@@ -1008,32 +988,6 @@
   padding-top: 12px;
   justify-content: space-between;
 }
-.teacher-redesign-shell .teacher-quick-link {
-  display: flex;
-  align-items: center;
-  gap: 12px;
-  min-height: 64px;
-  padding: 12px 0;
-  border-bottom: 1px solid var(--color-border-light);
-}
-.teacher-redesign-shell .teacher-quick-link > svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-.teacher-redesign-shell .teacher-quick-link > span {
-  flex: 1;
-  min-width: 0;
-}
-.teacher-redesign-shell .teacher-quick-link strong {
-  display: block;
-  font-size: 14px;
-}
-.teacher-redesign-shell .teacher-quick-link small {
-  display: block;
-  font-size: 12px;
-  color: var(--color-text-light);
-  margin-top: 4px;
-}
 .teacher-redesign-shell .teacher-class-overview {
   display: grid;
   gap: 20px;
@@ -1080,9 +1034,6 @@
   color: var(--color-primary);
   border: 1px solid var(--color-border);
 }
-.teacher-redesign-shell .teacher-roster-table-heading {
-  display: none;
-}
 .teacher-redesign-shell .teacher-students-card {
   --card-padding: 0;
   --card-background: transparent;
@@ -1096,19 +1047,6 @@
   border: 1px solid var(--color-border-light);
   border-radius: 16px;
   padding: 16px;
-}
-.teacher-redesign-shell .teacher-class-picker,
-.teacher-redesign-shell .teacher-recipient-picker {
-  display: grid;
-  gap: 16px;
-}
-.teacher-redesign-shell .teacher-class-picker > a {
-  display: flex;
-  gap: 8px;
-  align-items: center;
-  min-height: 44px;
-  font-weight: 600;
-  color: var(--color-primary);
 }
 .teacher-redesign-shell .numora-tabs__list {
   background: var(--color-secondary-light);
@@ -1375,19 +1313,8 @@
     grid-template-columns: minmax(0, 1fr) auto;
     align-items: center;
   }
-  .teacher-redesign-shell .teacher-class-picker {
-    grid-template-columns: minmax(0, 1fr) auto;
-    align-items: end;
-  }
-  .teacher-redesign-shell .teacher-recipient-picker {
-    grid-template-columns: repeat(2, minmax(0, 1fr));
-  }
   .teacher-redesign-shell .teacher-progress-row {
     grid-template-columns: minmax(0, 1fr) 220px;
-  }
-  .teacher-redesign-shell .teacher-progress-row__actions {
-    grid-column: 1 / -1;
-    justify-content: flex-end;
   }
   .teacher-redesign-shell .teacher-students-card {
     --card-padding: 0 20px;
@@ -1395,18 +1322,6 @@
     --card-border: 1px solid var(--color-border-light);
     --card-shadow: var(--shadow-sm);
     gap: 0;
-  }
-  .teacher-redesign-shell .teacher-roster-table-heading {
-    display: grid;
-    grid-template-columns: 1fr 1fr;
-    gap: 16px;
-    padding: 16px 0;
-    font-size: 12px;
-    font-weight: 700;
-    border-bottom: 1px solid var(--color-border);
-  }
-  .teacher-redesign-shell .teacher-roster-table-heading span:last-child {
-    text-align: right;
   }
   .teacher-redesign-shell .teacher-student-link {
     border: 0;
