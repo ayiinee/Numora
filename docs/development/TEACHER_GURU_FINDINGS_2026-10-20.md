@@ -78,6 +78,28 @@ Status: **READY** (Aliwafa), perlu dikonfirmasi Ferdi untuk penghapusan. Priorit
 
 Saya tidak menghapusnya di increment ini karena `onboarding-ui.tsx` menyentuh login dan pemilihan role yang secara resmi masih menunggu handoff FR-01, dan perapian struktur FE lintas fitur adalah milik Ferdi (FD-06). Menunggu konfirmasi pemilik sebelum file dibuang.
 
+## GF-05 — Hasil audit visual dan responsif layar Guru (AW-02)
+
+Status: **DONE sebagai audit**, dengan perbaikan state yang menyertainya sudah masuk `feat/teacher-polishv1`. Prioritas: **P1**.
+
+Bukti: `apps/web/e2e/teacher.spec.ts` dijalankan pada SHA increment ini, **23/23 lulus**, menghasilkan 23 layar × 13 viewport (320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1440, 1920). Setiap capture menguji `overflow === false` atas geometri node; **nol overflow** pada seluruh artefak.
+
+Layar yang diaudit: `verification`, `verification-empty`, `verification-school-error`, `verification-token-error`, `verification-session-expired`, `verification-disabled`, `classes`, `classes-loading`, `classes-empty`, `create-class`, `create-error`, `students`, `students-empty`, `progress`, `progress-empty`, `progress-forbidden`, `progress-session-expired`, `invite`, `feedback`, `profile`, `long-identity`, `class-redirect`.
+
+Satu catatan pembacaan bukti: pada tangkapan full-page, navigasi bawah `position: fixed` tampil di posisi viewport-nya sehingga tampak menimpa konten di bawah 768px. Itu perilaku capture, bukan cacat tata letak — overlap sidebar/bottom bar yang sesungguhnya diuji terpisah oleh `Teacher viewport transition switches navigation without overlapping sidebar and bottom bar`.
+
+Temuan yang saya perbaiki sebagai hasil audit ini, semuanya cacat state dan bukan preferensi visual:
+
+| Layar | Sebelum | Sesudah |
+| --- | --- | --- |
+| Verifikasi — token ditolak | satu state error dipakai bersama kegagalan muat sekolah, pesan muncul di bawah field tanpa relasi ARIA | error token memakai slot `error` milik `Input` (`aria-invalid` + `aria-describedby` + `role="alert"`), kegagalan muat sekolah punya alert sendiri; arahan tindakan lanjut untuk 403 |
+| Verifikasi — setelah sukses | `busy` hanya dilepas di cabang gagal, sehingga Guru yang identity-nya belum berpindah terkunci pada form dengan tombol "Memverifikasi…" | status dilepas pada jalur apa pun |
+| Daftar siswa — dialog undang | `code` masih dalam perjalanan dirender sebagai "Kode kelas belum tersedia", dead-end permanen | `pending` menampilkan "Memuat kode kelas…"; fallback hanya untuk kelas yang benar-benar tanpa kode |
+| Daftar siswa — header kode | `—` selama query kelas belum menjawab | "Memuat…" |
+| Profil — daftar kelas kosong | paragraf polos, berbeda dari permukaan Guru lain | `EmptyState` bersama |
+
+Yang sengaja **tidak** saya ubah: hierarki, token warna, tipografi, dan komposisi layout layar Guru. Area ini sudah melewati redesign delapan fase dan revisi umpan balik UI 5 Oktober yang disetujui pemilik, dan joblist §7 menempatkan shared UI serta struktur FE di tangan Ferdi (FD-05/FD-06). Perubahan visual baru perlu keputusan, bukan inisiatif pemilik area.
+
 ## Ringkasan tindak lanjut
 
 | Tiket | Pemilik tindak lanjut | Butuh keputusan sebelum FE kerja |
@@ -86,5 +108,6 @@ Saya tidak menghapusnya di increment ini karena `onboarding-ui.tsx` menyentuh lo
 | GF-02 | Andi (field `joinUrl`) → Aliwafa (konsumi) | Tidak untuk bentuk, ya untuk waktu |
 | GF-03 | Andi / Ferdi (kontrak) | Tidak |
 | GF-04 | Ferdi (FD-06) bersama Aliwafa | Ya, untuk penghapusan |
+| GF-05 | Aliwafa (selesai di branch ini); Ferdi mereview sebagai reviewer FE | Tidak |
 
 Pekerjaan polish yang tidak bergantung pada keempat tiket ini sudah berjalan di branch `feat/teacher-polishv1` dan dicatat pada PR-nya masing-masing.
