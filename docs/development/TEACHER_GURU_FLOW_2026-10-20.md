@@ -91,7 +91,7 @@ Rencananya pengujian aliran ini ada di QA (Farel untuk Guru/Student), jadi peta 
 
 ## 6. Status akhir increment dan titik lanjut
 
-Branch `feat/teacher-polishv1`, 32 commit di atas `main`, tree bersih, **belum di-push dan belum ada PR**.
+Branch `feat/teacher-polishv1` di atas `main` (jumlah commit sengaja tidak ditulis karena berubah setiap commit; cek dengan `git log --oneline main..HEAD | wc -l`), tree bersih, **belum di-push dan belum ada PR**.
 
 Sudah selesai di increment ini: pemetaan flow dan kondisi tiap langkah (AW-01), integrasi status akses, cache ganti akun, dan mitigasi create tanpa jawaban (AW-03), polish kelas/undangan/roster/progres/feedback bersama perapian helper, hook, dan selector CSS mati (AW-02/AW-04). Laporan GF-01 sampai GF-08 ada di dokumen temuan.
 
