@@ -100,6 +100,12 @@ Temuan yang saya perbaiki sebagai hasil audit ini, semuanya cacat state dan buka
 
 Yang sengaja **tidak** saya ubah: hierarki, token warna, tipografi, dan komposisi layout layar Guru. Area ini sudah melewati redesign delapan fase dan revisi umpan balik UI 5 Oktober yang disetujui pemilik, dan joblist §7 menempatkan shared UI serta struktur FE di tangan Ferdi (FD-05/FD-06). Perubahan visual baru perlu keputusan, bukan inisiatif pemilik area.
 
+### AW-03 — cache antar akun Guru (diverifikasi, kini dipatok tes)
+
+AW-03 meminta pemeriksaan account switch, logout, dan cache pengguna sebelumnya. Jawabannya: isolasi cache Guru bergantung pada satu prop — `TeacherGate` membungkus layarnya dengan `<LearningProvider key={state.profile.id}>`, dan `LearningProvider` membuat `QueryClient` baru tiap mount lalu `client.clear()` saat unmount. Karena kunci query Guru (`teacherKeys` di `features/monitoring/teacher-query.ts`) **tidak** memuat ID Guru, hilangnya prop `key` itu akan membuat roster, daftar siswa, progres, dan riwayat feedback Guru A tampil untuk Guru B sebelum respons server pertama tiba.
+
+`features/monitoring/teacher-gate.test.tsx` sekarang mematok dua arah itu: akun berikutnya mendapat cache kosong, dan sesi yang berakhir melepas cache. Pemeriksaan mutasi dilakukan dengan menghapus `key` tersebut — tes pertama gagal dengan nilai cache Guru A terbaca di sesi Guru B, lalu kode dikembalikan utuh.
+
 ## Ringkasan tindak lanjut
 
 | Tiket | Pemilik tindak lanjut | Butuh keputusan sebelum FE kerja |
