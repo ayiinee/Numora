@@ -353,6 +353,8 @@
 }
 .teacher-account-card .teacher-account-link .numora-list-row {
   padding: 0 !important;
+  /* The anchor around the row owns the pointer; the row itself is not clickable. */
+  cursor: inherit;
 }
 .teacher-verification-shell {
   min-height: 100svh;

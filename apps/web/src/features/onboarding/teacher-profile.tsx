@@ -101,7 +101,6 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
                 description="Lihat kelas dan progres siswa."
                 leading={<Icon name="users" />}
                 trailing={<Icon name="chevron" />}
-                style={{ padding: 0, cursor: 'inherit' }}
               />
             </Link>
           </Card>
