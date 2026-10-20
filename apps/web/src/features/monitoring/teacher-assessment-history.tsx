@@ -6,6 +6,16 @@ import { apiRequest, ApiProblem } from '@/lib/api';
 import type { AssessmentHistoryDto } from '@/features/core-learning/generated-types';
 import { DataState } from '@/features/core-learning/ui';
 
+/**
+ * Built once per module: the previous inline construction created a formatter for every
+ * record on every render. Business time stays Asia/Jakarta while durable stamps are UTC.
+ */
+const submittedAt = new Intl.DateTimeFormat('id-ID', {
+  timeZone: 'Asia/Jakarta',
+  dateStyle: 'medium',
+  timeStyle: 'short',
+});
+
 export function TeacherAssessmentHistory({
   token,
   classId,
@@ -53,12 +63,7 @@ export function TeacherAssessmentHistory({
                 <h3>{record.title}</h3>
                 {record.levelTitle && <p>{record.levelTitle}</p>}
                 <time dateTime={record.submittedAt}>
-                  {new Intl.DateTimeFormat('id-ID', {
-                    timeZone: 'Asia/Jakarta',
-                    dateStyle: 'medium',
-                    timeStyle: 'short',
-                  }).format(new Date(record.submittedAt))}{' '}
-                  WIB
+                  {submittedAt.format(new Date(record.submittedAt))} WIB
                 </time>
               </div>
               <div className="teacher-assessment-record__result">
