@@ -16,7 +16,6 @@ import {
 } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from './teacher-gate';
-export { TeacherGate } from './teacher-gate';
 import { DataState } from '@/features/core-learning/ui';
 import {
   createTeacherClass,

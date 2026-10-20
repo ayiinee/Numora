@@ -4,9 +4,9 @@ import { useState } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, Badge, Button, Card, Icon, ListRow, SectionHeader } from '@tka/ui';
+import { Avatar, Badge, Button, Card, EmptyState, Icon, ListRow, SectionHeader } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
-import { TeacherGate } from '@/features/monitoring/teacher-screens';
+import { TeacherGate } from '@/features/monitoring/teacher-gate';
 import { useAuth } from './auth';
 import { getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
@@ -100,7 +100,11 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
                 </div>
               ))
             ) : (
-              <p>Belum ada kelas. Buat kelas pertama dari Kelas saya.</p>
+              <EmptyState
+                icon={<Icon name="users" />}
+                title="Belum ada kelas"
+                description="Buat kelas pertama dari Kelas saya."
+              />
             )}
           </Card>
           <Card className="teacher-account-card">
