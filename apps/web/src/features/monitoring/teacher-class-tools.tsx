@@ -10,7 +10,7 @@ import { getClassStudents, getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
-import { teacherKeys } from './teacher-query';
+import { findTeacherClass, teacherKeys } from './teacher-query';
 
 export function TeacherInviteContent({
   name,
@@ -148,7 +148,7 @@ function ClassTools({
     queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
   });
-  const cls = classes.data?.items.find((value) => value.id === classId);
+  const cls = findTeacherClass(classes.data?.items, classId);
   return (
     <TeacherShell
       title="Undang siswa"

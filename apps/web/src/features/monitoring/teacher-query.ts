@@ -1,4 +1,16 @@
 import { ApiProblem } from '@/lib/api';
+import type { ClassSummary } from '@/lib/api';
+
+/**
+ * Several Teacher screens read one class out of the shared cached class list. The lookup
+ * lived in each screen, so a change to how the list is cached had to be found twice.
+ */
+export function findTeacherClass(
+  classes: ClassSummary[] | undefined,
+  classId: string,
+): ClassSummary | undefined {
+  return classes?.find((value) => value.id === classId);
+}
 
 /**
  * Single source for the Teacher query cache keys. The same literals were repeated in

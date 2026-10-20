@@ -25,7 +25,7 @@ import {
   ApiProblem,
 } from '@/lib/api';
 import { MonitoredLevelCard, TeacherClassCard, TeacherStudentRow } from './teacher-presentation';
-import { teacherKeys } from './teacher-query';
+import { findTeacherClass, teacherKeys } from './teacher-query';
 import { useTeacherRosterCounts } from './teacher-data';
 import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
 import { TeacherInviteContent } from './teacher-class-tools';
@@ -228,7 +228,7 @@ function ClassStudentsContent({
     queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
-  const cls = classes.data?.items.find((value) => value.id === classId);
+  const cls = findTeacherClass(classes.data?.items, classId);
   const query = useQuery({
     queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
