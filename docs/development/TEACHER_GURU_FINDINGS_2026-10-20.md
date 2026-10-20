@@ -2,7 +2,7 @@
 
 Tanggal: 20 Oktober 2026. Basis kode: `main` pada `6ba9638`. Metode: baca dokumen produk/design/joblist, pembacaan kode FE/BE, pemeriksaan `packages/contracts/openapi/openapi.json`, dan pelaksanaan gate FE. Tidak ada runtime cloud, OAuth nyata, atau audit database yang dilakukan di sini.
 
-Rujukan pembagian: [SE Joblist 19 Oktober](SE_JOBLIST_2026-10-19.md) butir AW-01, AW-03 dan §7. Dokumen ini melaporkan temuan; ia **tidak** menetapkan keputusan produk dan **tidak** mengklaim kapabilitas sudah selesai.
+Rujukan pembagian: [SE Joblist 19 Oktober](SE_JOBLIST_2026-10-19.md) butir AW-01, AW-03 dan §7. Peta alur dan kondisi tiap langkah ada di [Peta flow Guru](TEACHER_GURU_FLOW_2026-10-20.md). Dokumen ini melaporkan temuan; ia **tidak** menetapkan keputusan produk dan **tidak** mengklaim kapabilitas sudah selesai.
 
 Aturan "satu temuan, satu pelaksana" berlaku. Setiap tiket di bawah menyebut pemilik tindak lanjut. FE Guru tidak mengubah kontrak, DTO, atau skema milik domain lain.
 
