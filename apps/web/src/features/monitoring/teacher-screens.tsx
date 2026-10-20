@@ -175,15 +175,16 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
           ) : query.data.items.length ? (
             <div className="teacher-class-grid">
               {query.data.items
-                .filter((cls) =>
+                .map((cls, index) => ({ cls, index }))
+                .filter(({ cls }) =>
                   cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
                 )
-                .map((cls) => (
+                .map(({ cls, index }) => (
                   <TeacherClassCard
                     key={cls.id}
                     value={cls}
-                    index={query.data.items.indexOf(cls)}
-                    count={counts.queries[query.data.items.indexOf(cls)]?.data?.items.length}
+                    index={index}
+                    count={counts.queries[index]?.data?.items.length}
                   />
                 ))}
               {!query.data.items.some((cls) =>
