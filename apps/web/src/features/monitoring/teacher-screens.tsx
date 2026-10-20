@@ -57,6 +57,14 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   // lets TeacherGate route the Teacher to the right destination.
   const accessLost = query.error instanceof ApiProblem && query.error.status === 403;
   const counts = useTeacherRosterCounts(token, query.isSuccess ? query.data.items : undefined);
+  // The match rule and the "no result" check have to agree, so the filtered list is
+  // derived once and keeps each card's position in the unfiltered roster for its count.
+  const needle = search.toLocaleLowerCase('id');
+  const visibleClasses = query.isSuccess
+    ? query.data.items
+        .map((cls, index) => ({ cls, index }))
+        .filter(({ cls }) => cls.name.toLocaleLowerCase('id').includes(needle))
+    : [];
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!name.trim() || busy) return;
@@ -186,22 +194,17 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             <DataState pending={false} error={query.error} retry={() => void query.refetch()} />
           ) : query.data.items.length ? (
             <div className="teacher-class-grid">
-              {query.data.items
-                .map((cls, index) => ({ cls, index }))
-                .filter(({ cls }) =>
-                  cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
-                )
-                .map(({ cls, index }) => (
-                  <TeacherClassCard
-                    key={cls.id}
-                    value={cls}
-                    index={index}
-                    count={counts.queries[index]?.data?.items.length}
-                  />
-                ))}
-              {!query.data.items.some((cls) =>
-                cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
-              ) && <EmptyState title="Kelas tidak ditemukan" description="Coba nama kelas lain." />}
+              {visibleClasses.map(({ cls, index }) => (
+                <TeacherClassCard
+                  key={cls.id}
+                  value={cls}
+                  index={index}
+                  count={counts.queries[index]?.data?.items.length}
+                />
+              ))}
+              {!visibleClasses.length && (
+                <EmptyState title="Kelas tidak ditemukan" description="Coba nama kelas lain." />
+              )}
             </div>
           ) : (
             <Card>

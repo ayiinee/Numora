@@ -110,6 +110,24 @@ it('filters and sorts names without mutating or replacing server identities', as
   expect(screen.getAllByRole('link', { name: /Lihat progres/ })).toHaveLength(1);
   expect(getClassStudents).toHaveBeenCalledWith('test-teacher', 'class-test');
 });
+it('keeps the class search result and its no-match notice on the same rule', async () => {
+  vi.mocked(getTeacherClasses).mockResolvedValue({
+    items: [
+      { id: 'c1', name: 'Kelas IX A', joinCode: 'AAAAAA' },
+      { id: 'c2', name: 'Kelas Pendampingan', joinCode: 'BBBBBB' },
+    ],
+  });
+  render(<TeacherDashboardScreen />);
+  expect(await screen.findAllByRole('link', { name: /Lihat siswa/ })).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'pendampingan' } });
+  expect(screen.getByText('Kelas Pendampingan')).toBeTruthy();
+  expect(screen.queryByText('Kelas IX A')).toBeNull();
+  expect(screen.queryByText('Kelas tidak ditemukan')).toBeNull();
+
+  fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'tidak-ada' } });
+  expect(screen.getByText('Kelas tidak ditemukan')).toBeTruthy();
+  expect(screen.queryAllByRole('link', { name: /Lihat siswa/ })).toHaveLength(0);
+});
 it('preserves zero, distinct best/latest, null and authoritative access state as read-only values', async () => {
   vi.mocked(getTeacherStudentProgress).mockResolvedValue({
     class: { id: 'class-test', name: 'IX A' },
