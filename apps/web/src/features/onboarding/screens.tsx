@@ -496,6 +496,7 @@ function TeacherVerificationContent() {
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Verifikasi belum berhasil.');
       setErrorStatus(cause instanceof ApiProblem ? cause.status : 0);
+    } finally {
       setBusy(false);
     }
   }
