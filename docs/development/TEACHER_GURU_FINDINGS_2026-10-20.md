@@ -112,6 +112,28 @@ AW-03 meminta pemeriksaan account switch, logout, dan cache pengguna sebelumnya.
 
 `features/monitoring/teacher-gate.test.tsx` sekarang mematok dua arah itu: akun berikutnya mendapat cache kosong, dan sesi yang berakhir melepas cache. Pemeriksaan mutasi dilakukan dengan menghapus `key` tersebut — tes pertama gagal dengan nilai cache Guru A terbaca di sesi Guru B, lalu kode dikembalikan utuh.
 
+## GF-06 — Aturan satu kelas (v0.5) masih hidup di layar gabung kelas dan di tesnya
+
+Status: **READY — butuh keputusan pemilik file.** Prioritas usulan: **P1**, karena menyangkut aturan produk yang sudah diganti.
+
+**Yang berubah di produk.** PRD v0.6 mengungguli aturan satu kelas v0.5: satu Siswa boleh punya **maksimal lima kelas aktif**, dan hanya Guru kelas aktif yang dapat memban/meng-unban. `AGENTS.md` mewajibkan perubahan aturan diikuti dokumen, kontrak, dan tes — bukan hanya kode.
+
+**Fakta terverifikasi di `main` `6ba9638`:**
+
+- `ALREADY_IN_CLASS` **tidak ditemukan** di seluruh `apps/api/src` maupun `packages/contracts`. Kode itu tidak pernah dikirim server lagi.
+- `apps/api/src/modules/classes/classes.service.ts` justru mengirim `CLASS_BANNED` (403, ±baris 131), `CLASS_LIMIT_REACHED` (409 "Siswa hanya dapat memiliki maksimal 5 kelas aktif", ±baris 143), dan `CLASS_MEMBERSHIP_CONFLICT` (409, ±baris 154).
+- `apps/web/src/features/onboarding/class-join.tsx:17-18` masih memetakan `ALREADY_IN_CLASS` ke teks: "Satu Siswa hanya boleh aktif pada satu kelas. Keluar atau pindah kelas tidak dapat dilakukan sendiri."
+- Dua tes mengassert kalimat usang itu sebagai hasil yang benar: `class-join.test.tsx:144-152` dan `e2e/student.spec.ts:1194-1200`.
+
+**Dampak sebenarnya.** Teks yang salah saat ini tidak muncul ke Siswa, karena kode pemicunya tidak pernah terkirim — ini cabang mati. Kerugiannya ada di tempat lain dan tetap nyata:
+
+1. Suite hijau sambil mengkodekan aturan yang sudah tidak berlaku. Siapa pun yang membaca tes akan menyimpulkan satu kelas masih aturan aktif, dan agen atau kontributor berikutnya bisa "memperbaiki" backend agar mengembalikan `ALREADY_IN_CLASS` supaya cocok dengan tes.
+2. Tiga kode yang benar-benar dikirim server tidak punya arahan pengguna. Siswa yang diban dari satu kelas dan mencoba gabung lagi hanya menerima `detail` mentah tanpa tahu ia harus meminta unban ke Guru kelas itu; begitu juga siswa yang menyentuh batas lima kelas.
+
+**Perbaikan yang diusulkan.** Hapus entri `ALREADY_IN_CLASS`, tambah `CLASS_BANNED`, `CLASS_LIMIT_REACHED`, dan `CLASS_MEMBERSHIP_CONFLICT` dengan arahan yang sesuai v0.6, lalu ubah kedua tes agar menguji kode yang benar-benar dikirim server. Tidak ada perubahan kontrak atau skema.
+
+**Kenapa tidak saya kerjakan sekarang.** `features/onboarding/class-join.tsx` adalah sisi Siswa. Joblist §7 memberi Saya "bagian Teacher/onboarding" dan memberi Avicenna seluruh route/komponen Siswa, jadi kepemilikan file ini ambigu. Aturan tim menyebut satu temuan satu pelaksana, dan mengubah layar Siswa tanpa kesepakatan bisa menabrak AV-01 yang sedang berjalan. Keputusan pemilik file diperlukan lebih dulu.
+
 ## Ringkasan tindak lanjut
 
 | Tiket | Pemilik tindak lanjut | Butuh keputusan sebelum FE kerja |
@@ -121,5 +143,6 @@ AW-03 meminta pemeriksaan account switch, logout, dan cache pengguna sebelumnya.
 | GF-03 | Andi / Ferdi (kontrak) | Tidak |
 | GF-04 | Ferdi (FD-06) bersama Aliwafa | Ya, untuk penghapusan |
 | GF-05 | Aliwafa (selesai di branch ini); Ferdi mereview sebagai reviewer FE | Tidak |
+| GF-06 | Avicenna sebagai pemilik layar Siswa, atau Aliwafa bila Ferdi menyerahkan file ini | Ya, pemilik file |
 
 Pekerjaan polish yang tidak bergantung pada keempat tiket ini sudah berjalan di branch `feat/teacher-polishv1` dan dicatat pada PR-nya masing-masing.
