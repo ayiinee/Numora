@@ -88,3 +88,16 @@ pnpm --filter @tka/web exec playwright test e2e/teacher.spec.ts
 Tanpa langkah 1, `next start` keluar dengan pesan "Could not find a production build in the '.next-e2e' directory". Mode default `pnpm test:e2e` memakai `next dev` dan biayanya ±43 detik per tes Guru, sehingga 23 tes saja sudah mendekati `globalTimeout` 900 detik — angka yang sama yang membuat suite Admin terpotong (GF-07). Nilai `NEXT_PUBLIC_*` harus sama dengan `playwright.config.ts` karena inline saat build. Ukuran pada mesin development yang sama: `e2e/teacher.spec.ts` **23 lulus dalam 1,5 menit** di mode produksi, dibanding ±43 detik per tes di mode dev — jadi untuk suite 194 kasus, mode produksi bukan kemewahan.
 
 Rencananya pengujian aliran ini ada di QA (Farel untuk Guru/Student), jadi peta ini dibuat agar QA cukup menambah kasus, bukan mengulang tes unit yang sudah ada.
+
+## 6. Status akhir increment dan titik lanjut
+
+Branch `feat/teacher-polishv1`, 32 commit di atas `main`, tree bersih, **belum di-push dan belum ada PR**.
+
+Sudah selesai di increment ini: pemetaan flow dan kondisi tiap langkah (AW-01), integrasi status akses, cache ganti akun, dan mitigasi create tanpa jawaban (AW-03), polish kelas/undangan/roster/progres/feedback bersama perapian helper, hook, dan selector CSS mati (AW-02/AW-04). Laporan GF-01 sampai GF-08 ada di dokumen temuan.
+
+Titik lanjut, berurutan menurut nilai:
+
+1. Putuskan push dan PR. Tanpa itu review Ferdi dan acceptance Farel tidak bisa mulai, padahal Definition of Done mensyaratkan keduanya.
+2. Lampiran screenshot 320/390/768/1440 px untuk keluaran AW-02. Audit visualnya sudah ada sebagai tabel GF-05; gambarnya belum.
+3. Jawaban tiga pemilik: Farel (GF-01 dan serah-terima §4), Andi (GF-02 `joinUrl`, GF-08 idempotensi create), pemilik `class-join.tsx` (GF-06 aturan lima kelas).
+4. Setelah GF-08 diperbaiki di server, FE tinggal meneruskan `clientRequestId` dan menghapus pesan "Pengiriman tidak dapat dipastikan" di `TeacherDashboardScreen`.
