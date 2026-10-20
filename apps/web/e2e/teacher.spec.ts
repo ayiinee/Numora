@@ -375,7 +375,7 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await expect(page.getByRole('img', { name: 'QR kode kelas Kelas IX-B' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Unduh PNG QR' })).toHaveAttribute(
       'download',
-      'numora-kode-kelas.png',
+      'qr-kelas-ix-b.png',
     );
     await capture(page, 'invite', width);
     await page.goto(`/teacher/classes/${classId}/settings`);
@@ -625,7 +625,9 @@ test('Teacher desktop invite dialog traps focus, copies the actual code, downloa
   const downloadLink = dialog.getByRole('link', { name: 'Unduh PNG QR' });
   const downloading = page.waitForEvent('download');
   await downloadLink.click();
-  expect((await downloading).suggestedFilename()).toBe('numora-kode-kelas.png');
+  // The file is named after the class so a Teacher with several classes can tell
+  // the downloads apart; "Kelas IX-B" slugs to qr-kelas-ix-b.png.
+  expect((await downloading).suggestedFilename()).toBe('qr-kelas-ix-b.png');
   await downloadLink.focus();
   await page.keyboard.press('Tab');
   await expect(dialog.getByRole('button', { name: 'Tutup dialog' })).toBeFocused();
