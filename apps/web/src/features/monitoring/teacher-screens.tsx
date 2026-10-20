@@ -255,7 +255,13 @@ function ClassStudentsContent({
               </div>
               <div className="teacher-class-overview__code">
                 <span>Kode kelas</span>
-                <strong>{classes.isError ? 'Belum dapat dimuat' : (cls?.joinCode ?? '—')}</strong>
+                <strong>
+                  {classes.isError
+                    ? 'Belum dapat dimuat'
+                    : classes.isPending
+                      ? 'Memuat…'
+                      : (cls?.joinCode ?? '—')}
+                </strong>
                 {classes.isError && (
                   <Button variant="secondary" onClick={() => void classes.refetch()}>
                     Muat ulang kode
@@ -289,7 +295,11 @@ function ClassStudentsContent({
               description="Bagikan kode kelas Anda."
               className="teacher-invite-dialog"
             >
-              <TeacherInviteContent name={query.data.class.name} code={cls?.joinCode} />
+              <TeacherInviteContent
+                name={query.data.class.name}
+                code={cls?.joinCode}
+                pending={classes.isPending}
+              />
             </Dialog>
           </>
         )}

@@ -12,7 +12,16 @@ import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
 import { teacherKeys } from './teacher-query';
 
-export function TeacherInviteContent({ name, code }: { name: string; code: string | undefined }) {
+export function TeacherInviteContent({
+  name,
+  code,
+  pending = false,
+}: {
+  name: string;
+  code: string | undefined;
+  /** The class list has not answered yet; that is not the same as a class without a code. */
+  pending?: boolean;
+}) {
   const [qr, setQr] = useState('');
   const [qrError, setQrError] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
@@ -101,6 +110,10 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
             </TeacherAnnouncement>
           </Card>
         </>
+      ) : pending ? (
+        <p className="teacher-help-text" role="status">
+          Memuat kode kelas…
+        </p>
       ) : (
         <TeacherUnavailable
           title="Kode kelas belum tersedia"
