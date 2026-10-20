@@ -67,4 +67,22 @@ AW-01 mensyaratkan daftar pekerjaan aktif Farel untuk profil, session, route pro
 
 `pnpm lint` root, `pnpm --filter @tka/web typecheck`, vitest web penuh, `pnpm test:checks`, `pnpm --filter @tka/web build`, dan `e2e/teacher.spec.ts` Playwright. Keluaran suite browser Admin dicatat sebagai GF-07 karena gagal juga di `main`.
 
+Cara menjalankan suite Guru dengan benar (dipakai saat dokumen ini ditulis, belum ada skrip repo untuk ini):
+
+```powershell
+# 1. Build ke direktori yang dipakai webServer mode produksi
+$env:NUMORA_WEB_DIST_DIR='.next-e2e'
+$env:NEXT_PUBLIC_API_URL='http://localhost:3301/api/v1'
+$env:NEXT_PUBLIC_SUPABASE_URL='https://numora-e2e.supabase.co'
+$env:NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY='test-only-public-key'
+$env:NODE_ENV='production'
+pnpm --filter @tka/web exec next build
+
+# 2. Jalankan suite terhadap bundel itu
+$env:NUMORA_E2E_PRODUCTION='true'
+pnpm --filter @tka/web exec playwright test e2e/teacher.spec.ts
+```
+
+Tanpa langkah 1, `next start` keluar dengan pesan "Could not find a production build in the '.next-e2e' directory". Mode default `pnpm test:e2e` memakai `next dev` dan biayanya ±43 detik per tes Guru, sehingga 23 tes saja sudah mendekati `globalTimeout` 900 detik — angka yang sama yang membuat suite Admin terpotong (GF-07). Nilai `NEXT_PUBLIC_*` harus sama dengan `playwright.config.ts` karena inline saat build. Ukuran pada mesin development yang sama: `e2e/teacher.spec.ts` **23 lulus dalam 1,5 menit** di mode produksi, dibanding ±43 detik per tes di mode dev — jadi untuk suite 194 kasus, mode produksi bukan kemewahan.
+
 Rencananya pengujian aliran ini ada di QA (Farel untuk Guru/Student), jadi peta ini dibuat agar QA cukup menambah kasus, bukan mengulang tes unit yang sudah ada.
