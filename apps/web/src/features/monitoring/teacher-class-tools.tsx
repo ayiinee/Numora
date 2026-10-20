@@ -12,6 +12,19 @@ import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
 import { findTeacherClass, teacherKeys } from './teacher-query';
 
+/**
+ * Teachers keep a QR file per class, so a single fixed name would bury older
+ * downloads as "numora-kode-kelas (2).png".
+ */
+function qrFileName(name: string): string {
+  const slug = name
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLocaleLowerCase('id');
+  return slug ? `qr-${slug}` : 'qr-kelas';
+}
+
 export function TeacherInviteContent({
   name,
   code,
@@ -92,7 +105,7 @@ export function TeacherInviteContent({
             )}
             <p>QR berisi kode kelas di atas.</p>
             {qr && (
-              <a className="button-link" href={qr} download="numora-kode-kelas.png">
+              <a className="button-link" href={qr} download={`${qrFileName(name)}.png`}>
                 <Icon name="arrow" /> Unduh PNG QR
               </a>
             )}
