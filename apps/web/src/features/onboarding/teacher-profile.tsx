@@ -1,13 +1,12 @@
 'use client';
 
-import { useState } from 'react';
 import Link from 'next/link';
-import { useRouter } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Avatar, Badge, Button, Card, EmptyState, Icon, ListRow, SectionHeader } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from '@/features/monitoring/teacher-gate';
 import { useAuth } from './auth';
+import { useTeacherSignOut } from './teacher-session';
 import { getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherAnnouncement } from '@/features/monitoring/teacher-ui';
@@ -22,28 +21,13 @@ export function TeacherProfileScreen() {
 }
 
 function TeacherProfileContent({ name, token }: { name: string; token: string }) {
-  const { state, logout } = useAuth();
-  const router = useRouter();
-  const [busy, setBusy] = useState(false);
-  const [error, setError] = useState('');
+  const { state } = useAuth();
+  const { busy, error, signOut } = useTeacherSignOut();
   const classes = useQuery({
     queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   if (state.status !== 'ready') return null;
-
-  async function signOut() {
-    if (busy) return;
-    setBusy(true);
-    setError('');
-    try {
-      await logout();
-      router.replace('/');
-    } catch {
-      setError('Belum dapat keluar. Coba lagi.');
-      setBusy(false);
-    }
-  }
 
   return (
     <TeacherShell title="Profil & akun" teacherName={name}>
