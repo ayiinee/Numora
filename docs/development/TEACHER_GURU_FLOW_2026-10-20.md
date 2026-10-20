@@ -67,6 +67,8 @@ AW-01 mensyaratkan daftar pekerjaan aktif Farel untuk profil, session, route pro
 
 `pnpm lint` root, `pnpm --filter @tka/web typecheck`, vitest web penuh, `pnpm test:checks`, `pnpm --filter @tka/web build`, dan `e2e/teacher.spec.ts` Playwright. Keluaran suite browser Admin dicatat sebagai GF-07 karena gagal juga di `main`.
 
+Angka pada `feat/teacher-polishv1` setelah seluruh perubahan hari ini (mesin development Windows, 21 Oktober): vitest web **279/279** (41 file), `test:checks` **68/68**, browser **Guru 23/23** dan **auth + account 34/34** dalam mode produksi. Satu-satunya suite browser yang belum hijau di branch ini adalah Admin, dan itu GF-07.
+
 Cara menjalankan suite Guru dengan benar (dipakai saat dokumen ini ditulis, belum ada skrip repo untuk ini):
 
 ```powershell
