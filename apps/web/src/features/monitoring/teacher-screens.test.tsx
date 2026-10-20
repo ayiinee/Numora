@@ -14,7 +14,7 @@ import {
   ApiProblem,
 } from '@/lib/api';
 
-const auth = vi.hoisted(() => ({ logout: vi.fn(), replace: vi.fn() }));
+const auth = vi.hoisted(() => ({ logout: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: auth.replace }),
   usePathname: () => '/teacher',
@@ -34,6 +34,7 @@ vi.mock('@/features/onboarding/auth', () => ({
       },
     },
     logout: auth.logout,
+    refresh: auth.refresh,
   }),
 }));
 vi.mock('@/lib/api', async (original) => ({
@@ -186,4 +187,20 @@ it('withholds total students when one class roster fails and recovers without a 
   failed = false;
   fireEvent.click(screen.getByRole('button', { name: 'Muat ulang jumlah siswa' }));
   await waitFor(() => expect(label.parentElement?.querySelector('strong')?.textContent).toBe('2'));
+});
+
+it('re-checks identity instead of offering a retry that can never succeed once access is revoked', async () => {
+  vi.mocked(getTeacherClasses).mockRejectedValue(
+    new ApiProblem(403, 'SCHOOL_FORBIDDEN', 'Akses sekolah ditolak.'),
+  );
+  render(<TeacherDashboardScreen />);
+  // LearningProvider retries a failed query once with a ~1s backoff, so the settled
+  // error state appears after that window rather than on the first tick.
+  await screen.findByText('Akses kelas Anda berakhir', {}, { timeout: 5000 });
+  expect(screen.queryByRole('button', { name: 'Coba lagi' })).toBeNull();
+
+  vi.mocked(getTeacherClasses).mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Periksa ulang akses' }));
+  await waitFor(() => expect(auth.refresh).toHaveBeenCalledOnce());
+  expect(getTeacherClasses).not.toHaveBeenCalled();
 });

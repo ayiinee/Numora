@@ -100,6 +100,12 @@ Temuan yang saya perbaiki sebagai hasil audit ini, semuanya cacat state dan buka
 
 Yang sengaja **tidak** saya ubah: hierarki, token warna, tipografi, dan komposisi layout layar Guru. Area ini sudah melewati redesign delapan fase dan revisi umpan balik UI 5 Oktober yang disetujui pemilik, dan joblist §7 menempatkan shared UI serta struktur FE di tangan Ferdi (FD-05/FD-06). Perubahan visual baru perlu keputusan, bukan inisiatif pemilik area.
 
+### AW-03 — akses yang dicabut (diverifikasi dan diperbaiki)
+
+Konsumsi status server untuk kehilangan akses setelah keluar sekolah semula berupa jalan buntu. `GET /classes` menjawab 403 `SCHOOL_FORBIDDEN` begitu keanggotaan sekolah Guru berakhir, tetapi identitas hasil refresh masih menyebut Guru itu terverifikasi, jadi `TeacherGate` tidak mengarahkan ke mana pun. Dashboard menampilkan "Akses ditolak" dengan tombol **Coba lagi** yang mengulang permintaan yang pasti ditolak selamanya.
+
+Dashboard Guru kini memisahkan 403 dari kegagalan sementara: tindakannya memeriksa ulang identitas, sehingga `TeacherGate` dapat mengarahkan Guru ke verifikasi atau login, bukan mengulang permintaan kelas. 401 tetap memakai jalur "Masuk kembali" yang sudah benar.
+
 ### AW-03 — cache antar akun Guru (diverifikasi, kini dipatok tes)
 
 AW-03 meminta pemeriksaan account switch, logout, dan cache pengguna sebelumnya. Jawabannya: isolasi cache Guru bergantung pada satu prop — `TeacherGate` membungkus layarnya dengan `<LearningProvider key={state.profile.id}>`, dan `LearningProvider` membuat `QueryClient` baru tiap mount lalu `client.clear()` saat unmount. Karena kunci query Guru (`teacherKeys` di `features/monitoring/teacher-query.ts`) **tidak** memuat ID Guru, hilangnya prop `key` itu akan membuat roster, daftar siswa, progres, dan riwayat feedback Guru A tampil untuk Guru B sebelum respons server pertama tiba.

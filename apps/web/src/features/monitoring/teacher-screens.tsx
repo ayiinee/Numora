@@ -16,7 +16,8 @@ import {
 } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from './teacher-gate';
-import { DataState } from '@/features/core-learning/ui';
+import { DataState, Status } from '@/features/core-learning/ui';
+import { useAuth } from '@/features/onboarding/auth';
 import {
   createTeacherClass,
   getClassStudents,
@@ -46,10 +47,15 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   const [createdCode, setCreatedCode] = useState('');
   const [search, setSearch] = useState('');
   const cache = useQueryClient();
+  const { refresh } = useAuth();
   const query = useQuery({
     queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
+  // A 403 here means the server ended this Teacher's school membership or class ownership.
+  // Refetching the list can never succeed, so the action re-reads identity instead, which
+  // lets TeacherGate route the Teacher to the right destination.
+  const accessLost = query.error instanceof ApiProblem && query.error.status === 403;
   const counts = useTeacherRosterCounts(token, query.isSuccess ? query.data.items : undefined);
   async function create(event: FormEvent) {
     event.preventDefault();
@@ -166,12 +172,18 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
               leftIcon={<Icon name="search" />}
             />
           )}
-          {query.isPending || query.isError ? (
-            <DataState
-              pending={query.isPending}
-              error={query.error}
-              retry={() => void query.refetch()}
-            />
+          {query.isPending ? (
+            <DataState pending />
+          ) : accessLost ? (
+            <Status title="Akses kelas Anda berakhir">
+              <p>
+                Keanggotaan sekolah atau kepemilikan kelas ini tidak berlaku lagi. Periksa ulang
+                akun Anda untuk lanjut ke tempat yang tepat.
+              </p>
+              <Button onClick={() => void refresh()}>Periksa ulang akses</Button>
+            </Status>
+          ) : query.isError ? (
+            <DataState pending={false} error={query.error} retry={() => void query.refetch()} />
           ) : query.data.items.length ? (
             <div className="teacher-class-grid">
               {query.data.items
