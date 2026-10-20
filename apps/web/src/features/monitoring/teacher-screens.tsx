@@ -184,7 +184,15 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
         <section className="teacher-classes-section">
           <SectionHeader
             title="Kelas yang Anda dampingi"
-            subtitle={query.data ? `${query.data.items.length} kelas` : ''}
+            subtitle={
+              // While a search is active the total alone is misleading: the Guru sees
+              // "3 kelas" above a single card.
+              query.data
+                ? needle.trim()
+                  ? `${visibleClasses.length} dari ${query.data.items.length} kelas cocok`
+                  : `${query.data.items.length} kelas`
+                : ''
+            }
           />
           {query.isSuccess && query.data.items.length > 0 && (
             <Input
@@ -362,7 +370,13 @@ function ClassStudentsContent({
           <section>
             <SectionHeader
               title="Siswa di kelas ini"
-              subtitle={`${query.data.items.length} siswa bergabung`}
+              subtitle={
+                // Same rule as the class grid: while searching, the roster total alone
+                // would disagree with the rows below it.
+                search.trim()
+                  ? `${filtered?.length ?? 0} dari ${query.data.items.length} siswa cocok`
+                  : `${query.data.items.length} siswa bergabung`
+              }
             />
             {filtered?.length ? (
               <Card className="teacher-students-card">
