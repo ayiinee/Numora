@@ -41,6 +41,7 @@ it('loads package choices five at a time and disables next on the final full pag
         id: `TEST-${i}`,
         name: `Paket TEST ${i}`,
       })),
+      total: 10,
     })
     .mockResolvedValueOnce({
       items: Array.from({ length: 5 }, (_, i) => ({
@@ -48,6 +49,7 @@ it('loads package choices five at a time and disables next on the final full pag
         id: `TEST-${i + 5}`,
         name: `Paket TEST ${i + 5}`,
       })),
+      total: 10,
     });
   render(
     <ContentPackageWorkspace token="TEST" disabled={false} onSelect={vi.fn()} refreshKey={0} />,
@@ -62,6 +64,7 @@ it('loads package choices five at a time and disables next on the final full pag
     ),
   );
   await screen.findByRole('option', { name: /Paket TEST 5/ });
+  expect(screen.getByText(/Jumlah data: 10/)).toBeTruthy();
   expect(
     (screen.getByRole('button', { name: 'Paket berikutnya' }) as HTMLButtonElement).disabled,
   ).toBe(true);
@@ -151,7 +154,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
       },
     ],
   };
-  vi.mocked(listContentPackages).mockResolvedValue({ items: [pack] });
+  vi.mocked(listContentPackages).mockResolvedValue({ items: [pack], total: 1 });
   vi.mocked(getContentPackage).mockResolvedValue(pack);
   const preview: PreviewSessionDto = {
     id,

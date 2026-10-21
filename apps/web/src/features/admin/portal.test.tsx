@@ -80,6 +80,7 @@ describe('Admin portal navigation', () => {
     expect(
       navigation.getByRole('link', { name: 'Ringkasan' }).getAttribute('aria-current'),
     ).toBeNull();
+    expect(document.querySelector('.desktop-context')?.textContent).toBe('Ruang admin/Impor soal');
     ready('OPERATIONS');
     view.rerender(<AppShell area="admin">Konten</AppShell>);
     expect(navigation.queryByRole('link', { name: 'Impor soal' })).toBeNull();

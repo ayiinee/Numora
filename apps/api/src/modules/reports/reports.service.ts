@@ -1,30 +1,49 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { desc, eq } from 'drizzle-orm';
+import { asc, count, desc, eq } from 'drizzle-orm';
 import { getDatabase, questionReports, videoReports } from '@tka/database';
 import { adminMutation } from '../audit/admin-mutation';
-import type { ContentPageDto } from '../content/content.dto';
-import type { AdminReportsDto, ResolveReportDto } from './reports.dto';
+import type { AdminReportQueryDto, AdminReportsDto, ResolveReportDto } from './reports.dto';
 
 @Injectable()
 export class ReportsService {
-  async list(page: ContentPageDto): Promise<AdminReportsDto> {
+  async list(page: AdminReportQueryDto): Promise<AdminReportsDto> {
     const { db } = getDatabase();
-    // Each source is paged separately so a busy question queue cannot hide video reports.
-    const [q, v] = await Promise.all([
-      db
-        .select()
-        .from(questionReports)
-        .orderBy(desc(questionReports.reportedAt), desc(questionReports.id))
-        .limit(page.limit)
-        .offset(page.offset),
-      db
-        .select()
-        .from(videoReports)
-        .orderBy(desc(videoReports.reportedAt), desc(videoReports.id))
-        .limit(page.limit)
-        .offset(page.offset),
+    const questionWhere = page.status ? eq(questionReports.status, page.status) : undefined;
+    const videoWhere = page.status ? eq(videoReports.status, page.status) : undefined;
+    const [q, v, questionTotal, videoTotal] = await Promise.all([
+      page.kind === 'VIDEO'
+        ? Promise.resolve([] as (typeof questionReports.$inferSelect)[])
+        : db
+            .select()
+            .from(questionReports)
+            .where(questionWhere)
+            .orderBy(desc(questionReports.reportedAt), asc(questionReports.id))
+            .limit(page.offset + page.limit + 1),
+      page.kind === 'QUESTION'
+        ? Promise.resolve([] as (typeof videoReports.$inferSelect)[])
+        : db
+            .select()
+            .from(videoReports)
+            .where(videoWhere)
+            .orderBy(desc(videoReports.reportedAt), asc(videoReports.id))
+            .limit(page.offset + page.limit + 1),
+      page.kind === 'VIDEO'
+        ? Promise.resolve(0)
+        : db
+            .select({ total: count() })
+            .from(questionReports)
+            .where(questionWhere)
+            .then((rows) => rows[0]!.total),
+      page.kind === 'QUESTION'
+        ? Promise.resolve(0)
+        : db
+            .select({ total: count() })
+            .from(videoReports)
+            .where(videoWhere)
+            .then((rows) => rows[0]!.total),
     ]);
     return {
+      total: questionTotal + videoTotal,
       items: [
         ...q.map((r) => ({
           id: r.id,
@@ -46,7 +65,14 @@ export class ReportsService {
           followUp: r.followUp,
           reportedAt: r.reportedAt.toISOString(),
         })),
-      ].sort((a, b) => b.reportedAt.localeCompare(a.reportedAt)),
+      ]
+        .sort(
+          (a, b) =>
+            b.reportedAt.localeCompare(a.reportedAt) ||
+            a.kind.localeCompare(b.kind) ||
+            a.id.localeCompare(b.id),
+        )
+        .slice(page.offset, page.offset + page.limit),
     };
   }
   update(actor: string, kind: 'QUESTION' | 'VIDEO', id: string, body: ResolveReportDto) {

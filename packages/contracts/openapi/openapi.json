@@ -5547,6 +5547,32 @@
                 }
               ]
             }
+          },
+          {
+            "name": "kind",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "QUESTION",
+                "VIDEO"
+              ]
+            }
+          },
+          {
+            "name": "status",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string",
+              "enum": [
+                "OPEN",
+                "IN_REVIEW",
+                "RESOLVED",
+                "REJECTED"
+              ]
+            }
           }
         ],
         "responses": {
@@ -11169,10 +11195,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminVersionDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateQuestionDto": {
@@ -11375,10 +11405,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminVideoDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateVideoDto": {
@@ -11490,10 +11524,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminTryoutDraftDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateTryoutDraftDto": {
@@ -11609,10 +11647,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminDrillPackageDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateDrillPackageDto": {
@@ -12560,10 +12602,14 @@
             "items": {
               "$ref": "#/components/schemas/ContentPackageDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateContentPackageDto": {
@@ -13745,10 +13791,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminAuditDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "AdminUserDto": {
@@ -13801,11 +13851,15 @@
           "nextOffset": {
             "type": "number",
             "nullable": true
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
           "items",
-          "nextOffset"
+          "nextOffset",
+          "total"
         ]
       },
       "AdminClassDto": {
@@ -13871,11 +13925,15 @@
           "nextOffset": {
             "type": "number",
             "nullable": true
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
           "items",
-          "nextOffset"
+          "nextOffset",
+          "total"
         ]
       },
       "AdminReportDto": {
@@ -13937,10 +13995,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminReportDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "ResolveReportDto": {
@@ -14360,10 +14422,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminIrtItemDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "AdminIrtBatchDto": {
@@ -14427,10 +14493,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminIrtBatchDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "LeaderboardPeriodDto": {

@@ -50,9 +50,13 @@ beforeEach(() => {
     profile: { id: 'admin-test', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
     session: { access_token: 'test-token' },
   };
-  vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5 });
+  vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5, total: 6 });
   vi.mocked(getAdminUser).mockResolvedValue(user);
-  vi.mocked(listAdminClasses).mockResolvedValue({ items: [adminClass], nextOffset: null });
+  vi.mocked(listAdminClasses).mockResolvedValue({
+    items: [adminClass],
+    nextOffset: null,
+    total: 1,
+  });
   vi.mocked(getAdminClass).mockResolvedValue(adminClass);
 });
 
@@ -85,6 +89,22 @@ describe('Admin operations UI', () => {
     expect(getAdminUser).toHaveBeenCalledWith('test-token', user.id);
     expect(screen.queryByText(/@/)).toBeNull();
     expect(screen.queryByRole('button', { name: /ban|nonaktifkan|koreksi/i })).toBeNull();
+  });
+
+  it('updates the displayed total to the applied filtered result count', async () => {
+    vi.mocked(listAdminUsers).mockImplementation(async (_token, filters) => ({
+      items: [user],
+      nextOffset: null,
+      total: filters.search ? 2 : 12,
+    }));
+    render(<AdminOperationsScreen />);
+    await screen.findByText(/Jumlah data: 12/);
+
+    fireEvent.change(screen.getByLabelText('Nama pengguna'), { target: { value: 'Guru' } });
+    fireEvent.click(screen.getByRole('button', { name: /terapkan filter/i }));
+
+    await screen.findByText(/Jumlah data: 2/);
+    expect(screen.queryByText(/Jumlah data: 12/)).toBeNull();
   });
 
   it('loads class filters, details, and paginates with the server-provided offset', async () => {
@@ -129,7 +149,7 @@ describe('Admin operations UI', () => {
   it('uses nextOffset for pagination and retries a failed list request', async () => {
     vi.mocked(listAdminUsers)
       .mockRejectedValueOnce(new Error('Daftar belum tersedia.'))
-      .mockResolvedValueOnce({ items: [user], nextOffset: 5 });
+      .mockResolvedValueOnce({ items: [user], nextOffset: 5, total: 6 });
     render(<AdminOperationsScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Coba lagi' }));
     await screen.findByText('Siswa TEST');

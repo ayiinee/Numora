@@ -45,6 +45,7 @@ export function ContentPackageWorkspace({
   const [source, setSource] = useState('');
   const [offset, setOffset] = useState(0);
   const [packages, setPackages] = useState<ContentPackageDto[]>([]);
+  const [total, setTotal] = useState(0);
   const [hasNext, setHasNext] = useState(false);
   const [curriculum, setCurriculum] = useState<AdminCurriculumDto['items']>([]);
   const [detail, setDetail] = useState<ContentPackageDetailDto | null>(null);
@@ -76,9 +77,10 @@ export function ContentPackageWorkspace({
     ])
       .then(([p, c]) => {
         if (active) {
-          const page = adminPage(p.items);
+          const page = adminPage(p.items, p.total, offset);
           setPackages(page.items);
           setHasNext(page.hasNext);
+          setTotal(p.total);
           setCurriculum(c.items);
           setError('');
         }
@@ -261,6 +263,7 @@ export function ContentPackageWorkspace({
       <AdminPagination
         offset={offset}
         hasNext={hasNext}
+        totalItems={total}
         disabled={locked || loading}
         onChange={setOffset}
         label="Halaman paket"

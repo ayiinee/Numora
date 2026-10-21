@@ -51,4 +51,5 @@ export class AdminDrillPackageDto {
 }
 export class AdminDrillPackagesDto {
   @ApiProperty({ type: [AdminDrillPackageDto] }) items!: AdminDrillPackageDto[];
+  @ApiProperty() total!: number;
 }

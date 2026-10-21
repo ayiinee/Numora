@@ -40,6 +40,7 @@ export class AdminIrtItemDto {
 }
 export class AdminIrtDto {
   @ApiProperty({ type: [AdminIrtItemDto] }) items!: AdminIrtItemDto[];
+  @ApiProperty() total!: number;
 }
 export class AdminIrtBatchDto {
   @ApiProperty() id!: string;
@@ -54,6 +55,7 @@ export class AdminIrtBatchDto {
 }
 export class AdminIrtBatchesDto {
   @ApiProperty({ type: [AdminIrtBatchDto] }) items!: AdminIrtBatchDto[];
+  @ApiProperty() total!: number;
 }
 
 // Legacy readers and v3 operational handoff. Scientific configuration/publication remains OPEN-12/18.

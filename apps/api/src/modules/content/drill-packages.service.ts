@@ -4,7 +4,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   chapters,
@@ -56,13 +56,19 @@ function found<T>(row: T | undefined): T {
 export class DrillPackagesService {
   async list(page: ContentPageDto): Promise<AdminDrillPackagesDto> {
     const { db } = getDatabase();
-    const rows = await db
-      .select()
-      .from(assessmentPackages)
-      .where(eq(assessmentPackages.assessmentType, 'DRILL'))
-      .orderBy(asc(assessmentPackages.familyCode), desc(assessmentPackages.packageVersion))
-      .limit(page.limit)
-      .offset(page.offset);
+    const [rows, [total]] = await Promise.all([
+      db
+        .select()
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.assessmentType, 'DRILL'))
+        .orderBy(asc(assessmentPackages.familyCode), desc(assessmentPackages.packageVersion))
+        .limit(page.limit)
+        .offset(page.offset),
+      db
+        .select({ total: count() })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.assessmentType, 'DRILL')),
+    ]);
     const items = rows.length
       ? await db
           .select()
@@ -76,6 +82,7 @@ export class DrillPackagesService {
           .orderBy(asc(packageItems.displayOrder))
       : [];
     return {
+      total: total!.total,
       items: rows.map((r) =>
         this.present(
           r,

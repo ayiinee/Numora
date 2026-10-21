@@ -7,6 +7,7 @@ import { ADMIN_PAGE_SIZE } from './pagination';
 export function AdminPagination({
   offset,
   hasNext,
+  totalItems,
   onChange,
   disabled = false,
   label = 'Halaman data',
@@ -15,6 +16,7 @@ export function AdminPagination({
 }: {
   offset: number;
   hasNext: boolean;
+  totalItems?: number;
   onChange: (offset: number) => void;
   disabled?: boolean;
   label?: string;
@@ -30,7 +32,10 @@ export function AdminPagination({
       >
         {previousLabel}
       </Button>
-      <span aria-live="polite">Halaman {Math.floor(offset / ADMIN_PAGE_SIZE) + 1}</span>
+      <span aria-live="polite">
+        Halaman {Math.floor(offset / ADMIN_PAGE_SIZE) + 1}
+        {totalItems !== undefined && ` · Jumlah data: ${totalItems}`}
+      </span>
       <Button
         variant="secondary"
         disabled={disabled || !hasNext}
@@ -51,6 +56,7 @@ export function useAdminPagination<T>(items: T[], resetKey?: unknown) {
     items: items.slice(offset, offset + ADMIN_PAGE_SIZE),
     pagination: {
       offset,
+      totalItems: items.length,
       hasNext: offset + ADMIN_PAGE_SIZE < items.length,
       onChange: (nextOffset: number) => setPosition({ offset: nextOffset, resetKey }),
     },

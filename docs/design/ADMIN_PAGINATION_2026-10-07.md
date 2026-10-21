@@ -4,8 +4,9 @@
 
 ## Perilaku UI
 
-- Daftar pengguna dan kelas meminta `limit=5` dan mengikuti `nextOffset` dari API. Menerapkan pencarian/filter mengembalikan daftar ke halaman pertama.
+- Daftar pengguna dan kelas meminta `limit=5`, mengikuti `nextOffset`, dan menampilkan total hasil dari API. Total mengikuti pencarian/filter aktif; menerapkan pencarian/filter mengembalikan daftar ke halaman pertama.
 - Versi soal, video, laporan, draf Tryout, paket Drill, batch/parameter IRT, audit umum, dan pilihan paket menampilkan lima data. Endpoint tanpa metadata pagination dibaca dengan satu baris tambahan untuk menentukan ketersediaan halaman berikutnya; baris tambahan tidak ditampilkan.
+- Kontrol pagination menampilkan nomor halaman dan total hasil. Filter versi soal dan laporan dihitung di server, sehingga angka mencerminkan seluruh hasil yang cocok, bukan hanya baris halaman aktif.
 - Sekolah, token Guru, materi, soal dalam detail paket, preview Excel, dan laporan impor memakai pagination lokal atas respons/file lengkap yang sudah tersedia. Dropdown referensi, opsi jawaban, dan checklist validasi tetap memuat informasi yang diperlukan oleh editor.
 - Tombol Sebelumnya/Berikutnya dan nomor halaman memakai komponen bersama. Tombol dinonaktifkan pada batas halaman dan selama operasi yang memerlukan lock.
 - Pagination tidak menghapus draf editor atau pilihan soal Excel. Pergantian sekolah/paket mengembalikan halaman daftar detail ke awal.

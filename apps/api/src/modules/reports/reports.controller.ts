@@ -14,8 +14,8 @@ import {
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
 import { AdminAccess } from '../identity/admin-permissions';
-import { ContentMutationDto, ContentPageDto } from '../content/content.dto';
-import { AdminReportsDto, ResolveReportDto } from './reports.dto';
+import { ContentMutationDto } from '../content/content.dto';
+import { AdminReportQueryDto, AdminReportsDto, ResolveReportDto } from './reports.dto';
 import { ReportsService } from './reports.service';
 
 enum ReportKind {
@@ -31,7 +31,7 @@ export class ReportsController {
   constructor(@Inject(ReportsService) private readonly reports: ReportsService) {}
   @Get()
   @ApiOkResponse({ type: AdminReportsDto })
-  list(@Query() q: ContentPageDto) {
+  list(@Query() q: AdminReportQueryDto) {
     return this.reports.list(q);
   }
   @Patch(':kind/:id')

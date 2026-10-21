@@ -145,6 +145,7 @@ function UsersPanel({
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminUserDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState('');
   const [detail, setDetail] = useState<AdminUserDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -164,6 +165,7 @@ function UsersPanel({
         if (!active) return;
         setItems(page.items);
         setNextOffset(page.nextOffset);
+        setTotal(page.total);
         setLoading(false);
       },
       (cause: unknown) => {
@@ -291,6 +293,7 @@ function UsersPanel({
           <AdminPagination
             offset={offset}
             hasNext={nextOffset !== null}
+            totalItems={total ?? 0}
             onChange={(next) => {
               setSelectedId('');
               setOffset(next < offset ? next : (nextOffset ?? offset));
@@ -381,6 +384,7 @@ function ClassesPanel({
   const [offset, setOffset] = useState(0);
   const [items, setItems] = useState<AdminClassDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
+  const [total, setTotal] = useState<number | null>(null);
   const [selectedId, setSelectedId] = useState('');
   const [detail, setDetail] = useState<AdminClassDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
@@ -400,6 +404,7 @@ function ClassesPanel({
         if (!active) return;
         setItems(page.items);
         setNextOffset(page.nextOffset);
+        setTotal(page.total);
         setLoading(false);
       },
       (cause: unknown) => {
@@ -541,6 +546,7 @@ function ClassesPanel({
           <AdminPagination
             offset={offset}
             hasNext={nextOffset !== null}
+            totalItems={total ?? 0}
             onChange={(next) => {
               setSelectedId('');
               setOffset(next < offset ? next : (nextOffset ?? offset));

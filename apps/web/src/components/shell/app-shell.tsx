@@ -70,6 +70,10 @@ export function AppShell({
         : pathname === href ||
           pathname.startsWith(`${href}/`) ||
           (href === '/student/learn' && pathname.startsWith('/student/drill/'));
+  const currentLabel =
+    area === 'admin'
+      ? adminItems.find((item) => item.href === adminActive)?.label
+      : navigation[area].find((item) => active(item.href))?.label;
   const links = (mobile = false) =>
     (area === 'admin'
       ? adminItems
@@ -141,7 +145,7 @@ export function AppShell({
               <span className="desktop-context">
                 {areaName}
                 <span>/</span>
-                {title || navigation[area].find((item) => active(item.href))?.label || 'Beranda'}
+                {title || currentLabel || 'Beranda'}
               </span>
             </>
           }
