@@ -1,5 +1,5 @@
 import { Injectable, NotFoundException } from '@nestjs/common';
-import { count, desc, eq } from 'drizzle-orm';
+import { asc, count, desc, eq } from 'drizzle-orm';
 import { getDatabase, questionReports, videoReports } from '@tka/database';
 import { adminMutation } from '../audit/admin-mutation';
 import type { AdminReportQueryDto, AdminReportsDto, ResolveReportDto } from './reports.dto';
@@ -17,7 +17,7 @@ export class ReportsService {
             .select()
             .from(questionReports)
             .where(questionWhere)
-            .orderBy(desc(questionReports.reportedAt), desc(questionReports.id))
+            .orderBy(desc(questionReports.reportedAt), asc(questionReports.id))
             .limit(page.offset + page.limit + 1),
       page.kind === 'QUESTION'
         ? Promise.resolve([] as (typeof videoReports.$inferSelect)[])
@@ -25,7 +25,7 @@ export class ReportsService {
             .select()
             .from(videoReports)
             .where(videoWhere)
-            .orderBy(desc(videoReports.reportedAt), desc(videoReports.id))
+            .orderBy(desc(videoReports.reportedAt), asc(videoReports.id))
             .limit(page.offset + page.limit + 1),
       page.kind === 'VIDEO'
         ? Promise.resolve(0)
