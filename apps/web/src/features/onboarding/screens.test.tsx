@@ -1,7 +1,8 @@
 import { StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { CallbackScreen, LoginScreen, OnboardingScreen } from './screens';
+import { ApiProblem } from '@/lib/api';
+import { CallbackScreen, LoginScreen, OnboardingScreen, TeacherVerificationScreen } from './screens';
 
 const mocks = vi.hoisted(() => ({
   state: { status: 'signed_out' } as Record<string, unknown>,
@@ -11,8 +12,15 @@ const mocks = vi.hoisted(() => ({
   logout: vi.fn(),
   oauth: vi.fn(),
   exchange: vi.fn(),
+  schools: vi.fn(),
+  verify: vi.fn(),
 }));
 vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: mocks.replace }) }));
+vi.mock('@/lib/api', async (original) => ({
+  ...(await original<object>()),
+  getSchools: mocks.schools,
+  verifyTeacher: mocks.verify,
+}));
 vi.mock('./auth', async (original) => ({
   ...(await original<object>()),
   useAuth: () => ({
@@ -122,4 +130,56 @@ it('keeps the disabled-account exit retryable without presenting registration or
   await screen.findByText('Belum dapat keluar. Coba lagi.');
   await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Keluar' })));
   expect(mocks.replace).toHaveBeenCalledWith('/');
+});
+
+function unverifiedTeacher() {
+  mocks.state = {
+    status: 'ready',
+    session: { access_token: 'fixture-access' },
+    profile: {
+      id: 'teacher-1',
+      role: 'TEACHER',
+      displayName: 'Bu Guru',
+      teacherVerified: false,
+    },
+  };
+  mocks.schools.mockResolvedValue({ items: [{ id: 'school-1', name: 'SMP 1' }] });
+}
+
+it('reports a rejected Teacher token on the token field and leaves the form usable', async () => {
+  unverifiedTeacher();
+  mocks.verify.mockRejectedValue(
+    new ApiProblem(
+      403,
+      'INVALID_TEACHER_TOKEN',
+      'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+    ),
+  );
+  render(<TeacherVerificationScreen />);
+  fireEvent.change(await screen.findByRole('combobox', { name: 'Sekolah' }), {
+    target: { value: 'school-1' },
+  });
+  fireEvent.change(screen.getByLabelText(/Token verifikasi/), { target: { value: 'Ab2345Cd' } });
+  fireEvent.click(screen.getByRole('button', { name: 'Verifikasi dan lanjutkan' }));
+  const alert = await screen.findByRole('alert');
+  expect(alert.id).toBe('teacher-token-error');
+  expect(alert.textContent).toContain('Minta credential baru dari Admin sekolah.');
+  expect(screen.getByLabelText(/Token verifikasi/).getAttribute('aria-invalid')).toBe('true');
+  expect((screen.getByLabelText(/Token verifikasi/) as HTMLInputElement).value).toBe('Ab2345Cd');
+  const submit = screen.getByRole('button', { name: /Verifikasi dan lanjutkan/ });
+  expect((submit as HTMLButtonElement).disabled).toBe(false);
+});
+
+it('keeps a school-loading failure off the token field and recovers through retry', async () => {
+  unverifiedTeacher();
+  mocks.schools
+    .mockRejectedValueOnce(new ApiProblem(500, 'SERVER_ERROR', 'Sekolah belum dapat dimuat.'))
+    .mockResolvedValue({ items: [{ id: 'school-1', name: 'SMP 1' }] });
+  render(<TeacherVerificationScreen />);
+  const alert = await screen.findByRole('alert');
+  expect(alert.textContent).toBe('Sekolah belum dapat dimuat.');
+  expect(screen.getByLabelText(/Token verifikasi/).getAttribute('aria-invalid')).toBe('false');
+  fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+  await waitFor(() => expect(screen.queryByRole('alert')).toBeNull());
+  expect(mocks.schools).toHaveBeenCalledTimes(2);
 });
