@@ -1,8 +1,9 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+import { IsDefined, IsIn } from 'class-validator';
 
 export class RegisterProfileDto {
   @ApiProperty({ enum: ['STUDENT', 'TEACHER'] })
+  @IsDefined()
   @IsIn(['STUDENT', 'TEACHER'])
   role!: 'STUDENT' | 'TEACHER';
 }

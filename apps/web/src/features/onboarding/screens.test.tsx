@@ -103,7 +103,10 @@ it('retains role choice after registration failure and submits only the selected
   expect(screen.getAllByRole('radio')).toHaveLength(2);
   fireEvent.click(screen.getByRole('button', { name: 'Simpan dan lanjutkan' }));
   expect(mocks.register).not.toHaveBeenCalled();
+  expect(screen.getByRole('alert').textContent).toBe('Pilih salah satu role: Siswa atau Guru.');
+  expect(screen.getByRole('group').getAttribute('aria-invalid')).toBe('true');
   fireEvent.click(screen.getByRole('radio', { name: /Guru/ }));
+  expect(screen.queryByRole('alert')).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Simpan dan lanjutkan' }));
   await screen.findByText('Profil belum tersimpan.');
   expect((screen.getByRole('radio', { name: /Guru/ }) as HTMLInputElement).checked).toBe(true);
