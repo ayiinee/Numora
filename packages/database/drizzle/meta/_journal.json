@@ -274,6 +274,20 @@
       "when": 1791324846965,
       "tag": "0038_generator_packages",
       "breakpoints": true
+    },
+    {
+      "idx": 39,
+      "version": "7",
+      "when": 1791324846966,
+      "tag": "0039_pvp_transient_queue_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 40,
+      "version": "7",
+      "when": 1791324846967,
+      "tag": "0040_tryout_reward_decimal_guard",
+      "breakpoints": true
     }
   ]
 }

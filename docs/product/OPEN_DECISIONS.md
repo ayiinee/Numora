@@ -158,6 +158,10 @@ The supplied Sprint 2 Goal defines one Student vertical slice and excludes _full
 
 **ENGINEERING UPDATE, 29 September 2026:** the Database team prepared a shared Supabase Cloud Development project. Development now uses Cloud PostgreSQL/Auth and no longer requires Supabase Local. The Database team owns Google provider/dashboard configuration for this migration. This does not close the separate staging domain, OAuth, hosting, or trial-readiness dependencies above.
 
+## Runtime integration repair — 21 October 2026
+
+**ENGINEERING DECISION — implementation of existing ADR-006/ADR-009 and owner-approved boundaries:** generator demo routes Student learning/PvP to the main API; the existing Chapter 3 allowlist remains usable; PostgreSQL deadlines survive transient Redis failure; Tryout reward validation matches existing six-decimal storage. No academic OPEN item is resolved and no historical result or reward is rewritten. [Scope, migrations and verification](../development/RUNTIME_RELIABILITY_2026-10-21.md).
+
 ## Decision workflow
 
 When a joint decision is reached, record its owner/date and update the PRD or module specification first; then update this register, `PRD_MAPPING.md`, affected contracts/schema/tests, and an ADR only if architecture changes. The original PDF metadata should be synchronized with the team's approval record when its owner republishes it.
