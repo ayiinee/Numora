@@ -1,6 +1,17 @@
 import { normalizeAssessmentAnswer, type AssessmentContent } from '@tka/assessment-engine';
+import { assessmentPackages, scoringPolicyVersions } from '@tka/database';
+import { sql } from 'drizzle-orm';
 
 export const CHAPTER3_POLICY_CODE = 'DRILL_CH3_OWNER_ACCEPTED_2026_10_07';
+
+export function chapter3RuntimeEligibility() {
+  return sql`(not ${assessmentPackages.isDemo}
+    and ${scoringPolicyVersions.policyCode} = ${CHAPTER3_POLICY_CODE}
+    and ${scoringPolicyVersions.version} = 1
+    and jsonb_typeof(${scoringPolicyVersions.configuration}->'packageIds') = 'array'
+    and ${scoringPolicyVersions.configuration}->'packageIds'
+      @> jsonb_build_array(${assessmentPackages.id}::text))`;
+}
 
 export function allowsChapter3Override(p: {
   id: string;

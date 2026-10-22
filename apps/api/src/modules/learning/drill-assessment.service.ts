@@ -42,7 +42,11 @@ import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
-import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
+import {
+  allowsChapter3Override,
+  chapter3RuntimeEligibility,
+  gradeChapter3Answer,
+} from './drill-chapter3-override';
 import {
   decodeSingleChoiceVersion,
   DRILL_POLICY_CODE,
@@ -155,7 +159,7 @@ export class DrillAssessmentService {
             eq(assessmentPackages.assessmentType, 'DRILL'),
             eq(assessmentPackages.purpose, 'REGULAR'),
             sql`public.package_can_distribute(${assessmentPackages.id})`,
-            packageRuntimeEligibility(),
+            or(packageRuntimeEligibility(), chapter3RuntimeEligibility()),
             eq(assessmentPackages.levelId, levelId),
             eq(assessmentPackages.status, 'PUBLISHED'),
             or(isNull(assessmentPackages.releaseAt), lte(assessmentPackages.releaseAt, new Date())),
@@ -225,7 +229,12 @@ export class DrillAssessmentService {
           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
         );
       items.forEach(ownerOverride ? decodeAssessmentContent : decodeSingleChoiceVersion);
-      if (items.some((item) => !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'))) {
+      if (
+        items.some(
+          (item) =>
+            !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'),
+        )
+      ) {
         throw new ServiceUnavailableException(
           problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
         );

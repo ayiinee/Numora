@@ -1,13 +1,13 @@
 'use client';
 
 import Link from 'next/link';
-import katex from 'katex';
 import type { ReactNode } from 'react';
 import { Button, Card, Icon, Skeleton } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { LearningApiError } from './api';
 import { ApiProblem } from '@/lib/api';
 import { useStudentToken } from './student-session';
+import { ContentRichText } from '@/features/admin/content-rich-text';
 
 export function LearningFrame({
   title,
@@ -105,27 +105,7 @@ export function StudentGate({ children }: { children: (token: string) => ReactNo
 }
 
 export function MathText({ value }: { value: string }) {
-  const parts = value.split(/(\$[^$]+\$)/g);
   return (
-    <>
-      {parts.map((part, index) => {
-        if (!part.startsWith('$') || !part.endsWith('$')) return <span key={index}>{part}</span>;
-        try {
-          return (
-            <span
-              key={index}
-              dangerouslySetInnerHTML={{
-                __html: katex.renderToString(part.slice(1, -1), {
-                  throwOnError: true,
-                  trust: false,
-                }),
-              }}
-            />
-          );
-        } catch {
-          return <span key={index}>{part}</span>;
-        }
-      })}
-    </>
+    <ContentRichText text={value} media={[]} retry={() => {}} renderBareMath renderMedia={false} />
   );
 }
