@@ -35,23 +35,29 @@ export function ContentRichText({
   media,
   retry,
   renderBareMath = false,
+  renderMedia = true,
 }: {
   text: string;
   media: PreviewMediaDto[];
   retry: () => void;
   renderBareMath?: boolean;
+  renderMedia?: boolean;
 }) {
   const delimiters =
     /\[\[asset:[A-Za-z0-9_-]+\]\]|\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\]/;
   const power = /(?:[A-Za-z0-9]+|\([^()\n]+\))\^(?:\{[^{}\n]+\}|-?\d+|[A-Za-z])/;
+  // ponytail: recognize flat source notation; nested expressions should use delimited LaTeX.
+  const root = /[+-]?\bsqrt\([^()\n]+\)/;
+  const fraction = /[+-]?\([^()\n]+\)\s*\/\s*\([^()\n]+\)/;
+  const bareMath = `${root.source}|${fraction.source}|${power.source}`;
   const parts = text.split(
-    new RegExp(`(${delimiters.source}${renderBareMath ? `|${power.source}` : ''})`, 'g'),
+    new RegExp(`(${delimiters.source}${renderBareMath ? `|${bareMath}` : ''})`, 'g'),
   );
   return (
     <span className="content-rich-text">
       {parts.map((part, i) => {
         const asset = /^\[\[asset:([^\]]+)\]\]$/.exec(part);
-        if (asset)
+        if (asset && renderMedia)
           return (
             <Media
               key={`${i}:${media.find((a) => a.assetId === asset[1])?.url ?? 'missing'}`}
@@ -61,12 +67,17 @@ export function ContentRichText({
           );
         const dollar = part.startsWith('$') && part.endsWith('$');
         const bracket = part.startsWith('\\(') || part.startsWith('\\[');
-        const bare = renderBareMath && new RegExp(`^${power.source}$`).test(part);
+        const bare = renderBareMath && new RegExp(`^(?:${bareMath})$`).test(part);
         if (dollar || bracket || bare) {
           const display = part.startsWith('$$') || part.startsWith('\\[');
           const trim = bracket || display ? 2 : 1;
           // Only KaTeX output becomes HTML. trust:false rejects HTML/URL commands.
-          const html = katex.renderToString(bare ? part : part.slice(trim, -trim), {
+          const formula = bare
+            ? part
+                .replace(/^([+-]?)sqrt\(([^()\n]+)\)$/, '$1\\sqrt{$2}')
+                .replace(/^([+-]?)\(([^()\n]+)\)\s*\/\s*\(([^()\n]+)\)$/, '$1\\frac{$2}{$3}')
+            : part.slice(trim, -trim);
+          const html = katex.renderToString(formula, {
             displayMode: display,
             throwOnError: false,
             trust: false,

@@ -33,6 +33,12 @@
 
 ## Verifikasi
 
+**ENGINEERING UPDATE — 22 Oktober 2026:** pemeriksaan runtime umum sempat menolak paket dalam allowlist sebelum pengecualian ini diperiksa. Pemilihan paket Drill kini menerima persetujuan umum **atau** paket non-demo yang UUID-nya tercantum pada policy khusus versi 1. Pemeriksaan jadwal, level, `package_can_distribute`, jumlah soal, serta penilaian tetap berlaku. Tidak ada perubahan allowlist, publikasi, isi soal, atau data historis.
+
+Pemeriksaan database hanya-baca pada tanggal ini menemukan 115 paket PUBLISHED, seluruhnya tercantum pada allowlist tersimpan, seluruh versi soal READY dan ditinjau; tidak ada paket yang mempunyai catatan persetujuan manifest/penguncian baru. Jumlah ini berbeda dari snapshot 12 paket di atas. Pemilik mengonfirmasi bahwa soal resmi telah disetujui tim kurikulum; perbaikan kode tidak membuat catatan persetujuan baru atau mengubah cakupan policy tersimpan.
+
+Tes PostgreSQL hanya-baca memeriksa izin UUID yang tepat, penolakan UUID lain, versi/kode policy yang salah, paket demo, serta bentuk daftar yang tidak sah. Tes ini menggunakan `TEST_DATABASE_URL` lokal terpisah.
+
 Tes unit membatasi policy/UUID/version, memvalidasi jawaban PGK, memeriksa parsial/kosong dan menjaga reward paket biasa. Typecheck, lint dan build API lulus.
 
 Pemeriksaan dengan service Student dan PostgreSQL nyata menjalankan 12 paket / 120 soal: katalog, tiga format, simpan jawaban, submit, skor parsial, pembahasan, XP, penolakan level terkunci, unlock bertahap dan submit ulang tanpa XP ganda. Autentikasi memakai identity test double; ini bukan tes browser. Seluruh fixture, attempt dan XP uji di-rollback.
