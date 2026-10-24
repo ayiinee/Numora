@@ -14,7 +14,7 @@ import { StudentSectionHeader } from './student-section-header';
 import type { StudentMaterialsDto, MaterialChapterDto } from './generated-types';
 
 export function MaterialsHeader() {
-  return <StudentSectionHeader title="Latihan Soal" />;
+  return <StudentSectionHeader title="Materi Belajar" />;
 }
 
 export function MaterialsScreen() {
@@ -73,15 +73,49 @@ function MaterialsContent() {
 
   return (
     <StudentLayout
-      title="Latihan Soal"
+      title="Materi Belajar"
       className="materials-shell"
       mobileHeader={<MaterialsHeader />}
     >
       <div className="materials-page">
         <div className="materials-heading">
-          <h1>Latihan Soal</h1>
-          <p>Pilih bab TKA Matematika SMP untuk mulai berlatih.</p>
+          <h1>Materi Belajar</h1>
+          <p>Kurikulum TKA Matematika SMP</p>
         </div>
+        <Input
+          className="materials-search"
+          label="Cari materi, bab, atau subbab"
+          type="search"
+          placeholder="Cari materi, bab, atau subbab…"
+          value={search}
+          onChange={(event) => changeSearch(event.target.value)}
+          leftIcon={<Icon name="search" />}
+        />
+        <section className="materials-chapters" aria-label="Daftar bab latihan">
+          {query.isPending || query.isError ? (
+            <DataState
+              pending={query.isPending}
+              error={query.error}
+              retry={() => void query.refetch()}
+            />
+          ) : !visible.length ? (
+            <Card>
+              <EmptyState
+                icon={<Icon name="book" />}
+                title={
+                  query.data.chapters.length ? 'Bab tidak ditemukan' : 'Latihan sedang disiapkan'
+                }
+                description={
+                  query.data.chapters.length
+                    ? 'Coba kata kunci lainnya.'
+                    : 'Bab yang diterbitkan akan muncul di sini.'
+                }
+              />
+            </Card>
+          ) : (
+            visible.map((chapter) => <MaterialChapterLink key={chapter.id} chapter={chapter} />)
+          )}
+        </section>
         <section className="materials-activity" aria-labelledby="materials-recent">
           <div className="materials-section-title">
             <h2 id="materials-recent">Aktivitas Terakhir</h2>
@@ -114,40 +148,6 @@ function MaterialsContent() {
                 description="Pilih bab untuk memulai latihan pertamamu."
               />
             </Card>
-          )}
-        </section>
-        <Input
-          className="materials-search"
-          label="Cari bab atau subbab"
-          type="search"
-          placeholder="Cari bab atau subbab…"
-          value={search}
-          onChange={(event) => changeSearch(event.target.value)}
-          leftIcon={<Icon name="search" />}
-        />
-        <section className="materials-chapters" aria-label="Daftar bab latihan">
-          {query.isPending || query.isError ? (
-            <DataState
-              pending={query.isPending}
-              error={query.error}
-              retry={() => void query.refetch()}
-            />
-          ) : !visible.length ? (
-            <Card>
-              <EmptyState
-                icon={<Icon name="book" />}
-                title={
-                  query.data.chapters.length ? 'Bab tidak ditemukan' : 'Latihan sedang disiapkan'
-                }
-                description={
-                  query.data.chapters.length
-                    ? 'Coba kata kunci lainnya.'
-                    : 'Bab yang diterbitkan akan muncul di sini.'
-                }
-              />
-            </Card>
-          ) : (
-            visible.map((chapter) => <MaterialChapterLink key={chapter.id} chapter={chapter} />)
           )}
         </section>
       </div>

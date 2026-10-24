@@ -146,7 +146,12 @@ export function NotificationsScreen() {
             </button>
           </p>
         )}
-        <div className="notification-filter" ref={filtersRef} aria-label="Filter notifikasi">
+        <div
+          className="notification-filter"
+          ref={filtersRef}
+          role="group"
+          aria-label="Filter notifikasi"
+        >
           {filters.map((f) => (
             <button
               type="button"
