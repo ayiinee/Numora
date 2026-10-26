@@ -103,6 +103,14 @@ The first `pnpm run ci` attempt passed script checks, 12 contract schemas, gener
 
 ### Final local verification — code `bc9207a`
 
+| Task increment                                                               | Draft PR                                           | Base                                     | Code commit |
+| ---------------------------------------------------------------------------- | -------------------------------------------------- | ---------------------------------------- | ----------- |
+| FD-01/02/03 and local FD-05 reuse: access, URL, confirmation, upload history | [#105](https://github.com/ayiinee/Numora/pull/105) | `fix/dev-watch-identity-recovery` (#99)  | `111bcae`   |
+| FD-04: component responsibility split                                        | [#106](https://github.com/ayiinee/Numora/pull/106) | `feat/ferdi-admin-finalization` (#105)   | `c1ba198`   |
+| FD-06: CSS extraction and portable evidence                                  | [#107](https://github.com/ayiinee/Numora/pull/107) | `refactor/ferdi-admin-components` (#106) | `bc9207a`   |
+
+Ferdi remains the implementation DRI. Drafts do not assign another fixer or imply review approval. Merge in dependency order after required review/checks; retarget #105 to main only after #99 is integrated. Later commits on the CSS branch update documentation only.
+
 | Check                                                   | Result                                                   | Boundary                                                                                                                                                          |
 | ------------------------------------------------------- | -------------------------------------------------------- | ----------------------------------------------------------------------------------------------------------------------------------------------------------------- |
 | Script checks, JSON contracts, generated type freshness | Passed; 12 schema contracts                              | From the initial CI run before the memory failure; no endpoint/schema/generated contract changed afterward.                                                       |
