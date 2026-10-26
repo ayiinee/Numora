@@ -1,25 +1,26 @@
 'use client';
-import Link from 'next/link';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
-import {
-  createGeneratorPackage,
-  generatorPackageCatalog,
-  getGeneratorPackage,
-  getGeneratorPackageFile,
-  listGeneratorPackages,
-  retryGeneratorPackage,
-} from './generator-package-api';
+import { Button,Card } from '@tka/ui';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useEffect,useRef,useState,type ReactNode } from 'react';
+import { AdminFrame,AdminLoading,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
 import { downloadFile } from './content-excel-api';
 import { ContentExcelPreview } from './content-excel-preview';
 import type {
-  GeneratorPackageCatalogDto,
-  GeneratorPackageDto,
-  GeneratorPackageFileDto,
+GeneratorPackageCatalogDto,
+GeneratorPackageDto,
+GeneratorPackageFileDto,
 } from './generated-types';
+import {
+createGeneratorPackage,
+generatorPackageCatalog,
+getGeneratorPackage,
+getGeneratorPackageFile,
+listGeneratorPackages,
+retryGeneratorPackage,
+} from './generator-package-api';
 export const generatorTypeLabels = { TRYOUT: 'Tryout', DRILL: 'Drill', PRETEST: 'Pretest' };
 export function useGeneratorToken() {
   const { state } = useAuth();
@@ -54,7 +55,12 @@ export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }
     />
   );
 }
-export function GeneratorPackageScreen() {
+export const GeneratorPackageScreen = withAdminWorkspace(
+  GeneratorPackageScreenProtected,
+  'content',
+);
+function GeneratorPackageScreenProtected() {
+  const reportAccessError = useAdminAccessError();
   const token = useGeneratorToken(),
     router = useRouter();
   const [catalog, setCatalog] = useState<GeneratorPackageCatalogDto | null>(null),
@@ -74,6 +80,7 @@ export function GeneratorPackageScreen() {
       setCatalog(await generatorPackageCatalog(token));
       setError('');
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Gagal memuat sumber generator.');
     }
   }
@@ -99,6 +106,7 @@ export function GeneratorPackageScreen() {
       setActiveId(result.id);
       window.history.replaceState(null, '', `?package=${result.id}`);
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Generate gagal.');
     } finally {
       setBusy(false);
@@ -241,7 +249,11 @@ function ResultsFrame({ embedded, children }: { embedded: boolean; children: Rea
     </AdminFrame>
   );
 }
-export function GeneratorResultsScreen({
+export const GeneratorResultsScreen = withAdminWorkspace(
+  GeneratorResultsScreenProtected,
+  'content',
+);
+function GeneratorResultsScreenProtected({
   id,
   embedded = false,
   autoOpen = false,
@@ -252,6 +264,7 @@ export function GeneratorResultsScreen({
   autoOpen?: boolean;
   onSelect?: (id: string) => void;
 }) {
+  const reportAccessError = useAdminAccessError();
   const token = useGeneratorToken();
   const router = useRouter();
   const [items, setItems] = useState<GeneratorPackageDto[]>([]),
@@ -267,6 +280,7 @@ export function GeneratorResultsScreen({
       else setItems((await listGeneratorPackages(token)).items);
       setError('');
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Gagal memuat hasil.');
     }
   }
@@ -289,6 +303,7 @@ export function GeneratorResultsScreen({
     try {
       await fn();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
     } finally {
       setBusy(false);

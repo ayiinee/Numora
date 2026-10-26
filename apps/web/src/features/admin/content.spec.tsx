@@ -1,15 +1,15 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApiProblem } from '@/lib/api';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminContentScreen } from './content';
 import {
-  createQuestion,
-  createDrillPackage,
-  updateDrillPackage,
   archiveDrillPackage,
+  createDrillPackage,
+  createQuestion,
   loadAdminWorkbench,
   publishDrillPackage,
   resolveReport,
+  updateDrillPackage,
   updateTryoutDraft,
 } from './content-api';
 
@@ -185,6 +185,20 @@ const data = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value() {
+        this.setAttribute('open', '');
+      },
+    },
+    close: {
+      configurable: true,
+      value() {
+        this.removeAttribute('open');
+      },
+    },
+  });
   context.state = {
     status: 'ready',
     profile: {
@@ -270,7 +284,7 @@ describe('Admin content UI', () => {
       session: { access_token: 'disabled-token' },
     };
     render(<AdminContentScreen />);
-    expect(screen.getByText('Halaman ini hanya tersedia untuk Admin yang aktif.')).toBeTruthy();
+    expect(screen.getByText(/Akses memerlukan Super Admin/)).toBeTruthy();
     expect(loadAdminWorkbench).not.toHaveBeenCalled();
   });
   it('creates a Drill draft with the selected level and split pinned question version IDs', async () => {
@@ -354,19 +368,16 @@ describe('Admin content UI', () => {
     await screen.findByText('Perubahan tersimpan. ID: drill-package-test');
   });
   it('requires confirmation before archiving a Drill package', async () => {
-    const confirm = vi
-      .spyOn(window, 'confirm')
-      .mockReturnValueOnce(false)
-      .mockReturnValueOnce(true);
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
     fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
     expect(archiveDrillPackage).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Batal' }));
     fireEvent.click(screen.getByRole('button', { name: 'Arsipkan paket' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi' }));
     await waitFor(() =>
       expect(archiveDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
     );
-    expect(confirm).toHaveBeenCalledTimes(2);
   });
   it('does not fetch or render administrative data for Student', () => {
     context.state = {
@@ -375,7 +386,7 @@ describe('Admin content UI', () => {
       session: { access_token: 'student-token' },
     };
     render(<AdminContentScreen />);
-    expect(screen.getByText('Halaman ini hanya tersedia untuk Admin yang aktif.')).toBeTruthy();
+    expect(screen.getByText(/Akses memerlukan Super Admin/)).toBeTruthy();
     expect(loadAdminWorkbench).not.toHaveBeenCalled();
   });
   it('shows a recoverable network error and retries loading', async () => {
@@ -435,6 +446,7 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Publikasikan paket' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi' }));
     await waitFor(() =>
       expect(publishDrillPackage).toHaveBeenCalledWith('test-token', 'drill-package-test'),
     );
@@ -485,6 +497,7 @@ describe('Admin content UI', () => {
       status: 'ready',
       profile: {
         id: 'another-admin-test',
+        adminRole: 'CONTENT_DATA_MODERATION',
         role: 'ADMIN',
         status: 'ACTIVE',
         capabilities: ['CONTENT_MANAGE'],

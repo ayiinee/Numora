@@ -1,6 +1,6 @@
-import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { ApiProblem } from '@/lib/api';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { AdminOperationsScreen } from './operations';
 import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
 
@@ -45,9 +45,16 @@ const adminClass = {
 
 beforeEach(() => {
   vi.resetAllMocks();
+  window.history.replaceState(null, '', '/');
   context.state = {
     status: 'ready',
-    profile: { id: 'admin-test', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
+    profile: {
+      id: 'admin-test',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS',
+      status: 'ACTIVE',
+      displayName: 'Admin TEST',
+    },
     session: { access_token: 'test-token' },
   };
   vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5 });
@@ -57,6 +64,26 @@ beforeEach(() => {
 });
 
 afterEach(cleanup);
+
+it('restores class filters and selected detail on first load and browser Back', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    `/?view=classes&search=IX&schoolId=${adminClass.schoolId}&classId=${adminClass.id}`,
+  );
+  render(<AdminOperationsScreen />);
+  await screen.findByRole('heading', { name: adminClass.name });
+  expect(listAdminClasses).toHaveBeenCalledWith(
+    'test-token',
+    expect.objectContaining({ search: 'IX', schoolId: adminClass.schoolId, offset: 0 }),
+  );
+  expect(getAdminClass).toHaveBeenCalledWith('test-token', adminClass.id);
+  fireEvent.click(screen.getByRole('button', { name: 'Tutup detail' }));
+  expect(new URLSearchParams(window.location.search).has('classId')).toBe(false);
+  window.history.back();
+  await screen.findByRole('heading', { name: adminClass.name });
+  expect(listAdminUsers).not.toHaveBeenCalled();
+});
 
 describe('Admin operations UI', () => {
   it('filters users with the existing API contract and loads a minimal user detail', async () => {

@@ -1,48 +1,50 @@
 'use client';
+import { AdminConfirmButton } from './admin-confirm-button';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
 import { ADMIN_PAGE_SIZE } from './pagination';
 
-import Link from 'next/link';
-import { useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { Badge, Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
+import { Badge,Button } from '@tka/ui';
+import Link from 'next/link';
+import { useEffect,useState,type FormEvent,type ReactNode } from 'react';
+import {
+AdminEditorForm,
+AdminFrame,
+AdminLoading,
+AdminMessage,
+AdminStats,
+} from './admin-presentation';
+import {
+archiveDrillPackage,
+createChapter,
+createCompetency,
+createDrillPackage,
+createLevel,
+createSubchapter,
+createTryoutDraft,
+createVariant,
+createVideo,
+loadAdminWorkbench,
+publishDrillPackage,
+renameTaxon,
+resolveReport,
+reviseQuestion,
+setChapterCategory,
+setContentStatus,
+updateDrillPackage,
+updateTryoutDraft,
+updateVideo,
+} from './content-api';
 import { classifyQuestion } from './content-package-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
-import {
-  setChapterCategory,
-  createChapter,
-  createCompetency,
-  createDrillPackage,
-  createLevel,
-  createSubchapter,
-  createTryoutDraft,
-  createVariant,
-  createVideo,
-  loadAdminWorkbench,
-  archiveDrillPackage,
-  publishDrillPackage,
-  renameTaxon,
-  resolveReport,
-  reviseQuestion,
-  setContentStatus,
-  updateDrillPackage,
-  updateTryoutDraft,
-  updateVideo,
-} from './content-api';
 import type {
-  AdminTaxonDto,
-  AdminDrillPackageDto,
-  AdminTryoutDraftDto,
-  AdminVersionDto,
-  QuestionContentDto,
+AdminDrillPackageDto,
+AdminTaxonDto,
+AdminTryoutDraftDto,
+AdminVersionDto,
+QuestionContentDto,
 } from './generated-types';
-import {
-  AdminFrame,
-  AdminLoading,
-  AdminMessage,
-  AdminStats,
-  AdminEditorForm,
-} from './admin-presentation';
 
 type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
 type View =
@@ -73,7 +75,8 @@ const message = (error: unknown) =>
   error instanceof Error ? error.message : 'Permintaan gagal. Coba lagi.';
 type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
-export function AdminContentScreen() {
+export const AdminContentScreen = withAdminWorkspace(AdminContentScreenProtected, 'content');
+function AdminContentScreenProtected() {
   const { state } = useAuth();
   const accountKey =
     state.status === 'ready'
@@ -83,6 +86,7 @@ export function AdminContentScreen() {
 }
 
 function AdminContentScreenContent() {
+  const reportAccessError = useAdminAccessError();
   const { state, refresh } = useAuth();
   const canReadAudit = state.status === 'ready' && state.profile.adminRole === 'SUPER_ADMIN';
   const token =
@@ -132,6 +136,7 @@ function AdminContentScreenContent() {
         }
       },
       (cause: unknown) => {
+        reportAccessError(cause);
         if (active) {
           setError(message(cause));
           setLoading(false);
@@ -154,6 +159,7 @@ function AdminContentScreenContent() {
       setRevision((value) => value + 1);
       return true;
     } catch (cause) {
+      reportAccessError(cause);
       setError(message(cause));
       if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setDenied(true);
       return false;
@@ -443,39 +449,31 @@ function AdminContentScreenContent() {
                               </Button>
                             )}
                             {!v.imported && v.contentStatus === 'DRAFT' && (
-                              <Button
+                              <AdminConfirmButton
                                 disabled={busy}
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Saya sudah meninjau isi, kunci jawaban, pembahasan, dan materi induk versi ini. Publikasikan sebagai READY?',
-                                    )
-                                  )
-                                    void run(() =>
-                                      setContentStatus(token, 'versions', v.id, 'READY'),
-                                    );
-                                }}
+                                description={
+                                  'Saya sudah meninjau isi, kunci jawaban, pembahasan, dan materi induk versi ini. Publikasikan sebagai READY?'
+                                }
+                                onConfirm={() =>
+                                  run(() => setContentStatus(token, 'versions', v.id, 'READY'))
+                                }
                               >
                                 Publikasikan versi
-                              </Button>
+                              </AdminConfirmButton>
                             )}
                             {!v.imported && v.contentStatus !== 'ARCHIVED' && (
-                              <Button
+                              <AdminConfirmButton
                                 variant="danger-outline"
                                 disabled={busy}
-                                onClick={() => {
-                                  if (
-                                    window.confirm(
-                                      'Arsipkan versi ini untuk mencegah pengerjaan baru? Riwayat tetap disimpan.',
-                                    )
-                                  )
-                                    void run(() =>
-                                      setContentStatus(token, 'versions', v.id, 'ARCHIVED'),
-                                    );
-                                }}
+                                description={
+                                  'Arsipkan versi ini untuk mencegah pengerjaan baru? Riwayat tetap disimpan.'
+                                }
+                                onConfirm={() =>
+                                  run(() => setContentStatus(token, 'versions', v.id, 'ARCHIVED'))
+                                }
                               >
                                 Arsipkan versi
-                              </Button>
+                              </AdminConfirmButton>
                             )}
                           </div>
                         </li>
@@ -964,36 +962,28 @@ function DrillPackages({
                 <Button variant="secondary" disabled={busy} onClick={() => setDraft(pack)}>
                   Edit draf
                 </Button>
-                <Button
+                <AdminConfirmButton
                   disabled={busy}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Terbitkan paket ini? API akan memvalidasi 10 soal, hasil review, materi, dan kebijakan penilaian.',
-                      )
-                    )
-                      void run(() => publishDrillPackage(token, pack.id));
-                  }}
+                  description={
+                    'Terbitkan paket ini? API akan memvalidasi 10 soal, hasil review, materi, dan kebijakan penilaian.'
+                  }
+                  onConfirm={() => run(() => publishDrillPackage(token, pack.id))}
                 >
                   Publikasikan paket
-                </Button>
+                </AdminConfirmButton>
               </div>
             )}
             {pack.status !== 'ARCHIVED' && (
-              <Button
+              <AdminConfirmButton
                 variant="danger-outline"
                 disabled={busy}
-                onClick={() => {
-                  if (
-                    window.confirm(
-                      'Arsipkan paket? Riwayat dan item paket tetap disimpan, dan paket tidak dapat diterbitkan ulang.',
-                    )
-                  )
-                    void run(() => archiveDrillPackage(token, pack.id));
-                }}
+                description={
+                  'Arsipkan paket? Riwayat dan item paket tetap disimpan, dan paket tidak dapat diterbitkan ulang.'
+                }
+                onConfirm={() => run(() => archiveDrillPackage(token, pack.id))}
               >
                 Arsipkan paket
-              </Button>
+              </AdminConfirmButton>
             )}
           </li>
         ))}
@@ -1258,20 +1248,18 @@ function Curriculum({ data, token, busy, run }: EditorProps) {
                 </Button>
               )}
               {r.status !== 'ARCHIVED' && (
-                <Button
+                <AdminConfirmButton
                   variant="danger-outline"
                   disabled={busy}
-                  onClick={() => {
-                    if (
-                      window.confirm(
-                        'Arsipkan materi ini? Materi dapat hilang dari katalog untuk pengerjaan baru.',
-                      )
-                    )
-                      void run(() => setContentStatus(token, resources[r.kind], r.id, 'ARCHIVED'));
-                  }}
+                  description={
+                    'Arsipkan materi ini? Materi dapat hilang dari katalog untuk pengerjaan baru.'
+                  }
+                  onConfirm={() =>
+                    run(() => setContentStatus(token, resources[r.kind], r.id, 'ARCHIVED'))
+                  }
                 >
                   Arsipkan
-                </Button>
+                </AdminConfirmButton>
               )}
             </div>
           </li>

@@ -1,12 +1,13 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, Card } from '@tka/ui';
-import { useAuth } from '@/features/onboarding/auth';
 import { QuestionChoices } from '@/features/core-learning/question-choices';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
-import { getPreview, savePreview, submitPreview, renewPreviewMedia } from './content-preview-api';
+import { useAuth } from '@/features/onboarding/auth';
+import { Badge,Button,Card } from '@tka/ui';
+import { useEffect,useRef,useState } from 'react';
+import { AdminFrame,AdminLoading,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
+import { getPreview,renewPreviewMedia,savePreview,submitPreview } from './content-preview-api';
 import { ContentRichText } from './content-rich-text';
-import type { PreviewSessionDto, PreviewItemDto, SavePreviewAnswerDto } from './generated-types';
+import type { PreviewItemDto,PreviewSessionDto,SavePreviewAnswerDto } from './generated-types';
 
 type RawAnswer = SavePreviewAnswerDto['answer'];
 function choice(answer: RawAnswer): string | string[] | Record<string, string> | null {
@@ -21,12 +22,14 @@ function answerFrom(type: PreviewItemDto['type'], value: ReturnType<typeof choic
   if (type === 'MULTIPLE_CHOICE_MULTIPLE_ANSWER') return { optionIds: value as string[] };
   return { categoryByStatementId: value as Record<string, string> };
 }
-export function ContentPreviewScreen({ id }: { id: string }) {
+export const ContentPreviewScreen = withAdminWorkspace(ContentPreviewScreenProtected, 'content');
+function ContentPreviewScreenProtected({ id }: { id: string }) {
   const { state } = useAuth();
   const accountKey = state.status === 'ready' ? state.profile.id : state.status;
   return <PreviewContent key={`${accountKey}:${id}`} id={id} />;
 }
 function PreviewContent({ id }: { id: string }) {
+  const reportAccessError = useAdminAccessError();
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' &&
@@ -55,6 +58,7 @@ function PreviewContent({ id }: { id: string }) {
       setDraft(next.items[index]?.answer ?? null);
       setDirty(false);
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Gagal memuat sesi.');
     } finally {
       setLoading(false);
@@ -80,6 +84,7 @@ function PreviewContent({ id }: { id: string }) {
           }
         },
         (e) => {
+          if (active) reportAccessError(e);
           if (active) {
             setError(e instanceof Error ? e.message : 'Gagal memuat sesi.');
             setLoading(false);
@@ -110,6 +115,7 @@ function PreviewContent({ id }: { id: string }) {
     try {
       await action();
     } catch (e) {
+      reportAccessError(e);
       setError(
         e instanceof Error ? e.message : 'Permintaan gagal. Jawaban belum dikonfirmasi server.',
       );

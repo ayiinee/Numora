@@ -1,15 +1,15 @@
-import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
-import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { AdminSchoolsScreen } from './schools';
 import {
   ApiProblem,
   createSchool,
+  issueTeacherToken,
   listAdminSchools,
   listTeacherTokens,
-  issueTeacherToken,
   revokeTeacherToken,
   updateSchool,
 } from '@/lib/api';
+import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
+import { AdminSchoolsScreen } from './schools';
 const auth = vi.hoisted(() => ({ state: {} as Record<string, unknown>, refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
   usePathname: () => '/admin/schools',
@@ -35,15 +35,47 @@ const school = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value() {
+        this.setAttribute('open', '');
+      },
+    },
+    close: {
+      configurable: true,
+      value() {
+        this.removeAttribute('open');
+      },
+    },
+  });
+  window.history.replaceState(null, '', '/');
   auth.state = {
     status: 'ready',
-    profile: { id: 'admin-one', role: 'ADMIN', status: 'ACTIVE', displayName: 'Admin TEST' },
+    profile: {
+      id: 'admin-one',
+      role: 'ADMIN',
+      adminRole: 'OPERATIONS',
+      status: 'ACTIVE',
+      displayName: 'Admin TEST',
+    },
     session: { access_token: 'test-admin' },
   };
   vi.mocked(listAdminSchools).mockResolvedValue({ items: [school] });
   vi.mocked(listTeacherTokens).mockResolvedValue({ items: [] });
 });
 afterEach(cleanup);
+it('restores a selected school and searches the complete list by name or code', async () => {
+  window.history.replaceState(null, '', '/?schoolId=school-one');
+  render(<AdminSchoolsScreen />);
+  await screen.findByLabelText(/Ubah nama/);
+  expect(listTeacherTokens).toHaveBeenCalledWith('test-admin', 'school-one');
+  fireEvent.change(screen.getByLabelText('Cari sekolah'), { target: { value: 'no match' } });
+  await screen.findByText('Tidak ada sekolah yang cocok.');
+  fireEvent.change(screen.getByLabelText('Cari sekolah'), { target: { value: 'test-ab' } });
+  await screen.findByRole('button', { name: /Sekolah TEST/ });
+  expect(new URLSearchParams(window.location.search).get('schoolId')).toBe('school-one');
+});
 it('shows five schools and tokens per page, and resets token pagination when changing schools', async () => {
   vi.mocked(listAdminSchools).mockResolvedValue({
     items: Array.from({ length: 6 }, (_, i) => ({
@@ -157,6 +189,7 @@ it('disables issuance for an inactive school and preserves the status update end
     (screen.getByRole('button', { name: 'Terbitkan token' }) as HTMLButtonElement).disabled,
   ).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Aktifkan sekolah' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi' }));
   await waitFor(() =>
     expect(updateSchool).toHaveBeenCalledWith('test-admin', 'school-one', { status: 'ACTIVE' }),
   );

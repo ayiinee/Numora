@@ -1,36 +1,39 @@
 'use client';
-import Link from 'next/link';
-import { apiRequest } from '@/lib/api';
-import { MaterialChoices } from './content-mapping';
-import { ContentImportSteps } from './content-import-steps';
-import { GeneratorImportWorkflow } from './generator-import-workflow';
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { apiRequest } from '@/lib/api';
+import { Button } from '@tka/ui';
+import Link from 'next/link';
+import { useEffect,useRef,useState } from 'react';
+import { AdminPagination } from './admin-pagination';
+import { AdminFrame,AdminLoading,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
+import { downloadFile,uploadExcelMedia,type UploadCache } from './content-excel-api';
 import { ContentExcelPreview } from './content-excel-preview';
-import { downloadFile, uploadExcelMedia, type UploadCache } from './content-excel-api';
+import { ContentImportSteps } from './content-import-steps';
+import { MaterialChoices } from './content-mapping';
 import {
-  getUpload,
-  listUploads,
-  receiveUpload,
-  saveUpload,
-  uploadTemplate,
-  validateUpload,
-} from './content-upload-api';
-import {
-  archiveContentPackage,
-  getContentPackage,
-  publishContentPackage,
+archiveContentPackage,
+getContentPackage,
+publishContentPackage,
 } from './content-package-api';
+import {
+getUpload,
+listUploads,
+receiveUpload,
+saveUpload,
+uploadTemplate,
+validateUpload,
+} from './content-upload-api';
 import type {
-  ExcelIntakeDto,
-  AdminCurriculumDto,
-  UploadDestinationDto,
-  SaveUploadDraftDto,
-  UploadDetailDto,
-  UploadListDto,
+AdminCurriculumDto,
+ExcelIntakeDto,
+SaveUploadDraftDto,
+UploadDestinationDto,
+UploadDetailDto,
+UploadListDto,
 } from './generated-types';
+import { GeneratorImportWorkflow } from './generator-import-workflow';
+import { ADMIN_PAGE_SIZE } from './pagination';
 
 const labels: Record<string, string> = {
   RECEIVED: 'Diterima',
@@ -43,13 +46,17 @@ const labels: Record<string, string> = {
   ARCHIVED: 'Diarsipkan',
 };
 const typeLabels = { TRYOUT: 'Tryout', PRETEST: 'Pretest', DRILL: 'Drill' };
-export function ContentImportScreen({ generatorPackageId }: { generatorPackageId?: string } = {}) {
+export const ContentImportScreen = withAdminWorkspace(ContentImportScreenProtected, 'content');
+function ContentImportScreenProtected({
+  generatorPackageId,
+}: { generatorPackageId?: string } = {}) {
   const { state } = useAuth();
   if (generatorPackageId)
     return <GeneratorImportWorkflow key={generatorPackageId} id={generatorPackageId} />;
   return <UploadContent key={state.status === 'ready' ? state.profile.id : state.status} />;
 }
 function UploadContent() {
+  const reportAccessError = useAdminAccessError();
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' &&
@@ -106,6 +113,7 @@ function UploadContent() {
     try {
       await action();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal. Coba lagi.');
     } finally {
       running.current = false;
@@ -156,7 +164,10 @@ function UploadContent() {
     if (!token) return;
     void apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
       .then(setCurriculum)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Materi tidak dapat dimuat.'));
+      .catch((e) => {
+        reportAccessError(e);
+        setError(e instanceof Error ? e.message : 'Materi tidak dapat dimuat.');
+      });
     const id = new URLSearchParams(window.location.search).get('upload');
     if (id) void run(() => open(id));
     // Restore once for the authenticated admin; later changes are explicit.
@@ -167,7 +178,7 @@ function UploadContent() {
     setHistoryLoading(true);
     setHistoryError('');
     const query = new URLSearchParams({
-      limit: '20',
+      limit: String(ADMIN_PAGE_SIZE),
       offset: String(offset),
       ...(search ? { search } : {}),
       ...(filterStatus ? { status: filterStatus } : {}),
@@ -178,6 +189,7 @@ function UploadContent() {
         if (active) setHistory(data);
       })
       .catch((e) => {
+        reportAccessError(e);
         if (active) setHistoryError(e instanceof Error ? e.message : 'Riwayat gagal dimuat.');
       })
       .finally(() => {
@@ -1105,23 +1117,14 @@ function UploadContent() {
                   </table>
                 </div>
               )}
-              <div className="upload-actions">
-                <Button
-                  variant="secondary"
-                  disabled={!offset || historyLoading}
-                  onClick={() => setOffset((n) => Math.max(0, n - 20))}
-                >
-                  Sebelumnya
-                </Button>
-                <span>{history.total} unggahan</span>
-                <Button
-                  variant="secondary"
-                  disabled={offset + 20 >= history.total || historyLoading}
-                  onClick={() => setOffset((n) => n + 20)}
-                >
-                  Berikutnya
-                </Button>
-              </div>
+              <p>{history.total} unggahan</p>
+              <AdminPagination
+                offset={offset}
+                hasNext={offset + ADMIN_PAGE_SIZE < history.total}
+                onChange={setOffset}
+                disabled={historyLoading || busy}
+                label="Halaman riwayat unggahan"
+              />
             </section>
           )}
         </div>

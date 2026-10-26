@@ -1,8 +1,8 @@
-import { beforeEach, afterEach, describe, it, expect, vi } from 'vitest';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 import { ContentPreviewScreen } from './content-preview';
-import { ContentRichText } from './content-rich-text';
 import { getPreview, renewPreviewMedia, savePreview, submitPreview } from './content-preview-api';
+import { ContentRichText } from './content-rich-text';
 import type { PreviewSessionDto } from './generated-types';
 const auth = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('@/features/onboarding/auth', () => ({
@@ -56,6 +56,7 @@ beforeEach(() => {
       displayName: 'TEST ONLY Admin',
       role: 'ADMIN',
       status: 'ACTIVE',
+      adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['CONTENT_MANAGE'],
     },
   };
@@ -76,7 +77,7 @@ describe('internal content preview and importer', () => {
       },
     };
     render(<ContentPreviewScreen id="session" />);
-    expect(screen.getByText(/memerlukan Admin konten/)).toBeTruthy();
+    expect(screen.getByRole('alert')).toBeTruthy();
     expect(getPreview).not.toHaveBeenCalled();
   });
   it('keeps keys and explanation absent while answering; saves only after server acknowledgement', async () => {

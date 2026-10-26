@@ -1,0 +1,200 @@
+{
+  "curriculum": {
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000001",
+        "kind": "CHAPTER",
+        "parentId": null,
+        "code": "BAB-02",
+        "name": "Persamaan & Fungsi Kuadrat",
+        "displayOrder": 2,
+        "status": "READY"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000002",
+        "kind": "SUBCHAPTER",
+        "parentId": "00000000-0000-4000-8000-000000000001",
+        "code": "SUB-21",
+        "name": "Faktorisasi & Bentuk Kuadrat",
+        "displayOrder": 1,
+        "status": "READY"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000003",
+        "kind": "COMPETENCY",
+        "parentId": "00000000-0000-4000-8000-000000000002",
+        "code": "ALG-01",
+        "name": "Mengidentifikasi bentuk kuadrat sempurna",
+        "displayOrder": 1,
+        "status": "READY"
+      },
+      {
+        "id": "00000000-0000-4000-8000-000000000004",
+        "kind": "LEVEL",
+        "parentId": "00000000-0000-4000-8000-000000000002",
+        "code": "DEMO-L1",
+        "name": "Level 1 — Pengenalan bentuk kuadrat",
+        "displayOrder": 1,
+        "status": "READY"
+      }
+    ]
+  },
+  "versions": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000010",
+        "questionId": "00000000-0000-4000-8000-000000000011",
+        "primaryCompetencyId": "00000000-0000-4000-8000-000000000003",
+        "variantId": "00000000-0000-4000-8000-000000000012",
+        "variantCode": "DEMO-ALG-01",
+        "variantKind": "ORIGINAL",
+        "originalVariantId": null,
+        "versionNumber": 1,
+        "questionType": "SINGLE_CHOICE",
+        "stem": "DEMO: Bentuk setara dari $x^2+6x+9$ adalah…",
+        "options": [
+          {
+            "id": "A",
+            "text": "$(x+3)^2$"
+          },
+          {
+            "id": "B",
+            "text": "$(x-3)^2$"
+          },
+          {
+            "id": "C",
+            "text": "$x^2+3$"
+          },
+          {
+            "id": "D",
+            "text": "$x(x+6)$"
+          }
+        ],
+        "answerOptionId": "A",
+        "explanation": "DEMO: Bentuk kuadrat sempurna mengikuti $(a+b)^2=a^2+2ab+b^2$.",
+        "difficulty": "DEMO",
+        "contentStatus": "READY",
+        "questionStatus": "READY",
+        "reviewedByUserId": "00000000-0000-4000-8000-000000000100",
+        "reviewedAt": "2026-10-03T02:00:00Z"
+      }
+    ]
+  },
+  "videos": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000013",
+        "mappingId": "00000000-0000-4000-8000-000000000014",
+        "subchapterId": "00000000-0000-4000-8000-000000000002",
+        "title": "DEMO — Mengenali bentuk kuadrat sempurna",
+        "url": "https://www.youtube.com/watch?v=dQw4w9WgXcQ",
+        "source": "YouTube",
+        "recommendationOrder": 1,
+        "status": "READY"
+      }
+    ]
+  },
+  "reports": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000015",
+        "kind": "QUESTION",
+        "referenceId": "00000000-0000-4000-8000-000000000010",
+        "category": "EXPLANATION",
+        "details": "DEMO: Mohon periksa urutan langkah pada pembahasan.",
+        "status": "OPEN",
+        "followUp": null,
+        "reportedAt": "2026-10-04T02:30:00Z"
+      }
+    ]
+  },
+  "irt": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000022",
+        "batchId": "00000000-0000-4000-8000-000000000016",
+        "questionVersionId": "00000000-0000-4000-8000-000000000010",
+        "modelVersion": "DEMO-MODEL",
+        "batchStatus": "SUCCEEDED",
+        "sampleSize": 0,
+        "dataStatus": "NOT_ENOUGH_DATA",
+        "difficultyB": null,
+        "discriminationA": null,
+        "guessingC": null
+      }
+    ]
+  },
+  "irtBatches": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000016",
+        "packageId": "00000000-0000-4000-8000-000000000018",
+        "batchKind": "TRYOUT",
+        "modelVersion": "DEMO-MODEL",
+        "status": "SUCCEEDED",
+        "startedAt": "2026-10-04T00:00:00Z",
+        "finishedAt": "2026-10-04T01:00:00Z",
+        "resultReleasedAt": null,
+        "failureCode": null
+      }
+    ]
+  },
+  "audit": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000017",
+        "actorUserId": "00000000-0000-4000-8000-000000000100",
+        "action": "question_version_reviewed",
+        "entityType": "question_version",
+        "entityId": "00000000-0000-4000-8000-000000000010",
+        "createdAt": "2026-10-03T02:00:00Z"
+      }
+    ]
+  },
+  "dashboard": {
+    "schools": 3,
+    "chapters": 1,
+    "questions": 1,
+    "readyVersions": 1,
+    "openReports": 1
+  },
+  "packages": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000018",
+        "familyCode": "DEMO-TRYOUT",
+        "packageVersion": 1,
+        "name": "DEMO — Draf Tryout Matematika",
+        "status": "DRAFT",
+        "questionVersionIds": [
+          "00000000-0000-4000-8000-000000000010",
+          "00000000-0000-4000-8000-000000000021"
+        ]
+      }
+    ]
+  },
+  "drillPackages": {
+    "hasNext": false,
+    "items": [
+      {
+        "id": "00000000-0000-4000-8000-000000000019",
+        "familyCode": "DEMO-DRILL",
+        "packageVersion": 1,
+        "name": "DEMO — Paket Latihan Aljabar",
+        "levelId": "00000000-0000-4000-8000-000000000004",
+        "variantIndex": 1,
+        "scoringPolicyVersionId": "00000000-0000-4000-8000-000000000020",
+        "status": "DRAFT",
+        "releaseAt": null,
+        "questionVersionIds": ["00000000-0000-4000-8000-000000000010"]
+      }
+    ]
+  }
+}

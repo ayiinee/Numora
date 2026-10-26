@@ -1,12 +1,10 @@
 'use client';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 
-import { useEffect, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
+import { useEffect, useState, type FormEvent } from 'react';
 
-import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
-import { AdminPagination, useAdminPagination } from './admin-pagination';
 import {
   ApiProblem,
   createSchool,
@@ -20,20 +18,30 @@ import {
   type IssuedTeacherToken,
   type TeacherTokenSummary,
 } from '@/lib/api';
+import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
+import { AdminConfirmButton } from './admin-confirm-button';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
+import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
+import { adminOffset, useAdminUrl } from './admin-url';
 
-export function AdminSchoolsScreen() {
+export const AdminSchoolsScreen = withAdminWorkspace(AdminSchoolsScreenProtected, 'operations');
+function AdminSchoolsScreenProtected() {
   const { state } = useAuth();
   const accountKey = state.status === 'ready' ? state.profile.id : state.status;
   return <AdminSchoolsScreenContent key={accountKey} />;
 }
 
 function AdminSchoolsScreenContent() {
+  const reportAccessError = useAdminAccessError();
   const router = useRouter();
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' && state.profile.role === 'ADMIN' ? state.session.access_token : null;
   const [schools, setSchools] = useState<AdminSchool[] | null>(null);
-  const [selected, setSelected] = useState('');
+  const url = useAdminUrl();
+  const selected = url.params.get('schoolId') ?? '';
+  const search = url.params.get('search') ?? '';
+  const setSelected = (schoolId: string) => url.update({ schoolId, tokenOffset: null });
   const [tokens, setTokens] = useState<TeacherTokenSummary[] | null>(null);
   const [issued, setIssued] = useState<IssuedTeacherToken | null>(null);
   const [code, setCode] = useState('');
@@ -45,8 +53,20 @@ function AdminSchoolsScreenContent() {
   const [accessError, setAccessError] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
-  const schoolPage = useAdminPagination(schools ?? []);
-  const tokenPage = useAdminPagination(tokens ?? [], selected);
+  const filteredSchools = (schools ?? []).filter((school) =>
+    `${school.name} ${school.code}`
+      .normalize('NFC')
+      .toLocaleLowerCase('id-ID')
+      .includes(search.normalize('NFC').trim().toLocaleLowerCase('id-ID')),
+  );
+  const schoolPage = useAdminPagination(filteredSchools, search, {
+    offset: adminOffset(url.params.get('offset')),
+    onChange: (offset) => url.update({ offset }),
+  });
+  const tokenPage = useAdminPagination(tokens ?? [], selected, {
+    offset: adminOffset(url.params.get('tokenOffset')),
+    onChange: (tokenOffset) => url.update({ tokenOffset }),
+  });
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin/login');
     if (state.status === 'registration') router.replace('/onboarding');
@@ -62,6 +82,7 @@ function AdminSchoolsScreenContent() {
         if (active) setSchools(result.items);
       },
       (cause: unknown) => {
+        if (active) reportAccessError(cause);
         if (active) {
           setSchoolError(message(cause));
           if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
@@ -82,6 +103,7 @@ function AdminSchoolsScreenContent() {
         if (active) setTokens(result.items);
       },
       (cause: unknown) => {
+        if (active) reportAccessError(cause);
         if (active) {
           setTokenError(message(cause));
           if (cause instanceof ApiProblem && [401, 403].includes(cause.status))
@@ -94,6 +116,17 @@ function AdminSchoolsScreenContent() {
     };
   }, [token, selected, revision]);
   const current = schools?.find((school) => school.id === selected);
+  useEffect(() => {
+    setIssued(null);
+    setTokens(null);
+    setTokenError('');
+  }, [selected]);
+  useEffect(() => {
+    setEditName(current?.name ?? '');
+  }, [current?.id]);
+  useEffect(() => {
+    if (current?.status !== 'ACTIVE') setIssued(null);
+  }, [current?.status]);
   async function run(action: () => Promise<unknown>) {
     if (busy) return;
     setBusy(true);
@@ -102,6 +135,7 @@ function AdminSchoolsScreenContent() {
       await action();
       setRevision((value) => value + 1);
     } catch (cause) {
+      reportAccessError(cause);
       setError(message(cause));
       if (cause instanceof ApiProblem && [401, 403].includes(cause.status)) setAccessError(true);
     } finally {
@@ -136,10 +170,10 @@ function AdminSchoolsScreenContent() {
     description: 'Kelola sekolah dan akses verifikasi guru pendamping.',
     icon: 'school' as const,
   };
-  if (!token || accessError)
+  if (!token || accessError || url.search === null)
     return (
       <AdminFrame {...frame}>
-        {state.status === 'loading' ? (
+        {state.status === 'loading' || url.search === null ? (
           <AdminLoading message="Memeriksa akses Admin…" />
         ) : (
           <AdminMessage
@@ -215,14 +249,22 @@ function AdminSchoolsScreenContent() {
               <h2>Sekolah terdaftar</h2>
               {schools && <Badge variant="default">{schools.length} sekolah</Badge>}
             </div>
+            <Input
+              label="Cari sekolah"
+              id="school-search"
+              value={search}
+              disabled={busy}
+              placeholder="Nama atau kode sekolah"
+              onChange={(event) => url.update({ search: event.target.value, offset: null }, true)}
+            />
             {schoolError ? (
               <AdminMessage error message={schoolError} retry={retry} />
             ) : schools === null ? (
               <AdminLoading message="Memuat sekolah…" />
-            ) : !schools.length ? (
+            ) : !filteredSchools.length ? (
               <Card className="admin-card">
                 <EmptyState
-                  title="Belum ada sekolah."
+                  title={schools.length ? 'Tidak ada sekolah yang cocok.' : 'Belum ada sekolah.'}
                   description="Gunakan formulir di atas untuk mendaftarkan sekolah pertama."
                 />
               </Card>
@@ -285,20 +327,26 @@ function AdminSchoolsScreenContent() {
                   </Button>
                 </fieldset>
               </form>
-              <Button
+              <AdminConfirmButton
+                description={
+                  current.status === 'ACTIVE'
+                    ? 'Nonaktifkan sekolah? Verifikasi Guru dengan sekolah ini akan ditolak.'
+                    : 'Aktifkan sekolah ini?'
+                }
                 variant={current.status === 'ACTIVE' ? 'danger-outline' : 'secondary'}
                 disabled={busy}
                 fullWidth
-                onClick={() =>
-                  void run(() =>
-                    updateSchool(token, current.id, {
+                onConfirm={() =>
+                  run(async () => {
+                    setIssued(null);
+                    return updateSchool(token, current.id, {
                       status: current.status === 'ACTIVE' ? 'INACTIVE' : 'ACTIVE',
-                    }),
-                  )
+                    });
+                  })
                 }
               >
                 {current.status === 'ACTIVE' ? 'Nonaktifkan sekolah' : 'Aktifkan sekolah'}
-              </Button>
+              </AdminConfirmButton>
               <div className="admin-token-section">
                 <div className="admin-section-heading">
                   <Icon name="lock" />
@@ -372,29 +420,31 @@ function AdminSchoolsScreenContent() {
                         </div>
                         {!item.usedAt && !item.revokedAt && (
                           <div className="admin-content-actions">
-                            <Button
+                            <AdminConfirmButton
+                              description="Terbit ulang token? Token lama tidak dapat digunakan lagi."
                               variant="secondary"
                               disabled={busy}
-                              onClick={() =>
-                                void run(async () =>
+                              onConfirm={() =>
+                                run(async () =>
                                   setIssued(await reissueTeacherToken(token, current.id, item.id)),
                                 )
                               }
                             >
                               Terbit ulang
-                            </Button>
-                            <Button
+                            </AdminConfirmButton>
+                            <AdminConfirmButton
+                              description="Cabut token ini? Token tidak dapat digunakan untuk verifikasi Guru."
                               variant="danger-outline"
                               disabled={busy}
-                              onClick={() =>
-                                void run(async () => {
+                              onConfirm={() =>
+                                run(async () => {
                                   await revokeTeacherToken(token, current.id, item.id);
                                   setIssued(null);
                                 })
                               }
                             >
                               Cabut
-                            </Button>
+                            </AdminConfirmButton>
                           </div>
                         )}
                       </li>

@@ -1,14 +1,16 @@
 'use client';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
-import { ApiProblem } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
-import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
-import type { AdminClassDto, AdminUserDto } from './generated-types';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { ApiProblem } from '@/lib/api';
+import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
 import { AdminPagination } from './admin-pagination';
+import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { adminOffset, useAdminUrl } from './admin-url';
+import type { AdminClassDto, AdminUserDto } from './generated-types';
+import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
 
 type OperationsTab = 'users' | 'classes';
 const dateTime = new Intl.DateTimeFormat('id-ID', {
@@ -34,10 +36,29 @@ function accessDenied(error: unknown): error is ApiProblem {
   return error instanceof ApiProblem && [401, 403].includes(error.status);
 }
 
-export function AdminOperationsScreen() {
+export const AdminOperationsScreen = withAdminWorkspace(
+  AdminOperationsScreenProtected,
+  'operations',
+);
+function AdminOperationsScreenProtected() {
+  const reportAccessError = useAdminAccessError();
   const router = useRouter();
   const { state, refresh } = useAuth();
-  const [tab, setTab] = useState<OperationsTab>('users');
+  const url = useAdminUrl();
+  const tab: OperationsTab = url.params.get('view') === 'classes' ? 'classes' : 'users';
+  const setTab = (view: OperationsTab) =>
+    url.update({
+      view,
+      search: null,
+      role: null,
+      status: null,
+      schoolId: null,
+      teacherId: null,
+      state: null,
+      offset: null,
+      userId: null,
+      classId: null,
+    });
   const [revision, setRevision] = useState(0);
   const [deniedError, setDeniedError] = useState('');
   const token =
@@ -52,11 +73,15 @@ export function AdminOperationsScreen() {
       router.replace(state.profile.role === 'STUDENT' ? '/student' : '/teacher');
   }, [router, state]);
 
-  const onAccessError = useCallback((error: unknown) => {
-    if (accessDenied(error)) {
-      setDeniedError(error.message);
-    }
-  }, []);
+  const onAccessError = useCallback(
+    (error: unknown) => {
+      if (accessDenied(error)) {
+        reportAccessError(error);
+        setDeniedError(error.message);
+      }
+    },
+    [reportAccessError],
+  );
 
   const frame = {
     title: 'Pengguna dan kelas',
@@ -64,10 +89,10 @@ export function AdminOperationsScreen() {
     icon: 'users' as const,
   };
 
-  if (!token || deniedError) {
+  if (!token || deniedError || url.search === null) {
     return (
       <AdminFrame {...frame}>
-        {state.status === 'loading' ? (
+        {state.status === 'loading' || url.search === null ? (
           <AdminLoading message="Memeriksa akses Admin…" />
         ) : (
           <AdminMessage
@@ -115,10 +140,15 @@ export function AdminOperationsScreen() {
           </Button>
         </nav>
         {tab === 'users' ? (
-          <UsersPanel key="users" token={token} revision={revision} onAccessError={onAccessError} />
+          <UsersPanel
+            key={`users:${url.search}`}
+            token={token}
+            revision={revision}
+            onAccessError={onAccessError}
+          />
         ) : (
           <ClassesPanel
-            key="classes"
+            key={`classes:${url.search}`}
             token={token}
             revision={revision}
             onAccessError={onAccessError}
@@ -138,14 +168,16 @@ function UsersPanel({
   revision: number;
   onAccessError: (error: unknown) => void;
 }) {
-  const [search, setSearch] = useState('');
-  const [role, setRole] = useState('');
-  const [status, setStatus] = useState('');
-  const [filters, setFilters] = useState({ search: '', role: '', status: '' });
-  const [offset, setOffset] = useState(0);
+  const url = useAdminUrl();
+  const [search, setSearch] = useState(url.params.get('search') ?? '');
+  const [role, setRole] = useState(url.params.get('role') ?? '');
+  const [status, setStatus] = useState(url.params.get('status') ?? '');
+  const [filters] = useState({ search, role, status });
+  const offset = adminOffset(url.params.get('offset'));
   const [items, setItems] = useState<AdminUserDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const [selectedId, setSelectedId] = useState('');
+  const selectedId = url.params.get('userId') ?? '';
+  const setSelectedId = (id: string) => url.update({ userId: id });
   const [detail, setDetail] = useState<AdminUserDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
@@ -210,9 +242,13 @@ function UsersPanel({
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSelectedId('');
-    setOffset(0);
-    setFilters({ search: search.trim(), role, status });
+    url.update({
+      search: search.trim(),
+      role: role.trim(),
+      status: status.trim(),
+      offset: null,
+      userId: null,
+    });
   }
 
   return (
@@ -292,8 +328,7 @@ function UsersPanel({
             offset={offset}
             hasNext={nextOffset !== null}
             onChange={(next) => {
-              setSelectedId('');
-              setOffset(next < offset ? next : (nextOffset ?? offset));
+              url.update({ userId: null, offset: next < offset ? next : (nextOffset ?? offset) });
             }}
           />
         )}
@@ -373,15 +408,17 @@ function ClassesPanel({
   revision: number;
   onAccessError: (error: unknown) => void;
 }) {
-  const [search, setSearch] = useState('');
-  const [schoolId, setSchoolId] = useState('');
-  const [teacherId, setTeacherId] = useState('');
-  const [state, setState] = useState('');
-  const [filters, setFilters] = useState({ search: '', schoolId: '', teacherId: '', state: '' });
-  const [offset, setOffset] = useState(0);
+  const url = useAdminUrl();
+  const [search, setSearch] = useState(url.params.get('search') ?? '');
+  const [schoolId, setSchoolId] = useState(url.params.get('schoolId') ?? '');
+  const [teacherId, setTeacherId] = useState(url.params.get('teacherId') ?? '');
+  const [state, setState] = useState(url.params.get('state') ?? '');
+  const [filters] = useState({ search, schoolId, teacherId, state });
+  const offset = adminOffset(url.params.get('offset'));
   const [items, setItems] = useState<AdminClassDto[] | null>(null);
   const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const [selectedId, setSelectedId] = useState('');
+  const selectedId = url.params.get('classId') ?? '';
+  const setSelectedId = (id: string) => url.update({ classId: id });
   const [detail, setDetail] = useState<AdminClassDto | null>(null);
   const [detailLoading, setDetailLoading] = useState(false);
   const [detailError, setDetailError] = useState('');
@@ -444,13 +481,13 @@ function ClassesPanel({
 
   function applyFilters(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    setSelectedId('');
-    setOffset(0);
-    setFilters({
+    url.update({
       search: search.trim(),
       schoolId: schoolId.trim(),
       teacherId: teacherId.trim(),
-      state,
+      state: state.trim(),
+      offset: null,
+      classId: null,
     });
   }
 
@@ -542,8 +579,7 @@ function ClassesPanel({
             offset={offset}
             hasNext={nextOffset !== null}
             onChange={(next) => {
-              setSelectedId('');
-              setOffset(next < offset ? next : (nextOffset ?? offset));
+              url.update({ classId: null, offset: next < offset ? next : (nextOffset ?? offset) });
             }}
           />
         )}
