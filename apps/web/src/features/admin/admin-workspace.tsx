@@ -14,18 +14,10 @@ import {
   type ReactNode,
 } from 'react';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { adminCanAccess, type AdminWorkspacePermission as Permission } from './admin-access';
 
-type Permission = 'operations' | 'content';
 const AccessError = createContext<(error: unknown) => void>(() => {});
 export const useAdminAccessError = () => useContext(AccessError);
-
-export function adminCanAccess(profile: IdentityProfile | null, permission: Permission) {
-  if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE') return false;
-  return permission === 'operations'
-    ? profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'OPERATIONS'
-    : (profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'CONTENT_DATA_MODERATION') &&
-        Boolean(profile.capabilities?.includes('CONTENT_MANAGE'));
-}
 
 export function AdminWorkspace({
   permission,
@@ -91,13 +83,7 @@ export function AdminWorkspace({
   }
   const key =
     state.status === 'ready'
-      ? JSON.stringify([
-          profile?.id,
-          profile?.adminRole,
-          profile?.status,
-          profile?.capabilities,
-          state.session.access_token,
-        ])
+      ? JSON.stringify([profile?.id, profile?.adminRole, profile?.status, profile?.capabilities])
       : state.status;
   return (
     <AccessError.Provider key={key} value={onError}>

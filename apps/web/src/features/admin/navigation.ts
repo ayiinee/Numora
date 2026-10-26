@@ -1,5 +1,6 @@
 import type { IconName } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
+import { adminCanAccess } from './admin-access';
 
 export function adminRoleLabel(role: IdentityProfile['adminRole']) {
   switch (role) {
@@ -32,7 +33,7 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
     },
   ];
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE') return items;
-  if (profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'OPERATIONS') {
+  if (adminCanAccess(profile, 'operations')) {
     items.push(
       {
         href: '/admin/schools',
@@ -48,7 +49,7 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       },
     );
   }
-  if (profile.capabilities?.includes('CONTENT_MANAGE')) {
+  if (adminCanAccess(profile, 'content')) {
     items.push(
       {
         href: '/admin/content',

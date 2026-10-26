@@ -45,6 +45,13 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 }
 
 describe('Admin portal navigation', () => {
+  it('does not offer Content when a stale capability remains after assignment removal', () => {
+    ready(null, ['CONTENT_MANAGE']);
+    render(<AdminHomeScreen />);
+    const main = within(screen.getByRole('main'));
+    expect(main.queryByRole('link', { name: 'Impor soal' })).toBeNull();
+    expect(main.getByText(/Belum ada modul/)).toBeTruthy();
+  });
   it('returns Admin logout to internal login', async () => {
     ready('SUPER_ADMIN', ['CONTENT_MANAGE']);
     render(<AppShell area="admin">Konten</AppShell>);

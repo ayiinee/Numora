@@ -22,6 +22,7 @@ function Workspace() {
   return (
     <>
       <p>{text}</p>
+      <input aria-label="Draf UI" defaultValue="" />
       <button onClick={() => report(new ApiProblem(403, 'FORBIDDEN', 'Akses dicabut.'))}>
         Revoke
       </button>
@@ -88,6 +89,16 @@ it('discards a pending response and form state when the account changes', async 
   await screen.findByText('ACCOUNT B');
   await act(async () => finish('ACCOUNT A PRIVATE PREVIEW'));
   expect(screen.queryByText('ACCOUNT A PRIVATE PREVIEW')).toBeNull();
+});
+it('keeps an unsaved form when the same authorized account refreshes its access token', async () => {
+  const result = render(view());
+  await screen.findByText('PRIVATE PREVIEW');
+  fireEvent.change(screen.getByLabelText('Draf UI'), { target: { value: 'UNSAVED' } });
+  ready();
+  auth.state.session = { access_token: 'REFRESHED TEST ONLY' };
+  result.rerender(view());
+  await screen.findByText('PRIVATE PREVIEW');
+  expect((screen.getByLabelText('Draf UI') as HTMLInputElement).value).toBe('UNSAVED');
 });
 it('an old rejected request cannot revoke a different current account', async () => {
   let reject!: (error: Error) => void;
