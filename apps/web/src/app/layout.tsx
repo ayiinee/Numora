@@ -4,6 +4,8 @@ import './globals.css';
 import './numora.css';
 import './admin-content.css';
 import './teacher.css';
+import './admin-workspaces.css';
+import './admin-operations.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 

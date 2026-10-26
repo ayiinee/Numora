@@ -28,6 +28,7 @@ export async function releasedTryoutPackageTimes(
     })
     .from(tryoutResultFinalizations)
     .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutResultFinalizations.batchId))
+    .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatches.packageId))
     .where(
       and(
         inArray(tryoutBatches.packageId, packageIds),
@@ -45,10 +46,12 @@ export async function releasedTryoutPackageTimes(
       releasedAt: irtBatches.resultReleasedAt,
     })
     .from(irtBatches)
+    .innerJoin(assessmentPackages, eq(assessmentPackages.id, irtBatches.packageId))
     .where(
       and(
         inArray(irtBatches.packageId, packageIds),
         eq(irtBatches.status, 'SUCCEEDED'),
+        eq(assessmentPackages.isDemo, true),
         isNotNull(irtBatches.resultReleasedAt),
         lte(irtBatches.resultReleasedAt, now),
       ),
@@ -141,7 +144,13 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
   if (!attemptIds.length)
     return new Map<
       string,
-      { score: number; resultMethod: 'IRT' | 'STANDARD'; reason: string | null }
+      {
+        score: number;
+        resultMethod: 'IRT' | 'STANDARD';
+        reason: string | null;
+        mode: string;
+        version: number;
+      }
     >();
   const { db } = getDatabase();
   const rows = await db
@@ -150,6 +159,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
       score: tryoutAttemptResults.score,
       mode: tryoutResultFinalizations.mode,
       policy: tryoutResultFinalizations.policySnapshot,
+      version: tryoutResultFinalizations.version,
     })
     .from(tryoutAttemptResults)
     .innerJoin(
@@ -184,6 +194,8 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
           row.attemptId,
           {
             score: Number(row.score),
+            mode: row.mode,
+            version: row.version,
             resultMethod: row.mode === 'IRT' ? ('IRT' as const) : ('STANDARD' as const),
             reason: row.mode === 'FALLBACK' ? (reasons[code] ?? null) : null,
           },

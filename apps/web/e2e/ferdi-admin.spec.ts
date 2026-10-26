@@ -35,9 +35,16 @@ for (const width of [320, 390, 768, 1440]) {
     const { state, errors } = await setup(page);
     await page.goto(`/admin/schools?schoolId=${id(101)}`);
     await expect(page.getByLabel('Ubah nama')).toHaveValue(state.schools[0]!.name);
+    for (const button of await page.locator('.admin-pagination button').all()) {
+      expect(await button.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
+        true,
+      );
+    }
     await page.getByLabel('Cari sekolah').fill('no match');
-    await expect(page.getByText('Tidak ada sekolah yang cocok.')).toBeVisible();
+    await page.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
+    await expect(page.getByRole('heading', { name: 'Belum ada sekolah.' })).toBeVisible();
     await page.getByLabel('Cari sekolah').fill('smp-test-jkt');
+    await page.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
     await expect(page.locator('.admin-school-rows > li')).toHaveCount(1);
     await page.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
     await expect(page.getByText('DEMO-ONE-TIME')).toBeVisible();

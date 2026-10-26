@@ -25,8 +25,9 @@ import {
   questionVariants,
   questionVersions,
   scoringPolicyVersions,
-  subchapters,
+  scoringRubricVersions,
   xpLedger,
+  subchapters,
 } from '@tka/database';
 import {
   databaseTime,
@@ -37,22 +38,27 @@ import {
   presentAssessmentQuestion,
   presentAssessmentReview,
   AssessmentFinalizationError,
+  decodeRuntimeQuestion,
+  activeRuntimeQuestion,
+  validateRuntimeAnswer,
+  gradeRuntimeResult,
+  readApprovedPolicy,
+  roundPolicy,
+  approvedStars,
+  validateRubricCoverage,
+  type ApprovedPolicy,
 } from '@tka/assessment-engine';
-import { and, asc, desc, eq, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
 import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
 import {
-  decodeSingleChoiceVersion,
-  DRILL_POLICY_CODE,
-  DRILL_POLICY_VERSION,
   DRILL_QUESTION_COUNT,
   DRILL_REWARD_POLICY_VERSION,
   drillReward,
   explanationAvailable,
   scoreDrill,
-  selectedOptionId,
   selectDrillPackage,
 } from './drill.policy';
 
@@ -143,7 +149,12 @@ export class DrillAssessmentService {
           scoringPolicyVersionId: assessmentPackages.scoringPolicyVersionId,
           policyCode: scoringPolicyVersions.policyCode,
           policyVersion: scoringPolicyVersions.version,
+          configuration: scoringPolicyVersions.configuration,
           policyConfiguration: scoringPolicyVersions.configuration,
+          policyStatus: scoringPolicyVersions.status,
+          approvedAt: scoringPolicyVersions.approvedAt,
+          approvedByUserId: scoringPolicyVersions.approvedByUserId,
+          approvalReference: scoringPolicyVersions.approvalReference,
         })
         .from(assessmentPackages)
         .innerJoin(
@@ -162,12 +173,19 @@ export class DrillAssessmentService {
           ),
         )
         .orderBy(asc(assessmentPackages.variantIndex), asc(assessmentPackages.id));
-      const packages = availablePackages.filter(
-        (item) =>
-          item.isDemo ||
-          allowsChapter3Override(item) ||
-          (item.policyCode === DRILL_POLICY_CODE && item.policyVersion === DRILL_POLICY_VERSION),
-      );
+      const packages = availablePackages.filter((item) => {
+        if (item.isDemo || allowsChapter3Override(item)) return true;
+        try {
+          readApprovedPolicy(
+            { ...item, version: item.policyVersion, status: item.policyStatus },
+            'DRILL',
+          );
+          return true;
+        } catch {
+          return false;
+        }
+      });
+
       if (!packages.length)
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_UNAVAILABLE', 'Paket Drill belum tersedia.'),
@@ -197,6 +215,8 @@ export class DrillAssessmentService {
           packageItemId: packageItems.id,
           displayOrder: packageItems.displayOrder,
           maxPoints: packageItems.maxPoints,
+          rubricVersionId: packageItems.rubricVersionId,
+          maximumScoreCategory: packageItems.maximumScoreCategory,
           questionVersionId: questionVersions.id,
           questionType: questionVersions.questionType,
           contentStatus: questionVersions.contentStatus,
@@ -214,18 +234,47 @@ export class DrillAssessmentService {
         .orderBy(asc(packageItems.displayOrder));
       if (
         items.length !== DRILL_QUESTION_COUNT ||
-        items.some((item) => Number(item.maxPoints) !== 1)
+        items.some(
+          (item) => !Number.isFinite(Number(item.maxPoints)) || Number(item.maxPoints) <= 0,
+        )
       )
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill harus berisi 10 soal bernilai satu poin.'),
         );
       const ownerOverride = allowsChapter3Override(selected);
-      if (!ownerOverride && items.some((item) => item.questionType !== 'SINGLE_CHOICE'))
-        throw new ServiceUnavailableException(
-          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
+      const rubricIds = [
+        ...new Set(items.flatMap((item) => (item.rubricVersionId ? [item.rubricVersionId] : []))),
+      ];
+      const rubrics = rubricIds.length
+        ? await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(inArray(scoringRubricVersions.id, rubricIds))
+        : [];
+      try {
+        items.forEach((item) =>
+          ownerOverride
+            ? decodeAssessmentContent(item)
+            : validateRubricCoverage(
+                decodeRuntimeQuestion(item),
+                rubrics.find((r) => r.id === item.rubricVersionId),
+              ),
         );
-      items.forEach(ownerOverride ? decodeAssessmentContent : decodeSingleChoiceVersion);
-      if (items.some((item) => !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'))) {
+      } catch (error) {
+        if (error instanceof AssessmentFinalizationError)
+          throw new ServiceUnavailableException(problem('PGK_SCORING_PENDING', error.message));
+        throw error;
+      }
+
+      if (
+        items.some(
+          (item) =>
+            item.contentStatus === 'ARCHIVED' ||
+            item.questionStatus === 'ARCHIVED' ||
+            (!selected.isDemo &&
+              (item.contentStatus !== 'READY' || item.questionStatus !== 'READY')),
+        )
+      ) {
         throw new ServiceUnavailableException(
           problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
         );
@@ -257,6 +306,8 @@ export class DrillAssessmentService {
           questionVersionId: item.questionVersionId,
           displayOrder: item.displayOrder,
           maxPoints: item.maxPoints,
+          rubricVersionId: item.rubricVersionId,
+          maximumScoreCategory: item.maximumScoreCategory,
         })),
       );
       await recordDomainEvent(
@@ -303,6 +354,7 @@ export class DrillAssessmentService {
         explanation: questionVersions.explanation,
         answer: attemptAnswers.answer,
         awardedPoints: attemptAnswers.awardedPoints,
+        fullyCorrect: attemptAnswers.fullyCorrect,
       })
       .from(attemptItems)
       .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
@@ -349,14 +401,18 @@ export class DrillAssessmentService {
       startedAt: attempt.startedAt.toISOString(),
       serverTime: (await databaseTime(db)).toISOString(),
       isDemo: attempt.isDemo,
-      questions: rows.map((row) =>
-        presentAssessmentQuestion(
+      questions: rows.map((row) => ({
+        ...activeRuntimeQuestion(
+          decodeRuntimeQuestion(row),
+          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
+        ),
+        ...presentAssessmentQuestion(
           decodeAssessmentContent(row),
           row.id,
           row.answer,
           row.questionVersionId,
         ),
-      ),
+      })),
     };
   }
 
@@ -478,12 +534,14 @@ export class DrillAssessmentService {
         .select({
           id: attemptItems.id,
           maxPoints: attemptItems.maxPoints,
+          rubricVersionId: attemptItems.rubricVersionId,
           questionType: questionVersions.questionType,
           stem: questionVersions.stem,
           optionsOrStatements: questionVersions.optionsOrStatements,
           answerKey: questionVersions.answerKey,
           explanation: questionVersions.explanation,
           answer: attemptAnswers.answer,
+          fullyCorrect: attemptAnswers.fullyCorrect,
         })
         .from(attemptItems)
         .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
@@ -493,29 +551,77 @@ export class DrillAssessmentService {
         throw new ServiceUnavailableException(
           problem('DRILL_PACKAGE_INVALID', 'Paket Drill tidak lengkap.'),
         );
-      if (!ownerOverride && rows.some((row) => row.questionType !== 'SINGLE_CHOICE'))
-        throw new ServiceUnavailableException(
-          problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
-        );
+      const [packagePolicy] = await tx
+        .select({ isDemo: assessmentPackages.isDemo, policy: scoringPolicyVersions })
+        .from(assessmentPackages)
+        .innerJoin(
+          scoringPolicyVersions,
+          eq(scoringPolicyVersions.id, attempt.scoringPolicyVersionId!),
+        )
+        .where(eq(assessmentPackages.id, attempt.packageId));
+      const policy: ApprovedPolicy | null =
+        ownerOverride || packagePolicy?.isDemo || attempt.drillPolicyVersion === null
+          ? null
+          : readApprovedPolicy(packagePolicy!.policy, 'DRILL', true);
+      const rubricIds = [
+        ...new Set(rows.flatMap((row) => (row.rubricVersionId ? [row.rubricVersionId] : []))),
+      ];
+      const rubrics = rubricIds.length
+        ? await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(inArray(scoringRubricVersions.id, rubricIds))
+        : [];
       const graded = rows.map((row) => {
         if (ownerOverride) {
           const grade = gradeChapter3Answer(decodeAssessmentContent(row), row.answer);
           return { ...row, ...grade, correct: grade.fullyCorrect };
         }
-        const content = decodeSingleChoiceVersion(row);
-        const correct = selectedOptionId(row.answer) === content.correctOptionId;
+        const content = decodeRuntimeQuestion(row),
+          answer = validateRuntimeAnswer(content, row.answer ?? null);
+        let grade;
+        try {
+          grade = gradeRuntimeResult(
+            content,
+            answer,
+            Number(row.maxPoints),
+            rubrics.find((rubric) => rubric.id === row.rubricVersionId),
+          );
+        } catch (error) {
+          if (error instanceof AssessmentFinalizationError)
+            throw new ServiceUnavailableException(problem('PGK_SCORING_PENDING', error.message));
+          throw error;
+        }
+        const awardedPoints = policy
+          ? roundPolicy(grade.points * 100, policy.itemPointRounding) / 100
+          : grade.points;
         return {
           ...row,
-          correct,
-          awardedPoints: correct ? Number(row.maxPoints) : 0,
-          equivalent: Number(correct),
-          scoreCategory: undefined,
-          fullyCorrect: undefined,
-          responseState: undefined,
+          answer,
+          equivalent: grade.equivalent,
+          correct: grade.fullyCorrect,
+          fullyCorrect: grade.fullyCorrect,
+          responseState: answer === null ? ('OMITTED' as const) : ('RESPONDED' as const),
+          scoreCategory: grade.category,
+          awardedPoints,
         };
       });
-      const correctEquivalent = graded.reduce((sum, item) => sum + item.equivalent, 0);
-      const scored = scoreDrill(correctEquivalent, graded.length, attempt.drillPolicyVersion);
+      const correctCount = ownerOverride
+        ? graded.reduce((sum, item) => sum + item.equivalent, 0)
+        : graded.filter((item) => item.correct).length;
+      const rawPoints = graded.reduce((sum, item) => sum + item.awardedPoints, 0);
+      const maximum = graded.reduce((sum, item) => sum + Number(item.maxPoints), 0);
+      const normalized = policy
+        ? roundPolicy((rawPoints * 100) / maximum, policy.scoreRounding)
+        : scoreDrill(correctCount, graded.length).score;
+      const scored = policy
+        ? {
+            score: normalized,
+            mastered: normalized >= 80,
+            stars: approvedStars(normalized, policy),
+          }
+        : scoreDrill(correctCount, graded.length, attempt.drillPolicyVersion);
+
       const [level] = await tx
         .select()
         .from(levels)
@@ -538,14 +644,20 @@ export class DrillAssessmentService {
       const now = await databaseTime(tx);
       const reward =
         attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION
-          ? drillReward(correctEquivalent, graded.length, attempt.startedAt, now, ownerOverride)
+          ? drillReward(
+              graded.reduce((sum, item) => sum + item.equivalent, 0),
+              graded.length,
+              attempt.startedAt,
+              now,
+              ownerOverride,
+            )
           : null;
       for (const item of graded) {
         await tx
           .insert(attemptAnswers)
           .values({
             attemptItemId: item.id,
-            answer: item.answer ?? { optionId: null },
+            answer: item.answer === null ? sql`'null'::jsonb` : item.answer,
             savedAt: now,
             awardedPoints: String(item.awardedPoints),
             gradedAt: now,
@@ -557,10 +669,10 @@ export class DrillAssessmentService {
             target: attemptAnswers.attemptItemId,
             set: {
               awardedPoints: String(item.awardedPoints),
-              gradedAt: now,
               scoreCategory: item.scoreCategory,
               fullyCorrect: item.fullyCorrect,
               responseState: item.responseState,
+              gradedAt: now,
             },
           });
       }
@@ -569,7 +681,8 @@ export class DrillAssessmentService {
         .set({
           status: 'GRADED',
           finishedAt: now,
-          rawPoints: String(graded.reduce((sum, item) => sum + item.awardedPoints, 0)),
+          rawPoints: String(rawPoints),
+
           score0To100: String(scored.score),
           stars: scored.stars,
           unlockedLevelId: next?.id ?? null,
@@ -731,7 +844,7 @@ export class DrillAssessmentService {
     const [counts] = await db
       .select({
         questionCount: sql<number>`count(*)::integer`,
-        correctCount: sql<number>`count(*) filter (where ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints})::integer`,
+        correctCount: sql<number>`count(*) filter (where coalesce(${attemptAnswers.fullyCorrect}, ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints}))::integer`,
       })
       .from(attemptItems)
       .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
@@ -762,15 +875,15 @@ export class DrillAssessmentService {
       questionCount: counts?.questionCount ?? 0,
       mastered: score >= 80,
       stars: attempt.stars,
-      xp: reward?.xpAmount ?? null,
+      xp: reward ? Number(reward.xpAmount) : null,
       drillPolicyVersion: attempt.drillPolicyVersion,
       reward: reward?.policyCode
         ? {
             policyCode: reward.policyCode,
             policyVersion: reward.policyVersion!,
-            baseXp: reward.baseXp!,
+            baseXp: Number(reward.baseXp),
             bonusXp: Number(reward.bonusXp),
-            totalXp: reward.xpAmount,
+            totalXp: Number(reward.xpAmount),
             durationSeconds: Number(reward.durationSeconds),
             detail: rows.every((row) => row.questionType === 'SINGLE_CHOICE')
               ? {
@@ -787,8 +900,16 @@ export class DrillAssessmentService {
       isDemo: attempt.isDemo,
       explanationState: available ? ('available' as const) : ('expired' as const),
       recommendations,
-      questions: rows.map((row) =>
-        presentAssessmentReview(
+      questions: rows.map((row) => ({
+        ...activeRuntimeQuestion(
+          decodeRuntimeQuestion(row),
+          validateRuntimeAnswer(decodeRuntimeQuestion(row), row.answer ?? null),
+        ),
+        richExplanation: decodeRuntimeQuestion(row).explanation,
+        fullyCorrect:
+          row.fullyCorrect ??
+          (row.awardedPoints !== null && Number(row.awardedPoints) === Number(row.maxPoints)),
+        ...presentAssessmentReview(
           decodeAssessmentContent(row),
           row.id,
           row.answer,
@@ -796,7 +917,7 @@ export class DrillAssessmentService {
           row.maxPoints,
           row.questionVersionId,
         ),
-      ),
+      })),
     };
   }
 

@@ -1,8 +1,9 @@
 'use client';
+import Link from 'next/link';
+import { JsonContentImportScreen } from './content-import-json';
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
 import { Button } from '@tka/ui';
-import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
@@ -37,11 +38,19 @@ import { ADMIN_PAGE_SIZE } from './pagination';
 export const ContentImportScreen = withAdminWorkspace(ContentImportScreenProtected, 'content');
 function ContentImportScreenProtected({
   generatorPackageId,
-}: { generatorPackageId?: string } = {}) {
+  mode,
+}: { generatorPackageId?: string; mode?: string } = {}) {
   const { state } = useAuth();
+  if (mode === 'json') return <JsonContentImportScreen />;
   if (generatorPackageId)
     return <GeneratorImportWorkflow key={generatorPackageId} id={generatorPackageId} />;
-  return <UploadContent key={state.status === 'ready' ? state.profile.id : state.status} />;
+  return (
+    <UploadContent
+      key={
+        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+      }
+    />
+  );
 }
 function UploadContent() {
   const reportAccessError = useAdminAccessError();
@@ -287,6 +296,7 @@ function UploadContent() {
       ) : (
         <div className="content-upload-workflow">
           <nav className="upload-tabs" aria-label="Pengelolaan unggahan">
+            <Link href="/admin/content/imports?mode=json">Impor JSON &amp; preview</Link>
             <button
               type="button"
               className={tab === 'upload' ? 'is-active' : ''}

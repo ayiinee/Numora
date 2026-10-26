@@ -1,3 +1,31 @@
+# Current source — PRD v0.6 Final
+
+**PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
+
+Current rules: three fixed Admin subroles and action-level permissions; maximum five active classes; account-based progress/XP; leave/ban/takeover preserving history; active teacher may be absent. Pretest: 20 items, one completed attempt/chapter, optional/skip, placement 0–7 L1 / 8–18 L2 / 19–20 L3, zero XP. Drill: 10 items/level, five levels/subchapter, one MVP variant, >=80 unlock, irreversible unlock, latest stars (0 included), final base/time bonus formula. Tryout: 30 items, free ongoing batch Monday–Sunday WIB, one attempt/package, close-time auto-submit, immediate XP independent of IRT, immutable value/explanation within 72 hours. PvP: 10-minute waiting/invite, 20-second reconnect, Top 10 plus self leaderboard. Admin cannot ban students or edit product formulas.
+
+**ENGINEERING DECISION - approved Product clarifications in main PR #77, 5 October 2026:** Tryout XP uses ceil(equivalent-correct x10) at completion; Drill XP rounds the final total once to the nearest integer. Product weights are PG=2, MCMA=3 and Category=3. Drill partial credit contributes to mastery and equivalent-correct XP. New Drill explanation access has no expiry; legacy attempts retain their pins. Tryout XP fallback applies only when partial calculation is unavailable at submit, using fully-correct x10. Result fallback is separate and applies to the whole batch after 72 hours without a valid IRT result. See [Drill decisions](../development/DRILL_V06_REWARDS.md) and [Tryout decisions](../development/TRYOUT_XP_V06.md).
+
+**OPEN:** approved Curriculum bank/metadata/blueprints, exhaustive PGK rubric/full-correctness evidence and Drill score precision before stars; Data scientific configuration, respondent mapping/quality and ordinary-result fallback formula; Cloud/independent QA acceptance. The scoring handoff remains partially unapproved. No substitute scientific mapping or academic rubric is inferred.
+
+**ENGINEERING DECISION — user-approved 5 October plan:** full-stack Admin implementation, fixed role capabilities, invite by email, stage gates without a fixed date. Import preview stays unscored. Main now provides the Pretest Student lifecycle; academic blueprint/rubric approval remains a separate gate. Main PR #77 supplies membership/ownership lifecycle; Admin readers must integrate that implementation without taking over Teacher-only actions. See [Admin implementation and acceptance](../development/ADMIN_FULL_STACK_STATUS.md).
+
+**ENGINEERING UPDATE - M6:** request/pin/adoption UI, aggregate analytics, batch SLA and immutable participant readers now reuse the foundation models. Response snapshot v2 separates collection deadline from actual grading time and preserves historical v1 data. Production participant publication remains blocked by the approved versioned respondent producer/mapping/release handoff. See [implementation boundary](../api/ADMIN_IRT_ANALYTICS.md).
+
+## Current engineering mapping
+
+**PRD RULE — Admin permissions:** §3.2–3.3 grants Content limited school/class views and aggregate Student data, without operational management; ban/unban remains Teacher-only even for Super Admin. **ENGINEERING DECISION:** the [three-subrole API and portal matrix](../api/ADMIN_PERMISSION_MATRIX.md) implements credential status counts, scoped IRT diagnostics and masked non-Admin audit actors.
+
+| Domain            | v0.6 implementation target                                                              | Gate                                   |
+| ----------------- | --------------------------------------------------------------------------------------- | -------------------------------------- |
+| Admin permissions | Per-action server guard, limited structure DTO, scoped audit                            | Direct HTTP + browser matrix           |
+| Admin accounts    | Internal invite, fixed assignment/status, durable reconciliation, last-Super protection | Provider/DB failure + actual email     |
+| Operations        | Address, credential used_by, verified teacher, memberships/roster, limited view         | No individual data for Content         |
+| Content/media     | JSON rich formats, Draft/Ready/Revision/Archive, immutable lineage, R2 receipt          | Curriculum review + storage acceptance |
+| Assessment        | 10 Drill/20 Pretest/30 Tryout, approved pins, retry, batch close, XP                    | Rubric/precision approval + consumer   |
+| IRT/publication   | Existing requests, respondent contract, SLA, immutable release                          | Data pipeline/quality/mapping          |
+| Analytics         | Authorized aggregate queries over durable truth                                         | Unavailable metrics explicitly marked  |
+
 **ENGINEERING DECISION — owner instruction, 7 October 2026:** opt-in DEMO-only PvP temporarily uses accepted uncalibrated READY single-choice Drill content. The three choices share the pool and retain server timers; calibrated academic difficulty remains pending. [Activation and owner replacement checklist](../development/PVP_TEMPORARY_READY_CONTENT.md).
 
 **ENGINEERING DECISION — owner approved, 6 October 2026:** unresolved Excel metadata remains in intake preview with immutable source provenance. Destination/scope is chosen before mapping validation. Preview progress is separate from final draft eligibility; non-ARCHIVED master may support draft, READY is required for every mapped master at Publish. Official taxonomy and PGK scoring remain dependencies. [Approved refinement](../content/UPLOAD_FIRST_WORKFLOW.md).
@@ -168,23 +196,17 @@ TryOut countdown/finalization maps to the shared PostgreSQL finalizer and recove
 
 **ENGINEERING DECISION:** owner-approved [scope](MATERIALS_NOTIFICATIONS_2026-10-04.md) adds explicit category metadata, inline material navigation and durable event-driven in-app notifications, with 30-day archive. It does not resolve academic, scoring, reward or PvP OPEN policies.
 
-
 ## Keputusan pemilik — 7 Oktober 2026: indikator Tryout
 
 **ENGINEERING DECISION — disetujui pemilik:** Tryout mengabaikan indikator pada alur upload, draft dan Publish. Nilai asli Excel tetap disimpan sebagai provenance; indikator efektif kosong tidak menghalangi Tryout. Drill dan Pretest tetap wajib memiliki indikator sah. Bab, subbab, level, kesulitan, konten, media dan aturan Publish lain tetap diperiksa. Identitas soal/paket dibuat otomatis; sistem tidak mengarang materi akademik. Migrasi forward membolehkan primary_competency_id NULL hanya untuk keluarga TRYOUT; histori tidak ditulis ulang.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan aturan sebelumnya yang mengabaikan indikator Tryout):** Tryout mengizinkan subbab, indikator dan level sumber kosong (`null`) sampai Publish. Nilai yang diberikan tetap dipertahankan dan divalidasi terhadap master/induk. Bab dan kesulitan tetap wajib; Drill/Pretest, konten/kunci/pembahasan, jumlah, media, review, jadwal dan pembatasan PGK tidak dilonggarkan. Migrasi 0034 menambahkan referensi bab/subbab nullable pada keluarga soal agar Tryout tanpa level tetap tersimpan dan dapat dibaca; histori tidak diubah.
-
 
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan kewajiban bab Tryout sebelumnya):** Bab, subbab, indikator dan level per soal maupun scope paket tidak wajib untuk Tryout campuran. Metadata materi kosong disimpan null sampai Publish. Admin dapat secara eksplisit melewati pemetaan materi tanpa menghapus sumber Excel; materi yang tetap dipakai divalidasi terhadap master. Kesulitan, konten, kunci, pembahasan dan gate Publish lain tetap berlaku; Drill/Pretest tetap memerlukan scope.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout boleh tanpa kesulitan serta tanpa pemetaan materi. Referensi Excel yang belum dapat dipetakan tetap menjadi provenance, dengan relasi efektif null; tidak mengarang materi atau kunci. Status DRAFT materi tidak menghalangi paket Tryout, tetapi materi ARCHIVED tidak dipakai. Rubrik PGK yang disetujui pemilik: MCMA dinilai per keputusan memilih/tidak memilih setiap opsi; Kategori per pernyataan tepat; jawaban kosong 0. Nilai proporsional dibulatkan ke dua desimal mengikuti kolom awarded_points; XP = jumlah benar ekuivalen ×10 dari poin tersimpan. Rubrik dipin melalui kebijakan baru TRYOUT_PGK_PARTIAL_V1 (migrasi 0035); paket/hasil lama tidak diubah. Urutan Tryout diacak server saat attempt dibuat dan disimpan tetap selama resume. Gambar diunggah dengan maksimal tiga pekerjaan paralel dan receipt R2 wajib diverifikasi. Konten, pilihan/pernyataan, kunci, pembahasan, otorisasi, review, jumlah, jadwal, dan integritas versi tetap divalidasi.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout dapat dipublish kapan saja, menggantikan batas Senin dan satu paket mingguan pada alur Admin. Tanggal rilis opsional: kosong berarti Publish sekarang; waktu lampau menjadi sekarang; waktu mendatang menjadwalkan akses. Batch tetap berjalan selama 7 hari dikurangi satu menit sejak rilis efektif, durasi attempt 10 menit dan IRT setelah batch tutup tetap berlaku. Paket dan attempt lama tidak diubah.
-
 
 **ENGINEERING DECISION — perbaikan akses, pemilik 7 Oktober 2026:** Publish Excel Tryout mengunci snapshot beserta scoring/blueprint pins secara atomik. Digest komposisi review dipertahankan sebagai compositionDigest; manifestDigest persetujuan mengikuti digest snapshot database. Distribusi paket Excel yang sudah direview/disetujui Admin tidak menunggu package_quality_results generator; jalur ini memeriksa 30 versi READY, provenance impor, persetujuan SEALED dan tetap menahan keputusan HOLD/RETIRED. Tidak membuat hasil statistik sintetis. Dua paket terbit tanpa attempt dipulihkan dengan backup; jadwal/histori attempt tidak diubah.
 

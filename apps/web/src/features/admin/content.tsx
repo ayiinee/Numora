@@ -2,24 +2,47 @@
 import { AdminConfirmButton } from './admin-confirm-button';
 import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 import { Curriculum } from './content-curriculum-panel';
-import { type Workbench } from './content-editor';
-import { field, type View } from './content-editor';
+import { Field, field, type Workbench } from './content-editor';
 import { DrillPackages, TryoutEditor } from './content-package-panels';
 import { QuestionEditor, Videos } from './content-question-panels';
-import { Reports, VerificationHistory } from './content-report-panels';
+import { Reports, ServerFilters, VerificationHistory } from './content-report-panels';
 import { ADMIN_PAGE_SIZE } from './pagination';
 
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
-import { Badge, Button } from '@tka/ui';
+import { Badge, Button, Icon, type IconName } from '@tka/ui';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { AdminFrame, AdminLoading, AdminMessage, AdminStats } from './admin-presentation';
-import { loadAdminWorkbench, setContentStatus } from './content-api';
+import { useEffect, useState, type ReactNode } from 'react';
+import {
+  AdminEditorForm,
+  AdminFrame,
+  AdminLoading,
+  AdminMessage,
+  AdminStats,
+} from './admin-presentation';
+import { AssessmentPolicySelector } from './assessment-policy-selector';
+import { loadAdminWorkbench, publishTryoutPackage, setContentStatus } from './content-api';
 import { classifyQuestion } from './content-package-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
+import { ContentText } from './content-payload';
 import type { AdminDrillPackageDto, AdminTryoutDraftDto, AdminVersionDto } from './generated-types';
 
+function QuestionSummary({ compact, children }: { compact: boolean; children: ReactNode }) {
+  return compact ? <div className="content-question-summary">{children}</div> : <>{children}</>;
+}
+
+export type ContentView =
+  | 'curriculum'
+  | 'questions'
+  | 'verification'
+  | 'videos'
+  | 'packages'
+  | 'drillPackages'
+  | 'directedPackages'
+  | 'reports'
+  | 'irt'
+  | 'audit';
+type View = ContentView;
 const views: { id: View; label: string }[] = [
   { id: 'curriculum', label: 'Materi' },
   { id: 'questions', label: 'Soal' },
@@ -32,23 +55,91 @@ const views: { id: View; label: string }[] = [
   { id: 'irt', label: 'IRT' },
   { id: 'audit', label: 'Audit' },
 ];
+const viewIcons: Record<View, IconName> = {
+  curriculum: 'book',
+  questions: 'clipboard',
+  verification: 'verified',
+  videos: 'play-circle',
+  packages: 'clock',
+  drillPackages: 'target',
+  directedPackages: 'clipboard',
+  reports: 'chat',
+  irt: 'chart',
+  audit: 'lock',
+};
+const viewGuidance: Record<View, { title: string; description: string }> = {
+  curriculum: {
+    title: 'Struktur materi',
+    description:
+      'Atur bab, subbab, kompetensi, dan level agar setiap soal memiliki tempat yang jelas dalam kurikulum.',
+  },
+  questions: {
+    title: 'Bank soal',
+    description:
+      'Buka detail versi untuk memeriksa isi, kunci, pembahasan, media, dan kesiapan. Tambahkan PG manual atau impor JSON untuk PG, MCMA, dan Kategori.',
+  },
+  verification: {
+    title: 'Riwayat verifikasi konten',
+    description:
+      'Telusuri keputusan review dan perubahan versi. Ini adalah review konten, bukan verifikasi Guru.',
+  },
+  videos: {
+    title: 'Video pembelajaran',
+    description:
+      'Hubungkan video ke subbab dan atur urutan rekomendasinya. Periksa tautan dan materi sebelum menjadikannya READY.',
+  },
+  packages: {
+    title: 'Paket Tryout mingguan',
+    description:
+      'Susun 30 versi soal, lalu pilih policy yang disahkan dan jadwal batch. Rilis nilai serta pembahasan dipantau terpisah di halaman IRT.',
+  },
+  drillPackages: {
+    title: 'Paket Drill per level',
+    description:
+      'Susun 10 versi soal untuk satu level. Publikasi pengganti mempertahankan versi yang digunakan pada pengerjaan lama.',
+  },
+  directedPackages: {
+    title: 'Paket & Pretest',
+    description: 'Kelola tujuan paket, sumber impor, dan kesiapan distribusi.',
+  },
+  reports: {
+    title: 'Antrian moderasi',
+    description:
+      'Buka detail laporan untuk melihat versi soal atau video yang dilaporkan. Catat tindak lanjut dan hubungkan revisi jika diperlukan.',
+  },
+  irt: {
+    title: 'Riwayat IRT',
+    description:
+      'Lihat catatan batch dan konfigurasi terdahulu. Gunakan halaman Request IRT & publikasi untuk menyiapkan analisis dan memantau rilis saat ini.',
+  },
+  audit: {
+    title: 'Jejak aktivitas',
+    description:
+      'Telusuri tindakan pada konten, moderasi, dan IRT menurut pelaku, aksi, target, atau periode.',
+  },
+};
+export function contentView(value: string | null | undefined): View {
+  return views.find((item) => item.id === value)?.id ?? 'questions';
+}
+
 const message = (error: unknown) =>
   error instanceof Error ? error.message : 'Permintaan gagal. Coba lagi.';
 
 export const AdminContentScreen = withAdminWorkspace(AdminContentScreenProtected, 'content');
-function AdminContentScreenProtected() {
+function AdminContentScreenProtected({ initialView = 'questions' }: { initialView?: View }) {
   const { state } = useAuth();
   const accountKey =
-    state.status === 'ready'
-      ? `${state.profile.id}:${state.profile.adminRole ?? 'unassigned'}`
-      : state.status;
-  return <AdminContentScreenContent key={accountKey} />;
+    state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status;
+  return <AdminContentScreenContent key={accountKey} initialView={initialView} />;
 }
 
-function AdminContentScreenContent() {
+function AdminContentScreenContent({ initialView }: { initialView: View }) {
   const reportAccessError = useAdminAccessError();
   const { state, refresh } = useAuth();
-  const canReadAudit = state.status === 'ready' && state.profile.adminRole === 'SUPER_ADMIN';
+  const contentRole =
+    state.status === 'ready' && state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const canReadAudit =
+    state.status === 'ready' && !!state.profile.capabilities?.includes('AUDIT_READ');
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -64,11 +155,8 @@ function AdminContentScreenContent() {
   const [denied, setDenied] = useState(false);
   const [revision, setRevision] = useState(0);
   const [offset, setOffset] = useState(0);
-  const [view, setView] = useState<View>('questions');
-  useEffect(() => {
-    if (new URLSearchParams(window.location.search).get('view') === 'curriculum')
-      setView('curriculum');
-  }, []);
+  const [view, setView] = useState<View>(initialView);
+  const [filters, setFilters] = useState<Record<string, string>>({});
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
@@ -83,11 +171,19 @@ function AdminContentScreenContent() {
     ...(versionSource ? { source: versionSource } : {}),
   }).toString();
   useEffect(() => {
-    if (!token) return;
+    if (!token) {
+      setData(null);
+      return;
+    }
     let active = true;
-    setLoading(true);
     setError('');
-    loadAdminWorkbench(token, offset, versionQuery, canReadAudit).then(
+    loadAdminWorkbench(
+      token,
+      offset,
+      view,
+      { ...Object.fromEntries(new URLSearchParams(versionQuery)), ...filters },
+      contentRole,
+    ).then(
       (result) => {
         if (active) {
           setData(result);
@@ -96,8 +192,8 @@ function AdminContentScreenContent() {
         }
       },
       (cause: unknown) => {
-        reportAccessError(cause);
         if (active) {
+          reportAccessError(cause);
           setError(message(cause));
           setLoading(false);
           setDenied(cause instanceof ApiProblem && [401, 403].includes(cause.status));
@@ -107,15 +203,15 @@ function AdminContentScreenContent() {
     return () => {
       active = false;
     };
-  }, [token, offset, revision, versionQuery, canReadAudit]);
+  }, [token, offset, revision, versionQuery, view, filters, contentRole]);
   async function run(action: () => Promise<{ id: string }>) {
     if (busy) return false;
     setBusy(true);
     setError('');
     setNotice('');
     try {
-      const result = await action();
-      setNotice(`Perubahan tersimpan. ID: ${result.id}`);
+      await action();
+      setNotice('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
       setRevision((value) => value + 1);
       return true;
     } catch (cause) {
@@ -133,10 +229,30 @@ function AdminContentScreenContent() {
     setRevision((value) => value + 1);
   }
   function navigate(next: View) {
+    if (view === next) return;
+    const url = new URL(window.location.href);
+    url.searchParams.set('view', next);
+    window.history.pushState(null, '', url);
+    resetView(next);
+  }
+  function resetView(next: View) {
+    setData(null);
+    setLoading(true);
     setView(next);
+    setFilters({});
     setOffset(0);
     setError('');
+    setNotice('');
+    setEditing(null);
+    setDraft(null);
+    setDrillDraft(null);
   }
+  useEffect(() => {
+    const restore = () =>
+      resetView(contentView(new URLSearchParams(window.location.search).get('view')));
+    window.addEventListener('popstate', restore);
+    return () => window.removeEventListener('popstate', restore);
+  }, []);
   const profileId = state.status === 'ready' ? state.profile.id : null;
   // Data cached in React must never be shown after logout or an account change.
   const [loadedFor, setLoadedFor] = useState<string | null>(null);
@@ -169,6 +285,17 @@ function AdminContentScreenContent() {
       </AdminFrame>
     );
   const current = loadedFor === profileId ? data : null;
+  const questionEditor = current && (
+    <QuestionEditor
+      key={editing?.id ?? 'new'}
+      version={editing}
+      data={current}
+      token={token}
+      busy={busy}
+      run={run}
+      close={() => setEditing(null)}
+    />
+  );
   const hasNext = current
     ? {
         curriculum: false,
@@ -196,13 +323,18 @@ function AdminContentScreenContent() {
         </p>
         <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
           {views
-            .filter((item) => canReadAudit || item.id !== 'audit')
+            .filter((item) => item.id !== 'audit' || canReadAudit)
             .map((item) => (
               <Button
                 key={item.id}
                 disabled={busy}
                 variant={view === item.id ? 'primary' : 'secondary'}
                 className="admin-view-button"
+                leftIcon={
+                  contentRole ? (
+                    <Icon name={viewIcons[item.id]} width={18} height={18} />
+                  ) : undefined
+                }
                 aria-current={view === item.id ? 'page' : undefined}
                 onClick={() => navigate(item.id)}
               >
@@ -210,6 +342,23 @@ function AdminContentScreenContent() {
               </Button>
             ))}
         </nav>
+        <section className="content-view-intro" aria-labelledby="content-view-title">
+          <div>
+            <span className="content-kicker">Konten & assessment</span>
+            <h2 id="content-view-title">{viewGuidance[view].title}</h2>
+            <p>{viewGuidance[view].description}</p>
+          </div>
+          {view === 'questions' && (
+            <Link className="content-primary-link" href="/admin/content/imports?mode=json">
+              Impor JSON
+            </Link>
+          )}
+          {(view === 'irt' || view === 'packages') && (
+            <Link className="content-primary-link" href="/admin/irt">
+              Request IRT & publikasi
+            </Link>
+          )}
+        </section>
         {notice && <AdminMessage message={notice} />}
         {error && (
           <div role="alert" className="form-error">
@@ -231,13 +380,14 @@ function AdminContentScreenContent() {
           <>
             <AdminStats
               items={[
-                { label: 'Keluarga soal', value: current.dashboard.questions, icon: 'book' },
-                { label: 'Versi READY', value: current.dashboard.readyVersions, icon: 'check' },
-                { label: 'Laporan terbuka', value: current.dashboard.openReports, icon: 'chat' },
+                { label: 'Keluarga soal', value: current.dashboard?.questions, icon: 'book' },
+                { label: 'Versi READY', value: current.dashboard?.readyVersions, icon: 'check' },
+                { label: 'Laporan terbuka', value: current.dashboard?.openReports, icon: 'chat' },
               ]}
             />
             <div
               className="admin-content-view"
+              data-view={view}
               aria-label={views.find((item) => item.id === view)?.label}
               aria-busy={loading}
             >
@@ -246,146 +396,178 @@ function AdminContentScreenContent() {
               )}
               {view === 'questions' && (
                 <>
-                  {editing && (
-                    <QuestionEditor
-                      key={editing.id}
-                      version={editing}
-                      data={current}
-                      token={token}
-                      busy={busy}
-                      run={run}
-                      close={() => setEditing(null)}
-                    />
-                  )}
+                  <div className="admin-search-toolbar">
+                    <label>
+                      Tujuan soal
+                      <select
+                        value={versionUsage}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionUsage(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua tujuan</option>
+                        <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
+                        {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+                          <option key={u}>{u}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Status versi
+                      <select
+                        value={versionStatus}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionStatus(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua status</option>
+                        {['DRAFT', 'READY', 'REVISION', 'ARCHIVED'].map((s) => (
+                          <option key={s}>{s}</option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Materi soal
+                      <select
+                        value={versionChapter}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionChapter(e.target.value);
+                          setOffset(0);
+                        }}
+                      >
+                        <option value="">Semua bab</option>
+                        {current.curriculum.items
+                          .filter((c) => c.kind === 'CHAPTER')
+                          .map((c) => (
+                            <option key={c.id} value={c.id}>
+                              {c.name}
+                            </option>
+                          ))}
+                      </select>
+                    </label>
+                    <label>
+                      Sumber soal
+                      <input
+                        value={versionSource}
+                        maxLength={240}
+                        disabled={busy}
+                        onChange={(e) => {
+                          setVersionSource(e.target.value);
+                          setOffset(0);
+                        }}
+                      />
+                    </label>
+                  </div>
                   <section>
                     <h2>Versi soal</h2>
+                    {contentRole && (
+                      <p>
+                        5 soal per halaman. Contoh demo diringkas menjadi maksimal 10 soal unik;
+                        semua versi tetap tersedia pada tab Verifikasi &amp; riwayat. Statistik di
+                        atas mencakup seluruh bank soal.
+                      </p>
+                    )}
                     <Link href="/admin/content/generator">Generator varian</Link>
-                    <Link href="/admin/content/imports">Upload soal dari template Excel</Link>
-                    <div className="excel-editor-options">
-                      <label>
-                        Tujuan soal
-                        <select
-                          value={versionUsage}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionUsage(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua tujuan</option>
-                          <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
-                          {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-                            <option key={u}>{u}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Status versi
-                        <select
-                          value={versionStatus}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionStatus(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua status</option>
-                          {['DRAFT', 'READY', 'ARCHIVED'].map((s) => (
-                            <option key={s}>{s}</option>
-                          ))}
-                        </select>
-                      </label>
-                      <label>
-                        Materi soal
-                        <select
-                          value={versionChapter}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionChapter(e.target.value);
-                            setOffset(0);
-                          }}
-                        >
-                          <option value="">Semua bab</option>
-                          {current.curriculum.items
-                            .filter((c) => c.kind === 'CHAPTER')
-                            .map((c) => (
-                              <option key={c.id} value={c.id}>
-                                {c.name}
-                              </option>
-                            ))}
-                        </select>
-                      </label>
-                      <label>
-                        Sumber soal
-                        <input
-                          value={versionSource}
-                          maxLength={240}
-                          disabled={busy}
-                          onChange={(e) => {
-                            setVersionSource(e.target.value);
-                            setOffset(0);
-                          }}
-                        />
-                      </label>
-                    </div>
+                    <Link href="/admin/content/imports">
+                      Impor Excel/JSON, paket & preview internal
+                    </Link>
                     {!current.versions.items.length && (
                       <p>Belum ada versi soal pada halaman ini.</p>
                     )}
-                    <ul className="monitoring-list">
+                    <ul className="monitoring-list" aria-label="Daftar soal">
                       {current.versions.items.map((v) => (
                         <li className="monitoring-notice admin-content-row" key={v.id}>
-                          <strong>{v.stem || `Konten ${v.questionType}`}</strong>
-                          <small>
-                            {v.variantCode} · v{v.versionNumber} · {v.questionType}
-                          </small>
-                          <p>
-                            Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
-                          </p>
-                          <Badge>{v.usageType ?? 'Belum diklasifikasikan'}</Badge>
-                          {v.sourceQuestionId && (
-                            <small>Salinan dari keluarga soal: {v.sourceQuestionId}</small>
-                          )}
-                          <small>
-                            Sumber: {v.sourceName ?? 'Belum tercatat'} {v.sourceReference ?? ''}{' '}
-                            {v.sourceFileName ? `· ${v.sourceFileName}` : ''}
-                          </small>
-                          {!v.usageType && (
-                            <form
-                              onSubmit={(e) => {
-                                e.preventDefault();
-                                const f = new FormData(e.currentTarget);
-                                void run(() =>
-                                  classifyQuestion(token, v.questionId, {
-                                    usageType: field(f, 'usageType') as
-                                      'DRILL' | 'PRETEST' | 'TRYOUT',
-                                  }),
-                                );
-                              }}
-                            >
-                              <label>
-                                Klasifikasi tujuan
-                                <select name="usageType" required disabled={busy}>
-                                  <option value="">Pilih tujuan permanen</option>
-                                  {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-                                    <option key={u}>{u}</option>
-                                  ))}
-                                </select>
-                              </label>
-                              <Button type="submit" disabled={busy}>
-                                Simpan klasifikasi
-                              </Button>
-                            </form>
-                          )}
-                          {v.reviewedByUserId && <small>Direview oleh: {v.reviewedByUserId}</small>}
-                          <small>ID versi: {v.id}</small>
-                          {v.reviewedAt && (
+                          <QuestionSummary compact={contentRole}>
+                            <strong>
+                              <ContentText value={v.stem || `Konten ${v.questionType}`} />
+                            </strong>
+                            <Badge>{v.usageType ?? 'Belum diklasifikasikan'}</Badge>
+                            {v.sourceQuestionId && (
+                              <small>Salinan dari keluarga soal: {v.sourceQuestionId}</small>
+                            )}
                             <small>
-                              Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
+                              Sumber: {v.sourceName ?? 'Belum tercatat'} {v.sourceReference ?? ''}{' '}
+                              {v.sourceFileName ? `· ${v.sourceFileName}` : ''}
                             </small>
-                          )}
+                            {!v.usageType && (
+                              <form
+                                onSubmit={(e) => {
+                                  e.preventDefault();
+                                  const f = new FormData(e.currentTarget);
+                                  void run(() =>
+                                    classifyQuestion(token, v.questionId, {
+                                      usageType: field(f, 'usageType') as
+                                        'DRILL' | 'PRETEST' | 'TRYOUT',
+                                    }),
+                                  );
+                                }}
+                              >
+                                <label>
+                                  Klasifikasi tujuan
+                                  <select name="usageType" required disabled={busy}>
+                                    <option value="">Pilih tujuan permanen</option>
+                                    {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+                                      <option key={u}>{u}</option>
+                                    ))}
+                                  </select>
+                                </label>
+                                <Button type="submit" disabled={busy}>
+                                  Simpan klasifikasi
+                                </Button>
+                              </form>
+                            )}
+                            <small>
+                              {v.variantCode} · v{v.versionNumber} · {v.questionType}
+                            </small>
+                            {v.questionType !== 'SINGLE_CHOICE' && v.options.length > 0 && (
+                              <ul aria-label="Cuplikan pernyataan soal">
+                                {v.options.slice(0, 2).map((option) => (
+                                  <li key={option.id}>
+                                    <ContentText value={option.text} />
+                                  </li>
+                                ))}
+                              </ul>
+                            )}
+                            <p className={contentRole ? 'content-status-pair' : undefined}>
+                              {contentRole ? (
+                                <>
+                                  <span>Keluarga: {v.questionStatus}</span>
+                                  <span data-status={v.contentStatus}>
+                                    Versi: {v.contentStatus}
+                                  </span>
+                                </>
+                              ) : (
+                                <>
+                                  Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
+                                </>
+                              )}
+                            </p>
+                            <details className="content-version-meta">
+                              <summary>Identitas versi & reviewer</summary>
+                              {v.reviewedByUserId && (
+                                <small>Direview oleh: {v.reviewedByUserId}</small>
+                              )}
+                              <small>ID versi: {v.id}</small>
+                            </details>
+                            {v.reviewedAt && (
+                              <small>
+                                Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
+                              </small>
+                            )}
+                          </QuestionSummary>
                           <div className="admin-content-actions">
+                            <Link href={`/admin/content/versions/${v.id}`}>
+                              Detail, review & kesiapan
+                            </Link>
                             {v.imported && (
-                              <span>Konten impor hanya dibaca; revisi melalui JSON.</span>
+                              <span>
+                                Payload versi immutable; review dan revisi tersedia pada detail.
+                              </span>
                             )}
                             {!v.imported && v.questionType === 'SINGLE_CHOICE' && (
                               <Button
@@ -440,6 +622,23 @@ function AdminContentScreenContent() {
                       ))}
                     </ul>
                   </section>
+                  {contentRole ? (
+                    <details
+                      className="content-editor-disclosure"
+                      open={editing ? true : undefined}
+                    >
+                      <summary>
+                        {editing ? 'Revisi / varian soal' : 'Tambah soal PG manual'}
+                      </summary>
+                      <p>
+                        Buat satu soal dengan empat pilihan. Untuk bank soal dalam jumlah banyak
+                        atau format PGK, gunakan impor JSON.
+                      </p>
+                      {questionEditor}
+                    </details>
+                  ) : (
+                    questionEditor
+                  )}
                 </>
               )}
               {view === 'verification' && (
@@ -467,9 +666,60 @@ function AdminContentScreenContent() {
                         </p>
                         <small>{p.id}</small>
                         {p.status === 'DRAFT' && (
-                          <Button variant="secondary" disabled={busy} onClick={() => setDraft(p)}>
-                            Edit draf
-                          </Button>
+                          <>
+                            <Button variant="secondary" disabled={busy} onClick={() => setDraft(p)}>
+                              Edit draf
+                            </Button>
+                            <AdminEditorForm
+                              busy={busy}
+                              onSubmit={(event) => {
+                                event.preventDefault();
+                                const form = new FormData(event.currentTarget);
+                                void run(() =>
+                                  publishTryoutPackage(token, p.id, {
+                                    scoringPolicyVersionId: field(form, 'scoringPolicyVersionId'),
+                                    curriculumApprovalReference: field(
+                                      form,
+                                      'curriculumApprovalReference',
+                                    ),
+                                    ...(field(form, 'releaseAt')
+                                      ? {
+                                          releaseAt: new Date(
+                                            `${field(form, 'releaseAt')}:00+07:00`,
+                                          ).toISOString(),
+                                        }
+                                      : {}),
+                                  }),
+                                );
+                              }}
+                            >
+                              <AssessmentPolicySelector token={token} type="TRYOUT" />
+                              <Field
+                                label="Referensi persetujuan Curriculum"
+                                name="curriculumApprovalReference"
+                              >
+                                <input
+                                  name="curriculumApprovalReference"
+                                  required
+                                  maxLength={1000}
+                                />
+                              </Field>
+                              <Field label="Jadwal rilis (WIB, opsional)" name="releaseAt">
+                                <input type="datetime-local" name="releaseAt" />
+                              </Field>
+                              <p>
+                                Kosong berarti rilis sekarang. Durasi pengerjaan 10 menit; batch
+                                berjalan 7 hari dikurangi 1 menit. Deadline mengikuti batas terawal
+                                durasi dan batch close.
+                              </p>
+                              <Button
+                                type="submit"
+                                disabled={busy || p.questionVersionIds.length !== 30}
+                              >
+                                Publikasikan batch Tryout
+                              </Button>
+                            </AdminEditorForm>
+                          </>
                         )}
                       </li>
                     ))}
@@ -496,11 +746,24 @@ function AdminContentScreenContent() {
                 />
               )}
               {view === 'reports' && (
-                <Reports data={current} token={token} busy={busy} run={run} navigate={navigate} />
+                <Reports
+                  data={current}
+                  token={token}
+                  busy={busy}
+                  run={run}
+                  navigate={navigate}
+                  filters={filters}
+                  onFilter={(next) => {
+                    setLoading(true);
+                    setOffset(0);
+                    setFilters(next);
+                  }}
+                />
               )}
               {view === 'irt' && (
                 <section>
                   <h2>Status dan riwayat batch IRT</h2>
+                  <Link href="/admin/irt">Buka request IRT dan SLA publikasi</Link>
                   <p>
                     Status batch dan waktu rilis berasal dari API. Batch SUCCEEDED tidak otomatis
                     berarti hasil Tryout sudah dirilis.
@@ -559,6 +822,15 @@ function AdminContentScreenContent() {
               {view === 'audit' && canReadAudit && (
                 <section>
                   <h2>Audit perubahan</h2>
+                  <ServerFilters
+                    audit
+                    filters={filters}
+                    onApply={(next) => {
+                      setLoading(true);
+                      setOffset(0);
+                      setFilters(next);
+                    }}
+                  />
                   {!current.audit.items.length && <p>Belum ada audit pada halaman ini.</p>}
                   <ul className="monitoring-list">
                     {current.audit.items.map((r) => (

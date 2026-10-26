@@ -1,10 +1,75 @@
 'use client';
 import { Badge, Button } from '@tka/ui';
-import { useState } from 'react';
+import Link from 'next/link';
 import { AdminEditorForm } from './admin-presentation';
 import { resolveReport } from './content-api';
-import { Field, field, type EditorProps, type Workbench } from './content-editor';
 import type { View } from './content-editor';
+import { Field, field, type EditorProps, type Workbench } from './content-editor';
+
+export function ServerFilters({
+  audit = false,
+  filters,
+  onApply,
+}: {
+  audit?: boolean;
+  filters: Record<string, string>;
+  onApply: (filters: Record<string, string>) => void;
+}) {
+  function localDate(value?: string) {
+    if (!value) return '';
+    const date = new Date(value);
+    return Number.isFinite(date.getTime())
+      ? new Date(date.getTime() - date.getTimezoneOffset() * 60_000).toISOString().slice(0, 16)
+      : '';
+  }
+  return (
+    <form
+      className="admin-content-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        const f = new FormData(e.currentTarget);
+        const next: Record<string, string> = {};
+        for (const [key, value] of f)
+          if (String(value).trim())
+            next[key] = ['from', 'to'].includes(key)
+              ? new Date(String(value)).toISOString()
+              : String(value).trim();
+        onApply(next);
+      }}
+    >
+      {audit ? (
+        <>
+          <label>
+            Aktor (UUID)
+            <input name="actorId" defaultValue={filters.actorId ?? ''} />
+          </label>
+          <label>
+            Aksi
+            <input name="action" maxLength={120} defaultValue={filters.action ?? ''} />
+          </label>
+          <label>
+            Jenis entitas
+            <input name="entityType" maxLength={120} defaultValue={filters.entityType ?? ''} />
+          </label>
+        </>
+      ) : (
+        <label>
+          Kategori laporan
+          <input name="category" maxLength={100} defaultValue={filters.category ?? ''} />
+        </label>
+      )}
+      <label>
+        Dari waktu
+        <input type="datetime-local" name="from" defaultValue={localDate(filters.from)} />
+      </label>
+      <label>
+        Sampai waktu
+        <input type="datetime-local" name="to" defaultValue={localDate(filters.to)} />
+      </label>
+      <Button>Terapkan filter server</Button>
+    </form>
+  );
+}
 
 export function Reports({
   data,
@@ -12,10 +77,16 @@ export function Reports({
   busy,
   run,
   navigate,
-}: EditorProps & { navigate: (view: View) => void }) {
+  onFilter,
+  filters,
+}: EditorProps & {
+  filters: Record<string, string>;
+  navigate: (view: View) => void;
+  onFilter: (filters: Record<string, string>) => void;
+}) {
   type Report = Workbench['reports']['items'][number];
-  const [kind, setKind] = useState<Report['kind'] | 'ALL'>('ALL');
-  const [status, setStatus] = useState<Report['status'] | 'ALL'>('ALL');
+  const kind = (filters.kind ?? 'ALL') as Report['kind'] | 'ALL';
+  const status = (filters.status ?? 'ALL') as Report['status'] | 'ALL';
   const visible = data.reports.items.filter(
     (report) =>
       (kind === 'ALL' || report.kind === kind) && (status === 'ALL' || report.status === status),
@@ -24,7 +95,8 @@ export function Reports({
     <section>
       <h2>Laporan soal dan video</h2>
       <p>
-        Daftar ini berisi laporan pada halaman yang dimuat. Filter tidak mengubah data di server.
+        Filter diterapkan server ke seluruh antrean. Detail target tidak bergantung pada halaman
+        metadata.
       </p>
       <div className="admin-content-actions">
         <label>
@@ -32,7 +104,16 @@ export function Reports({
           <select
             aria-label="Jenis laporan"
             value={kind}
-            onChange={(event) => setKind(event.target.value as typeof kind)}
+            onChange={(event) => {
+              const next = event.target.value as typeof kind;
+              const rest = { ...filters };
+              delete rest.kind;
+              onFilter({
+                ...rest,
+                ...(next !== 'ALL' ? { kind: next } : {}),
+                ...(status !== 'ALL' ? { status } : {}),
+              });
+            }}
           >
             <option value="ALL">Semua jenis</option>
             <option value="QUESTION">Soal</option>
@@ -44,7 +125,16 @@ export function Reports({
           <select
             aria-label="Filter status laporan"
             value={status}
-            onChange={(event) => setStatus(event.target.value as typeof status)}
+            onChange={(event) => {
+              const next = event.target.value as typeof status;
+              const rest = { ...filters };
+              delete rest.status;
+              onFilter({
+                ...rest,
+                ...(kind !== 'ALL' ? { kind } : {}),
+                ...(next !== 'ALL' ? { status: next } : {}),
+              });
+            }}
           >
             <option value="ALL">Semua status</option>
             {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
@@ -56,6 +146,16 @@ export function Reports({
         </label>
         <span role="status">{visible.length} laporan ditampilkan</span>
       </div>
+      <ServerFilters
+        filters={filters}
+        onApply={(next) =>
+          onFilter({
+            ...next,
+            ...(kind !== 'ALL' ? { kind } : {}),
+            ...(status !== 'ALL' ? { status } : {}),
+          })
+        }
+      />
       {!data.reports.items.length ? (
         <p>Belum ada laporan pada halaman ini.</p>
       ) : !visible.length ? (
@@ -63,13 +163,6 @@ export function Reports({
       ) : (
         <ul className="monitoring-list">
           {visible.map((report) => {
-            const video =
-              report.kind === 'VIDEO'
-                ? data.videos.items.find((item) => item.mappingId === report.referenceId)
-                : undefined;
-            const subchapter = video
-              ? data.curriculum.items.find((item) => item.id === video.subchapterId)
-              : undefined;
             return (
               <li
                 key={`${report.kind}-${report.id}`}
@@ -96,36 +189,16 @@ export function Reports({
                 <p>Kategori: {report.category}</p>
                 <p>{report.details || 'Pelapor tidak menambahkan rincian.'}</p>
                 <small>Diterima {new Date(report.reportedAt).toLocaleString('id-ID')}</small>
-                {report.kind === 'VIDEO' ? (
-                  video ? (
-                    <div>
-                      <p>
-                        Mapping: {video.title} · {video.source} · subbab{' '}
-                        {subchapter?.name ?? video.subchapterId} · urutan{' '}
-                        {video.recommendationOrder}
-                      </p>
-                      {video.url.startsWith('https://') ? (
-                        <a href={video.url} target="_blank" rel="noreferrer">
-                          Buka video terkait
-                        </a>
-                      ) : (
-                        <p>URL mapping video belum menggunakan HTTPS.</p>
-                      )}
-                    </div>
-                  ) : (
-                    <p>Mapping video tidak ada pada halaman metadata yang sedang dimuat.</p>
-                  )
-                ) : (
-                  <p>
-                    Referensi jawaban/attempt: <code>{report.referenceId}</code>
-                  </p>
-                )}
+                <p>Buka detail untuk melihat target historis dan bukti snapshot.</p>
                 {report.followUp && (
                   <p>
                     <strong>Tindak lanjut tersimpan:</strong> {report.followUp}
                   </p>
                 )}
                 <div className="admin-content-actions">
+                  <Link href={`/admin/reports/${report.kind}/${report.id}`}>
+                    Detail target & resolution
+                  </Link>
                   <Button
                     type="button"
                     className="secondary-button"
@@ -180,7 +253,7 @@ export function Reports({
   );
 }
 
-export function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
+function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
   return {
     OPEN: 'Terbuka',
     IN_REVIEW: 'Sedang ditinjau',
@@ -223,6 +296,7 @@ export function VerificationHistory({
                   : 'Belum ditinjau'}
               </small>
               <small>ID versi: {version.id}</small>
+              <Link href={`/admin/content/versions/${version.id}`}>Detail &amp; review versi</Link>
             </li>
           ))}
         </ul>

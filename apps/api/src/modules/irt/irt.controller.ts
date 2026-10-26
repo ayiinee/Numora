@@ -1,8 +1,11 @@
+import { IrtOperationsService } from './irt-operations.service';
+import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
   Body,
   Controller,
   Get,
   Headers,
+  HttpCode,
   Inject,
   Param,
   ParseUUIDPipe,
@@ -20,8 +23,8 @@ import {
   ApiTags,
 } from '@nestjs/swagger';
 import { IrtService } from './irt.service';
-import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
-import { AdminAccess } from '../identity/admin-permissions';
+import type { AdminRequest } from '../identity/admin.guard';
+import { ContentAdminGuard } from '../identity/content-admin.guard';
 import { IrtRequestsService } from './irt-requests.service';
 import { IrtRequestDto, IrtRequestsDto, PrepareIrtRequestDto } from './irt-requests.dto';
 import { ContentPageDto } from '../content/content.dto';
@@ -59,14 +62,30 @@ export class AdminIrtBatchesDto {
 // Legacy readers and v3 operational handoff. Scientific configuration/publication remains OPEN-12/18.
 @ApiTags('admin-irt')
 @ApiBearerAuth()
-@UseGuards(AdminGuard)
-@AdminAccess('content')
+@UseGuards(ContentAdminGuard)
 @Controller('admin/irt')
 export class IrtController {
   constructor(
     @Inject(IrtService) private readonly irt: IrtService,
     @Inject(IrtRequestsService) private readonly requests: IrtRequestsService,
+    @Inject(IrtOperationsService) private readonly operations: IrtOperationsService,
   ) {}
+  @Get('options')
+  @ApiOkResponse({ type: IrtOperationalOptionsDto })
+  options() {
+    return this.operations.options();
+  }
+  @Get('batch-health')
+  @ApiOkResponse({ type: IrtBatchHealthListDto })
+  health(@Query() page: ContentPageDto) {
+    return this.operations.health(page);
+  }
+  @Post('requests/:id/adopt')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtRequestDto })
+  adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.adopt(request.adminId, id);
+  }
   @Post('requests')
   @ApiHeader({ name: 'Idempotency-Key', required: true })
   @ApiCreatedResponse({ type: IrtRequestDto })

@@ -147,6 +147,14 @@ export function AuthProvider({ children }: { children: ReactNode }) {
     );
     return () => clearTimeout(timer);
   }, [state]);
+  useEffect(() => {
+    const invalidate = () => {
+      setState({ status: 'loading' });
+      void refresh();
+    };
+    window.addEventListener('numora:authorization-changed', invalidate);
+    return () => window.removeEventListener('numora:authorization-changed', invalidate);
+  }, [refresh]);
   const register = useCallback(async (role: 'STUDENT' | 'TEACHER') => {
     const { data } = await getSupabase().auth.getSession();
     if (!data.session) throw new Error('Sesi berakhir. Login kembali.');

@@ -1,13 +1,14 @@
 'use client';
 import { QuestionChoices } from '@/features/core-learning/question-choices';
 import { useAuth } from '@/features/onboarding/auth';
-import { Badge,Button,Card } from '@tka/ui';
-import { useEffect,useRef,useState } from 'react';
-import { AdminFrame,AdminLoading,AdminMessage } from './admin-presentation';
-import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
-import { getPreview,renewPreviewMedia,savePreview,submitPreview } from './content-preview-api';
+import { Badge, Button, Card } from '@tka/ui';
+import { useEffect, useRef, useState } from 'react';
+import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
+import { getPreview, renewPreviewMedia, savePreview, submitPreview } from './content-preview-api';
 import { ContentRichText } from './content-rich-text';
-import type { PreviewItemDto,PreviewSessionDto,SavePreviewAnswerDto } from './generated-types';
+import type { PreviewItemDto, PreviewSessionDto, SavePreviewAnswerDto } from './generated-types';
+import { adminAccessDenied } from './operational-query';
 
 type RawAnswer = SavePreviewAnswerDto['answer'];
 function choice(answer: RawAnswer): string | string[] | Record<string, string> | null {
@@ -59,6 +60,7 @@ function PreviewContent({ id }: { id: string }) {
       setDirty(false);
     } catch (e) {
       reportAccessError(e);
+      setView(null);
       setError(e instanceof Error ? e.message : 'Gagal memuat sesi.');
     } finally {
       setLoading(false);
@@ -67,6 +69,9 @@ function PreviewContent({ id }: { id: string }) {
   useEffect(() => {
     let active = true;
     if (!token) return;
+    setView(null);
+    setLoading(true);
+    setError('');
     getPreview(token, id)
       .then(async (work) => (work.state === 'SUBMITTED' ? getPreview(token, id, true) : work))
       .then(
@@ -116,6 +121,11 @@ function PreviewContent({ id }: { id: string }) {
       await action();
     } catch (e) {
       reportAccessError(e);
+      if (adminAccessDenied(e)) {
+        setView(null);
+        setDraft(null);
+        setDirty(false);
+      }
       setError(
         e instanceof Error ? e.message : 'Permintaan gagal. Jawaban belum dikonfirmasi server.',
       );
@@ -156,7 +166,7 @@ function PreviewContent({ id }: { id: string }) {
       description="Sesi internal tersimpan; tidak menghasilkan nilai, XP, progres, atau evidence IRT."
       icon="book"
     >
-      <Badge>DRAFT — preview internal</Badge>
+      <Badge>Preview internal — tanpa scoring</Badge>
       {!token ? (
         <AdminMessage
           message="Akses memerlukan Admin konten yang berwenang."

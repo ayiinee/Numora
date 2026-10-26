@@ -59,7 +59,16 @@ export async function setup(page: Page) {
       },
     ] as AdminSchool[],
     tokens: [
-      { id: id(110), expiresAt: '2099-01-01T00:00:00Z', usedAt: null, revokedAt: null },
+      {
+        id: id(110),
+        expiresAt: '2099-01-01T00:00:00Z',
+        usedAt: null,
+        revokedAt: null,
+        createdAt: '2026-10-01T00:00:00Z',
+        usedByUserId: null,
+        usedByName: null,
+        status: 'AVAILABLE',
+      },
     ] as TeacherTokenSummary[],
     classes: [
       {
@@ -69,6 +78,7 @@ export async function setup(page: Page) {
         schoolName: 'Sekolah TEST',
         teacherId: id(800),
         teacherName: 'Guru TEST',
+        teacherActive: true,
         studentCount: 6,
         createdAt: '2026-10-01T00:00:00Z',
         archivedAt: null,
@@ -89,9 +99,14 @@ export async function setup(page: Page) {
           role: 'ADMIN',
           status: 'ACTIVE',
           adminRole: state.adminRole,
-          capabilities: ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'].includes(state.adminRole ?? '')
-            ? ['CONTENT_MANAGE']
-            : [],
+          capabilities:
+            state.adminRole === 'SUPER_ADMIN'
+              ? ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'AUDIT_READ', 'ADMIN_ACCOUNTS_MANAGE']
+              : state.adminRole === 'OPERATIONS'
+                ? ['OPERATIONS_MANAGE']
+                : state.adminRole === 'CONTENT_DATA_MODERATION'
+                  ? ['CONTENT_MANAGE']
+                  : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',
           teacherVerified: null,
@@ -107,7 +122,16 @@ export async function setup(page: Page) {
         });
       if (path.endsWith('/teacher-tokens')) {
         const issued = { id: id(120), token: 'DEMO-ONE-TIME', expiresAt: '2099-01-01T00:00:00Z' };
-        state.tokens.push({ ...issued, usedAt: null, revokedAt: null });
+        state.tokens.push({
+          id: issued.id,
+          expiresAt: issued.expiresAt,
+          createdAt: new Date().toISOString(),
+          usedAt: null,
+          revokedAt: null,
+          usedByUserId: null,
+          usedByName: null,
+          status: 'AVAILABLE',
+        });
         return route.fulfill({ json: issued });
       }
       const school = state.schools.find((item) => path === `/admin/schools/${item.id}`);
@@ -117,8 +141,24 @@ export async function setup(page: Page) {
       }
       return route.fulfill({ json: { id: id(200) } });
     }
-    if (path === '/admin/schools') return route.fulfill({ json: { items: state.schools } });
-    if (path.endsWith('/teacher-tokens')) return route.fulfill({ json: { items: state.tokens } });
+    if (path === '/admin/schools') {
+      const params = new URL(request.url()).searchParams;
+      const search = (params.get('search') ?? '').toLowerCase();
+      const offset = Number(params.get('offset') ?? 0);
+      const schools = state.schools.filter((item) =>
+        `${item.code} ${item.name}`.toLowerCase().includes(search),
+      );
+      return route.fulfill({
+        json: {
+          items: schools.slice(offset, offset + 5),
+          nextOffset: schools.length > offset + 5 ? offset + 5 : null,
+        },
+      });
+    }
+    const detailSchool = state.schools.find((item) => path === `/admin/schools/${item.id}`);
+    if (detailSchool) return route.fulfill({ json: detailSchool });
+    if (path.endsWith('/teacher-tokens'))
+      return route.fulfill({ json: { items: state.tokens, nextOffset: null } });
     if (path === '/admin/classes')
       return route.fulfill({ json: { items: state.classes, nextOffset: null } });
     if (path === `/admin/classes/${id(700)}`) return route.fulfill({ json: state.classes[0] });

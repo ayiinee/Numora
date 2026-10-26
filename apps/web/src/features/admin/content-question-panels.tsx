@@ -3,6 +3,7 @@ import { Button } from '@tka/ui';
 import { useState, type FormEvent } from 'react';
 import { AdminEditorForm } from './admin-presentation';
 import {
+  createQuestion,
   createVariant,
   createVideo,
   reviseQuestion,
@@ -14,15 +15,17 @@ import type { AdminVersionDto, QuestionContentDto } from './generated-types';
 
 export function QuestionEditor({
   version,
+  data,
   token,
   busy,
   run,
   close,
-}: EditorProps & { version: AdminVersionDto; close: () => void }) {
+}: EditorProps & { version: AdminVersionDto | null; close: () => void }) {
   const [variant, setVariant] = useState(false);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
-    const f = new FormData(e.currentTarget);
+    const form = e.currentTarget;
+    const f = new FormData(form);
     const body: QuestionContentDto = {
       stem: field(f, 'stem'),
       options: ['A', 'B', 'C', 'D'].map((id) => ({ id, text: field(f, id) })),
@@ -31,32 +34,64 @@ export function QuestionEditor({
       difficulty: field(f, 'difficulty'),
     };
     const result = await run(() =>
-      variant
-        ? createVariant(token, version.questionId, {
+      !version
+        ? createQuestion(token, {
             ...body,
-            originalVariantId: version.originalVariantId ?? version.variantId,
+            primaryCompetencyId: field(f, 'competency'),
             variantCode: field(f, 'variantCode'),
+            usageType: field(f, 'usageType') as 'DRILL' | 'PRETEST' | 'TRYOUT',
           })
-        : reviseQuestion(token, version.id, body),
+        : variant
+          ? createVariant(token, version.questionId, {
+              ...body,
+              originalVariantId: version.originalVariantId ?? version.variantId,
+              variantCode: field(f, 'variantCode'),
+            })
+          : reviseQuestion(token, version.id, body),
     );
-    if (result) close();
+    if (result) {
+      if (version) close();
+      else form.reset();
+    }
   }
   return (
     <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
-      <h2>{`Revisi ${version.variantCode} v${version.versionNumber}`}</h2>
+      <h2>
+        {version ? `Revisi ${version.variantCode} v${version.versionNumber}` : 'Buat soal PG'}
+      </h2>
       <p>
-        Editor awal mendukung empat opsi A–D. Soal tersimpan sebagai DRAFT. PGK menunggu OPEN-04.
+        Tambahkan soal PG dengan empat opsi A–D sebagai DRAFT. Untuk MCMA atau Kategori, gunakan
+        impor JSON; scoring PGK tetap memerlukan rubric yang disahkan.
       </p>
-      <>
-        <Button variant="secondary" type="button" disabled={busy} onClick={close}>
-          Batal revisi
-        </Button>
-        <label>
-          <input type="checkbox" checked={variant} onChange={(e) => setVariant(e.target.checked)} />{' '}
-          Buat varian setara dalam keluarga soal ini
-        </label>
-      </>
-      {variant && (
+      {version ? (
+        <>
+          <Button variant="secondary" type="button" disabled={busy} onClick={close}>
+            Batal revisi
+          </Button>
+          <label>
+            <input
+              type="checkbox"
+              checked={variant}
+              onChange={(e) => setVariant(e.target.checked)}
+            />{' '}
+            Buat varian setara dalam keluarga soal ini
+          </label>
+        </>
+      ) : (
+        <Field label="Kompetensi" name="competency">
+          <select name="competency" defaultValue="" required>
+            <option value="">Pilih kompetensi</option>
+            {data.curriculum.items
+              .filter((r) => r.kind === 'COMPETENCY')
+              .map((r) => (
+                <option key={r.id} value={r.id}>
+                  {r.code}: {r.name}
+                </option>
+              ))}
+          </select>
+        </Field>
+      )}
+      {(!version || variant) && (
         <Field label="Kode varian unik" name="variantCode">
           <input
             name="variantCode"
@@ -64,6 +99,16 @@ export function QuestionEditor({
             pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*"
             maxLength={64}
           />
+        </Field>
+      )}
+      {!version && (
+        <Field label="Tujuan soal permanen" name="usageType">
+          <select name="usageType" required defaultValue="">
+            <option value="">Pilih tujuan</option>
+            {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
+              <option key={u}>{u}</option>
+            ))}
+          </select>
         </Field>
       )}
       <Field label="Teks soal (LaTeX inline diperbolehkan)" name="stem">
@@ -95,9 +140,17 @@ export function QuestionEditor({
         />
       </Field>
       <Field label="Label kesulitan dari Curriculum" name="difficulty">
-        <input name="difficulty" required maxLength={80} defaultValue={version?.difficulty ?? ''} />
+        <input
+          name="difficulty"
+          required
+          maxLength={80}
+          defaultValue={version?.difficulty ?? 'DEMO'}
+        />
       </Field>
-      <Button type="submit" disabled={busy}>
+      <Button
+        type="submit"
+        disabled={busy || (!version && !data.curriculum.items.some((r) => r.kind === 'COMPETENCY'))}
+      >
         Simpan versi DRAFT
       </Button>
     </AdminEditorForm>

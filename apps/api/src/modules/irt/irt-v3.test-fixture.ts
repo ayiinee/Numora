@@ -6,7 +6,13 @@ export async function tryoutMeasurementFixture(
   owner: Sql,
   main: Sql,
   compute: Sql,
-  options: { partial?: boolean; empty?: boolean; unanswered?: boolean } = {},
+  options: {
+    partial?: boolean;
+    empty?: boolean;
+    unanswered?: boolean;
+    lateGrading?: boolean;
+    lateSaved?: boolean;
+  } = {},
 ) {
   const key = randomUUID(),
     partial = options.partial ?? false;
@@ -85,8 +91,10 @@ export async function tryoutMeasurementFixture(
     >`INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(${a!.id},${pack!.id},${pi!.id},${version!.id},1,${partial ? 6 : 1}) RETURNING id`;
     if (!options.unanswered)
       await main`INSERT INTO attempt_answers(attempt_item_id,answer,saved_at,awarded_points,graded_at,score_category,fully_correct,response_state)
-      VALUES(${i!.id},'{"optionId":"A"}',now()-interval '30 hours',${partial ? 4 : 1},now()-interval '30 hours',${partial ? 2 : 1},${!partial},'RESPONDED')`;
-    await main`UPDATE assessment_attempts SET status=${options.unanswered ? 'SUBMITTED' : 'GRADED'},finished_at=now()-interval '30 hours',raw_points=${options.unanswered ? null : partial ? 4 : 1},score_0_100=${options.unanswered ? null : 100} WHERE id=${a!.id}`;
+      VALUES(${i!.id},'{"optionId":"A"}',CASE WHEN ${options.lateSaved ?? false} THEN now() ELSE now()-interval '30 hours' END,${partial ? 4 : 1},CASE WHEN ${options.lateGrading ?? false} THEN now() ELSE now()-interval '30 hours' END,${partial ? 2 : 1},${!partial},'RESPONDED')`;
+    if (options.lateGrading)
+      await main`UPDATE assessment_attempts SET deadline_at=(SELECT cutoff_at FROM tryout_batches WHERE id=${batch!.id}) WHERE id=${a!.id}`;
+    await main`UPDATE assessment_attempts SET status=${options.unanswered ? 'SUBMITTED' : 'GRADED'},finished_at=CASE WHEN ${options.lateGrading ?? false} THEN now() ELSE now()-interval '30 hours' END,raw_points=${options.unanswered ? null : partial ? 4 : 1},score_0_100=${options.unanswered ? null : 100} WHERE id=${a!.id}`;
     attemptId = a!.id;
     itemId = i!.id;
   }

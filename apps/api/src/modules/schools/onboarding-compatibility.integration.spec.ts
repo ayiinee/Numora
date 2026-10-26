@@ -48,6 +48,7 @@ integration('onboarding compatibility and collision transactions', () => {
       me: async (name: string) => ({
         id: ids[name],
         role: roles[name],
+        status: 'ACTIVE',
         adminRole: name === 'admin' ? 'SUPER_ADMIN' : null,
         teacherVerified: true,
       }),

@@ -2,11 +2,12 @@ import { ContentImportScreen } from '@/features/admin/content-import';
 export default async function Page({
   searchParams,
 }: {
-  searchParams: Promise<{ generatorPackage?: string }>;
+  searchParams: Promise<{ generatorPackage?: string; mode?: string }>;
 }) {
-  const { generatorPackage } = await searchParams;
+  const { generatorPackage, mode } = await searchParams;
   return (
     <ContentImportScreen
+      {...(typeof mode === 'string' ? { mode } : {})}
       {...(typeof generatorPackage === 'string' ? { generatorPackageId: generatorPackage } : {})}
     />
   );

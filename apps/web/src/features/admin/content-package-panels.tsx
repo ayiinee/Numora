@@ -1,8 +1,10 @@
 'use client';
 import { Button } from '@tka/ui';
-import { useState, type FormEvent } from 'react';
+import Link from 'next/link';
+import { useEffect, useState, type FormEvent } from 'react';
 import { AdminConfirmButton } from './admin-confirm-button';
-import { AdminEditorForm } from './admin-presentation';
+import { AdminEditorForm, AdminLoading, AdminMessage } from './admin-presentation';
+import { AssessmentPolicySelector } from './assessment-policy-selector';
 import {
   archiveDrillPackage,
   createDrillPackage,
@@ -12,7 +14,12 @@ import {
   updateTryoutDraft,
 } from './content-api';
 import { Field, field, type EditorProps } from './content-editor';
-import type { AdminDrillPackageDto, AdminTryoutDraftDto } from './generated-types';
+import type {
+  AdminDrillPackageDto,
+  AdminTryoutDraftDto,
+  AdminVersionsDto,
+} from './generated-types';
+import { useOperationalQuery } from './operational-query';
 
 export function DrillPackages({
   data,
@@ -80,15 +87,35 @@ export function DrillPackages({
                 <Button variant="secondary" disabled={busy} onClick={() => setDraft(pack)}>
                   Edit draf
                 </Button>
-                <AdminConfirmButton
-                  disabled={busy}
-                  description={
-                    'Terbitkan paket ini? API akan memvalidasi 10 soal, hasil review, materi, dan kebijakan penilaian.'
-                  }
-                  onConfirm={() => run(() => publishDrillPackage(token, pack.id))}
+                <form
+                  onSubmit={(event) => {
+                    event.preventDefault();
+                    const reference = field(
+                      new FormData(event.currentTarget),
+                      'curriculumApprovalReference',
+                    );
+                    if (
+                      window.confirm(
+                        'Terbitkan susunan paket yang sudah ditinjau dan disetujui Curriculum?',
+                      )
+                    )
+                      void run(() =>
+                        publishDrillPackage(token, pack.id, {
+                          curriculumApprovalReference: reference,
+                        }),
+                      );
+                  }}
                 >
-                  Publikasikan paket
-                </AdminConfirmButton>
+                  <Field
+                    label="Referensi persetujuan Curriculum"
+                    name="curriculumApprovalReference"
+                  >
+                    <input name="curriculumApprovalReference" required maxLength={1000} />
+                  </Field>
+                  <Button type="submit" disabled={busy}>
+                    Publikasikan paket
+                  </Button>
+                </form>
               </div>
             )}
             {pack.status !== 'ARCHIVED' && (
@@ -110,7 +137,7 @@ export function DrillPackages({
   );
 }
 
-export function DrillPackageEditor({
+function DrillPackageEditor({
   draft,
   data,
   token,
@@ -186,25 +213,19 @@ export function DrillPackageEditor({
             </select>
           </Field>
           <Field label="Indeks varian" name="variantIndex">
-            <input name="variantIndex" type="number" min={1} max={100000} required />
+            <input name="variantIndex" type="number" min={1} max={1} value={1} readOnly required />
+            <small>MVP memakai satu varian per level.</small>
           </Field>
         </>
       )}
       <Field label="Nama paket" name="name">
         <input name="name" required maxLength={160} defaultValue={draft?.name ?? ''} />
       </Field>
-      <Field label="ID versi kebijakan penilaian" name="scoringPolicyVersionId">
-        <input
-          name="scoringPolicyVersionId"
-          required
-          defaultValue={draft?.scoringPolicyVersionId ?? ''}
-          aria-describedby="drill-policy-help"
-        />
-      </Field>
-      <small id="drill-policy-help">
-        Publikasi memerlukan kebijakan DRILL_PRD_V06 versi 1; masukkan ID policy yang disediakan
-        backend.
-      </small>
+      <AssessmentPolicySelector
+        token={token}
+        type="DRILL"
+        defaultValue={draft?.scoringPolicyVersionId ?? ''}
+      />
       <Field label="ID versi soal (pisahkan dengan baris baru atau koma)" name="questionVersionIds">
         <textarea
           name="questionVersionIds"
@@ -230,7 +251,6 @@ export function DrillPackageEditor({
 
 export function TryoutEditor({
   draft,
-  data,
   token,
   busy,
   run,
@@ -238,8 +258,17 @@ export function TryoutEditor({
 }: EditorProps & { draft: AdminTryoutDraftDto | null; close: () => void }) {
   // Preserve pinned IDs outside the current question page while editing a package.
   const [selected, setSelected] = useState<string[]>(draft?.questionVersionIds ?? []);
+  const [questionOffset, setQuestionOffset] = useState(0);
+  const versions = useOperationalQuery<AdminVersionsDto>(
+    `admin/content/versions?limit=20&offset=${questionOffset}`,
+    token,
+  );
+  useEffect(() => {
+    if (versions.denied) setSelected([]);
+  }, [versions.denied]);
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
+    if (busy || versions.denied) return;
     const form = e.currentTarget;
     const f = new FormData(form);
     const body = { name: field(f, 'name'), questionVersionIds: selected };
@@ -260,12 +289,15 @@ export function TryoutEditor({
       }
     }
   }
+  if (versions.denied)
+    return <AdminMessage error message="Akses bank soal dicabut. Muat ulang akses admin." />;
   return (
     <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
       <h2>{draft ? 'Edit draf Tryout' : 'Susun draf Tryout'}</h2>
       <p>
-        Belum diterbitkan ke Siswa. Konfigurasi resmi Tryout, scoring, dan release IRT masih OPEN;
-        parameter produk tidak dapat diubah di sini.
+        Simpan susunan soal sebagai draf terlebih dahulu. Publikasi memerlukan 30 versi soal yang
+        siap dan policy yang disahkan. Nilai serta pembahasan dirilis melalui proses IRT; parameter
+        produk tetap mengikuti aturan MVP.
       </p>
       {draft ? (
         <Button variant="secondary" type="button" onClick={close}>
@@ -290,8 +322,40 @@ export function TryoutEditor({
         <input name="name" required maxLength={160} defaultValue={draft?.name ?? ''} />
       </Field>
       <fieldset>
-        <legend>Versi READY pada halaman soal saat ini ({selected.length} versi dipilih)</legend>
-        {data.versions.items
+        <legend>Versi READY ({selected.length} versi dipilih)</legend>
+        <p>Pilihan tetap tersimpan saat berpindah halaman soal.</p>
+        {!!selected.length && (
+          <details>
+            <summary>Kelola versi yang dipilih</summary>
+            <p>
+              Versi dari halaman lain atau yang sudah diarsipkan tetap tercatat di sini sampai
+              dikeluarkan dari draf.
+            </p>
+            <ul>
+              {selected.map((id) => (
+                <li key={id}>
+                  <Link href={`/admin/content/versions/${id}`} target="_blank" rel="noreferrer">
+                    Detail versi {id}
+                  </Link>{' '}
+                  <Button
+                    type="button"
+                    variant="secondary"
+                    aria-label={`Keluarkan versi ${id}`}
+                    onClick={() => setSelected((ids) => ids.filter((value) => value !== id))}
+                  >
+                    Keluarkan
+                  </Button>
+                </li>
+              ))}
+            </ul>
+          </details>
+        )}
+        {versions.error ? (
+          <AdminMessage error message={versions.error} retry={versions.retry} />
+        ) : !versions.data ? (
+          <AdminLoading message="Memuat pemilih soal Tryout…" />
+        ) : null}
+        {versions.data?.items
           .filter((v) => v.contentStatus === 'READY' && v.questionStatus === 'READY')
           .map((v) => (
             <label key={v.id}>
@@ -307,9 +371,29 @@ export function TryoutEditor({
               {v.variantCode} v{v.versionNumber}: {v.stem}
             </label>
           ))}
-        {!data.versions.items.some(
-          (v) => v.contentStatus === 'READY' && v.questionStatus === 'READY',
-        ) && <p>Belum ada versi READY pada halaman ini. Draf kosong boleh disimpan.</p>}
+        {versions.data &&
+          !versions.data.items.some(
+            (v) => v.contentStatus === 'READY' && v.questionStatus === 'READY',
+          ) && <p>Belum ada versi READY pada halaman ini. Draf kosong boleh disimpan.</p>}
+        <nav aria-label="Halaman pemilih soal Tryout" className="admin-content-actions">
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy || !versions.data || questionOffset === 0}
+            onClick={() => setQuestionOffset((n) => Math.max(0, n - 20))}
+          >
+            Soal sebelumnya
+          </Button>
+          <span>Halaman {Math.floor(questionOffset / 20) + 1}</span>
+          <Button
+            type="button"
+            variant="secondary"
+            disabled={busy || !versions.data || versions.data.nextOffset == null}
+            onClick={() => setQuestionOffset(versions.data!.nextOffset!)}
+          >
+            Soal berikutnya
+          </Button>
+        </nav>
       </fieldset>
       <Button type="submit" disabled={busy}>
         Simpan draf paket

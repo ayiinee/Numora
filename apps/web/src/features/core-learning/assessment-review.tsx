@@ -1,4 +1,5 @@
 'use client';
+import { ContentRichText } from '@/components/content-rich-text';
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { useParams } from 'next/navigation';
@@ -7,11 +8,10 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge, Button, Card, Icon } from '@tka/ui';
 import { AssessmentHeader } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
-import { AssessmentRichText } from './assessment-rich-text';
 import { answerOf, choiceValue, questionTypeLabels } from './assessment-answers';
 import { learningApi, LearningApiError } from './api';
 import type { ReviewedQuestionDto, DrillResultDto, TryoutResultDto } from './generated-types';
-import { DataState, LearningFrame, Status, StudentGate } from './ui';
+import { DataState, LearningFrame, Status, StudentGate, MathText } from './ui';
 import { useLearningView } from './learning-interactions';
 import { QUESTION_REPORT_CATEGORIES, ReportForm } from './support';
 
@@ -22,7 +22,13 @@ const labels = {
   unanswered: 'Tidak dijawab',
 } as const;
 
-export function QuestionReviewDetail({ question }: { question: ReviewedQuestionDto }) {
+export function QuestionReviewDetail({
+  question,
+  renderContent = (text) => <MathText value={text} />,
+}: {
+  question: ReviewedQuestionDto;
+  renderContent?: (text: string) => ReactNode;
+}) {
   const answer = answerOf(question);
   const key =
     question.answerKey ??
@@ -79,13 +85,7 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
         <div className="category-review-list">
           {question.options.map((statement) => (
             <section className="practice-statement" key={statement.id}>
-              <h3>
-                <AssessmentRichText
-                  value={statement.text}
-                  instanceId={question.questionInstanceId}
-                  phase="REVIEW"
-                />
-              </h3>
+              <h3>{renderContent(statement.text)}</h3>
               <p>
                 <strong>Jawabanmu: </strong>
                 {categoryText(
@@ -123,12 +123,7 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
             {selectedIds.length
               ? selectedIds.map((id) => (
                   <span className="review-option-text" key={id}>
-                    {id}.{' '}
-                    <AssessmentRichText
-                      value={optionText(id)}
-                      instanceId={question.questionInstanceId}
-                      phase="REVIEW"
-                    />
+                    {id}. {renderContent(optionText(id))}
                   </span>
                 ))
               : 'Tidak dijawab'}
@@ -137,12 +132,7 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
             <strong>Jawaban benar: </strong>
             {expectedIds.map((id) => (
               <span className="review-option-text" key={id}>
-                {id}.{' '}
-                <AssessmentRichText
-                  value={optionText(id)}
-                  instanceId={question.questionInstanceId}
-                  phase="REVIEW"
-                />
+                {id}. {renderContent(optionText(id))}
               </span>
             ))}
           </section>
@@ -163,11 +153,7 @@ export function QuestionReviewDetail({ question }: { question: ReviewedQuestionD
         <h3>
           <Icon name="info" width={18} height={18} /> Pembahasan Numora
         </h3>
-        <AssessmentRichText
-          value={question.explanation}
-          instanceId={question.questionInstanceId}
-          phase="REVIEW"
-        />
+        {renderContent(question.richExplanation?.text ?? question.explanation)}
       </section>
     </div>
   );
@@ -179,7 +165,11 @@ export function AssessmentExplanation({
   title,
   resultHref,
   report,
+  token,
+  attemptId,
 }: {
+  token?: string | undefined;
+  attemptId?: string | undefined;
   questions: ReviewedQuestionDto[];
   title: string;
   resultHref: string;
@@ -210,40 +200,15 @@ export function AssessmentExplanation({
       </p>
       <div className="practice-layout">
         <div className="practice-main">
-          <Card className="practice-question">
-            <div className="practice-question__tags">
-              <span>
-                Soal {index + 1} dari {questions.length}
-              </span>
-              <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
-            </div>
-            <h2 className="practice-stem">
-              <AssessmentRichText
-                value={question.stem}
-                instanceId={question.questionInstanceId}
-                phase="REVIEW"
-              />
-            </h2>
-            <QuestionChoices
-              renderContent={(value) => (
-                <AssessmentRichText
-                  value={value}
-                  instanceId={question.questionInstanceId}
-                  phase="REVIEW"
-                />
-              )}
-              kind={question.type ?? 'SINGLE_CHOICE'}
-              name={`review-${question.questionInstanceId}`}
-              options={question.options ?? []}
-              statements={question.options ?? []}
-              categories={question.categories ?? []}
-              value={choiceValue(answerOf(question))}
-              onChange={() => {}}
-              disabled
-            />
-            {report?.(question, index)}
-            <QuestionReviewDetail question={question} />
-          </Card>
+          <ExplanationQuestion
+            key={question.questionInstanceId}
+            question={question}
+            index={index}
+            total={questions.length}
+            token={token}
+            attemptId={attemptId}
+            report={report}
+          />
         </div>
         <aside className="practice-toolbar">
           <h2>Navigasi pembahasan</h2>
@@ -276,6 +241,67 @@ export function AssessmentExplanation({
   );
 }
 
+function ExplanationQuestion({
+  question,
+  index,
+  total,
+  token,
+  attemptId,
+  report,
+}: {
+  question: ReviewedQuestionDto;
+  index: number;
+  total: number;
+  token?: string | undefined;
+  attemptId?: string | undefined;
+  report?: ((question: ReviewedQuestionDto, index: number) => ReactNode) | undefined;
+}) {
+  const ids = [
+    ...new Set(
+      [question.stem, question.explanation, ...question.options.map((o) => o.text)].flatMap(
+        (text) => [...text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g)].map((m) => m[1]!),
+      ),
+    ),
+  ];
+  const media = useQuery({
+    queryKey: ['assessment-review-media', attemptId, question.questionInstanceId, ids],
+    enabled: !!token && !!attemptId && ids.length > 0,
+    queryFn: () =>
+      learningApi.media(token!, attemptId!, question.questionInstanceId, 'REVIEW', ids),
+    retry: false,
+  });
+  const renderContent = (text: string) => (
+    <ContentRichText
+      text={text}
+      media={media.data?.media ?? []}
+      retry={() => void media.refetch()}
+    />
+  );
+  return (
+    <Card className="practice-question">
+      <div className="practice-question__tags">
+        <span>
+          Soal {index + 1} dari {total}
+        </span>
+        <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
+      </div>
+      <h2 className="practice-stem">{renderContent(question.richStem?.text ?? question.stem)}</h2>
+      <QuestionChoices
+        kind={question.type ?? 'SINGLE_CHOICE'}
+        name={`review-${question.questionInstanceId}`}
+        options={question.options ?? []}
+        renderContent={renderContent}
+        statements={question.options ?? []}
+        categories={question.categories ?? []}
+        value={choiceValue(answerOf(question))}
+        onChange={() => {}}
+        disabled
+      />
+      {report?.(question, index)}
+      <QuestionReviewDetail question={question} renderContent={renderContent} />
+    </Card>
+  );
+}
 export function ExplanationScreen({ kind }: { kind: 'drill' | 'tryout' }) {
   const { attemptId } = useParams<{ attemptId: string }>();
   return (
@@ -352,6 +378,8 @@ function ExplanationData({
   const questions = 'questions' in query.data ? query.data.questions : query.data.explanation;
   return (
     <AssessmentExplanation
+      token={token}
+      attemptId={attemptId}
       questions={questions}
       title={kind === 'drill' ? 'Pembahasan Drill' : 'Pembahasan TryOut'}
       resultHref={resultHref}

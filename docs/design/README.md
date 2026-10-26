@@ -2,9 +2,14 @@
 
 **ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.
 
-**ENGINEERING DECISION — owner UI request, 7 October 2026:** all web pages use `#F3ECCB` as their outer page background through the shared `--color-bg` token. Cards, headers, hero panels, and state surfaces retain their semantic colors.
+**ENGINEERING DECISION — owner UI request, 7 October 2026:** the shared outer background token remains `#F3ECCB`; Content/Operations retain their owner-requested scoped grey AdminLTE canvas. Cards, headers, hero panels, and state surfaces retain their semantic colors.
 
 **ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.
+**ENGINEERING UPDATE — 7 October 2026, Operations redesign:** Admin Operasional now follows the Admin Content AdminLTE palette and shell, with compact school/credential panels and responsive user/class filters and details. Shared styling is opt-in for Content/Operations; Super keeps its previous theme. [Operations redesign and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md#redesign-adminlte).
+
+**ENGINEERING UPDATE — 7 October 2026:** Admin Operasional now opens Sekolah & credential directly. Ringkasan, Analytics and the large page banner are removed from its portal; Super Admin retains them. This presentation change preserves server permissions and stored data. [Operations UX scope and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md).
+
+**ENGINEERING UPDATE — 6 October 2026:** Admin Content, Data & Moderation uses the owner-supplied AdminLTE reference: white sidebar/topbar, purple accent, grey canvas, compact cards, deep-linked workbench tabs and readable version/report review. Content opens the bank; Ringkasan, Analytics and the large page banner remain removed. [UX scope and acceptance](ADMIN_CONTENT_UX_2026-10-06.md), [portable browser gallery](screenshots/admin-content/README.md). Operations/Super visual iterations and external release gates remain separate.
 
 **ENGINEERING DECISION — Aini, 5 October 2026:** remove the standalone development Admin mock and use the shared portal at `/admin`, internal login at `/admin/login`, and content tools under `/admin/content`. The `/admin/preview` frame mapping below is historical; that route no longer exists. Real unscored question preview remains part of the importer workflow. [Portal scope and validation](../development/ADMIN_PORTAL_2026-10-05.md).
 

@@ -1,7 +1,9 @@
 'use client';
+import { useAuth } from '@/features/onboarding/auth';
 import { Button } from '@tka/ui';
 import { useState, type FormEvent } from 'react';
 import { AdminConfirmButton } from './admin-confirm-button';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import { AdminEditorForm } from './admin-presentation';
 import {
   createChapter,
@@ -16,7 +18,26 @@ import { Field, field, type EditorProps } from './content-editor';
 import type { AdminTaxonDto } from './generated-types';
 
 export function Curriculum({ data, token, busy, run }: EditorProps) {
+  const { state } = useAuth();
+  const contentRole =
+    state.status === 'ready' && state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const [showAllDemos, setShowAllDemos] = useState(false);
   const [kind, setKind] = useState<AdminTaxonDto['kind']>('CHAPTER');
+  const demoIds = new Set(
+    data.curriculum.items
+      .filter((r) => r.code.startsWith('DEMO-') || r.code === 'NUMORA-PVP-DEMO-V1')
+      .map((r) => r.id),
+  );
+  // Level codes are numbers; inherit the fixture marker from their parent taxonomy.
+  for (let depth = 0; depth < 3; depth++) {
+    for (const r of data.curriculum.items)
+      if (r.parentId && demoIds.has(r.parentId)) demoIds.add(r.id);
+  }
+  let demoCount = 0;
+  const visibleItems = data.curriculum.items.filter(
+    (r) => !contentRole || showAllDemos || !demoIds.has(r.id) || ++demoCount <= 6,
+  );
+  const page = useAdminPagination(visibleItems, showAllDemos);
   const parents = data.curriculum.items.filter(
     (r) => r.kind === (kind === 'SUBCHAPTER' ? 'CHAPTER' : 'SUBCHAPTER'),
   );
@@ -101,7 +122,7 @@ export function Curriculum({ data, token, busy, run }: EditorProps) {
               name="order"
               type="number"
               min={1}
-              max={kind === 'LEVEL' ? 1000 : 100000}
+              max={kind === 'LEVEL' ? 5 : 100000}
               required
             />
           </Field>
@@ -110,13 +131,37 @@ export function Curriculum({ data, token, busy, run }: EditorProps) {
           Simpan draf materi
         </Button>
       </AdminEditorForm>
+      {contentRole && demoIds.size > 6 && (
+        <label className="admin-content-actions">
+          <input
+            type="checkbox"
+            checked={showAllDemos}
+            onChange={(e) => {
+              setShowAllDemos(e.target.checked);
+            }}
+          />
+          Tampilkan seluruh materi demo ({demoIds.size} entri)
+        </label>
+      )}
+      {contentRole && (
+        <p role="status">
+          {visibleItems.length} entri materi · 3 per halaman
+          {!showAllDemos && demoIds.size > 6 ? ' · Demo diringkas menjadi 6 entri.' : ''}
+        </p>
+      )}
       {!data.curriculum.items.length && <p>Belum ada materi. Mulai dengan Bab.</p>}
-      <ul className="monitoring-list">
-        {data.curriculum.items.map((r) => (
+      <ul className="monitoring-list" aria-label="Daftar materi">
+        {page.items.map((r) => (
           <li key={r.id} className="monitoring-notice admin-content-row">
             <strong>{r.name}</strong>
+            {contentRole && (
+              <span className="content-item-status" data-status={r.status}>
+                {r.status}
+              </span>
+            )}
             <small>
-              {r.kind} · {r.code} · {r.status} · Induk:{' '}
+              {r.kind} · {r.code}
+              {!contentRole && ` · ${r.status}`} · Induk:{' '}
               {data.curriculum.items.find((p) => p.id === r.parentId)?.name ?? '—'}
             </small>
             {r.kind === 'CHAPTER' && (
@@ -170,11 +215,12 @@ export function Curriculum({ data, token, busy, run }: EditorProps) {
           </li>
         ))}
       </ul>
+      <AdminPagination {...page.pagination} disabled={busy} label="Halaman materi" />
     </section>
   );
 }
 
-export function CategorySelect(props: React.ComponentProps<'select'>) {
+function CategorySelect(props: React.ComponentProps<'select'>) {
   return (
     <select {...props}>
       <option value="">Belum dipetakan</option>
