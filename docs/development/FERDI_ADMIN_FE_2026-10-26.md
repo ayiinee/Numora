@@ -62,13 +62,13 @@ Handoff must record task ID, old/new DRI, file area, branch/PR/SHA, sanitized re
 
 ### FD-05 shared component catalogue
 
-| Concern | Canonical implementation | Consumers and action |
-| --- | --- | --- |
-| Buttons, input/select, cards, badges | existing `@tka/ui` exports | Admin, Student, Teacher, PvP: retain APIs and tokens; no new library. |
-| Modal confirmation and focus | existing `Dialog` | Already used by Student, Teacher and PvP; Admin confirmation now composes it through local `AdminConfirmButton`, with pending/cancel/focus recovery. |
-| Loading and empty/error presentation | existing `Skeleton`, `EmptyState`, feature-specific state wrappers | Reuse primitives; retain domain-specific messages and recovery instead of forcing one universal fetch/error component. |
-| Pagination | local `AdminPagination` / `useAdminPagination` | School/token/upload/operational lists. Optional controlled offset supports URL state; fixed five-row policy stays out of shared UI. |
-| Toast/notices | existing inline status/alert notices | No new toast system; retain durable actionable errors. |
+| Concern                              | Canonical implementation                                           | Consumers and action                                                                                                                                 |
+| ------------------------------------ | ------------------------------------------------------------------ | ---------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Buttons, input/select, cards, badges | existing `@tka/ui` exports                                         | Admin, Student, Teacher, PvP: retain APIs and tokens; no new library.                                                                                |
+| Modal confirmation and focus         | existing `Dialog`                                                  | Already used by Student, Teacher and PvP; Admin confirmation now composes it through local `AdminConfirmButton`, with pending/cancel/focus recovery. |
+| Loading and empty/error presentation | existing `Skeleton`, `EmptyState`, feature-specific state wrappers | Reuse primitives; retain domain-specific messages and recovery instead of forcing one universal fetch/error component.                               |
+| Pagination                           | local `AdminPagination` / `useAdminPagination`                     | School/token/upload/operational lists. Optional controlled offset supports URL state; fixed five-row policy stays out of shared UI.                  |
+| Toast/notices                        | existing inline status/alert notices                               | No new toast system; retain durable actionable errors.                                                                                               |
 
 There is no shared package API/token/shell change in this increment. Consumer implementation stays with its current owner. A separate shared-package migration is unnecessary until a concrete duplicate remains; consumer regression is still required for Admin CSS extraction.
 
@@ -81,3 +81,24 @@ Next.js is locked to 16.3.6. Context7 exposed versions only through 16.2.9 for t
 - Workbench composition stays in `content.tsx`; report/history, packages, curriculum, and question/video panels move to adjacent feature modules. Shared editor fields and types stay local to Admin in `content-editor.tsx`.
 - Upload source/history presentation moves to `content-upload-panels.tsx`; display labels have one local module. Intake state, request handlers, optimistic revisions, media receipts, selection/order, retry keys and resume remain in the parent. Existing preview/mapping primitives remain canonical.
 - AST comparison against `14f4ab7` verified all 11 extracted function bodies unchanged. Admin component regression 83/83, web TypeScript and targeted ESLint passed. This increment changes no contract, permission or product rule. Large rewrites of the remaining intake orchestration are deferred.
+
+### FD-06 CSS increment — `refactor/ferdi-admin-styles`
+
+- Move the contiguous final section beginning `Internal content tools reuse Admin surfaces and assessment controls` from `numora.css` into `admin-content.css`. Root imports remain globals → numora → extracted Admin suffix → teacher, preserving the original order. Earlier shared/Admin shell rules remain in the composition stylesheet; no selector or asset was deleted.
+- CSS AST comparison confirms identical order and values for 7,368 nodes. Eight school/content screenshots are pixel-identical before/after at 320/390/768/1440. Importer source/history was also checked at all four sizes. [Portable synthetic gallery](../design/screenshots/ferdi-admin/README.md).
+- Final scoped Chromium check: 20/20 passed (14 Ferdi cases, 2 Student Home, 2 Teacher flow, 2 PvP). Separately, the existing upload suite passed 4 Drill/Pretest cases; 2 Tryout cases failed on legacy publication-label/indicator expectations. The current intake already uses `Publish sekarang` for immediate Tryout publication; that flow was not changed by these increments. RY-03/TG-03 must reconcile those expectations and any policy/document drift before full Admin acceptance. Tests were not skipped or edited to conceal this gap.
+
+| File               | Baseline bytes | Measured bytes after extraction |
+| ------------------ | -------------: | ------------------------------: |
+| content.tsx        |         61,301 |                          26,456 |
+| content-import.tsx |         47,966 |                          39,780 |
+| numora.css         |        204,714 |                         189,345 |
+| admin-content.css  |              — |                          14,764 |
+
+This measures responsibility/file placement, not a runtime speed improvement. Total CSS rules and values are unchanged.
+
+### Environment and remaining gates
+
+The first `pnpm run ci` attempt passed script checks, 12 contract schemas, generated types and root lint, then failed in database typecheck with `FATAL ERROR: Zone Allocation failed - process out of memory`. C: also had approximately 290 MB free. Automatic approval review rejected recursive deletion of generated Next caches, including a narrower cache-only request. The non-destructive fallback compressed ignored, inactive Next outputs with Windows `compact`; no source, fixture, `.tmp`, account, schema or cloud data was deleted. Subsequent gates run serially to limit memory pressure.
+
+All six packages remain pending independent review/acceptance. TG-01/02/03 handoff, expanded backend-dependent readers, legacy Tryout/browser alignment, connected Development/Auth/media/generator acceptance and production/release approval remain external gates. Account management/invite/recovery and large P2 refactors remain deferred. No cloud migration, seed, publication or deployment was performed.

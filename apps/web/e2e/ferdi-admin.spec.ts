@@ -4,6 +4,30 @@ import { resolve } from 'node:path';
 import { id, setup } from './fixtures/admin';
 
 for (const width of [320, 390, 768, 1440]) {
+  test(`Ferdi importer source and history layout at ${width}px`, async ({ page }) => {
+    await page.setViewportSize({ width, height: 900 });
+    const { errors } = await setup(page);
+    await page.route('**/api/v1/admin/content/uploads?*', (route) =>
+      route.fulfill({ json: { items: [], total: 0 } }),
+    );
+    await page.goto('/admin/content/imports');
+    await expect(page.getByRole('heading', { name: '1. Upload Excel', exact: true })).toBeVisible();
+    await expect(page.getByLabel('File soal Excel')).toBeEnabled();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    const out = resolve(`../../.tmp/ferdi-admin/${process.env.NUMORA_FERDI_EVIDENCE ?? 'before'}`);
+    await mkdir(out, { recursive: true });
+    await page.screenshot({
+      path: resolve(out, `import-${width}.png`),
+      fullPage: true,
+      animations: 'disabled',
+      style: 'nextjs-portal {visibility:hidden !important;}',
+    });
+    await page.getByRole('button', { name: 'Riwayat unggahan', exact: true }).click();
+    await expect(page.getByText('Belum ada unggahan yang sesuai filter.')).toBeVisible();
+    expect(errors).toEqual([]);
+  });
   test(`Ferdi Admin school search, URL recovery and confirmation at ${width}px`, async ({
     page,
   }) => {
