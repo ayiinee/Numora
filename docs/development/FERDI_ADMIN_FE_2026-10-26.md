@@ -75,3 +75,9 @@ There is no shared package API/token/shell change in this increment. Consumer im
 ### Documentation sources
 
 Next.js is locked to 16.3.6. Context7 exposed versions only through 16.2.9 for this lookup. Its native History API guidance was cross-checked against the installed 16.3.6 documentation in `next/dist/docs/01-app/01-getting-started/04-linking-and-navigating.md`. The URL helper uses native history and `popstate`, with an SSR snapshot that prevents unfiltered initial data requests during hydration.
+
+### FD-04 component increment — `refactor/ferdi-admin-components`
+
+- Workbench composition stays in `content.tsx`; report/history, packages, curriculum, and question/video panels move to adjacent feature modules. Shared editor fields and types stay local to Admin in `content-editor.tsx`.
+- Upload source/history presentation moves to `content-upload-panels.tsx`; display labels have one local module. Intake state, request handlers, optimistic revisions, media receipts, selection/order, retry keys and resume remain in the parent. Existing preview/mapping primitives remain canonical.
+- AST comparison against `14f4ab7` verified all 11 extracted function bodies unchanged. Admin component regression 83/83, web TypeScript and targeted ESLint passed. This increment changes no contract, permission or product rule. Large rewrites of the remaining intake orchestration are deferred.
