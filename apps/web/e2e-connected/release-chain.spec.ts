@@ -179,17 +179,25 @@ test.describe.serial('JOB-06 connected release chain', () => {
   }) => {
     const admin = await login(browser, 'admin');
     await admin.goto('/admin/schools');
-    await admin
+    await admin.getByRole('button', { name: 'Tambah sekolah', exact: true }).click();
+    const schoolForm = admin.getByRole('dialog', { name: 'Tambah sekolah', exact: true });
+    await schoolForm
       .getByRole('textbox', { name: 'Kode sekolah', exact: true })
       .fill(`JOB06-${Date.now()}`);
-    await admin
+    await schoolForm
       .getByRole('textbox', { name: 'Nama sekolah', exact: true })
       .fill('JOB06 Test School');
+    await schoolForm.getByLabel('Alamat sekolah', { exact: false }).fill('Jalan JOB06 Test');
     const created = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/schools'),
     );
-    await admin.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
-    school = (await (await created).json()) as AdminSchoolDto;
+    await schoolForm.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
+    const schoolResponse = await created;
+    expect(schoolResponse.status()).toBe(201);
+    school = (await schoolResponse.json()) as AdminSchoolDto;
+    expect(school).toMatchObject({ name: 'JOB06 Test School', address: 'Jalan JOB06 Test' });
+    await expect(schoolForm).toHaveCount(0);
+    await expect(admin.getByRole('heading', { name: school.name, exact: true })).toBeVisible();
     const issued = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/teacher-tokens'),
     );
