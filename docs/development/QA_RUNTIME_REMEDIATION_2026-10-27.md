@@ -83,6 +83,12 @@ Its leaderboard assertion follows the approved compact UI heading, selected
 difficulty, own rank and displayed points. DEMO separation remains asserted on
 the API result and projection; the old `Leaderboard PvP DEMO` heading is no longer
 part of the current presentation contract.
+Both scenario and PvP harnesses share the versioned synthetic READY Drill pool
+helper in `packages/testing`. The old bootstrap demo uses a legacy policy and
+does not itself satisfy current Drill start requirements. The helper creates
+new reviewed versions/packages, retains old pins, and rejects a non-local or
+mismatched actual client/database before writing. Three guard tests cover these
+boundaries. This is isolated fixture preparation, not academic publication.
 
 New verification is linked to SIS-001 optimization run
 `5a091494-b077-4a09-95aa-8f06ac18ea21`; its PASS volume/load and FAIL audit are

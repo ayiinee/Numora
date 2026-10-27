@@ -1,3 +1,4 @@
+import { seedReadyDrillFixture } from '../../packages/testing/ready-drill-fixture.mjs';
 // Test-only harness. Production entrypoints never import this file.
 import { createServer } from 'node:http';
 import { randomUUID } from 'node:crypto';
@@ -98,54 +99,11 @@ for (const [name, role] of [
   ['admin', 'ADMIN'],
 ])
   await actor(name, role);
-const [policy] = await client.unsafe(
-  "select id from scoring_policy_versions where policy_code='DRILL_PRD_V06' and version=1 and status='PUBLISHED'",
-);
-if (!policy) throw new Error('DRILL_POLICY_FIXTURE_MISSING');
-const versions = [];
-for (let i = 0; i < 10; i++) {
-  const sourceId = '00000000-0000-4000-8000-' + String(301 + i * 2).padStart(12, '0');
-  const [source] = await client.unsafe('select * from question_versions where id=$1', [sourceId]);
-  if (!source) throw new Error('DEMO_QUESTION_FIXTURE_MISSING');
-  const [latest] = await client.unsafe(
-    'select max(version_number)::integer as n from question_versions where variant_id=$1',
-    [source.variant_id],
-  );
-  const id = randomUUID();
-  await client.unsafe(
-    'insert into question_versions(id,variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,difficulty,content_status,reviewed_by_user_id,reviewed_at) values($1,$2,$3,$4,$5::text::jsonb,$6::text::jsonb,$7::text::jsonb,$8::text::jsonb,$9,$10,$11,now())',
-    [
-      id,
-      source.variant_id,
-      latest.n + 1,
-      source.question_type,
-      JSON.stringify(source.stem),
-      JSON.stringify(source.options_or_statements),
-      JSON.stringify(source.answer_key),
-      JSON.stringify(source.explanation),
-      source.difficulty,
-      'READY',
-      actors.admin.profileId,
-    ],
-  );
-  versions.push(id);
-}
-await client.unsafe(
-  "update assessment_packages set status='ARCHIVED' where level_id=any($1::uuid[]) and status='PUBLISHED'",
-  [[ids.levelOne, ids.levelTwo]],
-);
-for (const level of [ids.levelOne, ids.levelTwo]) {
-  const id = randomUUID();
-  await client.unsafe(
-    "insert into assessment_packages(id,family_code,package_version,name,assessment_type,chapter_id,level_id,variant_index,is_demo,scoring_policy_version_id,release_at,status) values($1,$2,1,$3,'DRILL',$4,$5,1,true,$6,now(),'PUBLISHED')",
-    [id, 'QA-' + id, 'TEST ONLY QA Drill', ids.chapter, level, policy.id],
-  );
-  for (let i = 0; i < versions.length; i++)
-    await client.unsafe(
-      'insert into package_items(package_id,question_version_id,display_order,max_points) values($1,$2,$3,1)',
-      [id, versions[i], i + 1],
-    );
-}
+await seedReadyDrillFixture(client, {
+  reviewerId: actors.admin.profileId,
+  levelIds: [ids.levelOne, ids.levelTwo],
+  testDatabaseUrl: environment.TEST_DATABASE_URL,
+});
 const authServer = createServer(async (req, res) => {
   res.setHeader('Access-Control-Allow-Origin', 'http://localhost:3500');
   res.setHeader(
