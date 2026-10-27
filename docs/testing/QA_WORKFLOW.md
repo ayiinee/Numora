@@ -69,3 +69,11 @@ Setiap eksperimen volume, velocity, variety dan recovery membuat clone database 
 Consumer diperiksa dalam batch kecil agar batas drain diperiksa berkala. Backlog yang belum habis pada batas eksperimen dilaporkan Blocked/incomplete, bukan kehilangan data. Cleanup memverifikasi nama parent, clone dan restore terhadap identitas run. Server fixture/API test-only bind ke loopback IPv4 untuk kompatibilitas browser, Node dan k6 pada Windows.
 
 Mode build low-memory menggunakan pilihan yang memang sudah disediakan next.config.ts; hasil dan fingerprint mencatat konfigurasi itu. Ini bukan pengukuran kapasitas produksi.
+
+## Regresi optimasi SIS-001 — 27 Oktober 2026
+
+ENGINEERING DECISION — implementasi optimasi yang diminta pengguna: worker memproses maksimal sepuluh event per statement atomik, dengan rollback kelompok dan fallback per event bila terjadi kegagalan. Limit publik, retry cooldown, SKIP LOCKED dan deduplikasi tetap berlaku. Ukur jumlah statement serta event yang benar-benar diakui; jangan mengasumsikan satu BEGIN eksplisit untuk setiap event atau menambah limit untuk menyatakan lulus.
+
+Pembentukan hasil Drill memakai satu projection untuk metadata, reward, hitungan dan soal. Pencatatan delivery tetap setelah commit dan kegagalannya tetap terlihat. Autentikasi dan rekomendasi merupakan query terpisah. Verifikasi kesetaraan DTO, reward historis/legacy, ownership, rollback dan retry melalui tes database nyata sebelum membandingkan latensi.
+
+Runner diagnostik harus mengambil akar repository aktif dari cwd dan memvalidasi guard lokal; jangan memakai path checkout lama yang tertanam di skrip investigasi. Simpan ID attempt untuk memisahkan respons yang diakui klien dari status GRADED. Tes tambahan di luar manifest yang kehilangan fixture tetap dicatat BLOCKED/NOT_RUN secara terpisah, tanpa mengubah kelulusan kasus wajib atau menyatakan seluruh suite lulus.

@@ -1,0 +1,15 @@
+{
+  "reviewId": "DEP-20261027-SIS001-OPT",
+  "sourceRunId": "5a091494-b077-4a09-95aa-8f06ac18ea21",
+  "triage": "COMPLETE",
+  "remediation": "NOT_RUN",
+  "protectedHashes": "PASS",
+  "files": {
+    "audit-full.json": "469d5befc539460ad3a45d88dd736b7a9e01830e1db87495b28cb92ffa4ec2d5",
+    "audit-production.json": "6403017987f9f1410a50ca8f61b85d5714c140253a9635b8b5b9492aeaf74a18",
+    "README.md": "4e635467d36f02b2e07ef1fdc9e701a671480b249dee3df858517bdb24cf1bec",
+    "registry-metadata.json": "5af46521b79faef8b2c4c2188e229db50ab9db1918b7f742cddf4dff3813a419",
+    "REMEDIATION_PLAN.md": "4e3f6815ed0435535b0c6153234d471e5bde9c1329257a132a1a7188feab3128",
+    "triage.json": "5d2e8ab25713064fcb1dcc34361edc35de6dca1b0d9c22ead33ef5273ef518e1"
+  }
+}

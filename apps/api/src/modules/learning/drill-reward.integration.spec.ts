@@ -252,6 +252,18 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     ]);
     expect(result.reward).toEqual(replay.reward);
     expect(result).toMatchObject({ score: 80, stars: 2, reward: { baseXp: 80, policyVersion: 2 } });
+    // Auth is a fixture here: count only the result projection and delivery statement.
+    const resultQueries = vi.spyOn(getDatabase().client, 'unsafe');
+    try {
+      expect(await service.result('student', attempt.id)).toEqual(result);
+      expect(resultQueries.mock.calls).toHaveLength(2);
+      expect(result.questions).toHaveLength(10);
+      expect(new Set(result.questions.map((question) => question.questionInstanceId)).size).toBe(
+        10,
+      );
+    } finally {
+      resultQueries.mockRestore();
+    }
     expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(
       1,
     );
@@ -298,6 +310,51 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
       questions: [],
     });
     vi.useRealTimers();
+    // Delivery errors remain visible after the independent grading transaction commits.
+    const deliveryAttempt = await service.start('student', level!.id);
+    const deliveryTrigger = `test_delivery_${suffix.replaceAll('-', '')}`;
+    await db.execute(
+      sql.raw(`create function ${deliveryTrigger}() returns trigger language plpgsql as $$ begin
+      if NEW.idempotency_key='${deliveryAttempt.id}:EXPLANATION_PAYLOAD_ISSUED' then raise exception 'TEST ONLY delivery unavailable'; end if; return NEW; end $$`),
+    );
+    await db.execute(
+      sql.raw(
+        `create trigger ${deliveryTrigger} before insert on content_delivery_manifests for each row execute function ${deliveryTrigger}()`,
+      ),
+    );
+    try {
+      await expect(service.submit('student', deliveryAttempt.id)).rejects.toThrow();
+      expect(
+        (
+          await db
+            .select()
+            .from(assessmentAttempts)
+            .where(eq(assessmentAttempts.id, deliveryAttempt.id))
+        )[0]?.status,
+      ).toBe('GRADED');
+      expect(
+        await db.select().from(xpLedger).where(eq(xpLedger.attemptId, deliveryAttempt.id)),
+      ).toHaveLength(1);
+      expect(
+        await db
+          .select()
+          .from(analyticsOutbox)
+          .where(
+            and(
+              eq(analyticsOutbox.entityId, deliveryAttempt.id),
+              eq(analyticsOutbox.eventName, 'drill_completed'),
+            ),
+          ),
+      ).toHaveLength(1);
+    } finally {
+      await db.execute(sql.raw(`drop trigger ${deliveryTrigger} on content_delivery_manifests`));
+      await db.execute(sql.raw(`drop function ${deliveryTrigger}()`));
+    }
+    const recovered = await service.result('student', deliveryAttempt.id);
+    expect(await service.submit('student', deliveryAttempt.id)).toEqual(recovered);
+    expect(
+      await db.select().from(xpLedger).where(eq(xpLedger.attemptId, deliveryAttempt.id)),
+    ).toHaveLength(1);
     // Production-equivalent RLS/grants with a separate LOGIN, never the migration owner.
     const role = `drill_main_${suffix.replaceAll('-', '')}`;
     const password = randomUUID();

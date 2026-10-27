@@ -1,4 +1,9 @@
 import assert from 'node:assert/strict';
+import {
+  drainVolumeQueue,
+  runVolumeStages,
+  summarizeChecks,
+} from '../../scripts/qa/volume-flow.mjs';
 import { createFaultProxy as proxy } from '../../scripts/qa/fault-proxy.mjs';
 import { spawn } from 'node:child_process';
 import { randomUUID } from 'node:crypto';
@@ -57,6 +62,7 @@ async function verify(name, fn) {
       reason: sanitize(error.message).slice(0, 1200),
     });
   }
+  return checks.at(-1);
 }
 async function insert(count, payloadFactory = (index) => ({ fixture: true, index })) {
   for (let offset = 0; offset < count; offset += 1000) {
@@ -80,6 +86,13 @@ async function snapshot() {
     [type],
   );
   return row;
+}
+async function hasPending() {
+  const [row] = await sql.unsafe(
+    'select exists(select 1 from analytics_outbox where entity_type=$1 and processed_at is null) as pending',
+    [type],
+  );
+  return row.pending;
 }
 async function reconcile(expected) {
   const [row] = await sql.unsafe(
@@ -112,23 +125,49 @@ async function drain() {
 let worker;
 try {
   if (mode === 'volume') {
+    assert.match(process.env.QA_RUN_ID ?? '', /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i);
     let cumulative = 0;
-    for (const count of config.volume)
-      await verify('volume-' + count + '-event-identity-and-payload', async () => {
+    metrics.experiment = 'cumulative-stop-on-first-incomplete';
+    metrics.drainBudgetMs = config.drainTimeoutSeconds * 1000;
+    metrics.snapshotIntervalMs = 1000;
+    metrics.backlogSamples = [];
+    const stages = await runVolumeStages(config.volume, async ({ count, name }) => {
+      const stageId = randomUUID();
+      const sample = { stageId, count, cumulativeBefore: cumulative };
+      metrics.samples.push(sample);
+      return verify(name, async () => {
         const start = performance.now();
-        await insert(count);
-        cumulative += count;
-        const insertedMs = performance.now() - start;
-        await drain();
-        metrics.samples.push({
-          count,
-          insertedMs,
-          elapsedMs: performance.now() - start,
-          ...(await reconcile(cumulative)),
-          memoryBytes: process.memoryUsage().rss,
-          cpu: process.cpuUsage(),
-        });
+        try {
+          await insert(count, (index) => ({
+            fixture: true,
+            index,
+            stageId,
+            stageSize: count,
+            runId: process.env.QA_RUN_ID,
+          }));
+          cumulative += count;
+          sample.insertedMs = performance.now() - start;
+          sample.cumulativeInserted = cumulative;
+          sample.drain = await drainVolumeQueue({
+            budgetMs: metrics.drainBudgetMs,
+            sampleIntervalMs: metrics.snapshotIntervalMs,
+            pending: hasPending,
+            drainBatch: drainOutboxBatch,
+            snapshot,
+            onSnapshot: (state) => {
+              metrics.backlogSamples.push({ stageId, ...state });
+              if (state.final) metrics.remainingBacklog = state;
+            },
+          });
+          Object.assign(sample, await reconcile(cumulative));
+        } finally {
+          sample.elapsedMs = performance.now() - start;
+          sample.memoryBytes = process.memoryUsage().rss;
+          sample.cpu = process.cpuUsage();
+        }
       });
+    });
+    checks.push(...stages.filter((stage) => stage.status === 'NOT_RUN'));
   } else if (mode === 'velocity') {
     worker = spawn(process.execPath, [resolve(root, 'qa/runtime/consume.mjs')], {
       cwd: root,
@@ -379,16 +418,12 @@ try {
   if (worker) terminate(worker);
   await sql.end({ timeout: 2 });
   await closeDatabaseConnection();
-  const failed = checks.filter((c) => c.status === 'FAIL').length;
-  const blocked = checks.filter((c) => c.status === 'BLOCKED').length;
+  const summary = summarizeChecks(checks);
   writeJson(output, {
-    passed: checks.length - failed - blocked,
-    blocked,
-    failed,
-    skipped: 0,
-    total: checks.length,
+    ...summary,
     checks,
     metrics,
   });
-  if (failed || blocked) process.exitCode = failed ? 1 : 2;
+  if (summary.failed || summary.blocked || summary.skipped)
+    process.exitCode = summary.failed ? 1 : 2;
 }

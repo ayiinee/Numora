@@ -1,0 +1,770 @@
+{
+  "finishedAt": "2026-10-27T14:04:27.375Z",
+  "sessionId": "05b7d54a-a708-400b-a8ac-0085f1f39f8c",
+  "runId": "5a091494-b077-4a09-95aa-8f06ac18ea21",
+  "parentRunId": "581a3c97-fe69-40d3-af72-576b22033593",
+  "branch": "feat/qa-scenario-workflow",
+  "identity": {
+    "sha": "598ab47bcba7d79bae9c170b18ee394878397bb5",
+    "dirty": true,
+    "codeHash": "26abc0fa083b5cb85528d33d31b915331c382e6cab89451333b52c53b828a5b2",
+    "rulesHash": "7ccaa15536697ad33e0adba7746b08d5871a774827d5b97e31648b8f8a4f7563",
+    "configHash": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "workerRegression": {
+    "status": "PASS",
+    "reason": null,
+    "observedTests": 25,
+    "passed": 25,
+    "failed": 0,
+    "skipped": 0,
+    "total": 25
+  },
+  "apiSweep": {
+    "status": "BLOCKED",
+    "reason": "EXTERNAL_ACADEMIC_WORKBOOK_FIXTURE_MISSING_OUTSIDE_SIS001",
+    "observedTests": 238,
+    "passed": 237,
+    "failed": 0,
+    "skipped": 1,
+    "total": 238,
+    "skippedCases": [
+      {
+        "file": "D:/Dev/Numora/apps/api/src/modules/content/excel-import.spec.ts",
+        "name": "Excel import at the trust boundary reads the supplied academic workbooks without discarding unresolved metadata"
+      }
+    ]
+  },
+  "requiredLearningRegression": {
+    "status": "PASS",
+    "reason": null,
+    "observedTests": 42,
+    "passed": 42,
+    "failed": 0,
+    "skipped": 0,
+    "total": 42
+  },
+  "workflow": {
+    "total": 39,
+    "passed": 39,
+    "failed": 0
+  },
+  "profiles": {
+    "id": "6975597c-3896-44ab-9479-ee890c04271f",
+    "worker": [
+      {
+        "queueSize": 1000,
+        "processed": 200,
+        "elapsedMs": 217.77689999999984,
+        "perEventMs": 1.0888844999999991,
+        "atomicStatements": 20,
+        "explicitBeginCalls": 0,
+        "batchTimingMs": {
+          "n": 20,
+          "mean": 10.146344999999974,
+          "p50": 8.158500000000004,
+          "p95": 40.81140000000005,
+          "max": 40.81140000000005
+        },
+        "integrity": {
+          "source": 1000,
+          "delivered": 200,
+          "processed": 200,
+          "mismatch": 0
+        }
+      },
+      {
+        "queueSize": 10000,
+        "processed": 200,
+        "elapsedMs": 1368.9204,
+        "perEventMs": 6.844602,
+        "atomicStatements": 20,
+        "explicitBeginCalls": 0,
+        "batchTimingMs": {
+          "n": 20,
+          "mean": 67.55381500000003,
+          "p50": 71.14549999999963,
+          "p95": 79.58870000000024,
+          "max": 79.58870000000024
+        },
+        "integrity": {
+          "source": 10000,
+          "delivered": 200,
+          "processed": 200,
+          "mismatch": 0
+        }
+      },
+      {
+        "queueSize": 100000,
+        "processed": 200,
+        "elapsedMs": 81.25640000000021,
+        "perEventMs": 0.4062820000000011,
+        "atomicStatements": 20,
+        "explicitBeginCalls": 0,
+        "batchTimingMs": {
+          "n": 20,
+          "mean": 3.528195000000005,
+          "p50": 2.3350000000000364,
+          "p95": 20.104599999999664,
+          "max": 20.104599999999664
+        },
+        "integrity": {
+          "source": 100000,
+          "delivered": 200,
+          "processed": 200,
+          "mismatch": 0
+        }
+      }
+    ],
+    "waves": [
+      {
+        "concurrency": 10,
+        "statuses": {
+          "201": 10
+        },
+        "clientMs": {
+          "n": 10,
+          "mean": 295.10597999999953,
+          "p50": 309.4939000000013,
+          "p95": 320.677300000003,
+          "max": 320.677300000003
+        },
+        "resultMs": {
+          "n": 10,
+          "mean": 34.235469999999985,
+          "p50": 37.031299999999646,
+          "p95": 46.237200000000485,
+          "max": 46.237200000000485
+        },
+        "integrity": {
+          "attempts": 10,
+          "graded": 10,
+          "broken_ledger": 0,
+          "broken_outbox": 0
+        },
+        "retry": {
+          "attemptId": "b0b7dac4-d89a-4d24-8590-1d7070255316",
+          "status": 201,
+          "ms": 16.636099999996077
+        },
+        "resultStatements": {
+          "select": 11,
+          "record_assessment_delivery": 11
+        }
+      },
+      {
+        "concurrency": 250,
+        "statuses": {
+          "201": 250
+        },
+        "clientMs": {
+          "n": 250,
+          "mean": 6302.0461696,
+          "p50": 6556.664199999999,
+          "p95": 6816.155599999998,
+          "max": 6834.037600000011
+        },
+        "resultMs": {
+          "n": 250,
+          "mean": 2561.9652640000004,
+          "p50": 2404.329000000005,
+          "p95": 4418.227200000001,
+          "max": 4590.658799999997
+        },
+        "integrity": {
+          "attempts": 250,
+          "graded": 250,
+          "broken_ledger": 0,
+          "broken_outbox": 0
+        },
+        "retry": {
+          "attemptId": "b3674e04-28c5-4687-8501-d76a7ecd22d3",
+          "status": 201,
+          "ms": 23.64890000000014
+        },
+        "resultStatements": {
+          "select": 251,
+          "record_assessment_delivery": 251
+        }
+      }
+    ]
+  },
+  "full": {
+    "verdict": "FAIL",
+    "checks": [
+      {
+        "id": "quality",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 5
+      },
+      {
+        "id": "rewards",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 12
+      },
+      {
+        "id": "components",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 29
+      },
+      {
+        "id": "persistence",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 1
+      },
+      {
+        "id": "connected",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 4
+      },
+      {
+        "id": "accessibility",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 3
+      },
+      {
+        "id": "variety",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 9
+      },
+      {
+        "id": "recovery",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 6
+      },
+      {
+        "id": "velocity",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 5
+      },
+      {
+        "id": "volume",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 3
+      },
+      {
+        "id": "load",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 3
+      },
+      {
+        "id": "dependencies",
+        "status": "FAIL",
+        "reason": "DEPENDENCY_VULNERABILITIES_REQUIRE_TRIAGE",
+        "observedTests": 1
+      },
+      {
+        "id": "manual-keyboard",
+        "status": "NOT_RUN",
+        "reason": "HUMAN_KEYBOARD_AND_USABILITY_REVIEW_REQUIRED",
+        "observedTests": 0
+      }
+    ],
+    "executionSeconds": 844.987,
+    "volume": {
+      "passed": 3,
+      "failed": 0,
+      "blocked": 0,
+      "skipped": 0,
+      "total": 3,
+      "checks": [
+        {
+          "name": "volume-1000-event-identity-and-payload",
+          "status": "PASS"
+        },
+        {
+          "name": "volume-10000-event-identity-and-payload",
+          "status": "PASS"
+        },
+        {
+          "name": "volume-100000-event-identity-and-payload",
+          "status": "PASS"
+        }
+      ],
+      "metrics": {
+        "mode": "volume",
+        "source": "direct-outbox-not-http",
+        "samples": [
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "count": 1000,
+            "cumulativeBefore": 0,
+            "insertedMs": 116.81269999999995,
+            "cumulativeInserted": 1000,
+            "drain": {
+              "total": 1000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 102,
+              "elapsedMs": 515.8399
+            },
+            "source": 1000,
+            "delivered": 1000,
+            "mismatch": 0,
+            "p50_ms": 482.3585,
+            "p95_ms": 615.8774999999999,
+            "p99_ms": 624.5391,
+            "elapsedMs": 640.9464,
+            "memoryBytes": 101396480,
+            "cpu": {
+              "user": 375000,
+              "system": 218000
+            }
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "count": 10000,
+            "cumulativeBefore": 1000,
+            "insertedMs": 279.38970000000006,
+            "cumulativeInserted": 11000,
+            "drain": {
+              "total": 11000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 1000,
+              "elapsedMs": 3947.5901000000003
+            },
+            "source": 11000,
+            "delivered": 11000,
+            "mismatch": 0,
+            "p50_ms": 1381.933,
+            "p95_ms": 3712.6765999999966,
+            "p99_ms": 3928.6257400000004,
+            "elapsedMs": 4264.6886,
+            "memoryBytes": 132263936,
+            "cpu": {
+              "user": 1390000,
+              "system": 437000
+            }
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "count": 100000,
+            "cumulativeBefore": 11000,
+            "insertedMs": 5810.8589,
+            "cumulativeInserted": 111000,
+            "drain": {
+              "total": 111000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 10000,
+              "elapsedMs": 29002.4732
+            },
+            "source": 111000,
+            "delivered": 111000,
+            "mismatch": 0,
+            "p50_ms": 15015.567,
+            "p95_ms": 27371.47874999997,
+            "p99_ms": 28880.216889999996,
+            "elapsedMs": 35224.865699999995,
+            "memoryBytes": 191651840,
+            "cpu": {
+              "user": 7484000,
+              "system": 2343000
+            }
+          }
+        ],
+        "experiment": "cumulative-stop-on-first-incomplete",
+        "drainBudgetMs": 120000,
+        "snapshotIntervalMs": 1000,
+        "backlogSamples": [
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "total": 1000,
+            "pending": 1000,
+            "oldest_seconds": 0.118807,
+            "elapsedMs": 3.4991999999999734,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "total": 1000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 515.8138,
+            "batches": 102,
+            "final": true
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 10000,
+            "oldest_seconds": 0.280677,
+            "elapsedMs": 3.903099999999995,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 6020,
+            "oldest_seconds": 1.182192,
+            "elapsedMs": 1006.7197999999999,
+            "batches": 398,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 3850,
+            "oldest_seconds": 2.109907,
+            "elapsedMs": 2014.6299,
+            "batches": 615,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 1810,
+            "oldest_seconds": 3.067388,
+            "elapsedMs": 3021.6175000000003,
+            "batches": 819,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 3947.5728,
+            "batches": 1000,
+            "final": true
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 100000,
+            "oldest_seconds": 5.813329,
+            "elapsedMs": 83.10000000000036,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 97250,
+            "oldest_seconds": 6.7151,
+            "elapsedMs": 1071.9230000000007,
+            "batches": 275,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 93250,
+            "oldest_seconds": 7.63246,
+            "elapsedMs": 2147.8897000000015,
+            "batches": 675,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 87430,
+            "oldest_seconds": 8.465886,
+            "elapsedMs": 3210.9871000000003,
+            "batches": 1257,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 82330,
+            "oldest_seconds": 8.977285,
+            "elapsedMs": 4287.4835,
+            "batches": 1767,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 77860,
+            "oldest_seconds": 9.890753,
+            "elapsedMs": 5358.3945,
+            "batches": 2214,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 75520,
+            "oldest_seconds": 10.731032,
+            "elapsedMs": 6467.0604,
+            "batches": 2448,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 72670,
+            "oldest_seconds": 11.587116,
+            "elapsedMs": 7534.4635,
+            "batches": 2733,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 69460,
+            "oldest_seconds": 12.589601,
+            "elapsedMs": 8584.1206,
+            "batches": 3054,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 66260,
+            "oldest_seconds": 13.03967,
+            "elapsedMs": 9647.5718,
+            "batches": 3374,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 61730,
+            "oldest_seconds": 13.995297,
+            "elapsedMs": 10696.8173,
+            "batches": 3827,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 57560,
+            "oldest_seconds": 14.745857,
+            "elapsedMs": 11771.6683,
+            "batches": 4244,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 53320,
+            "oldest_seconds": 15.37034,
+            "elapsedMs": 12828.826600000002,
+            "batches": 4668,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 50080,
+            "oldest_seconds": 16.187046,
+            "elapsedMs": 13895.3556,
+            "batches": 4992,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 46570,
+            "oldest_seconds": 16.990955,
+            "elapsedMs": 14960.0361,
+            "batches": 5343,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 43290,
+            "oldest_seconds": 17.810295,
+            "elapsedMs": 16052.164900000002,
+            "batches": 5671,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 38960,
+            "oldest_seconds": 18.504507,
+            "elapsedMs": 17120.076999999997,
+            "batches": 6104,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 33750,
+            "oldest_seconds": 19.433841,
+            "elapsedMs": 18195.929799999998,
+            "batches": 6625,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 31110,
+            "oldest_seconds": 20.450171,
+            "elapsedMs": 19270.296500000004,
+            "batches": 6889,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 27840,
+            "oldest_seconds": 21.402673,
+            "elapsedMs": 20342.458100000003,
+            "batches": 7216,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 24350,
+            "oldest_seconds": 22.335344,
+            "elapsedMs": 21426.581899999997,
+            "batches": 7565,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 20320,
+            "oldest_seconds": 23.297436,
+            "elapsedMs": 22504.331,
+            "batches": 7968,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 15660,
+            "oldest_seconds": 24.208311,
+            "elapsedMs": 23591.149299999997,
+            "batches": 8434,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 11160,
+            "oldest_seconds": 25.157286,
+            "elapsedMs": 24699.6751,
+            "batches": 8884,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 8710,
+            "oldest_seconds": 26.1706,
+            "elapsedMs": 25800.007100000003,
+            "batches": 9129,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 5910,
+            "oldest_seconds": 27.185278,
+            "elapsedMs": 26877.612800000003,
+            "batches": 9409,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 3060,
+            "oldest_seconds": 28.206001,
+            "elapsedMs": 27954.258,
+            "batches": 9694,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 29002.4507,
+            "batches": 10000,
+            "final": true
+          }
+        ],
+        "remainingBacklog": {
+          "total": 111000,
+          "pending": 0,
+          "oldest_seconds": 0,
+          "elapsedMs": 29002.4507,
+          "batches": 10000,
+          "final": true
+        }
+      }
+    },
+    "volumeReconciliation": {
+      "source": 111000,
+      "delivered": 111000,
+      "pending": 0,
+      "processed_without_analytics": 0,
+      "mismatch": 0
+    },
+    "load": {
+      "phases": [
+        {
+          "phase": "load",
+          "vus": [
+            10,
+            25,
+            50,
+            100
+          ],
+          "completed": 2853,
+          "integrityErrors": 0,
+          "duration": {
+            "p(95)": 694.83295,
+            "p(99)": 1307.695,
+            "max": 1993.8893,
+            "avg": 248.4210512377677,
+            "p(50)": 165.70005
+          },
+          "errorRate": 0,
+          "throughput": 125.35799188121537,
+          "iterations": 2853
+        },
+        {
+          "phase": "stress",
+          "vus": [
+            250
+          ],
+          "completed": 807,
+          "integrityErrors": 0,
+          "duration": {
+            "avg": 1487.8917853432604,
+            "p(50)": 1106.39275,
+            "p(95)": 4047.0635250000028,
+            "p(99)": 4928.568577,
+            "max": 5266.565
+          },
+          "errorRate": 0,
+          "throughput": 147.54054478851592,
+          "iterations": 807
+        }
+      ],
+      "reconciliation": {
+        "graded": 3660,
+        "broken": 0,
+        "accepted": 3660
+      },
+      "slo": "NOT_DEFINED",
+      "environment": "LOCAL_SHARED_GENERATOR_AND_SERVER"
+    }
+  },
+  "previousResultsUnchanged": true,
+  "experimentConfigUnchanged": true
+}
