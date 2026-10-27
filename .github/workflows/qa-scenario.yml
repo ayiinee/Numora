@@ -1,0 +1,87 @@
+name: QA scenario (manual)
+
+on:
+  workflow_dispatch:
+    inputs:
+      scenario:
+        description: Scenario ID from pnpm qa list
+        required: true
+        default: SIS-001
+        type: string
+      profile:
+        description: QA profile (manual/UAT acceptance remains separate)
+        required: true
+        default: standard
+        type: choice
+        options: [quick, standard, full]
+
+permissions:
+  contents: read
+
+jobs:
+  scenario:
+    runs-on: ubuntu-24.04
+    timeout-minutes: 100
+    services:
+      postgres:
+        image: postgres:16
+        env:
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: numora_test
+        ports: ['5432:5432']
+        options: >-
+          --health-cmd "pg_isready -U postgres -d numora_test"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+      redis:
+        image: redis:7
+        ports: ['6379:6379']
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 5s --health-timeout 5s --health-retries 10
+    env:
+      NODE_ENV: test
+      TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+      TEST_REDIS_URL: redis://localhost:6379
+      BULLMQ_PREFIX: numora:test:ci
+      DATABASE_URL: ''
+      REDIS_URL: ''
+      DATABASE_MIGRATION_URL: ''
+      TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
+      QA_PG_BIN: /usr/lib/postgresql/16/bin
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+      - run: corepack enable
+      - run: pnpm install --frozen-lockfile
+      - run: pnpm exec playwright install --with-deps chromium
+      - name: Install benchmark and backup tools
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y postgresql-client-16
+          curl --fail --location https://github.com/grafana/k6/releases/download/v2.3.0/k6-v2.3.0-linux-amd64.tar.gz -o /tmp/k6.tar.gz
+          curl --fail --location https://github.com/grafana/k6/releases/download/v2.3.0/k6-v2.3.0-checksums.txt -o /tmp/k6-checksums.txt
+          cd /tmp
+          grep 'k6-v2.3.0-linux-amd64.tar.gz$' k6-checksums.txt | sed 's/k6-v2.3.0-linux-amd64.tar.gz/k6.tar.gz/' | sha256sum -c -
+          tar -xzf k6.tar.gz
+          sudo install k6-v2.3.0-linux-amd64/k6 /usr/local/bin/k6
+      - name: Execute selected scenario
+        id: execute
+        continue-on-error: true
+        env:
+          QA_SELECTED_SCENARIO: ${{ inputs.scenario }}
+          QA_SELECTED_PROFILE: ${{ inputs.profile }}
+        run: |
+          mkdir -p qa/.local
+          node scripts/qa.mjs run --scenario "$QA_SELECTED_SCENARIO" --profile "$QA_SELECTED_PROFILE" --json > qa/.local/ci-output.json
+      - name: Upload sanitized reports
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: qa-${{ github.run_id }}-${{ github.sha }}
+          path: qa/scenarios/**/reports/**
+          if-no-files-found: warn
+      - name: Gate automated evidence (manual acceptance stays pending)
+        if: always()
+        run: node scripts/qa/ci-verdict.mjs

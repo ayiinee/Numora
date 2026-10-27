@@ -1,0 +1,45 @@
+{
+  "schemaVersion": 1,
+  "roles": ["siswa", "guru", "admin", "cross-role"],
+  "runtime": { "lowMemoryBuild": true },
+  "defaultRole": "siswa",
+  "defaultProfile": "standard",
+  "profiles": {
+    "quick": 0,
+    "standard": 1,
+    "full": 2
+  },
+  "fullBudgetSeconds": 3600,
+  "performance": {
+    "vus": [10, 25, 50, 100],
+    "stressVus": 250,
+    "stageSeconds": 60,
+    "volume": [1000, 10000, 100000],
+    "rates": [5, 10, 20, 30],
+    "rateStageSeconds": 60,
+    "drainTimeoutSeconds": 120
+  },
+  "services": {
+    "postgresMajor": 16,
+    "redisMajor": 7
+  },
+  "drive": {
+    "folderId": "1R0Y-J448i3NwbmXZZ9IIgayaF5jrbszn",
+    "folderName": "Numora QA",
+    "publication": "explicit",
+    "format": "google-docs",
+    "teamAccessVerified": false
+  },
+  "staging": {
+    "enabled": false,
+    "baseUrl": null,
+    "deploymentSha": null
+  },
+  "rules": [
+    "AGENTS.md",
+    "docs/product/PRODUCT_CONTEXT.md",
+    "docs/product/OPEN_DECISIONS.md",
+    "docs/product/PRD_MAPPING.md",
+    "docs/development/DRILL_V06_REWARDS.md"
+  ]
+}

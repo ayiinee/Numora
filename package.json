@@ -8,6 +8,8 @@
     "pnpm": ">=12 <13"
   },
   "scripts": {
+    "qa": "node scripts/qa.mjs",
+    "test:qa-workflow": "node --test scripts/qa/*.test.mjs",
     "dev": "pnpm dev:prepare && dotenv -e .env -- turbo run dev --env-mode=loose --filter=@tka/web --filter=@tka/api",
     "env:check": "dotenv -e .env -- node scripts/check-dev-env.mjs",
     "db:check": "dotenv -e .env -- pnpm --filter @tka/database db:check",
@@ -55,7 +57,9 @@
     "dev:generator": "node scripts/run-generator-demo.mjs"
   },
   "devDependencies": {
+    "@axe-core/playwright": "4.11.1",
     "@eslint/js": "9.39.5",
+    "@playwright/test": "1.63.0",
     "@types/node": "24.19.0",
     "ajv": "8.20.0",
     "ajv-formats": "3.0.1",
@@ -64,6 +68,7 @@
     "prettier": "3.9.9",
     "turbo": "^2.5.0",
     "typescript": "5.9.3",
-    "typescript-eslint": "8.70.0"
+    "typescript-eslint": "8.70.0",
+    "vitest": "5.0.2"
   }
 }

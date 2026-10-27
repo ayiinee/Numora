@@ -1,0 +1,166 @@
+{
+  "type": "object",
+  "additionalProperties": false,
+  "required": ["schemaVersion", "id", "role", "title", "priority", "sources", "cases", "checks"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^(SIS|GRU|ADM|XROLE)-[0-9]{3}$"
+    },
+    "role": {
+      "enum": ["siswa", "guru", "admin", "cross-role"]
+    },
+    "title": {
+      "type": "string",
+      "minLength": 1
+    },
+    "priority": {
+      "type": "integer",
+      "minimum": 1
+    },
+    "sources": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "path"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "path": {
+            "type": "string"
+          },
+          "section": {
+            "type": "string"
+          }
+        }
+      }
+    },
+    "cases": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "title", "source", "checks", "applicability"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[A-Z]+-[0-9]{3}$"
+          },
+          "title": {
+            "type": "string",
+            "minLength": 1
+          },
+          "source": {
+            "type": "string"
+          },
+          "checks": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "applicability": {
+            "enum": ["required", "optional", "not-applicable"]
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "allOf": [
+          {
+            "if": {
+              "properties": {
+                "applicability": {
+                  "const": "not-applicable"
+                }
+              }
+            },
+            "then": {
+              "properties": {
+                "checks": {
+                  "minItems": 0
+                }
+              }
+            },
+            "else": {
+              "properties": {
+                "checks": {
+                  "minItems": 1
+                }
+              }
+            }
+          }
+        ]
+      }
+    },
+    "checks": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["id", "adapter", "profile", "evidence", "files", "minimumTests"],
+        "properties": {
+          "id": {
+            "type": "string",
+            "pattern": "^[a-z][a-z0-9-]+$"
+          },
+          "adapter": {
+            "enum": [
+              "quality",
+              "vitest-domain",
+              "vitest-web",
+              "vitest-api",
+              "playwright",
+              "accessibility",
+              "volume",
+              "velocity",
+              "variety",
+              "recovery",
+              "k6",
+              "audit",
+              "manual"
+            ]
+          },
+          "profile": {
+            "enum": ["quick", "standard", "full"]
+          },
+          "evidence": {
+            "enum": [
+              "static",
+              "isolated-unit",
+              "component",
+              "real-database",
+              "connected-auth-fixture",
+              "benchmark",
+              "manual"
+            ]
+          },
+          "files": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "minimumTests": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "tags": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        }
+      }
+    }
+  }
+}

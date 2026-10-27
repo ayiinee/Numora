@@ -53,7 +53,11 @@ jobs:
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate contracts
+      - name: Validate QA workflow
+        # QA harness checks do not require credentials or cloud services.
+        run: pnpm test:qa-workflow && pnpm qa validate && pnpm exec tsc -p qa/tsconfig.json
+
+      - name: Validate product contracts
         run: pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check
 
       - name: Lint

@@ -22,6 +22,7 @@ coverage/
 .qa-seed/
 
 # local tooling
+qa/.local/
 .DS_Store
 .vscode/
 .idea/

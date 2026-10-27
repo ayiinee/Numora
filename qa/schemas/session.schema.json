@@ -1,0 +1,34 @@
+{
+  "type": "object",
+  "required": ["schemaVersion", "id", "role", "phase", "createdAt", "updatedAt"],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "role": {
+      "enum": ["siswa", "guru", "admin", "cross-role"]
+    },
+    "phase": {
+      "enum": ["STARTED", "SETUP_REQUIRED", "READY", "RUNNING", "AWAITING_SELECTION", "INTERRUPTED"]
+    },
+    "scenarioId": {
+      "type": ["string", "null"]
+    },
+    "runId": {
+      "type": ["string", "null"]
+    },
+    "profile": {
+      "enum": ["quick", "standard", "full"]
+    },
+    "createdAt": {
+      "type": "string"
+    },
+    "updatedAt": {
+      "type": "string"
+    }
+  }
+}

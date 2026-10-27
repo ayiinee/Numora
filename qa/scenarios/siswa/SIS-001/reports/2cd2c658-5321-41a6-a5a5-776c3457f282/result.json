@@ -1,0 +1,219 @@
+{
+  "schemaVersion": 1,
+  "id": "2cd2c658-5321-41a6-a5a5-776c3457f282",
+  "scenarioId": "SIS-001",
+  "role": "siswa",
+  "profile": "full",
+  "startedAt": "2026-10-26T19:22:24.531Z",
+  "finishedAt": null,
+  "parentRunId": null,
+  "identity": {
+    "sha": "6ba9638c0a60469f1919e675e35d999f2dbde407",
+    "dirty": true,
+    "codeHash": "cea9bea92b6be0f598d884975fc90eef488399f60f5887caab89880ccda6c706",
+    "rulesHash": "d8c6cbd944730deb70449cda4797c695422b8d00f6231b1726fa4be99af2cbb2",
+    "configHash": "838187a5db1a379d51d114a9becc6f6ef41132c40e3bcb7a81dbe4eae2ccbcfa",
+    "manifestHash": "940796cd31e0557be593cbd8a1e393ab2a7c4cc0f6c08cbab058ed186bc6c2a4"
+  },
+  "environment": null,
+  "checks": [
+    {
+      "id": "quality",
+      "adapter": "quality",
+      "profile": "quick",
+      "evidence": "static",
+      "files": [
+        "package.json"
+      ],
+      "minimumTests": 4,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "rewards",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/unit/rewards.test.ts",
+        "packages/assessment-engine/src/rewards.spec.ts"
+      ],
+      "minimumTests": 12,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/core-learning/drill.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "apps/web/src/features/core-learning/question-choices.test.tsx"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/learning/drill-reward.integration.spec.ts"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "connected",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/drill.pw.ts"
+      ],
+      "minimumTests": 4,
+      "tags": [
+        "functional",
+        "security",
+        "regression"
+      ],
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "accessibility",
+      "adapter": "accessibility",
+      "profile": "full",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/accessibility.pw.ts"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "load",
+      "adapter": "k6",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/performance/drill.k6.js"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "volume",
+      "adapter": "volume",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "velocity",
+      "adapter": "velocity",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 5,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "variety",
+      "adapter": "variety",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 9,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "recovery",
+      "adapter": "recovery",
+      "profile": "full",
+      "evidence": "real-database",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 6,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "dependencies",
+      "adapter": "audit",
+      "profile": "full",
+      "evidence": "static",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    },
+    {
+      "id": "manual-keyboard",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/manual/CHECKLIST.md"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "PENDING"
+    }
+  ],
+  "verdict": "INCOMPLETE",
+  "limitations": [
+    "Synthetic PG content and email auth fixtures; not Google login, academic content approval or staging acceptance.",
+    "Local performance is a baseline with no approved production SLO; generator and application share one machine.",
+    "Manual keyboard/UAT evidence is separate; automated accessibility is not a complete accessibility certification.",
+    "Variety invalid-envelope rejection is contract/generator evidence; connected tests cover API input rejection.",
+    "Recovery is local database/worker/transport rehearsal, not cloud failover, R2 recovery or production RTO/RPO."
+  ]
+}

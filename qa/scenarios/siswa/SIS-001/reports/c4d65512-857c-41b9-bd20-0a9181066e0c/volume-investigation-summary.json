@@ -1,0 +1,125 @@
+{
+  "investigationId": "SIS-001-VOLUME-20261027",
+  "runId": "c4d65512-857c-41b9-bd20-0a9181066e0c",
+  "sessionId": "7cbff6b0-2467-4216-8792-67cc990eb369",
+  "completedAt": "2026-10-27T05:00:33.398Z",
+  "database": "numora_test_qa_c4d65512857c41b9bd200a9181066e0c_volume",
+  "mode": "READ_ONLY",
+  "applicationChanges": false,
+  "schemaChanges": false,
+  "experimentLimitChanges": false,
+  "workerRetest": "NOT_RUN",
+  "logicalDataUnchanged": true,
+  "signatures": {
+    "outbox": {
+      "rows": 111011,
+      "signature": "b32b4833167f9650a771ada014843d63"
+    },
+    "analytics": {
+      "rows": 10411,
+      "signature": "2d61aea3b06f434155b1df30798dcbf5"
+    }
+  },
+  "integrity": [
+    {
+      "source": 111000,
+      "delivered": 10400,
+      "pending": 100600,
+      "processed_without_analytics": 0,
+      "pending_with_analytics": 0,
+      "delivered_content_mismatch": 0
+    }
+  ],
+  "bursts": [
+    {
+      "burst": "1",
+      "generated": 1000,
+      "processed": 1000,
+      "pending": 0,
+      "first_insert": "2026-10-27T04:00:23.347Z",
+      "last_insert": "2026-10-27T04:00:23.351Z",
+      "first_processed": "2026-10-27T04:00:23.592Z",
+      "last_processed": "2026-10-27T04:00:27.954Z"
+    },
+    {
+      "burst": "2",
+      "generated": 10000,
+      "processed": 9400,
+      "pending": 600,
+      "first_insert": "2026-10-27T04:00:27.972Z",
+      "last_insert": "2026-10-27T04:00:28.464Z",
+      "first_processed": "2026-10-27T04:00:28.528Z",
+      "last_processed": "2026-10-27T04:04:33.799Z"
+    },
+    {
+      "burst": "3",
+      "generated": 100000,
+      "processed": 0,
+      "pending": 100000,
+      "first_insert": "2026-10-27T04:02:28.526Z",
+      "last_insert": "2026-10-27T04:02:32.883Z",
+      "first_processed": null,
+      "last_processed": null
+    }
+  ],
+  "findings": [
+    {
+      "id": "PERF-001",
+      "category": "worker-query",
+      "status": "READ_PLAN_BOTTLENECK_VERIFIED",
+      "currentPlan": "Limit -> LockRows -> Sort -> Seq Scan",
+      "existingIndex": "analytics_outbox_pending_idx(processed_at,occurred_at)",
+      "candidatePlan": "Limit -> LockRows -> Incremental Sort -> Index Scan",
+      "currentReadMs": [
+        29.725,
+        30.375,
+        30.444
+      ],
+      "candidateReadMs": [
+        0.341,
+        0.224,
+        0.383
+      ],
+      "currentMedianMs": 30.375,
+      "candidateMedianMs": 0.341,
+      "queryOnlyMedianRatio": 89.07624633431084,
+      "sameOrderedFirst1000": true,
+      "scope": "Read-only SELECT measurements; exact FOR UPDATE queries were explained without ANALYZE, not executed; no worker-throughput improvement is asserted."
+    },
+    {
+      "id": "QA-EXP-001",
+      "category": "experiment-design",
+      "status": "CUMULATIVE_BACKLOG_CARRYOVER_VERIFIED",
+      "detail": "The 100k burst has zero processed events and follows an unfinished 10k burst on the same queue."
+    },
+    {
+      "id": "QA-OBS-001",
+      "category": "measurement-overhead",
+      "status": "FULL_QUEUE_SCAN_MEASURED",
+      "snapshotReadMs": 32.34,
+      "existenceProbeReadMs": 1.071,
+      "detail": "EXISTS is a proposed control-loop probe, not a replacement for required count, age, identity and content reconciliation."
+    }
+  ],
+  "databaseStatsBeforeComparison": [
+    {
+      "temp_files": "580",
+      "temp_bytes": "9797230592",
+      "xact_commit": "11730",
+      "xact_rollback": "0",
+      "deadlocks": "0"
+    }
+  ],
+  "limitations": [
+    "Cumulative database temp-file counters are not per-statement attribution.",
+    "No schema/index/config/application change was made.",
+    "No live worker or write workload was executed during investigation.",
+    "Production capacity, write/commit cost and concurrent-worker correctness remain unverified."
+  ],
+  "resultPreserved": {
+    "full": "FAIL",
+    "volume": "BLOCKED",
+    "manual": "NOT_RUN"
+  },
+  "recommendedNextAction": "Prepare candidate query/harness patches and staged retest evidence as reviewable artifacts; do not apply application changes in the read-only investigation."
+}
