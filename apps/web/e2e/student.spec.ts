@@ -2,6 +2,7 @@ import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { TryoutResultDto } from '../src/features/core-learning/generated-types';
+import { selectContentSection } from './fixtures/admin';
 
 const browserErrors = new WeakMap<Page, string[]>();
 test.beforeEach(({ page }) => {
@@ -1803,7 +1804,8 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: responses[path] ?? { items: [] } });
     });
     await page.goto('/admin/content');
-    await page.getByRole('button', { name: 'Paket Drill', exact: true }).click();
+    await selectContentSection(page, 'Paket Drill');
+    await page.getByText('Buat paket Drill', { exact: true }).click();
     await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
     await page.getByLabel('Versi paket', { exact: true }).fill('1');
     await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
@@ -1827,10 +1829,13 @@ for (const width of [390, 1440]) {
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
     await expect(page.getByText(/DEMO-E2E.*PUBLISHED/)).toBeVisible();
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Arsipkan paket', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Konfirmasi tindakan', exact: true })
+      .getByRole('button', { name: 'Konfirmasi', exact: true })
+      .click();
     await expect(page.getByText(/DEMO-E2E.*ARCHIVED/)).toBeVisible();
-    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await selectContentSection(page, 'Laporan');
     await page
       .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
       .selectOption('RESOLVED');
@@ -1839,7 +1844,7 @@ for (const width of [390, 1440]) {
       .getByRole('button', { name: 'Simpan status dan tindak lanjut', exact: true })
       .click();
     await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'IRT', exact: true }).click();
+    await selectContentSection(page, 'IRT');
     await expect(page.getByText('TRYOUT · SUCCEEDED', { exact: true })).toBeVisible();
     await expect(page.getByText(/Rilis belum tercatat/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -1868,7 +1873,7 @@ for (const { role, verified, path, destination } of [
     path: '/admin/schools',
     destination: '/teacher/verification-required',
   },
-  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin' },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/content' },
 ] as const) {
   test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
     await fixtures(page, role, verified);

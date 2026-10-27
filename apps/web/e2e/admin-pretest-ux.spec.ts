@@ -90,9 +90,9 @@ test('create saves scoped selections in explicit order and preserves them across
   await options.getByRole('checkbox').first().check();
   const pager = dialog.getByRole('navigation', { name: 'Halaman pilihan soal Pretest' });
   await pager.getByRole('button', { name: 'Berikutnya' }).click();
-  await options.getByRole('checkbox').first().check();
+  await options.getByRole('checkbox', { name: /Pertanyaan fixture 6:/ }).check();
   await pager.getByRole('button', { name: 'Sebelumnya' }).click();
-  await expect(options.getByRole('checkbox').first()).toBeChecked();
+  await expect(options.getByRole('checkbox', { name: /Tentukan hasil/ })).toBeChecked();
   await dialog.getByText('Kelola urutan soal terpilih (2/20)', { exact: true }).click();
   await dialog.getByRole('button', { name: 'Turunkan soal 1', exact: true }).click();
   expect(pretest.calls.filter((c) => c.method !== 'GET')).toHaveLength(0);
@@ -367,12 +367,14 @@ test('selected pages keep all twenty pins and replacing one updates only the int
     .click();
   await dialog.getByRole('button', { name: 'Keluarkan soal 6', exact: true }).click();
   const picker = dialog.getByRole('navigation', { name: 'Halaman pilihan soal Pretest' });
-  for (let i = 0; i < 4; i++) await picker.getByRole('button', { name: 'Berikutnya' }).click();
-  await dialog
-    .getByRole('list', { name: 'Pilihan soal Pretest' })
-    .getByRole('checkbox')
-    .first()
-    .check();
+  const choices = dialog.getByRole('list', { name: 'Pilihan soal Pretest' });
+  for (let i = 1; i <= 4; i++) {
+    await picker.getByRole('button', { name: 'Berikutnya' }).click();
+    await expect(
+      choices.getByRole('checkbox', { name: new RegExp(`Pertanyaan fixture ${i * 5 + 1}:`) }),
+    ).toBeVisible();
+  }
+  await choices.getByRole('checkbox', { name: /Pertanyaan fixture 21:/ }).check();
   await expect(
     dialog.getByText('Kelola urutan soal terpilih (20/20)', { exact: true }),
   ).toBeVisible();

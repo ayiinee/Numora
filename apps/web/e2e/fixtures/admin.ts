@@ -5,6 +5,21 @@ import fixture from './admin-workbench.json';
 
 export const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
 
+export async function selectContentSection(page: Page, label: string) {
+  const select = page.getByRole('combobox', {
+    name: 'Bagian konten',
+    exact: true,
+    includeHidden: true,
+  });
+  await select.waitFor({ state: 'attached' });
+  if (await select.isVisible()) await select.selectOption({ label });
+  else
+    await page
+      .getByRole('navigation', { name: 'Pengelolaan Admin' })
+      .getByRole('button', { name: label, exact: true })
+      .click();
+}
+
 // Isolated synthetic snapshot: leave the PR #100 / RY-03 suite untouched.
 export async function setup(page: Page) {
   const errors: string[] = [];
