@@ -1166,6 +1166,7 @@ test('Content can assemble thirty Tryout questions across selector pages on mobi
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content');
   await selectContentSection(page, 'Draf Tryout');
+  await page.getByText('Buat draf Tryout', { exact: true }).click();
   await expect(page.getByRole('checkbox')).toHaveCount(20);
   for (const box of await page.getByRole('checkbox').all()) await box.check();
   await page.getByRole('button', { name: 'Soal berikutnya', exact: true }).click();
