@@ -101,11 +101,24 @@ export async function setup(page: Page) {
           adminRole: state.adminRole,
           capabilities:
             state.adminRole === 'SUPER_ADMIN'
-              ? ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'AUDIT_READ', 'ADMIN_ACCOUNTS_MANAGE']
+              ? [
+                  'CONTENT_MANAGE',
+                  'OPERATIONS_MANAGE',
+                  'OPERATIONS_LIMITED_READ',
+                  'AUDIT_READ',
+                  'ADMIN_ACCOUNTS_MANAGE',
+                  'ANALYTICS_OPERATIONS',
+                  'ANALYTICS_CONTENT',
+                ]
               : state.adminRole === 'OPERATIONS'
-                ? ['OPERATIONS_MANAGE']
+                ? [
+                    'OPERATIONS_MANAGE',
+                    'OPERATIONS_LIMITED_READ',
+                    'ANALYTICS_OPERATIONS',
+                    'AUDIT_READ',
+                  ]
                 : state.adminRole === 'CONTENT_DATA_MODERATION'
-                  ? ['CONTENT_MANAGE']
+                  ? ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ', 'ANALYTICS_CONTENT', 'AUDIT_READ']
                   : [],
           displayName: 'Admin DEMO',
           email: 'admin@example.test',

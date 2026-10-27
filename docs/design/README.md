@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING FIX - 27 Oktober 2026:** seluruh sidebar desktop Admin, termasuk Super Admin, dapat digulir di dalam tinggi viewport. Scroll sidebar tidak diteruskan ke halaman utama saat mencapai batas. Semua menu dan identitas akun tetap dapat dicapai pada layar pendek, termasuk melalui keyboard. Regresi browser memeriksa roda mouse, Tab hingga menu terakhir, dan menu mobile; otorisasi serta struktur navigasi tetap mengikuti assignment.
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
 
 **ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.

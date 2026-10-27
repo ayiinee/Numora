@@ -80,6 +80,10 @@ img {
   background: var(--color-surface-raised);
   border-right: 1px solid var(--color-border-light);
 }
+.app-shell--admin .app-sidebar {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
 .app-brand {
   margin: 0 12px 44px;
 }
