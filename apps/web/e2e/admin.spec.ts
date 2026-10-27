@@ -11,8 +11,14 @@ import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generate
 
 async function selectContentSection(page: Page, label: string) {
   const select = page.getByRole('combobox', { name: 'Bagian konten', exact: true });
+  // Wait for the workspace before choosing its mobile or desktop navigation.
+  await select.waitFor({ state: 'attached' });
   if (await select.isVisible()) await select.selectOption({ label });
-  else await page.getByRole('button', { name: label, exact: true }).click();
+  else
+    await page
+      .getByRole('navigation', { name: 'Pengelolaan Admin' })
+      .getByRole('button', { name: label, exact: true })
+      .click();
 }
 
 function directedPackage(
@@ -1123,10 +1129,15 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   ])
     if (list) list.items = [];
   await page.goto('/admin/content');
+  await expect(page.getByRole('link', { name: 'Impor soal', exact: true })).toHaveAttribute(
+    'href',
+    '/admin/content/imports',
+  );
+  await page.getByRole('button', { name: 'Tambah soal PG', exact: true }).click();
   await expect(
-    page.getByRole('link', { name: 'Impor Excel/JSON, paket & preview internal' }),
-  ).toHaveAttribute('href', '/admin/content/imports');
-  await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toBeDisabled();
+    page.getByRole('dialog').getByRole('button', { name: 'Simpan versi DRAFT' }),
+  ).toBeDisabled();
+  await page.keyboard.press('Escape');
   for (const [label, name] of panels) {
     await selectContentSection(page, label);
     await capture(page, `empty-${name}`, 390);
