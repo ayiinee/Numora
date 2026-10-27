@@ -22,6 +22,47 @@ export async function migrateIntegratedDatabase(
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
+      // Only the reviewed joint candidate may move PR102 after PR92's nine Admin files.
+      // Production's 0000-0040 journal is unchanged until the merge order is reviewed.
+      if (migrations.length >= 50) {
+        const archived = resolve(migrationsFolder, '..', 'staging', 'fixtures');
+        const runtime = readMigrationFiles({
+          migrationsFolder: resolve(archived, 'runtime-pr102'),
+        });
+        const admin = readMigrationFiles({ migrationsFolder: resolve(archived, 'admin-pr92') });
+        const candidateHashes = new Set(migrations.map((entry) => entry.hash));
+        const runtimeMoved = runtime.every(
+          (entry, i) =>
+            migrations[48 + i]?.hash === entry.hash &&
+            history.some(
+              (row) => row.hash === entry.hash && Number(row.created_at) === entry.folderMillis,
+            ),
+        );
+        const adminMatches = admin.every((entry, i) => migrations[39 + i]?.hash === entry.hash);
+        const adminCount = admin.filter((entry) => hashes.has(entry.hash)).length;
+        if (runtimeMoved && adminMatches) {
+          if (
+            !migrations.slice(0, 39).every((entry) => hashes.has(entry.hash)) ||
+            !history.every((row) => candidateHashes.has(row.hash))
+          )
+            throw new Error('Unknown runtime/Admin history requires explicit reconciliation.');
+          if (adminCount !== 0 && adminCount !== admin.length)
+            throw new Error('Partial Admin fork requires explicit reconciliation.');
+          for (const [index, entry] of migrations.entries()) {
+            // Admin's older provenance guard shadows PR102's decimal correction. Restore
+            // that reviewed idempotent ALTER/FUNCTION after Admin DDL, never replay triggers.
+            if (!hashes.has(entry.hash) || (index === 49 && adminCount === 0))
+              for (const statement of entry.sql) if (statement.trim()) await tx.unsafe(statement);
+            if (
+              !history.some(
+                (row) => row.hash === entry.hash && Number(row.created_at) === entry.folderMillis,
+              )
+            )
+              await tx`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+          }
+          return true;
+        }
+      }
       const moved = migrations.filter(
         (entry) => hashes.has(entry.hash) && entry.folderMillis > cursor,
       );

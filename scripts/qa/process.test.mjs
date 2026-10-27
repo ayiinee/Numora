@@ -1,9 +1,15 @@
 import { test } from 'node:test';
 import assert from 'node:assert/strict';
 import { fileURLToPath } from 'node:url';
-import { testEnvironment, runProcess } from './process.mjs';
+import { testEnvironment, runProcess, supportedQaNode } from './process.mjs';
 import { parsePlaywright, parseVitest } from './adapters.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
+test('QA runtime enforces the patched Node 24 floor', () => {
+  for (const version of ['24.22.1', '24.22.2', '24.23.0'])
+    assert.equal(supportedQaNode(version), true);
+  for (const version of ['24.14.1', '24.22.0', '22.22.2', '25.0.0', 'invalid'])
+    assert.equal(supportedQaNode(version), false);
+});
 const safe = {
   NODE_ENV: 'test',
   TEST_DATABASE_URL: 'postgres://fixture:fixture@127.0.0.1:5432/numora_test?sslmode=disable',

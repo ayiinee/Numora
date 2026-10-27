@@ -230,6 +230,11 @@ export function testEnvironment(root, supplied = process.env) {
     problems.push('DATABASE_MIGRATION_URL must exactly match TEST_DATABASE_URL');
   return { environment, problems };
 }
+export function supportedQaNode(version) {
+  if (!/^\d+\.\d+\.\d+$/.test(version)) return false;
+  const [major, minor, patch] = version.split('.').map(Number);
+  return major === 24 && (minor > 22 || (minor === 22 && patch >= 1));
+}
 export async function doctor(root, profile = 'standard') {
   const config = readJson(resolve(root, 'qa/config.json')),
     checks = [];
@@ -237,8 +242,8 @@ export async function doctor(root, profile = 'standard') {
     checks.push({ id, ready, message, ...(version ? { version } : {}) });
   add(
     'node',
-    Number(process.versions.node.split('.')[0]) === 24,
-    'Node 24 required',
+    supportedQaNode(process.versions.node),
+    'Node >=24.22.1 <25 required (patched bundled Undici)',
     process.versions.node,
   );
   const packageVersion = readJson(resolve(root, 'package.json')).packageManager.split('@')[1];

@@ -4,7 +4,7 @@
   "private": true,
   "packageManager": "pnpm@12.6.0",
   "engines": {
-    "node": ">=24 <25",
+    "node": ">=24.22.1 <25",
     "pnpm": ">=12 <13"
   },
   "scripts": {
@@ -16,7 +16,7 @@
     "build": "turbo run build",
     "lint": "eslint . --max-warnings=0",
     "typecheck": "turbo run typecheck",
-    "test": "turbo run test",
+    "test": "turbo run test --concurrency=1",
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci": "pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",

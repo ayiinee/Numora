@@ -5,12 +5,12 @@ For scenario QA, start at the [QA workflow section](#qa-scenario-workflow--27-ok
 ## Prerequisites
 
 - Git
-- Node.js 24 LTS
+- Node.js 24 LTS, minimum 24.22.1 (see `.node-version`)
 - Corepack
 
 pnpm is pinned by the repository. Obtain the isolated cloud development credentials from the cloud team before running the apps.
 
-On Windows, run `node --version` in the terminal you will use for development. It must report v24; an older system installation can take precedence over a user-installed Node 24 in `PATH`.
+On Windows, run `node --version` in the terminal you will use for development. It must report at least v24.22.1 and remain on major 24; an older system installation can take precedence over a user-installed Node 24 in `PATH`. This minimum includes the patched bundled Undici 7.30.1. Updating an npm Undici dependency does not update Node's built-in `fetch`. A portable Node installation may be selected for the current shell without replacing the global installation or restarting Codex. Verify `node -p "JSON.stringify({node:process.versions.node,undici:process.versions.undici})"` before setup. CI uses the same pinned runtime.
 
 ## First run
 
