@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION - pemilik, 27 Oktober 2026:** arah Akun Admin disetujui sebagai referensi perbaikan berikutnya: ringkas, profesional, mudah dipindai dan tidak membingungkan. [Sekolah & credential](ADMIN_SCHOOLS_UX_2026-10-27.md) menerapkan daftar sekolah, ruang sekolah terpilih dan dialog aksi. Fondasi token/shell/button dipakai bersama melalui `admin-management.css`; aturan produk tetap mengikuti PRD/API.
+
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** halaman Akun Admin memakai [layout operasional ringkas dan profesional](ADMIN_ACCOUNTS_UX_2026-10-27.md), dengan daftar akun, tab undangan, dan dialog aksi. Perubahan dibatasi pada halaman tersebut dan tetap memakai komponen, font, serta aturan akses Numora.
 
 **ENGINEERING FIX - 27 Oktober 2026:** seluruh sidebar desktop Admin, termasuk Super Admin, dapat digulir di dalam tinggi viewport. Scroll sidebar tidak diteruskan ke halaman utama saat mencapai batas. Semua menu dan identitas akun tetap dapat dicapai pada layar pendek, termasuk melalui keyboard. Regresi browser memeriksa roda mouse, Tab hingga menu terakhir, dan menu mobile; otorisasi serta struktur navigasi tetap mengikuti assignment.

@@ -304,11 +304,13 @@ for (const width of [320, 768, 1440]) {
     await expect(
       page.getByRole('textbox', { name: 'Kode sekolah', exact: true }),
     ).not.toBeVisible();
-    const createSchool = page.locator('.operations-create-disclosure > summary');
+    const createSchool = page
+      .locator('.schools-page-heading')
+      .getByRole('button', { name: 'Tambah sekolah', exact: true });
     await createSchool.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('textbox', { name: 'Kode sekolah', exact: true })).toBeVisible();
-    await createSchool.click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Batal', exact: true }).click();
     if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
     const navigation =
       width < 960

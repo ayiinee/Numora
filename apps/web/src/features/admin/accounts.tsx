@@ -38,7 +38,10 @@ function AccountsScreen() {
   const { state } = useAuth();
   if (state.status !== 'ready') return null;
   return (
-    <AppShell area="admin" className="admin-redesign-shell admin-accounts-shell">
+    <AppShell
+      area="admin"
+      className="admin-redesign-shell admin-management-shell admin-accounts-shell"
+    >
       <div className="admin-accounts-frame">
         <AccountsPanel token={state.session.access_token} />
       </div>
@@ -397,7 +400,7 @@ function AccountsPanel({ token }: { token: string }) {
           }
           onClose={close}
           pending={busy}
-          className="admin-accounts-dialog"
+          className="admin-management-dialog admin-accounts-dialog"
         >
           {alert}
           {modal.kind === 'invite' ? (

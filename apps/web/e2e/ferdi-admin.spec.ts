@@ -34,18 +34,22 @@ for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const { state, errors } = await setup(page);
     await page.goto(`/admin/schools?schoolId=${id(101)}`);
+    await page.getByRole('button', { name: 'Edit sekolah', exact: true }).click();
     await expect(page.getByLabel('Ubah nama')).toHaveValue(state.schools[0]!.name);
+    await page.getByRole('dialog').getByRole('button', { name: 'Batal', exact: true }).click();
     for (const button of await page.locator('.admin-pagination button').all()) {
       expect(await button.evaluate((element) => element.scrollWidth <= element.clientWidth)).toBe(
         true,
       );
     }
+    await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
     await page.getByLabel('Cari sekolah').fill('no match');
     await page.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Belum ada sekolah.' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Sekolah tidak ditemukan' })).toBeVisible();
     await page.getByLabel('Cari sekolah').fill('smp-test-jkt');
     await page.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
-    await expect(page.locator('.admin-school-rows > li')).toHaveCount(1);
+    await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(1);
+    await page.getByRole('button', { name: /Kelola SMPN 1 Jakarta/ }).click();
     await page.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
     await expect(page.getByText('DEMO-ONE-TIME')).toBeVisible();
     const deactivate = page.getByRole('button', { name: 'Nonaktifkan sekolah', exact: true });

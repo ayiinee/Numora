@@ -643,11 +643,11 @@ for (const width of [390, 1280]) {
       name: `Sekolah TEST ${n + 1}`,
     }));
     await page.goto('/admin/schools');
-    await expect(page.locator('.admin-school-rows > li')).toHaveCount(5);
+    await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(5);
     const schoolsNav = page.getByRole('navigation', { name: 'Halaman sekolah' });
-    await schoolsNav.getByRole('button', { name: 'Sekolah berikutnya' }).click();
-    await expect(page.locator('.admin-school-rows > li')).toHaveCount(1);
-    await expect(schoolsNav.getByRole('button', { name: 'Sekolah berikutnya' })).toBeDisabled();
+    await schoolsNav.getByRole('button', { name: 'Berikutnya' }).click();
+    await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(1);
+    await expect(schoolsNav.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
     await capture(page, 'pagination-schools', width);
     expect(errors).toEqual([]);
   });
@@ -910,8 +910,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
     const { state, errors } = await setup(page);
     state.adminRole = role;
     await page.goto('/admin/schools');
-    if (role === 'OPERATIONS')
-      await page.locator('.operations-create-disclosure > summary').click();
+    await page.getByRole('button', { name: 'Tambah sekolah', exact: true }).click();
     await page.getByRole('textbox', { name: 'Kode sekolah', exact: true }).fill('Test-Ab');
     await page
       .getByRole('textbox', { name: 'Nama sekolah', exact: true })
@@ -925,24 +924,22 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
     await capture(page, 'school-mutation-error', 390);
     state.failMutation = false;
     await page.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
+    await page.getByRole('button', { name: 'Edit sekolah', exact: true }).click();
     await expect(page.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveValue(
       'Sekolah DEMO Baru',
     );
-    await expect(page.getByText('TEST-AB', { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText(/TEST-AB/)).toBeVisible();
     await page
       .getByRole('textbox', { name: 'Ubah nama', exact: true })
       .fill('Sekolah DEMO Direvisi');
-    await page
-      .getByRole('textbox', { name: 'Ubah alamat', exact: true })
-      .fill('Jalan Verifikasi 1');
+    await page.getByRole('textbox', { name: /Ubah alamat/ }).fill('Jalan Verifikasi 1');
     await page.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
     await expect(page.getByRole('heading', { name: 'Sekolah DEMO Direvisi' })).toBeVisible();
-    await expect(page.getByRole('textbox', { name: 'Ubah alamat', exact: true })).toHaveValue(
-      'Jalan Verifikasi 1',
-    );
+    await expect(page.getByText('Jalan Verifikasi 1', { exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
     await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
     await capture(page, 'school-issued-token', 390);
+    await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
     await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
     await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Terbit ulang', exact: true }).first().click();
@@ -970,7 +967,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
   });
 }
 
-test('Operations school detail can recover and repeated selection keeps credential history', async ({
+test('Operations school detail recovers and credential operations preserve edit drafts', async ({
   page,
 }) => {
   const { state, errors } = await setup(page);
@@ -978,20 +975,21 @@ test('Operations school detail can recover and repeated selection keeps credenti
   state.failPath = `/admin/schools/${id(101)}`;
   await page.goto('/admin/schools');
   await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
-  const detail = page.getByRole('complementary', { name: 'Detail sekolah dan token' });
+  const detail = page.getByRole('region', { name: 'Detail sekolah dan token' });
   await expect(detail.getByRole('alert')).toBeVisible();
   await expect(detail.getByRole('button', { name: 'Terbitkan token', exact: true })).toHaveCount(0);
   state.failPath = '';
   await detail.getByRole('button', { name: 'Coba lagi' }).click();
   await expect(detail.getByText('Terpakai', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
-  await expect(detail.getByText('Terpakai', { exact: true })).toBeVisible();
-  await detail.getByRole('textbox', { name: 'Ubah nama', exact: true }).fill('Edit belum disimpan');
+  await page.getByRole('button', { name: 'Edit sekolah', exact: true }).click();
+  await page.getByLabel('Ubah nama').fill('Edit belum disimpan');
+  await page.getByRole('dialog').getByRole('button', { name: 'Batal', exact: true }).click();
   await detail.getByRole('button', { name: 'Terbitkan token', exact: true }).click();
   await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
-  await expect(detail.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveValue(
-    'Edit belum disimpan',
-  );
+  await page.getByRole('button', { name: 'Edit sekolah', exact: true }).click();
+  await expect(page.getByLabel('Ubah nama')).toHaveValue('Edit belum disimpan');
+  await page.getByRole('dialog').getByRole('button', { name: 'Batal', exact: true }).click();
+  await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
   await page.getByRole('button', { name: /Sekolah Pendampingan/ }).click();
   await expect(detail.getByRole('button', { name: 'Terbitkan token', exact: true })).toBeDisabled();
   await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
@@ -1048,6 +1046,7 @@ test('Admin list/token errors, empty schools and expired access provide recovery
   await page.getByRole('button', { name: 'Coba lagi' }).click();
   await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
   state.failPath = 'teacher-tokens';
+  await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
   await page.getByRole('button', { name: /Sekolah Pendampingan/ }).click();
   await expect(page.locator('main').getByRole('alert')).toBeVisible();
   await capture(page, 'tokens-error', 390);
@@ -1057,6 +1056,7 @@ test('Admin list/token errors, empty schools and expired access provide recovery
   state.failPath = 'teacher-tokens';
   state.failStatus = 401; // Inactive school must keep issuance disabled before a 401 token-list retry.
   await expect(page.getByRole('button', { name: 'Terbitkan token' })).toBeDisabled();
+  await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
   await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
   await expect(page.getByRole('link', { name: 'Ke halaman masuk' })).toBeVisible();
   await expect(page.getByRole('textbox', { name: 'Ubah nama', exact: true })).toHaveCount(0);
