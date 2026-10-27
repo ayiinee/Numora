@@ -553,6 +553,7 @@ for (const width of [390, 1280]) {
     }));
     await page.goto('/admin/content');
     await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Buat revisi / varian', exact: true }).first().click();
     await page
       .getByLabel('Teks soal (LaTeX inline diperbolehkan)')
       .fill('Draf TEST belum disimpan');
@@ -563,9 +564,15 @@ for (const width of [390, 1280]) {
     );
     if (width === 1280) {
       const toolbar = await page
-        .locator('.admin-content-view > .admin-search-toolbar')
+        .getByRole('heading', { name: 'Versi soal', exact: true })
+        .locator('..')
+        .locator('.excel-editor-options')
         .boundingBox();
-      const area = await page.locator('.admin-content-view').boundingBox();
+      // With the revision editor open, the list occupies its own workspace column.
+      const area = await page
+        .getByRole('heading', { name: 'Versi soal', exact: true })
+        .locator('..')
+        .boundingBox();
       expect(toolbar!.width).toBeGreaterThan(area!.width * 0.95);
     }
     await capture(page, 'pagination-questions', width);
@@ -608,7 +615,9 @@ for (const width of [390, 1280]) {
         await link.focus();
         await page.keyboard.press('Enter');
         await expect(page).toHaveURL(/\/admin\/content\/imports$/);
-        await expect(page.getByRole('heading', { name: 'Upload soal Excel' })).toBeVisible();
+        await expect(
+          page.getByRole('heading', { name: '1. Upload Excel', exact: true }),
+        ).toBeVisible();
         if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
         const nav =
           width < 960
@@ -1097,11 +1106,15 @@ for (const width of [390, 1280])
       await mappingPanel.locator('summary').click();
       expect(await mappingPanel.evaluate((e) => getComputedStyle(e).borderTopWidth)).toBe('1px');
       if (usage === 'TRYOUT' && width === 1280) {
-        await expect(
-          mappingPanel.getByRole('combobox', { name: 'Indikator', exact: true }),
-        ).toHaveCount(0);
-        for (const [index, masterId] of [id(1), id(2), id(4)].entries())
-          await mappingPanel.locator('select').nth(index).selectOption(masterId);
+        // The later approved upload decision makes Tryout mapping optional,
+        // while retaining and validating explicitly supplied material relations.
+        for (const [name, masterId] of [
+          ['Bab', id(1)],
+          ['Subbab', id(2)],
+          ['Indikator', id(3)],
+          ['Level', id(4)],
+        ] as const)
+          await mappingPanel.getByRole('combobox', { name, exact: true }).selectOption(masterId);
         await expect(
           page.getByRole('button', { name: 'Simpan draft', exact: true }),
         ).toBeDisabled();
@@ -1123,9 +1136,14 @@ for (const width of [390, 1280])
       }
       await expect(page.getByRole('heading', { name: '4. Periksa dan Publish' })).toBeVisible();
       expect(saves).toBe(1);
-      await expect(page.getByRole('button', { name: 'Publish paket' })).toBeDisabled();
+      const publish = page.getByRole('button', {
+        name: usage === 'TRYOUT' ? 'Publish sekarang' : 'Publish paket',
+        exact: true,
+      });
+      await expect(publish).toBeDisabled();
       await page.getByLabel('Saya telah meninjau').check();
-      if (usage === 'TRYOUT') await page.getByLabel('Tanggal rilis Tryout').fill('2099-01-05');
+      if (usage === 'TRYOUT')
+        await page.getByLabel(/^Tanggal dan jam rilis Tryout/).fill('2099-01-05T00:00');
       await page.getByRole('button', { name: 'Publish paket' }).click();
       await expect(page.getByRole('link', { name: 'Lihat bank soal' })).toBeVisible();
       await page.getByRole('button', { name: 'Riwayat unggahan' }).click();
