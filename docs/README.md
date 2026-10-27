@@ -45,6 +45,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 ## Development
 
+- [Ferdi PR stabilization, 28 October 2026](development/FERDI_PR_STABILIZATION_2026-10-28.md) — current PR blockers, preserved integration path, XP review packet and separate #102 migration handoff.
 - [Ferdi Admin integration, 26 October 2026](development/FERDI_ADMIN_INTEGRATION_2026-10-26.md) — PR #92 reconciliation, partial Tryout XP correction, isolated test evidence and remaining review gates.
 
 - `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
