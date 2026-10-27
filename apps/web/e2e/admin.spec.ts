@@ -10,7 +10,11 @@ import type {
 import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generated-types';
 
 async function selectContentSection(page: Page, label: string) {
-  const select = page.getByRole('combobox', { name: 'Bagian konten', exact: true });
+  const select = page.getByRole('combobox', {
+    name: 'Bagian konten',
+    exact: true,
+    includeHidden: true,
+  });
   // Wait for the workspace before choosing its mobile or desktop navigation.
   await select.waitFor({ state: 'attached' });
   if (await select.isVisible()) await select.selectOption({ label });
