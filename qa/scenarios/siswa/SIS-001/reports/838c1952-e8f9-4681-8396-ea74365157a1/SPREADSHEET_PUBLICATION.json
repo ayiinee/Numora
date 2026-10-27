@@ -1,0 +1,49 @@
+{
+  "runId": "838c1952-e8f9-4681-8396-ea74365157a1",
+  "status": "PUBLISHED_VERIFIED",
+  "verifiedAt": "2026-10-27T20:55:17.163Z",
+  "documentUrl": "https://docs.google.com/document/d/17lmSWzGYNi2ajl7WDoBA1pMVZqWiXyE6j5maU7PHwQw",
+  "spreadsheetUrl": "https://docs.google.com/spreadsheets/d/1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs/edit",
+  "sheet": "QA_Person_A_20261028",
+  "caseRange": "A55:N69",
+  "appendedRange": "A49:N78",
+  "dashboardRange": "Ringkasan!M1:Z20",
+  "caseCounts": {
+    "PASS": 13,
+    "FAIL": 1,
+    "BLOCKED": 0,
+    "NOT_RUN": 1
+  },
+  "dashboardFormulaValues": [
+    15,
+    13,
+    1,
+    0,
+    1
+  ],
+  "ratio": 0.8666666666666667,
+  "readback": {
+    "documentMime": "application/vnd.google-apps.document",
+    "documentFolderId": "1czyp89HC3lWi3kHX0kBk6PvJdidaO80L",
+    "documentNativeTables": 4,
+    "documentHeadings": 7,
+    "runAndSourceVerified": true,
+    "exactCaseCellsVerified": true,
+    "statusAndPriorityValidationVerified": true,
+    "historyPersonAUnchanged": true,
+    "personCUnchanged": true,
+    "originalDashboardValuesAndFormulasUnchanged": true,
+    "zeroErrorsInWrittenFormulaCells": true
+  },
+  "visual": {
+    "method": "Native API CellData plus read-only XLSX export rendered with artifact-tool",
+    "ranges": [
+      "Ringkasan!M1:Z20",
+      "QA_Person_A_20261028!A49:N59"
+    ],
+    "result": "Readable headings, wrapping and values; no detected clipping in inspected changed views",
+    "limitations": "Native browser disabled in Work settings; XLSX rendering is a surrogate and may differ from Google-specific controls. Native formula/effective-value and validation checks performed through connector."
+  },
+  "sharing": "Existing inherited permissions unchanged; restricted team-account access not verified",
+  "historicalRunsPreserved": true
+}

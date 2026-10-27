@@ -1,5 +1,61 @@
 # QA delivery — 28 October 2026
 
+## Current closure evidence
+
+**ENGINEERING EVIDENCE.** Full **838c1952-e8f9-4681-8396-ea74365157a1**, parent
+d537c6dc, tested clean source **b33954b0678551bdea78e4bb40c9f7eb8568e9c1**.
+[Closure report](../../qa/scenarios/siswa/SIS-001/reports/838c1952-e8f9-4681-8396-ea74365157a1/CLOSURE_REPORT.md)
+and [machine summary](../../qa/scenarios/siswa/SIS-001/reports/838c1952-e8f9-4681-8396-ea74365157a1/CLOSURE_SUMMARY.json)
+are the current entry points. Report-only head and tested application SHA remain distinct.
+
+- **Full FAIL:13 PASS /1 FAIL /0 BLOCKED /1 NOT_RUN** of15 cases,844.782s after
+  build against3600s. Load fails; human keyboard/usability remains NOT_RUN.
+- Quality, rewards, components, persistence, connected, automated accessibility,
+  variety, recovery, velocity, volume and dependencies PASS. Volume111000 delivered,
+  zero backlog/content mismatch;100k drain34.885s/120s. Velocity3900/3900,0 mismatch.
+- Load snapshot2389 accepted vs2459 graded; READ ONLY follow-up2508 graded,
+  including49 late commits,0 broken durable effects and0 submitted nonfinal.
+  The119 acknowledgment gap is2 HTTP500 and117 responses not observed. PostgreSQL
+  logged3 OOM errors during full. This establishes an acknowledgment gap and local
+  resource correlation, not confirmed loss or per-request root-cause attribution.
+- Submit-only p95 is2578.22ms load and8140.42ms stress, from1891/500 recorded
+  samples. Missing/interrupted responses are not assigned latency estimates.
+  VU/stage, HTTP15s, gracefulStop10s, drain120s and full60min remain unchanged.
+- Database61, assessment21, IRT14, API245, worker25, web273, workflow49 and fixture
+  guards3 PASS. Lint/typecheck/build/contracts/freshness pass. Original workbook
+  inputs now participate in parser9/9 PASS; academic approval is separate.
+- Eight Admin failures were stale interactions/selectors/fixtures against the
+  latest upload/release decisions. Focused Admin16/16 PASS; authorization, draft,
+  overflow and exact publication assertions remain. Connected Windows6/6 passes
+  without extending timeout; old anonymous/startup failures remain historical.
+- Audit now **0 full /0 production advisories**, staged without suppression or
+  force-fix. CI passed on PR109 b33954b and focused PR102 b8734c6; report-head CI
+  remains separate. Existing owner review requires owner re-review.
+
+The [new native report](https://docs.google.com/document/d/17lmSWzGYNi2ajl7WDoBA1pMVZqWiXyE6j5maU7PHwQw)
+is verified in Big Data/Numora QA/siswa.
+[Person A/dashboard](https://docs.google.com/spreadsheets/d/1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs/edit#gid=202610280&range=A50:N78)
+appends this run at49–78; formulas count only15 cases55–69 (13/1/0/1, rounded87%).
+History and inspected Person C/original dashboard values/formulas remain unchanged.
+Native cell/formula/validation readback and read-only XLSX rendering verify the
+changed views. Native browser rendering is unavailable; XLSX is a surrogate.
+Reconnect restored the alternate account; inherited sharing permissions are unchanged.
+
+Next local action: investigate resource/OOM and commit-without-response using
+exact attempt identities and safe SQLSTATE/response correlation. Do not weaken
+gates or rerun unchanged work until green. Alternative human work uses
+[MANUAL_CHECKLIST.md](../../qa/scenarios/siswa/SIS-001/MANUAL_CHECKLIST.md).
+Real OAuth, staging/accounts, academic approval and migration integration remain
+separate in [ACCEPTANCE_READINESS.md](../../qa/scenarios/siswa/SIS-001/ACCEPTANCE_READINESS.md).
+APP-ADMIN-01 copy candidate is prepared for developer review, not applied.
+No merge/deployment or cloud Development substitution occurred.
+
+## Historical delivery snapshot — before closure
+
+The sections below preserve the earlier delivery state. Statements such as
+“latest” and open dependency/workbook counts describe that historical snapshot;
+use the closure evidence above for current status. Original run files are unchanged.
+
 **ENGINEERING EVIDENCE.** This delivery includes the three-role scenario workflow,
 Windows onboarding, SIS-001 pilot and immutable run history, worker batch/result
 projection optimizations, P0 dependency repairs, and the PvP recovery follow-up

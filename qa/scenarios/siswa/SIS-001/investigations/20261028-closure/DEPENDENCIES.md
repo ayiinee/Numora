@@ -29,7 +29,10 @@ primer untuk perubahan produksi: [source-map-js](https://github.com/advisories/G
 [Zod](https://github.com/advisories/GHSA-mrhx-c7xc-m3w5),
 [qs](https://github.com/advisories/GHSA-6pq8-jhm2-2vcw).
 
-Audit nol bukan pengesahan fungsional atau keamanan menyeluruh. Suite regresi
-akhir, build, connected browser dan full SIS-001 tetap memerlukan bukti pada
-versi akhir. Kegagalan startup/OOM awal tetap terlihat terpisah. Runtime global,
+Audit nol bukan pengesahan fungsional atau keamanan menyeluruh. Pada source
+bersih b33954b, regresi API245, database61, worker25, web273, assessment21,
+IRT14, workflow49 dan fixture guard3 lulus. Connected Windows6/6 serta
+lint/typecheck/kontrak/build lulus. Full run838c1952 tetap FAIL pada load;
+dependency PASS dan manual NOT_RUN dilaporkan terpisah. Lihat laporan run itu.
+Kegagalan startup/OOM awal tetap terlihat terpisah. Runtime global,
 timeout HTTP, beban, dan aturan bisnis tidak diubah.
