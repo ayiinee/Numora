@@ -74,6 +74,12 @@ database package seeds from racing API fixtures in CI. Concurrent submissions,
 consumers and reconnect races inside test cases remain concurrent and unchanged.
 This is runner isolation, not retries, skipped assertions or a load-profile change.
 
+The two-browser PvP fixture explicitly selects strict content mode and enables
+new fixture rooms. AppModule also reads local environment files; inheriting a
+developer's temporary uncalibrated-content setting otherwise excludes the
+fixture's EASY/MEDIUM/HARD bank. The browser test retains its three-difficulty
+assertions and production content rules are unchanged.
+
 New verification is linked to SIS-001 optimization run
 `5a091494-b077-4a09-95aa-8f06ac18ea21`; its PASS volume/load and FAIL audit are
 historical evidence, not approval for the changed dependency graph. New full QA

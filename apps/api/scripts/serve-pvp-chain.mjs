@@ -20,6 +20,9 @@ Object.assign(process.env, {
   REDIS_URL: process.env.TEST_REDIS_URL,
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
+  // AppModule also loads local .env files; the three-difficulty fixture must stay strict.
+  PVP_CONTENT_MODE: 'strict',
+  PVP_NEW_MATCHES_ENABLED: 'true',
   ALLOW_DEMO_SEED: 'true',
   ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
