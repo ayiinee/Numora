@@ -790,42 +790,38 @@ for (const width of [390, 1280]) {
       const { state, errors } = await setup(page);
       state.adminRole = role;
       await page.goto('/admin');
+      await expect(page.getByRole('heading', { name: 'Ringkasan Admin', exact: true })).toHaveCount(
+        0,
+      );
+      await expect(page.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
       if (role === 'CONTENT_DATA_MODERATION') {
         await expect(page).toHaveURL(/\/admin\/content$/);
         await expect(page.locator('.admin-page-header')).toHaveCount(0);
         await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-      } else if (role === 'OPERATIONS') {
+      } else if (role === 'OPERATIONS' || role === 'SUPER_ADMIN') {
         await expect(page).toHaveURL(/\/admin\/schools$/);
-        await expect(page.locator('.admin-page-header')).toHaveCount(0);
-      } else
-        await expect(
-          page.getByRole('heading', { name: 'Ringkasan Admin', exact: true }),
-        ).toBeVisible();
-      const main = page.getByRole('main');
-      if (role === 'SUPER_ADMIN') {
-        await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toBeVisible();
-      } else await expect(main.getByRole('link', { name: 'Sekolah & credential' })).toHaveCount(0);
+        if (role === 'OPERATIONS') await expect(page.locator('.admin-page-header')).toHaveCount(0);
+      } else {
+        await expect(page.getByRole('heading', { name: 'Akses Admin', exact: true })).toBeVisible();
+        await expect(page.getByText(/Belum ada modul/)).toBeVisible();
+      }
+      if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
+      const nav =
+        width < 960
+          ? page.locator('#mobile-menu')
+          : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
+      await expect(nav.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
+      await expect(
+        nav.getByRole('link', { name: 'Sekolah & credential', exact: true }),
+      ).toHaveCount(role === 'SUPER_ADMIN' || role === 'OPERATIONS' ? 1 : 0);
       if (role === 'SUPER_ADMIN' || role === 'CONTENT_DATA_MODERATION') {
-        const link = main.getByRole('link', {
-          name: role === 'SUPER_ADMIN' ? 'Impor soal' : 'Impor JSON',
-          exact: true,
-        });
+        const link = nav.getByRole('link', { name: 'Impor soal', exact: true });
         await expect(link).toBeVisible();
-        await capture(page, `portal-${role}`, width);
         await link.focus();
         await page.keyboard.press('Enter');
-        if (role === 'CONTENT_DATA_MODERATION') {
-          await expect(page).toHaveURL(/\/admin\/content\/imports\?mode=json$/);
-          await expect(page.getByRole('heading', { name: 'File sumber soal' })).toBeVisible();
-        } else {
-          await expect(page).toHaveURL(/\/admin\/content\/imports$/);
-          await expect(page.getByRole('heading', { name: '1. Upload Excel' })).toBeVisible();
-        }
+        await expect(page).toHaveURL(/\/admin\/content\/imports$/);
+        await expect(page.getByRole('heading', { name: '1. Upload Excel' })).toBeVisible();
         if (width < 960) await page.getByRole('button', { name: 'Menu navigasi' }).click();
-        const nav =
-          width < 960
-            ? page.locator('#mobile-menu')
-            : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
         await expect(nav.getByRole('link', { name: 'Impor soal' })).toHaveAttribute(
           'aria-current',
           'page',
@@ -834,11 +830,8 @@ for (const width of [390, 1280]) {
           'aria-current',
           'page',
         );
-      } else {
-        await expect(main.getByRole('link', { name: 'Impor soal' })).toHaveCount(0);
-        if (role === null) await expect(main.getByText(/Belum ada modul/)).toBeVisible();
-        await capture(page, `portal-${role ?? 'unassigned'}`, width);
-      }
+      } else await expect(nav.getByRole('link', { name: 'Impor soal' })).toHaveCount(0);
+      await capture(page, `portal-${role ?? 'unassigned'}`, width);
       expect(state.mutations).toEqual([]);
       expect(errors).toEqual([]);
     });

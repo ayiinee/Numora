@@ -24,14 +24,7 @@ export type AdminNavigationItem = {
 
 // Presentation only. API guards remain authoritative for each operation.
 export function adminNavigation(profile: IdentityProfile | null): AdminNavigationItem[] {
-  const items: AdminNavigationItem[] = [
-    {
-      href: '/admin',
-      label: 'Ringkasan',
-      description: 'Pilih modul sesuai akses akun.',
-      icon: 'chart',
-    },
-  ];
+  const items: AdminNavigationItem[] = [];
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE' || !profile.adminRole) return items;
   if (profile.capabilities?.includes('ADMIN_ACCOUNTS_MANAGE'))
     items.push({
@@ -115,13 +108,11 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       icon: 'chart',
     });
   if (profile.adminRole === 'OPERATIONS') {
-    return items.filter(({ href }) => href !== '/admin' && href !== '/admin/analytics');
+    return items.filter(({ href }) => href !== '/admin/analytics');
   }
   if (profile.adminRole === 'CONTENT_DATA_MODERATION') {
     // Content opens the bank directly; these pages are temporarily out of its portal.
-    const contentItems = items.filter(
-      ({ href }) => href !== '/admin' && href !== '/admin/analytics',
-    );
+    const contentItems = items.filter(({ href }) => href !== '/admin/analytics');
     const order = [
       '/admin/content',
       '/admin/content/imports',

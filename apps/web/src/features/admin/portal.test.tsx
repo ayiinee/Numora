@@ -1,6 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AdminHomeScreen } from './home';
+import { AdminEntryScreen } from './entry';
 import { AdminLoginScreen } from './login';
 import { AppShell } from '@/components/shell';
 import { AdminFrame } from './admin-presentation';
@@ -47,9 +47,49 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 }
 
 describe('Admin portal navigation', () => {
+  it.each([
+    ['SUPER_ADMIN', '/admin/schools'],
+    ['OPERATIONS', '/admin/schools'],
+    ['CONTENT_DATA_MODERATION', '/admin/content'],
+  ])('opens a working module instead of an overview for %s', async (role, target) => {
+    ready(role, ['CONTENT_MANAGE', 'OPERATIONS_MANAGE']);
+    const { container } = render(<AdminEntryScreen />);
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith(target));
+    expect(container.textContent).toBe('');
+  });
+  it.each(['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null])(
+    'never shows an overview menu for %s',
+    (role) => {
+      ready(role, [
+        'CONTENT_MANAGE',
+        'OPERATIONS_MANAGE',
+        'ADMIN_ACCOUNTS_MANAGE',
+        'ANALYTICS_CONTENT',
+      ]);
+      render(<AppShell area="admin">Isi modul</AppShell>);
+      expect(screen.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
+      expect(!!screen.queryByRole('link', { name: 'Analytics' })).toBe(role === 'SUPER_ADMIN');
+    },
+  );
+  it.each(['loading', 'error', 'disabled'])(
+    'keeps the %s access state without summary content',
+    (status) => {
+      ready('SUPER_ADMIN', ['OPERATIONS_MANAGE']);
+      mocks.state = { ...mocks.state, status };
+      render(<AdminEntryScreen />);
+      expect(screen.queryByRole('heading', { name: 'Ringkasan Admin' })).toBeNull();
+      expect(mocks.replace).not.toHaveBeenCalled();
+      if (status === 'loading') expect(screen.getByText('Memeriksa akun Admin…')).toBeTruthy();
+      else {
+        fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+        expect(mocks.refresh).toHaveBeenCalledOnce();
+      }
+    },
+  );
+
   it('does not offer Content when a stale capability remains after assignment removal', () => {
     ready(null, ['CONTENT_MANAGE']);
-    render(<AdminHomeScreen />);
+    render(<AdminEntryScreen />);
     const main = within(screen.getByRole('main'));
     expect(main.queryByRole('link', { name: 'Impor soal' })).toBeNull();
     expect(main.getByText(/Belum ada modul/)).toBeTruthy();
@@ -66,11 +106,11 @@ describe('Admin portal navigation', () => {
     [null, [], false, false],
   ] as const)('shows assigned modules for %s', (role, capabilities, operations, content) => {
     ready(role, [...capabilities]);
-    render(<AdminHomeScreen />);
-    const main = within(screen.getByRole('main'));
+    render(<AppShell area="admin">Isi modul</AppShell>);
+    const main = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
     expect(!!main.queryByRole('link', { name: 'Sekolah & credential' })).toBe(operations);
     expect(!!main.queryByRole('link', { name: 'Impor soal' })).toBe(content);
-    if (role === null) expect(main.getByText(/Belum ada modul/)).toBeTruthy();
+    expect(main.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
     expect(mocks.signIn).not.toHaveBeenCalled();
   });
   it('selects only the most specific nested navigation item and drops links after access changes', () => {
@@ -84,9 +124,7 @@ describe('Admin portal navigation', () => {
     expect(
       navigation.getByRole('link', { name: 'Konten & assessment' }).getAttribute('aria-current'),
     ).toBeNull();
-    expect(
-      navigation.getByRole('link', { name: 'Ringkasan' }).getAttribute('aria-current'),
-    ).toBeNull();
+    expect(navigation.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
     ready('OPERATIONS');
     view.rerender(<AppShell area="admin">Konten</AppShell>);
     expect(navigation.queryByRole('link', { name: 'Impor soal' })).toBeNull();
@@ -108,7 +146,7 @@ describe('Admin portal navigation', () => {
     for (const name of ['Ringkasan', 'Analytics'])
       expect(main.queryByRole('link', { name })).toBeNull();
   });
-  it.each([AdminHomeScreen, AdminAnalyticsScreen])(
+  it.each([AdminEntryScreen, AdminAnalyticsScreen])(
     'redirects retired Operations pages to schools without rendering them',
     async (Page) => {
       ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
@@ -126,7 +164,7 @@ describe('Admin portal navigation', () => {
     for (const name of ['Ringkasan', 'Analytics', 'Konten & assessment', 'Akun Admin'])
       expect(navigation.queryByRole('link', { name })).toBeNull();
   });
-  it.each([AdminHomeScreen, AdminAnalyticsScreen])(
+  it.each([AdminEntryScreen, AdminAnalyticsScreen])(
     'redirects retired Content pages to the bank without rendering them',
     async (Page) => {
       ready('CONTENT_DATA_MODERATION', ['CONTENT_MANAGE', 'ANALYTICS_CONTENT']);
@@ -157,7 +195,7 @@ describe('Admin portal navigation', () => {
     },
   );
   it('sends signed-out users to internal login and Teachers to their own area', async () => {
-    const view = render(<AdminHomeScreen />);
+    const view = render(<AdminEntryScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
     mocks.state = {
       status: 'ready',
@@ -169,7 +207,7 @@ describe('Admin portal navigation', () => {
         status: 'ACTIVE',
       },
     };
-    view.rerender(<AdminHomeScreen />);
+    view.rerender(<AdminEntryScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/teacher'));
     expect(screen.queryByText(/Selamat datang/)).toBeNull();
   });
