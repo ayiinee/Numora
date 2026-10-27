@@ -17,3 +17,12 @@ Regression coverage includes generator-demo HTTP routing, queue absence, durable
 Local verification passed 9 targeted API unit tests, 3 PostgreSQL migration/guard tests and 13 PostgreSQL PvP/Tryout lifecycle tests. Fresh canonical migration and replay were verified on a disposable embedded PostgreSQL cluster, which was stopped afterwards. Redis transport and connected browser release checks remain for CI. An initial full web test/build attempt hit Windows memory/process failures; 238 web assertions passed in that run, but it was not an overall pass.
 
 Academic approval, Curriculum mapping and IRT dependencies remain open as previously documented. This repair does not create new product rules or synthetic production approvals.
+
+
+## Recovery follow-up — 27 October 2026
+
+Cancellation now uses PostgreSQL greatest against persisted started_at/created_at, including microseconds, and shares the exact terminal timestamp with invitation/outbox writes. The SQL time constraint remains unchanged. A regression reproduces 23514 with future fixture clocks and verifies recovery, claims, no XP, replay and rejection of invalid direct writes.
+
+The pinned PR92 Admin and PR102 runtime SQL are archived unchanged. A disposable joint candidate preserves Admin0039–0047 and moves unchanged runtime SQL to0048/0049, restoring the decimal guard after the older ceil guard. Six PostgreSQL rehearsals cover fresh/runtime/Admin histories, replay, unknown/partial histories and rollback on schema drift. The live journal remains0000–0040 until normal integration review; no shared database or other developer branch was changed.
+
+API files/workspace tests serialize shared fixtures; concurrent commands inside race tests remain unchanged. On the combined QA/P0 branch, available API cases passed244/244 with one external workbook NOT_RUN, database61, worker25 and web273 passed, and connected two-browser PvP passed all difficulties plus persisted XP/leaderboards. Those results identify the combined QA source/dependency version; CI must verify this focused PR head, whose dependency versions remain unchanged.

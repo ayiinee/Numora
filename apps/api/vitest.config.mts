@@ -4,7 +4,9 @@ import ts from 'typescript';
 export default defineConfig({
   test: {
     include: ['src/**/*.{test,spec}.ts'],
-    maxWorkers: 2,
+    // Integration files mutate shared published-package fixtures in one test database.
+    // Race-condition tests still run their concurrent commands inside each case.
+    maxWorkers: 1,
     env: { TEACHER_TOKEN_PEPPER: 'fixture-only-teacher-token-pepper-not-for-deployment' },
   },
   plugins: [
