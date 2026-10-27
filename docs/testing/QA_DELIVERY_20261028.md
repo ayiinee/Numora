@@ -58,15 +58,23 @@ no message was sent and his approval is not asserted. See the
 
 ## Shared monitoring
 
-The selected publication account is
-`muhammad.farel.2405356@students.um.ac.id`. The user supplied Main Spreadsheet
-`1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs`. Existing Person C evidence is
-historical and must remain intact. Person A covers student learning; add its
-current results in an adjacent dedicated tab and connect a separate QA panel in
-the blank area of Ringkasan. The original Checklist formulas describe a different
-engineering backlog and must not be overwritten with testing pass counts.
+The user supplied [Main Spreadsheet](https://docs.google.com/spreadsheets/d/1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs/edit).
+The initially selected campus account could read but received 403 on writes.
+After the user explicitly selected an alternate account, the update succeeded.
+`QA_Person_A_20261028` sits immediately before the historical Person C tab.
+`Ringkasan!M1:Z20` now derives its counts from the fifteen current SIS-001 case
+rows: **12 PASS, 2 FAIL, 1 NOT_RUN (80%)**. Supplemental regressions and history
+are separate rows and do not inflate that denominator. The full verdict remains FAIL.
+`QA!J2:J6` links to the results and dashboard. Native readback verified the
+formulas and zero cell errors; 139 existing nonempty dashboard cells and 116
+Person C cells in the inspected ranges retained their original values/formulas.
+The original Checklist describes a different engineering backlog and was not edited.
+Native browser preview was unavailable because the computer-use runtime could
+not initialize; visual verification is therefore limited to native cell/layout
+metadata, not a screenshot. Publication details are recorded separately beside
+the immutable run result in `SPREADSHEET_PUBLICATION.json`.
 
-The configured team Drive folder returns NOT_FOUND for this selected account;
+The configured team Drive folder returns NOT_FOUND for both selected accounts;
 folder publication is **PENDING_FOLDER_ACCESS**, not successful publication.
 Do not create a replacement team folder, switch accounts silently or expose public
 access. The spreadsheet remains the authorized shared monitoring destination;

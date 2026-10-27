@@ -1,0 +1,40 @@
+{
+  "schemaVersion": 1,
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "testedCommit": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+  "status": "PUBLISHED_VERIFIED",
+  "spreadsheetId": "1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs",
+  "documentUrl": "https://docs.google.com/spreadsheets/d/1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs/edit",
+  "title": "Main Spreadsheet",
+  "tab": {
+    "id": 202610280,
+    "title": "QA_Person_A_20261028",
+    "index": 11,
+    "ranges": ["A1:N47"]
+  },
+  "dashboardRange": "Ringkasan!M1:Z20",
+  "navigationRange": "QA!J2:J6",
+  "account": "User explicitly selected alternate account after campus write returned 403",
+  "verification": {
+    "verifiedAt": "2026-10-27T18:03:58.852Z",
+    "source": "native Google Sheets readback",
+    "caseCount": 15,
+    "pass": 12,
+    "fail": 2,
+    "blocked": 0,
+    "notRun": 1,
+    "passRate": 0.8,
+    "cellErrors": [],
+    "existingInspectedValuesChanged": [],
+    "personCInspectedNonemptyCells": 116,
+    "oldDashboardInspectedNonemptyCells": 139,
+    "visualPreview": "UNAVAILABLE_COMPUTER_USE_RUNTIME_INITIALIZATION_FAILED"
+  },
+  "fullVerdict": "FAIL",
+  "pullRequest": "https://github.com/ayiinee/Numora/pull/109",
+  "driveFolderPublication": {
+    "status": "PENDING_FOLDER_ACCESS",
+    "reason": "Configured folder metadata returned 404 for both selected accounts; no replacement or public sharing created"
+  },
+  "historicalResultUnchanged": true
+}

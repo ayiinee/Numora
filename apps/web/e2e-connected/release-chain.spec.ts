@@ -394,7 +394,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       rewards: {
         attempt_id: string;
         xp_amount: string | number;
-        base_xp: number;
+        base_xp: string | number;
         policy_version: number;
       }[];
     };
@@ -411,7 +411,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(persisted.rewards).toHaveLength(3);
     expect(new Set(persisted.rewards.map((r) => r.attempt_id)).size).toBe(3);
     const persistedReward = persisted.rewards.find((r) => r.attempt_id === attempt.id)!;
-    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(persistedReward.policy_version).toBe(2);
+    // PostgreSQL numeric is serialized as a decimal string at the fixture boundary.
+    expect(Number(persistedReward.base_xp)).toBe(80);
     expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
     await expect(
