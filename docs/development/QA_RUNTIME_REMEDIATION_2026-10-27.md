@@ -79,6 +79,10 @@ new fixture rooms. AppModule also reads local environment files; inheriting a
 developer's temporary uncalibrated-content setting otherwise excludes the
 fixture's EASY/MEDIUM/HARD bank. The browser test retains its three-difficulty
 assertions and production content rules are unchanged.
+Its leaderboard assertion follows the approved compact UI heading, selected
+difficulty, own rank and displayed points. DEMO separation remains asserted on
+the API result and projection; the old `Leaderboard PvP DEMO` heading is no longer
+part of the current presentation contract.
 
 New verification is linked to SIS-001 optimization run
 `5a091494-b077-4a09-95aa-8f06ac18ea21`; its PASS volume/load and FAIL audit are

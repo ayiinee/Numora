@@ -120,8 +120,12 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
         result.players.find((p) => p.studentId === fixtures.actors.mandiri!.profileId)!.points,
       );
       await host.goto(`/student/leaderboards?difficulty=${difficulty}`);
-      await expect(host.getByText('Leaderboard PvP DEMO', { exact: true })).toBeVisible();
+      await expect(host.getByRole('heading', { name: 'Leaderboard PvP', exact: true })).toBeVisible();
+      await expect(host.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'true');
       await expect(host.getByRole('heading', { name: 'Posisimu' })).toBeVisible();
+      const ownCard = host.getByRole('complementary').filter({ has: host.getByRole('heading', { name: 'Posisimu' }) });
+      await expect(ownCard).toContainText(`#${board.ownEntry!.rank}`);
+      await expect(ownCard).toContainText(new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Number(board.ownEntry!.points)));
       checks.push(
         `${difficulty}: two-browser completed 10-item match, durable result, DEMO projection and own rank`,
       );
