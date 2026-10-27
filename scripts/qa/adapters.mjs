@@ -9,6 +9,7 @@ import {
   trackOwnedProcess,
 } from './process.mjs';
 import { evaluateEvidence, inside, readJson, sanitize } from './core.mjs';
+import { readLoadReceipts, reconcileLoadReceipts } from './load-receipts.mjs';
 
 export function parsePlaywright(data) {
   const stats = data.stats || {};
@@ -323,17 +324,21 @@ export async function executeCheck(root, check, context) {
       }
       const config = readJson(resolve(root, 'qa/config.json')).performance,
         phases = [],
-        failures = [];
+        failures = [],
+        receiptFiles = [];
+      let experimentIncomplete = false;
       for (const [phase, vus] of [
         ['load', config.vus],
         ['stress', [config.stressVus]],
       ]) {
         const file = resolve(context.artifacts, 'k6-' + phase + '.json');
+        const receiptsFile = resolve(context.artifacts, 'k6-' + phase + '-receipts.jsonl');
         if (existsSync(file)) unlinkSync(file);
+        if (existsSync(receiptsFile)) unlinkSync(receiptsFile);
         const result = await runProcess(
           root,
           context.environment.QA_K6_BIN || 'k6',
-          ['run', ...check.files.map((p) => inside(root, p))],
+          ['run', '--out', 'json=' + receiptsFile, ...check.files.map((p) => inside(root, p))],
           {
             ...options,
             timeoutMs: Math.max(1, context.deadline - Date.now()),
@@ -342,6 +347,7 @@ export async function executeCheck(root, check, context) {
               QA_VUS: JSON.stringify(vus),
               QA_STAGE_SECONDS: String(config.stageSeconds),
               QA_EVIDENCE_FILE: file,
+              QA_LOAD_PHASE: phase,
             },
           },
         );
@@ -351,6 +357,9 @@ export async function executeCheck(root, check, context) {
           metrics = data.metrics || {};
         const completed = metrics.qa_completed?.values?.count || 0,
           integrity = metrics.qa_integrity_errors?.values?.count || 0;
+        if (!existsSync(receiptsFile))
+          return { status: 'BLOCKED', reason: 'K6_RECEIPTS_MISSING', observedTests: phases.length };
+        receiptFiles.push(receiptsFile);
         phases.push({
           phase,
           vus,
@@ -362,33 +371,66 @@ export async function executeCheck(root, check, context) {
           iterations: metrics.iterations?.values?.count || 0,
         });
         if (integrity > 0) failures.push('ACCEPTED_SUBMISSION_INTEGRITY_FAILURE');
-        if (result.code !== 0 || completed < 1 || result.timedOut)
-          return {
-            status: integrity > 0 ? 'FAIL' : 'BLOCKED',
-            reason: integrity > 0 ? failures[0] : 'EXPERIMENT_INCOMPLETE_OR_SAFETY_STOP',
-            observedTests: phases.filter((p) => p.completed > 0).length,
-            metrics: { phases, slo: 'NOT_DEFINED' },
-          };
+        if (result.code !== 0 || completed < 1 || result.timedOut) {
+          experimentIncomplete = true;
+          break;
+        }
       }
       const sql = postgres(context.environment.TEST_DATABASE_URL, { max: 1, onnotice: () => {} });
       let reconciliation;
       try {
-        const [row] = await sql.unsafe(
-          "select count(*)::integer as graded, count(*) filter(where (select count(*) from xp_ledger x where x.attempt_id=a.id)<>1 or (select count(*) from analytics_outbox o where o.entity_id=a.id and o.event_name='drill_completed')<>1)::integer as broken from assessment_attempts a where a.assessment_type='DRILL' and a.status='GRADED' and not(a.id=any($1::uuid[]))",
+        const rows = await sql.unsafe(
+          `select a.id, a.student_id as "studentId", a.status, a.score_0_100 as score,
+            coalesce((select jsonb_agg(jsonb_build_object('id',x.id,'studentId',x.student_id,'sourceType',x.source_type,'xp',x.xp_amount))
+              from xp_ledger x where x.attempt_id=a.id),'[]'::jsonb) as ledger,
+            coalesce((select jsonb_agg(jsonb_build_object('id',o.id,'actorId',o.actor_user_id,'correlationId',o.correlation_id,'payload',o.payload))
+              from analytics_outbox o where o.entity_id=a.id and o.event_name='drill_completed'),'[]'::jsonb) as events
+            from assessment_attempts a where a.assessment_type='DRILL' and not(a.id=any($1::uuid[]))`,
           [baselineIds],
         );
+        const receipts = await readLoadReceipts(receiptFiles);
+        const identity = reconcileLoadReceipts(
+          receipts,
+          rows,
+          phases.reduce((sum, phase) => sum + phase.completed, 0),
+        );
+        writeFileSync(
+          resolve(context.artifacts, 'load-client-receipts.json'),
+          JSON.stringify(receipts),
+        );
+        writeFileSync(
+          resolve(context.artifacts, 'load-durable-snapshot.json'),
+          JSON.stringify(rows),
+        );
+        writeFileSync(
+          resolve(context.artifacts, 'load-identity-reconciliation.json'),
+          JSON.stringify(identity, null, 2),
+        );
         reconciliation = {
-          ...row,
-          accepted: phases.reduce((sum, phase) => sum + phase.completed, 0),
+          ...identity.counts,
+          accepted: identity.counts.acceptedCounter,
+          identityStatus: identity.status,
+          failureCount: identity.failures.length,
+          incompleteCount: identity.incomplete.length,
+          unacknowledgedGraded: identity.unacknowledgedGraded.length,
+          classifications: Object.fromEntries(
+            [...new Set(identity.unacknowledgedGraded.map((x) => x.classification))].map((kind) => [
+              kind,
+              identity.unacknowledgedGraded.filter((x) => x.classification === kind).length,
+            ]),
+          ),
+          sampleUnacknowledged: identity.unacknowledgedGraded.slice(0, 20),
         };
-        if (row.broken > 0 || row.graded !== reconciliation.accepted)
-          failures.push('DATABASE_RECONCILIATION_FAILED');
+        if (identity.status === 'FAIL') failures.push('DATABASE_RECONCILIATION_FAILED');
+        if (identity.status === 'BLOCKED') experimentIncomplete = true;
       } finally {
         await sql.end();
       }
       return {
-        status: failures.length ? 'FAIL' : 'PASS',
-        reason: failures.join('; ') || null,
+        status: failures.length ? 'FAIL' : experimentIncomplete ? 'BLOCKED' : 'PASS',
+        reason:
+          failures.join('; ') ||
+          (experimentIncomplete ? 'EXPERIMENT_INCOMPLETE_OR_SAFETY_STOP' : null),
         observedTests: phases.length + 1,
         metrics: {
           phases,

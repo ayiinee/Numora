@@ -1,0 +1,13 @@
+diff --git a/apps/web/src/features/admin/content-import.tsx b/apps/web/src/features/admin/content-import.tsx
+index bd267de..630de27 100644
+--- a/apps/web/src/features/admin/content-import.tsx
++++ b/apps/web/src/features/admin/content-import.tsx
+@@ -580,7 +580,7 @@ function UploadContent() {
+                   {usage === 'TRYOUT' && (
+                     <p>
+                       Tryout campuran: bab, subbab, indikator, dan level boleh kosong. Kesulitan
+-                      tetap wajib.
++                      juga boleh kosong; nilai yang diberikan tetap divalidasi.
+                     </p>
+                   )}
+                   {usage === 'TRYOUT' && (

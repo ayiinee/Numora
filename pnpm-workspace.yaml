@@ -10,3 +10,14 @@ minimumReleaseAgeExclude:
 overrides:
   # Express still permits body-parser 2.3.x; require its compressed-body crash fix.
   'express>body-parser': 2.4.0
+  # Reviewed compatible security patches; preserve every parent package/API.
+  'source-map-js@1.2.1': 1.2.2
+  'fast-uri@3.1.8': 3.1.9
+  'qs@6.16.0': 6.16.1
+  # Keep Vitest/jsdom on reviewed compatible minor/patch fixes.
+  'vite@8.3.1': 8.3.3
+  'undici@8.11.2': 8.12.2
+  # ExcelJS uses only the unchanged CJS v4 export; verify workbook/media regressions.
+  'exceljs>uuid': 11.1.1
+  # Legacy drizzle loader uses transform/build APIs; verify config/journal loading.
+  '@esbuild-kit/core-utils>esbuild': 0.25.12

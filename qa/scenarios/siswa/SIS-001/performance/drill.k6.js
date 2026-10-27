@@ -1,8 +1,10 @@
 import http from 'k6/http';
 import { check, sleep } from 'k6';
 import { Counter } from 'k6/metrics';
+import exec from 'k6/execution';
 const completed = new Counter('qa_completed');
 const integrityErrors = new Counter('qa_integrity_errors');
+const clientEvents = new Counter('qa_client_event');
 const vus = JSON.parse(__ENV.QA_VUS || '[10,25,50,100]');
 const seconds = Number(__ENV.QA_STAGE_SECONDS || 60);
 export const options = {
@@ -36,23 +38,38 @@ export function setup() {
 }
 export default function (actors) {
   integrityErrors.add(0);
+  const actor = actors[(__VU - 1) % actors.length];
+  const receipt = (kind, fields = {}) =>
+    clientEvents.add(1, {
+      phase: __ENV.QA_LOAD_PHASE || 'load',
+      op_id: `${exec.scenario.name}:${__VU}:${__ITER}`,
+      actor_id: actor.profileId,
+      kind,
+      ...fields,
+    });
   const params = {
     headers: {
-      Authorization: 'Bearer ' + actors[(__VU - 1) % actors.length].session.access_token,
+      Authorization: 'Bearer ' + actor.session.access_token,
       'Content-Type': 'application/json',
     },
     timeout: '15s',
   };
+  receipt('start_requested');
   const started = http.post(
     api + '/assessments/drill/attempts',
     JSON.stringify({ levelId: '00000000-0000-4000-8000-000000000102' }),
     params,
   );
   if (!check(started, { 'start accepted': (r) => r.status === 201 })) {
+    receipt('start_response', {
+      http_status: String(started.status),
+      error_code: String(started.error_code || ''),
+    });
     sleep(1);
     return;
   }
   const attempt = started.json();
+  receipt('start_response', { http_status: String(started.status), attempt_id: attempt.id });
   if (!Array.isArray(attempt.questions) || attempt.questions.length !== 10) {
     integrityErrors.add(1);
     return;
@@ -67,21 +84,43 @@ export default function (actors) {
       JSON.stringify({ optionId: i < 8 ? 'B' : 'A' }),
       params,
     );
-    if (!check(saved, { 'answer acknowledged': (r) => r.status === 200 })) return;
+    if (!check(saved, { 'answer acknowledged': (r) => r.status === 200 })) {
+      receipt('answer_failed', {
+        attempt_id: attempt.id,
+        http_status: String(saved.status),
+        error_code: String(saved.error_code || ''),
+      });
+      return;
+    }
   }
+  receipt('submit_requested', { attempt_id: attempt.id });
   const submitted = http.post(api + '/assessment-attempts/' + attempt.id + '/submit', null, params);
   if (check(submitted, { 'submit accepted': (r) => r.status === 201 })) {
     const result = submitted.json();
     const correct =
+      result.attemptId === attempt.id &&
       result.score === 80 &&
       result.reward &&
       result.reward.baseXp === 80 &&
       Number.isInteger(result.reward.totalXp) &&
       result.reward.totalXp >= 80 &&
       result.reward.totalXp <= 130;
+    receipt('submit_response', {
+      attempt_id: attempt.id,
+      http_status: String(submitted.status),
+      valid: correct ? '1' : '0',
+      score: String(result.score),
+      xp: String(result.reward?.totalXp),
+    });
     if (!correct) integrityErrors.add(1);
     else completed.add(1);
-  }
+  } else
+    receipt('submit_response', {
+      attempt_id: attempt.id,
+      http_status: String(submitted.status),
+      error_code: String(submitted.error_code || ''),
+    });
+  receipt('iteration_finished', { attempt_id: attempt.id });
   sleep(1);
 }
 export function handleSummary(data) {
