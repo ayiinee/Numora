@@ -74,8 +74,25 @@ not initialize; visual verification is therefore limited to native cell/layout
 metadata, not a screenshot. Publication details are recorded separately beside
 the immutable run result in `SPREADSHEET_PUBLICATION.json`.
 
-The configured team Drive folder returns NOT_FOUND for both selected accounts;
-folder publication is **PENDING_FOLDER_ACCESS**, not successful publication.
-Do not create a replacement team folder, switch accounts silently or expose public
-access. The spreadsheet remains the authorized shared monitoring destination;
-repository reports remain the canonical test evidence.
+The old configured Drive folder returned NOT_FOUND for both selected accounts.
+The user then supplied the accessible Big Data parent folder. The confirmed
+destination is now `Big Data/Numora QA/siswa`; the root and four role folder IDs
+are stored in `qa/config.json`. The sanitized native Google Doc was read back
+and its parent verified. The destination inherits the parent's existing
+`anyone/writer` access; no permissions were changed, and restricted team-account
+access is **not verified**. The initial 403/404 outcomes remain in publication
+history. Repository reports remain the canonical test evidence.
+
+## CI follow-up
+
+Initial PR #109 and #102 CI passed lint, typecheck and package tests, then failed
+the connected release-chain assertion comparing PostgreSQL decimal string
+`"80.000000"` to integer `80`. The fixture type and numeric comparison are
+corrected; expected base XP 80 and policy version 2 are unchanged. Local retest
+on clean `2fc382f370571ee98d39b98152b372dd4e9939ca` passed the Drill/monitoring
+chain and token/HTTP authorization checks, then timed out at the anonymous URL
+guard (2 PASS, 1 FAIL, 3 NOT_RUN). An earlier API readiness timeout is retained.
+Neither partial run establishes release-chain acceptance; Linux PR CI must
+verify the final head. JOB-06 also explicitly pins its disabled PvP fixture so
+local developer activation cannot alter that boundary; real PvP evidence is
+owned by the separate JOB-16 harness.

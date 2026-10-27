@@ -24,8 +24,16 @@
     "redisMajor": 7
   },
   "drive": {
-    "folderId": "1R0Y-J448i3NwbmXZZ9IIgayaF5jrbszn",
+    "folderId": "1i2_3VLW7qlAz6-XPvFRGV-VtuJEb13YS",
     "folderName": "Numora QA",
+    "parentFolderId": "1NHAQNoP6oBTIL0zDdTU0i4aSct85k2wq",
+    "roleFolders": {
+      "siswa": "1czyp89HC3lWi3kHX0kBk6PvJdidaO80L",
+      "guru": "1kE_OW-B9hFyp1jb_ixEJKYWTOtRJLDIf",
+      "admin": "1L6a9FNpE5b1-Uifcxd94jktzYbe7fqmS",
+      "cross-role": "1JDLH3kNWcADcRJu5dy_t95fij92aQgvf"
+    },
+    "destinationVisibility": "INHERITED_ANYONE_WRITER",
     "publication": "explicit",
     "format": "google-docs",
     "teamAccessVerified": false
