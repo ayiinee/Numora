@@ -70,9 +70,11 @@ export function AdminWorkspace({
                 ? blocked.message
                 : state.status === 'error' || state.status === 'disabled'
                   ? (state.message ?? 'Akun tidak dapat mengakses halaman ini.')
-                  : permission === 'content'
-                    ? 'Akses memerlukan Super Admin atau Admin Content, Data & Moderation.'
-                    : 'Halaman ini hanya tersedia untuk Admin Operasional atau Super Admin yang aktif.'
+                  : permission === 'accounts'
+                    ? 'Hanya Super Admin aktif yang dapat mengelola akun Admin.'
+                    : permission === 'content'
+                      ? 'Akses memerlukan Super Admin atau Admin Content, Data & Moderation.'
+                      : 'Halaman ini hanya tersedia untuk Admin Operasional atau Super Admin yang aktif.'
             }
             login
             retry={() => void refresh()}

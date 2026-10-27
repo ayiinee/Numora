@@ -9,6 +9,11 @@ const mocks = vi.hoisted(() => ({
   update: vi.fn(),
   identity: vi.fn(),
   refresh: vi.fn(),
+  router: { replace: vi.fn() },
+}));
+vi.mock('next/navigation', () => ({ useRouter: () => mocks.router }));
+vi.mock('@/components/shell', () => ({
+  AppShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
 }));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: mocks.state, refresh: mocks.refresh }),
@@ -43,8 +48,18 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 describe('Admin accounts and dedicated acceptance', () => {
-  it('does not load privileged data for Content or Operations', () => {
-    mocks.state = { status: 'ready', profile: { role: 'ADMIN', capabilities: ['CONTENT_MANAGE'] } };
+  it.each([
+    {
+      adminRole: 'CONTENT_DATA_MODERATION',
+      status: 'ACTIVE',
+      capabilities: ['ADMIN_ACCOUNTS_MANAGE'],
+    },
+    { adminRole: 'OPERATIONS', status: 'ACTIVE', capabilities: ['ADMIN_ACCOUNTS_MANAGE'] },
+    { adminRole: null, status: 'ACTIVE', capabilities: ['ADMIN_ACCOUNTS_MANAGE'] },
+    { adminRole: 'SUPER_ADMIN', status: 'DISABLED', capabilities: ['ADMIN_ACCOUNTS_MANAGE'] },
+    { adminRole: 'SUPER_ADMIN', status: 'ACTIVE', capabilities: [] },
+  ])('does not load privileged data for invalid assignment %j', (profile) => {
+    mocks.state = { status: 'ready', profile: { role: 'ADMIN', ...profile } };
     render(<AdminAccountsScreen />);
     expect(screen.getByText(/Hanya Super/)).toBeTruthy();
     expect(mocks.api).not.toHaveBeenCalled();
@@ -55,7 +70,9 @@ describe('Admin accounts and dedicated acceptance', () => {
       return { items: [], nextOffset: null };
     });
     render(<AdminAccountsScreen />);
-    await screen.findByText('Belum ada akun sesuai filter.');
+    await screen.findByText('Belum ada akun Admin');
+    expect(screen.queryByText('Invite unavailable')).toBeNull();
+    fireEvent.click(screen.getByRole('tab', { name: /Undangan/ }));
     await screen.findByText('Invite unavailable');
   });
   it('clears loaded account data when access changes', async () => {

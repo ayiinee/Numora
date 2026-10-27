@@ -1,6 +1,6 @@
 import type { IdentityProfile } from '@/lib/api';
 
-export type AdminWorkspacePermission = 'operations' | 'content';
+export type AdminWorkspacePermission = 'operations' | 'content' | 'accounts';
 
 // Presentation only; NestJS remains authoritative for each request.
 export function adminCanAccess(
@@ -8,6 +8,11 @@ export function adminCanAccess(
   permission: AdminWorkspacePermission,
 ) {
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE') return false;
+  if (permission === 'accounts')
+    return (
+      profile.adminRole === 'SUPER_ADMIN' &&
+      Boolean(profile.capabilities?.includes('ADMIN_ACCOUNTS_MANAGE'))
+    );
   return permission === 'operations'
     ? profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'OPERATIONS'
     : (profile.adminRole === 'SUPER_ADMIN' || profile.adminRole === 'CONTENT_DATA_MODERATION') &&

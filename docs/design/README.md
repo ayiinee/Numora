@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION - pemilik, 27 Oktober 2026:** halaman Akun Admin memakai [layout operasional ringkas dan profesional](ADMIN_ACCOUNTS_UX_2026-10-27.md), dengan daftar akun, tab undangan, dan dialog aksi. Perubahan dibatasi pada halaman tersebut dan tetap memakai komponen, font, serta aturan akses Numora.
+
 **ENGINEERING FIX - 27 Oktober 2026:** seluruh sidebar desktop Admin, termasuk Super Admin, dapat digulir di dalam tinggi viewport. Scroll sidebar tidak diteruskan ke halaman utama saat mencapai batas. Semua menu dan identitas akun tetap dapat dicapai pada layar pendek, termasuk melalui keyboard. Regresi browser memeriksa roda mouse, Tab hingga menu terakhir, dan menu mobile; otorisasi serta struktur navigasi tetap mengikuti assignment.
 
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
