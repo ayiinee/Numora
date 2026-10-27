@@ -1,0 +1,14 @@
+{
+  "baseSha": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+  "workingTree": "clean",
+  "environment": "isolated localhost",
+  "auth": "TEST FIXTURE; real staging identities still required",
+  "checks": [
+    "easy: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+    "medium: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+    "hard: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+    "random READY Drill bank: ten unique families/difficulty, equal questions/order, browser reload reconnect, frozen snapshots",
+    "actual Drill submit → immutable XP ledger → identical class/global account XP"
+  ],
+  "result": "PASS"
+}
