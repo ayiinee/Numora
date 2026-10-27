@@ -1,0 +1,362 @@
+{
+  "historicalErrors": 27,
+  "backendCount": 11,
+  "allocationRangeBytes": [
+    48,
+    27336
+  ],
+  "errors": [
+    {
+      "at": "2026-10-28 03:31:05.427 +07",
+      "backendPid": 1156,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6294976,
+        "usedBytes": 4586232
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.429 +07",
+      "backendPid": 16688,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6764688,
+        "usedBytes": 4826952
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.428 +07",
+      "backendPid": 5296,
+      "allocationBytes": 512,
+      "memoryContext": "CachedPlan",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6764688,
+        "usedBytes": 4826952
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.438 +07",
+      "backendPid": 3832,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6760544,
+        "usedBytes": 4813872
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.462 +07",
+      "backendPid": 16688,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6752352,
+        "usedBytes": 4814224
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.468 +07",
+      "backendPid": 5296,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6752352,
+        "usedBytes": 4814232
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.474 +07",
+      "backendPid": 15032,
+      "allocationBytes": 440,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 7476368,
+        "usedBytes": 5358376
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.498 +07",
+      "backendPid": 1156,
+      "allocationBytes": 440,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6510736,
+        "usedBytes": 4563168
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.503 +07",
+      "backendPid": 16688,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6290608,
+        "usedBytes": 4592248
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.505 +07",
+      "backendPid": 5488,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6292616,
+        "usedBytes": 4585904
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.520 +07",
+      "backendPid": 15032,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 7737488,
+        "usedBytes": 5620648
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.539 +07",
+      "backendPid": 21936,
+      "allocationBytes": 1056,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6304912,
+        "usedBytes": 4382704
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.554 +07",
+      "backendPid": 1156,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6760544,
+        "usedBytes": 4814160
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.557 +07",
+      "backendPid": 5488,
+      "allocationBytes": 27336,
+      "memoryContext": "get_actual_variable_range workspace",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6498400,
+        "usedBytes": 4526400
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.582 +07",
+      "backendPid": 5488,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6292616,
+        "usedBytes": 4591320
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.610 +07",
+      "backendPid": 16688,
+      "allocationBytes": 1056,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6359136,
+        "usedBytes": 4423216
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.638 +07",
+      "backendPid": 1156,
+      "allocationBytes": 48,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 5571008,
+        "usedBytes": 3992064
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.648 +07",
+      "backendPid": 16688,
+      "allocationBytes": 440,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6489184,
+        "usedBytes": 4550952
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.702 +07",
+      "backendPid": 21616,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6290608,
+        "usedBytes": 4593952
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.959 +07",
+      "backendPid": 16688,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6020272,
+        "usedBytes": 4321728
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.974 +07",
+      "backendPid": 21936,
+      "allocationBytes": 24576,
+      "memoryContext": "TupleSort main",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 5952696,
+        "usedBytes": 4108096
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.976 +07",
+      "backendPid": 3832,
+      "allocationBytes": 1056,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6366304,
+        "usedBytes": 4417632
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:05.986 +07",
+      "backendPid": 5296,
+      "allocationBytes": 64,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6292616,
+        "usedBytes": 4598840
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:31:06.054 +07",
+      "backendPid": 5488,
+      "allocationBytes": 64,
+      "memoryContext": "SPI Exec",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6751328,
+        "usedBytes": 4813632
+      },
+      "windowContainsDeliveryCall": true,
+      "windowContainsTrialReservationUpdate": true,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:44:24.328 +07",
+      "backendPid": 23724,
+      "allocationBytes": 48,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6323376,
+        "usedBytes": 4635224
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:44:24.341 +07",
+      "backendPid": 26612,
+      "allocationBytes": 48,
+      "memoryContext": "MessageContext",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 6327472,
+        "usedBytes": 4646632
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    },
+    {
+      "at": "2026-10-28 03:45:05.719 +07",
+      "backendPid": 7052,
+      "allocationBytes": 564,
+      "memoryContext": "ExecutorState",
+      "nearbyUnattributedContextDump": {
+        "totalBytes": 7119448,
+        "usedBytes": 4855704
+      },
+      "windowContainsDeliveryCall": false,
+      "windowContainsTrialReservationUpdate": false,
+      "contextAssociation": "NEARBY_LOG_WINDOW_ONLY_INTERLEAVED_BACKENDS_NOT_PER_REQUEST_PROOF"
+    }
+  ],
+  "inference": "Small failed allocations across multiple backends/contexts are consistent with system commit pressure. Backend memory-context totals exclude other allocations/shared mappings and cannot alone prove OS exhaustion. Contemporaneous system commit samples unavailable for historical run."
+}

@@ -108,6 +108,14 @@ test('stream reader keeps only controlled tags and rejects conflicting identitie
         }),
         JSON.stringify(point('submit_requested')),
         JSON.stringify(
+          point('start_response', {
+            http_status: '201',
+            attempt_status: 'completed',
+            question_count: '0',
+            secret: 'NOT_RETAINED',
+          }),
+        ),
+        JSON.stringify(
           point('submit_response', { http_status: '201', valid: '1', score: '80', xp: '125' }),
         ),
         JSON.stringify(point('iteration_finished', { actor_id: attempt })),
@@ -117,11 +125,43 @@ test('stream reader keeps only controlled tags and rejects conflicting identitie
     const r = await readLoadReceipts([file]);
     assert.equal(r.operations.length, 1);
     assert.equal(r.operations[0].events.submit_response.xp, 125);
+    assert.equal(r.operations[0].events.start_response.attemptStatus, 'completed');
+    assert.equal(r.operations[0].events.start_response.questionCount, 0);
     assert.deepEqual(
       r.errors.map((x) => x.code),
       ['RECEIPT_IDENTITY_CHANGED', 'INVALID_JSON_LINE'],
     );
     assert.ok(!JSON.stringify(r).includes('NOT_RETAINED'));
+  } finally {
+    rmSync(dir, { recursive: true, force: true });
+  }
+});
+
+test('stream reader rejects arbitrary status and nonnumeric question metadata', async () => {
+  const dir = mkdtempSync(join(tmpdir(), 'numora-receipt-metadata-'));
+  const file = join(dir, 'stream.jsonl');
+  try {
+    const points = [{ attempt_status: 'private payload' }, { question_count: 'NaN' }].map(
+      (extra) => ({
+        type: 'Point',
+        metric: 'qa_client_event',
+        data: {
+          time: '2026-10-28T00:00:00Z',
+          tags: {
+            phase: 'load',
+            op_id: 'vus_10:1:0',
+            actor_id: student,
+            kind: 'start_response',
+            ...extra,
+          },
+        },
+      }),
+    );
+    writeFileSync(file, points.map((p) => JSON.stringify(p)).join('\n'));
+    assert.deepEqual(
+      (await readLoadReceipts([file])).errors.map((e) => e.code),
+      ['INVALID_RECEIPT', 'INVALID_RECEIPT'],
+    );
   } finally {
     rmSync(dir, { recursive: true, force: true });
   }

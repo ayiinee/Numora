@@ -39,10 +39,11 @@ export function setup() {
 export default function (actors) {
   integrityErrors.add(0);
   const actor = actors[(__VU - 1) % actors.length];
+  const operationId = `${exec.scenario.name}:${__VU}:${__ITER}`;
   const receipt = (kind, fields = {}) =>
     clientEvents.add(1, {
       phase: __ENV.QA_LOAD_PHASE || 'load',
-      op_id: `${exec.scenario.name}:${__VU}:${__ITER}`,
+      op_id: operationId,
       actor_id: actor.profileId,
       kind,
       ...fields,
@@ -51,6 +52,7 @@ export default function (actors) {
     headers: {
       Authorization: 'Bearer ' + actor.session.access_token,
       'Content-Type': 'application/json',
+      'x-qa-operation-id': operationId,
     },
     timeout: '15s',
   };
@@ -69,7 +71,14 @@ export default function (actors) {
     return;
   }
   const attempt = started.json();
-  receipt('start_response', { http_status: String(started.status), attempt_id: attempt.id });
+  receipt('start_response', {
+    http_status: String(started.status),
+    attempt_id: attempt.id,
+    attempt_status: ['inProgress', 'completed'].includes(attempt.status)
+      ? attempt.status
+      : 'unknown',
+    question_count: String(Array.isArray(attempt.questions) ? attempt.questions.length : -1),
+  });
   if (!Array.isArray(attempt.questions) || attempt.questions.length !== 10) {
     integrityErrors.add(1);
     return;

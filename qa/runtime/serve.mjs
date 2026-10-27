@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { fileURLToPath, pathToFileURL } from 'node:url';
 import { resolve } from 'node:path';
 import { requireFrom, testEnvironment } from '../../scripts/qa/process.mjs';
+import { createHttpObserver } from './http-observer.mjs';
 const root = fileURLToPath(new URL('../../', import.meta.url));
 const { environment, problems } = testEnvironment(root);
 if (
@@ -165,6 +166,22 @@ const { configureApplication } = await import(
 );
 const app = await NestFactory.create(AppModule, { logger: ['error', 'warn'] });
 configureApplication(app);
+const observer = process.env.QA_HTTP_EVIDENCE_FILE
+  ? createHttpObserver(root, process.env.QA_HTTP_EVIDENCE_FILE)
+  : null;
+if (observer) {
+  app.use(observer.middleware);
+  const { ProblemDetailsFilter } = await import(
+    pathToFileURL(resolve(root, 'apps/api/dist/problem-details.filter.js')).href
+  );
+  const filter = new ProblemDetailsFilter();
+  app.useGlobalFilters({
+    catch(error, host) {
+      observer.error(host.switchToHttp().getRequest(), error);
+      return filter.catch(error, host);
+    },
+  });
+}
 await app.listen(3501, '127.0.0.1');
 console.log('QA connected harness ready. Synthetic auth only; product API and database are real.');
 async function shutdown() {
@@ -172,6 +189,7 @@ async function shutdown() {
   authServer.closeAllConnections();
   authServer.close();
   await closeDatabaseConnection();
+  if (observer) await observer.close();
   process.exit(0);
 }
 process.on('SIGTERM', shutdown);

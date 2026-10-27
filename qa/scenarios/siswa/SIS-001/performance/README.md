@@ -34,3 +34,14 @@ Instrumentation menambah pekerjaan pada generator, sehingga angka latensi tetap
 baseline lokal dan tidak dibandingkan sebagai bukti sebab-akibat kapasitas.
 Pemeriksaan load memeriksa persistensi outbox; delivery analytics diuji terpisah
 melalui volume/velocity/recovery. Tidak ada SLO produksi yang diciptakan.
+
+# Investigasi commit tanpa respons — 28 Oktober 2026
+
+Lihat [laporan OOM/response](../investigations/20261028-submit-oom/REPORT.md).
+Fault API terarah membuktikan SQLSTATE53200 sesudah grading dan timeout klien15s
+sebelum respons siap, dengan GET/concurrent retry idempoten. Bukti ini bukan
+kelulusan load. Receipt117 tanpa respons pada full838c1952 seluruhnya berada
+538–1184ms sebelum metric akhir fase; jangan menyebutnya117 timeout HTTP15s.
+Observer HTTP opt-in hanya ada dalam harness QA dan tidak merekam token/body.
+Metadata status/jumlah soal pada start ditambahkan untuk investigasi race berikutnya.
+VU, stage, gracefulStop, drain dan batas full tidak berubah.

@@ -38,7 +38,10 @@ export async function readLoadReceipts(files) {
         !/^[a-zA-Z0-9_:.-]{1,160}$/.test(t.op_id || '') ||
         !kinds.has(t.kind) ||
         !uuid.test(t.actor_id || '') ||
-        (t.attempt_id && !uuid.test(t.attempt_id))
+        (t.attempt_id && !uuid.test(t.attempt_id)) ||
+        (t.attempt_status !== undefined &&
+          !['inProgress', 'completed', 'unknown'].includes(t.attempt_status)) ||
+        (t.question_count !== undefined && !/^(?:-1|\d{1,4})$/.test(t.question_count))
       ) {
         errors.push({ code: 'INVALID_RECEIPT', line: lineNumber });
         continue;
@@ -65,6 +68,8 @@ export async function readLoadReceipts(files) {
         valid: t.valid === '1',
         score: t.score === undefined ? null : Number(t.score),
         xp: t.xp === undefined ? null : Number(t.xp),
+        ...(t.attempt_status === undefined ? {} : { attemptStatus: t.attempt_status }),
+        ...(t.question_count === undefined ? {} : { questionCount: Number(t.question_count) }),
       };
     }
   }
