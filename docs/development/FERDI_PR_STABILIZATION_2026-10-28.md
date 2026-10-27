@@ -82,6 +82,12 @@ Do not guess Farel's GitHub account or send email/chat messages. The canonical P
 
 ## Verification boundary
 
+### Browser dependency acquisition in CI
+
+Two attempts at head `509238a` reached successful tests and connected IRT, then spent multiple minutes downloading Ubuntu font/library packages from `azure.archive.ubuntu.com`. The second recorded 25.9 MB in 4 min 3 s (107 kB/s); the subsequent Chromium downloads were fast. Both were cancelled during installation, so neither is a passing full-quality result.
+
+The workflow now prefers Ubuntu's official HTTPS archive in the runner's existing APT mirror list and limits the browser installation step to five minutes. Installation failures remain fatal; package signature verification, browser scenarios, business assertions and test timeouts are retained. This changes the disposable CI runner only. The [runner image's mirror configuration](https://github.com/actions/runner-images/blob/main/images/ubuntu/scripts/build/configure-apt-sources.sh) supplies the same official archive as its existing fallback; [upstream issue #14594](https://github.com/actions/runner-images/issues/14594) records the Azure-mirror stall class.
+
 Use logs under `D:/CodexCache/Numora-integration-20261026-762ad57/stabilization-*` for this run. Record actual results and the tested SHA in the canonical PR body. Interrupted memory-constrained attempts are not passing tests. Local lint, types, unit/integration tests, browser fixtures, connected service chains and GitHub `quality` are separate evidence.
 
 All database writes in this task target disposable local PostgreSQL at `127.0.0.1:55442`, using `numora_test_stabilization_20261028` and the dedicated `numora_test_job06_stabilization` chain database. Redis uses dedicated localhost port `56379`. Test commands explicitly pin those service URLs; the connected harness also pins API/auth to localhost fixtures and PvP to its expected closed policy (`PVP_MODE=disabled`, strict content), regardless of local demo activation. Application environment loaders retain their existing behavior. No Cloud schema, data, credentials, email or external media is changed. Browser fixtures do not prove real Google OAuth/SMTP/R2 or academic/Data acceptance.
