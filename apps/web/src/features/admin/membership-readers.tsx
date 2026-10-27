@@ -1,38 +1,10 @@
 'use client';
 import { useEffect, useState } from 'react';
-import { Button, Card } from '@tka/ui';
+import { Button } from '@tka/ui';
+import { PeopleFooter, PeopleStatus, peopleDate } from './operations-panels';
 import { AdminLoading, AdminMessage } from './admin-presentation';
-import { ADMIN_PAGE_SIZE } from './pagination';
 import { getAdminMemberships, getAdminRoster } from './operations-api';
 import type { AdminMembershipsDto, AdminRosterDto } from './generated-types';
-function Pager({
-  offset,
-  nextOffset,
-  setOffset,
-}: {
-  offset: number;
-  nextOffset: number | null;
-  setOffset: (offset: number) => void;
-}) {
-  return (
-    <div className="admin-content-actions">
-      <Button
-        variant="secondary"
-        disabled={!offset}
-        onClick={() => setOffset(Math.max(0, offset - ADMIN_PAGE_SIZE))}
-      >
-        Sebelumnya
-      </Button>
-      <Button
-        variant="secondary"
-        disabled={nextOffset === null}
-        onClick={() => setOffset(nextOffset!)}
-      >
-        Berikutnya
-      </Button>
-    </div>
-  );
-}
 export function OperationsMemberships({
   token,
   userId,
@@ -65,38 +37,74 @@ export function OperationsMemberships({
     };
   }, [token, userId, offset, revision, onAccessError]);
   return (
-    <section>
-      <h4>Membership dan verifikasi sekolah</h4>
+    <section
+      className="people-history people-surface"
+      aria-label="Keanggotaan dan verifikasi sekolah"
+    >
+      <div className="people-section-heading">
+        <h3>Keanggotaan & verifikasi sekolah</h3>
+        <p>Riwayat sekolah dan kelas yang terhubung dengan akun ini.</p>
+      </div>
       {error ? (
-        <AdminMessage error message={error} retry={() => setRevision((value) => value + 1)} />
+        <AdminMessage error message={error} retry={() => setRevision((v) => v + 1)} />
       ) : !data ? (
-        <AdminLoading message="Memuat membership…" />
+        <AdminLoading message="Memuat keanggotaan..." />
       ) : (
         <>
-          {!data.items.length && <p>Belum ada membership atau verifikasi sekolah.</p>}
-          <ul className="monitoring-list">
-            {data.items.map((item) => (
-              <li key={item.id}>
-                <strong>
-                  {item.schoolName}
-                  {item.className ? ` · ${item.className}` : ''}
-                </strong>
-                <p>
-                  {item.active ? 'Aktif' : 'Tidak aktif'} · Mulai{' '}
-                  {new Date(item.startedAt).toLocaleString('id-ID')}
-                  {item.endedAt
-                    ? ` · Berakhir ${new Date(item.endedAt).toLocaleString('id-ID')}`
-                    : ''}
-                </p>
-              </li>
-            ))}
-          </ul>
-          <Pager offset={offset} nextOffset={data.nextOffset} setOffset={setOffset} />
+          {!data.items.length ? (
+            <p className="people-empty-inline">Belum ada membership atau verifikasi sekolah.</p>
+          ) : (
+            <table className="people-table people-membership-table" role="table">
+              <caption className="sr-only">Riwayat keanggotaan dan verifikasi sekolah</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Sekolah & kelas</th>
+                  <th scope="col">Status keanggotaan</th>
+                  <th scope="col">Mulai (WIB)</th>
+                  <th scope="col">Berakhir (WIB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item) => (
+                  <tr key={item.id}>
+                    <td className="people-person">
+                      <strong className="people-record-name">{item.schoolName}</strong>
+                      <span className="people-record-secondary">
+                        {item.className ?? 'Verifikasi sekolah'}
+                      </span>
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Status keanggotaan</span>
+                      <PeopleStatus active={item.active}>
+                        {item.active ? 'Aktif' : 'Tidak aktif'}
+                      </PeopleStatus>
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Mulai (WIB)</span>
+                      {peopleDate(item.startedAt)}
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Berakhir (WIB)</span>
+                      {item.endedAt ? peopleDate(item.endedAt) : 'Belum berakhir'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <PeopleFooter
+            offset={offset}
+            count={data.items.length}
+            nextOffset={data.nextOffset}
+            onChange={setOffset}
+            label="Halaman keanggotaan"
+          />
         </>
       )}
     </section>
   );
 }
+
 export function OperationsRoster({
   token,
   classId,
@@ -132,62 +140,103 @@ export function OperationsRoster({
     };
   }, [token, classId, offset, state, filter, revision, onAccessError]);
   return (
-    <Card>
-      <h4>Roster kelas</h4>
-      <label htmlFor="roster-state">Status membership</label>
-      <select
-        id="roster-state"
-        className="text-input"
-        value={state}
-        onChange={(e) => {
-          setState(e.target.value);
-          setOffset(0);
-        }}
-      >
-        <option value="active">Anggota aktif</option>
-        <option value="former">Mantan anggota</option>
-        <option value="">Semua membership</option>
-      </select>
-      <form
-        onSubmit={(e) => {
-          e.preventDefault();
-          setFilter(search);
-          setOffset(0);
-        }}
-      >
-        <label htmlFor="roster-search">Cari anggota</label>
-        <input
-          id="roster-search"
-          className="text-input"
-          maxLength={100}
-          value={search}
-          onChange={(e) => setSearch(e.target.value)}
-        />
-        <Button type="submit" variant="secondary">
-          Cari anggota
-        </Button>
-      </form>
+    <section className="people-history people-surface" aria-label="Anggota kelas">
+      <div className="people-section-heading">
+        <h3>Anggota kelas</h3>
+        <p>Telusuri anggota aktif dan riwayat keanggotaan kelas.</p>
+      </div>
+      <div className="people-roster-toolbar">
+        <label className="people-field" htmlFor="roster-state">
+          <span>Status keanggotaan</span>
+          <select
+            id="roster-state"
+            value={state}
+            onChange={(event) => {
+              setState(event.target.value);
+              setOffset(0);
+            }}
+          >
+            <option value="active">Anggota aktif</option>
+            <option value="former">Mantan anggota</option>
+            <option value="">Semua keanggotaan</option>
+          </select>
+        </label>
+        <form
+          onSubmit={(event) => {
+            event.preventDefault();
+            setFilter(search.trim());
+            setOffset(0);
+          }}
+          className="people-roster-search"
+        >
+          <label className="people-field" htmlFor="roster-search">
+            <span>Cari anggota</span>
+            <input
+              id="roster-search"
+              type="search"
+              maxLength={100}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </label>
+          <Button type="submit" variant="secondary">
+            Cari anggota
+          </Button>
+        </form>
+      </div>
       {error ? (
-        <AdminMessage error message={error} retry={() => setRevision((value) => value + 1)} />
+        <AdminMessage error message={error} retry={() => setRevision((v) => v + 1)} />
       ) : !data ? (
-        <AdminLoading message="Memuat roster…" />
+        <AdminLoading message="Memuat anggota kelas..." />
       ) : (
         <>
-          {!data.items.length && <p>Belum ada anggota sesuai filter.</p>}
-          <ul className="monitoring-list">
-            {data.items.map((item) => (
-              <li key={item.membershipId}>
-                <strong>{item.displayName}</strong>
-                <p>
-                  Akun {item.status} · Bergabung {new Date(item.joinedAt).toLocaleString('id-ID')}
-                  {item.leftAt ? ` · Keluar ${new Date(item.leftAt).toLocaleString('id-ID')}` : ''}
-                </p>
-              </li>
-            ))}
-          </ul>
-          <Pager offset={offset} nextOffset={data.nextOffset} setOffset={setOffset} />
+          {!data.items.length ? (
+            <p className="people-empty-inline">Belum ada anggota sesuai filter.</p>
+          ) : (
+            <table className="people-table people-roster-table" role="table">
+              <caption className="sr-only">Anggota dan riwayat keanggotaan kelas</caption>
+              <thead>
+                <tr>
+                  <th scope="col">Nama anggota</th>
+                  <th scope="col">Status akun</th>
+                  <th scope="col">Bergabung (WIB)</th>
+                  <th scope="col">Keluar (WIB)</th>
+                </tr>
+              </thead>
+              <tbody>
+                {data.items.map((item) => (
+                  <tr key={item.membershipId}>
+                    <td className="people-person">
+                      <strong className="people-record-name">{item.displayName}</strong>
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Status akun</span>
+                      <PeopleStatus active={item.status === 'ACTIVE'}>
+                        {item.status === 'ACTIVE' ? 'Aktif' : 'Dinonaktifkan'}
+                      </PeopleStatus>
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Bergabung (WIB)</span>
+                      {peopleDate(item.joinedAt)}
+                    </td>
+                    <td>
+                      <span className="people-cell-label">Keluar (WIB)</span>
+                      {item.leftAt ? peopleDate(item.leftAt) : 'Masih menjadi anggota'}
+                    </td>
+                  </tr>
+                ))}
+              </tbody>
+            </table>
+          )}
+          <PeopleFooter
+            offset={offset}
+            count={data.items.length}
+            nextOffset={data.nextOffset}
+            onChange={setOffset}
+            label="Halaman anggota kelas"
+          />
         </>
       )}
-    </Card>
+    </section>
   );
 }

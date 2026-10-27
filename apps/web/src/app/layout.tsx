@@ -9,6 +9,7 @@ import './admin-operations.css';
 import './admin-management.css';
 import './admin-accounts.css';
 import './admin-schools.css';
+import './admin-people.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 

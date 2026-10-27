@@ -151,11 +151,15 @@ test('Operations reads student affiliation, membership and roster without an act
   await page.goto('/admin/operations');
   await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
   await expect(page.getByText('student@example.test')).toBeVisible();
-  await expect(page.getByText('Sekolah Fixture · Kelas Fixture')).toBeVisible();
-  await page.getByRole('button', { name: 'Kelas', exact: true }).click();
+  await expect(
+    page
+      .getByRole('region', { name: 'Keanggotaan dan verifikasi sekolah' })
+      .getByText('Sekolah Fixture', { exact: true }),
+  ).toBeVisible();
+  await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
   await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
   await expect(page.getByText('Tanpa Guru aktif', { exact: true })).toBeVisible();
-  await expect(page.getByRole('heading', { name: 'Roster kelas' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Anggota kelas' })).toBeVisible();
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -172,31 +176,32 @@ test('Operations deep links restore filters on reload and browser history', asyn
     if (url.pathname === '/api/v1/admin/classes') classQueries.push(url.search);
   });
   await page.goto(`/admin/operations?view=classes&schoolId=${id(4)}`);
-  await expect(page.getByLabel('ID sekolah (opsional)')).toHaveValue(id(4));
+  await expect(page).toHaveURL(new RegExp(`schoolId=${id(4)}`));
   await expect(page.getByText('Kelas Fixture', { exact: true })).toBeVisible();
   expect(requests).not.toContain('admin/users');
   expect(classQueries.every((query) => new URLSearchParams(query).get('schoolId') === id(4))).toBe(
     true,
   );
   await page.reload();
-  await expect(page.getByRole('button', { name: 'Kelas', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
+  await expect(page.getByRole('tab', { name: 'Kelas', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
   );
-  await page.getByRole('button', { name: 'Pengguna', exact: true }).click();
+  await page.getByRole('tab', { name: 'Pengguna', exact: true }).click();
   await expect(page).toHaveURL(/view=users/);
   await page.goBack();
-  await expect(page.getByRole('button', { name: 'Kelas', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
+  await expect(page.getByRole('tab', { name: 'Kelas', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
   );
   await page.goForward();
-  await expect(page.getByRole('button', { name: 'Pengguna', exact: true })).toHaveAttribute(
-    'aria-current',
-    'page',
+  await expect(page.getByRole('tab', { name: 'Pengguna', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
   );
   await page.goto('/admin/operations?role=TEACHER');
-  await expect(page.getByRole('combobox', { name: 'Role', exact: true })).toHaveValue('TEACHER');
+  await page.getByRole('button', { name: 'Filter', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Peran', exact: true })).toHaveValue('TEACHER');
 });
 
 for (const target of ['memberships', 'roster'] as const) {
@@ -266,17 +271,17 @@ test('Operations roster retries, filters and pages without losing the class deta
   fail = false;
   await page.getByRole('button', { name: 'Coba lagi' }).click();
   await expect(page.getByText('Anggota Halaman 1', { exact: true })).toBeVisible();
-  const roster = page.getByRole('heading', { name: 'Roster kelas' }).locator('..');
+  const roster = page.getByRole('region', { name: 'Anggota kelas' });
   await roster.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(page.getByText('Anggota Halaman 2', { exact: true })).toBeVisible();
   expect(queries.at(-1)?.get('offset')).toBe('5');
   await roster.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByText('Anggota Halaman 1', { exact: true })).toBeVisible();
-  await page.getByLabel('Status membership').selectOption('former');
+  await page.getByLabel('Status keanggotaan').selectOption('former');
   await expect(page.getByText('Mantan Anggota', { exact: true })).toBeVisible();
   expect(queries.at(-1)?.get('offset')).toBe('0');
   expect(queries.at(-1)?.get('state')).toBe('former');
-  await page.getByLabel('Status membership').selectOption('');
+  await page.getByLabel('Status keanggotaan').selectOption('');
   await expect(page.getByText('Anggota Halaman 1', { exact: true })).toBeVisible();
   expect(queries.at(-1)?.has('state')).toBe(false);
   await page.getByLabel('Cari anggota').fill('Nama Dicari');
@@ -332,7 +337,9 @@ for (const width of [320, 768, 1440]) {
     await page.goto('/admin/operations');
     await expect(page.getByRole('button', { name: 'Lihat detail', exact: true })).toBeVisible();
     await expect(page.locator('.admin-page-header')).toHaveCount(0);
-    await expect(page.locator('h1.sr-only')).toHaveCount(1);
+    await expect(
+      page.getByRole('heading', { name: 'Pengguna & kelas', level: 1, exact: true }),
+    ).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -340,9 +347,9 @@ for (const width of [320, 768, 1440]) {
     await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
     await expect(page.getByText('student@example.test')).toBeVisible();
     await captureOperations(page, 'user', width);
-    await page.getByRole('button', { name: 'Kelas', exact: true }).click();
+    await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
     await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
-    await expect(page.getByRole('heading', { name: 'Roster kelas' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Anggota kelas' })).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );

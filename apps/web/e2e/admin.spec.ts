@@ -584,33 +584,37 @@ for (const width of [390, 1280]) {
     await page.setViewportSize({ width, height: 900 });
     const { state, errors } = await setup(page);
     await page.goto('/admin/operations');
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
     const nextRequest = page.waitForRequest(
       (r) =>
         r.url().includes('/admin/users?') && new URL(r.url()).searchParams.get('offset') === '5',
     );
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
     expect(new URL((await nextRequest).url()).searchParams.get('limit')).toBe('5');
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
     await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Berikutnya', exact: true })).toBeDisabled();
     await page.getByLabel('Nama pengguna').fill('TEST 1');
-    await page.getByRole('button', { name: /Terapkan filter/ }).click();
+    await page.getByRole('button', { name: 'Cari', exact: true }).click();
     await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
     if (width === 1280) {
       const name = await page.getByLabel('Nama pengguna').boundingBox();
-      const role = await page.getByRole('combobox', { name: 'Role', exact: true }).boundingBox();
-      expect(Math.abs(name!.y - role!.y)).toBeLessThan(2);
-      expect(name!.width).toBeGreaterThan(role!.width);
+      const search = await page.getByRole('button', { name: 'Cari', exact: true }).boundingBox();
+      expect(Math.abs(name!.y - search!.y)).toBeLessThan(2);
+      expect(name!.width).toBeGreaterThan(search!.width);
+      await expect(page.getByRole('button', { name: 'Filter', exact: true })).toHaveAttribute(
+        'aria-expanded',
+        'false',
+      );
     }
     await capture(page, 'pagination-users', width);
-    await page.getByRole('button', { name: 'Kelas', exact: true }).click();
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(1);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
     await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
-    await expect(page.locator('.monitoring-list > li')).toHaveCount(5);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
     await capture(page, 'pagination-classes', width);
 
     state.data.versions.items = Array.from({ length: 6 }, (_, n) => ({

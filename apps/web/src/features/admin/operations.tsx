@@ -1,69 +1,40 @@
 'use client';
+import { useEffect, useRef, useState } from 'react';
+import { Button, Icon, Tabs } from '@tka/ui';
+import { AppShell } from '@/components/shell';
+import { useAuth } from '@/features/onboarding/auth';
+import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { withAdminWorkspace, useAdminAccessError } from './admin-workspace';
 import { useAdminUrl, adminOffset } from './admin-url';
-
-import { useCallback, useEffect, useState, type FormEvent, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { Badge, Button, Card, EmptyState, Icon, Input } from '@tka/ui';
-import { ApiProblem } from '@/lib/api';
-import { useAuth } from '@/features/onboarding/auth';
 import { getAdminClass, getAdminUser, listAdminClasses, listAdminUsers } from './operations-api';
-import type { AdminClassDto, AdminUserDto, AdminUserDetailDto } from './generated-types';
+import type {
+  AdminClassDto,
+  AdminClassListDto,
+  AdminUserDetailDto,
+  AdminUserListDto,
+} from './generated-types';
 import { OperationsMemberships, OperationsRoster } from './membership-readers';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
-import { AdminPagination } from './admin-pagination';
+import {
+  UserTable,
+  ClassTable,
+  UserSummary,
+  ClassSummary,
+  PeopleFooter,
+  PeopleEmpty,
+  peopleRoles,
+} from './operations-panels';
+import { OperationsPicker } from './operations-picker';
 
-type OperationsTab = 'users' | 'classes';
-const dateTime = new Intl.DateTimeFormat('id-ID', {
-  dateStyle: 'medium',
-  timeStyle: 'short',
-  timeZone: 'Asia/Jakarta',
-});
-const roleLabels = {
-  STUDENT: 'Siswa',
-  TEACHER: 'Guru',
-  ADMIN: 'Admin',
-} satisfies Record<AdminUserDto['role'], string>;
-const userStatusLabels = {
-  ACTIVE: 'Aktif',
-  DISABLED: 'Dinonaktifkan',
-} satisfies Record<AdminUserDto['status'], string>;
-
-function formatDate(value: string) {
-  const date = new Date(value);
-  return Number.isNaN(date.getTime()) ? 'Tidak tersedia' : dateTime.format(date);
-}
-
-function accessDenied(error: unknown): error is ApiProblem {
-  return error instanceof ApiProblem && [401, 403].includes(error.status);
-}
-
-export const AdminOperationsScreen = withAdminWorkspace(
-  AdminOperationsScreenProtected,
-  'operations',
-);
-function AdminOperationsScreenProtected() {
-  const { state } = useAuth();
-  return (
-    <AdminOperationsScreenContent
-      key={
-        state.status === 'ready'
-          ? `${state.profile.id}:${state.profile.adminRole}:${state.profile.status}:${state.profile.capabilities?.includes('OPERATIONS_MANAGE')}`
-          : state.status
-      }
-    />
-  );
-}
-function AdminOperationsScreenContent() {
-  const reportAccessError = useAdminAccessError();
-  const router = useRouter();
+type View = 'users' | 'classes';
+type Directory =
+  { kind: 'users'; page: AdminUserListDto } | { kind: 'classes'; page: AdminClassListDto };
+type Detail =
+  { kind: 'users'; value: AdminUserDetailDto } | { kind: 'classes'; value: AdminClassDto };
+const keys = ['search', 'role', 'status', 'affiliation', 'schoolId', 'teacherId', 'state'] as const;
+export const AdminOperationsScreen = withAdminWorkspace(OperationsScreen, 'operations');
+function OperationsScreen() {
   const { state, refresh } = useAuth();
   const url = useAdminUrl();
-  const tab: OperationsTab = url.params.get('view') === 'classes' ? 'classes' : 'users';
-  const routeQuery = url.search;
-  const [revision, setRevision] = useState(0);
-  const [deniedError, setDeniedError] = useState('');
-  const operationsRole = state.status === 'ready' && state.profile.adminRole === 'OPERATIONS';
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -71,10 +42,39 @@ function AdminOperationsScreenContent() {
     state.profile.capabilities?.includes('OPERATIONS_MANAGE')
       ? state.session.access_token
       : null;
-
-  function navigate(view: OperationsTab) {
+  const view: View = url.params.get('view') === 'classes' ? 'classes' : 'users';
+  const operations = state.status === 'ready' && state.profile.adminRole === 'OPERATIONS';
+  const identity =
+    state.status === 'ready'
+      ? JSON.stringify([
+          state.profile.id,
+          state.profile.adminRole,
+          state.profile.status,
+          state.profile.capabilities,
+        ])
+      : state.status;
+  if (!token || url.search === null)
+    return (
+      <AdminFrame
+        title="Pengguna & kelas"
+        description="Telusuri data operasional akun dan kelas."
+        icon="users"
+      >
+        {state.status === 'loading' || url.search === null ? (
+          <AdminLoading message="Memeriksa akses Admin..." />
+        ) : (
+          <AdminMessage
+            error
+            message="Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin."
+            login
+            retry={() => void refresh()}
+          />
+        )}
+      </AdminFrame>
+    );
+  function navigate(next: string) {
     url.update({
-      view,
+      view: next,
       search: null,
       role: null,
       status: null,
@@ -87,707 +87,427 @@ function AdminOperationsScreenContent() {
       classId: null,
     });
   }
-  useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/admin/login');
-    if (state.status === 'registration') router.replace('/onboarding');
-    if (state.status === 'ready' && state.profile.role !== 'ADMIN')
-      router.replace(state.profile.role === 'STUDENT' ? '/student' : '/teacher');
-  }, [router, state]);
-
-  const onAccessError = useCallback((error: unknown) => {
-    if (accessDenied(error)) {
-      reportAccessError(error);
-      setDeniedError(error.message);
-    }
-  }, []);
-
-  const frame = {
-    title: 'Pengguna dan kelas',
-    description: 'Lihat data operasional akun dan kelas yang tercatat di Numora.',
-    icon: 'users' as const,
-  };
-
-  if (!token || deniedError) {
-    return (
-      <AdminFrame {...frame}>
-        {state.status === 'loading' ? (
-          <AdminLoading message="Memeriksa akses Admin…" />
-        ) : (
-          <AdminMessage
-            error
-            message={
-              deniedError ||
-              (state.status === 'error'
-                ? (state.message ?? 'Akun belum dapat diperiksa.')
-                : 'Halaman ini hanya tersedia untuk Admin Operasional dan Super Admin.')
-            }
-            login
-            retry={() => {
-              setDeniedError('');
-              setRevision((current) => current + 1);
-              void refresh();
-            }}
-          />
-        )}
-      </AdminFrame>
-    );
-  }
-
+  const panel = (
+    <PeopleWorkspace
+      key={`${identity}:${url.search}`}
+      token={token}
+      view={view}
+      superAdmin={state.status === 'ready' && state.profile.adminRole === 'SUPER_ADMIN'}
+    />
+  );
   return (
-    <AdminFrame {...frame}>
-      {routeQuery === null ? (
-        <AdminLoading message="Memuat halaman operasional…" />
-      ) : (
-        <div className="monitoring-frame admin-content admin-operations">
-          <p className="admin-context-note">
-            <span>Data operasional · baca saja</span>
-            Telusuri verifikasi Guru, affiliation siswa, membership, dan roster kelas.
-          </p>
-          <nav className="admin-content-nav" aria-label="Jenis data operasional">
-            <Button
-              className={operationsRole ? 'admin-view-button' : undefined}
-              variant={tab === 'users' ? 'primary' : 'secondary'}
-              aria-current={tab === 'users' ? 'page' : undefined}
-              onClick={() => navigate('users')}
-            >
-              {operationsRole && <Icon name="users" />}
-              Pengguna
-            </Button>
-            <Button
-              className={operationsRole ? 'admin-view-button' : undefined}
-              variant={tab === 'classes' ? 'primary' : 'secondary'}
-              aria-current={tab === 'classes' ? 'page' : undefined}
-              onClick={() => navigate('classes')}
-            >
-              {operationsRole && <Icon name="school" />}
-              Kelas
-            </Button>
-          </nav>
-          {tab === 'users' ? (
-            <UsersPanel
-              key={`users:${routeQuery}`}
-              token={token}
-              revision={revision}
-              onAccessError={onAccessError}
-            />
-          ) : (
-            <ClassesPanel
-              key={`classes:${routeQuery}`}
-              token={token}
-              revision={revision}
-              onAccessError={onAccessError}
-            />
-          )}
-        </div>
-      )}
-    </AdminFrame>
+    <AppShell
+      area="admin"
+      className={`admin-redesign-shell admin-management-shell admin-people-shell${operations ? ' admin-workspace-shell admin-operations-shell' : ''}`}
+    >
+      <div className="people-frame">
+        <header className="people-page-heading">
+          <div>
+            <h1>Pengguna & kelas</h1>
+            <p>Telusuri akun, keanggotaan sekolah, dan anggota kelas.</p>
+          </div>
+          <span className="people-readonly">
+            <Icon name="lock" />
+            Baca saja
+          </span>
+        </header>
+        <Tabs
+          label="Jenis data operasional"
+          value={view}
+          onChange={navigate}
+          items={[
+            { value: 'users', label: 'Pengguna', content: view === 'users' ? panel : null },
+            { value: 'classes', label: 'Kelas', content: view === 'classes' ? panel : null },
+          ]}
+        />
+        <p className="people-access-note">
+          <Icon name="info" />
+          Halaman ini untuk penelusuran data. Pengelolaan akses akun dan tindakan khusus Guru
+          mengikuti izin masing-masing.
+        </p>
+      </div>
+    </AppShell>
   );
 }
-
-function UsersPanel({
+function PeopleWorkspace({
   token,
-  revision,
-  onAccessError,
+  view,
+  superAdmin,
 }: {
   token: string;
-  revision: number;
-  onAccessError: (error: unknown) => void;
+  view: View;
+  superAdmin: boolean;
 }) {
   const url = useAdminUrl();
-  const [search, setSearch] = useState(url.params.get('search') ?? '');
-  const [role, setRole] = useState(url.params.get('role') ?? '');
-  const [status, setStatus] = useState(url.params.get('status') ?? '');
-  const [affiliation, setAffiliation] = useState(url.params.get('affiliation') ?? '');
-  const [schoolId, setSchoolId] = useState(url.params.get('schoolId') ?? '');
-  const [filters] = useState({ search, role, status, affiliation, schoolId });
-  const { state: auth } = useAuth();
+  const onAccessError = useAdminAccessError();
+  const filters = Object.fromEntries(keys.map((key) => [key, url.params.get(key) ?? ''])) as Record<
+    (typeof keys)[number],
+    string
+  >;
+  const [form, setForm] = useState(filters),
+    [showFilters, setShowFilters] = useState(false);
+  const [directory, setDirectory] = useState<Directory | null>(null),
+    [listError, setListError] = useState(''),
+    [listRetry, setListRetry] = useState(0);
+  const [detail, setDetail] = useState<Detail | null>(null),
+    [detailError, setDetailError] = useState(''),
+    [detailRetry, setDetailRetry] = useState(0);
+  const selectedKey = view === 'users' ? 'userId' : 'classId';
+  const selectedId = (url.params.get(selectedKey) ?? '').toLowerCase();
   const offset = adminOffset(url.params.get('offset'));
-  const [items, setItems] = useState<AdminUserDto[] | null>(null);
-  const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const selectedId = url.params.get('userId') ?? '';
-  const setSelectedId = (id: string) => url.update({ userId: id });
-  const [detail, setDetail] = useState<AdminUserDetailDto | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState('');
-  const [detailRetry, setDetailRetry] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [retry, setRetry] = useState(0);
-
+  const detailHeading = useRef<HTMLHeadingElement>(null);
+  const query = url.search;
   useEffect(() => {
+    if (selectedId) return;
     let active = true;
-    setLoading(true);
-    setError('');
-    setItems(null);
-    listAdminUsers(token, { ...filters, offset }).then(
-      (page) => {
-        if (!active) return;
-        setItems(page.items);
-        setNextOffset(page.nextOffset);
-        setLoading(false);
+    setDirectory(null);
+    setListError('');
+    const pending =
+      view === 'users'
+        ? listAdminUsers(token, {
+            offset,
+            search: filters.search,
+            role: filters.role,
+            status: filters.status,
+            affiliation: filters.affiliation,
+            schoolId: filters.schoolId,
+          }).then((page) => ({ kind: 'users' as const, page }))
+        : listAdminClasses(token, {
+            offset,
+            search: filters.search,
+            schoolId: filters.schoolId,
+            teacherId: filters.teacherId,
+            state: filters.state,
+          }).then((page) => ({ kind: 'classes' as const, page }));
+    void pending.then(
+      (data) => {
+        if (active) setDirectory(data);
       },
-      (cause: unknown) => {
-        if (!active) return;
-        setError(cause instanceof Error ? cause.message : 'Daftar pengguna belum dapat dimuat.');
-        setLoading(false);
-        onAccessError(cause);
+      (cause) => {
+        if (active) {
+          setListError(cause instanceof Error ? cause.message : 'Daftar belum dapat dimuat.');
+          onAccessError(cause);
+        }
       },
     );
     return () => {
       active = false;
     };
-  }, [filters, offset, onAccessError, revision, retry, token]);
-
+  }, [query, listRetry, token, onAccessError, view, selectedId, offset]);
   useEffect(() => {
-    if (!selectedId) {
-      setDetail(null);
-      setDetailError('');
-      return;
-    }
+    if (!selectedId) return;
     let active = true;
     setDetail(null);
     setDetailError('');
-    setDetailLoading(true);
-    getAdminUser(token, selectedId).then(
+    const pending =
+      view === 'users'
+        ? getAdminUser(token, selectedId).then((value) => ({ kind: 'users' as const, value }))
+        : getAdminClass(token, selectedId).then((value) => ({ kind: 'classes' as const, value }));
+    void pending.then(
       (value) => {
-        if (!active) return;
-        setDetail(value);
-        setDetailLoading(false);
+        if (active) setDetail(value);
       },
-      (cause: unknown) => {
-        if (!active) return;
-        setDetailError(
-          cause instanceof Error ? cause.message : 'Detail pengguna belum dapat dimuat.',
-        );
-        setDetailLoading(false);
-        onAccessError(cause);
+      (cause) => {
+        if (active) {
+          setDetailError(cause instanceof Error ? cause.message : 'Detail belum dapat dimuat.');
+          onAccessError(cause);
+        }
       },
     );
     return () => {
       active = false;
     };
-  }, [detailRetry, onAccessError, selectedId, token]);
-
-  function applyFilters(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
+  }, [token, view, selectedId, detailRetry, onAccessError]);
+  useEffect(() => {
+    if (selectedId) {
+      detailHeading.current?.focus({ preventScroll: true });
+      window.scrollTo(0, 0);
+    }
+  }, [selectedId]);
+  function apply() {
     url.update({
-      search: search.trim(),
-      role: role.trim(),
-      status: status.trim(),
-      affiliation: affiliation.trim(),
-      schoolId: schoolId.trim(),
+      ...Object.fromEntries(keys.map((key) => [key, form[key].trim()])),
       offset: null,
       userId: null,
-    });
-  }
-
-  return (
-    <div className="admin-operations-grid">
-      <section className="admin-operations-search" aria-labelledby="admin-users-title">
-        <h2 id="admin-users-title">Daftar pengguna</h2>
-        <p>Cari berdasarkan nama tampilan dan batasi daftar berdasarkan role atau status.</p>
-        <form className="admin-content-form admin-search-toolbar" onSubmit={applyFilters}>
-          <label className="admin-content-field admin-search-primary">
-            <span>Nama pengguna</span>
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari nama..."
-              maxLength={100}
-            />
-          </label>
-          <label className="admin-content-field">
-            <span>Role</span>
-            <select value={role} onChange={(event) => setRole(event.target.value)}>
-              <option value="">Semua role</option>
-              <option value="STUDENT">Siswa</option>
-              <option value="TEACHER">Guru</option>
-              {auth.status === 'ready' && auth.profile.adminRole === 'SUPER_ADMIN' && (
-                <option value="ADMIN">Admin</option>
-              )}
-            </select>
-          </label>
-          <label className="admin-content-field">
-            <span>Affiliation siswa</span>
-            <select value={affiliation} onChange={(event) => setAffiliation(event.target.value)}>
-              <option value="">Semua affiliation</option>
-              <option value="MANDIRI">Mandiri</option>
-              <option value="SCHOOL">Sekolah</option>
-            </select>
-          </label>
-          <label className="admin-content-field">
-            <span>ID sekolah pengguna (opsional)</span>
-            <Input
-              value={schoolId}
-              onChange={(event) => setSchoolId(event.target.value)}
-              placeholder="UUID sekolah"
-            />
-          </label>
-          <label className="admin-content-field">
-            <span>Status akun</span>
-            <select value={status} onChange={(event) => setStatus(event.target.value)}>
-              <option value="">Semua status</option>
-              <option value="ACTIVE">Aktif</option>
-              <option value="DISABLED">Dinonaktifkan</option>
-            </select>
-          </label>
-          <div className="admin-content-actions">
-            <Button type="submit" disabled={loading}>
-              <Icon name="search" /> Terapkan filter
-            </Button>
-          </div>
-        </form>
-      </section>
-      <section aria-label="Hasil pencarian pengguna">
-        <ResultsState
-          loading={loading}
-          error={error}
-          hasItems={Boolean(items?.length)}
-          emptyLabel="Tidak ada pengguna yang cocok dengan filter."
-          onRetry={() => setRetry((current) => current + 1)}
-        />
-        {items?.length ? (
-          <>
-            <ul className="monitoring-list">
-              {items.map((user) => (
-                <li className="monitoring-notice admin-content-row" key={user.id}>
-                  <div className="admin-operation-row-heading">
-                    <strong>{user.displayName}</strong>
-                    <Badge variant={user.status === 'ACTIVE' ? 'success' : 'warning'}>
-                      {userStatusLabels[user.status]}
-                    </Badge>
-                  </div>
-                  <p>{roleLabels[user.role]}</p>
-                  <small>Terdaftar {formatDate(user.createdAt)}</small>
-                  <Button
-                    variant="secondary"
-                    aria-pressed={selectedId === user.id}
-                    onClick={() => setSelectedId(user.id)}
-                  >
-                    Lihat detail
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-        {items && !loading && !error && (
-          <AdminPagination
-            offset={offset}
-            hasNext={nextOffset !== null}
-            onChange={(next) => {
-              url.update({ userId: null, offset: next < offset ? next : (nextOffset ?? offset) });
-            }}
-          />
-        )}
-      </section>
-      <UserDetail
-        token={token}
-        detail={detail}
-        loading={detailLoading}
-        error={detailError}
-        selected={Boolean(selectedId)}
-        onAccessError={onAccessError}
-        onClose={() => setSelectedId('')}
-        onRetry={() => setDetailRetry((current) => current + 1)}
-      />
-    </div>
-  );
-}
-
-function UserDetail({
-  token,
-  detail,
-  loading,
-  error,
-  selected,
-  onClose,
-  onRetry,
-  onAccessError,
-}: {
-  token: string;
-  detail: AdminUserDetailDto | null;
-  loading: boolean;
-  error: string;
-  selected: boolean;
-  onClose: () => void;
-  onRetry: () => void;
-  onAccessError: (error: unknown) => void;
-}) {
-  return (
-    <section aria-labelledby="admin-user-detail-title">
-      <h2 id="admin-user-detail-title">Detail pengguna</h2>
-      {!selected ? (
-        <Card className="admin-operation-detail-placeholder">
-          <EmptyState
-            icon={<Icon name="user" />}
-            title="Pilih pengguna"
-            description="Pilih satu baris untuk melihat detail akun yang tersedia."
-          />
-        </Card>
-      ) : loading ? (
-        <AdminLoading message="Memuat detail pengguna…" />
-      ) : error ? (
-        <AdminMessage error message={error} retry={onRetry} />
-      ) : detail ? (
-        <Card className="admin-operation-detail">
-          <div className="admin-operation-row-heading">
-            <h3>{detail.displayName}</h3>
-            <Badge variant={detail.status === 'ACTIVE' ? 'success' : 'warning'}>
-              {userStatusLabels[detail.status]}
-            </Badge>
-          </div>
-          <dl>
-            <DetailField label="Role">{roleLabels[detail.role]}</DetailField>
-            <DetailField label="Email">{detail.email}</DetailField>
-            {detail.affiliation && (
-              <DetailField label="Affiliation">
-                {detail.affiliation === 'SCHOOL' ? 'Sekolah' : 'Mandiri'}
-              </DetailField>
-            )}
-            {detail.teacherVerified !== null && (
-              <DetailField label="Verifikasi Guru">
-                {detail.teacherVerified
-                  ? 'Aktif dan terverifikasi'
-                  : 'Tidak aktif atau belum terverifikasi'}
-              </DetailField>
-            )}
-            <DetailField label="ID pengguna">
-              <code>{detail.id}</code>
-            </DetailField>
-            <DetailField label="Akun dibuat">{formatDate(detail.createdAt)}</DetailField>
-          </dl>
-          {detail.role !== 'ADMIN' && (
-            <OperationsMemberships
-              key={detail.id}
-              token={token}
-              userId={detail.id}
-              onAccessError={onAccessError}
-            />
-          )}
-          <Button variant="secondary" onClick={onClose}>
-            Tutup detail
-          </Button>
-        </Card>
-      ) : null}
-    </section>
-  );
-}
-
-function ClassesPanel({
-  token,
-  revision,
-  onAccessError,
-}: {
-  token: string;
-  revision: number;
-  onAccessError: (error: unknown) => void;
-}) {
-  const url = useAdminUrl();
-  const [search, setSearch] = useState(url.params.get('search') ?? '');
-  const [schoolId, setSchoolId] = useState(url.params.get('schoolId') ?? '');
-  const [teacherId, setTeacherId] = useState(url.params.get('teacherId') ?? '');
-  const [state, setState] = useState(url.params.get('state') ?? '');
-  const [filters] = useState({ search, schoolId, teacherId, state });
-  const offset = adminOffset(url.params.get('offset'));
-  const [items, setItems] = useState<AdminClassDto[] | null>(null);
-  const [nextOffset, setNextOffset] = useState<number | null>(null);
-  const selectedId = url.params.get('classId') ?? '';
-  const setSelectedId = (id: string) => url.update({ classId: id });
-  const [detail, setDetail] = useState<AdminClassDto | null>(null);
-  const [detailLoading, setDetailLoading] = useState(false);
-  const [detailError, setDetailError] = useState('');
-  const [detailRetry, setDetailRetry] = useState(0);
-  const [loading, setLoading] = useState(true);
-  const [error, setError] = useState('');
-  const [retry, setRetry] = useState(0);
-
-  useEffect(() => {
-    let active = true;
-    setLoading(true);
-    setError('');
-    setItems(null);
-    listAdminClasses(token, { ...filters, offset }).then(
-      (page) => {
-        if (!active) return;
-        setItems(page.items);
-        setNextOffset(page.nextOffset);
-        setLoading(false);
-      },
-      (cause: unknown) => {
-        if (!active) return;
-        setError(cause instanceof Error ? cause.message : 'Daftar kelas belum dapat dimuat.');
-        setLoading(false);
-        onAccessError(cause);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [filters, offset, onAccessError, revision, retry, token]);
-
-  useEffect(() => {
-    if (!selectedId) {
-      setDetail(null);
-      setDetailError('');
-      return;
-    }
-    let active = true;
-    setDetail(null);
-    setDetailError('');
-    setDetailLoading(true);
-    getAdminClass(token, selectedId).then(
-      (value) => {
-        if (!active) return;
-        setDetail(value);
-        setDetailLoading(false);
-      },
-      (cause: unknown) => {
-        if (!active) return;
-        setDetailError(cause instanceof Error ? cause.message : 'Detail kelas belum dapat dimuat.');
-        setDetailLoading(false);
-        onAccessError(cause);
-      },
-    );
-    return () => {
-      active = false;
-    };
-  }, [detailRetry, onAccessError, selectedId, token]);
-
-  function applyFilters(event: FormEvent<HTMLFormElement>) {
-    event.preventDefault();
-    url.update({
-      search: search.trim(),
-      schoolId: schoolId.trim(),
-      teacherId: teacherId.trim(),
-      state: state.trim(),
-      offset: null,
       classId: null,
     });
   }
-
-  return (
-    <div className="admin-operations-grid">
-      <section className="admin-operations-search" aria-labelledby="admin-classes-title">
-        <h2 id="admin-classes-title">Daftar kelas</h2>
-        <p>Filter kelas berdasarkan nama, sekolah, Guru, atau status arsip.</p>
-        <form className="admin-content-form admin-search-toolbar" onSubmit={applyFilters}>
-          <label className="admin-content-field admin-search-primary">
-            <span>Nama kelas</span>
-            <Input
-              value={search}
-              onChange={(event) => setSearch(event.target.value)}
-              placeholder="Cari kelas..."
-              maxLength={100}
-            />
-          </label>
-          <label className="admin-content-field">
-            <span>ID sekolah (opsional)</span>
-            <Input
-              value={schoolId}
-              onChange={(event) => setSchoolId(event.target.value)}
-              placeholder="UUID sekolah"
-              inputMode="text"
-            />
-          </label>
-          <label className="admin-content-field">
-            <span>ID Guru (opsional)</span>
-            <Input
-              value={teacherId}
-              onChange={(event) => setTeacherId(event.target.value)}
-              placeholder="UUID Guru"
-              inputMode="text"
-            />
-          </label>
-          <label className="admin-content-field">
-            <span>Status kelas</span>
-            <select value={state} onChange={(event) => setState(event.target.value)}>
-              <option value="">Semua status</option>
-              <option value="active">Aktif</option>
-              <option value="archived">Diarsipkan</option>
-            </select>
-          </label>
-          <div className="admin-content-actions">
-            <Button type="submit" disabled={loading}>
-              <Icon name="search" /> Terapkan filter
-            </Button>
-          </div>
-        </form>
-      </section>
-      <section aria-label="Hasil pencarian kelas">
-        <ResultsState
-          loading={loading}
-          error={error}
-          hasItems={Boolean(items?.length)}
-          emptyLabel="Tidak ada kelas yang cocok dengan filter."
-          onRetry={() => setRetry((current) => current + 1)}
-        />
-        {items?.length ? (
-          <>
-            <ul className="monitoring-list">
-              {items.map((item) => (
-                <li className="monitoring-notice admin-content-row" key={item.id}>
-                  <div className="admin-operation-row-heading">
-                    <strong>{item.name}</strong>
-                    <Badge variant={item.archivedAt ? 'default' : 'success'}>
-                      {item.archivedAt ? 'Diarsipkan' : 'Aktif'}
-                    </Badge>
-                  </div>
-                  <p>{item.schoolName}</p>
-                  <small>
-                    Guru tercatat: {item.teacherName ?? 'Tidak ada Guru tercatat'} ·{' '}
-                    {item.teacherActive ? 'Guru aktif' : 'Tanpa Guru aktif'} · {item.studentCount}{' '}
-                    siswa aktif
-                  </small>
-                  <Button
-                    variant="secondary"
-                    aria-pressed={selectedId === item.id}
-                    onClick={() => setSelectedId(item.id)}
-                  >
-                    Lihat detail
-                  </Button>
-                </li>
-              ))}
-            </ul>
-          </>
-        ) : null}
-        {items && !loading && !error && (
-          <AdminPagination
-            offset={offset}
-            hasNext={nextOffset !== null}
-            onChange={(next) => {
-              url.update({ classId: null, offset: next < offset ? next : (nextOffset ?? offset) });
-            }}
-          />
-        )}
-      </section>
-      <ClassDetail
-        token={token}
-        detail={detail}
-        loading={detailLoading}
-        error={detailError}
-        selected={Boolean(selectedId)}
-        onAccessError={onAccessError}
-        onClose={() => setSelectedId('')}
-        onRetry={() => setDetailRetry((current) => current + 1)}
-      />
-    </div>
-  );
-}
-
-function ClassDetail({
-  token,
-  detail,
-  loading,
-  error,
-  selected,
-  onClose,
-  onRetry,
-  onAccessError,
-}: {
-  token: string;
-  detail: AdminClassDto | null;
-  loading: boolean;
-  error: string;
-  selected: boolean;
-  onClose: () => void;
-  onRetry: () => void;
-  onAccessError: (error: unknown) => void;
-}) {
-  return (
-    <section aria-labelledby="admin-class-detail-title">
-      <h2 id="admin-class-detail-title">Detail kelas</h2>
-      {!selected ? (
-        <Card className="admin-operation-detail-placeholder">
-          <EmptyState
-            icon={<Icon name="school" />}
-            title="Pilih kelas"
-            description="Pilih satu baris untuk melihat sekolah, Guru, dan jumlah anggota aktif."
-          />
-        </Card>
-      ) : loading ? (
-        <AdminLoading message="Memuat detail kelas…" />
-      ) : error ? (
-        <AdminMessage error message={error} retry={onRetry} />
-      ) : detail ? (
-        <Card className="admin-operation-detail">
-          <div className="admin-operation-row-heading">
-            <h3>{detail.name}</h3>
-            <Badge variant={detail.archivedAt ? 'default' : 'success'}>
-              {detail.archivedAt ? 'Diarsipkan' : 'Aktif'}
-            </Badge>
-          </div>
-          <dl>
-            <DetailField label="Sekolah">{detail.schoolName}</DetailField>
-            <DetailField label="ID sekolah">
-              <code>{detail.schoolId}</code>
-            </DetailField>
-            <DetailField label="Guru tercatat">
-              {detail.teacherName ?? 'Tidak ada Guru tercatat'}
-            </DetailField>
-            <DetailField label="Guru aktif">
-              {detail.teacherActive ? 'Aktif dan terverifikasi' : 'Tanpa Guru aktif'}
-            </DetailField>
-            <DetailField label="ID Guru">
-              <code>{detail.teacherId}</code>
-            </DetailField>
-            <DetailField label="Siswa aktif">{detail.studentCount}</DetailField>
-            <DetailField label="Kelas dibuat">{formatDate(detail.createdAt)}</DetailField>
-            {detail.archivedAt && (
-              <DetailField label="Diarsipkan">{formatDate(detail.archivedAt)}</DetailField>
-            )}
-            <DetailField label="ID kelas">
-              <code>{detail.id}</code>
-            </DetailField>
-          </dl>
-          <OperationsRoster
-            key={detail.id}
-            token={token}
-            classId={detail.id}
-            onAccessError={onAccessError}
-          />
-          <Button variant="secondary" onClick={onClose}>
+  function reset() {
+    setForm({
+      search: '',
+      role: '',
+      status: '',
+      affiliation: '',
+      schoolId: '',
+      teacherId: '',
+      state: '',
+    });
+    url.update({
+      search: null,
+      role: null,
+      status: null,
+      affiliation: null,
+      schoolId: null,
+      teacherId: null,
+      state: null,
+      offset: null,
+      userId: null,
+      classId: null,
+    });
+  }
+  function field(key: (typeof keys)[number], value: string) {
+    setForm((current) => ({ ...current, [key]: value }));
+  }
+  const isUsers = view === 'users';
+  const count = keys.filter(
+    (key) =>
+      key !== 'search' &&
+      filters[key] &&
+      (isUsers
+        ? !['teacherId', 'state'].includes(key)
+        : !['role', 'status', 'affiliation'].includes(key)),
+  ).length;
+  if (selectedId)
+    return (
+      <section className="people-detail" aria-label={isUsers ? 'Detail pengguna' : 'Detail kelas'}>
+        <div className="people-detail-toolbar">
+          <Button variant="ghost" onClick={() => url.update({ [selectedKey]: null })}>
+            <Icon name="back" />
             Tutup detail
           </Button>
-        </Card>
-      ) : null}
+          <h2 ref={detailHeading} tabIndex={-1} className="sr-only">
+            {isUsers ? 'Detail pengguna' : 'Detail kelas'}
+          </h2>
+          <span>Kembali ke hasil pencarian</span>
+        </div>
+        {detailError ? (
+          <div className="people-surface">
+            <AdminMessage error message={detailError} retry={() => setDetailRetry((v) => v + 1)} />
+          </div>
+        ) : !detail ? (
+          <div className="people-surface">
+            <AdminLoading
+              message={isUsers ? 'Memuat detail pengguna...' : 'Memuat detail kelas...'}
+            />
+          </div>
+        ) : detail.kind === 'users' ? (
+          <>
+            <UserSummary user={detail.value} />
+            {detail.value.role !== 'ADMIN' && (
+              <OperationsMemberships
+                key={detail.value.id}
+                token={token}
+                userId={detail.value.id}
+                onAccessError={onAccessError}
+              />
+            )}
+          </>
+        ) : (
+          <>
+            <ClassSummary item={detail.value} />
+            <OperationsRoster
+              key={detail.value.id}
+              token={token}
+              classId={detail.value.id}
+              onAccessError={onAccessError}
+            />
+          </>
+        )}
+      </section>
+    );
+  return (
+    <section
+      className="people-directory people-surface"
+      aria-label={isUsers ? 'Hasil pencarian pengguna' : 'Hasil pencarian kelas'}
+    >
+      <div className="people-toolbar">
+        <div>
+          <h2>{isUsers ? 'Daftar pengguna' : 'Daftar kelas'}</h2>
+          <p>
+            {isUsers
+              ? 'Temukan akun, lalu telusuri informasi dan keanggotaannya.'
+              : 'Lihat sekolah, Guru, dan anggota setiap kelas.'}
+          </p>
+        </div>
+        <form
+          className="people-search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            apply();
+          }}
+        >
+          <label className="sr-only" htmlFor="people-search">
+            {isUsers ? 'Nama pengguna' : 'Nama kelas'}
+          </label>
+          <div>
+            <Icon name="search" />
+            <input
+              type="search"
+              id="people-search"
+              maxLength={100}
+              value={form.search}
+              onChange={(event) => field('search', event.target.value)}
+              placeholder={isUsers ? 'Cari nama pengguna' : 'Cari nama kelas'}
+            />
+          </div>
+          <Button variant="secondary" type="submit">
+            Cari
+          </Button>
+          <Button
+            variant="secondary"
+            type="button"
+            aria-expanded={showFilters}
+            aria-controls="people-filters"
+            aria-label="Filter"
+            onClick={() => setShowFilters((v) => !v)}
+          >
+            Filter{count > 0 && <span className="people-filter-count">{count}</span>}
+          </Button>
+        </form>
+      </div>
+      <div id="people-filters" className="people-filters" hidden={!showFilters}>
+        <div className="people-filter-fields">
+          {isUsers && (
+            <>
+              <label className="people-field">
+                <span id="people-role-label">Peran</span>
+                <select
+                  aria-labelledby="people-role-label"
+                  value={form.role}
+                  onChange={(e) => field('role', e.target.value)}
+                >
+                  <option value="">Semua peran</option>
+                  <option value="STUDENT">Siswa</option>
+                  <option value="TEACHER">Guru</option>
+                  {superAdmin && <option value="ADMIN">Admin</option>}
+                </select>
+              </label>
+              <label className="people-field">
+                <span id="people-status-label">Status akun</span>
+                <select
+                  aria-labelledby="people-status-label"
+                  value={form.status}
+                  onChange={(e) => field('status', e.target.value)}
+                >
+                  <option value="">Semua status</option>
+                  <option value="ACTIVE">Aktif</option>
+                  <option value="DISABLED">Dinonaktifkan</option>
+                </select>
+              </label>
+              <label className="people-field">
+                <span id="people-affiliation-label">Afiliasi siswa</span>
+                <select
+                  aria-labelledby="people-affiliation-label"
+                  value={form.affiliation}
+                  onChange={(e) => field('affiliation', e.target.value)}
+                >
+                  <option value="">Semua afiliasi</option>
+                  <option value="MANDIRI">Mandiri</option>
+                  <option value="SCHOOL">Sekolah</option>
+                </select>
+              </label>
+            </>
+          )}
+          <OperationsPicker
+            kind="school"
+            value={form.schoolId}
+            onChange={(value) => field('schoolId', value)}
+            token={token}
+            onAccessError={onAccessError}
+          />
+          {!isUsers && (
+            <>
+              <OperationsPicker
+                kind="teacher"
+                value={form.teacherId}
+                onChange={(value) => field('teacherId', value)}
+                schoolId={form.schoolId}
+                token={token}
+                onAccessError={onAccessError}
+              />
+              <label className="people-field">
+                <span id="people-class-state-label">Status kelas</span>
+                <select
+                  aria-labelledby="people-class-state-label"
+                  value={form.state}
+                  onChange={(e) => field('state', e.target.value)}
+                >
+                  <option value="">Semua status</option>
+                  <option value="active">Aktif</option>
+                  <option value="archived">Diarsipkan</option>
+                </select>
+              </label>
+            </>
+          )}
+        </div>
+        <div className="people-filter-actions">
+          <p>Filter berlaku setelah diterapkan.</p>
+          <Button variant="secondary" onClick={reset}>
+            Reset filter
+          </Button>
+          <Button onClick={apply}>Terapkan filter</Button>
+        </div>
+      </div>
+      {(count > 0 || filters.search) && (
+        <div className="people-applied">
+          <span>{filters.search ? `Pencarian: ${filters.search}` : 'Filter aktif'}</span>
+          {isUsers && filters.role && (
+            <span>{peopleRoles[filters.role as keyof typeof peopleRoles] ?? filters.role}</span>
+          )}
+          {isUsers && filters.status && (
+            <span>{filters.status === 'ACTIVE' ? 'Aktif' : 'Dinonaktifkan'}</span>
+          )}
+          {isUsers && filters.affiliation && (
+            <span>{filters.affiliation === 'SCHOOL' ? 'Sekolah' : 'Mandiri'}</span>
+          )}
+          {filters.schoolId && <span>Sekolah dipilih</span>}
+          {!isUsers && filters.teacherId && <span>Guru dipilih</span>}
+          {!isUsers && filters.state && (
+            <span>{filters.state === 'archived' ? 'Diarsipkan' : 'Kelas aktif'}</span>
+          )}
+          <Button variant="ghost" onClick={reset}>
+            Hapus filter
+          </Button>
+        </div>
+      )}
+      {listError ? (
+        <AdminMessage error message={listError} retry={() => setListRetry((v) => v + 1)} />
+      ) : !directory ? (
+        <AdminLoading message={isUsers ? 'Memuat pengguna...' : 'Memuat kelas...'} />
+      ) : !directory.page.items.length ? (
+        <PeopleEmpty
+          title={
+            isUsers
+              ? count || filters.search
+                ? 'Tidak ada pengguna yang cocok dengan filter.'
+                : 'Belum ada pengguna'
+              : count || filters.search
+                ? 'Tidak ada kelas yang cocok dengan filter.'
+                : 'Belum ada kelas'
+          }
+          description={
+            count || filters.search
+              ? 'Coba nama atau pilihan filter lain.'
+              : isUsers
+                ? 'Pengguna yang terdaftar akan tampil di sini.'
+                : 'Kelas yang dibuat Guru akan tampil di sini.'
+          }
+          {...(count || filters.search ? { reset } : {})}
+        />
+      ) : directory.kind === 'users' ? (
+        <UserTable items={directory.page.items} onSelect={(id) => url.update({ userId: id })} />
+      ) : (
+        <ClassTable items={directory.page.items} onSelect={(id) => url.update({ classId: id })} />
+      )}
+      {directory && !listError && (
+        <PeopleFooter
+          offset={offset}
+          count={directory.page.items.length}
+          nextOffset={directory.page.nextOffset}
+          label={isUsers ? 'Halaman pengguna' : 'Halaman kelas'}
+          onChange={(next) => url.update({ offset: next })}
+        />
+      )}
     </section>
   );
-}
-
-function DetailField({ label, children }: { label: string; children: ReactNode }) {
-  return (
-    <div>
-      <dt>{label}</dt>
-      <dd>{children}</dd>
-    </div>
-  );
-}
-
-function ResultsState({
-  loading,
-  error,
-  hasItems,
-  emptyLabel,
-  onRetry,
-}: {
-  loading: boolean;
-  error: string;
-  hasItems: boolean;
-  emptyLabel: string;
-  onRetry: () => void;
-}) {
-  if (loading) return <AdminLoading message="Memuat daftar…" />;
-  if (error) return <AdminMessage error message={error} retry={onRetry} />;
-  if (!hasItems)
-    return (
-      <Card>
-        <EmptyState
-          icon={<Icon name="search" />}
-          title="Belum ada hasil"
-          description={emptyLabel}
-        />
-      </Card>
-    );
-  return null;
 }

@@ -1,5 +1,7 @@
 # NUMORA UI DESIGN SYSTEM
 
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pengguna & kelas](ADMIN_PEOPLE_UX_2026-10-27.md) mengikuti arah Akun Admin/Sekolah yang telah disetujui. Tab pengguna/kelas, tabel responsif, filter bertahap dengan pencarian nama sekolah/Guru, detail penuh dan riwayat keanggotaan memakai `admin-management.css` serta CSS khusus `admin-people.css`. Halaman tetap baca saja; kontrak API, izin server dan pagination lima data dipertahankan. [Galeri verifikasi](screenshots/admin-people/README.md).
+
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** gaya Akun Admin disetujui untuk iterasi berikutnya. Sekolah & credential menggunakan fondasi yang sama di `apps/web/src/app/admin-management.css` dan layout khusus di `admin-schools.css`: direktori lima sekolah, detail berbasis schoolId di URL, dialog tambah/edit/konfirmasi dan riwayat token yang responsif. [Audit Sekolah & credential](ADMIN_SCHOOLS_UX_2026-10-27.md). Ini tidak mengubah izin, masa berlaku credential atau otorisasi server.
 
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** halaman Akun Admin memakai kanvas abu terang, tabel operasional dan dialog dengan token lokal di `apps/web/src/app/admin-accounts.css`. Arah ringkas dan profesional dipilih pemilik. Perubahan ini berlaku pada halaman Akun Admin saja; Plus Jakarta Sans, branding dan primitive bersama dipertahankan. Lihat [audit dan keputusan Akun Admin](ADMIN_ACCOUNTS_UX_2026-10-27.md).

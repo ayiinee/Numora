@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pengguna & kelas](ADMIN_PEOPLE_UX_2026-10-27.md) mengikuti arah Akun Admin/Sekolah yang telah disetujui. Tab pengguna/kelas, tabel responsif, filter bertahap dengan pencarian nama sekolah/Guru, detail penuh dan riwayat keanggotaan memakai `admin-management.css` serta CSS khusus `admin-people.css`. Halaman tetap baca saja; kontrak API, izin server dan pagination lima data dipertahankan. [Galeri verifikasi](screenshots/admin-people/README.md).
+
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** arah Akun Admin disetujui sebagai referensi perbaikan berikutnya: ringkas, profesional, mudah dipindai dan tidak membingungkan. [Sekolah & credential](ADMIN_SCHOOLS_UX_2026-10-27.md) menerapkan daftar sekolah, ruang sekolah terpilih dan dialog aksi. Fondasi token/shell/button dipakai bersama melalui `admin-management.css`; aturan produk tetap mengikuti PRD/API.
 
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** halaman Akun Admin memakai [layout operasional ringkas dan profesional](ADMIN_ACCOUNTS_UX_2026-10-27.md), dengan daftar akun, tab undangan, dan dialog aksi. Perubahan dibatasi pada halaman tersebut dan tetap memakai komponen, font, serta aturan akses Numora.
