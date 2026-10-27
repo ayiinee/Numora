@@ -31,7 +31,7 @@ export async function seedReadyDrillFixture(client, { reviewerId, levelIds, test
         await tx`select max(version_number)::integer as n from question_versions where variant_id=${source.variant_id}`;
       const id = randomUUID();
       await tx`insert into question_versions(id,variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,difficulty,content_status,reviewed_by_user_id,reviewed_at)
-        values(${id},${source.variant_id},${latest.n + 1},${source.question_type},${tx.json(source.stem)},${tx.json(source.options_or_statements)},${tx.json(source.answer_key)},${tx.json(source.explanation)},${source.difficulty},'READY',${reviewerId},now())`;
+        values(${id},${source.variant_id},${latest.n + 1},${source.question_type},${JSON.stringify(source.stem)}::text::jsonb,${JSON.stringify(source.options_or_statements)}::text::jsonb,${JSON.stringify(source.answer_key)}::text::jsonb,${JSON.stringify(source.explanation)}::text::jsonb,${source.difficulty},'READY',${reviewerId},now())`;
       versions.push(id);
     }
     await tx`update assessment_packages set status='ARCHIVED' where level_id=any(${levelIds}::uuid[]) and status='PUBLISHED'`;
