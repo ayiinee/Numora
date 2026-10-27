@@ -1,4 +1,6 @@
 'use client';
+import { ContentText } from './content-payload';
+import { questionFormat, contentStatusLabel } from './content-question-format';
 import { Badge, Button } from '@tka/ui';
 import Link from 'next/link';
 import { AdminEditorForm } from './admin-presentation';
@@ -282,20 +284,27 @@ export function VerificationHistory({
           {data.versions.items.map((version) => (
             <li className="monitoring-notice admin-content-row" key={version.id}>
               <strong>
-                {version.variantCode} · v{version.versionNumber} · {version.questionType}
+                <ContentText value={version.stem || 'Isi soal belum tersedia'} />
               </strong>
               <p>
-                Keluarga {version.questionStatus} · Versi {version.contentStatus}
+                {questionFormat(version.questionType).label} · Versi {version.versionNumber} ·{' '}
+                {contentStatusLabel(version.contentStatus)}
               </p>
-              <small>{version.stem || `Soal ${version.questionId}`}</small>
-              <small>Reviewer: {version.reviewedByUserId ?? 'Belum tercatat'}</small>
-              <small>
-                Waktu review:{' '}
-                {version.reviewedAt
-                  ? new Date(version.reviewedAt).toLocaleString('id-ID')
-                  : 'Belum ditinjau'}
-              </small>
-              <small>ID versi: {version.id}</small>
+              <details className="assessment-source">
+                <summary>Identitas versi &amp; reviewer</summary>
+                <p>Kode varian: {version.variantCode}</p>
+                <p>Status keluarga: {contentStatusLabel(version.questionStatus)}</p>
+                <p>Reviewer: {version.reviewedByUserId ?? 'Belum tercatat'}</p>
+                <p>
+                  Waktu review (WIB):{' '}
+                  {version.reviewedAt
+                    ? new Date(version.reviewedAt).toLocaleString('id-ID', {
+                        timeZone: 'Asia/Jakarta',
+                      })
+                    : 'Belum ditinjau'}
+                </p>
+                <p>ID versi: {version.id}</p>
+              </details>
               <Link href={`/admin/content/versions/${version.id}`}>Detail &amp; review versi</Link>
             </li>
           ))}

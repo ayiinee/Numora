@@ -1,12 +1,18 @@
 'use client';
-import { type ReactNode } from 'react';
+import { cloneElement, isValidElement, useId, type ReactElement, type ReactNode } from 'react';
 import { loadAdminWorkbench } from './content-api';
 
 export type Workbench = Awaited<ReturnType<typeof loadAdminWorkbench>>;
 
 export type Run = (action: () => Promise<{ id: string }>) => Promise<boolean>;
 
-export type EditorProps = { data: Workbench; token: string; busy: boolean; run: Run };
+export type EditorProps = {
+  data: Workbench;
+  token: string;
+  busy: boolean;
+  run: Run;
+  error?: string;
+};
 
 export function Field({
   label,
@@ -17,10 +23,15 @@ export function Field({
   name: string;
   children: ReactNode;
 }) {
+  const labelId = useId();
   return (
     <label className="admin-content-field" data-field={name}>
-      <span>{label}</span>
-      {children}
+      <span id={labelId}>{label}</span>
+      {isValidElement(children)
+        ? cloneElement(children as ReactElement<{ 'aria-labelledby'?: string }>, {
+            'aria-labelledby': labelId,
+          })
+        : children}
     </label>
   );
 }

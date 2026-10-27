@@ -1,13 +1,14 @@
 'use client';
 import Link from 'next/link';
 import { useEffect, useRef, useState } from 'react';
-import { Badge, Button, Card } from '@tka/ui';
+import { Button, Card } from '@tka/ui';
 import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { createPreview, importContent, validateImport } from './content-preview-api';
 import { setContentStatus } from './content-api';
 import { ContentPayload } from './content-payload';
+import { contentStatusLabel } from './content-question-format';
 import { ContentBlockers } from './content-blockers';
 import { adminAccessDenied } from './operational-query';
 import type {
@@ -96,8 +97,11 @@ function Review({ id }: { id: string }) {
       title="Review versi soal"
       description="Periksa isi dan kelengkapan, lalu catat keputusan review untuk versi ini."
       icon="book"
+      management
     >
-      <Link href="/admin/content">Kembali ke bank soal</Link>
+      <Link className="assessment-back-link" href="/admin/content">
+        Kembali ke bank soal
+      </Link>
       {!token ? (
         <AdminMessage message="Akses konten diperlukan." login />
       ) : (
@@ -108,10 +112,20 @@ function Review({ id }: { id: string }) {
             <AdminLoading message="Memuat versi…" />
           ) : (
             detail && (
-              <>
-                <Card className="content-import-card">
-                  <h2>Versi {detail.versionNumber}</h2>
-                  <Badge>{detail.status}</Badge>
+              <div className="assessment-review-layout">
+                <Card className="content-import-card assessment-review-content">
+                  <div className="assessment-review-heading">
+                    <h2>Versi {detail.versionNumber}</h2>
+                    <span className="assessment-status" data-status={detail.status}>
+                      {contentStatusLabel(detail.status)}
+                    </span>
+                  </div>
+                  {detail.sourceNamespace && (
+                    <p className="assessment-media-note">
+                      Soal memuat gambar? Gunakan <strong>Preview konten dan media</strong> pada
+                      panel peninjauan untuk membuka gambar privat.
+                    </p>
+                  )}
                   <ContentPayload payload={detail.payload} />
                   <details>
                     <summary>Identitas versi & riwayat review</summary>
@@ -142,6 +156,9 @@ function Review({ id }: { id: string }) {
                       ))}
                     </ul>
                   </details>
+                </Card>
+                <Card className="content-import-card assessment-review-workflow">
+                  <h2>Peninjauan versi</h2>
                   <div className="content-readiness">
                     <h3>Validasi isi</h3>
                     <ContentBlockers
@@ -220,10 +237,10 @@ function Review({ id }: { id: string }) {
                       Status review
                       <select name="status" disabled={busy || detail.status === 'ARCHIVED'}>
                         <option value="READY" disabled={!detail.readiness.canReviewReady}>
-                          READY
+                          Siap (READY)
                         </option>
-                        <option value="REVISION">REVISION</option>
-                        <option value="ARCHIVED">ARCHIVED</option>
+                        <option value="REVISION">Perlu revisi (REVISION)</option>
+                        <option value="ARCHIVED">Diarsipkan (ARCHIVED)</option>
                       </select>
                     </label>
                     <label>
@@ -234,7 +251,7 @@ function Review({ id }: { id: string }) {
                   </form>
                 </Card>
                 {detail.sourceNamespace && (
-                  <Card className="content-import-card">
+                  <Card className="content-import-card assessment-review-revision">
                     <details>
                       <summary>Revisi isi soal melalui JSON</summary>
                       <h2>Buat revisi payload</h2>
@@ -297,7 +314,7 @@ function Review({ id }: { id: string }) {
                     </details>
                   </Card>
                 )}
-              </>
+              </div>
             )
           )}
         </>

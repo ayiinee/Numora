@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Konten & assessment](ADMIN_ASSESSMENT_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui, termasuk Super Admin dan Content. Bank soal menonjolkan pertanyaan, semua pilihan/pernyataan dan rumus; kunci detail dipetakan ke label yang konsisten tanpa mengubah sumber. Navigasi dikelompokkan di desktop dan memakai pemilih bagian di ponsel; editor serta filter dibuka sesuai kebutuhan. Review editorial, kesiapan publikasi, hak akses dan histori tetap terpisah. [Galeri audit](screenshots/admin-assessment/README.md).
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pengguna & kelas](ADMIN_PEOPLE_UX_2026-10-27.md) mengikuti arah Akun Admin/Sekolah yang telah disetujui. Tab pengguna/kelas, tabel responsif, filter bertahap dengan pencarian nama sekolah/Guru, detail penuh dan riwayat keanggotaan memakai `admin-management.css` serta CSS khusus `admin-people.css`. Halaman tetap baca saja; kontrak API, izin server dan pagination lima data dipertahankan. [Galeri verifikasi](screenshots/admin-people/README.md).
 
 **ENGINEERING DECISION - pemilik, 27 Oktober 2026:** arah Akun Admin disetujui sebagai referensi perbaikan berikutnya: ringkas, profesional, mudah dipindai dan tidak membingungkan. [Sekolah & credential](ADMIN_SCHOOLS_UX_2026-10-27.md) menerapkan daftar sekolah, ruang sekolah terpilih dan dialog aksi. Fondasi token/shell/button dipakai bersama melalui `admin-management.css`; aturan produk tetap mengikuti PRD/API.

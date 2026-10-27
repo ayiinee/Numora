@@ -2,6 +2,7 @@
 
 import { useState } from 'react';
 import { ContentRichText } from './content-rich-text';
+import { questionFormat } from './content-question-format';
 
 const object = (value: unknown): Record<string, unknown> =>
   value && typeof value === 'object' && !Array.isArray(value)
@@ -30,6 +31,16 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
   const [sourceOpen, setSourceOpen] = useState(false);
   const options = Array.isArray(payload.options) ? payload.options : [];
   const statements = Array.isArray(payload.statements) ? payload.statements : [];
+  const format = questionFormat(String(payload.type));
+  const items = options.length ? options : statements;
+  const labelFor = (id: unknown) => {
+    const index = items.findIndex((item) => object(item).id === id);
+    return index < 0
+      ? String(id)
+      : format.kind === 'single'
+        ? String.fromCharCode(65 + index)
+        : String(index + 1);
+  };
   const answer = payload.answer ?? payload.answerKey;
   const answerObject = object(answer);
   const rawCategories = object(payload.metadata).categories;
@@ -38,7 +49,7 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
     text(object(categories.find((c) => object(c).id === id)).label) || String(id);
   const keys = answerObject.categoryByStatementId
     ? Object.entries(object(answerObject.categoryByStatementId)).map(
-        ([id, value]) => [id, categoryLabel(value)] as const,
+        ([id, value]) => [`Pernyataan ${labelFor(id)}`, categoryLabel(value)] as const,
       )
     : Object.entries(answerObject);
   const taxonomy = ['chapterCode', 'subchapterCode', 'competencyCode', 'difficulty']
@@ -50,15 +61,7 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
   return (
     <div className="content-payload">
       <div className="content-payload-meta">
-        <span>
-          {(
-            {
-              SINGLE_CHOICE: 'Pilihan ganda',
-              MCMA: 'Pilihan ganda kompleks · MCMA',
-              CATEGORY: 'Pilihan ganda kompleks · Kategori',
-            } as Record<string, string>
-          )[String(payload.type)] ?? 'Format soal'}
-        </span>
+        <span>{format.label}</span>
         {typeof object(payload.metadata).sourceLevelNumber === 'number' &&
           Number(object(payload.metadata).sourceLevelNumber) > 0 && (
             <span>Level: {String(object(payload.metadata).sourceLevelNumber)}</span>
@@ -73,18 +76,32 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
           <ContentText value={text(payload.stem) || 'Isi soal belum tersedia pada versi ini.'} />
         </p>
       </section>
-      {!!(options.length || statements.length) && (
-        <ol className="content-options">
-          {(options.length ? options : statements).map((option, index) => {
-            const item = object(option);
-            return (
-              <li key={String(item.id ?? index)}>
-                <span>{String(item.id ?? index + 1)}</span>
-                <ContentText value={text(item.content ?? item.text ?? option)} />
-              </li>
-            );
-          })}
-        </ol>
+      <p className="assessment-question-instruction">{format.instruction}</p>
+      {!!items.length && (
+        <section className="content-options-section">
+          <h3>{format.kind === 'category' ? 'Pernyataan' : 'Pilihan jawaban'}</h3>
+          <ol className="content-options assessment-options">
+            {items.map((option, index) => {
+              const item = object(option);
+              const correct =
+                item.id != null &&
+                (answerObject.optionId === item.id ||
+                  (Array.isArray(answerObject.optionIds) &&
+                    answerObject.optionIds.includes(item.id)));
+              return (
+                <li key={String(item.id ?? index)}>
+                  <span className="assessment-option-label">
+                    {format.kind === 'single' ? String.fromCharCode(65 + index) : index + 1}
+                  </span>
+                  <div>
+                    <ContentText value={text(item.content ?? item.text ?? option)} />
+                    {correct && <span className="assessment-answer-marker">Jawaban benar</span>}
+                  </div>
+                </li>
+              );
+            })}
+          </ol>
+        </section>
       )}
       <section className="content-answer-section">
         <h3>Kunci jawaban · hanya untuk review Admin</h3>
@@ -95,9 +112,11 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
                 <dt>{key === 'optionId' || key === 'optionIds' ? 'Pilihan benar' : key}</dt>
                 <dd>
                   {typeof value === 'string'
-                    ? value
+                    ? key === 'optionId'
+                      ? labelFor(value)
+                      : value
                     : Array.isArray(value)
-                      ? value.join(', ')
+                      ? value.map(labelFor).join(', ')
                       : JSON.stringify(value)}
                 </dd>
               </div>
@@ -108,7 +127,7 @@ export function ContentPayload({ payload }: { payload: Record<string, unknown> }
             {answer == null
               ? 'Kunci belum tersedia.'
               : typeof answer === 'string'
-                ? answer
+                ? labelFor(answer)
                 : JSON.stringify(answer)}
           </p>
         )}

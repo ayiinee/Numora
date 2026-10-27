@@ -2,6 +2,7 @@
 import { useAuth } from '@/features/onboarding/auth';
 import { Button } from '@tka/ui';
 import { useState, type FormEvent } from 'react';
+import { ContentTextEdit } from './content-text-edit';
 import { AdminConfirmButton } from './admin-confirm-button';
 import { AdminPagination, useAdminPagination } from './admin-pagination';
 import { AdminEditorForm } from './admin-presentation';
@@ -17,7 +18,7 @@ import {
 import { Field, field, type EditorProps } from './content-editor';
 import type { AdminTaxonDto } from './generated-types';
 
-export function Curriculum({ data, token, busy, run }: EditorProps) {
+export function Curriculum({ data, token, busy, run, error }: EditorProps) {
   const { state } = useAuth();
   const contentRole =
     state.status === 'ready' && state.profile.adminRole === 'CONTENT_DATA_MODERATION';
@@ -76,61 +77,64 @@ export function Curriculum({ data, token, busy, run }: EditorProps) {
   return (
     <section>
       <h2>Materi dan kompetensi</h2>
-      <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
-        <Field label="Jenis materi" name="kind">
-          <select
-            name="kind"
-            value={kind}
-            onChange={(e) => setKind(e.target.value as AdminTaxonDto['kind'])}
-          >
-            {['CHAPTER', 'SUBCHAPTER', 'COMPETENCY', 'LEVEL'].map((s) => (
-              <option key={s}>{s}</option>
-            ))}
-          </select>
-        </Field>
-        {kind !== 'CHAPTER' && (
-          <Field label="Materi induk" name="parent">
-            <select name="parent" required defaultValue="">
-              <option value="">Pilih materi induk</option>
-              {parents.map((p) => (
-                <option key={p.id} value={p.id}>
-                  {p.name} ({p.code})
-                </option>
+      <details className="assessment-authoring">
+        <summary>Tambah materi</summary>
+        <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
+          <Field label="Jenis materi" name="kind">
+            <select
+              name="kind"
+              value={kind}
+              onChange={(e) => setKind(e.target.value as AdminTaxonDto['kind'])}
+            >
+              {['CHAPTER', 'SUBCHAPTER', 'COMPETENCY', 'LEVEL'].map((s) => (
+                <option key={s}>{s}</option>
               ))}
             </select>
           </Field>
-        )}
-        {kind !== 'LEVEL' && (
-          <Field label="Kode unik" name="code">
-            <input name="code" required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" />
+          {kind !== 'CHAPTER' && (
+            <Field label="Materi induk" name="parent">
+              <select name="parent" required defaultValue="">
+                <option value="">Pilih materi induk</option>
+                {parents.map((p) => (
+                  <option key={p.id} value={p.id}>
+                    {p.name} ({p.code})
+                  </option>
+                ))}
+              </select>
+            </Field>
+          )}
+          {kind !== 'LEVEL' && (
+            <Field label="Kode unik" name="code">
+              <input name="code" required maxLength={64} pattern="[A-Za-z0-9]+(-[A-Za-z0-9]+)*" />
+            </Field>
+          )}
+          {kind === 'CHAPTER' && (
+            <Field label="Kategori bab" name="category">
+              <CategorySelect name="category" />
+            </Field>
+          )}
+          <Field
+            label={kind === 'COMPETENCY' ? 'Deskripsi kompetensi' : 'Nama / deskripsi'}
+            name="name"
+          >
+            <input name="name" required maxLength={160} />
           </Field>
-        )}
-        {kind === 'CHAPTER' && (
-          <Field label="Kategori bab" name="category">
-            <CategorySelect name="category" />
-          </Field>
-        )}
-        <Field
-          label={kind === 'COMPETENCY' ? 'Deskripsi kompetensi' : 'Nama / deskripsi'}
-          name="name"
-        >
-          <input name="name" required maxLength={160} />
-        </Field>
-        {kind !== 'COMPETENCY' && (
-          <Field label={kind === 'LEVEL' ? 'Nomor level' : 'Urutan'} name="order">
-            <input
-              name="order"
-              type="number"
-              min={1}
-              max={kind === 'LEVEL' ? 5 : 100000}
-              required
-            />
-          </Field>
-        )}
-        <Button type="submit" disabled={busy || (kind !== 'CHAPTER' && !parents.length)}>
-          Simpan draf materi
-        </Button>
-      </AdminEditorForm>
+          {kind !== 'COMPETENCY' && (
+            <Field label={kind === 'LEVEL' ? 'Nomor level' : 'Urutan'} name="order">
+              <input
+                name="order"
+                type="number"
+                min={1}
+                max={kind === 'LEVEL' ? 5 : 100000}
+                required
+              />
+            </Field>
+          )}
+          <Button type="submit" disabled={busy || (kind !== 'CHAPTER' && !parents.length)}>
+            Simpan draf materi
+          </Button>
+        </AdminEditorForm>
+      </details>
       {contentRole && demoIds.size > 6 && (
         <label className="admin-content-actions">
           <input
@@ -177,16 +181,16 @@ export function Curriculum({ data, token, busy, run }: EditorProps) {
               </label>
             )}
             <div className="admin-content-actions">
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() => {
-                  const name = window.prompt('Nama / deskripsi baru', r.name);
-                  if (name?.trim()) void run(() => renameTaxon(token, r, name.trim()));
-                }}
-              >
-                Ubah nama / deskripsi
-              </Button>
+              <ContentTextEdit
+                trigger="Ubah nama / deskripsi"
+                title="Ubah materi"
+                label="Nama / deskripsi baru"
+                value={r.name}
+                busy={busy}
+                error={error}
+                maxLength={r.kind === 'COMPETENCY' || r.kind === 'LEVEL' ? 2000 : 160}
+                save={(name) => run(() => renameTaxon(token, r, name))}
+              />
               {r.status !== 'READY' && (
                 <Button
                   disabled={busy}

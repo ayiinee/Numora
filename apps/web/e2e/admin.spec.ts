@@ -9,6 +9,12 @@ import type {
 } from '../src/features/admin/generated-types';
 import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generated-types';
 
+async function selectContentSection(page: Page, label: string) {
+  const select = page.getByRole('combobox', { name: 'Bagian konten', exact: true });
+  if (await select.isVisible()) await select.selectOption({ label });
+  else await page.getByRole('button', { name: label, exact: true }).click();
+}
+
 function directedPackage(
   usage: ContentPackageDetailDto['assessmentType'] = 'DRILL',
 ): ContentPackageDetailDto {
@@ -624,18 +630,21 @@ for (const width of [390, 1280]) {
     }));
     await page.goto('/admin/content');
     await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(5);
+    await page.getByRole('button', { name: 'Tambah soal PG', exact: true }).click();
     await page
       .getByLabel('Teks soal (LaTeX inline diperbolehkan)')
       .fill('Draf TEST belum disimpan');
+    await page.keyboard.press('Escape');
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
     await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(1);
+    await page.getByRole('button', { name: 'Tambah soal PG', exact: true }).click();
     await expect(page.getByLabel('Teks soal (LaTeX inline diperbolehkan)')).toHaveValue(
       'Draf TEST belum disimpan',
     );
+    await page.keyboard.press('Escape');
     if (width === 1280) {
-      const toolbar = await page
-        .locator('.admin-content-view > .admin-search-toolbar')
-        .boundingBox();
+      await page.getByRole('button', { name: /^Filter soal/ }).click();
+      const toolbar = await page.locator('.assessment-bank-filters').boundingBox();
       const area = await page.locator('.admin-content-view').boundingBox();
       expect(toolbar!.width).toBeGreaterThan(area!.width * 0.95);
     }
@@ -700,10 +709,10 @@ for (const width of [320, 375, 768, 1440]) {
     await expect(materialPages.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
     await materialPages.getByRole('button', { name: 'Sebelumnya' }).click();
     await expect(materials.getByText('Materi demo 1', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Soal', exact: true }).click();
+    await selectContentSection(page, 'Soal');
     const questions = page.getByRole('list', { name: 'Daftar soal' });
     const questionPages = page.getByRole('navigation', { name: 'Halaman data' });
-    await expect(questions.getByRole('listitem')).toHaveCount(5);
+    await expect(questions.locator(':scope > li')).toHaveCount(5);
     await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toBeVisible();
     const firstRequest = new URL(bankRequests[0]!);
     expect(firstRequest.searchParams.get('catalog')).toBe('COMPACT_DEMO');
@@ -711,7 +720,7 @@ for (const width of [320, 375, 768, 1440]) {
     await capture(page, 'content-catalog-questions-page1', width);
     await questionPages.getByRole('button', { name: 'Berikutnya' }).focus();
     await page.keyboard.press('Enter');
-    await expect(questions.getByRole('listitem')).toHaveCount(5);
+    await expect(questions.locator(':scope > li')).toHaveCount(5);
     await expect(questions.getByText('DEMO: Contoh soal 6', { exact: true })).toBeVisible();
     await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toHaveCount(0);
     await expect(questionPages.getByText('Halaman 2', { exact: true })).toBeVisible();
@@ -758,17 +767,18 @@ for (const width of [320, 375, 768, 1440]) {
     await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).not.toBeVisible();
     await capture(page, 'content-ux-questions', width);
-    await page.getByText('Tambah soal PG manual', { exact: true }).focus();
+    await page.getByRole('button', { name: 'Tambah soal PG', exact: true }).focus();
     await page.keyboard.press('Enter');
     await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await page.keyboard.press('Escape');
+    await selectContentSection(page, 'Laporan');
     await expect(page).toHaveURL(/view=reports/);
     await page.reload();
     await expect(page.getByRole('heading', { name: 'Antrian moderasi' })).toBeVisible();
     await page.goBack();
     await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
     for (const [label] of panels) {
-      await page.getByRole('button', { name: label, exact: true }).click();
+      await selectContentSection(page, label);
       await expect(page.locator('.admin-content-view')).toHaveAttribute('aria-label', label);
       await expect(page.locator('.admin-page-header')).toHaveCount(0);
       await capture(page, `content-ux-${label.replaceAll(/[^A-Za-z]/g, '-')}`, width);
@@ -866,10 +876,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto('/admin/content');
     await expect(page.getByRole('heading', { name: 'Versi soal', exact: true })).toBeVisible();
     for (const [label, name] of panels) {
-      await page.getByRole('button', { name: label, exact: true }).click();
-      await expect(page.getByRole('button', { name: label, exact: true })).toHaveAttribute(
-        'aria-current',
-        'page',
+      await selectContentSection(page, label);
+      await expect(page.locator('.assessment-navigation button[aria-current="page"]')).toHaveText(
+        label,
       );
       await capture(page, name, width);
     }
@@ -1016,7 +1025,7 @@ test('Admin category changes preserve the server value on failure and allow a nu
 }) => {
   const { state } = await setup(page);
   await page.goto('/admin/content');
-  await page.getByRole('button', { name: 'Materi', exact: true }).click();
+  await selectContentSection(page, 'Materi');
   const category = page.getByRole('combobox', {
     name: 'Kategori bab: Persamaan & Fungsi Kuadrat',
     exact: true,
@@ -1084,7 +1093,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   state.failPath = '';
   await page.getByRole('button', { name: 'Muat ulang data' }).click();
   await expect(page.getByRole('heading', { name: 'Versi soal', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'IRT', exact: true }).click();
+  await selectContentSection(page, 'IRT');
   await expect(page.getByText('TRYOUT · SUCCEEDED', { exact: true })).toBeVisible();
   await expect(page.getByText(/Rilis belum tercatat/)).toBeVisible();
   await expect(page.getByText('0 respons · NOT_ENOUGH_DATA', { exact: true })).toBeVisible();
@@ -1119,7 +1128,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   ).toHaveAttribute('href', '/admin/content/imports');
   await expect(page.getByRole('button', { name: 'Simpan versi DRAFT' })).toBeDisabled();
   for (const [label, name] of panels) {
-    await page.getByRole('button', { name: label, exact: true }).click();
+    await selectContentSection(page, label);
     await capture(page, `empty-${name}`, 390);
   }
   state.failPath = '/admin/content/curriculum';
@@ -1145,7 +1154,7 @@ test('Content can assemble thirty Tryout questions across selector pages on mobi
   }));
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content');
-  await page.getByRole('button', { name: 'Draf Tryout', exact: true }).click();
+  await selectContentSection(page, 'Draf Tryout');
   await expect(page.getByRole('checkbox')).toHaveCount(20);
   for (const box of await page.getByRole('checkbox').all()) await box.check();
   await page.getByRole('button', { name: 'Soal berikutnya', exact: true }).click();
@@ -1306,13 +1315,13 @@ test('Admin loading, pinned Tryout edits, report follow-up and logout remain exp
   release();
   state.wait = null;
   await expect(page.getByRole('heading', { name: 'Versi soal', exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Draf Tryout', exact: true }).click();
+  await selectContentSection(page, 'Draf Tryout');
   await page.getByRole('button', { name: 'Edit draf', exact: true }).click();
   await page.getByLabel('Nama paket', { exact: true }).fill('DEMO Draf Revisi');
   await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
   await expect(page.getByText('DEMO Draf Revisi', { exact: true })).toBeVisible();
   expect(state.mutations.at(-1)?.body.questionVersionIds).toEqual([id(10), id(21)]);
-  await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+  await selectContentSection(page, 'Laporan');
   await page
     .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
     .selectOption('RESOLVED');

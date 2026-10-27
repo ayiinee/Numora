@@ -5,7 +5,7 @@ import { ContentPayload } from './content-payload';
 afterEach(cleanup);
 it.each([
   ['SINGLE_CHOICE', { optionId: 'A' }, 'A'],
-  ['MCMA', { optionIds: ['A', 'C'] }, 'A, C'],
+  ['MCMA', { optionIds: ['A', 'C'] }, '1, C'],
   ['CATEGORY', { categoryByStatementId: { S1: 'TRUE' } }, 'Benar'],
 ])('renders %s keys from the pinned payload without assuming scoring', (type, answer, expected) => {
   render(
@@ -44,4 +44,42 @@ it('handles legacy and incomplete content without unsafe HTML or fetching privat
   expect(screen.getByText('Kunci belum tersedia.')).toBeTruthy();
   expect(document.querySelector('script')).toBeNull();
   expect(document.querySelector('img')).toBeNull();
+});
+
+it('maps long imported identifiers to the same statement numbers without changing mathematics or keys', () => {
+  render(
+    <ContentPayload
+      payload={{
+        type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+        stem: 'Choisissez les réponses correctes.',
+        options: [
+          { id: 'source-statement-083125b756f4107d143ade49f3ccd824-1', text: '$60\\div(-6)=6$' },
+          { id: 'source-statement-083125b756f4107d143ade49f3ccd824-2', text: '$8\\times(-2)=-16$' },
+        ],
+        answer: { optionIds: ['source-statement-083125b756f4107d143ade49f3ccd824-2'] },
+      }}
+    />,
+  );
+  const keys = screen.getByText('Kunci jawaban · hanya untuk review Admin').closest('section')!;
+  expect(within(keys).getByText('2')).toBeTruthy();
+  expect(screen.getAllByText('Jawaban benar')).toHaveLength(1);
+  expect(document.querySelectorAll('.assessment-options > li')).toHaveLength(2);
+  expect(document.querySelector('.katex-mathml')?.textContent).toContain('=6');
+  expect(document.querySelector('.assessment-options')?.textContent).not.toContain(
+    'source-statement',
+  );
+});
+
+it('keeps an unknown answer identifier visible instead of inventing an option mapping', () => {
+  render(
+    <ContentPayload
+      payload={{
+        type: 'SINGLE_CHOICE',
+        options: [{ id: 'source-A', text: 'Pertama' }],
+        answer: { optionId: 'missing-source-key' },
+      }}
+    />,
+  );
+  expect(screen.getByText('missing-source-key')).toBeTruthy();
+  expect(screen.queryByText('Jawaban benar')).toBeNull();
 });

@@ -39,15 +39,18 @@ export function DrillPackages({
         Publikasi divalidasi oleh API. Paket harus berisi 10 versi soal yang sudah ditinjau dan
         materi serta kebijakan penilaiannya harus siap.
       </p>
-      <DrillPackageEditor
-        key={draft?.id ?? 'new-drill-package'}
-        data={data}
-        token={token}
-        busy={busy}
-        run={run}
-        draft={draft}
-        close={() => setDraft(null)}
-      />
+      <details className="assessment-authoring" open={draft ? true : undefined}>
+        <summary>{draft ? 'Edit draf Drill' : 'Buat paket Drill'}</summary>
+        <DrillPackageEditor
+          key={draft?.id ?? 'new-drill-package'}
+          data={data}
+          token={token}
+          busy={busy}
+          run={run}
+          draft={draft}
+          close={() => setDraft(null)}
+        />
+      </details>
       {!data.drillPackages.items.length && <p>Belum ada paket Drill pada halaman ini.</p>}
       <ul className="monitoring-list">
         {data.drillPackages.items.map((pack) => (

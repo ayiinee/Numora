@@ -214,6 +214,20 @@ beforeEach(() => {
       },
     },
   });
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value() {
+        this.setAttribute('open', '');
+      },
+    },
+    close: {
+      configurable: true,
+      value() {
+        this.removeAttribute('open');
+      },
+    },
+  });
   vi.resetAllMocks();
   context.state = {
     status: 'ready',
@@ -255,6 +269,7 @@ describe('Admin content UI', () => {
         : { items: questions.slice(0, 20), nextOffset: 20 },
     );
     render(<AdminContentScreen initialView="packages" />);
+    fireEvent.click(await screen.findByText('Buat draf Tryout'));
     await screen.findByLabelText(/Question 1$/);
     screen.getAllByRole('checkbox').forEach((item) => fireEvent.click(item));
     fireEvent.click(screen.getByRole('button', { name: 'Soal berikutnya' }));
@@ -341,11 +356,11 @@ describe('Admin content UI', () => {
       },
     }));
     render(<AdminContentScreen />);
-    await screen.findByText('Soal 1');
+    await screen.findByRole('heading', { name: 'Soal 1' });
     const pager = screen.getByRole('navigation', { name: 'Halaman data' });
     fireEvent.click(within(pager).getByRole('button', { name: 'Berikutnya' }));
-    await screen.findByText('Soal 6');
-    expect(screen.queryByText('Soal 1')).toBeNull();
+    await screen.findByRole('heading', { name: 'Soal 6' });
+    expect(screen.queryByRole('heading', { name: 'Soal 1' })).toBeNull();
     const secondPager = screen.getByRole('navigation', { name: 'Halaman data' });
     expect(within(secondPager).getByText('Halaman 2')).toBeTruthy();
     expect(
@@ -353,7 +368,7 @@ describe('Admin content UI', () => {
     ).toBe(true);
     expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, 'questions', {}, true);
     fireEvent.click(within(secondPager).getByRole('button', { name: 'Sebelumnya' }));
-    await screen.findByText('Soal 1');
+    await screen.findByRole('heading', { name: 'Soal 1' });
   });
   it('does not fetch administrative data for a disabled Admin', () => {
     context.state = {
@@ -393,6 +408,7 @@ describe('Admin content UI', () => {
     });
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    fireEvent.click(await screen.findByText('Buat paket Drill'));
     fireEvent.change(await screen.findByLabelText('Kode keluarga'), {
       target: { value: 'DEMO-L1' },
     });
@@ -488,11 +504,13 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen />);
     await screen.findByText('TEST offline');
     fireEvent.click(screen.getByRole('button', { name: 'Muat ulang data' }));
+    fireEvent.click(await screen.findByRole('button', { name: 'Tambah soal PG' }));
     await screen.findByLabelText('Kompetensi');
     expect(loadAdminWorkbench).toHaveBeenCalledTimes(2);
   });
   it('sends a complete PG draft through the shared authenticated API client', async () => {
     render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Tambah soal PG' }));
     fireEvent.change(await screen.findByLabelText('Kompetensi'), {
       target: { value: 'competency-test' },
     });
@@ -522,6 +540,7 @@ describe('Admin content UI', () => {
   });
   it('preserves pinned versions outside the loaded page when editing a Tryout draft', async () => {
     render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Tambah soal PG' }));
     await screen.findByLabelText('Kompetensi');
     fireEvent.click(screen.getByRole('button', { name: 'Draf Tryout' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
@@ -652,6 +671,7 @@ describe('Admin content UI', () => {
   });
   it('removes administrative data on logout and on an API access rejection', async () => {
     const result = render(<AdminContentScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: 'Tambah soal PG' }));
     await screen.findByLabelText('Kompetensi');
     context.state = { status: 'signed_out' };
     result.rerender(<AdminContentScreen />);
@@ -706,6 +726,7 @@ describe('Admin content UI', () => {
     }));
     render(<AdminContentScreen />);
     await screen.findByText('Soal halaman 0');
+    fireEvent.click(screen.getByRole('button', { name: 'Tambah soal PG' }));
     expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
     fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
       target: { value: 'Draf belum disimpan' },

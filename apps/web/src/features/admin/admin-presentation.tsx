@@ -11,11 +11,13 @@ export function AdminFrame({
   title,
   description,
   icon,
+  management = false,
   children,
 }: {
   title: string;
   description: string;
   icon: IconName;
+  management?: boolean;
   children: ReactNode;
 }) {
   const { state } = useAuth();
@@ -27,15 +29,20 @@ export function AdminFrame({
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.adminRole === 'OPERATIONS';
-  const hidePageHeader = contentRole || operationsRole;
+  const hidePageHeader = !management && (contentRole || operationsRole);
   return (
     <AppShell
       area="admin"
-      className={`admin-redesign-shell${hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}`}
+      className={`admin-redesign-shell${management ? ' admin-management-shell admin-assessment-shell' : hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}`}
     >
       <div className="admin-redesign-frame">
         {hidePageHeader ? (
           <h1 className="sr-only">{title}</h1>
+        ) : management ? (
+          <header className="assessment-page-heading">
+            <h1>{title}</h1>
+            <p>{description}</p>
+          </header>
         ) : (
           <header className="admin-page-header">
             <span className="admin-header-icon">

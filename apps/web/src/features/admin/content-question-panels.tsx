@@ -1,6 +1,7 @@
 'use client';
 import { Button } from '@tka/ui';
 import { useState, type FormEvent } from 'react';
+import { ContentTextEdit } from './content-text-edit';
 import { AdminEditorForm } from './admin-presentation';
 import {
   createQuestion,
@@ -157,7 +158,7 @@ export function QuestionEditor({
   );
 }
 
-export function Videos({ data, token, busy, run }: EditorProps) {
+export function Videos({ data, token, busy, run, error }: EditorProps) {
   async function submit(e: FormEvent<HTMLFormElement>) {
     e.preventDefault();
     const form = e.currentTarget;
@@ -176,35 +177,38 @@ export function Videos({ data, token, busy, run }: EditorProps) {
   return (
     <section>
       <h2>Metadata video</h2>
-      <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
-        <Field label="Judul video" name="title">
-          <input name="title" required maxLength={240} />
-        </Field>
-        <Field label="URL HTTPS" name="url">
-          <input name="url" type="url" pattern="https://.*" required maxLength={2000} />
-        </Field>
-        <Field label="Sumber / penyedia" name="source">
-          <input name="source" required maxLength={160} />
-        </Field>
-        <Field label="Subbab" name="subchapter">
-          <select name="subchapter" required defaultValue="">
-            <option value="">Pilih subbab</option>
-            {data.curriculum.items
-              .filter((r) => r.kind === 'SUBCHAPTER')
-              .map((r) => (
-                <option key={r.id} value={r.id}>
-                  {r.name}
-                </option>
-              ))}
-          </select>
-        </Field>
-        <Field label="Urutan rekomendasi" name="order">
-          <input name="order" type="number" min={1} max={100000} required />
-        </Field>
-        <Button type="submit" disabled={busy}>
-          Simpan draf video
-        </Button>
-      </AdminEditorForm>
+      <details className="assessment-authoring">
+        <summary>Tambah video</summary>
+        <AdminEditorForm busy={busy} onSubmit={(e) => void submit(e)}>
+          <Field label="Judul video" name="title">
+            <input name="title" required maxLength={240} />
+          </Field>
+          <Field label="URL HTTPS" name="url">
+            <input name="url" type="url" pattern="https://.*" required maxLength={2000} />
+          </Field>
+          <Field label="Sumber / penyedia" name="source">
+            <input name="source" required maxLength={160} />
+          </Field>
+          <Field label="Subbab" name="subchapter">
+            <select name="subchapter" required defaultValue="">
+              <option value="">Pilih subbab</option>
+              {data.curriculum.items
+                .filter((r) => r.kind === 'SUBCHAPTER')
+                .map((r) => (
+                  <option key={r.id} value={r.id}>
+                    {r.name}
+                  </option>
+                ))}
+            </select>
+          </Field>
+          <Field label="Urutan rekomendasi" name="order">
+            <input name="order" type="number" min={1} max={100000} required />
+          </Field>
+          <Button type="submit" disabled={busy}>
+            Simpan draf video
+          </Button>
+        </AdminEditorForm>
+      </details>
       {!data.videos.items.length && <p>Belum ada video pada halaman ini.</p>}
       <ul className="monitoring-list">
         {data.videos.items.map((v) => (
@@ -221,17 +225,16 @@ export function Videos({ data, token, busy, run }: EditorProps) {
               Urutan {v.recommendationOrder} · {v.status}
             </p>
             <div className="admin-content-actions">
-              <Button
-                variant="secondary"
-                disabled={busy}
-                onClick={() => {
-                  const url = window.prompt('URL HTTPS baru', v.url);
-                  if (url?.trim())
-                    void run(() => updateVideo(token, v.mappingId, { url: url.trim() }));
-                }}
-              >
-                Ubah URL
-              </Button>
+              <ContentTextEdit
+                trigger="Ubah URL"
+                title="Ubah tautan video"
+                label="URL HTTPS baru"
+                value={v.url}
+                busy={busy}
+                error={error}
+                url
+                save={(url) => run(() => updateVideo(token, v.mappingId, { url }))}
+              />
               {v.status !== 'READY' && (
                 <Button
                   disabled={busy}

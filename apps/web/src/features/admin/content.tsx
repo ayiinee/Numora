@@ -1,5 +1,4 @@
 'use client';
-import { AdminConfirmButton } from './admin-confirm-button';
 import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 import { Curriculum } from './content-curriculum-panel';
 import { Field, field, type Workbench } from './content-editor';
@@ -7,29 +6,18 @@ import { DrillPackages, TryoutEditor } from './content-package-panels';
 import { QuestionEditor, Videos } from './content-question-panels';
 import { Reports, ServerFilters, VerificationHistory } from './content-report-panels';
 import { ADMIN_PAGE_SIZE } from './pagination';
+import { ContentBank } from './content-bank';
 
 import { useAuth } from '@/features/onboarding/auth';
 import { ApiProblem } from '@/lib/api';
-import { Badge, Button, Icon, type IconName } from '@tka/ui';
+import { Button, Dialog } from '@tka/ui';
 import Link from 'next/link';
-import { useEffect, useState, type ReactNode } from 'react';
-import {
-  AdminEditorForm,
-  AdminFrame,
-  AdminLoading,
-  AdminMessage,
-  AdminStats,
-} from './admin-presentation';
+import { useEffect, useRef, useState } from 'react';
+import { AdminEditorForm, AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { AssessmentPolicySelector } from './assessment-policy-selector';
-import { loadAdminWorkbench, publishTryoutPackage, setContentStatus } from './content-api';
-import { classifyQuestion } from './content-package-api';
+import { loadAdminWorkbench, publishTryoutPackage } from './content-api';
 import { ContentPackageWorkspace } from './content-package-workspace';
-import { ContentText } from './content-payload';
 import type { AdminDrillPackageDto, AdminTryoutDraftDto, AdminVersionDto } from './generated-types';
-
-function QuestionSummary({ compact, children }: { compact: boolean; children: ReactNode }) {
-  return compact ? <div className="content-question-summary">{children}</div> : <>{children}</>;
-}
 
 export type ContentView =
   | 'curriculum'
@@ -55,18 +43,6 @@ const views: { id: View; label: string }[] = [
   { id: 'irt', label: 'IRT' },
   { id: 'audit', label: 'Audit' },
 ];
-const viewIcons: Record<View, IconName> = {
-  curriculum: 'book',
-  questions: 'clipboard',
-  verification: 'verified',
-  videos: 'play-circle',
-  packages: 'clock',
-  drillPackages: 'target',
-  directedPackages: 'clipboard',
-  reports: 'chat',
-  irt: 'chart',
-  audit: 'lock',
-};
 const viewGuidance: Record<View, { title: string; description: string }> = {
   curriculum: {
     title: 'Struktur materi',
@@ -157,6 +133,15 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
   const [offset, setOffset] = useState(0);
   const [view, setView] = useState<View>(initialView);
   const [filters, setFilters] = useState<Record<string, string>>({});
+  const [editorOpen, setEditorOpen] = useState(false);
+  const editorFeedback = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (editorOpen && (error || notice)) {
+      const dialog = editorFeedback.current?.closest('dialog');
+      if (dialog) dialog.scrollTop = 0;
+      editorFeedback.current?.focus({ preventScroll: true });
+    }
+  }, [editorOpen, error, notice]);
   const [editing, setEditing] = useState<AdminVersionDto | null>(null);
   const [draft, setDraft] = useState<AdminTryoutDraftDto | null>(null);
   const [drillDraft, setDrillDraft] = useState<AdminDrillPackageDto | null>(null);
@@ -244,6 +229,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
     setError('');
     setNotice('');
     setEditing(null);
+    setEditorOpen(false);
     setDraft(null);
     setDrillDraft(null);
   }
@@ -268,6 +254,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
         title="Konten & assessment"
         description="Kelola konten, tinjau laporan, dan pantau proses IRT."
         icon="book"
+        management
       >
         {state.status === 'loading' ? (
           <AdminLoading message="Memeriksa akun…" />
@@ -293,7 +280,10 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
       token={token}
       busy={busy}
       run={run}
-      close={() => setEditing(null)}
+      close={() => {
+        setEditing(null);
+        setEditorOpen(false);
+      }}
     />
   );
   const hasNext = current
@@ -315,43 +305,74 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
       title="Konten & assessment"
       description="Kelola konten, tinjau laporan, dan pantau proses IRT."
       icon="book"
+      management
     >
       <div className="monitoring-frame admin-content">
-        <p className="admin-context-note">
-          <span>Konten berversi</span> Revisi soal disimpan sebagai versi baru; riwayat pengerjaan
-          tetap dipertahankan.
-        </p>
-        <nav aria-label="Pengelolaan Admin" className="admin-content-nav">
-          {views
-            .filter((item) => item.id !== 'audit' || canReadAudit)
-            .map((item) => (
-              <Button
-                key={item.id}
-                disabled={busy}
-                variant={view === item.id ? 'primary' : 'secondary'}
-                className="admin-view-button"
-                leftIcon={
-                  contentRole ? (
-                    <Icon name={viewIcons[item.id]} width={18} height={18} />
-                  ) : undefined
-                }
-                aria-current={view === item.id ? 'page' : undefined}
-                onClick={() => navigate(item.id)}
-              >
-                {item.label}
-              </Button>
-            ))}
+        <label className="assessment-mobile-navigation">
+          <span>Bagian konten</span>
+          <select
+            aria-label="Bagian konten"
+            value={view}
+            disabled={busy}
+            onChange={(event) => navigate(contentView(event.target.value))}
+          >
+            {views
+              .filter((item) => item.id !== 'audit' || canReadAudit)
+              .map((item) => (
+                <option key={item.id} value={item.id}>
+                  {item.label}
+                </option>
+              ))}
+          </select>
+        </label>
+        <nav aria-label="Pengelolaan Admin" className="assessment-navigation">
+          {[
+            { label: 'Konten', ids: ['questions', 'curriculum', 'videos'] },
+            { label: 'Paket assessment', ids: ['directedPackages', 'drillPackages', 'packages'] },
+            { label: 'Peninjauan', ids: ['verification', 'reports', 'irt', 'audit'] },
+          ].map((group) => (
+            <div className="assessment-nav-group" key={group.label}>
+              <span>{group.label}</span>
+              <div>
+                {group.ids
+                  .map((id) => views.find((item) => item.id === id)!)
+                  .filter((item) => item.id !== 'audit' || canReadAudit)
+                  .map((item) => (
+                    <Button
+                      key={item.id}
+                      disabled={busy}
+                      variant="ghost"
+                      className="admin-view-button"
+                      aria-current={view === item.id ? 'page' : undefined}
+                      onClick={() => navigate(item.id)}
+                    >
+                      {item.label}
+                    </Button>
+                  ))}
+              </div>
+            </div>
+          ))}
         </nav>
         <section className="content-view-intro" aria-labelledby="content-view-title">
           <div>
-            <span className="content-kicker">Konten & assessment</span>
             <h2 id="content-view-title">{viewGuidance[view].title}</h2>
             <p>{viewGuidance[view].description}</p>
           </div>
           {view === 'questions' && (
-            <Link className="content-primary-link" href="/admin/content/imports?mode=json">
-              Impor JSON
-            </Link>
+            <div className="assessment-heading-actions">
+              <Link className="assessment-detail-link" href="/admin/content/imports">
+                Impor soal
+              </Link>
+              <Button
+                disabled={busy || !current}
+                onClick={() => {
+                  setEditing(null);
+                  setEditorOpen(true);
+                }}
+              >
+                Tambah soal PG
+              </Button>
+            </div>
           )}
           {(view === 'irt' || view === 'packages') && (
             <Link className="content-primary-link" href="/admin/irt">
@@ -359,8 +380,8 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
             </Link>
           )}
         </section>
-        {notice && <AdminMessage message={notice} />}
-        {error && (
+        {notice && !editorOpen && <AdminMessage message={notice} />}
+        {error && !editorOpen && (
           <div role="alert" className="form-error">
             <p>{error}</p>
             <Button onClick={retry} disabled={busy}>
@@ -378,13 +399,22 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
           )
         ) : (
           <>
-            <AdminStats
-              items={[
-                { label: 'Keluarga soal', value: current.dashboard?.questions, icon: 'book' },
-                { label: 'Versi READY', value: current.dashboard?.readyVersions, icon: 'check' },
-                { label: 'Laporan terbuka', value: current.dashboard?.openReports, icon: 'chat' },
-              ]}
-            />
+            {current.dashboard && (
+              <div className="assessment-counts" aria-label="Statistik seluruh bank">
+                <span>
+                  Keluarga soal{' '}
+                  <strong>{current.dashboard.questions?.toLocaleString('id-ID') ?? '—'}</strong>
+                </span>
+                <span>
+                  Versi siap{' '}
+                  <strong>{current.dashboard.readyVersions?.toLocaleString('id-ID') ?? '—'}</strong>
+                </span>
+                <span>
+                  Laporan terbuka{' '}
+                  <strong>{current.dashboard.openReports?.toLocaleString('id-ID') ?? '—'}</strong>
+                </span>
+              </div>
+            )}
             <div
               className="admin-content-view"
               data-view={view}
@@ -392,270 +422,95 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
               aria-busy={loading}
             >
               {view === 'curriculum' && (
-                <Curriculum data={current} token={token} busy={busy} run={run} />
+                <Curriculum data={current} token={token} busy={busy} run={run} error={error} />
               )}
               {view === 'questions' && (
                 <>
-                  <div className="admin-search-toolbar">
-                    <label>
-                      Tujuan soal
-                      <select
-                        value={versionUsage}
-                        disabled={busy}
-                        onChange={(e) => {
-                          setVersionUsage(e.target.value);
-                          setOffset(0);
-                        }}
-                      >
-                        <option value="">Semua tujuan</option>
-                        <option value="UNCLASSIFIED">Belum diklasifikasikan</option>
-                        {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-                          <option key={u}>{u}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Status versi
-                      <select
-                        value={versionStatus}
-                        disabled={busy}
-                        onChange={(e) => {
-                          setVersionStatus(e.target.value);
-                          setOffset(0);
-                        }}
-                      >
-                        <option value="">Semua status</option>
-                        {['DRAFT', 'READY', 'REVISION', 'ARCHIVED'].map((s) => (
-                          <option key={s}>{s}</option>
-                        ))}
-                      </select>
-                    </label>
-                    <label>
-                      Materi soal
-                      <select
-                        value={versionChapter}
-                        disabled={busy}
-                        onChange={(e) => {
-                          setVersionChapter(e.target.value);
-                          setOffset(0);
-                        }}
-                      >
-                        <option value="">Semua bab</option>
-                        {current.curriculum.items
-                          .filter((c) => c.kind === 'CHAPTER')
-                          .map((c) => (
-                            <option key={c.id} value={c.id}>
-                              {c.name}
-                            </option>
-                          ))}
-                      </select>
-                    </label>
-                    <label>
-                      Sumber soal
-                      <input
-                        value={versionSource}
-                        maxLength={240}
-                        disabled={busy}
-                        onChange={(e) => {
-                          setVersionSource(e.target.value);
-                          setOffset(0);
-                        }}
-                      />
-                    </label>
-                  </div>
-                  <section>
-                    <h2>Versi soal</h2>
-                    {contentRole && (
-                      <p>
-                        5 soal per halaman. Contoh demo diringkas menjadi maksimal 10 soal unik;
-                        semua versi tetap tersedia pada tab Verifikasi &amp; riwayat. Statistik di
-                        atas mencakup seluruh bank soal.
-                      </p>
-                    )}
+                  <ContentBank
+                    data={current}
+                    token={token}
+                    busy={busy}
+                    run={run}
+                    offset={offset}
+                    loading={loading}
+                    values={{
+                      usageType: versionUsage,
+                      status: versionStatus,
+                      chapterId: versionChapter,
+                      source: versionSource,
+                    }}
+                    onApply={(next) => {
+                      setLoading(true);
+                      setVersionUsage(next.usageType);
+                      setVersionStatus(next.status);
+                      setVersionChapter(next.chapterId);
+                      setVersionSource(next.source);
+                      setOffset(0);
+                      setRevision((value) => value + 1);
+                    }}
+                    onEdit={(version) => {
+                      setEditing(version);
+                      setEditorOpen(true);
+                    }}
+                  />
+                  <div className="assessment-bank-help">
+                    <p>
+                      {contentRole
+                        ? 'Daftar demo diringkas hingga 10 soal unik. Semua versi tersedia di Verifikasi & riwayat.'
+                        : 'Revisi menghasilkan versi baru. Riwayat pengerjaan tetap dipertahankan.'}
+                    </p>
                     <Link href="/admin/content/generator">Generator varian</Link>
-                    <Link href="/admin/content/imports">
-                      Impor Excel/JSON, paket & preview internal
-                    </Link>
-                    {!current.versions.items.length && (
-                      <p>Belum ada versi soal pada halaman ini.</p>
+                    <Link href="/admin/content/imports?mode=json">Impor JSON</Link>
+                  </div>
+                  <Dialog
+                    open={editorOpen}
+                    pending={busy}
+                    title={editing ? 'Revisi / varian soal' : 'Tambah soal PG'}
+                    className="admin-management-dialog assessment-editor-dialog"
+                    onClose={() => {
+                      if (!busy) {
+                        setEditorOpen(false);
+                      }
+                    }}
+                  >
+                    {editorOpen && (error || notice) && (
+                      <div
+                        className="assessment-editor-feedback"
+                        ref={editorFeedback}
+                        tabIndex={-1}
+                        aria-label="Status penyimpanan"
+                      >
+                        {error ? (
+                          <AdminMessage error message={error} />
+                        ) : (
+                          <AdminMessage message={notice} />
+                        )}
+                      </div>
                     )}
-                    <ul className="monitoring-list" aria-label="Daftar soal">
-                      {current.versions.items.map((v) => (
-                        <li className="monitoring-notice admin-content-row" key={v.id}>
-                          <QuestionSummary compact={contentRole}>
-                            <strong>
-                              <ContentText value={v.stem || `Konten ${v.questionType}`} />
-                            </strong>
-                            <Badge>{v.usageType ?? 'Belum diklasifikasikan'}</Badge>
-                            {v.sourceQuestionId && (
-                              <small>Salinan dari keluarga soal: {v.sourceQuestionId}</small>
-                            )}
-                            <small>
-                              Sumber: {v.sourceName ?? 'Belum tercatat'} {v.sourceReference ?? ''}{' '}
-                              {v.sourceFileName ? `· ${v.sourceFileName}` : ''}
-                            </small>
-                            {!v.usageType && (
-                              <form
-                                onSubmit={(e) => {
-                                  e.preventDefault();
-                                  const f = new FormData(e.currentTarget);
-                                  void run(() =>
-                                    classifyQuestion(token, v.questionId, {
-                                      usageType: field(f, 'usageType') as
-                                        'DRILL' | 'PRETEST' | 'TRYOUT',
-                                    }),
-                                  );
-                                }}
-                              >
-                                <label>
-                                  Klasifikasi tujuan
-                                  <select name="usageType" required disabled={busy}>
-                                    <option value="">Pilih tujuan permanen</option>
-                                    {['DRILL', 'PRETEST', 'TRYOUT'].map((u) => (
-                                      <option key={u}>{u}</option>
-                                    ))}
-                                  </select>
-                                </label>
-                                <Button type="submit" disabled={busy}>
-                                  Simpan klasifikasi
-                                </Button>
-                              </form>
-                            )}
-                            <small>
-                              {v.variantCode} · v{v.versionNumber} · {v.questionType}
-                            </small>
-                            {v.questionType !== 'SINGLE_CHOICE' && v.options.length > 0 && (
-                              <ul aria-label="Cuplikan pernyataan soal">
-                                {v.options.slice(0, 2).map((option) => (
-                                  <li key={option.id}>
-                                    <ContentText value={option.text} />
-                                  </li>
-                                ))}
-                              </ul>
-                            )}
-                            <p className={contentRole ? 'content-status-pair' : undefined}>
-                              {contentRole ? (
-                                <>
-                                  <span>Keluarga: {v.questionStatus}</span>
-                                  <span data-status={v.contentStatus}>
-                                    Versi: {v.contentStatus}
-                                  </span>
-                                </>
-                              ) : (
-                                <>
-                                  Keluarga: {v.questionStatus} · Versi: {v.contentStatus}
-                                </>
-                              )}
-                            </p>
-                            <details className="content-version-meta">
-                              <summary>Identitas versi & reviewer</summary>
-                              {v.reviewedByUserId && (
-                                <small>Direview oleh: {v.reviewedByUserId}</small>
-                              )}
-                              <small>ID versi: {v.id}</small>
-                            </details>
-                            {v.reviewedAt && (
-                              <small>
-                                Ditinjau: {new Date(v.reviewedAt).toLocaleString('id-ID')}
-                              </small>
-                            )}
-                          </QuestionSummary>
-                          <div className="admin-content-actions">
-                            <Link href={`/admin/content/versions/${v.id}`}>
-                              Detail, review & kesiapan
-                            </Link>
-                            {v.imported && (
-                              <span>
-                                Payload versi immutable; review dan revisi tersedia pada detail.
-                              </span>
-                            )}
-                            {!v.imported && v.questionType === 'SINGLE_CHOICE' && (
-                              <Button
-                                variant="secondary"
-                                disabled={busy}
-                                onClick={() => setEditing(v)}
-                              >
-                                Buat revisi / varian
-                              </Button>
-                            )}
-                            {!v.imported && v.questionStatus !== 'READY' && (
-                              <Button
-                                disabled={busy}
-                                onClick={() =>
-                                  void run(() =>
-                                    setContentStatus(token, 'questions', v.questionId, 'READY'),
-                                  )
-                                }
-                              >
-                                Atur keluarga READY
-                              </Button>
-                            )}
-                            {!v.imported && v.contentStatus === 'DRAFT' && (
-                              <AdminConfirmButton
-                                disabled={busy}
-                                description={
-                                  'Saya sudah meninjau isi, kunci jawaban, pembahasan, dan materi induk versi ini. Publikasikan sebagai READY?'
-                                }
-                                onConfirm={() =>
-                                  run(() => setContentStatus(token, 'versions', v.id, 'READY'))
-                                }
-                              >
-                                Publikasikan versi
-                              </AdminConfirmButton>
-                            )}
-                            {!v.imported && v.contentStatus !== 'ARCHIVED' && (
-                              <AdminConfirmButton
-                                variant="danger-outline"
-                                disabled={busy}
-                                description={
-                                  'Arsipkan versi ini untuk mencegah pengerjaan baru? Riwayat tetap disimpan.'
-                                }
-                                onConfirm={() =>
-                                  run(() => setContentStatus(token, 'versions', v.id, 'ARCHIVED'))
-                                }
-                              >
-                                Arsipkan versi
-                              </AdminConfirmButton>
-                            )}
-                          </div>
-                        </li>
-                      ))}
-                    </ul>
-                  </section>
-                  {contentRole ? (
-                    <details
-                      className="content-editor-disclosure"
-                      open={editing ? true : undefined}
-                    >
-                      <summary>
-                        {editing ? 'Revisi / varian soal' : 'Tambah soal PG manual'}
-                      </summary>
-                      <p>
-                        Buat satu soal dengan empat pilihan. Untuk bank soal dalam jumlah banyak
-                        atau format PGK, gunakan impor JSON.
-                      </p>
-                      {questionEditor}
-                    </details>
-                  ) : (
-                    questionEditor
-                  )}
+                    {questionEditor}
+                  </Dialog>
                 </>
               )}
               {view === 'verification' && (
                 <VerificationHistory data={current} canReadAudit={canReadAudit} />
               )}
-              {view === 'videos' && <Videos data={current} token={token} busy={busy} run={run} />}
+              {view === 'videos' && (
+                <Videos data={current} token={token} busy={busy} run={run} error={error} />
+              )}
               {view === 'packages' && (
                 <>
-                  <TryoutEditor
-                    key={draft?.id ?? 'new'}
-                    draft={draft}
-                    data={current}
-                    token={token}
-                    busy={busy}
-                    run={run}
-                    close={() => setDraft(null)}
-                  />
+                  <details className="assessment-authoring" open={draft ? true : undefined}>
+                    <summary>{draft ? 'Edit draf Tryout' : 'Buat draf Tryout'}</summary>
+                    <TryoutEditor
+                      key={draft?.id ?? 'new'}
+                      draft={draft}
+                      data={current}
+                      token={token}
+                      busy={busy}
+                      run={run}
+                      close={() => setDraft(null)}
+                    />
+                  </details>
                   <ul className="monitoring-list">
                     {current.packages.items.map((p) => (
                       <li key={p.id} className="monitoring-notice admin-content-row">
@@ -850,7 +705,10 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
               )}
             </div>
             {view !== 'curriculum' && (
-              <nav className="admin-content-actions" aria-label="Halaman data">
+              <nav
+                className="admin-content-actions assessment-pagination"
+                aria-label="Halaman data"
+              >
                 <Button
                   disabled={offset === 0 || busy || loading}
                   onClick={() => {
