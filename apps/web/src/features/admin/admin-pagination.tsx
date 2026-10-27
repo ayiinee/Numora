@@ -24,6 +24,7 @@ export function AdminPagination({
   return (
     <nav className="admin-content-actions admin-pagination" aria-label={label}>
       <Button
+        type="button"
         variant="secondary"
         disabled={disabled || offset === 0}
         onClick={() => onChange(Math.max(0, offset - ADMIN_PAGE_SIZE))}
@@ -32,6 +33,7 @@ export function AdminPagination({
       </Button>
       <span aria-live="polite">Halaman {Math.floor(offset / ADMIN_PAGE_SIZE) + 1}</span>
       <Button
+        type="button"
         variant="secondary"
         disabled={disabled || !hasNext}
         onClick={() => onChange(offset + ADMIN_PAGE_SIZE)}

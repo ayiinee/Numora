@@ -1,22 +1,15 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AdminPretestScreen } from './pretest';
-const mock = vi.hoisted(() => ({ api: vi.fn(), refresh: vi.fn() }));
+import { ApiProblem } from '@/lib/api';
+const mock = vi.hoisted(() => ({
+  api: vi.fn(),
+  refresh: vi.fn(),
+  state: {} as Record<string, unknown>,
+}));
+vi.mock('next/navigation', () => ({ useRouter: () => ({ replace: vi.fn() }) }));
 vi.mock('@/features/onboarding/auth', () => ({
-  useAuth: () => ({
-    state: {
-      status: 'ready',
-      profile: {
-        id: 'TEST',
-        role: 'ADMIN',
-        status: 'ACTIVE',
-        adminRole: 'CONTENT_DATA_MODERATION',
-        capabilities: ['CONTENT_MANAGE'],
-      },
-      session: { access_token: 'TEST ONLY' },
-    },
-    refresh: mock.refresh,
-  }),
+  useAuth: () => ({ state: mock.state, refresh: mock.refresh }),
 }));
 vi.mock('@/lib/api', async (load) => ({ ...(await load<object>()), apiRequest: mock.api }));
 vi.mock('./admin-presentation', async (load) => ({
@@ -37,8 +30,37 @@ const draft = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  mock.state = {
+    status: 'ready',
+    profile: {
+      id: 'TEST',
+      role: 'ADMIN',
+      status: 'ACTIVE',
+      adminRole: 'CONTENT_DATA_MODERATION',
+      capabilities: ['CONTENT_MANAGE'],
+    },
+    session: { access_token: 'TEST ONLY' },
+  };
+  window.history.replaceState({}, '', '/admin/content/pretest');
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value() {
+        this.setAttribute('open', '');
+      },
+    },
+    close: {
+      configurable: true,
+      value() {
+        this.removeAttribute('open');
+      },
+    },
+  });
+  window.scrollTo = vi.fn();
   mock.api.mockImplementation(async (path: string, _token: string, init?: RequestInit) => {
     if (init?.method) return { id: 'saved' };
+    if (path === 'admin/content/pretest-packages/draft') return draft;
+    if (path.startsWith('admin/content/versions')) return { items: [], nextOffset: null };
     if (path.endsWith('/blueprints')) return { items: [] };
     if (path.endsWith('/curriculum'))
       return { items: [{ id: 'chapter', kind: 'CHAPTER', name: 'TEST Chapter' }] };
@@ -47,15 +69,17 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 function submitNew() {
+  fireEvent.click(screen.getByRole('button', { name: 'Buat draf Pretest' }));
   fireEvent.change(screen.getByLabelText('Kode keluarga'), { target: { value: 'TEAM' } });
   fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'TEAM Pretest' } });
   fireEvent.change(screen.getByLabelText('Bab'), { target: { value: 'chapter' } });
-  fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf' }).closest('form')!);
+  fireEvent.submit(document.getElementById('pretest-editor-form')!);
 }
 it('returns to POST creation after cancelling an edit', async () => {
   render(<AdminPretestScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
-  fireEvent.click(screen.getByRole('button', { name: 'Batal revisi' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Batal' }));
   submitNew();
   await waitFor(() =>
     expect(mock.api).toHaveBeenCalledWith(
@@ -67,9 +91,10 @@ it('returns to POST creation after cancelling an edit', async () => {
 });
 it('returns to POST creation after a successful PUT edit', async () => {
   render(<AdminPretestScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
   fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
-  fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf' }).closest('form')!);
-  await screen.findByLabelText('Kode keluarga');
+  fireEvent.submit(document.getElementById('pretest-editor-form')!);
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   expect(mock.api).toHaveBeenCalledWith(
     'admin/content/pretest-packages/draft',
     'TEST ONLY',
@@ -100,4 +125,72 @@ it('retries the blueprint loader instead of only reloading the package list', as
   fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
   await waitFor(() => expect(screen.queryByText(/Blueprint belum bisa dimuat/)).toBeNull());
   expect(mock.api.mock.calls.filter(([path]) => path.endsWith('/blueprints'))).toHaveLength(2);
+});
+
+it.each(['OPERATIONS', null])(
+  'does not load pretest data for subrole %s even with stale capabilities',
+  (role) => {
+    mock.state.profile = { ...(mock.state.profile as object), adminRole: role };
+    render(<AdminPretestScreen />);
+    expect(mock.api).not.toHaveBeenCalled();
+    expect(screen.getByRole('alert').textContent).toContain('Akses memerlukan');
+  },
+);
+it('keeps an edit body and its pinned versions intact after a rejected save', async () => {
+  const initial = mock.api.getMockImplementation()!;
+  mock.api.mockImplementation(async (path: string, token: string, init?: RequestInit) => {
+    if (init?.method === 'PUT') throw new ApiProblem(503, 'UNAVAILABLE', 'TEST temporary failure');
+    return initial(path, token, init);
+  });
+  render(<AdminPretestScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
+  fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Kept draft' } });
+  fireEvent.submit(document.getElementById('pretest-editor-form')!);
+  await screen.findByText('TEST temporary failure');
+  expect((screen.getByLabelText('Nama paket') as HTMLInputElement).value).toBe('Kept draft');
+  expect(mock.api).toHaveBeenCalledWith(
+    'admin/content/pretest-packages/draft',
+    'TEST ONLY',
+    expect.objectContaining({
+      method: 'PUT',
+      body: JSON.stringify({
+        name: 'Kept draft',
+        blueprintVersionId: null,
+        questionVersionIds: [],
+      }),
+    }),
+  );
+});
+it('clears the editor and all cached package data when a mutation loses access', async () => {
+  const initial = mock.api.getMockImplementation()!;
+  mock.api.mockImplementation(async (path: string, token: string, init?: RequestInit) => {
+    if (init?.method === 'PUT') throw new ApiProblem(403, 'FORBIDDEN', 'TEST access revoked');
+    return initial(path, token, init);
+  });
+  render(<AdminPretestScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
+  fireEvent.submit(document.getElementById('pretest-editor-form')!);
+  await screen.findByText('TEST access revoked');
+  expect(screen.queryByRole('dialog')).toBeNull();
+  expect(screen.queryByText('TEST Pretest')).toBeNull();
+});
+it('ignores a detail response after returning to the directory', async () => {
+  const initial = mock.api.getMockImplementation()!;
+  let finish!: (value: typeof draft) => void;
+  mock.api.mockImplementation(async (path: string, token: string, init?: RequestInit) =>
+    path === 'admin/content/pretest-packages/draft'
+      ? new Promise((resolve) => {
+          finish = resolve;
+        })
+      : initial(path, token, init),
+  );
+  render(<AdminPretestScreen />);
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
+  await screen.findByText('Memuat detail paket...');
+  fireEvent.click(screen.getByRole('button', { name: 'Kembali ke daftar' }));
+  await screen.findByRole('heading', { name: 'Daftar paket' });
+  finish(draft);
+  await waitFor(() => expect(screen.queryByRole('button', { name: 'Edit draf' })).toBeNull());
 });

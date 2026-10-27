@@ -1,4 +1,13 @@
 const explanations: Record<string, string> = {
+  ASSESSMENT_PACKAGE_INCOMPLETE:
+    'Jumlah soal belum sesuai kebutuhan paket, atau ada versi yang berulang. Periksa komposisi sebelum review.',
+  ASSESSMENT_CONTENT_MISSING:
+    'Sebagian versi soal tidak ditemukan. Periksa kembali versi yang dipilih.',
+  ASSESSMENT_CONTENT_SCOPE_INVALID:
+    'Ada soal dari bab, subbab, atau level yang tidak sesuai dengan paket.',
+  ASSESSMENT_CONTENT_NOT_READY:
+    'Sebagian soal belum memenuhi kesiapan konten. Buka detail versi untuk memeriksa hambatannya.',
+  PRETEST_REQUIRES_20_ITEMS: 'Pretest memerlukan 20 versi soal unik untuk review editorial.',
   APPROVED_PGK_RUBRIC_REQUIRED:
     'Rubric scoring PGK belum disahkan atau belum terhubung ke versi ini. Minta konfirmasi Curriculum sebelum publikasi paket.',
   REVIEW_REQUIRED:

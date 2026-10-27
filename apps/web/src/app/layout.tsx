@@ -11,6 +11,7 @@ import './admin-accounts.css';
 import './admin-schools.css';
 import './admin-people.css';
 import './admin-assessment.css';
+import './admin-pretest.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 

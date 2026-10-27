@@ -62,6 +62,10 @@ async function fixture(page: Page, role: 'ADMIN' | 'STUDENT' = 'ADMIN') {
           ],
         },
       });
+    if (path.startsWith('admin/content/versions/'))
+      return route.fulfill({
+        json: { payload: { stem: { text: 'TEST pinned question' }, type: 'SINGLE_CHOICE' } },
+      });
     if (path === 'admin/content/pretest-packages/blueprints')
       return route.fulfill({ json: { items: [] } });
     if (path.includes('/review')) {
@@ -70,29 +74,28 @@ async function fixture(page: Page, role: 'ADMIN' | 'STUDENT' = 'ADMIN') {
     }
     if (path.startsWith('admin/content/pretest-packages'))
       return route.fulfill({
-        json: {
-          items: [
-            {
-              id: userId,
-              familyCode: 'TEST',
-              packageVersion: 1,
-              name: 'TEST Pretest',
-              chapterId: userId,
-              blueprintVersionId: null,
-              state: pretestState,
-              manifestDigest: pretestState === 'DRAFT' ? null : 'TEST',
-              questionVersionIds: Array.from(
-                { length: 20 },
-                (_, i) => `bbbbbbbb-bbbb-4bbb-8bbb-${String(i).padStart(12, '0')}`,
-              ),
-              reviewBlockers: [],
-              publicationBlockers: [
-                'APPROVED_PRETEST_BLUEPRINT_REQUIRED',
-                'PRETEST_STUDENT_CONSUMER_REQUIRED',
-              ],
-            },
-          ],
-        },
+        json: (() => {
+          const pack = {
+            id: userId,
+            familyCode: 'TEST',
+            packageVersion: 1,
+            name: 'TEST Pretest',
+            chapterId: userId,
+            blueprintVersionId: null,
+            state: pretestState,
+            manifestDigest: pretestState === 'DRAFT' ? null : 'TEST',
+            questionVersionIds: Array.from(
+              { length: 20 },
+              (_, i) => `bbbbbbbb-bbbb-4bbb-8bbb-${String(i).padStart(12, '0')}`,
+            ),
+            reviewBlockers: [],
+            publicationBlockers: [
+              'APPROVED_PRETEST_BLUEPRINT_REQUIRED',
+              'PRETEST_STUDENT_CONSUMER_REQUIRED',
+            ],
+          };
+          return path === `admin/content/pretest-packages/${userId}` ? pack : { items: [pack] };
+        })(),
       });
     if (path === 'assessment-attempts/TEST')
       return route.fulfill({
@@ -154,6 +157,8 @@ test('Pretest editorial review preserves a concrete production blocker at mobile
   await fixture(page);
   await page.goto('/admin/content/pretest');
   await expect(page.getByText('TEST Pretest', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
+  await page.getByRole('button', { name: 'Review paket', exact: true }).click();
   await page.getByLabel('Alasan review').fill('TEST editorial review');
   await page.getByRole('button', { name: 'Sahkan review editorial' }).click();
   await expect(page.getByRole('button', { name: 'Buat versi baru' })).toBeVisible();
