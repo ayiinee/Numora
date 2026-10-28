@@ -1,8 +1,9 @@
 import assert from 'node:assert/strict';
 import { test } from 'node:test';
 import { createServer } from 'node:http';
-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
-import { resolve } from 'node:path';
+import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
+import { tmpdir } from 'node:os';
+import { basename, dirname, resolve } from 'node:path';
 import {
   safeErrorFingerprint,
   responseMetadata,
@@ -60,10 +61,18 @@ test('QA observer cannot write outside local artifact directory', () => {
   );
 });
 
-test('QA observer keeps the response unchanged and records finish/close without secrets', async () => {
-  const directory = mkdtempSync(resolve('qa/.local/http-observer-test-'));
+test('QA observer keeps the response unchanged and records finish/close without secrets', async (t) => {
+  const root = mkdtempSync(resolve(tmpdir(), 'numora-qa-http-observer-'));
+  t.after(() => {
+    assert.equal(dirname(root), resolve(tmpdir()));
+    assert.ok(basename(root).startsWith('numora-qa-http-observer-'));
+    rmSync(root, { recursive: true, force: true });
+  });
+  const directory = resolve(root, 'qa/.local');
+  assert.equal(existsSync(directory), false);
+  mkdirSync(directory, { recursive: true });
   const file = resolve(directory, 'events.jsonl');
-  const observer = createHttpObserver(process.cwd(), file);
+  const observer = createHttpObserver(root, file);
   const body = {
     id: '11111111-1111-4111-8111-111111111111',
     status: 'inProgress',
@@ -79,6 +88,7 @@ test('QA observer keeps the response unchanged and records finish/close without 
       res.json(body);
     });
   });
+  let observerClosed = false;
   try {
     await new Promise((done) => server.listen(0, '127.0.0.1', done));
     const response = await fetch(
@@ -92,6 +102,7 @@ test('QA observer keeps the response unchanged and records finish/close without 
     assert.deepEqual(await response.json(), body);
     await new Promise((done) => server.close(done));
     await observer.close();
+    observerClosed = true;
     const text = readFileSync(file, 'utf8');
     assert.ok(!/PRIVATE_TOKEN|PRIVATE_CONTENT|Authorization/.test(text));
     const events = text
@@ -99,11 +110,12 @@ test('QA observer keeps the response unchanged and records finish/close without 
       .split('\n')
       .map((line) => JSON.parse(line));
     assert.equal(events.find((e) => e.event === 'response_prepared').questionCount, 1);
+    assert.equal(events.find((e) => e.event === 'response_finished').httpStatus, 201);
     assert.equal(events.find((e) => e.event === 'response_closed').writableFinished, true);
     assert.ok(events.every((e) => e.operationId === 'test:1:0'));
   } finally {
     server.closeAllConnections();
     server.close();
-    rmSync(directory, { recursive: true, force: true });
+    if (!observerClosed) await observer.close();
   }
 });
