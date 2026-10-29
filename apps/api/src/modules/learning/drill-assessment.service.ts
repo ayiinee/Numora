@@ -52,7 +52,11 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from 'dr
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
-import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
+import {
+  CHAPTER3_POLICY_CODE,
+  allowsChapter3Override,
+  gradeChapter3Answer,
+} from './drill-chapter3-override';
 import {
   DRILL_QUESTION_COUNT,
   DRILL_REWARD_POLICY_VERSION,
@@ -166,7 +170,15 @@ export class DrillAssessmentService {
             eq(assessmentPackages.assessmentType, 'DRILL'),
             eq(assessmentPackages.purpose, 'REGULAR'),
             sql`public.package_can_distribute(${assessmentPackages.id})`,
-            packageRuntimeEligibility(),
+            or(
+              packageRuntimeEligibility(),
+              and(
+                eq(assessmentPackages.isDemo, false),
+                eq(scoringPolicyVersions.policyCode, CHAPTER3_POLICY_CODE),
+                eq(scoringPolicyVersions.version, 1),
+                sql`${scoringPolicyVersions.configuration}->'packageIds' ? ${assessmentPackages.id}::text`,
+              ),
+            ),
             eq(assessmentPackages.levelId, levelId),
             eq(assessmentPackages.status, 'PUBLISHED'),
             or(isNull(assessmentPackages.releaseAt), lte(assessmentPackages.releaseAt, new Date())),

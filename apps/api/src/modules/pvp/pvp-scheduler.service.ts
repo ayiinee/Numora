@@ -44,13 +44,11 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       enableOfflineQueue: false,
     });
     this.redis.on('error', () => {
-      this.engine.setSchedulerReady(false);
       this.logger.warn('PvP cache connection unavailable.');
     });
-    this.redis.on('close', () => this.engine.setSchedulerReady(false));
-    this.redis.on('ready', () => {
-      if (this.queue && this.worker) this.engine.setSchedulerReady(true);
-    });
+    this.redis.on('close', () =>
+      this.logger.warn('PvP Redis disconnected; PostgreSQL scheduler remains active.'),
+    );
     try {
       await this.redis.connect();
       await this.redis.ping();
@@ -59,7 +57,6 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     }
     this.queue = new Queue('pvp-deadlines', { connection: this.redis, prefix });
     this.queue.on('error', () => {
-      this.engine.setSchedulerReady(false);
       this.logger.warn('PvP queue unavailable.');
     });
     this.worker = new Worker(
@@ -72,15 +69,20 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       { connection: this.redis, prefix },
     );
     this.worker.on('error', () => {
-      this.engine.setSchedulerReady(false);
       this.logger.warn('PvP scheduler unavailable.');
     });
-    this.engine.setSchedulerReady(this.redis.status === 'ready');
+    await this.sweep().catch(() => {
+      this.engine.setSchedulerReady(false);
+      this.logger.error('PvP PostgreSQL deadline sweep failed.');
+    });
     // PostgreSQL sweep repairs missed transient jobs; Redis never owns match truth.
     this.timer = setInterval(() => {
       if (this.busy) return;
       this.busy = this.sweep()
-        .catch(() => this.logger.error('PvP deadline sweep failed.'))
+        .catch(() => {
+          this.engine.setSchedulerReady(false);
+          this.logger.error('PvP PostgreSQL deadline sweep failed.');
+        })
         .finally(() => {
           this.busy = undefined;
         });
@@ -92,13 +94,13 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       .from(pvpMatches)
       .where(inArray(pvpMatches.status, ['WAITING', 'READY', 'RUNNING']));
     for (const match of matches) {
-      if (this.redis?.status !== 'ready') await this.engine.cancelUnavailable(match.id);
-      else {
-        await this.engine.tick(match.id);
-        await this.reschedule(match.id);
-      }
-      await this.notify(match.id);
+      await this.engine.tick(match.id);
+      if (this.redis?.status === 'ready') await this.reschedule(match.id);
+      await this.notify(match.id).catch(() => {
+        this.logger.warn('PvP deadline notification delayed; durable state retained.');
+      });
     }
+    this.engine.setSchedulerReady(true);
   }
   private async reschedule(matchId: string) {
     const [match] = await getDatabase()
@@ -110,8 +112,7 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
   async schedule(matchId: string, studentId: string) {
     if (!this.policy) return;
     try {
-      if (!this.redis || this.redis.status !== 'ready' || !this.queue)
-        throw new Error('Redis unavailable');
+      if (!this.redis || this.redis.status !== 'ready' || !this.queue) return;
       const snapshot = await this.engine.snapshot(studentId, matchId);
       if (snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED') return;
       await this.bounded(
@@ -147,9 +148,8 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
           ),
         );
     } catch {
-      this.engine.setSchedulerReady(false);
-      await this.engine.cancelUnavailable(matchId);
-      await this.notify(matchId);
+      // PostgreSQL sweep remains authoritative when the transient queue fails.
+      this.logger.warn('PvP queue scheduling failed; PostgreSQL deadline sweep remains active.');
     }
   }
   private async bounded<T>(operation: Promise<T>) {

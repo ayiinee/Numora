@@ -96,6 +96,10 @@ This document maps [Drill v1.2 and TryOut v1.1](CORE_LEARNING_PRD_UPDATE_2026-10
 | §13 OPEN items        | Global OPEN-01–18 + DRL-OPEN-01–10 + TRY-TBC-01–07                                                                                  | policy abstractions                        | feature states                                 | config/versioning                                | tests gated by approved policy                                                                   |
 | §14 Terms             | canonical vocabulary                                                                                                                | naming                                     | labels                                         | naming                                           | terminology consistency                                                                          |
 
+## Runtime integration repair — 21 October 2026
+
+**ENGINEERING DECISION — implementation mapping:** existing Student learning/PvP routing and the Chapter 3 owner exception map to their runtime clients/package selector. ADR-006 durability maps to PostgreSQL deadline sweeps and migration 0039's transactional cancellation guard; ADR-009 and the 7 October Tryout equivalent-correct decision map to migration 0040's six-decimal ledger validation. [Scope and regression coverage](../development/RUNTIME_RELIABILITY_2026-10-21.md). No new scoring/publication policy or academic approval is introduced.
+
 ## User stories to technical capabilities
 
 | User story                 | Technical capability                                                                                                    |

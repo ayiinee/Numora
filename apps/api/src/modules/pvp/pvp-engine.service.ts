@@ -25,7 +25,7 @@ import {
   scoringPolicyVersions,
   users,
 } from '@tka/database';
-import { and, asc, desc, eq, gt, inArray, isNull, lte, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, inArray, isNull, lte, sql, type SQL } from 'drizzle-orm';
 import {
   PVP_POLICY,
   TEMPORARY_PVP_CONTENT_NOTICE,
@@ -127,15 +127,21 @@ export class PvpEngineService {
 
   private async scoringVersion(tx: Database | Transaction, lock = false) {
     const policy = requirePvpPolicy(this.policy);
-    const query = tx.select().from(scoringPolicyVersions).where(and(
-      eq(scoringPolicyVersions.id, policy.policyVersionId),
-      eq(scoringPolicyVersions.status, 'PUBLISHED'),
-    ));
+    const query = tx
+      .select()
+      .from(scoringPolicyVersions)
+      .where(
+        and(
+          eq(scoringPolicyVersions.id, policy.policyVersionId),
+          eq(scoringPolicyVersions.status, 'PUBLISHED'),
+        ),
+      );
     const [version] = await (lock ? query.for('share') : query);
-    if (!version) throw new ServiceUnavailableException({
-      code: 'PVP_POLICY_UNAVAILABLE',
-      detail: 'Kebijakan pertandingan belum tersedia.',
-    });
+    if (!version)
+      throw new ServiceUnavailableException({
+        code: 'PVP_POLICY_UNAVAILABLE',
+        detail: 'Kebijakan pertandingan belum tersedia.',
+      });
     return version;
   }
 
@@ -144,27 +150,38 @@ export class PvpEngineService {
     const sampled = sampleDrillFamilies(await this.drillBank.families(tx, difficulty));
     const selected = await this.drillBank.lockSelection(tx, difficulty, sampled);
     const now = this.now();
-    const [draft] = await tx.insert(assessmentPackages).values({
-      familyCode: `PVP_ROOM_${randomUUID()}`,
-      packageVersion: 1,
-      name: 'PvP',
-      assessmentType: 'PVP',
-      status: 'DRAFT',
-      isDemo: this.dataMode === 'demo',
-      scoringPolicyVersionId: version.id,
-      releaseAt: now,
-    }).returning();
-    const savedItems = await tx.insert(packageItems).values(selected.map((c, i) => ({
-      packageId: draft!.id,
-      questionVersionId: c.version.id,
-      displayOrder: i + 1,
-      maxPoints: '150',
-    }))).returning();
+    const [draft] = await tx
+      .insert(assessmentPackages)
+      .values({
+        familyCode: `PVP_ROOM_${randomUUID()}`,
+        packageVersion: 1,
+        name: 'PvP',
+        assessmentType: 'PVP',
+        status: 'DRAFT',
+        isDemo: this.dataMode === 'demo',
+        scoringPolicyVersionId: version.id,
+        releaseAt: now,
+      })
+      .returning();
+    const savedItems = await tx
+      .insert(packageItems)
+      .values(
+        selected.map((c, i) => ({
+          packageId: draft!.id,
+          questionVersionId: c.version.id,
+          displayOrder: i + 1,
+          maxPoints: '150',
+        })),
+      )
+      .returning();
     // Existing DB trigger computes the canonical digest and seals item composition.
-    const [pack] = await tx.update(assessmentPackages)
+    const [pack] = await tx
+      .update(assessmentPackages)
       .set({ status: 'PUBLISHED', frozenAt: now })
-      .where(eq(assessmentPackages.id, draft!.id)).returning();
-    const items = savedItems.sort((a, b) => a.displayOrder - b.displayOrder)
+      .where(eq(assessmentPackages.id, draft!.id))
+      .returning();
+    const items = savedItems
+      .sort((a, b) => a.displayOrder - b.displayOrder)
       .map((item) => ({ item }));
     return { pack: pack!, items, version };
   }
@@ -231,13 +248,14 @@ export class PvpEngineService {
     eventName: string,
     context: Record<string, unknown> = {},
     actorId = match.creatorStudentId,
+    occurredAt: Date | SQL = this.now(),
   ) {
     await tx.insert(analyticsOutbox).values({
       eventName,
       entityType: 'pvp_match',
       entityId: match.id,
       actorUserId: actorId,
-      occurredAt: this.now(),
+      occurredAt,
       payload: { difficulty: match.difficulty, ...context },
     });
   }
@@ -556,20 +574,33 @@ export class PvpEngineService {
       await this.event(tx, match, 'pvp_match_completed');
     }
   }
-  private async closeInvites(tx: Transaction, matchId: string) {
+  private async closeInvites(
+    tx: Transaction,
+    matchId: string,
+    respondedAt: Date | SQL = this.now(),
+  ) {
     await tx
       .update(pvpInvites)
-      .set({ status: 'CANCELLED', respondedAt: this.now() })
+      .set({ status: 'CANCELLED', respondedAt })
       .where(and(eq(pvpInvites.matchId, matchId), eq(pvpInvites.status, 'PENDING')));
   }
   private async cancel(tx: Transaction, match: Match, reason: string) {
     if (match.status === 'FINISHED' || match.status === 'CANCELLED') return;
+    // A restarted server (or an independent test clock) can lag persisted match time.
+    // Keep durable chronology and the cancellation event consistent without relaxing SQL guards.
     await tx
       .update(pvpMatches)
-      .set({ status: 'CANCELLED', recordEligible: false, endReason: reason, endedAt: this.now() })
+      .set({
+        status: 'CANCELLED',
+        recordEligible: false,
+        endReason: reason,
+        endedAt: sql`greatest(${this.now().toISOString()}::timestamptz, coalesce(${pvpMatches.startedAt}, ${pvpMatches.createdAt}))`,
+      })
       .where(eq(pvpMatches.id, match.id));
-    await this.closeInvites(tx, match.id);
-    await this.event(tx, match, 'pvp_match_cancelled');
+    // Read the persisted value in SQL so microseconds are not truncated by a JS Date.
+    const endedAt = sql`(select ended_at from ${pvpMatches} where id = ${match.id}::uuid)`;
+    await this.closeInvites(tx, match.id, endedAt);
+    await this.event(tx, match, 'pvp_match_cancelled', {}, match.creatorStudentId, endedAt);
   }
   async leave(studentId: string, matchId: string, requestId?: string) {
     const { db } = getDatabase();

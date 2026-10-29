@@ -9,6 +9,7 @@ import {
   getDatabase,
   leaderboardPeriod,
   leaderboardPeriods,
+  pvpActiveRooms,
   pvpLeaderboardEntries,
   users,
 } from '@tka/database';
@@ -132,6 +133,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const peer = await app.get(PvpEngineService).snapshot(fixture.students[1]!.id, room.matchId);
     expect(peer.question?.selectedOptionId).toBeNull();
     expect(JSON.stringify(saved)).not.toMatch(/answerKey|correctOptionId|explanation|email/);
+    await app.get(PvpSchedulerService).schedule(room.matchId, fixture.students[0]!.id);
     const keys = await redis.keys(`pvp:${process.env.BULLMQ_PREFIX}:*`);
     expect(keys.length).toBeGreaterThan(0);
     await redis.del(...keys); // Erasing transient caches cannot erase the saved answer.
@@ -141,7 +143,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     ).toBe('A');
     await command(first, 'room:leave', { matchId: room.matchId });
   }, 30_000);
-  it('repairs missed timeout jobs from PostgreSQL and cancels safely when Redis is lost', async () => {
+  it('keeps durable deadlines and room claims when Redis is lost', async () => {
     const engine = app.get(PvpEngineService);
     const a = fixture.students[0]!.id;
     const b = fixture.students[1]!.id;
@@ -161,10 +163,28 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const connection = (scheduler as unknown as { redis: Redis }).redis;
     connection.disconnect();
     await scheduler.schedule(room.matchId, a);
-    const cancelled = await engine.snapshot(a, room.matchId);
-    expect(cancelled.status).toBe('CANCELLED');
-    expect(cancelled.recordEligible).toBe(false);
-    expect(cancelled.endReason).toBe('SERVICE_INTERRUPTED');
+    expect((await engine.snapshot(a, room.matchId)).status).toBe('RUNNING');
+    await expect(engine.cancelUnavailable(room.matchId)).rejects.toThrow();
+    expect((await engine.snapshot(a, room.matchId)).status).toBe('RUNNING');
+    expect(
+      await getDatabase()
+        .db.select()
+        .from(pvpActiveRooms)
+        .where(eq(pvpActiveRooms.matchId, room.matchId)),
+    ).toHaveLength(2);
+    const next = await engine.snapshot(a, room.matchId);
+    Object.defineProperty(engine, 'now', {
+      value: () => new Date(next.question!.deadlineAt),
+      configurable: true,
+    });
+    try {
+      await (scheduler as unknown as { sweep(): Promise<void> }).sweep();
+      expect((await engine.snapshot(a, room.matchId)).question?.order).toBe(3);
+    } finally {
+      Object.defineProperty(engine, 'now', { value: clock, configurable: true });
+    }
+    await engine.leave(a, room.matchId, randomUUID());
+    await connection.connect();
   }, 30_000);
   it('enforces REST Student authorization, ownership, DTO validation and top10/own-rank privacy', async () => {
     const headers = { authorization: 'Bearer fixture-2' };

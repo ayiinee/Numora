@@ -55,6 +55,7 @@ const requiredChecks = [
   'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
 ];
 const contexts: BrowserContext[] = [];
+const browserResources: { test: string; contexts: number; pages: number }[] = [];
 
 async function call(
   request: APIRequestContext,
@@ -128,6 +129,17 @@ async function submit(page: Page) {
 }
 
 test.describe.serial('JOB-06 connected release chain', () => {
+  test.afterEach(async () => {
+    const info = test.info();
+    const owned = contexts.splice(0);
+    browserResources.push({
+      test: info.title,
+      contexts: owned.length,
+      pages: owned.reduce((sum, context) => sum + context.pages().length, 0),
+    });
+    // Persisted business state survives; browser resources must not accumulate across cases.
+    await Promise.all(owned.map((context) => context.close()));
+  });
   test.beforeAll(async ({ request }) => {
     fixtures = (await (await request.get(`${fixtureBase}/fixtures`)).json()) as Fixtures;
     expect(fixtures.sha).toBe(
@@ -158,6 +170,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
           content: 'TEST_ONLY_DEMO',
           irtRelease: 'TEST_ONLY_SYNTHETIC_RELEASE_NO_MODEL_EXECUTION',
           checks,
+          browserResources,
           acceptance: {
             google: 'NOT_RUN',
             reviewedCurriculum: 'NOT_PROVIDED',
@@ -553,7 +566,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     browser,
     request,
   }) => {
-    const anonymous = await browser.newPage();
+    const anonymousContext = await browser.newContext();
+    contexts.push(anonymousContext);
+    const anonymous = await anonymousContext.newPage();
     await anonymous.goto('http://localhost:3400/teacher');
     await expect(anonymous).toHaveURL('http://localhost:3400/');
     await anonymous.close();
