@@ -5,6 +5,7 @@ import { readMigrationFiles } from 'drizzle-orm/migrator';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import type postgres from 'postgres';
+import { reconcileDevelopmentHistory } from './development-history-bridge.js';
 
 /** Preserve published fork hashes while recovering only their known skipped DDL. */
 export async function migrateIntegratedDatabase(
@@ -19,12 +20,16 @@ export async function migrateIntegratedDatabase(
       await tx.unsafe("SET LOCAL lock_timeout = '5s'");
       await tx.unsafe('LOCK TABLE drizzle.__drizzle_migrations IN EXCLUSIVE MODE');
       const history = await tx<{ hash: string; created_at: string }[]>`
-        SELECT hash, created_at::text FROM drizzle.__drizzle_migrations`;
+        SELECT hash, created_at::text FROM drizzle.__drizzle_migrations ORDER BY id`;
+      if (await reconcileDevelopmentHistory(tx, migrations, migrationsFolder, history)) return true;
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
       // Canonical main retains Admin 0039-0048; only the original PvP trigger moves to 0049.
       // The old runtime XP function is provenance, never the final effective guard.
-      if (migrations[49]?.hash && migrations[48]?.sql.some((s) => s.includes('TRYOUT_PGK_PARTIAL_V1'))) {
+      if (
+        migrations[49]?.hash &&
+        migrations[48]?.sql.some((s) => s.includes('TRYOUT_PGK_PARTIAL_V1'))
+      ) {
         const archived = resolve(migrationsFolder, '..', 'staging', 'fixtures');
         const runtime = readMigrationFiles({
           migrationsFolder: resolve(archived, 'runtime-pr102'),
@@ -32,15 +37,21 @@ export async function migrateIntegratedDatabase(
         const admin = readMigrationFiles({ migrationsFolder: resolve(archived, 'admin-pr92') });
         const pair = (hash: string, cursor: number | string) => `${hash}:${cursor}`;
         const applied = new Set(history.map((row) => pair(row.hash, row.created_at)));
-        const runtimeFork = hashes.has(runtime[1]!.hash) || applied.has(pair(runtime[0]!.hash, runtime[0]!.folderMillis));
+        const runtimeFork =
+          hashes.has(runtime[1]!.hash) ||
+          applied.has(pair(runtime[0]!.hash, runtime[0]!.folderMillis));
         const adminMatches = admin.every((entry, i) => migrations[39 + i]?.hash === entry.hash);
         const adminCount = admin.filter((entry) => hashes.has(entry.hash)).length;
         if (runtimeFork) {
           if (!adminMatches || migrations[49]!.hash !== runtime[0]!.hash)
             throw new Error('Canonical runtime/Admin SQL does not match audited sources.');
-          const allowed = new Set([...migrations, ...runtime].map((entry) => pair(entry.hash, entry.folderMillis)));
+          const allowed = new Set(
+            [...migrations, ...runtime].map((entry) => pair(entry.hash, entry.folderMillis)),
+          );
           if (
-            !migrations.slice(0, 39).every((entry) => applied.has(pair(entry.hash, entry.folderMillis))) ||
+            !migrations
+              .slice(0, 39)
+              .every((entry) => applied.has(pair(entry.hash, entry.folderMillis))) ||
             !history.every((row) => allowed.has(pair(row.hash, row.created_at)))
           )
             throw new Error('Unknown runtime/Admin history requires explicit reconciliation.');
@@ -48,7 +59,9 @@ export async function migrateIntegratedDatabase(
             throw new Error('Partial runtime fork requires explicit reconciliation.');
           if (adminCount !== 0 && adminCount !== admin.length)
             throw new Error('Partial Admin fork requires explicit reconciliation.');
-          const upgrading = migrations.some((entry) => !applied.has(pair(entry.hash, entry.folderMillis)));
+          const upgrading = migrations.some(
+            (entry) => !applied.has(pair(entry.hash, entry.folderMillis)),
+          );
           for (const [index, entry] of migrations.entries()) {
             // Restore the policy-specific function on the first bridge, even when a
             // runtime function followed an already-applied 0048. Never replay triggers.

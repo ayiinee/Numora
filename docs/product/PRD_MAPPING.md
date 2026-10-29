@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 Final
 
+**ENGINEERING DECISION — 29 October 2026 integration:** [Runtime/QA after Admin #110](../development/RUNTIME_QA_INTEGRATION_2026-10-29.md) maps Redis-independent PvP, Student main-API routing, pinned-policy XP compatibility, worker/QA/dependency improvements and append-only migration reconciliation to existing ADR-006/009 and owner decisions. No new academic or scoring rule is introduced; Cloud backup/rehearsal and independent acceptance remain distinct evidence.
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
 
 **PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
