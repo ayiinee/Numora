@@ -42,7 +42,10 @@ describe.skipIf(!testUrl)('Runtime repair guards on isolated PostgreSQL (TEST ON
     expect(await db`SELECT * FROM pvp_active_rooms WHERE match_id=${match!.id}`).toHaveLength(0);
   });
 
-  it('accepts six-decimal equivalent-correct XP and preserves amount and ledger immutability', async () => {
+  it.each([
+    { partial: true, xp: 3.333333, rejected: 3.333334 },
+    { partial: false, xp: 4, rejected: 3.333333 },
+  ])('preserves partial=$partial policy XP and ledger immutability', async ({partial,xp,rejected}) => {
     const [student] = await db`INSERT INTO users(auth_user_id,role,display_name,email)
       VALUES(${randomUUID()},'STUDENT','TEST ONLY',${randomUUID() + '@example.test'}) RETURNING id`;
     const [pack] =
@@ -61,8 +64,9 @@ describe.skipIf(!testUrl)('Runtime repair guards on isolated PostgreSQL (TEST ON
       await db`INSERT INTO package_items(package_id,question_version_id,display_order,max_points)
       VALUES(${pack!.id},${version!.id},1,3) RETURNING id`;
     const [attempt] =
-      await db`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,status,finished_at,tryout_xp_policy_version)
-      VALUES(${student!.id},${pack!.id},'TRYOUT','IN_PROGRESS',null,1) RETURNING id`;
+      await db`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,status,finished_at,tryout_xp_policy_version,scoring_policy_version_id)
+      VALUES(${student!.id},${pack!.id},'TRYOUT','IN_PROGRESS',null,1,
+      CASE WHEN ${partial} THEN (SELECT id FROM scoring_policy_versions WHERE policy_code='TRYOUT_PGK_PARTIAL_V1' AND version=1) ELSE null END) RETURNING id`;
     const [attemptItem] =
       await db`INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points)
       VALUES(${attempt!.id},${pack!.id},${item!.id},${version!.id},1,3) RETURNING id`;
@@ -73,9 +77,9 @@ describe.skipIf(!testUrl)('Runtime repair guards on isolated PostgreSQL (TEST ON
       xp: number,
     ) => db`INSERT INTO xp_ledger(student_id,source_type,attempt_id,xp_amount,policy_code,policy_version,base_xp,bonus_xp,occurred_at)
       VALUES(${student!.id},'TRYOUT',${attempt!.id},${xp},'TRYOUT_PRD_V06',1,${xp},0,(SELECT finished_at FROM assessment_attempts WHERE id=${attempt!.id})) RETURNING id,xp_amount`;
-    await expect(reward(3.333334)).rejects.toMatchObject({ code: '23514' });
-    const [posted] = await reward(3.333333);
-    expect(Number(posted!.xp_amount)).toBe(3.333333);
+    await expect(reward(rejected)).rejects.toMatchObject({ code: '23514' });
+    const [posted] = await reward(xp);
+    expect(Number(posted!.xp_amount)).toBe(xp);
     await expect(db`UPDATE xp_ledger SET xp_amount=4 WHERE id=${posted!.id}`).rejects.toMatchObject(
       { code: '23514' },
     );

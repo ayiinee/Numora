@@ -1,0 +1,35 @@
+diff --git a/scripts/qa/http-observer.test.mjs b/scripts/qa/http-observer.test.mjs
+index 8b14571..376c3ec 100644
+--- a/scripts/qa/http-observer.test.mjs
++++ b/scripts/qa/http-observer.test.mjs
+@@ -4,2 +4,3 @@ import { createServer } from 'node:http';
+-import { mkdtempSync, readFileSync, rmSync } from 'node:fs';
+-import { resolve } from 'node:path';
++import { existsSync, mkdirSync, mkdtempSync, readFileSync, rmSync } from 'node:fs';
++import { tmpdir } from 'node:os';
++import { basename, dirname, resolve } from 'node:path';
+@@ -63,2 +64,10 @@ test('QA observer cannot write outside local artifact directory', () => {
+-test('QA observer keeps the response unchanged and records finish/close without secrets', async () => {
+-  const directory = mkdtempSync(resolve('qa/.local/http-observer-test-'));
++test('QA observer keeps the response unchanged and records finish/close without secrets', async (t) => {
++  const root = mkdtempSync(resolve(tmpdir(), 'numora-qa-http-observer-'));
++  t.after(() => {
++    assert.equal(dirname(root), resolve(tmpdir()));
++    assert.ok(basename(root).startsWith('numora-qa-http-observer-'));
++    rmSync(root, { recursive: true, force: true });
++  });
++  const directory = resolve(root, 'qa/.local');
++  assert.equal(existsSync(directory), false);
++  mkdirSync(directory, { recursive: true });
+@@ -66 +75 @@ test('QA observer keeps the response unchanged and records finish/close without
+-  const observer = createHttpObserver(process.cwd(), file);
++  const observer = createHttpObserver(root, file);
+@@ -81,0 +91 @@ test('QA observer keeps the response unchanged and records finish/close without
++  let observerClosed = false;
+@@ -94,0 +105 @@ test('QA observer keeps the response unchanged and records finish/close without
++    observerClosed = true;
+@@ -101,0 +113 @@ test('QA observer keeps the response unchanged and records finish/close without
++    assert.equal(events.find((e) => e.event === 'response_finished').httpStatus, 201);
+@@ -107 +119 @@ test('QA observer keeps the response unchanged and records finish/close without
+-    rmSync(directory, { recursive: true, force: true });
++    if (!observerClosed) await observer.close();

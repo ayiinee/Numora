@@ -822,7 +822,9 @@ export class DrillAssessmentService {
 
   private async resultForStudent(studentId: string, attemptId: string) {
     const { db } = getDatabase();
-    const [attempt] = await db
+    // One snapshot for the header, immutable content, answers and stored reward.
+    // xp_ledger_attempt_uq prevents the reward join from multiplying questions.
+    const projection = await db
       .select({
         id: assessmentAttempts.id,
         studentId: assessmentAttempts.studentId,
@@ -837,40 +839,78 @@ export class DrillAssessmentService {
         drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
         unlockedLevelId: assessmentAttempts.unlockedLevelId,
         isDemo: assessmentPackages.isDemo,
+        questionCount: sql<number>`(count(${attemptItems.id}) over ())::integer`,
+        correctCount: sql<number>`(count(${attemptItems.id}) filter (where coalesce(${attemptAnswers.fullyCorrect}, ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints})) over ())::integer`,
+        reward: {
+          id: xpLedger.id,
+          xpAmount: xpLedger.xpAmount,
+          policyCode: xpLedger.policyCode,
+          policyVersion: xpLedger.policyVersion,
+          baseXp: xpLedger.baseXp,
+          bonusXp: xpLedger.bonusXp,
+          durationSeconds: xpLedger.durationSeconds,
+        },
+        item: {
+          id: attemptItems.id,
+          displayOrder: attemptItems.displayOrder,
+          maxPoints: attemptItems.maxPoints,
+        },
+        version: {
+          questionType: questionVersions.questionType,
+          questionVersionId: questionVersions.id,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+        },
+        savedAnswer: {
+          id: attemptAnswers.attemptItemId,
+          answer: attemptAnswers.answer,
+          awardedPoints: attemptAnswers.awardedPoints,
+          fullyCorrect: attemptAnswers.fullyCorrect,
+        },
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .innerJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))
+      .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
+      .leftJoin(attemptItems, eq(attemptItems.attemptId, assessmentAttempts.id))
+      .leftJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
+      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
       .where(
         and(
           eq(assessmentAttempts.id, attemptId),
+          eq(assessmentAttempts.studentId, studentId),
           eq(assessmentAttempts.assessmentType, 'DRILL'),
           eq(assessmentAttempts.purpose, 'REGULAR'),
         ),
       )
-      .limit(1);
+      .orderBy(asc(attemptItems.displayOrder));
+    const attempt = projection[0];
     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
     if (attempt.status !== 'GRADED' || !attempt.completedAt || attempt.score === null)
       throw new ConflictException(problem('RESULT_PENDING', 'Hasil Drill belum tersedia.'));
-    const [counts] = await db
-      .select({
-        questionCount: sql<number>`count(*)::integer`,
-        correctCount: sql<number>`count(*) filter (where coalesce(${attemptAnswers.fullyCorrect}, ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints}))::integer`,
-      })
-      .from(attemptItems)
-      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
-      .where(eq(attemptItems.attemptId, attemptId))
-      .limit(1);
+    const counts = attempt;
     const available =
       attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION ||
       explanationAvailable(attempt.completedAt);
-    const [reward] = await db
-      .select()
-      .from(xpLedger)
-      .where(eq(xpLedger.attemptId, attemptId))
-      .limit(1);
-    const rows = available ? await this.questionRows(attemptId) : [];
+    const reward = attempt.reward;
+    const rows = available
+      ? projection.flatMap((row) =>
+          row.item && row.version
+            ? [
+                {
+                  ...row.item,
+                  ...row.version,
+                  answer: row.savedAnswer?.answer ?? null,
+                  awardedPoints: row.savedAnswer?.awardedPoints ?? null,
+                  fullyCorrect: row.savedAnswer?.fullyCorrect ?? null,
+                },
+              ]
+            : [],
+        )
+      : [];
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
     const score = Number(attempt.score);

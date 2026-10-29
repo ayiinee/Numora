@@ -1,0 +1,1376 @@
+{
+  "id": "28974b1c-2adf-456a-988a-e6dec4bf3026",
+  "sourceRun": "581a3c97-fe69-40d3-af72-576b22033593",
+  "startedAt": "2026-10-27T11:46:14.685Z",
+  "directory": "D:\\Dev\\Numora-qa-candidate-retest-20261027\\qa\\.local\\transaction-investigation\\28974b1c-2adf-456a-988a-e6dec4bf3026",
+  "phase": "COMPLETED",
+  "workerCases": [
+    {
+      "count": 1000,
+      "runId": "8fde6ec6-feae-4acc-88b5-aaa4aa2d0d33",
+      "exitCode": 0
+    },
+    {
+      "count": 10000,
+      "runId": "ee699727-357d-4990-ab7e-34e9d89f56ba",
+      "exitCode": 0
+    },
+    {
+      "count": 100000,
+      "runId": "6486d33b-b4f3-4d9c-904a-d85ebf49dd9c",
+      "exitCode": 0
+    }
+  ],
+  "waves": [
+    {
+      "concurrency": 10,
+      "outcomes": [
+        {
+          "attemptId": "4f798b8e-d272-4b80-a1d5-febd71f7ae8e",
+          "status": 201,
+          "ms": 676.5871999999981
+        },
+        {
+          "attemptId": "1de9297b-cadc-4653-8162-20d730f490fd",
+          "status": 201,
+          "ms": 673.4628000000012
+        },
+        {
+          "attemptId": "73c2101d-0cfd-48a5-8de3-dd3dde38bf39",
+          "status": 201,
+          "ms": 669.6614999999983
+        },
+        {
+          "attemptId": "3f30c89a-c1ad-4484-bc40-e8cba7a1cee8",
+          "status": 201,
+          "ms": 675.230599999999
+        },
+        {
+          "attemptId": "79897401-5eec-4985-8219-a0ed45c600a6",
+          "status": 201,
+          "ms": 651.917300000001
+        },
+        {
+          "attemptId": "c4e7d597-b49e-42ce-a645-27b86bc55d12",
+          "status": 201,
+          "ms": 699.7749000000003
+        },
+        {
+          "attemptId": "2fe32083-cd2e-428d-bcf7-c4d84ca412f9",
+          "status": 201,
+          "ms": 696.2165999999997
+        },
+        {
+          "attemptId": "e687275d-e12d-4fc0-bf5f-d45edcd1b5b7",
+          "status": 201,
+          "ms": 688.3417999999983
+        },
+        {
+          "attemptId": "8801b0c4-4481-40ad-b2ca-e95153204498",
+          "status": 201,
+          "ms": 780.1520999999993
+        },
+        {
+          "attemptId": "3a8850ad-d900-45c9-bbb8-7ed63524493a",
+          "status": 201,
+          "ms": 696.5885999999991
+        }
+      ],
+      "integrity": {
+        "attempts": 10,
+        "graded": 10,
+        "broken_ledger": 0,
+        "broken_outbox": 0
+      },
+      "retry": {
+        "attemptId": "4f798b8e-d272-4b80-a1d5-febd71f7ae8e",
+        "status": 201,
+        "ms": 34.39979999999923
+      }
+    },
+    {
+      "concurrency": 250,
+      "outcomes": [
+        {
+          "attemptId": "65c09dd0-7d74-49fd-a1cd-698a53880dd8",
+          "status": 201,
+          "ms": 10137.583799999993
+        },
+        {
+          "attemptId": "5035aa0a-e478-497a-8bfc-f909bfa45886",
+          "status": 201,
+          "ms": 11941.882100000003
+        },
+        {
+          "attemptId": "d85a42c3-fcb9-4f87-b413-8df653544b18",
+          "status": 201,
+          "ms": 11935.9945
+        },
+        {
+          "attemptId": "d7728eaa-e887-40ca-a139-dafdedb87c83",
+          "status": 201,
+          "ms": 11942.643899999995
+        },
+        {
+          "attemptId": "ab1d43df-531d-4493-a129-a1f531c388f4",
+          "status": 201,
+          "ms": 12287.7972
+        },
+        {
+          "attemptId": "9020afb6-d049-4d90-95aa-e828cc46b725",
+          "status": 201,
+          "ms": 12309.520100000009
+        },
+        {
+          "attemptId": "324178ea-5a57-4cf2-8bd2-33cb91dfdc42",
+          "status": 201,
+          "ms": 11949.985
+        },
+        {
+          "attemptId": "203fde55-c023-4565-9235-e8196c6d2556",
+          "status": 201,
+          "ms": 11950.710300000006
+        },
+        {
+          "attemptId": "eb3da528-aabc-4a95-ba5d-fff099d4a170",
+          "status": 201,
+          "ms": 13179.429600000003
+        },
+        {
+          "attemptId": "1ddc644d-c4a4-4d4d-8e03-a868f12676a9",
+          "status": 201,
+          "ms": 12511.406000000003
+        },
+        {
+          "attemptId": "3ea4c110-ef50-49e7-a6e5-6da42cdb81bd",
+          "status": 201,
+          "ms": 13202.405700000003
+        },
+        {
+          "attemptId": "71980f9b-dfdd-4049-a6f5-2654c881d19e",
+          "status": 201,
+          "ms": 13217.062999999995
+        },
+        {
+          "attemptId": "e8f8c7d6-fdad-428f-93c2-254054293837",
+          "status": 201,
+          "ms": 12302.811000000002
+        },
+        {
+          "attemptId": "c9328c58-e302-4277-bfbf-13ee28163a51",
+          "status": 201,
+          "ms": 13605.0187
+        },
+        {
+          "attemptId": "db254dc7-222c-43df-80ae-5cdf94ae6449",
+          "status": 201,
+          "ms": 13611.267700000011
+        },
+        {
+          "attemptId": "7f676499-fee8-4e8f-8ace-38e2b7963f6b",
+          "status": 201,
+          "ms": 13741.883499999996
+        },
+        {
+          "attemptId": "9d70b096-34c2-4d6d-9669-201f270e64d6",
+          "status": 201,
+          "ms": 13606.237500000003
+        },
+        {
+          "attemptId": "1992897c-6335-46c1-a266-f2c33c6fa9fb",
+          "status": 201,
+          "ms": 13747.688500000004
+        },
+        {
+          "attemptId": "bfabfc19-eea7-4488-9c45-f46f38352d7d",
+          "status": 201,
+          "ms": 13749.673999999999
+        },
+        {
+          "attemptId": "a155f93c-b0fc-42f6-86c2-313b732d9261",
+          "status": 201,
+          "ms": 13737.812600000005
+        },
+        {
+          "attemptId": "56317779-84a5-422d-aa4e-b18381068b97",
+          "status": 201,
+          "ms": 13741.36009999999
+        },
+        {
+          "attemptId": "d5dd790c-d56e-40d8-9ace-25b035f2350f",
+          "status": 201,
+          "ms": 13746.194799999997
+        },
+        {
+          "attemptId": "6a6359c9-2bbe-4372-9e88-5c2811036fe3",
+          "status": 201,
+          "ms": 13817.498600000006
+        },
+        {
+          "attemptId": "d194b85c-99ce-4589-93d2-9f3c997fd79a",
+          "status": 201,
+          "ms": 13747.452699999994
+        },
+        {
+          "attemptId": "ccd36502-796d-40a6-9b8e-e646e4070233",
+          "status": 201,
+          "ms": 13745.099300000002
+        },
+        {
+          "attemptId": "5c43d246-31b4-4bd5-a863-be56affa0a1d",
+          "status": 201,
+          "ms": 13737.094800000006
+        },
+        {
+          "attemptId": "c8fcc887-86d0-4498-879a-7a8bede1bbf8",
+          "status": 201,
+          "ms": 13737.70120000001
+        },
+        {
+          "attemptId": "360c4dbb-25ff-4e37-8613-7dcd4f7aa0f7",
+          "status": 201,
+          "ms": 13775.118700000006
+        },
+        {
+          "attemptId": "e9a498dc-43fa-410d-93d6-039d4b4e469a",
+          "status": 201,
+          "ms": 13812.382799999992
+        },
+        {
+          "attemptId": "020565ff-8252-473f-b9df-2ff01895fea0",
+          "status": 201,
+          "ms": 13817.4081
+        },
+        {
+          "attemptId": "e2363a69-3661-458d-88f7-8bc2cbd23e4a",
+          "status": 201,
+          "ms": 13809.209799999997
+        },
+        {
+          "attemptId": "7f06769d-f4a5-4f68-8b70-c8bb9ce58f92",
+          "status": 201,
+          "ms": 13818.080499999996
+        },
+        {
+          "attemptId": "945d3a84-645a-4d55-a010-a636d479c278",
+          "status": 201,
+          "ms": 13782.147400000002
+        },
+        {
+          "attemptId": "435886f1-aa43-4cea-a30c-d8d83ba3836f",
+          "status": 201,
+          "ms": 13793.665800000002
+        },
+        {
+          "attemptId": "68ea1955-5a5e-4338-87aa-08ec8e5d81ec",
+          "status": 201,
+          "ms": 13837.910000000003
+        },
+        {
+          "attemptId": "ed70b013-07ad-4b94-80b5-60be6940775d",
+          "status": 201,
+          "ms": 13801.160599999988
+        },
+        {
+          "attemptId": "8a4fdca8-4aa9-416f-a8be-5860ebaf22bb",
+          "status": 201,
+          "ms": 13855.14480000001
+        },
+        {
+          "attemptId": "5de179c3-3933-4c62-bc82-1358f89b9754",
+          "status": 201,
+          "ms": 13848.179499999998
+        },
+        {
+          "attemptId": "b908ba13-2548-470f-aa87-ff7cd5e194a8",
+          "status": 201,
+          "ms": 13816.258600000001
+        },
+        {
+          "attemptId": "afb6b297-a1a2-48d5-b476-8e3ce8d4e26f",
+          "status": 201,
+          "ms": 13858.240300000005
+        },
+        {
+          "attemptId": "60192dd9-1e61-4074-a49e-7fcab878546a",
+          "status": 201,
+          "ms": 13822.606
+        },
+        {
+          "attemptId": "26d585ba-efd5-4efc-aa0f-3ef3cad5210e",
+          "status": 201,
+          "ms": 13844.535199999998
+        },
+        {
+          "attemptId": "333a55a1-40d7-4516-a533-2acb698ee69c",
+          "status": 201,
+          "ms": 13847.850699999995
+        },
+        {
+          "attemptId": "1ecf8f71-c49f-4831-a000-8ba6b47babb8",
+          "status": 201,
+          "ms": 13912.573699999994
+        },
+        {
+          "attemptId": "7d7f1d98-5806-44a8-95bd-62d52c42ce8c",
+          "status": 201,
+          "ms": 13854.0772
+        },
+        {
+          "attemptId": "b38e7dee-062e-4631-99a1-fc1758154693",
+          "status": 201,
+          "ms": 13852.303
+        },
+        {
+          "attemptId": "42706761-1b0f-4b50-9f38-cc5596508213",
+          "status": 201,
+          "ms": 13848.469599999997
+        },
+        {
+          "attemptId": "6ee54e53-5c2a-4249-b5d9-1f3d2154877f",
+          "status": 201,
+          "ms": 13893.456900000005
+        },
+        {
+          "attemptId": "f44b6ebe-9a08-4214-87ec-2a1cd6b11baa",
+          "status": 201,
+          "ms": 13855.468599999993
+        },
+        {
+          "attemptId": "c61b33e1-6845-46f6-a28e-98f494ba1dbb",
+          "status": 201,
+          "ms": 13890.339399999997
+        },
+        {
+          "attemptId": "d82e1749-4a37-4b43-a17d-8118160edbd5",
+          "status": 201,
+          "ms": 13913.834000000003
+        },
+        {
+          "attemptId": "ce4b396d-6604-48ba-b1ac-6d3af2c5a39a",
+          "status": 201,
+          "ms": 13857.042099999991
+        },
+        {
+          "attemptId": "3885e330-9f45-4c3e-8915-831ea4bb3be4",
+          "status": 201,
+          "ms": 13907.066300000006
+        },
+        {
+          "attemptId": "415c5da5-afbf-4589-bbf9-619ca4e620f7",
+          "status": 201,
+          "ms": 13907.910499999998
+        },
+        {
+          "attemptId": "3b237de3-b521-4b28-ab96-63db55186f5e",
+          "status": 201,
+          "ms": 13859.914999999994
+        },
+        {
+          "attemptId": "c38dff9b-c5d5-492c-9d43-e5a541263a4f",
+          "status": 201,
+          "ms": 14052.678
+        },
+        {
+          "attemptId": "3930c0b0-2fda-4991-bc1e-44035abf66ec",
+          "status": 201,
+          "ms": 14029.090500000006
+        },
+        {
+          "attemptId": "e0416916-7525-41da-a693-79a182225ea9",
+          "status": 201,
+          "ms": 14084.627300000007
+        },
+        {
+          "attemptId": "f60f1f4f-4d04-47ee-81a9-3ec418a8328b",
+          "status": 201,
+          "ms": 13794.013900000005
+        },
+        {
+          "attemptId": "696577ee-369d-468e-85b8-f1d5a5b93449",
+          "status": 201,
+          "ms": 13795.083100000003
+        },
+        {
+          "attemptId": "ef7553b4-bd2e-4eae-a33a-7f6809ab84c6",
+          "status": 201,
+          "ms": 13899.001199999999
+        },
+        {
+          "attemptId": "28148de1-c6dc-4a50-a638-8f9e66e3f214",
+          "status": 201,
+          "ms": 13929.856899999999
+        },
+        {
+          "attemptId": "c23e4c18-dd26-4c7c-8c8b-edaefe823c94",
+          "status": 201,
+          "ms": 13905.706399999995
+        },
+        {
+          "attemptId": "3d36015e-997d-40de-b9d5-1b971c012e30",
+          "status": 201,
+          "ms": 13930.95730000001
+        },
+        {
+          "attemptId": "79e9c949-c21d-4f3f-bc38-58d1825e173f",
+          "status": 201,
+          "ms": 13911.377499999988
+        },
+        {
+          "attemptId": "8d966f86-3cdf-4d63-9927-6211f6632219",
+          "status": 201,
+          "ms": 13945.473599999998
+        },
+        {
+          "attemptId": "7b122b1d-3bb8-48c4-86e4-086dea04ceb6",
+          "status": 201,
+          "ms": 13879.978500000012
+        },
+        {
+          "attemptId": "c09af482-3e94-4872-9d69-3ce37ea3d33f",
+          "status": 201,
+          "ms": 13866.653699999995
+        },
+        {
+          "attemptId": "acc90669-b0ad-4dc8-a6e4-e97c2270f679",
+          "status": 201,
+          "ms": 13912.3217
+        },
+        {
+          "attemptId": "37b9bb94-8a65-4bab-8c47-e761de91f34b",
+          "status": 201,
+          "ms": 13936.979399999997
+        },
+        {
+          "attemptId": "ed1f6bcc-eca4-4618-99d9-a7adaf54bdd2",
+          "status": 201,
+          "ms": 13931.400299999994
+        },
+        {
+          "attemptId": "bb81891a-5194-4114-be5e-ce0cfa52c89a",
+          "status": 201,
+          "ms": 13920.3226
+        },
+        {
+          "attemptId": "d5e15f5f-88ab-472b-836f-621200da5083",
+          "status": 201,
+          "ms": 13999.914499999999
+        },
+        {
+          "attemptId": "44d805fc-4051-4a54-aa52-21b04df774e5",
+          "status": 201,
+          "ms": 13939.79830000001
+        },
+        {
+          "attemptId": "00876663-0c14-4079-8811-00846ed03a3a",
+          "status": 201,
+          "ms": 13963.705000000002
+        },
+        {
+          "attemptId": "9d3280d6-b64d-4980-af95-84d4010e26b7",
+          "status": 201,
+          "ms": 13923.5475
+        },
+        {
+          "attemptId": "fafcc0de-b7ad-4e83-83c6-f9288217ca42",
+          "status": 201,
+          "ms": 13930.320599999992
+        },
+        {
+          "attemptId": "e2edca17-0460-41ba-b2dd-92948d6b745d",
+          "status": 201,
+          "ms": 13957.871600000013
+        },
+        {
+          "attemptId": "67969838-4742-4d43-b511-3ab8d8e51013",
+          "status": 201,
+          "ms": 14060.0619
+        },
+        {
+          "attemptId": "59ff2654-9891-4a44-b6c9-74c62ee80302",
+          "status": 201,
+          "ms": 14070.080399999992
+        },
+        {
+          "attemptId": "f7b86086-4487-4e9c-8f88-82b02846f29a",
+          "status": 201,
+          "ms": 13965.793600000005
+        },
+        {
+          "attemptId": "6c4e4195-3427-49a9-b781-b5539cef3b78",
+          "status": 201,
+          "ms": 14004.203599999993
+        },
+        {
+          "attemptId": "0c372046-f78c-42cc-884f-8a7fbf6ebd3e",
+          "status": 201,
+          "ms": 13962.945999999996
+        },
+        {
+          "attemptId": "16135ce0-4740-4fd8-a438-2ea2911437e0",
+          "status": 201,
+          "ms": 13966.483399999997
+        },
+        {
+          "attemptId": "46b7c604-3917-40c8-a8e2-8d8fab8c936d",
+          "status": 201,
+          "ms": 14029.256500000003
+        },
+        {
+          "attemptId": "ccc4e0f7-ae31-4a3f-88de-d6030a1c09cb",
+          "status": 201,
+          "ms": 13993.307
+        },
+        {
+          "attemptId": "e43489ef-442c-41f1-a3f4-508d965d9b1b",
+          "status": 201,
+          "ms": 14020.704199999993
+        },
+        {
+          "attemptId": "0271beaa-1881-4bc5-8732-9f7077593cf5",
+          "status": 201,
+          "ms": 14046.315299999987
+        },
+        {
+          "attemptId": "504835c2-70e4-4059-9c4f-777315873cb4",
+          "status": 201,
+          "ms": 13986.726500000004
+        },
+        {
+          "attemptId": "bc79fdc8-beda-4913-b029-cecef854863a",
+          "status": 201,
+          "ms": 14046.455399999992
+        },
+        {
+          "attemptId": "0d3d5b0c-339b-4882-ba28-8e60e6293731",
+          "status": 201,
+          "ms": 14074.309000000008
+        },
+        {
+          "attemptId": "ad5501a2-6705-4295-8ee6-b2d783de0baf",
+          "status": 201,
+          "ms": 14057.25039999999
+        },
+        {
+          "attemptId": "d6e7c8d5-b930-406f-8aab-60f82689fd9f",
+          "status": 201,
+          "ms": 14035.286099999998
+        },
+        {
+          "attemptId": "70a51a4f-901f-451b-a1ad-a01ddcfaec7e",
+          "status": 201,
+          "ms": 14092.6783
+        },
+        {
+          "attemptId": "fae26424-ec2f-495d-9d44-93b9cffb2246",
+          "status": 201,
+          "ms": 14134.435299999997
+        },
+        {
+          "attemptId": "a4327c86-5cc8-416d-8f42-e174eb50868b",
+          "status": 201,
+          "ms": 14080.347999999998
+        },
+        {
+          "attemptId": "35e45f09-a4b4-4175-8146-1dac9093832c",
+          "status": 201,
+          "ms": 14004.477199999994
+        },
+        {
+          "attemptId": "accba745-c3b9-4506-8427-55e7dae23fd1",
+          "status": 201,
+          "ms": 14122.63410000001
+        },
+        {
+          "attemptId": "d2f40756-fe24-4799-8115-a108fb96f2a3",
+          "status": 201,
+          "ms": 14109.282099999997
+        },
+        {
+          "attemptId": "483f9acb-706b-4acc-920e-5252d7c597c0",
+          "status": 201,
+          "ms": 14066.523100000006
+        },
+        {
+          "attemptId": "14892667-68fb-4d65-862d-9cfaa857b6ae",
+          "status": 201,
+          "ms": 14116.294599999994
+        },
+        {
+          "attemptId": "9b9a0b9a-5f3d-4341-a60a-67fa7478fc88",
+          "status": 201,
+          "ms": 14089.154200000004
+        },
+        {
+          "attemptId": "9dd260f4-996d-4401-830c-8fb37c78adc4",
+          "status": 201,
+          "ms": 14100.106100000005
+        },
+        {
+          "attemptId": "d90bb4c1-dca9-4f49-a946-cbbf0850917a",
+          "status": 201,
+          "ms": 14167.256299999994
+        },
+        {
+          "attemptId": "0c7385b0-b533-4db3-8321-31e70b5810e3",
+          "status": 201,
+          "ms": 14096.996399999989
+        },
+        {
+          "attemptId": "95571b4e-44e1-4b11-8c61-75ea0993e229",
+          "status": 201,
+          "ms": 14138.363400000002
+        },
+        {
+          "attemptId": "d3fb592d-35e1-43ef-a4a2-e934cf37e17d",
+          "status": 201,
+          "ms": 14078.938200000004
+        },
+        {
+          "attemptId": "929e78df-d47b-474b-8f72-dc0533c5e38f",
+          "status": 201,
+          "ms": 14140.91459999999
+        },
+        {
+          "attemptId": "0bc27b9c-475e-49e1-abe4-2f2e2a96ba72",
+          "status": 201,
+          "ms": 14171.161600000007
+        },
+        {
+          "attemptId": "52aab37b-2d73-4e39-8337-4003c0bf0210",
+          "status": 201,
+          "ms": 14142.806100000002
+        },
+        {
+          "attemptId": "e815525d-d352-47bd-bb69-cf8bad42f316",
+          "status": 201,
+          "ms": 14172.419699999999
+        },
+        {
+          "attemptId": "39296904-0d76-4c06-8834-4d159fce84ce",
+          "status": 201,
+          "ms": 14139.788100000005
+        },
+        {
+          "attemptId": "1f3d3018-3c2a-4cfb-8ac0-1b6716de6bbf",
+          "status": 201,
+          "ms": 14095.4902
+        },
+        {
+          "attemptId": "b616cef6-5083-49c2-8a48-41ca5711d0f1",
+          "status": 201,
+          "ms": 14135.066200000001
+        },
+        {
+          "attemptId": "2a1a70da-b36d-4e0c-adfa-efb099705e56",
+          "status": 201,
+          "ms": 14147.936199999996
+        },
+        {
+          "attemptId": "b46eeb72-c4bd-4504-856d-437ca5fbc988",
+          "status": 201,
+          "ms": 14156.46100000001
+        },
+        {
+          "attemptId": "74c257ba-c128-4b8f-ac00-5730c63f5bbc",
+          "status": 201,
+          "ms": 14148.400300000008
+        },
+        {
+          "attemptId": "e52827a9-d551-43a8-bf18-275d8d77c705",
+          "status": 201,
+          "ms": 14160.193
+        },
+        {
+          "attemptId": "654560a1-5ecb-45be-b9fe-f7e33ec784f5",
+          "status": 201,
+          "ms": 14161.056400000001
+        },
+        {
+          "attemptId": "655b902e-8ef1-4a69-a23c-2c5b0ceb172b",
+          "status": 201,
+          "ms": 14191.1198
+        },
+        {
+          "attemptId": "bd402104-b8ea-42c1-a6d8-cb9fba5b30af",
+          "status": 201,
+          "ms": 14230.044299999994
+        },
+        {
+          "attemptId": "157f340b-2702-4a29-8ed2-e8723a204853",
+          "status": 201,
+          "ms": 14160.901700000002
+        },
+        {
+          "attemptId": "4ebc6f6e-1341-4915-94b4-da63f12d794c",
+          "status": 201,
+          "ms": 14224.284899999999
+        },
+        {
+          "attemptId": "c09c41da-379a-4cfb-91ef-9f494df878a2",
+          "status": 201,
+          "ms": 14219.363700000002
+        },
+        {
+          "attemptId": "1cac5312-605a-4eb2-a5fa-bfdc3ecc4392",
+          "status": 201,
+          "ms": 14179.628199999992
+        },
+        {
+          "attemptId": "ba54df19-34a6-4c95-8713-407d3ba56c9d",
+          "status": 201,
+          "ms": 14216.749099999986
+        },
+        {
+          "attemptId": "539fd067-cd29-43ba-b13c-101efb30ebd0",
+          "status": 201,
+          "ms": 14171.479800000001
+        },
+        {
+          "attemptId": "fc5d5244-6b49-4eee-b885-adbaa61d1444",
+          "status": 201,
+          "ms": 14296.513300000006
+        },
+        {
+          "attemptId": "be648292-074e-4eb2-9837-e9760142a054",
+          "status": 201,
+          "ms": 14233.599300000002
+        },
+        {
+          "attemptId": "9d2dacdf-7188-4a38-ac27-487fd523dee3",
+          "status": 201,
+          "ms": 14206.818599999999
+        },
+        {
+          "attemptId": "b9f1d1ea-33d2-4df4-bba7-e70111eee312",
+          "status": 201,
+          "ms": 14229.300099999993
+        },
+        {
+          "attemptId": "1a69a867-2963-4868-a475-d4515e0b00ea",
+          "status": 201,
+          "ms": 14190.436000000002
+        },
+        {
+          "attemptId": "ac33f4b8-9fca-4094-84b4-97d18342f22e",
+          "status": 201,
+          "ms": 14261.460500000001
+        },
+        {
+          "attemptId": "3361f1fe-1cc0-4227-9632-fee5cca2657f",
+          "status": 201,
+          "ms": 14196.4127
+        },
+        {
+          "attemptId": "4110d9f5-3c7d-413e-b3d7-f038662cb009",
+          "status": 201,
+          "ms": 14236.767100000012
+        },
+        {
+          "attemptId": "1d02918d-8ff8-45bb-aa3f-c13ba1392781",
+          "status": 201,
+          "ms": 14233.877600000007
+        },
+        {
+          "attemptId": "0cbe1670-c7b6-4514-a1cb-804b49ad53cf",
+          "status": 201,
+          "ms": 14222.319200000013
+        },
+        {
+          "attemptId": "7aa38dcc-3e12-43ac-9c0a-1e08650f6fb7",
+          "status": 201,
+          "ms": 14244.590299999996
+        },
+        {
+          "attemptId": "bdd01573-6776-451e-a4bb-ee4d7e1b4228",
+          "status": 201,
+          "ms": 14264.587100000004
+        },
+        {
+          "attemptId": "ee952929-e373-48b0-9bba-25792b6f3f89",
+          "status": 201,
+          "ms": 14283.103799999997
+        },
+        {
+          "attemptId": "d83bd478-e122-49a1-bd87-a10732ce1804",
+          "status": 201,
+          "ms": 14309.257700000002
+        },
+        {
+          "attemptId": "c7b30f17-6eed-4bfc-a8d7-698a8073004a",
+          "status": 201,
+          "ms": 14248.4231
+        },
+        {
+          "attemptId": "fc574c5a-1ac8-4a1c-840b-0169ec33e844",
+          "status": 201,
+          "ms": 14233.271199999988
+        },
+        {
+          "attemptId": "7d465545-e39e-490f-8be9-6ce646884c46",
+          "status": 201,
+          "ms": 14269.872900000002
+        },
+        {
+          "attemptId": "e5c088de-c0d7-4c42-b5a1-700c0aea0576",
+          "status": 201,
+          "ms": 14305.276700000002
+        },
+        {
+          "attemptId": "f161e39d-19a6-4ea2-ae62-5862b06de194",
+          "status": 201,
+          "ms": 14235.806200000006
+        },
+        {
+          "attemptId": "3f297e99-332a-490f-a46f-a2066fa9b2c3",
+          "status": 201,
+          "ms": 14367.079299999998
+        },
+        {
+          "attemptId": "8278934b-93c2-4961-82ab-bd0584b2a5a7",
+          "status": 201,
+          "ms": 14314.210000000006
+        },
+        {
+          "attemptId": "d2c9c6ca-5762-4a4d-8006-79941b73eb9b",
+          "status": 201,
+          "ms": 14349.511500000008
+        },
+        {
+          "attemptId": "88205c54-ada6-4872-bd91-322f0336b535",
+          "status": 201,
+          "ms": 14330.477699999989
+        },
+        {
+          "attemptId": "e82638f4-a2d7-4875-a62c-4b3843858e2d",
+          "status": 201,
+          "ms": 14284.871700000003
+        },
+        {
+          "attemptId": "05b11bab-c1f6-473f-b379-066af083cb95",
+          "status": 201,
+          "ms": 14346.51860000001
+        },
+        {
+          "attemptId": "946f948c-45ff-4c7a-9321-ca117384bff5",
+          "status": 201,
+          "ms": 14351.059099999999
+        },
+        {
+          "attemptId": "971459e2-3f9b-49d9-ac4e-f442d2554ee2",
+          "status": 201,
+          "ms": 14347.059200000003
+        },
+        {
+          "attemptId": "4a6addd6-5856-4f4c-9646-4da3035fb476",
+          "status": 201,
+          "ms": 14366.790000000008
+        },
+        {
+          "attemptId": "f8ac552a-0801-4127-b3f2-336862fb8d6e",
+          "status": 201,
+          "ms": 14339.710399999996
+        },
+        {
+          "attemptId": "c1abaea5-cbb8-47b3-9f8f-007480510e53",
+          "status": 201,
+          "ms": 14290.709099999993
+        },
+        {
+          "attemptId": "0aa29cdc-f57d-4c38-bad1-77d9bb370195",
+          "status": 201,
+          "ms": 14307.50910000001
+        },
+        {
+          "attemptId": "710fb2f2-5c43-492b-b77a-00bc95f84687",
+          "status": 201,
+          "ms": 14383.182
+        },
+        {
+          "attemptId": "f7567cce-02a7-477f-9517-8bf8a24b098b",
+          "status": 201,
+          "ms": 14364.601200000005
+        },
+        {
+          "attemptId": "a2090b09-d13e-4fc5-8cbe-288034014da6",
+          "status": 201,
+          "ms": 14366.34060000001
+        },
+        {
+          "attemptId": "b453de38-6276-4f63-9a82-1f264908d231",
+          "status": 201,
+          "ms": 14329.659100000004
+        },
+        {
+          "attemptId": "53172419-51e3-4832-9b5d-5855dcc85377",
+          "status": 201,
+          "ms": 14375.158500000005
+        },
+        {
+          "attemptId": "99aded16-0b1c-47e6-9335-94031af92a51",
+          "status": 201,
+          "ms": 14343.2932
+        },
+        {
+          "attemptId": "f93e7a23-d2dc-4f31-a05f-592371cc4313",
+          "status": 201,
+          "ms": 14416.617200000008
+        },
+        {
+          "attemptId": "8ec11923-d114-4da9-be96-9492bc93e439",
+          "status": 201,
+          "ms": 14365.14360000001
+        },
+        {
+          "attemptId": "2a571180-d5ca-4eab-a1ad-e0e1dcaf7eb5",
+          "status": 201,
+          "ms": 14381.47020000001
+        },
+        {
+          "attemptId": "94bfcec3-d261-4b9c-b998-e91185d1bbe6",
+          "status": 201,
+          "ms": 14382.464800000002
+        },
+        {
+          "attemptId": "8e2fe3d9-dc9a-44d9-aff5-f704c8da5c3c",
+          "status": 201,
+          "ms": 14402.559099999999
+        },
+        {
+          "attemptId": "7df6b8c9-212e-4cdf-af3d-ea78f3781ccf",
+          "status": 201,
+          "ms": 14382.9994
+        },
+        {
+          "attemptId": "c5184059-f6d7-4767-af81-846421757c67",
+          "status": 201,
+          "ms": 14418.873000000007
+        },
+        {
+          "attemptId": "03e00f43-ead8-4788-b542-6ccc881b6570",
+          "status": 201,
+          "ms": 14413.75439999999
+        },
+        {
+          "attemptId": "1f2388f5-7d49-4b07-8b5e-55c7280efbf9",
+          "status": 201,
+          "ms": 14415.969500000007
+        },
+        {
+          "attemptId": "63c4334f-4eaa-43ee-850a-c43f91debe74",
+          "status": 201,
+          "ms": 14404.713199999998
+        },
+        {
+          "attemptId": "b7aa0a1a-8269-4cc2-ab4f-d69ef140e2cb",
+          "status": 201,
+          "ms": 14408.978099999993
+        },
+        {
+          "attemptId": "148b4bbc-2a35-4fe0-a00d-286664afb340",
+          "status": 201,
+          "ms": 14392.7929
+        },
+        {
+          "attemptId": "cc409035-1995-4798-85f5-0273fe55b24a",
+          "status": 201,
+          "ms": 14490.484200000006
+        },
+        {
+          "attemptId": "66bf45fc-0129-45df-8e7f-993a88f36e13",
+          "status": 201,
+          "ms": 14419.855800000005
+        },
+        {
+          "attemptId": "67052f89-5524-4d77-844e-9088cf95ed52",
+          "status": 201,
+          "ms": 14424.218300000008
+        },
+        {
+          "attemptId": "97e14dfe-8394-47b5-845b-af132b87179e",
+          "status": 201,
+          "ms": 13662.008000000002
+        },
+        {
+          "attemptId": "7e8c1292-60bd-428b-83bb-1d2a043808b5",
+          "status": 201,
+          "ms": 13673.257099999988
+        },
+        {
+          "attemptId": "40703344-f550-4240-b254-4fca09b192bf",
+          "status": 201,
+          "ms": 13652.321499999991
+        },
+        {
+          "attemptId": "eac2866f-4d3f-46e7-8f83-e82dc8238164",
+          "status": 201,
+          "ms": 14430.1152
+        },
+        {
+          "attemptId": "3846389d-00cd-4d09-b5c2-d9e9919a6053",
+          "status": 201,
+          "ms": 14457.573100000009
+        },
+        {
+          "attemptId": "448149a7-bf4f-450d-8966-877d7c6884ce",
+          "status": 201,
+          "ms": 14441.895600000003
+        },
+        {
+          "attemptId": "f54d30a4-9a9c-4f33-bc49-45db76c2eded",
+          "status": 201,
+          "ms": 14419.551000000007
+        },
+        {
+          "attemptId": "4eafd160-5243-47de-866d-e8e6bd25c430",
+          "status": 201,
+          "ms": 14431.521500000003
+        },
+        {
+          "attemptId": "3418d0ad-b8ad-4b46-b794-dd497ce94183",
+          "status": 201,
+          "ms": 14444.3214
+        },
+        {
+          "attemptId": "25bce867-ab5f-40d6-ad40-4e9080f6d2ea",
+          "status": 201,
+          "ms": 14452.0766
+        },
+        {
+          "attemptId": "c6870a77-4a85-4387-b2a2-51ca4f973608",
+          "status": 201,
+          "ms": 14464.124500000005
+        },
+        {
+          "attemptId": "e83e1a97-e463-49d2-9ae2-bd22481ad14c",
+          "status": 201,
+          "ms": 14472.65370000001
+        },
+        {
+          "attemptId": "b1f55b92-9679-4402-99eb-b3b690ea3d1f",
+          "status": 201,
+          "ms": 14481.047399999996
+        },
+        {
+          "attemptId": "0452d24d-4a3f-4056-8e54-a6a9014372c9",
+          "status": 201,
+          "ms": 14464.065199999997
+        },
+        {
+          "attemptId": "c9d4a39b-5cc1-46c7-b50d-c08cf9f2bd86",
+          "status": 201,
+          "ms": 14496.758700000006
+        },
+        {
+          "attemptId": "d0e4b4ac-679c-433b-b8e0-0ce00b585e4b",
+          "status": 201,
+          "ms": 14488.856700000004
+        },
+        {
+          "attemptId": "c09b01a6-e6ab-4d29-93e0-d76ae77fd69e",
+          "status": 201,
+          "ms": 14479.863700000002
+        },
+        {
+          "attemptId": "ca03670c-0129-4326-a8f7-421b44c173da",
+          "status": 201,
+          "ms": 14483.165099999998
+        },
+        {
+          "attemptId": "fbc0c72e-d044-4d75-9a79-252ce7e74a1c",
+          "status": 201,
+          "ms": 14525.88979999999
+        },
+        {
+          "attemptId": "83d937f6-b9ac-4dc5-80a2-7cd10abfc148",
+          "status": 201,
+          "ms": 14479.623600000006
+        },
+        {
+          "attemptId": "0ef5aa02-4e07-4a3c-a4ac-a1cf39513299",
+          "status": 201,
+          "ms": 14570.753300000011
+        },
+        {
+          "attemptId": "85d41458-12dd-48bc-a6c1-773161435836",
+          "status": 201,
+          "ms": 14515.079199999993
+        },
+        {
+          "attemptId": "313b800a-79fe-4cf9-8994-80fe014eab2d",
+          "status": 201,
+          "ms": 14587.300199999998
+        },
+        {
+          "attemptId": "f71d1593-d8b5-4fd6-888a-12db0f42ead9",
+          "status": 201,
+          "ms": 14624.502599999993
+        },
+        {
+          "attemptId": "691295ec-ca6e-4d5e-bf35-cbc2f0c48db1",
+          "status": 201,
+          "ms": 14592.958200000008
+        },
+        {
+          "attemptId": "9a75e5ae-4679-4c30-9104-57d5da66429c",
+          "status": 201,
+          "ms": 14533.940100000007
+        },
+        {
+          "attemptId": "04138a11-dba1-452e-9229-be7d9b375814",
+          "status": 201,
+          "ms": 14628.789400000009
+        },
+        {
+          "attemptId": "09db01c6-3642-47f2-a18d-0b5f1c0d0145",
+          "status": 201,
+          "ms": 14592.649300000005
+        },
+        {
+          "attemptId": "cdd6eedb-5c74-4aa8-a1e0-85967d5e79b6",
+          "status": 201,
+          "ms": 14609.646200000003
+        },
+        {
+          "attemptId": "c0eac9cd-c330-45de-bb9d-ed4d9ffb286d",
+          "status": 201,
+          "ms": 14555.802500000005
+        },
+        {
+          "attemptId": "fa8510c7-0927-4400-9c37-094a40942abb",
+          "status": 201,
+          "ms": 14519.58159999999
+        },
+        {
+          "attemptId": "994d04b0-2a30-4ab4-94dc-62a4c44904ca",
+          "status": 201,
+          "ms": 14626.994200000001
+        },
+        {
+          "attemptId": "dbd09f32-6a41-4181-893e-dbcde00ee1a0",
+          "status": 201,
+          "ms": 14669.741800000003
+        },
+        {
+          "attemptId": "7530e7e6-e117-4e92-99a9-c167a9e838be",
+          "status": 201,
+          "ms": 14682.371899999998
+        },
+        {
+          "attemptId": "0febbea2-1d60-42e4-a29d-86ce643d5068",
+          "status": 201,
+          "ms": 14682.93209999999
+        },
+        {
+          "attemptId": "baad7b4e-67d3-457b-b679-160c0648126f",
+          "status": 201,
+          "ms": 14668.57179999999
+        },
+        {
+          "attemptId": "9727a3fb-78d2-40bf-94ae-47d32a88cb92",
+          "status": 201,
+          "ms": 14567.117599999998
+        },
+        {
+          "attemptId": "17679578-69fb-46b2-a3e9-c73b3df034b6",
+          "status": 201,
+          "ms": 14615.18710000001
+        },
+        {
+          "attemptId": "9abd05e2-b9ad-4b9b-8f06-12e7dca29742",
+          "status": 201,
+          "ms": 14702.00940000001
+        },
+        {
+          "attemptId": "224cfeb9-f7ab-4594-b131-222044fb3207",
+          "status": 201,
+          "ms": 14532.288400000005
+        },
+        {
+          "attemptId": "78010e36-74f2-4891-b343-be5b0d4a8818",
+          "status": 201,
+          "ms": 14672.876100000009
+        },
+        {
+          "attemptId": "e9e50d32-f963-4416-a931-87cf6761d325",
+          "status": 201,
+          "ms": 14705.333099999989
+        },
+        {
+          "attemptId": "77c0d817-50e0-4683-874c-f7fabf68acd1",
+          "status": 201,
+          "ms": 14701.503400000001
+        },
+        {
+          "attemptId": "a2e054a7-4469-4be7-8f6b-5e39d431d5a5",
+          "status": 201,
+          "ms": 14693.4225
+        },
+        {
+          "attemptId": "b87a4550-e06d-4e18-8c19-ab2b8a577786",
+          "status": 201,
+          "ms": 14684.650999999998
+        },
+        {
+          "attemptId": "1a1d1f8d-9e16-47ce-b4d5-a5036c116373",
+          "status": 201,
+          "ms": 14694.509600000005
+        },
+        {
+          "attemptId": "c269c38b-3cf3-4e3f-b2f5-0ae1665d3189",
+          "status": 201,
+          "ms": 14680.886199999994
+        },
+        {
+          "attemptId": "f0676dcd-3f15-4fe3-97c3-0a310e1e2e1d",
+          "status": 201,
+          "ms": 14684.682100000005
+        },
+        {
+          "attemptId": "c82a5a55-c9fe-415d-9f9c-11a80d19cf72",
+          "status": 201,
+          "ms": 14687.194600000003
+        },
+        {
+          "attemptId": "606fdc16-b0a2-44e3-97cf-194ca14eacbe",
+          "status": 201,
+          "ms": 14670.599399999992
+        },
+        {
+          "attemptId": "fc97064d-1619-47a3-9033-e64056a89058",
+          "status": 201,
+          "ms": 14693.175300000003
+        },
+        {
+          "attemptId": "d3245a43-3d43-4f14-ade9-9a46181d37c7",
+          "status": 201,
+          "ms": 14717.188699999999
+        },
+        {
+          "attemptId": "1eb8ae64-2122-473f-a1c7-518b93677309",
+          "status": 201,
+          "ms": 14678.059800000003
+        },
+        {
+          "attemptId": "e8cabae3-fd07-4171-8b3c-add4c05243d9",
+          "status": 201,
+          "ms": 14721.3027
+        },
+        {
+          "attemptId": "0581a1dd-7f8f-4873-9c4e-dd61e2a68e0e",
+          "status": 201,
+          "ms": 14744.4335
+        },
+        {
+          "attemptId": "494058b8-7eed-43ad-a7ec-6b1c7d0164f0",
+          "status": 201,
+          "ms": 14691.679600000003
+        },
+        {
+          "attemptId": "ddbfe245-3902-4c3e-8712-f924c618c3fe",
+          "status": 201,
+          "ms": 14707.207900000009
+        },
+        {
+          "attemptId": "6a02fce8-eb99-4131-82a1-42659dbede55",
+          "status": 201,
+          "ms": 14766.258300000001
+        },
+        {
+          "attemptId": "898616c7-a487-46ee-9552-c5e463ee38e9",
+          "status": 201,
+          "ms": 14734.791699999987
+        },
+        {
+          "attemptId": "6a13c9ac-547d-4546-8925-130645c7f2b8",
+          "status": 201,
+          "ms": 14748.709900000002
+        },
+        {
+          "attemptId": "7a2725a7-7199-4322-ae13-c47650ec2053",
+          "status": 201,
+          "ms": 14728.626399999994
+        },
+        {
+          "attemptId": "b01e4254-d449-4d9f-b4e4-b15e79c50e68",
+          "status": 201,
+          "ms": 14771.440500000012
+        },
+        {
+          "attemptId": "95b4a64c-2a4c-4a89-a532-e4fe83273838",
+          "status": 201,
+          "ms": 14725.547299999991
+        },
+        {
+          "attemptId": "8d6c9845-27f7-49b8-a866-e98b3d16d302",
+          "status": 201,
+          "ms": 14729.51909999999
+        },
+        {
+          "attemptId": "86df62ac-87e0-4145-8900-8270d8e20dc8",
+          "status": 201,
+          "ms": 14803.50540000001
+        },
+        {
+          "attemptId": "a9534fcf-b310-485e-af18-a3aacc32bd12",
+          "status": 201,
+          "ms": 14731.937099999996
+        },
+        {
+          "attemptId": "6cfe879e-386c-4beb-983a-172c25813b51",
+          "status": 201,
+          "ms": 14805.429300000003
+        },
+        {
+          "attemptId": "49130881-bb93-4afc-a8fc-bdc380bf4ade",
+          "status": 201,
+          "ms": 14791.538900000014
+        },
+        {
+          "attemptId": "d9025949-4680-48f4-94d6-c983aae7363a",
+          "status": 201,
+          "ms": 14793.348200000008
+        },
+        {
+          "attemptId": "73365c40-6aea-41d1-97e4-bd9eb24d9f5e",
+          "status": 201,
+          "ms": 14801.744399999996
+        },
+        {
+          "attemptId": "0761875b-d20d-45e8-a3b0-ce67c9c26798",
+          "status": 201,
+          "ms": 14797.194600000003
+        }
+      ],
+      "integrity": {
+        "attempts": 250,
+        "graded": 250,
+        "broken_ledger": 0,
+        "broken_outbox": 0
+      },
+      "retry": {
+        "attemptId": "65c09dd0-7d74-49fd-a1cd-698a53880dd8",
+        "status": 201,
+        "ms": 62.85099999999511
+      }
+    }
+  ],
+  "toolingCorrections": [
+    {
+      "error": "Diagnostic API startup failed",
+      "at": "2026-10-27T11:46:50.360Z",
+      "correction": "Windows --import requires file URL; resume HTTP only, preserve successful worker profiles"
+    },
+    {
+      "error": "Diagnostic API startup failed",
+      "at": "2026-10-27T11:49:16.743Z",
+      "correction": "Windows --import requires file URL; resume HTTP only, preserve successful worker profiles"
+    },
+    {
+      "error": "postgres is not defined",
+      "at": "2026-10-27T11:51:26.061Z",
+      "correction": "Windows --import requires file URL; resume HTTP only, preserve successful worker profiles"
+    }
+  ],
+  "finishedAt": "2026-10-27T11:53:49.859Z"
+}

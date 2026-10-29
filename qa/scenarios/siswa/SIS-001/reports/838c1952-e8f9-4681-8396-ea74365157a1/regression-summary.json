@@ -1,0 +1,58 @@
+{
+  "id": "bff38ce9-f012-4340-a601-303b2ed49e7a",
+  "database": "numora_test_qa_bff38ce9f0124340a601303b2ed49e7a",
+  "sha": "b33954b0678551bdea78e4bb40c9f7eb8568e9c1",
+  "startedAt": "2026-10-27T20:09:18.536Z",
+  "steps": [
+    {
+      "package": "database",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "assessment-engine",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "irt-orchestration",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "api",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "worker",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "web",
+      "exitCode": 0,
+      "timedOut": false
+    },
+    {
+      "package": "testing",
+      "exitCode": 0,
+      "timedOut": false
+    }
+  ],
+  "inputs": [
+    {
+      "name": "TryOut.xlsx",
+      "bytes": 864317,
+      "sha256": "9ae068ed00051afb48b004274e6a5a937c66b0822c70d2b9c5e2f7b3695bca30",
+      "academicApproval": "NOT_ESTABLISHED"
+    },
+    {
+      "name": "NUMORA_Pretest_Aljabar_10_Soal_V3.xlsx",
+      "bytes": 109992,
+      "sha256": "ba2221e963fdd7985db1fc1f508326136a920a6ac5301ba89e9761f972287c6e",
+      "academicApproval": "NOT_ESTABLISHED"
+    }
+  ],
+  "finishedAt": "2026-10-27T20:23:56.686Z"
+}

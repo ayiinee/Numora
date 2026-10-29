@@ -1,0 +1,90 @@
+[
+  {
+    "at": "2026-10-27T23:26:54.436Z",
+    "requestId": "f4dec831-44d7-431f-b0f0-6767634ad5d0",
+    "operationId": "postcommit-sqlstate53200.submit",
+    "kind": "submit",
+    "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+    "event": "request_received",
+    "elapsedMs": 0.029800000003888272
+  },
+  {
+    "at": "2026-10-27T23:26:54.501Z",
+    "requestId": "f4dec831-44d7-431f-b0f0-6767634ad5d0",
+    "operationId": "postcommit-sqlstate53200.submit",
+    "kind": "submit",
+    "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+    "event": "handler_error",
+    "elapsedMs": 65.54910000000382,
+    "sqlStates": [
+      "53200"
+    ],
+    "databaseOperations": [
+      "assessment_delivery"
+    ]
+  },
+  {
+    "at": "2026-10-27T23:26:54.502Z",
+    "requestId": "f4dec831-44d7-431f-b0f0-6767634ad5d0",
+    "operationId": "postcommit-sqlstate53200.submit",
+    "kind": "submit",
+    "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+    "event": "response_prepared",
+    "elapsedMs": 65.96080000000075,
+    "httpStatus": 500
+  },
+  {
+    "at": "2026-10-27T23:26:54.502Z",
+    "requestId": "f4dec831-44d7-431f-b0f0-6767634ad5d0",
+    "operationId": "postcommit-sqlstate53200.submit",
+    "kind": "submit",
+    "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+    "event": "response_finished",
+    "elapsedMs": 66.4169000000038,
+    "httpStatus": 500
+  },
+  {
+    "at": "2026-10-27T23:26:54.502Z",
+    "requestId": "f4dec831-44d7-431f-b0f0-6767634ad5d0",
+    "operationId": "postcommit-sqlstate53200.submit",
+    "kind": "submit",
+    "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+    "event": "response_closed",
+    "elapsedMs": 66.45300000000134,
+    "httpStatus": 500,
+    "writableFinished": true
+  },
+  {
+    "at": "2026-10-27T23:26:54.814Z",
+    "requestId": "18883b1a-ef4e-4655-9f76-e8c0300110af",
+    "operationId": "postcommit-http15s.submit",
+    "kind": "submit",
+    "attemptId": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+    "event": "request_received",
+    "elapsedMs": 0.012000000002444722
+  },
+  {
+    "at": "2026-10-27T23:27:09.827Z",
+    "requestId": "18883b1a-ef4e-4655-9f76-e8c0300110af",
+    "operationId": "postcommit-http15s.submit",
+    "kind": "submit",
+    "attemptId": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+    "event": "response_closed",
+    "elapsedMs": 15012.999599999996,
+    "httpStatus": 201,
+    "writableFinished": false
+  },
+  {
+    "at": "2026-10-27T23:27:10.881Z",
+    "requestId": "18883b1a-ef4e-4655-9f76-e8c0300110af",
+    "operationId": "postcommit-http15s.submit",
+    "kind": "submit",
+    "attemptId": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+    "event": "response_prepared",
+    "elapsedMs": 16066.844400000002,
+    "httpStatus": 201,
+    "questionCount": 10,
+    "score": 80,
+    "totalXp": 130
+  }
+]

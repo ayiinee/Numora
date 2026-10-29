@@ -1,0 +1,57 @@
+{
+  "releaseSha": "b33954b0678551bdea78e4bb40c9f7eb8568e9c1",
+  "collectedAt": "2026-10-27T20:27:48.010Z",
+  "status": "PASS",
+  "environment": "isolated-local-postgresql-redis-chromium",
+  "authMode": "email-fixture-boundary",
+  "productApiMocks": false,
+  "content": "TEST_ONLY_DEMO",
+  "irtRelease": "TEST_ONLY_SYNTHETIC_RELEASE_NO_MODEL_EXECUTION",
+  "checks": [
+    "connected-role-chain-save-refresh-reauth-submit-monitor-retry-unlock-level2-persistence",
+    "drill-v06-xp-ledger-replay-single-package-latest-stars-exit-confirmation-level-history",
+    "real-http-token-ttl-revoke-reissue-expiry-races-multi-class-ownership-auth",
+    "direct-url-role-refresh-logout-reauth-mandiri-drill",
+    "tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history",
+    "draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review",
+    "five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress"
+  ],
+  "browserResources": [
+    {
+      "test": "Admin → Teacher → Student → saved/resumed Drill → monitoring → retry → Level 2",
+      "contexts": 4,
+      "pages": 4
+    },
+    {
+      "test": "token lifecycle, single-use race, concurrent multi-class joins and authorization at real HTTP boundary",
+      "contexts": 0,
+      "pages": 0
+    },
+    {
+      "test": "direct URL role guards, refresh, logout/re-auth and independent Mandiri persistence",
+      "contexts": 8,
+      "pages": 7
+    },
+    {
+      "test": "reconciled TryOut access and history retain class privacy through real browser/API/persistence",
+      "contexts": 1,
+      "pages": 1
+    },
+    {
+      "test": "DRAFT JSON API import -> ten three-format browser previews -> server save/resume -> unscored review",
+      "contexts": 1,
+      "pages": 1
+    },
+    {
+      "test": "five-class limit, teacher ban/unban and teacherless takeover preserve account progress",
+      "contexts": 0,
+      "pages": 0
+    }
+  ],
+  "acceptance": {
+    "google": "NOT_RUN",
+    "reviewedCurriculum": "NOT_PROVIDED",
+    "staging": "NOT_RUN",
+    "independentQa": "PENDING"
+  }
+}

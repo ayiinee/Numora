@@ -1,0 +1,1170 @@
+diff --git a/apps/worker/src/outbox.ts b/apps/worker/src/outbox.ts
+index 6bfd87d..c577e2f 100644
+--- a/apps/worker/src/outbox.ts
++++ b/apps/worker/src/outbox.ts
+@@ -1,69 +1,119 @@
+ import { analyticsEvents, analyticsOutbox, getDatabase } from '@tka/database';
+ import { and, asc, eq, isNull, or, sql } from 'drizzle-orm';
+ 
+-const ready = or(isNull(analyticsOutbox.failedAt),
+-  sql`${analyticsOutbox.failedAt} <= clock_timestamp() - interval '5 minutes'`);
++const ready = or(
++  isNull(analyticsOutbox.failedAt),
++  sql`${analyticsOutbox.failedAt} <= clock_timestamp() - interval '5 minutes'`,
++);
+ 
+ export async function outboxStatus() {
+   const { db } = getDatabase();
+-  const [status] = await db.select({
+-    pending: sql<number>`count(*)::integer`,
+-    failed: sql<number>`count(*) filter (where ${analyticsOutbox.failedAt} is not null)::integer`,
+-    retryReady: sql<number>`count(*) filter (where ${ready})::integer`,
+-    oldestPendingSeconds: sql<number>`coalesce(greatest(0, extract(epoch from clock_timestamp() - min(${analyticsOutbox.occurredAt}))), 0)::integer`,
+-    oldestFailedSeconds: sql<number>`coalesce(greatest(0, extract(epoch from clock_timestamp() - min(${analyticsOutbox.failedAt}))), 0)::integer`,
+-  }).from(analyticsOutbox).where(isNull(analyticsOutbox.processedAt));
++  const [status] = await db
++    .select({
++      pending: sql<number>`count(*)::integer`,
++      failed: sql<number>`count(*) filter (where ${analyticsOutbox.failedAt} is not null)::integer`,
++      retryReady: sql<number>`count(*) filter (where ${ready})::integer`,
++      oldestPendingSeconds: sql<number>`coalesce(greatest(0, extract(epoch from clock_timestamp() - min(${analyticsOutbox.occurredAt}))), 0)::integer`,
++      oldestFailedSeconds: sql<number>`coalesce(greatest(0, extract(epoch from clock_timestamp() - min(${analyticsOutbox.failedAt}))), 0)::integer`,
++    })
++    .from(analyticsOutbox)
++    .where(isNull(analyticsOutbox.processedAt));
+   return { ...status!, coolingDown: status!.pending - status!.retryReady };
+ }
+ 
+ export async function drainOutboxBatch(limit = 100) {
+-  if (!Number.isInteger(limit) || limit < 1 || limit > 1000) throw new Error('OUTBOX_LIMIT_INVALID');
++  if (!Number.isInteger(limit) || limit < 1 || limit > 1000)
++    throw new Error('OUTBOX_LIMIT_INVALID');
+   const { db } = getDatabase();
+   let processed = 0;
+   let failed = 0;
+-  for (let index = 0; index < limit; index++) {
+-    let selectedId: string | undefined;
++  while (processed + failed < limit) {
++    const take = Math.min(10, limit - processed - failed);
+     try {
+-      const found = await db.transaction(async (tx) => {
+-        const [event] = await tx
+-          .select()
+-          .from(analyticsOutbox)
+-          .where(and(
+-            isNull(analyticsOutbox.processedAt),
+-            ready,
+-          ))
+-          .orderBy(asc(analyticsOutbox.occurredAt), asc(analyticsOutbox.id))
+-          .limit(1)
+-          .for('update', { skipLocked: true });
+-        if (!event) return false;
+-        selectedId = event.id;
+-        await tx.insert(analyticsEvents).values({
+-          eventId: event.id, correlationId: event.correlationId,
+-          eventName: event.eventName,
+-          eventVersion: event.eventVersion,
+-          actorUserId: event.actorUserId,
+-          occurredAt: event.occurredAt,
+-          entityType: event.entityType,
+-          entityId: event.entityId,
+-          payload: event.payload,
+-        }).onConflictDoNothing({ target: analyticsEvents.eventId });
+-        await tx.update(analyticsOutbox)
+-          .set({ processedAt: sql`clock_timestamp()`, failedAt: null })
+-          .where(eq(analyticsOutbox.id, event.id));
+-        return true;
+-      });
+-      if (!found) break;
+-      processed++;
++      // One implicit transaction: analytics insertion and acknowledgment roll back together.
++      // Referencing inserted through an aggregate also handles duplicate delivery (zero inserts).
++      const acknowledged = await db.execute(sql`
++        with selected as materialized (
++          select * from ${analyticsOutbox}
++          where ${analyticsOutbox.processedAt} is null and ${ready}
++          order by ${analyticsOutbox.processedAt}, ${analyticsOutbox.occurredAt}, ${analyticsOutbox.id}
++          limit ${take} for update skip locked
++        ), inserted as (
++          insert into ${analyticsEvents}
++            (event_id, correlation_id, event_name, event_version, actor_user_id,
++             occurred_at, entity_type, entity_id, payload)
++          select id, correlation_id, event_name, event_version, actor_user_id,
++                 occurred_at, entity_type, entity_id, payload from selected
++          on conflict (event_id) do nothing
++          returning event_id
++        )
++        update ${analyticsOutbox} as acknowledged
++        set processed_at = clock_timestamp(), failed_at = null
++        from selected, (select count(*) from inserted) as inserted_count
++        where acknowledged.id = selected.id
++        returning acknowledged.id
++      `);
++      if (!acknowledged.length) break;
++      processed += acknowledged.length;
++      if (acknowledged.length < take) break;
++      continue;
+     } catch {
+-      failed++;
+-      if (selectedId)
+-        await db.update(analyticsOutbox)
+-          .set({ failedAt: sql`clock_timestamp()` })
+-          .where(and(eq(analyticsOutbox.id, selectedId), isNull(analyticsOutbox.processedAt)));
+-      console.error('[outbox] delivery failed', {
+-        eventId: selectedId ?? null,
+-        reason: 'DELIVERY_FAILED',
+-      });
++      // Isolate a poison event with the original per-event transactions. The failed
++      // bulk statement has no durable effects and does not consume the public limit.
++    }
++    for (let index = 0; index < take; index++) {
++      let selectedId: string | undefined;
++      try {
++        const found = await db.transaction(async (tx) => {
++          const [event] = await tx
++            .select()
++            .from(analyticsOutbox)
++            .where(and(isNull(analyticsOutbox.processedAt), ready))
++            // processedAt is NULL for every candidate; preserve chronological/id order
++            // while exposing the existing (processed_at, occurred_at) index prefix.
++            .orderBy(
++              asc(analyticsOutbox.processedAt),
++              asc(analyticsOutbox.occurredAt),
++              asc(analyticsOutbox.id),
++            )
++            .limit(1)
++            .for('update', { skipLocked: true });
++          if (!event) return false;
++          selectedId = event.id;
++          await tx
++            .insert(analyticsEvents)
++            .values({
++              eventId: event.id,
++              correlationId: event.correlationId,
++              eventName: event.eventName,
++              eventVersion: event.eventVersion,
++              actorUserId: event.actorUserId,
++              occurredAt: event.occurredAt,
++              entityType: event.entityType,
++              entityId: event.entityId,
++              payload: event.payload,
++            })
++            .onConflictDoNothing({ target: analyticsEvents.eventId });
++          await tx
++            .update(analyticsOutbox)
++            .set({ processedAt: sql`clock_timestamp()`, failedAt: null })
++            .where(eq(analyticsOutbox.id, event.id));
++          return true;
++        });
++        if (!found) return { processed, failed };
++        processed++;
++      } catch {
++        failed++;
++        if (selectedId)
++          await db
++            .update(analyticsOutbox)
++            .set({ failedAt: sql`clock_timestamp()` })
++            .where(and(eq(analyticsOutbox.id, selectedId), isNull(analyticsOutbox.processedAt)));
++        console.error('[outbox] delivery failed', {
++          eventId: selectedId ?? null,
++          reason: 'DELIVERY_FAILED',
++        });
++      }
+     }
+   }
+   return { processed, failed };
+diff --git a/apps/api/src/modules/learning/drill-assessment.service.ts b/apps/api/src/modules/learning/drill-assessment.service.ts
+index cd7d9ed..77c9e3a 100644
+--- a/apps/api/src/modules/learning/drill-assessment.service.ts
++++ b/apps/api/src/modules/learning/drill-assessment.service.ts
+@@ -225,7 +225,12 @@ export class DrillAssessmentService {
+           problem('PGK_SCORING_PENDING', 'Rubrik penilaian PGK belum disahkan.'),
+         );
+       items.forEach(ownerOverride ? decodeAssessmentContent : decodeSingleChoiceVersion);
+-      if (items.some((item) => !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'))) {
++      if (
++        items.some(
++          (item) =>
++            !ownerOverride && (item.contentStatus !== 'READY' || item.questionStatus !== 'READY'),
++        )
++      ) {
+         throw new ServiceUnavailableException(
+           problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
+         );
+@@ -697,7 +702,9 @@ export class DrillAssessmentService {
+ 
+   private async resultForStudent(studentId: string, attemptId: string) {
+     const { db } = getDatabase();
+-    const [attempt] = await db
++    // One snapshot for the header, immutable content, answers and stored reward.
++    // xp_ledger_attempt_uq prevents the reward join from multiplying questions.
++    const projection = await db
+       .select({
+         id: assessmentAttempts.id,
+         studentId: assessmentAttempts.studentId,
+@@ -712,40 +719,76 @@ export class DrillAssessmentService {
+         drillPolicyVersion: assessmentAttempts.drillPolicyVersion,
+         unlockedLevelId: assessmentAttempts.unlockedLevelId,
+         isDemo: assessmentPackages.isDemo,
++        questionCount: sql<number>`(count(${attemptItems.id}) over ())::integer`,
++        correctCount: sql<number>`(count(${attemptItems.id}) filter (where ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints}) over ())::integer`,
++        reward: {
++          id: xpLedger.id,
++          xpAmount: xpLedger.xpAmount,
++          policyCode: xpLedger.policyCode,
++          policyVersion: xpLedger.policyVersion,
++          baseXp: xpLedger.baseXp,
++          bonusXp: xpLedger.bonusXp,
++          durationSeconds: xpLedger.durationSeconds,
++        },
++        item: {
++          id: attemptItems.id,
++          displayOrder: attemptItems.displayOrder,
++          maxPoints: attemptItems.maxPoints,
++        },
++        version: {
++          questionType: questionVersions.questionType,
++          questionVersionId: questionVersions.id,
++          stem: questionVersions.stem,
++          optionsOrStatements: questionVersions.optionsOrStatements,
++          answerKey: questionVersions.answerKey,
++          explanation: questionVersions.explanation,
++        },
++        savedAnswer: {
++          id: attemptAnswers.attemptItemId,
++          answer: attemptAnswers.answer,
++          awardedPoints: attemptAnswers.awardedPoints,
++        },
+       })
+       .from(assessmentAttempts)
+       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
+       .innerJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))
++      .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
++      .leftJoin(attemptItems, eq(attemptItems.attemptId, assessmentAttempts.id))
++      .leftJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
++      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
+       .where(
+         and(
+           eq(assessmentAttempts.id, attemptId),
++          eq(assessmentAttempts.studentId, studentId),
+           eq(assessmentAttempts.assessmentType, 'DRILL'),
+           eq(assessmentAttempts.purpose, 'REGULAR'),
+         ),
+       )
+-      .limit(1);
++      .orderBy(asc(attemptItems.displayOrder));
++    const attempt = projection[0];
+     if (!attempt || attempt.studentId !== studentId || !attempt.levelId)
+       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
+     if (attempt.status !== 'GRADED' || !attempt.completedAt || attempt.score === null)
+       throw new ConflictException(problem('RESULT_PENDING', 'Hasil Drill belum tersedia.'));
+-    const [counts] = await db
+-      .select({
+-        questionCount: sql<number>`count(*)::integer`,
+-        correctCount: sql<number>`count(*) filter (where ${attemptAnswers.awardedPoints} = ${attemptItems.maxPoints})::integer`,
+-      })
+-      .from(attemptItems)
+-      .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
+-      .where(eq(attemptItems.attemptId, attemptId))
+-      .limit(1);
++    const counts = attempt;
+     const available =
+       attempt.drillPolicyVersion === DRILL_REWARD_POLICY_VERSION ||
+       explanationAvailable(attempt.completedAt);
+-    const [reward] = await db
+-      .select()
+-      .from(xpLedger)
+-      .where(eq(xpLedger.attemptId, attemptId))
+-      .limit(1);
+-    const rows = available ? await this.questionRows(attemptId) : [];
++    const reward = attempt.reward;
++    const rows = available
++      ? projection.flatMap((row) =>
++          row.item && row.version
++            ? [
++                {
++                  ...row.item,
++                  ...row.version,
++                  answer: row.savedAnswer?.answer ?? null,
++                  awardedPoints: row.savedAnswer?.awardedPoints ?? null,
++                },
++              ]
++            : [],
++        )
++      : [];
+     if (rows.length)
+       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, true)`);
+     const score = Number(attempt.score);
+diff --git a/apps/api/src/modules/learning/drill-reward.integration.spec.ts b/apps/api/src/modules/learning/drill-reward.integration.spec.ts
+index a2fd14f..23ff638 100644
+--- a/apps/api/src/modules/learning/drill-reward.integration.spec.ts
++++ b/apps/api/src/modules/learning/drill-reward.integration.spec.ts
+@@ -252,6 +252,18 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
+     ]);
+     expect(result.reward).toEqual(replay.reward);
+     expect(result).toMatchObject({ score: 80, stars: 2, reward: { baseXp: 80, policyVersion: 2 } });
++    // Auth is a fixture here: count only the result projection and delivery statement.
++    const resultQueries = vi.spyOn(getDatabase().client, 'unsafe');
++    try {
++      expect(await service.result('student', attempt.id)).toEqual(result);
++      expect(resultQueries.mock.calls).toHaveLength(2);
++      expect(result.questions).toHaveLength(10);
++      expect(new Set(result.questions.map((question) => question.questionInstanceId)).size).toBe(
++        10,
++      );
++    } finally {
++      resultQueries.mockRestore();
++    }
+     expect(await db.select().from(xpLedger).where(eq(xpLedger.attemptId, attempt.id))).toHaveLength(
+       1,
+     );
+@@ -298,6 +310,51 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
+       questions: [],
+     });
+     vi.useRealTimers();
++    // Delivery errors remain visible after the independent grading transaction commits.
++    const deliveryAttempt = await service.start('student', level!.id);
++    const deliveryTrigger = `test_delivery_${suffix.replaceAll('-', '')}`;
++    await db.execute(
++      sql.raw(`create function ${deliveryTrigger}() returns trigger language plpgsql as $$ begin
++      if NEW.idempotency_key='${deliveryAttempt.id}:EXPLANATION_PAYLOAD_ISSUED' then raise exception 'TEST ONLY delivery unavailable'; end if; return NEW; end $$`),
++    );
++    await db.execute(
++      sql.raw(
++        `create trigger ${deliveryTrigger} before insert on content_delivery_manifests for each row execute function ${deliveryTrigger}()`,
++      ),
++    );
++    try {
++      await expect(service.submit('student', deliveryAttempt.id)).rejects.toThrow();
++      expect(
++        (
++          await db
++            .select()
++            .from(assessmentAttempts)
++            .where(eq(assessmentAttempts.id, deliveryAttempt.id))
++        )[0]?.status,
++      ).toBe('GRADED');
++      expect(
++        await db.select().from(xpLedger).where(eq(xpLedger.attemptId, deliveryAttempt.id)),
++      ).toHaveLength(1);
++      expect(
++        await db
++          .select()
++          .from(analyticsOutbox)
++          .where(
++            and(
++              eq(analyticsOutbox.entityId, deliveryAttempt.id),
++              eq(analyticsOutbox.eventName, 'drill_completed'),
++            ),
++          ),
++      ).toHaveLength(1);
++    } finally {
++      await db.execute(sql.raw(`drop trigger ${deliveryTrigger} on content_delivery_manifests`));
++      await db.execute(sql.raw(`drop function ${deliveryTrigger}()`));
++    }
++    const recovered = await service.result('student', deliveryAttempt.id);
++    expect(await service.submit('student', deliveryAttempt.id)).toEqual(recovered);
++    expect(
++      await db.select().from(xpLedger).where(eq(xpLedger.attemptId, deliveryAttempt.id)),
++    ).toHaveLength(1);
+     // Production-equivalent RLS/grants with a separate LOGIN, never the migration owner.
+     const role = `drill_main_${suffix.replaceAll('-', '')}`;
+     const password = randomUUID();
+diff --git a/apps/api/src/modules/learning/learning.service-access.spec.ts b/apps/api/src/modules/learning/learning.service-access.spec.ts
+index 1533946..7eb144e 100644
+--- a/apps/api/src/modules/learning/learning.service-access.spec.ts
++++ b/apps/api/src/modules/learning/learning.service-access.spec.ts
+@@ -88,26 +88,28 @@ describe('Drill access and duplicate submit', () => {
+     };
+     const db = {
+       transaction: (run: (value: typeof tx) => unknown) => run(tx),
+-      select: vi
+-        .fn()
+-        .mockImplementationOnce(() =>
+-          query([
+-            {
+-              id: attemptId,
+-              studentId,
+-              levelId: 'level',
+-              levelTitle: 'Level 1',
+-              status: 'GRADED',
+-              completedAt,
+-              score: '80',
+-              rawPoints: '8',
+-              stars: 2,
+-              isDemo: true,
+-            },
+-          ]),
+-        )
+-        .mockImplementationOnce(() => query([{ questionCount: 10, correctCount: 8 }]))
+-        .mockImplementationOnce(() => query([{ xpAmount: 105 }])),
++      select: vi.fn().mockImplementationOnce(() =>
++        query([
++          {
++            id: attemptId,
++            studentId,
++            levelId: 'level',
++            levelTitle: 'Level 1',
++            status: 'GRADED',
++            completedAt,
++            score: '80',
++            rawPoints: '8',
++            stars: 2,
++            isDemo: true,
++            questionCount: 10,
++            correctCount: 8,
++            reward: { id: 'stored-reward', xpAmount: 105 },
++            item: null,
++            version: null,
++            savedAnswer: null,
++          },
++        ]),
++      ),
+     };
+     vi.mocked(getDatabase).mockReturnValue({ db } as never);
+     await expect(learning().submit('Bearer valid', attemptId)).resolves.toMatchObject({
+diff --git a/qa/runtime/pipeline.mjs b/qa/runtime/pipeline.mjs
+index f1271ed..0d09565 100644
+--- a/qa/runtime/pipeline.mjs
++++ b/qa/runtime/pipeline.mjs
+@@ -1,4 +1,9 @@
+ import assert from 'node:assert/strict';
++import {
++  drainVolumeQueue,
++  runVolumeStages,
++  summarizeChecks,
++} from '../../scripts/qa/volume-flow.mjs';
+ import { createFaultProxy as proxy } from '../../scripts/qa/fault-proxy.mjs';
+ import { spawn } from 'node:child_process';
+ import { randomUUID } from 'node:crypto';
+@@ -57,6 +62,7 @@ async function verify(name, fn) {
+       reason: sanitize(error.message).slice(0, 1200),
+     });
+   }
++  return checks.at(-1);
+ }
+ async function insert(count, payloadFactory = (index) => ({ fixture: true, index })) {
+   for (let offset = 0; offset < count; offset += 1000) {
+@@ -81,6 +87,13 @@ async function snapshot() {
+   );
+   return row;
+ }
++async function hasPending() {
++  const [row] = await sql.unsafe(
++    'select exists(select 1 from analytics_outbox where entity_type=$1 and processed_at is null) as pending',
++    [type],
++  );
++  return row.pending;
++}
+ async function reconcile(expected) {
+   const [row] = await sql.unsafe(
+     'select count(*)::integer as source, count(e.event_id)::integer as delivered, count(*) filter(where e.event_id is null or e.payload<>o.payload or e.event_name<>o.event_name or e.event_version<>o.event_version or e.entity_id<>o.entity_id)::integer as mismatch from analytics_outbox o left join analytics_events e on e.event_id=o.id where o.entity_type=$1',
+@@ -112,23 +125,49 @@ async function drain() {
+ let worker;
+ try {
+   if (mode === 'volume') {
++    assert.match(process.env.QA_RUN_ID ?? '', /^[0-9a-f]{8}(?:-[0-9a-f]{4}){3}-[0-9a-f]{12}$/i);
+     let cumulative = 0;
+-    for (const count of config.volume)
+-      await verify('volume-' + count + '-event-identity-and-payload', async () => {
++    metrics.experiment = 'cumulative-stop-on-first-incomplete';
++    metrics.drainBudgetMs = config.drainTimeoutSeconds * 1000;
++    metrics.snapshotIntervalMs = 1000;
++    metrics.backlogSamples = [];
++    const stages = await runVolumeStages(config.volume, async ({ count, name }) => {
++      const stageId = randomUUID();
++      const sample = { stageId, count, cumulativeBefore: cumulative };
++      metrics.samples.push(sample);
++      return verify(name, async () => {
+         const start = performance.now();
+-        await insert(count);
+-        cumulative += count;
+-        const insertedMs = performance.now() - start;
+-        await drain();
+-        metrics.samples.push({
+-          count,
+-          insertedMs,
+-          elapsedMs: performance.now() - start,
+-          ...(await reconcile(cumulative)),
+-          memoryBytes: process.memoryUsage().rss,
+-          cpu: process.cpuUsage(),
+-        });
++        try {
++          await insert(count, (index) => ({
++            fixture: true,
++            index,
++            stageId,
++            stageSize: count,
++            runId: process.env.QA_RUN_ID,
++          }));
++          cumulative += count;
++          sample.insertedMs = performance.now() - start;
++          sample.cumulativeInserted = cumulative;
++          sample.drain = await drainVolumeQueue({
++            budgetMs: metrics.drainBudgetMs,
++            sampleIntervalMs: metrics.snapshotIntervalMs,
++            pending: hasPending,
++            drainBatch: drainOutboxBatch,
++            snapshot,
++            onSnapshot: (state) => {
++              metrics.backlogSamples.push({ stageId, ...state });
++              if (state.final) metrics.remainingBacklog = state;
++            },
++          });
++          Object.assign(sample, await reconcile(cumulative));
++        } finally {
++          sample.elapsedMs = performance.now() - start;
++          sample.memoryBytes = process.memoryUsage().rss;
++          sample.cpu = process.cpuUsage();
++        }
+       });
++    });
++    checks.push(...stages.filter((stage) => stage.status === 'NOT_RUN'));
+   } else if (mode === 'velocity') {
+     worker = spawn(process.execPath, [resolve(root, 'qa/runtime/consume.mjs')], {
+       cwd: root,
+@@ -379,16 +418,12 @@ try {
+   if (worker) terminate(worker);
+   await sql.end({ timeout: 2 });
+   await closeDatabaseConnection();
+-  const failed = checks.filter((c) => c.status === 'FAIL').length;
+-  const blocked = checks.filter((c) => c.status === 'BLOCKED').length;
++  const summary = summarizeChecks(checks);
+   writeJson(output, {
+-    passed: checks.length - failed - blocked,
+-    blocked,
+-    failed,
+-    skipped: 0,
+-    total: checks.length,
++    ...summary,
+     checks,
+     metrics,
+   });
+-  if (failed || blocked) process.exitCode = failed ? 1 : 2;
++  if (summary.failed || summary.blocked || summary.skipped)
++    process.exitCode = summary.failed ? 1 : 2;
+ }
+diff --git a/docs/testing/QA_WORKFLOW.md b/docs/testing/QA_WORKFLOW.md
+index 9c72fb7..cb27c82 100644
+--- a/docs/testing/QA_WORKFLOW.md
++++ b/docs/testing/QA_WORKFLOW.md
+@@ -69,3 +69,11 @@ Setiap eksperimen volume, velocity, variety dan recovery membuat clone database
+ Consumer diperiksa dalam batch kecil agar batas drain diperiksa berkala. Backlog yang belum habis pada batas eksperimen dilaporkan Blocked/incomplete, bukan kehilangan data. Cleanup memverifikasi nama parent, clone dan restore terhadap identitas run. Server fixture/API test-only bind ke loopback IPv4 untuk kompatibilitas browser, Node dan k6 pada Windows.
+ 
+ Mode build low-memory menggunakan pilihan yang memang sudah disediakan next.config.ts; hasil dan fingerprint mencatat konfigurasi itu. Ini bukan pengukuran kapasitas produksi.
++
++## Regresi optimasi SIS-001 — 27 Oktober 2026
++
++ENGINEERING DECISION — implementasi optimasi yang diminta pengguna: worker memproses maksimal sepuluh event per statement atomik, dengan rollback kelompok dan fallback per event bila terjadi kegagalan. Limit publik, retry cooldown, SKIP LOCKED dan deduplikasi tetap berlaku. Ukur jumlah statement serta event yang benar-benar diakui; jangan mengasumsikan satu BEGIN eksplisit untuk setiap event atau menambah limit untuk menyatakan lulus.
++
++Pembentukan hasil Drill memakai satu projection untuk metadata, reward, hitungan dan soal. Pencatatan delivery tetap setelah commit dan kegagalannya tetap terlihat. Autentikasi dan rekomendasi merupakan query terpisah. Verifikasi kesetaraan DTO, reward historis/legacy, ownership, rollback dan retry melalui tes database nyata sebelum membandingkan latensi.
++
++Runner diagnostik harus mengambil akar repository aktif dari cwd dan memvalidasi guard lokal; jangan memakai path checkout lama yang tertanam di skrip investigasi. Simpan ID attempt untuk memisahkan respons yang diakui klien dari status GRADED. Tes tambahan di luar manifest yang kehilangan fixture tetap dicatat BLOCKED/NOT_RUN secara terpisah, tanpa mengubah kelulusan kasus wajib atau menyatakan seluruh suite lulus.
+diff --git a/apps/worker/src/outbox-order.integration.spec.ts b/apps/worker/src/outbox-order.integration.spec.ts
+new file mode 100644
+--- /dev/null
++++ b/apps/worker/src/outbox-order.integration.spec.ts
+@@ -0,0 +1,82 @@
++import { randomUUID } from 'node:crypto';
++import { afterAll, describe, expect, it } from 'vitest';
++import { eq, sql } from 'drizzle-orm';
++import {
++  analyticsEvents,
++  analyticsOutbox,
++  closeDatabaseConnection,
++  getDatabase,
++} from '@tka/database';
++import { drainOutboxBatch } from './outbox.js';
++
++// The package setup creates a migrated localhost database per integration file.
++const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
++
++integration('outbox candidate order regression', () => {
++  afterAll(async () => closeDatabaseConnection());
++
++  it('preserves chronological selection and the UUID tie-breaker', async () => {
++    const { db } = getDatabase();
++    const expected = [
++      '00000000-0000-4000-8000-000000000003',
++      '00000000-0000-4000-8000-000000000001',
++      '00000000-0000-4000-8000-000000000002',
++    ];
++    for (const id of [...expected].reverse())
++      await db.insert(analyticsOutbox).values({
++        id,
++        eventName: 'drill_completed',
++        entityType: 'assessmentAttempt',
++        entityId: randomUUID(),
++        occurredAt: new Date(id === expected[0] ? '2020-01-01T00:00:00Z' : '2020-01-01T00:00:01Z'),
++        payload: { fixture: true, order: id },
++      });
++    for (let i = 0; i < expected.length; i++) {
++      expect(await drainOutboxBatch(1)).toEqual({ processed: 1, failed: 0 });
++      const delivered = await db.select({ id: analyticsEvents.eventId }).from(analyticsEvents);
++      expect(delivered.map((row) => row.id).sort()).toEqual(expected.slice(0, i + 1).sort());
++    }
++  });
++
++  it('skips a locked earliest event and delivers it after release', async () => {
++    // One connection holds a lock while another runs the actual worker query.
++    expect(Number(process.env.DB_POOL_MAX ?? 10)).toBeGreaterThanOrEqual(2);
++    const { db } = getDatabase();
++    const ids = [randomUUID(), randomUUID()];
++    await db.insert(analyticsOutbox).values(
++      ids.map((id, index) => ({
++        id,
++        eventName: 'drill_completed',
++        entityType: 'assessmentAttempt',
++        entityId: randomUUID(),
++        occurredAt: new Date(Date.UTC(2020, 0, 2, 0, 0, index)),
++        payload: { fixture: true },
++      })),
++    );
++    await db.transaction(async (tx) => {
++      await tx.execute(sql`select id from analytics_outbox where id = ${ids[0]}::uuid for update`);
++      let timer: ReturnType<typeof setTimeout> | undefined;
++      try {
++        const result = await Promise.race([
++          drainOutboxBatch(1),
++          new Promise<never>((_, reject) => {
++            timer = setTimeout(() => reject(new Error('LOCKED_EVENT_NOT_SKIPPED')), 3000);
++          }),
++        ]);
++        expect(result).toEqual({ processed: 1, failed: 0 });
++        expect(
++          await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[0]!)),
++        ).toHaveLength(0);
++        expect(
++          await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[1]!)),
++        ).toHaveLength(1);
++      } finally {
++        clearTimeout(timer);
++      }
++    });
++    expect(await drainOutboxBatch(1)).toEqual({ processed: 1, failed: 0 });
++    expect(
++      await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[0]!)),
++    ).toHaveLength(1);
++  }, 15000);
++});
+diff --git a/apps/worker/src/outbox-batch.integration.spec.ts b/apps/worker/src/outbox-batch.integration.spec.ts
+new file mode 100644
+--- /dev/null
++++ b/apps/worker/src/outbox-batch.integration.spec.ts
+@@ -0,0 +1,186 @@
++import { randomUUID } from 'node:crypto';
++import { afterAll, afterEach, describe, expect, it, vi } from 'vitest';
++import { eq, inArray, isNull, sql } from 'drizzle-orm';
++import {
++  analyticsEvents,
++  analyticsOutbox,
++  closeDatabaseConnection,
++  getDatabase,
++} from '@tka/database';
++import { drainOutboxBatch, outboxStatus } from './outbox.js';
++
++const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
++integration('atomic outbox groups and poison-event fallback', () => {
++  afterAll(closeDatabaseConnection);
++  afterEach(async () => {
++    vi.restoreAllMocks();
++    const { db } = getDatabase();
++    await db
++      .update(analyticsOutbox)
++      .set({ failedAt: null })
++      .where(isNull(analyticsOutbox.processedAt));
++    await drainOutboxBatch(1000);
++  });
++  async function events(count: number) {
++    const rows = Array.from({ length: count }, (_, index) => ({
++      id: randomUUID(),
++      eventName: 'drill_completed',
++      eventVersion: '2',
++      entityType: 'assessmentAttempt',
++      entityId: randomUUID(),
++      correlationId: randomUUID(),
++      occurredAt: new Date(Date.UTC(2020, 0, 1, 0, 0, index)),
++      payload: { fixture: true, index, text: '∑ siswa 😊', optional: null },
++    }));
++    await getDatabase().db.insert(analyticsOutbox).values(rows);
++    return rows;
++  }
++  it('rejects invalid limits and reports an empty queue without work', async () => {
++    for (const limit of [0, -1, 1.5, 1001, NaN])
++      await expect(drainOutboxBatch(limit)).rejects.toThrow('OUTBOX_LIMIT_INVALID');
++    expect(await drainOutboxBatch()).toEqual({ processed: 0, failed: 0 });
++  });
++  it('respects the public limit and preserves full event contents with bounded SQL work', async () => {
++    const rows = await events(27);
++    const spy = vi.spyOn(getDatabase().client, 'unsafe');
++    expect(await drainOutboxBatch(25)).toEqual({ processed: 25, failed: 0 });
++    expect(spy.mock.calls.length).toBe(3);
++    spy.mockRestore();
++    const delivered = await getDatabase()
++      .db.select()
++      .from(analyticsEvents)
++      .where(
++        inArray(
++          analyticsEvents.eventId,
++          rows.map((r) => r.id),
++        ),
++      );
++    expect(delivered).toHaveLength(25);
++    for (const [index, event] of rows.entries()) {
++      const stored = delivered.find((r) => r.eventId === event.id);
++      if (index >= 25) expect(stored).toBeUndefined();
++      else
++        expect(stored).toMatchObject({
++          eventId: event.id,
++          eventName: event.eventName,
++          eventVersion: '2',
++          actorUserId: null,
++          entityType: event.entityType,
++          entityId: event.entityId,
++          correlationId: event.correlationId,
++          occurredAt: event.occurredAt,
++          payload: event.payload,
++        });
++    }
++  });
++  it('acknowledges partial and complete redelivery without rewriting existing analytics', async () => {
++    const rows = await events(4);
++    await getDatabase()
++      .db.insert(analyticsEvents)
++      .values(
++        rows
++          .slice(0, 2)
++          .map(({ id, ...event }) => ({ ...event, eventId: id, payload: { historical: true } })),
++      );
++    expect(await drainOutboxBatch(4)).toEqual({ processed: 4, failed: 0 });
++    const delivered = await getDatabase()
++      .db.select()
++      .from(analyticsEvents)
++      .where(
++        inArray(
++          analyticsEvents.eventId,
++          rows.map((r) => r.id),
++        ),
++      );
++    expect(delivered).toHaveLength(4);
++    expect(delivered.find((r) => r.eventId === rows[0]!.id)?.payload).toEqual({ historical: true });
++    await getDatabase()
++      .db.update(analyticsOutbox)
++      .set({ processedAt: null })
++      .where(
++        inArray(
++          analyticsOutbox.id,
++          rows.map((r) => r.id),
++        ),
++      );
++    expect(await drainOutboxBatch(4)).toEqual({ processed: 4, failed: 0 });
++    expect(
++      await getDatabase()
++        .db.select()
++        .from(analyticsEvents)
++        .where(
++          inArray(
++            analyticsEvents.eventId,
++            rows.map((r) => r.id),
++          ),
++        ),
++    ).toHaveLength(4);
++  });
++  for (const failure of ['insert', 'acknowledgment'] as const) {
++    it(`rolls back a failed group and isolates ${failure} failure without counting it twice`, async () => {
++      const rows = await events(4),
++        bad = rows[1]!;
++      const { db } = getDatabase();
++      const name = 'test_batch_' + randomUUID().replaceAll('-', '');
++      const table = failure === 'insert' ? 'analytics_events' : 'analytics_outbox';
++      const condition =
++        failure === 'insert'
++          ? `NEW.event_id='${bad.id}'::uuid`
++          : `NEW.id='${bad.id}'::uuid and NEW.processed_at is not null`;
++      await db.execute(
++        sql.raw(
++          `create function ${name}() returns trigger language plpgsql as $$ begin if ${condition} then raise exception 'TEST ONLY batch delivery failure'; end if; return NEW; end $$`,
++        ),
++      );
++      await db.execute(
++        sql.raw(
++          `create trigger ${name} before ${failure === 'insert' ? 'insert' : 'update'} on ${table} for each row execute function ${name}()`,
++        ),
++      );
++      try {
++        expect(await drainOutboxBatch(4)).toEqual({ processed: 3, failed: 1 });
++        expect(
++          await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, bad.id)),
++        ).toHaveLength(0);
++        expect(
++          await db
++            .select()
++            .from(analyticsEvents)
++            .where(
++              inArray(
++                analyticsEvents.eventId,
++                rows.map((r) => r.id),
++              ),
++            ),
++        ).toHaveLength(3);
++        expect(await outboxStatus()).toMatchObject({
++          pending: 1,
++          failed: 1,
++          retryReady: 0,
++          coolingDown: 1,
++        });
++        expect(await drainOutboxBatch(10)).toEqual({ processed: 0, failed: 0 });
++      } finally {
++        await db.execute(sql.raw(`drop trigger ${name} on ${table}`));
++        await db.execute(sql.raw(`drop function ${name}()`));
++      }
++    });
++  }
++  it('lets two consumers acknowledge disjoint groups exactly once', async () => {
++    const rows = await events(20);
++    const results = await Promise.all([drainOutboxBatch(10), drainOutboxBatch(10)]);
++    expect(results.reduce((n, r) => n + r.processed, 0)).toBe(20);
++    expect(results.reduce((n, r) => n + r.failed, 0)).toBe(0);
++    const delivered = await getDatabase()
++      .db.select()
++      .from(analyticsEvents)
++      .where(
++        inArray(
++          analyticsEvents.eventId,
++          rows.map((r) => r.id),
++        ),
++      );
++    expect(new Set(delivered.map((r) => r.eventId)).size).toBe(20);
++    expect((await outboxStatus()).pending).toBe(0);
++  });
++});
+diff --git a/scripts/qa/volume-flow.mjs b/scripts/qa/volume-flow.mjs
+new file mode 100644
+--- /dev/null
++++ b/scripts/qa/volume-flow.mjs
+@@ -0,0 +1,102 @@
++// Cumulative stages share one queue. A failed stage must never receive more load.
++export async function runVolumeStages(sizes, execute) {
++  if (
++    !Array.isArray(sizes) ||
++    sizes.length === 0 ||
++    sizes.some((n, i) => !Number.isSafeInteger(n) || n < 1 || (i > 0 && n <= sizes[i - 1]))
++  )
++    throw new Error('INVALID_VOLUME_STAGES');
++  const checks = [];
++  let stopped;
++  for (const count of sizes) {
++    const name = `volume-${count}-event-identity-and-payload`;
++    if (stopped) {
++      checks.push({
++        name,
++        count,
++        status: 'NOT_RUN',
++        reason: `PREVIOUS_STAGE_${stopped.status}: ${stopped.name}`,
++      });
++      continue;
++    }
++    const outcome = await execute({ count, name });
++    if (!outcome || !['PASS', 'FAIL', 'BLOCKED'].includes(outcome.status))
++      throw new Error('INVALID_VOLUME_STAGE_OUTCOME');
++    const check = { name, count, status: outcome.status };
++    if (outcome.reason) check.reason = outcome.reason;
++    checks.push(check);
++    if (check.status !== 'PASS') stopped = check;
++  }
++  return checks;
++}
++
++export function summarizeChecks(checks) {
++  if (!Array.isArray(checks) || checks.length === 0) throw new Error('EMPTY_CHECKS');
++  const result = { passed: 0, failed: 0, blocked: 0, skipped: 0, total: checks.length };
++  const field = { PASS: 'passed', FAIL: 'failed', BLOCKED: 'blocked', NOT_RUN: 'skipped' };
++  for (const check of checks) {
++    if (!Object.hasOwn(field, check.status)) throw new Error('UNKNOWN_CHECK_STATUS');
++    result[field[check.status]]++;
++  }
++  return result;
++}
++
++// EXISTS controls the loop; full counts/age remain required periodic/final evidence.
++// The deadline is cooperative: an in-flight SQL query/batch is not forcibly cancelled.
++export async function drainVolumeQueue({
++  budgetMs,
++  pending,
++  drainBatch,
++  snapshot,
++  onSnapshot = () => {},
++  sampleIntervalMs = 1000,
++  clock = () => performance.now(),
++}) {
++  if (
++    !Number.isFinite(budgetMs) ||
++    budgetMs <= 0 ||
++    !Number.isFinite(sampleIntervalMs) ||
++    sampleIntervalMs <= 0
++  )
++    throw new Error('INVALID_VOLUME_DRAIN_BOUND');
++  const start = clock();
++  let lastSample = start;
++  let batches = 0;
++  async function record(final) {
++    const state = await snapshot();
++    if (
++      !state ||
++      !Number.isSafeInteger(state.total) ||
++      !Number.isSafeInteger(state.pending) ||
++      state.pending < 0 ||
++      state.total < state.pending ||
++      !Number.isFinite(state.oldest_seconds) ||
++      state.oldest_seconds < 0
++    )
++      throw new Error('INVALID_VOLUME_SNAPSHOT');
++    await onSnapshot({ ...state, elapsedMs: clock() - start, batches, final });
++    return state;
++  }
++  await record(false);
++  while (clock() - start < budgetMs) {
++    const hasPending = await pending();
++    if (typeof hasPending !== 'boolean') throw new Error('INVALID_VOLUME_PENDING_PROBE');
++    if (!hasPending || clock() - start >= budgetMs) break;
++    await drainBatch(10);
++    batches++;
++    if (clock() - lastSample >= sampleIntervalMs) {
++      await record(false);
++      lastSample = clock();
++    }
++  }
++  const remaining = await record(true);
++  const elapsedMs = clock() - start;
++  if (remaining.pending > 0 || elapsedMs > budgetMs)
++    throw Object.assign(
++      new Error(
++        'Volume drain budget exhausted or backlog remains; capacity conclusion remains incomplete',
++      ),
++      { code: 'EXPERIMENT_INCOMPLETE', remaining, elapsedMs },
++    );
++  return { ...remaining, batches, elapsedMs: clock() - start };
++}
+diff --git a/scripts/qa/volume-flow.test.mjs b/scripts/qa/volume-flow.test.mjs
+new file mode 100644
+--- /dev/null
++++ b/scripts/qa/volume-flow.test.mjs
+@@ -0,0 +1,218 @@
++import assert from 'node:assert/strict';
++import test from 'node:test';
++import { drainVolumeQueue, runVolumeStages, summarizeChecks } from './volume-flow.mjs';
++
++test('blocked 10k stage prevents any 100k insertion and preserves three planned outcomes', async () => {
++  const called = [];
++  const checks = await runVolumeStages([1000, 10000, 100000], async ({ count }) => {
++    called.push(count);
++    return count === 10000 ? { status: 'BLOCKED', reason: 'drain bound' } : { status: 'PASS' };
++  });
++  assert.deepEqual(called, [1000, 10000]);
++  assert.deepEqual(
++    checks.map((c) => c.status),
++    ['PASS', 'BLOCKED', 'NOT_RUN'],
++  );
++  assert.match(checks[2].reason, /PREVIOUS_STAGE_BLOCKED/);
++  assert.deepEqual(summarizeChecks(checks), {
++    passed: 1,
++    failed: 0,
++    blocked: 1,
++    skipped: 1,
++    total: 3,
++  });
++});
++
++test('integrity failure stops escalation while preserving FAIL', async () => {
++  let calls = 0;
++  const checks = await runVolumeStages([1000, 10000, 100000], async () => {
++    calls++;
++    return { status: 'FAIL', reason: 'payload mismatch' };
++  });
++  assert.equal(calls, 1);
++  assert.deepEqual(summarizeChecks(checks), {
++    passed: 0,
++    failed: 1,
++    blocked: 0,
++    skipped: 2,
++    total: 3,
++  });
++});
++
++test('all stages may run when previous identity/content reconciliation passes', async () => {
++  const called = [];
++  const checks = await runVolumeStages([1000, 10000, 100000], async ({ count }) => {
++    called.push(count);
++    return { status: 'PASS' };
++  });
++  assert.deepEqual(called, [1000, 10000, 100000]);
++  assert.equal(summarizeChecks(checks).passed, 3);
++});
++
++test('invalid or missing evidence and invalid plans cannot silently pass', async () => {
++  for (const sizes of [[], [0], [1000, 1000], [10000, 1000], [1.5]])
++    await assert.rejects(
++      runVolumeStages(sizes, async () => ({ status: 'PASS' })),
++      /INVALID_VOLUME_STAGES/,
++    );
++  for (const outcome of [undefined, {}, { status: 'NOT_RUN' }, { status: 'UNKNOWN' }])
++    await assert.rejects(
++      runVolumeStages([1000], async () => outcome),
++      /INVALID_VOLUME_STAGE_OUTCOME/,
++    );
++  await assert.rejects(
++    runVolumeStages([1000], async () => {
++      throw new Error('runner crashed');
++    }),
++    /runner crashed/,
++  );
++  assert.throws(() => summarizeChecks([]), /EMPTY_CHECKS/);
++  assert.throws(() => summarizeChecks([{ status: 'UNKNOWN' }]), /UNKNOWN_CHECK_STATUS/);
++});
++
++test('NOT_RUN maps to skipped and is never counted as passed', () => {
++  assert.deepEqual(summarizeChecks([{ status: 'NOT_RUN' }]), {
++    passed: 0,
++    failed: 0,
++    blocked: 0,
++    skipped: 1,
++    total: 1,
++  });
++});
++
++function queueFixture({
++  count = 40,
++  batchMs = 100,
++  budgetMs = 1000,
++  sampleIntervalMs = 1000,
++} = {}) {
++  let time = 0,
++    left = count,
++    snapshots = 0;
++  const batchSizes = [],
++    samples = [];
++  return {
++    args: {
++      budgetMs,
++      sampleIntervalMs,
++      clock: () => time,
++      pending: async () => left > 0,
++      snapshot: async () => {
++        snapshots++;
++        return { total: count, pending: left, oldest_seconds: left ? 1 : 0 };
++      },
++      drainBatch: async (size) => {
++        batchSizes.push(size);
++        left = Math.max(0, left - size);
++        time += batchMs;
++      },
++      onSnapshot: (state) => samples.push(state),
++    },
++    batchSizes,
++    samples,
++    snapshots: () => snapshots,
++  };
++}
++
++test('fast drain uses probes and final counts without full COUNT per batch', async () => {
++  const f = queueFixture();
++  const result = await drainVolumeQueue(f.args);
++  assert.equal(result.pending, 0);
++  assert.deepEqual(f.batchSizes, [10, 10, 10, 10]);
++  assert.equal(f.snapshots(), 2);
++  assert.equal(f.samples.at(-1).final, true);
++});
++
++test('deadline retains backlog evidence and does not start another batch', async () => {
++  const f = queueFixture({ count: 100, budgetMs: 200 });
++  await assert.rejects(drainVolumeQueue(f.args), (error) => {
++    assert.equal(error.code, 'EXPERIMENT_INCOMPLETE');
++    assert.equal(error.remaining.pending, 80);
++    return true;
++  });
++  assert.equal(f.batchSizes.length, 2);
++  assert.equal(f.samples.at(-1).pending, 80);
++  assert.equal(f.samples.at(-1).final, true);
++});
++
++test('a slow probe exhausting the budget cannot start a new batch', async () => {
++  let time = 0,
++    batches = 0;
++  await assert.rejects(
++    drainVolumeQueue({
++      budgetMs: 120000,
++      clock: () => time,
++      pending: async () => {
++        time = 120001;
++        return true;
++      },
++      drainBatch: async () => {
++        batches++;
++      },
++      snapshot: async () => ({ total: 1000, pending: 1000, oldest_seconds: 1 }),
++    }),
++    { code: 'EXPERIMENT_INCOMPLETE' },
++  );
++  assert.equal(batches, 0);
++});
++
++test('a final in-flight batch finishing late is incomplete even if pending becomes zero', async () => {
++  const f = queueFixture({ count: 10, batchMs: 120001, budgetMs: 120000 });
++  await assert.rejects(drainVolumeQueue(f.args), (error) => {
++    assert.equal(error.code, 'EXPERIMENT_INCOMPLETE');
++    assert.equal(error.remaining.pending, 0);
++    assert.equal(error.elapsedMs, 120001);
++    return true;
++  });
++  assert.equal(f.batchSizes.length, 1);
++});
++
++test('periodic samples include age/count and final evidence is unconditional', async () => {
++  const f = queueFixture({ count: 100, batchMs: 250, budgetMs: 3000 });
++  await drainVolumeQueue(f.args);
++  assert.equal(f.snapshots(), 4); // initial, ~1s, ~2s, final
++  assert.deepEqual(
++    f.samples.map((s) => s.pending),
++    [100, 60, 20, 0],
++  );
++  assert.equal(f.samples.at(-1).final, true);
++});
++
++test('empty probe cannot replace final count evidence or claim drain success', async () => {
++  let snapshots = 0;
++  await assert.rejects(
++    drainVolumeQueue({
++      budgetMs: 1000,
++      pending: async () => false,
++      drainBatch: async () => {
++        assert.fail('must not drain after empty probe');
++      },
++      snapshot: async () => {
++        snapshots++;
++        return { total: 3, pending: 3, oldest_seconds: 1 };
++      },
++    }),
++    { code: 'EXPERIMENT_INCOMPLETE' },
++  );
++  assert.equal(snapshots, 2);
++});
++
++test('invalid snapshot, probe and sampling bounds cannot produce success', async () => {
++  const base = queueFixture().args;
++  await assert.rejects(drainVolumeQueue({ ...base, budgetMs: 0 }), /INVALID_VOLUME_DRAIN_BOUND/);
++  await assert.rejects(
++    drainVolumeQueue({ ...base, sampleIntervalMs: 0 }),
++    /INVALID_VOLUME_DRAIN_BOUND/,
++  );
++  await assert.rejects(
++    drainVolumeQueue({
++      ...base,
++      snapshot: async () => ({ total: 1, pending: 2, oldest_seconds: 1 }),
++    }),
++    /INVALID_VOLUME_SNAPSHOT/,
++  );
++  await assert.rejects(
++    drainVolumeQueue({ ...base, pending: async () => undefined }),
++    /INVALID_VOLUME_PENDING_PROBE/,
++  );
++});

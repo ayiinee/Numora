@@ -1,0 +1,174 @@
+{
+  "schemaVersion": 1,
+  "kind": "ENGINEERING_EVIDENCE",
+  "recordedAt": "2026-10-28T01:51:36.912Z",
+  "scope": "QA workflow harness fixture",
+  "source": {
+    "baseCommit": "43b4cb7560e71e7154ad6f8c01d7652130c57e43",
+    "branch": "feat/qa-scenario-workflow",
+    "dirty": true,
+    "modifiedTest": "scripts/qa/http-observer.test.mjs",
+    "originalTestSha256": "2bae5ecbb1f05d93d15a320f001fac645ddcf89f359fc9e247e0caec1061af4c",
+    "patchedTestSha256": "63cc4ef968b485d46b0649f03cc482eb2d2c624f25e6d97fe60c77dac6cfb5a4"
+  },
+  "originalCi": {
+    "runId": 40603050557,
+    "coreJobId": 122535679158,
+    "url": "https://github.com/ayiinee/Numora/actions/runs/40603050557/job/122535679158",
+    "pullRequestHead": "43b4cb7560e71e7154ad6f8c01d7652130c57e43",
+    "checkoutMergeSha": "05b63534dd768f56a011e6998a25b445b362949e",
+    "mergeTestMatchesHead": true,
+    "workflow": {
+      "tests": 58,
+      "pass": 57,
+      "fail": 1,
+      "skipped": 0
+    },
+    "failure": "ENOENT from mkdtempSync when qa/.local does not exist",
+    "checks": [
+      {
+        "name": "quality",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ayiinee/Numora/actions/runs/40603050557/job/122537879812"
+      },
+      {
+        "name": "core",
+        "status": "completed",
+        "conclusion": "failure",
+        "url": "https://github.com/ayiinee/Numora/actions/runs/40603050557/job/122535679158"
+      },
+      {
+        "name": "browser-e2e (2)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ayiinee/Numora/actions/runs/40603050557/job/122535679147"
+      },
+      {
+        "name": "browser-e2e (1)",
+        "status": "completed",
+        "conclusion": "success",
+        "url": "https://github.com/ayiinee/Numora/actions/runs/40603050557/job/122535678839"
+      }
+    ]
+  },
+  "reproduction": {
+    "node": "v24.22.1",
+    "platform": "win32",
+    "missingLocalDirectory": true,
+    "before": {
+      "exitCode": 1,
+      "tests": 4,
+      "pass": 3,
+      "fail": 1,
+      "skipped": 0
+    },
+    "after": {
+      "exitCode": 0,
+      "tests": 4,
+      "pass": 4,
+      "fail": 0,
+      "skipped": 0
+    }
+  },
+  "verification": {
+    "node": "v24.22.1",
+    "platform": "win32",
+    "workflow": {
+      "tests": 58,
+      "pass": 58,
+      "fail": 0,
+      "skipped": 0
+    },
+    "repositoryGuards": {
+      "tests": 68,
+      "pass": 68,
+      "fail": 0,
+      "skipped": 0
+    },
+    "checks": [
+      {
+        "id": "workflow",
+        "command": "pnpm test:qa-workflow",
+        "startedAt": "2026-10-28T01:49:06.196Z",
+        "finishedAt": "2026-10-28T01:49:12.721Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "id": "manifest",
+        "command": "pnpm qa validate",
+        "startedAt": "2026-10-28T01:49:12.723Z",
+        "finishedAt": "2026-10-28T01:49:13.214Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "id": "qa-typecheck",
+        "command": "pnpm exec tsc -p qa/tsconfig.json",
+        "startedAt": "2026-10-28T01:49:13.215Z",
+        "finishedAt": "2026-10-28T01:49:17.478Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "id": "lint",
+        "command": "pnpm exec eslint scripts/qa/http-observer.test.mjs --max-warnings=0",
+        "startedAt": "2026-10-28T01:49:17.478Z",
+        "finishedAt": "2026-10-28T01:49:22.495Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "id": "format",
+        "command": "pnpm exec prettier --check scripts/qa/http-observer.test.mjs",
+        "startedAt": "2026-10-28T01:49:22.495Z",
+        "finishedAt": "2026-10-28T01:49:23.329Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      },
+      {
+        "id": "repository-guards",
+        "command": "pnpm test:checks",
+        "startedAt": "2026-10-28T01:49:23.330Z",
+        "finishedAt": "2026-10-28T01:49:36.878Z",
+        "exitCode": 0,
+        "signal": null,
+        "error": null
+      }
+    ]
+  },
+  "scopeBoundary": {
+    "applicationChanged": false,
+    "observerImplementationChanged": false,
+    "ciWorkflowChanged": false,
+    "assertionsWeakened": false,
+    "servicesStarted": false,
+    "scenarioFullRerun": false,
+    "pushed": false,
+    "merged": false,
+    "deployed": false,
+    "linuxPatchedCi": "NOT_RUN",
+    "linuxReason": "No local WSL installation; candidate has not been pushed to GitHub."
+  },
+  "scenarioReference": {
+    "runId": "838c1952-e8f9-4681-8396-ea74365157a1",
+    "verdict": "FAIL",
+    "caseCounts": {
+      "PASS": 13,
+      "FAIL": 1,
+      "BLOCKED": 0,
+      "NOT_RUN": 1
+    }
+  },
+  "remaining": [
+    "Patched Linux CI requires verification on a new published commit.",
+    "Load/submit acknowledgments and host headroom retest remain open.",
+    "Human keyboard/usability, real OAuth, staging, academic acceptance and migration integration remain open."
+  ]
+}

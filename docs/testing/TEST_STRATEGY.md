@@ -1,4 +1,32 @@
-# Test Strategy
+# Strategi pengujian berbasis skenario
+
+**ENGINEERING DECISION — workflow 27 Oktober 2026.** Sumber aturan aktif mengikuti [QA Guide](QA_GUIDE.md); prosedur operasional mengikuti [QA_WORKFLOW](QA_WORKFLOW.md).
+
+## Strategi aktif
+
+Satu folder mewakili satu tujuan bisnis. Manifest memetakan source → case → check → bukti. Unit/integration/E2E adalah lapisan; security/performance/accessibility adalah aspek kualitas dan dapat memakai tes yang sama. Regression mencakup semua lapisan yang terdampak.
+
+| Profil   | Cakupan                                                                                   |
+| -------- | ----------------------------------------------------------------------------------------- |
+| quick    | Lint/typecheck/kontrak bersama, unit dan component terkait                                |
+| standard | quick + integrasi PostgreSQL serta HTTP/browser terhubung                                 |
+| full     | standard + axe, k6, volume/velocity/variety, recovery, dependency audit dan status manual |
+
+Tes aturan bersama tetap dirujuk dari modul asal. Tes khusus baru berada di qa/scenarios. Konfigurasi API mewarisi transformer metadata Nest. Minimum jumlah tes, file yang benar-benar dijalankan dan skip diperiksa; exit code nol saja tidak cukup.
+
+Pilot SIS-001 memeriksa 7/10 vs 8/10, XP/rounding/900 detik, latest/best/unlock, persistensi, submit idempotent, rollback dan akses. Connected menggunakan API/database nyata dengan batas autentikasi sintetis. Axe pada 390/768/1440 tidak menggantikan keyboard/UAT manual.
+
+Parameter eksperimen berada pada qa/config.json. k6 menghasilkan trafik HTTP; volume/velocity memasukkan event langsung ke outbox dan memakai consumer produksi. Identitas, versi, entity dan payload direkonsiliasi. Variety mencakup payload valid pada worker dan penolakan envelope invalid pada generator kontrak; jangan menyebutnya bukti worker menolak baris DB malformed. Error rate 20% sesudah satu menit merupakan safety stop eksperimen, bukan SLO produk.
+
+Full dibatasi 60 menit setelah setup/build. Check yang belum selesai tetap terlihat. Recovery hanya menghentikan proses worker milik run, memakai proxy koneksi terisolasi dan restore ke DB milik run. Tidak membuktikan R2/cloud failover/rollback atau RTO/RPO produksi.
+
+Setiap run connected memiliki database dan prefix Redis sendiri. Jangan memakai cloud Development sebagai DB tes. Perubahan fingerprint membatalkan penggunaan PASS lama. Resume mempertahankan riwayat dan memulai run verifikasi baru, tanpa mencampur kelulusan antarversi.
+
+CI dan clean-SHA release-chain guard lama dipertahankan. Bukti draft SHA+fingerprint tidak menggantikan release acceptance. Staging memerlukan deployment teridentifikasi, Google OAuth nyata serta izin/data QA.
+
+## Strategi historis — telah digantikan bila bertentangan
+
+Bagian di bawah dipertahankan sebagai konteks lama, bukan target kapasitas/SLO yang disahkan. Aturan Tryout 35 soal, satu kelas, pergantian varian, serta XP/stars pending telah digantikan sumber aktif. Manifest dan strategi aktif di atas menentukan eksekusi baru.
 
 ## Objectives
 

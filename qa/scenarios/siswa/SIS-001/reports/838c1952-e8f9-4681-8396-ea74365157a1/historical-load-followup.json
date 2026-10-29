@@ -1,0 +1,17 @@
+{
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "observedAt": "2026-10-27T20:14:57.060Z",
+  "method": "READ_ONLY dedicated historical run database",
+  "packageId": "38dc2396-aa27-4897-9fa1-34b9be678e18",
+  "originalSnapshot": {
+    "graded": 3603,
+    "broken": 0,
+    "accepted": 3573
+  },
+  "attempts": 3822,
+  "graded": 3618,
+  "broken": [],
+  "receiptEvidenceAtOriginalRun": "NOT_COLLECTED",
+  "historicalFailureUnchanged": true,
+  "conclusion": "Original client identities cannot be reconstructed from a total counter. New diagnostic must be a separate run; historical mismatch remains unproven, not converted to PASS."
+}

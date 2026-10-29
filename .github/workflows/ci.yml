@@ -9,7 +9,7 @@ permissions:
   contents: read
 
 jobs:
-  quality:
+  core:
     env:
       TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
     runs-on: ubuntu-latest
@@ -47,13 +47,17 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
 
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
 
-      - name: Validate contracts
+      - name: Validate QA workflow
+        # QA harness checks do not require credentials or cloud services.
+        run: pnpm test:qa-workflow && pnpm qa validate && pnpm exec tsc -p qa/tsconfig.json
+
+      - name: Validate product contracts
         run: pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check
 
       - name: Lint
@@ -115,11 +119,6 @@ jobs:
           path: .tmp/job06-evidence/connected.json
           if-no-files-found: warn
 
-      - name: Browser E2E
-        env:
-          DEBUG: pw:webserver
-        run: pnpm --filter @tka/web test:e2e
-
       - name: Build
         run: pnpm build
 
@@ -127,3 +126,60 @@ jobs:
         run: |
           pnpm openapi:generate
           git diff --exit-code -- packages/contracts/openapi/openapi.json
+
+  browser-e2e:
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate complete browser partition
+        run: node scripts/qa/browser-shards.mjs plan
+      - name: Install browser
+        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+      - name: Browser E2E
+        env:
+          DEBUG: pw:webserver
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/.tmp/browser-e2e-${{ matrix.shard }}.json
+        # Test-level sharding balances large files; one worker keeps each host serial.
+        run: pnpm --filter @tka/web test:e2e --fully-parallel --shard=${{ matrix.shard }}/2 --reporter=line,json
+      - name: Verify exact browser result identities
+        if: always()
+        run: node scripts/qa/browser-shards.mjs verify ${{ matrix.shard }}
+      - name: Upload sanitized browser evidence
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-shard-${{ matrix.shard }}-${{ github.sha }}
+          path: |
+            .tmp/browser-shards.json
+            .tmp/browser-result-${{ matrix.shard }}.json
+          if-no-files-found: warn
+
+  # Retain the required check name. A skipped/failed dependency must not bypass it.
+  quality:
+    if: always()
+    needs: [core, browser-e2e]
+    runs-on: ubuntu-latest
+    timeout-minutes: 1
+    steps:
+      - name: Require core and every browser shard
+        env:
+          CORE_RESULT: ${{ needs.core.result }}
+          BROWSER_RESULT: ${{ needs.browser-e2e.result }}
+        run: |
+          test "$CORE_RESULT" = success
+          test "$BROWSER_RESULT" = success

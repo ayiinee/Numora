@@ -5,6 +5,7 @@ import { randomUUID } from 'node:crypto';
 import { execFileSync } from 'node:child_process';
 import { fileURLToPath } from 'node:url';
 import { inArray } from 'drizzle-orm';
+import { seedReadyDrillFixture } from '../../../packages/testing/ready-drill-fixture.mjs';
 const database = new URL(process.env.TEST_DATABASE_URL ?? '');
 const redis = new URL(process.env.TEST_REDIS_URL ?? '');
 if (
@@ -20,6 +21,9 @@ Object.assign(process.env, {
   REDIS_URL: process.env.TEST_REDIS_URL,
   BULLMQ_PREFIX: `job16-${randomUUID()}`,
   PVP_MODE: 'demo',
+  // AppModule also loads local .env files; the three-difficulty fixture must stay strict.
+  PVP_CONTENT_MODE: 'strict',
+  PVP_NEW_MATCHES_ENABLED: 'true',
   ALLOW_DEMO_SEED: 'true',
   ALLOW_SYNTHETIC_CONTENT: 'true',
   SUPABASE_URL: 'http://localhost:3452',
@@ -61,6 +65,11 @@ await db.update(questionVersions).set({
     pvpDemoId(`version:${difficulty}:${i + 1}`))),
 ));
 await seedDemoLearning(db);
+await seedReadyDrillFixture(client, {
+  reviewerId: reviewer.id,
+  levelIds: ['00000000-0000-4000-8000-000000000102'],
+  testDatabaseUrl: process.env.TEST_DATABASE_URL,
+});
 const actors = {};
 for (const alias of ['mandiri', 'school']) {
   const id = randomUUID();

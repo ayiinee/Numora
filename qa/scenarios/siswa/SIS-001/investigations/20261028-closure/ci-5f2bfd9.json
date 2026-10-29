@@ -1,0 +1,137 @@
+{
+  "head": "5f2bfd92c8bef9452a2c19288c40f7af0fceb817",
+  "observedAt": "2026-10-27T21:22:43.541Z",
+  "checks": [
+    {
+      "id": 122466089266,
+      "status": "completed",
+      "conclusion": "failure",
+      "url": "https://github.com/ayiinee/Numora/actions/runs/40582718056/job/122466089266"
+    }
+  ],
+  "steps": [
+    {
+      "name": "Set up job",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Initialize containers",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Checkout",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Enable Corepack",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Setup Node.js",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install dependencies",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate QA workflow",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Validate product contracts",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Lint",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Typecheck",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Test",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "JOB-10 connected IRT foundation on one SHA",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload JOB-10 connected evidence",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Install browser for E2E",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Connected release chain (real API, PostgreSQL and Redis)",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Upload sanitized release-chain evidence",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Browser E2E",
+      "status": "completed",
+      "conclusion": "failure"
+    },
+    {
+      "name": "Build",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Check OpenAPI freshness",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Setup Node.js",
+      "status": "completed",
+      "conclusion": "skipped"
+    },
+    {
+      "name": "Post Checkout",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Stop containers",
+      "status": "completed",
+      "conclusion": "success"
+    },
+    {
+      "name": "Complete job",
+      "status": "completed",
+      "conclusion": "success"
+    }
+  ],
+  "browser": {
+    "selected": 194,
+    "passed": 183,
+    "notRun": 11,
+    "failedAssertions": 0,
+    "globalTimeoutSeconds": 900
+  },
+  "interpretation": "Suite budget exhausted; no passing claim for missing tests or skipped build/freshness. Full SIS001 on b33954b remains separate and FAIL."
+}
