@@ -1,7 +1,8 @@
 'use client';
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
+import { ApiProblem, apiRequest } from '@/lib/api';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
-import { apiRequest } from '@/lib/api';
+import { uploadExcelMedia } from './content-excel-api';
 import { ContentImportScreen } from './content-import';
 import {
   getUpload,
@@ -10,7 +11,6 @@ import {
   saveUpload,
   validateUpload,
 } from './content-upload-api';
-import { uploadExcelMedia } from './content-excel-api';
 import type { UploadDetailDto } from './generated-types';
 const auth = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('@/features/onboarding/auth', () => ({
@@ -20,7 +20,7 @@ vi.mock('next/navigation', () => ({
   usePathname: () => '/admin/content/imports',
   useRouter: () => ({ replace: vi.fn() }),
 }));
-vi.mock('@/lib/api', () => ({ apiRequest: vi.fn() }));
+vi.mock('@/lib/api', async (original) => ({ ...(await original<object>()), apiRequest: vi.fn() }));
 vi.mock('./content-upload-api', () => ({
   getUpload: vi.fn(),
   listUploads: vi.fn(),
@@ -92,6 +92,7 @@ beforeEach(() => {
       displayName: 'TEST',
       role: 'ADMIN',
       status: 'ACTIVE',
+      adminRole: 'CONTENT_DATA_MODERATION',
       capabilities: ['CONTENT_MANAGE'],
     },
   };
@@ -114,6 +115,63 @@ beforeEach(() => {
   vi.mocked(listUploads).mockResolvedValue({ items: [fresh], total: 1 });
 });
 afterEach(cleanup);
+it('closes an already loaded preview when validation rejects access', async () => {
+  await upload();
+  fireEvent.change(screen.getByLabelText('Judul paket'), { target: { value: 'TEST title' } });
+  vi.mocked(validateUpload).mockRejectedValueOnce(
+    new ApiProblem(403, 'FORBIDDEN', 'Akses dicabut.'),
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Lanjutkan ke pemetaan' }));
+  await screen.findByText('Akses dicabut.');
+  expect(screen.queryByText('TEST stem')).toBeNull();
+  expect(screen.queryByLabelText('Judul paket')).toBeNull();
+  expect(saveUpload).not.toHaveBeenCalled();
+});
+it('preserves the local preview and title after a stale revision instead of silently reloading', async () => {
+  await upload();
+  fireEvent.change(screen.getByLabelText('Judul paket'), {
+    target: { value: 'Local unsaved title' },
+  });
+  vi.mocked(validateUpload).mockRejectedValueOnce(
+    new ApiProblem(
+      409,
+      'STALE_REVISION',
+      'Revisi sudah berubah. Muat ulang sesi sebelum menyimpan.',
+    ),
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Lanjutkan ke pemetaan' }));
+  await screen.findByText(/Revisi sudah berubah/);
+  expect((screen.getByLabelText('Judul paket') as HTMLInputElement).value).toBe(
+    'Local unsaved title',
+  );
+  expect(screen.getByText('TEST stem')).toBeTruthy();
+  expect(getUpload).not.toHaveBeenCalled();
+  expect(saveUpload).not.toHaveBeenCalled();
+});
+it('requests five upload history rows and resets pagination when filtering', async () => {
+  vi.mocked(listUploads).mockImplementation(async (_token, query) => {
+    const offset = Number(new URLSearchParams(query).get('offset'));
+    return {
+      items: Array.from({ length: offset ? 1 : 5 }, (_, n) => ({
+        ...fresh,
+        id: `upload-${offset + n}`,
+        fileName: `TEST-${offset + n}.xlsx`,
+      })),
+      total: 6,
+    };
+  });
+  render(<ContentImportScreen />);
+  fireEvent.click(screen.getByRole('button', { name: 'Riwayat unggahan' }));
+  await screen.findByText('TEST-4.xlsx');
+  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('limit')).toBe('5');
+  fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
+  await screen.findByText('TEST-5.xlsx');
+  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('offset')).toBe('5');
+  fireEvent.change(screen.getByLabelText('Cari file atau judul'), { target: { value: 'TEST' } });
+  await waitFor(() =>
+    expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('offset')).toBe('0'),
+  );
+});
 async function upload() {
   render(<ContentImportScreen />);
   expect(screen.queryByLabelText('Jenis paket')).toBeNull();

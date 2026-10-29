@@ -10,21 +10,25 @@ import {
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { AdminGuard, type AdminRequest } from '../identity/admin.guard';
-import { AdminAccess } from '../identity/admin-permissions';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
 import {
   AdminClassDto,
   AdminClassListDto,
   AdminClassQueryDto,
-  AdminUserDto,
   AdminUserListDto,
   AdminUserQueryDto,
+  AdminUserDetailDto,
+  AdminMembershipsDto,
+  AdminRosterDto,
+  AdminRosterQueryDto,
 } from './operations.dto';
+import { ContentPageDto } from '../content/content.dto';
 import { AdminOperationsService } from './operations.service';
 
 @ApiTags('admin-operations')
 @ApiBearerAuth()
 @UseGuards(AdminGuard)
-@AdminAccess('operations')
+@RequireAdminCapability('OPERATIONS_MANAGE')
 @Controller('admin')
 export class AdminOperationsController {
   constructor(
@@ -32,13 +36,26 @@ export class AdminOperationsController {
   ) {}
   @Get('users')
   @ApiOkResponse({ type: AdminUserListDto })
-  users(@Query() query: AdminUserQueryDto, @Req() request: AdminRequest) {
-    return this.operations.users(query, request.adminRole === 'SUPER_ADMIN');
+  users(@Req() request: AdminRequest, @Query() query: AdminUserQueryDto) {
+    return this.operations.users(query, request.adminRole);
   }
   @Get('users/:userId')
-  @ApiOkResponse({ type: AdminUserDto })
-  user(@Param('userId', ParseUUIDPipe) id: string, @Req() request: AdminRequest) {
-    return this.operations.user(id, request.adminRole === 'SUPER_ADMIN');
+  @ApiOkResponse({ type: AdminUserDetailDto })
+  user(@Req() request: AdminRequest, @Param('userId', ParseUUIDPipe) id: string) {
+    return this.operations.user(id, request.adminRole);
+  }
+  @Get('users/:userId/memberships') @ApiOkResponse({ type: AdminMembershipsDto }) memberships(
+    @Req() request: AdminRequest,
+    @Param('userId', ParseUUIDPipe) id: string,
+    @Query() query: ContentPageDto,
+  ) {
+    return this.operations.memberships(id, request.adminRole, query);
+  }
+  @Get('classes/:classId/roster') @ApiOkResponse({ type: AdminRosterDto }) roster(
+    @Param('classId', ParseUUIDPipe) id: string,
+    @Query() query: AdminRosterQueryDto,
+  ) {
+    return this.operations.roster(id, query);
   }
   @Get('classes')
   @ApiOkResponse({ type: AdminClassListDto })

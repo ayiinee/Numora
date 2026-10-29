@@ -83,6 +83,9 @@ function DrillForm({
           ? 'Semua soal sudah dijawab. Kirim Drill sekarang?'
           : `${emptyCount} soal belum dijawab. Kirim Drill sekarang?`
       }
+      loadMedia={async (questionId, phase, assetIds) =>
+        (await learningApi.media(token, attempt.id, questionId, phase, assetIds)).media
+      }
       onSaveTyped={(questionId, optionId) =>
         learningApi.saveAnswer(token, attempt.id, questionId, optionId)
       }

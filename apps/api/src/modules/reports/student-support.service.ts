@@ -17,6 +17,7 @@ import {
   drillAttempts,
   getDatabase,
   levels,
+  learningVideos,
   questionReports,
   videoReports,
   videoSubchapterMappings,
@@ -122,7 +123,10 @@ export class StudentSupportService {
         ...(body.eventName === 'video_clicked' ? { mappingId: body.mappingId } : {}),
       };
       if (body.eventName === 'video_clicked') {
-        const [mapping] = await db.select().from(videoSubchapterMappings).where(eq(videoSubchapterMappings.id, body.mappingId!));
+        const [mapping] = await db
+          .select()
+          .from(videoSubchapterMappings)
+          .where(eq(videoSubchapterMappings.id, body.mappingId!));
         if (!mapping) throw new NotFoundException('Pemetaan tidak ditemukan.');
         payload.videoId = mapping.videoId;
       }
@@ -313,6 +317,12 @@ export class StudentSupportService {
         .where(eq(videoSubchapterMappings.id, body.mappingId))
         .for('share');
       if (!mapping) throw new NotFoundException('Pemetaan tidak ditemukan.');
+      const [target] = await tx
+        .select()
+        .from(learningVideos)
+        .where(eq(learningVideos.id, mapping.videoId))
+        .for('share');
+      if (!target) throw new NotFoundException('Video tidak ditemukan.');
       const context = {
         attemptId: body.attemptId,
         levelId: attempt.levelId ?? null,
@@ -327,6 +337,14 @@ export class StudentSupportService {
             reporterStudentId: studentId,
             mappingId: body.mappingId,
             attemptContext: context,
+            targetSnapshot: {
+              title: target.title,
+              url: target.url,
+              source: target.source,
+              videoId: target.id,
+              subchapterId: mapping.subchapterId,
+              recommendationOrder: mapping.recommendationOrder,
+            },
             category: body.category.trim(),
             details: body.details?.trim(),
           })

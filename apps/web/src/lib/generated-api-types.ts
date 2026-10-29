@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("CONTENT_MANAGE")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
+export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("ADMIN_ACCOUNTS_MANAGE" | "OPERATIONS_MANAGE" | "OPERATIONS_LIMITED_READ" | "CONTENT_MANAGE" | "ANALYTICS_OPERATIONS" | "ANALYTICS_CONTENT" | "AUDIT_READ")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
 
 export type RegisterProfileDto = { "role": "STUDENT" | "TEACHER"; };
 
@@ -37,19 +37,19 @@ export type MonitoredLevelDto = { "levelId": string; "chapterLabel": string; "su
 
 export type TeacherStudentProgressDto = { "class": ClassDto; "student": StudentDto; "latestDrillScore": number | null; "levels": (MonitoredLevelDto)[]; };
 
-export type AdminSchoolDto = { "id": string; "code": string; "name": string; "status": "ACTIVE" | "INACTIVE"; };
+export type AdminSchoolDto = { "id": string; "code": string; "name": string; "address": string | null; "status": "ACTIVE" | "INACTIVE"; };
 
-export type AdminSchoolsDto = { "items": (AdminSchoolDto)[]; };
+export type AdminSchoolsDto = { "items": (AdminSchoolDto)[]; "nextOffset": number | null; };
 
-export type CreateSchoolDto = { "code": string; "name": string; };
+export type CreateSchoolDto = { "address"?: string; "code": string; "name": string; };
 
-export type UpdateSchoolDto = { "name"?: string; "status"?: "ACTIVE" | "INACTIVE"; };
+export type UpdateSchoolDto = { "address"?: string | null; "name"?: string; "status"?: "ACTIVE" | "INACTIVE"; };
 
 export type TokenDto = { "id": string; "token": string; "expiresAt": string; };
 
-export type TokenSummaryDto = { "id": string; "expiresAt": string; "usedAt": string | null; "revokedAt": string | null; };
+export type TokenSummaryDto = { "id": string; "expiresAt": string; "usedAt": string | null; "revokedAt": string | null; "createdAt": string; "usedByUserId": string | null; "usedByName": string | null; "status": "AVAILABLE" | "EXPIRED" | "USED" | "REVOKED"; };
 
-export type TokenListDto = { "items": (TokenSummaryDto)[]; };
+export type TokenListDto = { "items": (TokenSummaryDto)[]; "nextOffset": number | null; };
 
 export type RevokedDto = { "revoked": boolean; };
 

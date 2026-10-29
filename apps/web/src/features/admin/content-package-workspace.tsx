@@ -1,29 +1,30 @@
 'use client';
-import { useEffect, useState } from 'react';
-import { Badge, Button, Card } from '@tka/ui';
 import { apiRequest } from '@/lib/api';
+import { Badge,Button,Card } from '@tka/ui';
+import { useEffect,useState } from 'react';
+import { AdminPagination,useAdminPagination } from './admin-pagination';
 import { AdminMessage } from './admin-presentation';
-import { AdminPagination, useAdminPagination } from './admin-pagination';
-import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
-import { ContentRichText } from './content-rich-text';
-import { createPreview, submitPreview } from './content-preview-api';
+import { useAdminAccessError } from './admin-workspace';
 import {
-  createContentPackage,
-  getContentPackage,
-  listContentPackages,
-  reviewImportedQuestion,
-  updateContentPackage,
-  approveContentPackage,
-  publishContentPackage,
-  archiveContentPackage,
+approveContentPackage,
+archiveContentPackage,
+createContentPackage,
+getContentPackage,
+listContentPackages,
+publishContentPackage,
+reviewImportedQuestion,
+updateContentPackage,
 } from './content-package-api';
+import { createPreview,submitPreview } from './content-preview-api';
+import { ContentRichText } from './content-rich-text';
 import type {
-  AdminCurriculumDto,
-  ContentPackageDetailDto,
-  ContentPackageDto,
-  CreateContentPackageDto,
-  PreviewMediaDto,
+AdminCurriculumDto,
+ContentPackageDetailDto,
+ContentPackageDto,
+CreateContentPackageDto,
+PreviewMediaDto,
 } from './generated-types';
+import { ADMIN_PAGE_SIZE,adminPage } from './pagination';
 type Usage = CreateContentPackageDto['assessmentType'];
 
 export function ContentPackageWorkspace({
@@ -39,6 +40,7 @@ export function ContentPackageWorkspace({
   refreshKey: number;
   busyChanged?: (busy: boolean) => void;
 }) {
+  const reportAccessError = useAdminAccessError();
   const [usage, setUsage] = useState<Usage>('DRILL');
   const [status, setStatus] = useState('DRAFT');
   const [chapter, setChapter] = useState('');
@@ -84,6 +86,7 @@ export function ContentPackageWorkspace({
         }
       })
       .catch((e) => {
+        if (active) reportAccessError(e);
         if (active) setError(e instanceof Error ? e.message : 'Daftar paket gagal dimuat.');
       })
       .finally(() => {
@@ -105,6 +108,7 @@ export function ContentPackageWorkspace({
         }
       })
       .catch((e) => {
+        if (active) reportAccessError(e);
         if (active) setError(e instanceof Error ? e.message : 'Checklist gagal dimuat.');
       });
     return () => {
@@ -119,6 +123,7 @@ export function ContentPackageWorkspace({
     try {
       await action();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
     } finally {
       setBusy(false);

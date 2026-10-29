@@ -19,11 +19,17 @@ function operationKey(key: string) {
 async function lockRequest(tx: TransactionSql, id: string) {
   await tx`SELECT pg_advisory_xact_lock(hashtextextended(${id}::text,3))`;
 }
-async function duplicate(tx: TransactionSql, key: string, fingerprint: string) {
+async function duplicate(tx: TransactionSql, key: string, fingerprint: string, actorId: string) {
   await tx`SELECT pg_advisory_xact_lock(hashtextextended(${key}::text,4))`;
-  const [existing] = await tx<{ request_id: string; operation_fingerprint: string }[]>`
-    SELECT request_id,operation_fingerprint FROM analysis_request_dispatches WHERE operation_key=${key}`;
-  if (existing && existing.operation_fingerprint !== fingerprint) fail('IRT_IDEMPOTENCY_CONFLICT');
+  const [existing] = await tx<
+    { request_id: string; operation_fingerprint: string; actor_user_id: string }[]
+  >`
+    SELECT request_id,operation_fingerprint,actor_user_id FROM analysis_request_dispatches WHERE operation_key=${key}`;
+  if (
+    existing &&
+    (existing.operation_fingerprint !== fingerprint || existing.actor_user_id !== actorId)
+  )
+    fail('IRT_IDEMPOTENCY_CONFLICT');
   return existing?.request_id;
 }
 async function consistentOperation<T>(
@@ -66,7 +72,7 @@ export async function prepareTryoutAnalysis(
   const opKey = operationKey(key);
   const fingerprint = hash({ operation: 'PREPARE', contextId: input.contextId, pins });
   const id = await consistentOperation(client, async (tx) => {
-    const previous = await duplicate(tx, opKey, fingerprint);
+    const previous = await duplicate(tx, opKey, fingerprint, actorId);
     if (previous) return previous;
     const [ctx] = await tx<
       {
@@ -120,12 +126,14 @@ export async function prepareTryoutAnalysis(
       !/^[A-Za-z0-9_.-]{1,80}$/.test(keyVersion)
     )
       fail('IRT_PSEUDONYM_NOT_CONFIGURED', 503);
-    const sources = await tx<{ id: string; student_id: string; finished_at: string }[]>`
-      SELECT id,student_id,finished_at::text FROM assessment_attempts WHERE package_id=${ctx.package_id}
-      AND assessment_type='TRYOUT' AND purpose='REGULAR' AND status IN ('SUBMITTED','GRADED') AND finished_at<=${ctx.cutoff_at}::timestamptz ORDER BY id`;
+    const sources = await tx<
+      { id: string; student_id: string; finished_at: string; completed_at: string }[]
+    >`
+      SELECT a.id,a.student_id,a.finished_at::text,least(a.finished_at,a.deadline_at,p.close_at)::text AS completed_at FROM assessment_attempts a JOIN assessment_packages p ON p.id=a.package_id WHERE a.package_id=${ctx.package_id}
+      AND a.assessment_type='TRYOUT' AND a.purpose='REGULAR' AND a.status IN ('SUBMITTED','GRADED') AND a.finished_at IS NOT NULL AND a.started_at<=${ctx.cutoff_at}::timestamptz ORDER BY a.id`;
     if (!sources.length) fail('IRT_DATASET_EMPTY');
     const policy = {
-      version: 'job10-operational-v1',
+      version: 'job10-operational-v2',
       releasePolicy: ctx.release_policy,
       releasePolicyDigest: ctx.release_policy_digest,
       packageManifestDigest: ctx.manifest_digest,
@@ -142,11 +150,11 @@ export async function prepareTryoutAnalysis(
         await tx`INSERT INTO response_snapshot_items(snapshot_id,respondent_id,attempt_id,attempt_item_id,question_version_id,rubric_version_id,raw_answer,score_category,maximum_score_category,fully_correct,awarded_points,max_points,response_state,operational_eligible,operational_exclusion_reasons,exposure_facts,completed_at)
         SELECT ${snapshot!.id},${respondent},i.attempt_id,i.id,i.question_version_id,i.rubric_version_id,a.answer,a.score_category,i.maximum_score_category,a.fully_correct,a.awarded_points,i.max_points,
           coalesce(a.response_state::text,'OMITTED'),
-          coalesce(a.graded_at IS NOT NULL AND a.score_category IS NOT NULL AND a.fully_correct IS NOT NULL AND a.response_state::text IN ('RESPONDED','OMITTED') AND a.saved_at<=${ctx.cutoff_at}::timestamptz AND a.graded_at<=${ctx.cutoff_at}::timestamptz,false),
-          CASE WHEN a.graded_at IS NULL OR a.score_category IS NULL OR a.fully_correct IS NULL THEN '["UNSCORED"]'::jsonb WHEN a.saved_at>${ctx.cutoff_at}::timestamptz OR a.graded_at>${ctx.cutoff_at}::timestamptz THEN '["AFTER_CUTOFF"]'::jsonb WHEN a.response_state::text NOT IN ('RESPONDED','OMITTED') THEN '["INVALID_RESPONSE"]'::jsonb ELSE '[]'::jsonb END,
-          jsonb_build_object('deliveries',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',m.kind,'issuedAt',m.issued_at) ORDER BY m.issued_at,m.id) FROM content_delivery_items di JOIN content_delivery_manifests m ON m.id=di.manifest_id WHERE di.attempt_item_id=i.id AND m.issued_at<=${ctx.cutoff_at}::timestamptz),'[]'::jsonb),
-            'priorExposure',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',e.kind,'module',e.module,'occurredAt',e.occurred_at) ORDER BY e.occurred_at,e.id) FROM student_item_exposures e JOIN question_variants v ON v.question_id=e.family_id JOIN question_versions q ON q.variant_id=v.id WHERE q.id=i.question_version_id AND e.student_id=${attempt.student_id} AND e.occurred_at<=${attempt.finished_at}::timestamptz),'[]'::jsonb)),
-          ${attempt.finished_at}::timestamptz
+          coalesce(${attempt.completed_at}::timestamptz<=${ctx.cutoff_at}::timestamptz AND a.graded_at IS NOT NULL AND a.score_category IS NOT NULL AND a.fully_correct IS NOT NULL AND a.response_state::text IN ('RESPONDED','OMITTED') AND (a.response_state::text='OMITTED' OR a.saved_at<=${ctx.cutoff_at}::timestamptz),false),
+          CASE WHEN a.graded_at IS NULL OR a.score_category IS NULL OR a.fully_correct IS NULL THEN '["UNSCORED"]'::jsonb WHEN ${attempt.completed_at}::timestamptz>${ctx.cutoff_at}::timestamptz OR a.response_state::text<>'OMITTED' AND a.saved_at>${ctx.cutoff_at}::timestamptz THEN '["AFTER_CUTOFF"]'::jsonb WHEN a.response_state::text NOT IN ('RESPONDED','OMITTED') THEN '["INVALID_RESPONSE"]'::jsonb ELSE '[]'::jsonb END,
+          jsonb_build_object('sourceFinalizedAt',${attempt.finished_at}::timestamptz,'deliveries',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',m.kind,'issuedAt',m.issued_at) ORDER BY m.issued_at,m.id) FROM content_delivery_items di JOIN content_delivery_manifests m ON m.id=di.manifest_id WHERE di.attempt_item_id=i.id AND m.issued_at<=${ctx.cutoff_at}::timestamptz),'[]'::jsonb),
+            'priorExposure',coalesce((SELECT jsonb_agg(jsonb_build_object('kind',e.kind,'module',e.module,'occurredAt',e.occurred_at) ORDER BY e.occurred_at,e.id) FROM student_item_exposures e JOIN question_variants v ON v.question_id=e.family_id JOIN question_versions q ON q.variant_id=v.id WHERE q.id=i.question_version_id AND e.student_id=${attempt.student_id} AND e.occurred_at<=${attempt.completed_at}::timestamptz),'[]'::jsonb)),
+          ${attempt.completed_at}::timestamptz
         FROM attempt_items i LEFT JOIN attempt_answers a ON a.attempt_item_id=i.id JOIN scoring_rubric_versions r ON r.id=i.rubric_version_id
         WHERE i.attempt_id=${attempt.id} AND r.status='SEALED' RETURNING id`;
       const [total] = await tx<
@@ -177,7 +185,7 @@ export async function retryTryoutAnalysis(client: Sql, actorId: string, key: str
   const opKey = operationKey(key),
     fingerprint = hash({ operation: 'RETRY', requestId: id });
   await client.begin(async (tx) => {
-    const previous = await duplicate(tx, opKey, fingerprint);
+    const previous = await duplicate(tx, opKey, fingerprint, actorId);
     if (previous) return;
     await lockRequest(tx, id);
     const [r] = await tx<
@@ -202,6 +210,7 @@ export async function analysisRequestDetail(client: Sql, id: string) {
       id: string;
       context_id: string;
       package_id: string;
+      configuration_pins: ConfigurationPin[];
       status: string;
       input_digest: string;
       snapshot_id: string;
@@ -238,6 +247,7 @@ export async function analysisRequestDetail(client: Sql, id: string) {
     id: r.id,
     contractVersion: 3 as const,
     contextId: r.context_id,
+    configurationPins: r.configuration_pins,
     packageId: r.package_id,
     status: r.status,
     inputDigest: r.input_digest,
@@ -272,7 +282,7 @@ export async function listAnalysisRequests(client: Sql, limit: number, offset: n
   return { items: await Promise.all(rows.map((r) => analysisRequestDetail(client, r.id))) };
 }
 
-export async function adoptTryoutArtifact(client: Sql, id: string) {
+export async function adoptTryoutArtifact(client: Sql, id: string, actorId?: string) {
   requireIrtEnabled();
   let attemptedExecutionId: string | undefined;
   try {
@@ -358,7 +368,7 @@ export async function adoptTryoutArtifact(client: Sql, id: string) {
           await tx`INSERT INTO irt_item_step_parameters(item_result_id,step,value,standard_error) VALUES(${result!.id},${step.step},${step.value},${step.standardError})`;
       }
       await tx`UPDATE outbox_deliveries SET failure_code=NULL,retry_at=NULL WHERE consumer='irt_compute' AND outbox_id IN (SELECT id FROM analytics_outbox WHERE entity_id=${id} AND event_name='analysis.requested')`;
-      await tx`INSERT INTO audit_logs(action,entity_type,entity_id,metadata) VALUES('IRT_V3_ADOPTED','analysis_request',${id},${JSON.stringify({ executionId: e.id, outputId: output.id, scientificDecision: output.scientific_decision })}::text::jsonb)`;
+      await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id,metadata) VALUES(${actorId ?? null},'IRT_V3_ADOPTED','analysis_request',${id},${JSON.stringify({ executionId: e.id, outputId: output.id, scientificDecision: output.scientific_decision })}::text::jsonb)`;
       return { requestId: id, adopted: true };
     });
   } catch (error) {

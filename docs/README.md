@@ -45,6 +45,9 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 ## Development
 
+- [Ferdi PR stabilization, 28 October 2026](development/FERDI_PR_STABILIZATION_2026-10-28.md) — current PR blockers, preserved integration path, XP review packet and separate #102 migration handoff.
+- [Ferdi Admin integration, 26 October 2026](development/FERDI_ADMIN_INTEGRATION_2026-10-26.md) — PR #92 reconciliation, partial Tryout XP correction, isolated test evidence and remaining review gates.
+
 - `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
 - `development/GETTING_STARTED.md`
 - `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
@@ -54,6 +57,9 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
 - [Development recovery, 6 October 2026](development/DEV_SCHEMA_RECOVERY_2026-10-06.md) — historical schema-recovery evidence, API watcher fix, and later migration mapping; not a migration runbook.
+- `development/ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md` — pembersihan fixture Content pada Development, backup, data yang dipertahankan dan verifikasi reader kosong.
+- `development/ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan seluruh halaman Content, perbaikan form/pagination/retry/akses, bukti tes dan gate eksternal.
+- `development/ADMIN_OPERATIONS_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan sekolah/credential/pengguna/kelas, perbaikan eligibility transaksi, detail/retry, navigasi dan pencabutan akses.
 - `development/OWNERSHIP.md`
 
 ## Testing
@@ -83,3 +89,5 @@ See `adr/README.md` and the individual ADR files.
 - **ENGINEERING DECISION** — approved during technical alignment.
 - **PROPOSED** — recommendation pending approval.
 - **OPEN** — unresolved product/academic decision.
+
+- [Admin Content/Operations synchronization with main, 7 October 2026](development/ADMIN_MAIN_SYNC_2026-10-07.md) ? combined scope, migration compatibility and verification limits.

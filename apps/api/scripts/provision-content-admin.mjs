@@ -22,6 +22,7 @@ if (
 const client = postgres(process.env.DATABASE_MIGRATION_URL, { max: 1 });
 try {
   await client.begin(async (tx) => {
+    await tx`SELECT pg_advisory_xact_lock(61720261005)`;
     const [principal] =
       await tx`SELECT pg_has_role(current_user,(SELECT datdba FROM pg_database WHERE datname=current_database()),'MEMBER') AS owner`;
     if (!principal.owner)
@@ -37,6 +38,11 @@ try {
     }
     const [previous] = await tx`SELECT admin_role FROM users WHERE id=${args['user-id']}`;
     if (previous.admin_role === args.role) return;
+    if (previous.admin_role === 'SUPER_ADMIN' && args.role !== 'SUPER_ADMIN') {
+      const remaining =
+        await tx`SELECT id FROM users WHERE role='ADMIN' AND status='ACTIVE' AND admin_role='SUPER_ADMIN' AND id<>${args['user-id']}`;
+      if (!remaining.length) throw new Error('Last active Super Admin cannot be demoted.');
+    }
     await tx`UPDATE users SET admin_role=${args.role},updated_at=clock_timestamp() WHERE id=${args['user-id']}`;
     await tx`INSERT INTO audit_logs(id,actor_user_id,action,entity_type,entity_id,metadata)
       VALUES(${randomUUID()},${args['actor-id']},'ADMIN_CONTENT_ROLE_PROVISIONED','user',${args['user-id']},${tx.json({ from: previous.admin_role, to: args.role, reason: args.reason })})`;

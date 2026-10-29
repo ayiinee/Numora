@@ -1,25 +1,31 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
-import { Button, Card } from '@tka/ui';
-import { useAuth } from '@/features/onboarding/auth';
-import { apiRequest, ApiProblem } from '@/lib/api';
-import { AdminFrame, AdminMessage } from './admin-presentation';
-import { ContentRichText } from './content-rich-text';
 import { QuestionChoices } from '@/features/core-learning/question-choices';
+import { useAuth } from '@/features/onboarding/auth';
+import { ApiProblem,apiRequest } from '@/lib/api';
+import { Button,Card } from '@tka/ui';
+import { useEffect,useRef,useState } from 'react';
+import { AdminFrame,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
+import { ContentRichText } from './content-rich-text';
 import type {
-  GeneratorCatalogDto,
-  GeneratorRequestDto,
-  GeneratorRequestsDto,
-  GeneratorPreviewDto,
-  GeneratorDraftDto,
+GeneratorCatalogDto,
+GeneratorDraftDto,
+GeneratorPreviewDto,
+GeneratorRequestDto,
+GeneratorRequestsDto,
 } from './generated-types';
 const root = 'admin/content/generator';
-export function ContentGeneratorScreen() {
+export const ContentGeneratorScreen = withAdminWorkspace(
+  ContentGeneratorScreenProtected,
+  'content',
+);
+function ContentGeneratorScreenProtected() {
   const { state } = useAuth();
   const account = state.status === 'ready' ? state.profile.id : state.status;
   return <GeneratorWorkspace key={account} />;
 }
 function GeneratorWorkspace() {
+  const reportAccessError = useAdminAccessError();
   const { state } = useAuth();
   const token =
     state.status === 'ready' &&
@@ -49,6 +55,7 @@ function GeneratorWorkspace() {
       setRequests(r.items);
       setError('');
     } catch (e) {
+      reportAccessError(e);
       setError(
         e instanceof ApiProblem && e.code === 'GENERATOR_DISABLED'
           ? 'Generator belum diaktifkan.'
@@ -79,6 +86,7 @@ function GeneratorWorkspace() {
           if (active) setCurrent(r);
         })
         .catch((e) => {
+          reportAccessError(e);
           if (active) setError(e instanceof Error ? e.message : 'Gagal memuat status.');
         });
     }, 3000);
@@ -94,6 +102,7 @@ function GeneratorWorkspace() {
     try {
       await run();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
     } finally {
       setBusy(false);

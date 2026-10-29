@@ -1,6 +1,6 @@
-import { render, screen, fireEvent, waitFor, cleanup } from '@testing-library/react';
-import { beforeEach, afterEach, expect, it, vi } from 'vitest';
-import { apiRequest, ApiProblem } from '@/lib/api';
+import { ApiProblem, apiRequest } from '@/lib/api';
+import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ContentGeneratorScreen } from './content-generator';
 const auth = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('@/features/onboarding/auth', () => ({
@@ -118,6 +118,6 @@ it('unauthorized role never fetches protected data', async () => {
     },
   };
   render(<ContentGeneratorScreen />);
-  await waitFor(() => expect(screen.getByText(/Akses Content Admin diperlukan/)).toBeTruthy());
+  await waitFor(() => expect(screen.getByText(/Akses memerlukan Super Admin/)).toBeTruthy());
   expect(apiRequest).not.toHaveBeenCalled();
 });

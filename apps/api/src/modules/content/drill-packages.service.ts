@@ -1,7 +1,9 @@
+import { approveEditorialPackage } from './editorial-package-approval';
 import {
   BadRequestException,
   ConflictException,
   Injectable,
+  Inject,
   NotFoundException,
 } from '@nestjs/common';
 import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm';
@@ -19,11 +21,8 @@ import {
   subchapters,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
-import {
-  decodeSingleChoiceVersion,
-  DRILL_POLICY_CODE,
-  DRILL_POLICY_VERSION,
-} from '../learning/drill.policy';
+import { AssessmentPoliciesService } from './assessment-policies.service';
+import { AssessmentReadinessService } from './assessment-readiness.service';
 import type { ContentPageDto } from './content.dto';
 import type {
   AdminDrillPackageDto,
@@ -34,18 +33,6 @@ import type {
 import { assertPackageUsage } from './content-package.rules';
 
 const problem = (code: string, detail: string) => ({ code, detail });
-function playable(version: typeof questionVersions.$inferSelect) {
-  try {
-    const content = decodeSingleChoiceVersion(version);
-    return (
-      !!content.stem.trim() &&
-      !!content.explanation.trim() &&
-      content.options.every((option) => !!option.text.trim())
-    );
-  } catch {
-    return false;
-  }
-}
 function found<T>(row: T | undefined): T {
   if (!row)
     throw new NotFoundException(problem('DRILL_PACKAGE_NOT_FOUND', 'Paket Drill tidak ditemukan.'));
@@ -54,6 +41,10 @@ function found<T>(row: T | undefined): T {
 
 @Injectable()
 export class DrillPackagesService {
+  constructor(
+    @Inject(AssessmentPoliciesService) private readonly policies: AssessmentPoliciesService,
+    @Inject(AssessmentReadinessService) private readonly readiness: AssessmentReadinessService,
+  ) {}
   async list(page: ContentPageDto): Promise<AdminDrillPackagesDto> {
     const { db } = getDatabase();
     const rows = await db
@@ -154,19 +145,9 @@ export class DrillPackagesService {
       .where(eq(scoringPolicyVersions.id, policyId))
       .for('share');
     if (!policy) throw new BadRequestException('Versi kebijakan penilaian tidak tersedia.');
-    const configuration = policy.configuration;
     if (
       publishing &&
-      (policy.status !== 'PUBLISHED' ||
-        configuration === null ||
-        typeof configuration !== 'object' ||
-        policy.policyCode !== DRILL_POLICY_CODE ||
-        policy.version !== DRILL_POLICY_VERSION ||
-        !('questionType' in configuration) ||
-        configuration.questionType !== 'SINGLE_CHOICE' ||
-        [scope.level.status, scope.subchapter.status, scope.chapter.status].some(
-          (s) => s !== 'READY',
-        ))
+      [scope.level.status, scope.subchapter.status, scope.chapter.status].some((s) => s !== 'READY')
     )
       throw new ConflictException(
         problem(
@@ -194,12 +175,11 @@ export class DrillPackagesService {
         (r) =>
           r.competency.subchapterId !== scope.level.subchapterId ||
           (r.question.curriculumLevelNumber !== null &&
-            r.question.curriculumLevelNumber !== scope.level.levelNumber) ||
-          r.version.questionType !== 'SINGLE_CHOICE',
+            r.question.curriculumLevelNumber !== scope.level.levelNumber),
       )
     )
       throw new BadRequestException(
-        'Soal harus unik, bertipe PG satu jawaban, dan sesuai subbab serta nomor level kurikulum.',
+        'Soal harus unik dan sesuai subbab serta nomor level kurikulum.',
       );
     if (
       publishing &&
@@ -218,10 +198,13 @@ export class DrillPackagesService {
           'Semua versi soal dan kompetensi harus READY dan ditinjau.',
         ),
       );
-    if (publishing && rows.some((r) => !playable(r.version)))
-      throw new ConflictException(
-        problem('DRILL_CONTENT_INVALID', 'Teks, opsi, kunci, atau pembahasan soal tidak valid.'),
-      );
+    if (publishing) {
+      const approved = await this.policies.require(tx, policyId, 'DRILL');
+      return this.readiness.items(tx, ids, 10, approved, {
+        subchapterId: scope.subchapter.id,
+        levelNumber: scope.level.levelNumber,
+      });
+    }
   }
   private async items(tx: AdminTransaction, id: string, ids: string[]) {
     if (ids.length)
@@ -300,12 +283,20 @@ export class DrillPackagesService {
       return { id };
     });
   }
-  publish(actor: string, id: string) {
+  publish(actor: string, id: string, curriculumApprovalReference?: string) {
     return adminMutation(actor, 'drill_package_published', 'assessment_package', async (tx) => {
+      const [target] = await tx
+        .select({ levelId: assessmentPackages.levelId })
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, id));
+      if (!target?.levelId) throw new NotFoundException({ code: 'DRILL_PACKAGE_NOT_FOUND' });
+      await tx.execute(
+        sql`select pg_advisory_xact_lock(hashtext('admin:drill-publish'), hashtext(${target.levelId}))`,
+      );
       const row = await this.lock(tx, id);
       if (row.status === 'PUBLISHED') return { id };
       if (row.status !== 'DRAFT') throw new ConflictException('Hanya draf yang dapat diterbitkan.');
-      if (row.variantIndex === null || row.scoringPolicyVersionId === null)
+      if (row.scoringPolicyVersionId === null)
         throw new ConflictException(
           problem(
             'DRILL_PACKAGE_NOT_READY',
@@ -322,41 +313,51 @@ export class DrillPackagesService {
         .from(levels)
         .where(eq(levels.id, row.levelId!))
         .for('no key update');
-      const [published] = await tx
-        .select({ id: assessmentPackages.id })
-        .from(assessmentPackages)
-        .where(
-          and(
-            eq(assessmentPackages.levelId, row.levelId!),
-            eq(assessmentPackages.assessmentType, 'DRILL'),
-            eq(assessmentPackages.purpose, 'REGULAR'),
-            eq(assessmentPackages.status, 'PUBLISHED'),
-            eq(assessmentPackages.isDemo, false),
-          ),
-        )
-        .limit(1);
-      if (!row.isDemo && published)
-        throw new ConflictException(
-          problem(
-            'DRILL_LEVEL_ALREADY_PUBLISHED',
-            'Archive paket aktif sebelum menerbitkan revisi level.',
-          ),
-        );
       const items = await tx
         .select()
         .from(packageItems)
         .where(eq(packageItems.packageId, id))
         .orderBy(asc(packageItems.displayOrder));
-      await this.validate(
+      const pins = await this.validate(
         tx,
         row.levelId!,
         row.scoringPolicyVersionId!,
         items.map((i) => i.questionVersionId),
         true,
       );
+      for (const pin of pins ?? [])
+        await tx
+          .update(packageItems)
+          .set({
+            maxPoints: pin.maxPoints,
+            rubricVersionId: pin.rubricVersionId,
+            maximumScoreCategory: pin.maximumScoreCategory,
+          })
+          .where(
+            and(
+              eq(packageItems.packageId, id),
+              eq(packageItems.questionVersionId, pin.questionVersionId),
+            ),
+          );
+      const approval = await approveEditorialPackage(tx, actor, row, curriculumApprovalReference);
       await tx
         .update(assessmentPackages)
-        .set({ status: 'PUBLISHED', releaseAt: new Date() })
+        .set({ status: 'ARCHIVED' })
+        .where(
+          and(
+            eq(assessmentPackages.assessmentType, 'DRILL'),
+            eq(assessmentPackages.purpose, 'REGULAR'),
+            eq(assessmentPackages.levelId, row.levelId!),
+            eq(assessmentPackages.status, 'PUBLISHED'),
+          ),
+        );
+      await tx
+        .update(assessmentPackages)
+        .set({
+          status: 'PUBLISHED',
+          releaseAt: new Date(),
+          ...approval,
+        })
         .where(eq(assessmentPackages.id, id));
       return { id };
     });

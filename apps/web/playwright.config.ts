@@ -3,8 +3,8 @@ export default defineConfig({
   testDir: './e2e',
   workers: 1,
   reporter: 'line',
-  // Allow the 192-case regression plus server startup and teardown to finish in CI.
-  globalTimeout: 900_000,
+  // Allow the expanded 319-case regression plus server startup and teardown.
+  globalTimeout: 1_500_000,
   timeout: 90_000,
   expect: { timeout: 20_000 },
   use: {

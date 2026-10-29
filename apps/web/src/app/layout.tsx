@@ -2,7 +2,16 @@ import type { Metadata } from 'next';
 import localFont from 'next/font/local';
 import './globals.css';
 import './numora.css';
+import './admin-content.css';
 import './teacher.css';
+import './admin-workspaces.css';
+import './admin-operations.css';
+import './admin-management.css';
+import './admin-accounts.css';
+import './admin-schools.css';
+import './admin-people.css';
+import './admin-assessment.css';
+import './admin-pretest.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 

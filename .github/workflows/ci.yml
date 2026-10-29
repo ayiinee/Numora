@@ -13,7 +13,7 @@ jobs:
     env:
       TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
     runs-on: ubuntu-latest
-    timeout-minutes: 25
+    timeout-minutes: 35
     services:
       redis:
         image: redis:7
@@ -90,7 +90,13 @@ jobs:
           if-no-files-found: warn
 
       - name: Install browser for E2E
-        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+        timeout-minutes: 5
+        run: |
+          # Prefer Ubuntu's official archive over the intermittently slow Azure mirror.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/apt-mirrors.txt
+          fi
+          pnpm --filter @tka/web exec playwright install --with-deps chromium
 
       - name: Connected release chain (real API, PostgreSQL and Redis)
         env:

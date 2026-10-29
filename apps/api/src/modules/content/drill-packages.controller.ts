@@ -20,6 +20,7 @@ import {
   AdminDrillPackagesDto,
   CreateDrillPackageDto,
   UpdateDrillPackageDto,
+  PublishDrillPackageDto,
 } from './drill-packages.dto';
 import { DrillPackagesService } from './drill-packages.service';
 
@@ -55,8 +56,12 @@ export class DrillPackagesController {
   }
   @Post(':id/publish')
   @ApiCreatedResponse({ type: ContentMutationDto })
-  publish(@Req() request: AdminRequest, @Param('id', ParseUUIDPipe) id: string) {
-    return this.packages.publish(request.adminId, id);
+  publish(
+    @Req() request: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PublishDrillPackageDto,
+  ) {
+    return this.packages.publish(request.adminId, id, body.curriculumApprovalReference);
   }
   @Post(':id/archive')
   @ApiCreatedResponse({ type: ContentMutationDto })

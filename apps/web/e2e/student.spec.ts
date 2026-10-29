@@ -1,6 +1,8 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import type { TryoutResultDto } from '../src/features/core-learning/generated-types';
+import { selectContentSection } from './fixtures/admin';
 
 const browserErrors = new WeakMap<Page, string[]>();
 test.beforeEach(({ page }) => {
@@ -23,6 +25,7 @@ async function fixtures(
   role: 'STUDENT' | 'TEACHER' | 'ADMIN' = 'STUDENT',
   teacherVerified = true,
   verificationIdentityDelayMs = 0,
+  adminRole: 'OPERATIONS' | 'CONTENT_DATA_MODERATION' = 'CONTENT_DATA_MODERATION',
 ) {
   const jwt = [
     Buffer.from(JSON.stringify({ alg: 'HS256', typ: 'JWT' })).toString('base64url'),
@@ -75,8 +78,18 @@ async function fixtures(
         displayName: 'Siswa fixture',
         role,
         status: 'ACTIVE',
-        adminRole: role === 'ADMIN' ? 'CONTENT_DATA_MODERATION' : null,
-        capabilities: role === 'ADMIN' ? ['CONTENT_MANAGE'] : [],
+        adminRole: role === 'ADMIN' ? adminRole : null,
+        capabilities:
+          role !== 'ADMIN'
+            ? []
+            : adminRole === 'OPERATIONS'
+              ? [
+                  'OPERATIONS_MANAGE',
+                  'OPERATIONS_LIMITED_READ',
+                  'ANALYTICS_OPERATIONS',
+                  'AUDIT_READ',
+                ]
+              : ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ', 'ANALYTICS_CONTENT', 'AUDIT_READ'],
         email: 'fixture@example.test',
         studentAffiliation: school ? 'SCHOOL' : 'MANDIRI',
         teacherVerified: role === 'TEACHER' ? teacherVerified : null,
@@ -311,6 +324,14 @@ async function fixtures(
       };
     else if (path === '/admin/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture', status: 'ACTIVE' }] };
+    else if (path === `/admin/schools/${chapterId}`)
+      data = {
+        id: chapterId,
+        code: 'QA',
+        name: 'Sekolah fixture',
+        status: 'ACTIVE',
+        address: null,
+      };
     else if (path === `/admin/schools/${chapterId}/teacher-tokens`)
       data =
         route.request().method() === 'POST'
@@ -926,12 +947,13 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
             {
               questionInstanceId: questionId,
               stem: 'Fixture: 1 + 1?',
+              options: attempt.questions[0]!.options,
               selectedOptionId: 'A',
               correctOptionId: 'A',
               explanation: 'Fixture explanation',
             },
           ],
-        },
+        } satisfies TryoutResultDto,
       });
     return route.fallback();
   });
@@ -1353,7 +1375,7 @@ for (const width of [390, 1440]) {
     page,
   }, testInfo) => {
     await page.setViewportSize({ width, height: 900 });
-    await fixtures(page, 'ADMIN');
+    await fixtures(page, 'ADMIN', true, 0, 'OPERATIONS');
     await page.goto('/admin/schools');
     await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Buka profil' })).toHaveCount(0);
@@ -1687,8 +1709,10 @@ for (const width of [390, 1440]) {
         } else if (path === `admin/content/drill-packages/${packageId}`) {
           expect(body.questionVersionIds).toEqual(ids);
           pack = { ...pack, ...body };
-        } else if (path.endsWith('/publish')) pack = { ...pack, status: 'PUBLISHED' };
-        else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
+        } else if (path.endsWith('/publish')) {
+          expect(body.curriculumApprovalReference).toBe('TEST_ONLY_BROWSER_APPROVAL');
+          pack = { ...pack, status: 'PUBLISHED' };
+        } else if (path.endsWith('/archive')) pack = { ...pack, status: 'ARCHIVED' };
         else if (path === `admin/reports/QUESTION/${questionId}`) {
           expect(body.status).toBe('RESOLVED');
           expect(body.followUp).toBe('Tindak lanjut fixture');
@@ -1698,6 +1722,19 @@ for (const width of [390, 1440]) {
         return route.fulfill({ json: { id: path.includes('/reports/') ? questionId : packageId } });
       }
       const responses: Record<string, unknown> = {
+        'admin/content/assessment-policies': {
+          items: [
+            {
+              id: policyId,
+              code: 'TEST-ONLY-DRILL',
+              version: 1,
+              assessmentType: 'DRILL',
+              approvedByUserId: studentId,
+              approvedAt: '2026-10-01T00:00:00Z',
+              approvalReference: 'TEST ONLY browser fixture; no academic approval',
+            },
+          ],
+        },
         'admin/content/curriculum': {
           items: [
             {
@@ -1767,13 +1804,16 @@ for (const width of [390, 1440]) {
       return route.fulfill({ json: responses[path] ?? { items: [] } });
     });
     await page.goto('/admin/content');
-    await page.getByRole('button', { name: 'Paket Drill', exact: true }).click();
+    await selectContentSection(page, 'Paket Drill');
+    await page.getByText('Buat paket Drill', { exact: true }).click();
     await page.getByLabel('Kode keluarga', { exact: true }).fill('DEMO-E2E');
     await page.getByLabel('Versi paket', { exact: true }).fill('1');
     await page.getByRole('combobox', { name: 'Level', exact: true }).selectOption(levelId);
-    await page.getByLabel('Indeks varian', { exact: true }).fill('1');
+    await expect(page.getByRole('spinbutton', { name: /^Indeks varian/ })).toHaveValue('1');
     await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture baru');
-    await page.getByLabel('ID versi kebijakan penilaian', { exact: true }).fill(policyId);
+    await page
+      .getByRole('combobox', { name: 'Versi kebijakan penilaian', exact: true })
+      .selectOption(policyId);
     await page
       .getByLabel('ID versi soal (pisahkan dengan baris baru atau koma)', { exact: true })
       .fill(ids.join('\n'));
@@ -1783,13 +1823,19 @@ for (const width of [390, 1440]) {
     await page.getByLabel('Nama paket', { exact: true }).fill('Paket fixture direvisi');
     await page.getByRole('button', { name: 'Simpan draf paket', exact: true }).click();
     await expect(page.getByText('Paket fixture direvisi', { exact: true })).toBeVisible();
+    await page
+      .getByLabel('Referensi persetujuan Curriculum', { exact: true })
+      .fill('TEST_ONLY_BROWSER_APPROVAL');
     page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
     await expect(page.getByText(/DEMO-E2E.*PUBLISHED/)).toBeVisible();
-    page.once('dialog', (dialog) => dialog.accept());
     await page.getByRole('button', { name: 'Arsipkan paket', exact: true }).click();
+    await page
+      .getByRole('dialog', { name: 'Konfirmasi tindakan', exact: true })
+      .getByRole('button', { name: 'Konfirmasi', exact: true })
+      .click();
     await expect(page.getByText(/DEMO-E2E.*ARCHIVED/)).toBeVisible();
-    await page.getByRole('button', { name: 'Laporan', exact: true }).click();
+    await selectContentSection(page, 'Laporan');
     await page
       .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
       .selectOption('RESOLVED');
@@ -1798,7 +1844,7 @@ for (const width of [390, 1440]) {
       .getByRole('button', { name: 'Simpan status dan tindak lanjut', exact: true })
       .click();
     await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
-    await page.getByRole('button', { name: 'IRT', exact: true }).click();
+    await selectContentSection(page, 'IRT');
     await expect(page.getByText('TRYOUT · SUCCEEDED', { exact: true })).toBeVisible();
     await expect(page.getByText(/Rilis belum tercatat/)).toBeVisible();
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -1827,7 +1873,7 @@ for (const { role, verified, path, destination } of [
     path: '/admin/schools',
     destination: '/teacher/verification-required',
   },
-  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin' },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/content' },
 ] as const) {
   test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
     await fixtures(page, role, verified);

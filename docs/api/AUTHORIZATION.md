@@ -1,3 +1,27 @@
+# Current authorization — PRD v0.6
+
+**PRD RULE:** NestJS verifies Auth identity and checks current database role/status/subrole on every privileged request. Fixed subrole assignment determines capabilities. Browser fields, JWT metadata and hidden menus never grant product privileges.
+
+| Domain/action                    | Super Admin  | Operations          | Content/Data/Moderation               |
+| -------------------------------- | ------------ | ------------------- | ------------------------------------- |
+| Admin accounts/assignment/status | Full         | Denied              | Denied                                |
+| School/teacher credentials       | Full         | Full                | Separate limited read; no credentials |
+| Operational individuals/roster   | Full         | Read                | Denied                                |
+| School/class structures          | Full         | Read                | Limited summaries/counts              |
+| Content/media/assessment         | Full         | Denied              | Full                                  |
+| Reports/IRT operations           | Full         | Denied              | Full                                  |
+| Analytics                        | Both domains | Operational         | Content/aggregated                    |
+| Audit                            | All          | Operations entities | Content/moderation/IRT entities       |
+| Student ban/unban                | Denied       | Denied              | Denied                                |
+
+**ENGINEERING DECISION:** unassigned Admin fails closed for privileged endpoints. Student/Teacher use Google; Admin uses internal Supabase Auth invitation/password, without public signup. All DTOs are generated from OpenAPI; least-data responses are enforced server-side. Assignment/status changes take effect even with an existing Auth token. Auth access and academic/result release are separate gates.
+
+Class/Teacher checks still enforce resource relationships. Five memberships and nullable active Teacher are current product rules; main PR #77 supplies the membership/ownership domain implementation; Admin reader integration and its acceptance remain required. See [acceptance ledger](../development/ADMIN_FULL_STACK_STATUS.md).
+
+Privileged Admin responses expose `X-Numora-Admin-Role` through CORS, computed from the current database assignment. If this differs from the loaded identity, the browser discards the response, clears cached Admin data and reloads identity. A denied request also triggers access refresh; the identity request itself does not recursively trigger that refresh. This header informs cache invalidation and never grants access. Full Operations and limited structure DTOs are separate contracts; Content cannot choose an individual Teacher filter or retrieve rosters through the limited routes.
+
+<details><summary>Historical authorization baseline — superseded where v0.6 differs</summary>
+
 # Authorization Model
 
 Authentication answers **who the user is**. Authorization answers **what this user may do to this resource**.
@@ -24,26 +48,26 @@ Evaluate as needed:
 
 ## Matrix baseline
 
-| Resource/action | Student | Teacher | Admin |
-|---|---|---|---|
-| Own profile read/update display name | Yes | Yes | operational read where authorized |
-| Choose/change own role after registration | No | No | internal process only if ever approved |
-| List schools for verification | No need | Yes | Yes |
-| Consume teacher token | No | Yes | No |
-| Generate/revoke teacher token | No | No | Yes |
-| Create class | No | Verified Teacher | operational/admin management |
-| Join class | Yes if no existing class | No | correction policy OPEN-08 |
-| View own assessment results | Yes | own students only | authorized operational access |
-| View another Student detail | No | only own class | authorized |
-| Manage question bank | No | No | Existing operational capability; outside new Drill/TryOut feature scope |
-| Send feedback | No | own Student only | not standard user flow |
-| Read feedback | own only | sent/own-class context as needed | operational only |
-| Start Drill without Class | Yes, Mandiri | n/a | n/a |
-| Start Pretest without Class | Baseline v0.5 No; affiliation reconciliation remains OPEN | n/a | n/a |
-| Start TryOut without Class | Yes, free MVP for Mandiri and School Students; package eligibility still enforced | n/a | n/a |
-| Create/share PvP room without Class | Yes, Mandiri | n/a | n/a |
-| Invite classmate to PvP | School Student only | n/a | n/a |
-| View IRT | No | No | Yes |
+| Resource/action                           | Student                                                                           | Teacher                          | Admin                                                                   |
+| ----------------------------------------- | --------------------------------------------------------------------------------- | -------------------------------- | ----------------------------------------------------------------------- |
+| Own profile read/update display name      | Yes                                                                               | Yes                              | operational read where authorized                                       |
+| Choose/change own role after registration | No                                                                                | No                               | internal process only if ever approved                                  |
+| List schools for verification             | No need                                                                           | Yes                              | Yes                                                                     |
+| Consume teacher token                     | No                                                                                | Yes                              | No                                                                      |
+| Generate/revoke teacher token             | No                                                                                | No                               | Yes                                                                     |
+| Create class                              | No                                                                                | Verified Teacher                 | operational/admin management                                            |
+| Join class                                | Yes if no existing class                                                          | No                               | correction policy OPEN-08                                               |
+| View own assessment results               | Yes                                                                               | own students only                | authorized operational access                                           |
+| View another Student detail               | No                                                                                | only own class                   | authorized                                                              |
+| Manage question bank                      | No                                                                                | No                               | Existing operational capability; outside new Drill/TryOut feature scope |
+| Send feedback                             | No                                                                                | own Student only                 | not standard user flow                                                  |
+| Read feedback                             | own only                                                                          | sent/own-class context as needed | operational only                                                        |
+| Start Drill without Class                 | Yes, Mandiri                                                                      | n/a                              | n/a                                                                     |
+| Start Pretest without Class               | Baseline v0.5 No; affiliation reconciliation remains OPEN                         | n/a                              | n/a                                                                     |
+| Start TryOut without Class                | Yes, free MVP for Mandiri and School Students; package eligibility still enforced | n/a                              | n/a                                                                     |
+| Create/share PvP room without Class       | Yes, Mandiri                                                                      | n/a                              | n/a                                                                     |
+| Invite classmate to PvP                   | School Student only                                                               | n/a                              | n/a                                                                     |
+| View IRT                                  | No                                                                                | No                               | Yes                                                                     |
 
 ## Server enforcement
 
@@ -72,3 +96,5 @@ Global PvP leaderboard should return only minimum display fields required by PRD
 ## Latest Core Learning source — 2 October 2026
 
 **PRD RULE — TryOut v1.1:** no class/payment prerequisite for MVP Students. Validate account role/status, package availability, existing attempt, ownership and result release server-side. Past never-attempted package eligibility is TRY-TBC-05; no second attempt for an already-attempted package. Existing class-required implementation must be aligned, not preserved as a current product rule. Teacher monitoring remains scoped to owned Classes. See [source reconciliation](../product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md).
+
+</details>

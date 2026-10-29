@@ -61,7 +61,6 @@ $env:NUMORA_E2E_WEBPACK='true'
 node node_modules/@playwright/test/cli.js test e2e/admin.spec.ts --grep 'Upload-first|Unified Admin portal'
 ```
 
-
 ## Keputusan pemilik â€” 7 Oktober 2026: indikator Tryout
 
 **ENGINEERING DECISION â€” disetujui pemilik:** Tryout mengabaikan indikator pada alur upload, draft dan Publish. Nilai asli Excel tetap disimpan sebagai provenance; indikator efektif kosong tidak menghalangi Tryout. Drill dan Pretest tetap wajib memiliki indikator sah. Bab, subbab, level, kesulitan, konten, media dan aturan Publish lain tetap diperiksa. Identitas soal/paket dibuat otomatis; sistem tidak mengarang materi akademik. Migrasi forward membolehkan primary_competency_id NULL hanya untuk keluarga TRYOUT; histori tidak ditulis ulang.
@@ -76,9 +75,7 @@ node node_modules/@playwright/test/cli.js test e2e/admin.spec.ts --grep 'Upload-
 
 Smoke live setelah migrasi: Excel Tryout pengguna tetap terbaca 30 soal/5 gambar melalui arsip R2. Indikator diabaikan; level yang kosong tetap memerlukan pemetaan, sehingga hasil fixture Publish tidak berarti workbook pengguna otomatis siap terbit.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan aturan sebelumnya yang mengabaikan indikator Tryout):** Tryout mengizinkan subbab, indikator dan level sumber kosong (`null`) sampai Publish. Nilai yang diberikan tetap dipertahankan dan divalidasi terhadap master/induk. Bab dan kesulitan tetap wajib; Drill/Pretest, konten/kunci/pembahasan, jumlah, media, review, jadwal dan pembatasan PGK tidak dilonggarkan. Migrasi 0034 menambahkan referensi bab/subbab nullable pada keluarga soal agar Tryout tanpa level tetap tersimpan dan dapat dibaca; histori tidak diubah.
-
 
 ### Aktivasi Tryout dengan metadata opsional — 7 Oktober 2026
 
@@ -86,17 +83,12 @@ Migrasi 0034 diterapkan melalui migrator resmi ke Staging `pkamenfnwmoeisccnrnk`
 
 Smoke API aktif: unggahan `TEST_ONLY_tryout_null.xlsx` dengan bab sah dan subbab/indikator/level kosong mencapai VALIDATED; nilai subbab yang tidak dikenal ditolak. Tidak dibuat draft paket baru atau publikasi akademik. API berjalan pada localhost:3001 dan frontend hasil build compile → generate pada localhost:3000. Typecheck terpisah sudah lulus; build dipisahkan untuk menghindari keterbatasan memori host. Unggahan lama perlu divalidasi ulang; master READY dan seluruh gate Publish lainnya tetap berlaku.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026 (menggantikan kewajiban bab Tryout sebelumnya):** Bab, subbab, indikator dan level per soal maupun scope paket tidak wajib untuk Tryout campuran. Metadata materi kosong disimpan null sampai Publish. Admin dapat secara eksplisit melewati pemetaan materi tanpa menghapus sumber Excel; materi yang tetap dipakai divalidasi terhadap master. Kesulitan, konten, kunci, pembahasan dan gate Publish lain tetap berlaku; Drill/Pretest tetap memerlukan scope.
-
 
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout boleh tanpa kesulitan serta tanpa pemetaan materi. Referensi Excel yang belum dapat dipetakan tetap menjadi provenance, dengan relasi efektif null; tidak mengarang materi atau kunci. Status DRAFT materi tidak menghalangi paket Tryout, tetapi materi ARCHIVED tidak dipakai. Rubrik PGK yang disetujui pemilik: MCMA dinilai per keputusan memilih/tidak memilih setiap opsi; Kategori per pernyataan tepat; jawaban kosong 0. Nilai proporsional dibulatkan ke dua desimal mengikuti kolom awarded_points; XP = jumlah benar ekuivalen ×10 dari poin tersimpan. Rubrik dipin melalui kebijakan baru TRYOUT_PGK_PARTIAL_V1 (migrasi 0035); paket/hasil lama tidak diubah. Urutan Tryout diacak server saat attempt dibuat dan disimpan tetap selama resume. Gambar diunggah dengan maksimal tiga pekerjaan paralel dan receipt R2 wajib diverifikasi. Konten, pilihan/pernyataan, kunci, pembahasan, otorisasi, review, jumlah, jadwal, dan integritas versi tetap divalidasi.
 
-
 **ENGINEERING DECISION — aktivasi 7 Oktober 2026:** Migrasi 0035–0036 aktif pada proyek pengembangan pkamenfnwmoeisccnrnk; replay tidak menambah migrasi dan 150 tabel mempertahankan data sebelumnya (hanya kebijakan scoring baru ditambahkan). Rubrik SEALED per jenis/jumlah opsi atau pernyataan dipin saat impor, lalu diwariskan ke package_items/attempt_items. Draft PGK lama tanpa rubric perlu impor ulang untuk membuat revisi; histori tidak dimutasi. Pemeriksaan runtime menahan versi PGK tanpa rubric. Validasi menggunakan cache master lokal dalam transaksi serta lookup identitas impor secara batch; tidak ada cache global yang dapat menutupi perubahan master. Tes integrasi membuktikan Publish paket campuran 30 soal dengan semua metadata materi/kesulitan null, skor parsial, XP dan submit idempoten.
 
-
 **ENGINEERING DECISION — pemilik, 7 Oktober 2026:** Tryout dapat dipublish kapan saja, menggantikan batas Senin dan satu paket mingguan pada alur Admin. Tanggal rilis opsional: kosong berarti Publish sekarang; waktu lampau menjadi sekarang; waktu mendatang menjadwalkan akses. Batch tetap berjalan selama 7 hari dikurangi satu menit sejak rilis efektif, durasi attempt 10 menit dan IRT setelah batch tutup tetap berlaku. Paket dan attempt lama tidak diubah.
-
 
 **ENGINEERING DECISION — perbaikan akses, pemilik 7 Oktober 2026:** Publish Excel Tryout mengunci snapshot beserta scoring/blueprint pins secara atomik. Digest komposisi review dipertahankan sebagai compositionDigest; manifestDigest persetujuan mengikuti digest snapshot database. Distribusi paket Excel yang sudah direview/disetujui Admin tidak menunggu package_quality_results generator; jalur ini memeriksa 30 versi READY, provenance impor, persetujuan SEALED dan tetap menahan keputusan HOLD/RETIRED. Tidak membuat hasil statistik sintetis. Dua paket terbit tanpa attempt dipulihkan dengan backup; jadwal/histori attempt tidak diubah.
