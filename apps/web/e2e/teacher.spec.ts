@@ -54,6 +54,8 @@ async function setup(page: Page) {
     failVerify: false,
     verifyStatus: 403,
     failCreate: false,
+    createStatus: 400,
+    createBeforeError: false,
     emptyClass: false,
     denied: 0,
     emptyProgress: false,
@@ -121,8 +123,15 @@ async function setup(page: Page) {
       if (route.request().method() === 'POST') {
         const name = route.request().postDataJSON().name;
         state.creates.push(name);
-        if (state.failCreate) return route.fulfill(fail(503, 'Kelas belum dapat dibuat.'));
-        const value = { id: '88888888-8888-4888-8888-888888888888', name, joinCode: 'Ab_cd-234' };
+        const value = {
+          id: `88888888-8888-4888-8888-${String(state.creates.length).padStart(12, '0')}`,
+          name,
+          joinCode: 'Ab_cd-234',
+        };
+        if (state.failCreate) {
+          if (state.createBeforeError) state.classes.push(value);
+          return route.fulfill(fail(state.createStatus, 'Kelas belum dapat dibuat.'));
+        }
         state.classes.push(value);
         data = value;
       } else data = { items: state.classes };
@@ -472,6 +481,18 @@ test('Teacher create error, empty classes and students retain recovery and no fa
   state.failCreate = false;
   await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
   await expect(page.locator('.teacher-class-card')).toHaveCount(1);
+  state.failCreate = true;
+  state.createStatus = 503;
+  state.createBeforeError = true;
+  await page.getByLabel('Nama kelas').fill('IX Tersimpan');
+  await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await expect(page.locator('main').getByRole('alert')).toContainText(
+    'Pengiriman tidak dapat dipastikan.',
+  );
+  await expect(page.getByLabel('Nama kelas')).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Buat kelas', exact: true })).toBeDisabled();
+  await expect(page.locator('.teacher-class-card')).toHaveCount(2);
+  expect(state.creates).toEqual(['IX Retry', 'IX Retry', 'IX Tersimpan']);
   state.classes = [{ id: classId, name: 'Kelas IX-B', joinCode: 'QA2345' }];
   state.emptyClass = true;
   await page.goto(`/teacher/classes/${classId}`);
