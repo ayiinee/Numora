@@ -2,6 +2,8 @@
 
 For scenario QA, start at the [QA workflow section](#qa-scenario-workflow--27-oktober-2026) below. The development/cloud instructions are separate from disposable local testing.
 
+For Development setup, follow the startup and worker checklist below. The [startup verification record](DEV_STARTUP_VERIFICATION.md) separates observed startup/probe results, operator-confirmed runtime/restart checks and owner-deferred follow-up. It is engineering setup evidence, not scenario QA or deployment acceptance.
+
 ## Prerequisites
 
 - Git
@@ -18,12 +20,42 @@ On Windows, run `node --version` in the terminal you will use for development. I
 git clone <repository-url>
 cd <repository>
 corepack enable
-pnpm install
-cp .env.example .env
+pnpm install --frozen-lockfile
+[ -f .env ] || cp .env.example .env
+# Fill .env with the agreed Development settings before startup.
 pnpm dev
 ```
 
 The lockfile and initial Drizzle migration are committed with the bootstrap. Use `pnpm install --frozen-lockfile` to reproduce the dependency versions.
+
+### Development baseline before startup
+
+**ENGINEERING DECISION — documentation requested by Aini:** record the source and actual terminal runtime before reproducing Development startup. Follow [Aini's Development responsibilities in the current joblist](SE_JOBLIST_2026-10-19.md#aini--tampilan-dan-backend-pvpleaderboard-be-runtime-dan-devops).
+
+From the repository root in PowerShell:
+
+```powershell
+git rev-parse HEAD
+git status --short
+node --version
+pnpm --version
+where.exe node
+where.exe pnpm
+```
+
+Use Node 24.22.1 and pnpm 12.6.0 as the reproducible baseline. `package.json` permits Node `>=24.22.1 <25` and pnpm `>=12 <13`; `.node-version` and `packageManager` select the baseline. If another executable takes precedence, select the intended installation for that terminal, then repeat these commands. A portable runtime/launcher must use paths appropriate to the developer's machine; ignored `.tmp` launchers are not a team installation prerequisite.
+
+Preserve an existing `.env`. For a new checkout only:
+
+```powershell
+if (-not (Test-Path -LiteralPath .env)) {
+  Copy-Item -LiteralPath .env.example -Destination .env
+}
+```
+
+Fill the startup-required settings in the [environment section](#environment-files) from the agreed Development handoff, then run `pnpm env:check` and `pnpm dev`. The environment check currently validates the settings described below; it does not enforce the Node pin or every feature-specific combination. Passing it does not establish service connectivity. `pnpm dev` builds the shared packages and performs the read-only database schema check before starting web/API. Migration and seed commands are separate operator actions.
+
+Wait for both web and API readiness. Check the web page, API health and database health URLs below. Record actual HTTP results; a ready web page alone does not prove the API has started. Capture SHA, runtime, environment label, commands and sanitized outcomes. A dirty checkout is not immutable release evidence.
 
 ## Local services
 
@@ -57,6 +89,46 @@ BullMQ issues commands even on idle queues. Keep the worker off when it is not n
 
 The worker checks Redis before creating its consumer. A `max requests limit exceeded` error at startup or runtime logs `REDIS_QUOTA_EXCEEDED`, stops schedules, disconnects and exits with code 1. Restore quota or configure a healthy dedicated instance before restarting manually. Transient runtime errors retry with backoff and emit at most one diagnostic per minute; startup and shutdown waits are bounded. `dev:full` may stop the other processes when its worker exits, so use separate `dev` and `dev:worker` terminals when diagnosing an outage. No provider error text or connection URL is logged.
 
+### Development worker, probe and restart checklist
+
+Use the confirmed Development Redis endpoint and a developer-specific prefix such as `numora:dev:aini`. Run the commands from the repository root with the same ignored `.env` and supported runtime. A worker also starts outbox/projection schedules; it performs background processing against the configured Development resources.
+
+1. Keep `pnpm dev` in its own terminal if web/API are needed. In another terminal, run `pnpm dev:worker`. Do not duplicate a worker already running through `dev:full`.
+2. Wait in the worker terminal for:
+
+   ```text
+   [worker] Redis connected; background processing enabled
+   ```
+
+   This is emitted after the startup Redis connection/ping, database connectivity check and BullMQ readiness. It describes startup readiness, not a permanent guarantee against later outages.
+
+3. Leave that terminal running. In a separate terminal, enqueue one diagnostic job:
+
+   ```powershell
+   pnpm worker:probe
+   ```
+
+   Expected producer output, with an example ID and prefix:
+
+   ```text
+   Queued manual probe 1 under numora:dev:aini.
+   ```
+
+   The command adds one `manual-probe` job to the `bootstrap` queue and exits. `Queued` proves enqueueing; record completion separately.
+
+4. Check the worker terminal for:
+
+   ```text
+   [worker] bootstrap probe completed
+   ```
+
+   If the job remains waiting, confirm the worker is still running and uses the same Redis endpoint/prefix. Check worker errors before adding more probes. The completion message currently omits the job ID; record it as a completion observation, not a per-ID durable receipt. The probe retains only the latest ten completed/failed jobs, so missing old queue history is not proof of completion.
+
+5. For a restart check, press `Ctrl+C` in the worker terminal and wait for the command prompt to return. Start `pnpm dev:worker` again, wait for readiness, then enqueue one new probe from the other terminal. Record the stop/start sequence, probe ID and completion. Mark restart verified only when that sequence is observed.
+6. Stop the worker with `Ctrl+C` when background processing is no longer needed. Keep connection URLs, credentials, raw logs and browser state ignored. Record only sanitized results.
+
+For each check use `PASS`, `FAIL`, `BLOCKED` or `NOT_VERIFIED`, with the actual SHA/environment and evidence source. Record another developer's reproduction separately. This checklist verifies bootstrap processing; outbox business correctness, leaderboard correctness, SIS-001 load, real Google login and release acceptance have their own gates.
+
 ### Dedicated local test dependencies
 
 Copy `.env.test.example` to `.env.test.local` and configure dedicated **localhost** PostgreSQL/Redis services. This file is ignored by Git and is separate from development `.env`. Example credentials are fixtures, not cloud credentials. Local services must be started separately; this change does not install Redis/PostgreSQL or create a cloud database.
@@ -81,6 +153,37 @@ cp .env.example .env
 ```
 
 Required current values: `NEXT_PUBLIC_SUPABASE_URL`, `NEXT_PUBLIC_SUPABASE_PUBLISHABLE_KEY`, `SUPABASE_URL`, `SUPABASE_PUBLISHABLE_KEY`, `DATABASE_URL`, `REDIS_URL`, `BULLMQ_PREFIX`, and server-only `TEACHER_TOKEN_PEPPER`. The web and API Supabase values must refer to the same development project; the API uses them to validate bearer sessions. Keep `NEXT_PUBLIC_API_URL`, `API_INTERNAL_URL`, and `CORS_ORIGINS` pointed at the local web/API processes. A public key is browser-visible; database and Redis URLs are secrets.
+
+### Startup-required and conditional configuration
+
+**ENGINEERING DECISION — existing startup and feature boundaries:** `.env.example` covers both basic Development and optional features/operator commands. A blank conditional setting does not by itself block web/API startup.
+
+| Settings                                                                           | When required                                                                                                                                                                                                                                        |
+| ---------------------------------------------------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| The startup-required values listed above                                           | Basic web/API startup and its configuration/schema checks; worker additionally requires its configured Redis/database connections                                                                                                                    |
+| `DATABASE_MIGRATION_URL`                                                           | Designated migration/operator commands; keep separate from routine application runtime configuration                                                                                                                                                 |
+| `IRT_PSEUDONYM_KEY`, `IRT_PSEUDONYM_KEY_VERSION`                                   | IRT flows that require pseudonymisation; v3 activation needs both a valid key and explicit version. They may remain empty for basic startup with IRT disabled                                                                                        |
+| `IRT_V3_ENABLED=false`                                                             | Valid default: v3 orchestration is disabled. Enabling it requires the [IRT runbook](IRT_V3_RUNBOOK.md) prerequisites                                                                                                                                 |
+| `NUMORA_GENERATOR_ENABLED=false`, `NUMORA_GENERATOR_URL`, `NUMORA_GENERATOR_TOKEN` | Disabled generator does not require its token for basic startup. When activating, API/worker and the Python service share a server-only token of at least 32 characters and must satisfy the [generator handoff](../content/GENERATOR_SERVICE_V1.md) |
+| `SENTRY_DSN`, `OTEL_EXPORTER_OTLP_ENDPOINT`                                        | Optional observability placeholders in this baseline; application source does not currently read these names. Filling them alone does not establish monitoring integration                                                                           |
+| R2 settings and `R2_MEDIA_UPLOADS_ENABLED`                                         | Owned media upload/serving flows; verify the scoped credentials, bucket and CORS before enabling those flows                                                                                                                                         |
+| `ADMIN_ACCOUNT_INVITES_ENABLED`, mail templates and redirect configuration         | Admin invite/recovery flow activation, with Auth/SMTP acceptance as documented in the [Admin runbook](ADMIN_ACCOUNTS_RUNBOOK.md)                                                                                                                     |
+
+PvP mode/content settings must also agree with the [existing policy](PVP_TEMPORARY_READY_CONTENT.md). Defaults are `PVP_MODE=disabled` and `PVP_CONTENT_MODE=strict`. Temporary owner-accepted content requires `PVP_MODE=demo`; `official` with temporary content is rejected by API startup. Strict DEMO requires verified `ALLOW_SYNTHETIC_CONTENT` opt-in; official play requires reviewed READY content and approved difficulty. Do not enable another feature simply to make optional values nonempty.
+
+For basic startup without IRT/generator activation, these values may remain:
+
+```dotenv
+DATABASE_MIGRATION_URL=
+IRT_PSEUDONYM_KEY=
+IRT_V3_ENABLED=false
+IRT_PSEUDONYM_KEY_VERSION=
+SENTRY_DSN=
+OTEL_EXPORTER_OTLP_ENDPOINT=
+NUMORA_GENERATOR_ENABLED=false
+NUMORA_GENERATOR_URL=http://127.0.0.1:8770
+NUMORA_GENERATOR_TOKEN=
+```
 
 **ENGINEERING DECISION:** `pnpm env:check` runs before `pnpm dev`. It checks required variables, matching web/API Supabase values, TLS URL settings, and rejects a `NEXT_PUBLIC_SUPABASE_SERVICE_ROLE_KEY`. It does not test cloud connectivity or validate the database password.
 
