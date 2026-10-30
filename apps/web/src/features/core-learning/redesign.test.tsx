@@ -527,7 +527,7 @@ describe('responsive learning composition', () => {
       state: 'open',
       eligible: true,
       title: 'Paket pulih',
-      questionCount: 35,
+      questionCount: 30,
       durationSeconds: 4800,
     });
     fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
@@ -574,12 +574,12 @@ describe('responsive learning composition', () => {
           title: 'Paket fixture',
           state: 'open',
           eligible: true,
-          questionCount: 35,
+          questionCount: 30,
           durationSeconds: 4800,
         }}
       />,
     );
-    expect(screen.getByText('35 soal · 80 menit')).toBeTruthy();
+    expect(screen.getByText('30 soal · 80 menit')).toBeTruthy();
     expect(screen.getByRole('link', { name: 'Lihat aturan' }).getAttribute('href')).toBe(
       '/student/tryout',
     );
