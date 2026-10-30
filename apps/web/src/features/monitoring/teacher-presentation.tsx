@@ -14,7 +14,11 @@ export function TeacherClassCard({
   count?: number | undefined;
 }) {
   return (
-    <Link className="teacher-class-link" href={`/teacher/classes/${value.id}`}>
+    <Link
+      className="teacher-class-link"
+      href={`/teacher/classes/${value.id}`}
+      aria-label={`Buka ${value.name}`}
+    >
       <Card className="teacher-class-card">
         <span className={`icon-tile accent-${index % 4}`}>
           <Icon name="users" />

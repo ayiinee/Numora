@@ -3,11 +3,12 @@
 import { useQueries } from '@tanstack/react-query';
 import { getClassStudents } from '@/lib/api';
 import type { ClassSummary } from '@/lib/api';
+import { teacherKeys } from './teacher-query';
 
 export function useTeacherRosterCounts(token: string, classes: ClassSummary[] | undefined) {
   const queries = useQueries({
     queries: (classes ?? []).map((value) => ({
-      queryKey: ['class-students', value.id],
+      queryKey: teacherKeys.roster(value.id),
       queryFn: () => getClassStudents(token, value.id),
       staleTime: 30_000,
     })),

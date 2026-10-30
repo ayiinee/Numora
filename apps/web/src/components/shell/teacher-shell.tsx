@@ -1,9 +1,10 @@
 'use client';
-import { useState, type ReactNode } from 'react';
+import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname } from 'next/navigation';
 import { Avatar, Badge, Brand, Button, Icon } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
+import { useTeacherSignOut } from '@/features/onboarding/teacher-session';
 import { TeacherHeader } from './teacher-header';
 import { TeacherBottomNavigation, TeacherDesktopNavigation } from './teacher-navigation';
 export function TeacherShell({
@@ -21,28 +22,13 @@ export function TeacherShell({
   actions?: ReactNode;
   children: ReactNode;
 }) {
-  const { state, logout } = useAuth();
+  const { state } = useAuth();
   const pathname = usePathname();
-  const router = useRouter();
-  const [loggingOut, setLoggingOut] = useState(false);
-  const [logoutError, setLogoutError] = useState('');
+  const { busy: loggingOut, error: logoutError, signOut } = useTeacherSignOut();
   const profile =
     state.status === 'ready' && state.profile.role === 'TEACHER' ? state.profile : null;
   const available = Boolean(profile?.teacherVerified);
   const name = profile?.displayName || teacherName;
-
-  async function signOut() {
-    if (loggingOut) return;
-    setLoggingOut(true);
-    setLogoutError('');
-    try {
-      await logout();
-      router.replace('/');
-    } catch {
-      setLogoutError('Belum dapat keluar. Coba lagi.');
-      setLoggingOut(false);
-    }
-  }
 
   return (
     <div
