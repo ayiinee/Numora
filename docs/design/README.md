@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Generator paket dan pencarian sekolah](ADMIN_GENERATOR_UX_2026-10-30.md) menerapkan UI-01/UI-02 dari main setelah integrasi: pencarian Operations tidak menimpa ikon; Generator memakai direktori, dialog konfigurasi dan detail progres mengikuti fondasi Admin yang disetujui. Kontrak sumber, permission dan handoff ke preview impor dipertahankan. Review dan penerimaan layanan nyata dicatat terpisah. [Galeri audit](screenshots/admin-generator/README.md).
+
 **PROPOSED — backlog, 30 Oktober 2026:** [Backlog UI/UX Admin dan kriteria penerimaan](ADMIN_UI_BACKLOG_2026-10-30.md) memisahkan temuan terkonfirmasi, kandidat audit halaman berikutnya dan gate integrasi. Penyusunan backlog tidak mengubah aplikasi atau aturan produk.
 
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pretest Authoring](ADMIN_PRETEST_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui. Direktori lima paket, detail terpisah, editor terfokus, pemilih soal berdasarkan bab dan susunan lima per halaman menggantikan form UUID sebagai alur utama. Review editorial dan kesiapan publikasi tetap mengikuti server; pin lama/blueprint asal dipertahankan, dan arsip memerlukan konfirmasi. [Galeri audit](screenshots/admin-pretest/README.md).
