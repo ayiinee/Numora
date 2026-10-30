@@ -285,11 +285,19 @@ for (const role of ['STUDENT', 'TEACHER'] as const) {
     state.failRegister = true;
     await page.goto('/onboarding');
     await page.getByRole('button', { name: 'Simpan dan lanjutkan' }).click();
-    await expect(page.getByText('Pilih role.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('alert')).toHaveText('Pilih salah satu role: Siswa atau Guru.');
+    await expect(page.getByRole('group', { name: 'Saya masuk sebagai' })).toHaveAttribute(
+      'aria-invalid',
+      'true',
+    );
     expect(state.posts).toEqual([]);
     await page.getByRole('radio', { name: role === 'STUDENT' ? /Siswa/ : /Guru/ }).check();
+    await expect(page.getByRole('alert')).toHaveCount(0);
     await page.getByRole('button', { name: 'Simpan dan lanjutkan' }).click();
     await expect(page.getByText('Profil belum tersimpan. Coba lagi.')).toBeVisible();
+    await expect(
+      page.getByRole('radio', { name: role === 'STUDENT' ? /Siswa/ : /Guru/ }),
+    ).toBeChecked();
     await capture(page, `registration-error-${role.toLowerCase()}`, 390);
     state.failRegister = false;
     await page.getByRole('button', { name: 'Simpan dan lanjutkan' }).click();
