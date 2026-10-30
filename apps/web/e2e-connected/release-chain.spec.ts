@@ -192,7 +192,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
   }) => {
     const admin = await login(browser, 'admin');
     await admin.goto('/admin/schools');
-    await admin.getByRole('button', { name: 'Tambah sekolah', exact: true }).click();
+    await admin
+      .locator('.schools-page-heading')
+      .getByRole('button', { name: 'Tambah sekolah', exact: true })
+      .click();
     const schoolForm = admin.getByRole('dialog', { name: 'Tambah sekolah', exact: true });
     await schoolForm
       .getByRole('textbox', { name: 'Kode sekolah', exact: true })
