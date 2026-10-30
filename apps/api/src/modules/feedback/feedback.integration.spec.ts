@@ -176,6 +176,56 @@ const url = process.env.TEST_DATABASE_URL;
         .status,
     ).toBe(200);
   });
+  it('rechecks class ownership before an identical retry while preserving the Student inbox', async () => {
+    const db = getDatabase().db;
+    const feedbackId = randomUUID();
+    let extraClassId: string | undefined;
+    try {
+      const [extraClass] = await db
+        .insert(classes)
+        .values({
+          schoolId,
+          teacherUserId: profiles.get('teacher')!.id,
+          name: `TEST feedback ownership ${suffix}`,
+          joinCode: randomUUID(),
+        })
+        .returning({ id: classes.id });
+      extraClassId = extraClass!.id;
+      await db
+        .insert(classMemberships)
+        .values({ classId: extraClassId, studentUserId: studentId() });
+      const target = `classes/${extraClassId}/students/${studentId()}/feedback`;
+      const body = { clientRequestId: feedbackId, body: 'TEST note before ownership ended' };
+      expect((await request(target, 'teacher', 'POST', body)).status).toBe(201);
+      await db.update(classes).set({ teacherUserId: null }).where(eq(classes.id, extraClassId));
+
+      expect((await request(target, 'teacher', 'POST', body)).status).toBe(404);
+      expect((await request(target, 'teacher')).status).toBe(404);
+      expect((await request(target, 'otherTeacher')).status).toBe(404);
+      const inbox = await request('students/me/feedback', 'student');
+      expect(inbox.status).toBe(200);
+      const notes = (await inbox.json()) as {
+        items: { id: string; body: string; classId: string }[];
+      };
+      expect(notes.items).toContainEqual(
+        expect.objectContaining({
+          id: feedbackId,
+          body: body.body,
+          classId: extraClassId,
+        }),
+      );
+      expect(await db.select().from(feedback).where(eq(feedback.id, feedbackId))).toHaveLength(1);
+    } finally {
+      await db.delete(analyticsOutbox).where(eq(analyticsOutbox.entityId, feedbackId));
+      await db.delete(notificationOutbox).where(eq(notificationOutbox.sourceId, feedbackId));
+      await db.delete(feedback).where(eq(feedback.id, feedbackId));
+      if (extraClassId) {
+        await db.delete(classMemberships).where(eq(classMemberships.classId, extraClassId));
+        await db.delete(classes).where(eq(classes.id, extraClassId));
+      }
+    }
+  });
+
   it('enforces body/input limits and creates exactly one feedback across concurrent retries', async () => {
     for (const body of ['', '   ', 'a'.repeat(1001)])
       expect(
