@@ -2,7 +2,7 @@
 
 For scenario QA, start at the [QA workflow section](#qa-scenario-workflow--27-oktober-2026) below. The development/cloud instructions are separate from disposable local testing.
 
-For Development setup, follow the startup and worker checklist below. The [startup verification record](DEV_STARTUP_VERIFICATION.md) separates observed startup/probe results, operator-confirmed runtime/restart checks and owner-deferred follow-up. It is engineering setup evidence, not scenario QA or deployment acceptance.
+For Development setup, follow the startup and worker checklist below. The [startup verification record](DEV_STARTUP_VERIFICATION.md) separates observed startup/probe results, operator-confirmed runtime/restart checks, service-audit results and owner-deferred teammate reproduction. It is engineering setup evidence, not scenario QA or deployment acceptance.
 
 ## Prerequisites
 

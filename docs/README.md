@@ -52,7 +52,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 - `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
 - `development/GETTING_STARTED.md`
-- [Development startup verification](development/DEV_STARTUP_VERIFICATION.md) — source SHA, web/API health, operator-confirmed runtime/worker/probe/restart evidence, and owner-deferred follow-up.
+- [Development startup verification](development/DEV_STARTUP_VERIFICATION.md) — source SHA, health/runtime/worker/probe evidence, service dependency audit and handoff, and owner-deferred teammate reproduction.
 - `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
 - `development/CORE_LEARNING_BACKEND_STATUS.md` — implementasi backend, bukti lokal, dan pekerjaan Core Learning yang tersisa.
 - `development/STUDENT_AREA_IMPLEMENTATION.md` — integrasi desain siswa, migrasi PvP, verifikasi dan QA staging.
