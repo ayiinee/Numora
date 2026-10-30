@@ -9,6 +9,11 @@ import { destination, useAuth } from './auth';
 import { AuthFrame, AuthStatus, GoogleIdentity } from './auth-presentation';
 import { getSupabase } from '@/lib/supabase';
 import { ApiProblem, getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
+import {
+  isRegisterableRole,
+  ROLE_REQUIRED_MESSAGE,
+  type RegisterableRole,
+} from './role-validation';
 
 function Shell({ children }: { children: React.ReactNode }) {
   return (
@@ -236,14 +241,14 @@ export function CallbackScreen() {
 
 function RegistrationForm({ initialName, email }: { initialName: string; email: string }) {
   const { register } = useAuth();
-  const [role, setRole] = useState<'STUDENT' | 'TEACHER' | ''>('');
+  const [role, setRole] = useState<RegisterableRole | ''>('');
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const submit = async (event: FormEvent) => {
     event.preventDefault();
     if (busy) return;
-    if (!role) {
-      setError('Pilih role.');
+    if (!isRegisterableRole(role)) {
+      setError(ROLE_REQUIRED_MESSAGE);
       return;
     }
     setBusy(true);
@@ -262,7 +267,12 @@ function RegistrationForm({ initialName, email }: { initialName: string; email: 
       onSubmit={(event) => void submit(event)}
     >
       <GoogleIdentity name={initialName} email={email} />
-      <fieldset className="auth-role-fieldset" disabled={busy} aria-describedby="role-policy">
+      <fieldset
+        className="auth-role-fieldset"
+        disabled={busy}
+        aria-describedby={`role-policy${error ? ' role-error' : ''}`}
+        aria-invalid={!role && Boolean(error)}
+      >
         <legend>Saya masuk sebagai</legend>
         <div className="auth-role-options">
           <label className={`auth-role-option ${role === 'STUDENT' ? 'selected' : ''}`}>
@@ -270,8 +280,13 @@ function RegistrationForm({ initialName, email }: { initialName: string; email: 
               type="radio"
               name="role"
               value="STUDENT"
+              required
+              onInvalid={() => setError(ROLE_REQUIRED_MESSAGE)}
               checked={role === 'STUDENT'}
-              onChange={() => setRole('STUDENT')}
+              onChange={() => {
+                setRole('STUDENT');
+                setError('');
+              }}
             />
             <span className="auth-role-icon">
               <Icon name="graduation" />
@@ -286,8 +301,13 @@ function RegistrationForm({ initialName, email }: { initialName: string; email: 
               type="radio"
               name="role"
               value="TEACHER"
+              required
+              onInvalid={() => setError(ROLE_REQUIRED_MESSAGE)}
               checked={role === 'TEACHER'}
-              onChange={() => setRole('TEACHER')}
+              onChange={() => {
+                setRole('TEACHER');
+                setError('');
+              }}
             />
             <span className="auth-role-icon">
               <Icon name="users" />
@@ -304,7 +324,7 @@ function RegistrationForm({ initialName, email }: { initialName: string; email: 
         disimpan.
       </p>
       {error && (
-        <p className="form-error" role="alert">
+        <p className="form-error" id="role-error" role="alert">
           {error}
         </p>
       )}
@@ -453,8 +473,9 @@ function TeacherVerificationContent() {
   const [schools, setSchools] = useState<SchoolSummary[] | null>(null);
   const [schoolId, setSchoolId] = useState('');
   const [token, setToken] = useState('');
-  const [error, setError] = useState('');
-  const [errorStatus, setErrorStatus] = useState(0);
+  const [schoolError, setSchoolError] = useState('');
+  const [verifyError, setVerifyError] = useState('');
+  const [sessionExpired, setSessionExpired] = useState(false);
   const [busy, setBusy] = useState(false);
   const [revision, setRevision] = useState(0);
   const accessToken = state.status === 'ready' ? state.session.access_token : null;
@@ -473,8 +494,8 @@ function TeacherVerificationContent() {
       },
       (cause: unknown) => {
         if (active) {
-          setError(cause instanceof Error ? cause.message : 'Sekolah belum dapat dimuat.');
-          setErrorStatus(cause instanceof ApiProblem ? cause.status : 0);
+          setSchoolError(cause instanceof Error ? cause.message : 'Sekolah belum dapat dimuat.');
+          setSessionExpired(cause instanceof ApiProblem && cause.status === 401);
         }
       },
     );
@@ -487,15 +508,21 @@ function TeacherVerificationContent() {
     event.preventDefault();
     if (!accessToken || !schoolId || !token.trim() || busy) return;
     setBusy(true);
-    setError('');
-    setErrorStatus(0);
+    setVerifyError('');
     try {
       await verifyTeacher(accessToken, schoolId, token.trim());
       setToken('');
       await refresh();
     } catch (cause) {
-      setError(cause instanceof Error ? cause.message : 'Verifikasi belum berhasil.');
-      setErrorStatus(cause instanceof ApiProblem ? cause.status : 0);
+      const status = cause instanceof ApiProblem ? cause.status : 0;
+      const detail = cause instanceof Error ? cause.message : 'Verifikasi belum berhasil.';
+      // The API reports an unusable token as one collapsed 403 on purpose, so the
+      // guidance names the next action without claiming which cause applied.
+      setVerifyError(
+        status === 403 ? `${detail} Minta credential baru dari Admin sekolah.` : detail,
+      );
+      setSessionExpired(status === 401);
+    } finally {
       setBusy(false);
     }
   }
@@ -509,7 +536,7 @@ function TeacherVerificationContent() {
         state.profile.role === 'TEACHER' &&
         !state.profile.teacherVerified ? (
           <>
-            {schools === null && !error ? (
+            {schools === null && !schoolError ? (
               <p role="status">Memuat sekolah…</p>
             ) : (
               <form
@@ -529,6 +556,11 @@ function TeacherVerificationContent() {
                   required
                 />
                 {schools?.length === 0 && <p role="status">Belum ada sekolah aktif.</p>}
+                {schoolError && (
+                  <p className="form-error" role="alert">
+                    {schoolError}
+                  </p>
+                )}
                 <Input
                   label="Token verifikasi"
                   id="teacher-token"
@@ -542,33 +574,29 @@ function TeacherVerificationContent() {
                   value={token}
                   onChange={(event) => setToken(event.target.value.trim())}
                   disabled={busy}
+                  error={verifyError}
                   leftIcon={<Icon name="lock" width={20} height={20} />}
                   helper="Token diberikan oleh Admin sekolah."
                   required
                 />
-                {error && (
-                  <p className="form-error" role="alert">
-                    {error}
-                  </p>
-                )}
                 <Button fullWidth type="submit" loading={busy} disabled={busy || !schools?.length}>
                   {busy ? 'Memverifikasi…' : 'Verifikasi dan lanjutkan'}
                 </Button>
               </form>
             )}
-            {error && schools === null && (
+            {schoolError && schools === null && (
               <Button
                 className="secondary-button"
                 onClick={() => {
-                  setError('');
-                  setErrorStatus(0);
+                  setSchoolError('');
+                  setSessionExpired(false);
                   setRevision((n) => n + 1);
                 }}
               >
                 Coba lagi
               </Button>
             )}
-            {errorStatus === 401 && (
+            {sessionExpired && (
               <Link className="button-link" href="/">
                 Masuk kembali
               </Link>

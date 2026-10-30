@@ -1,5 +1,5 @@
-import { AdminHomeScreen } from '@/features/admin/home';
+import { AdminEntryScreen } from '@/features/admin/entry';
 
 export default function AdminPage() {
-  return <AdminHomeScreen />;
+  return <AdminEntryScreen />;
 }

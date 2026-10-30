@@ -51,7 +51,7 @@ test('diagnostics project durations and allowlisted current-attempt artifacts wi
   const diagnostics = projectDiagnostics(
     [
       {
-        name: 'browser',
+        name: 'browser-e2e (1)',
         id: 456,
         conclusion: 'failure',
         started_at: '2026-10-27T01:00:00Z',
@@ -73,21 +73,30 @@ test('diagnostics project durations and allowlisted current-attempt artifacts wi
           { name: 'Interrupted', conclusion: null },
         ],
       },
+      {
+        name: 'browser-e2e (2)',
+        id: 457,
+        conclusion: 'success',
+        started_at: '2026-10-27T01:00:00Z',
+        completed_at: '2026-10-27T01:10:00Z',
+        steps: [],
+      },
     ],
     [
       {
         id: 789,
-        name: `browser-${context.sha}-2`,
+        name: `browser-1-${context.sha}-2`,
         expired: false,
         archive_download_url: 'DO_NOT_EXPORT',
       },
+      { id: 793, name: `browser-2-${context.sha}-2`, expired: false },
       { id: 790, name: `connected-job10-${context.sha}-2`, expired: true },
       { id: 791, name: `connected-job06-${context.sha}-1`, expired: false },
       { id: 792, name: 'unrelated-secret-artifact', expired: false },
     ],
     context,
   );
-  const browser = diagnostics.jobs.find((job) => job.name === 'browser');
+  const browser = diagnostics.jobs.find((job) => job.name === 'browser-e2e (1)');
   assert.equal(browser.seconds, 900);
   assert.equal(browser.steps[1].seconds, null);
   assert.equal(browser.steps[2].result, 'not_completed');
@@ -95,21 +104,49 @@ test('diagnostics project durations and allowlisted current-attempt artifacts wi
     diagnostics.artifacts[0].url,
     'https://github.com/owner/repo/actions/runs/123/artifacts/789',
   );
-  assert.equal(diagnostics.artifacts[1].url, null);
+  assert.ok(diagnostics.artifacts[1].url.endsWith('/artifacts/793'));
   assert.equal(diagnostics.artifacts[2].url, null);
+  assert.equal(diagnostics.artifacts[3].url, null);
   assert.doesNotMatch(JSON.stringify(diagnostics), /DO_NOT_EXPORT|unrelated-secret/);
   const summary = renderSummary({
     ...context,
     node: 'v24',
     runner: 'Linux',
     checkoutMatches: true,
-    gate: evaluateNeeds({ ...success(), browser: { result: 'failure' } }),
+    gate: evaluateNeeds({ ...success(), 'browser-e2e': { result: 'failure' } }),
     diagnostics,
   });
   assert.match(summary, /Gate: FAIL/);
-  assert.match(summary, /browser \| failure \| 900s/);
+  assert.match(summary, /browser-e2e \| failure \| 900s \/ 600s/);
+  assert.match(summary, /browser-e2e \(1\) log.*\/job\/456/);
+  assert.match(summary, /browser-e2e \(2\) log.*\/job\/457/);
   assert.match(summary, /Later step \| skipped \| —/);
   assert.match(summary, /unavailable or expired/);
+});
+
+test('a missing shard stays unavailable and optional metadata cannot approve a failed matrix', () => {
+  const diagnostics = projectDiagnostics(
+    [{ name: 'browser-e2e (1)', id: 456, conclusion: 'success', steps: [] }],
+    [],
+    context,
+  );
+  assert.equal(
+    diagnostics.jobs.find((job) => job.name === 'browser-e2e (2)').result,
+    'unavailable',
+  );
+  assert.equal(diagnostics.artifacts[1].url, null);
+  for (const result of ['failure', 'cancelled', 'skipped']) {
+    const summary = renderSummary({
+      ...context,
+      node: 'v24',
+      runner: 'Linux',
+      checkoutMatches: true,
+      gate: evaluateNeeds({ ...success(), 'browser-e2e': { result } }),
+      diagnostics,
+    });
+    assert.match(summary, /Gate: FAIL/);
+    assert.match(summary, /browser-e2e \(2\)/);
+  }
 });
 
 test('API metadata is scoped to the current attempt, paginated and stripped of unknown fields', async () => {
@@ -124,7 +161,7 @@ test('API metadata is scoped to the current attempt, paginated and stripped of u
     return response({
       artifacts: url.endsWith('page=1')
         ? Array.from({ length: 100 }, () => ({ name: 'unrelated' }))
-        : [{ id: 2, name: `browser-${context.sha}-2`, expired: false }],
+        : [{ id: 2, name: `browser-1-${context.sha}-2`, expired: false }],
     });
   });
   assert.equal(calls.length, 3);

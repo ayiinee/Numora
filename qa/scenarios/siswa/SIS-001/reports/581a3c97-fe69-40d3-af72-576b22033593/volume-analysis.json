@@ -1,0 +1,1243 @@
+{
+  "checkedAt": "2026-10-27T11:26:58.010Z",
+  "mode": "READ_ONLY",
+  "sourceRun": "c4d65512-857c-41b9-bd20-0a9181066e0c",
+  "runs": {
+    "B": {
+      "id": "e9335d05-792f-4bb3-b8e3-a9594c5b2576",
+      "volumeStatus": "BLOCKED",
+      "integrity": {
+        "source": 111000,
+        "delivered": 16450,
+        "pending": 94550,
+        "failed": 0,
+        "processed_without_analytics": 0,
+        "pending_with_analytics": 0,
+        "delivered_content_mismatch": 0
+      },
+      "stageGroups": [
+        {
+          "burst": "1",
+          "source": 1000,
+          "processed": 1000,
+          "pending": 0,
+          "first_occurred": "2026-10-27T10:47:52.060Z",
+          "last_occurred": "2026-10-27T10:47:52.064Z",
+          "first_processed": "2026-10-27T10:47:52.734Z",
+          "last_processed": "2026-10-27T10:48:00.361Z"
+        },
+        {
+          "burst": "2",
+          "source": 10000,
+          "processed": 10000,
+          "pending": 0,
+          "first_occurred": "2026-10-27T10:48:00.386Z",
+          "last_occurred": "2026-10-27T10:48:00.774Z",
+          "first_processed": "2026-10-27T10:48:00.825Z",
+          "last_processed": "2026-10-27T10:49:02.594Z"
+        },
+        {
+          "burst": "3",
+          "source": 100000,
+          "processed": 5450,
+          "pending": 94550,
+          "first_occurred": "2026-10-27T10:49:02.688Z",
+          "last_occurred": "2026-10-27T10:49:10.601Z",
+          "first_processed": "2026-10-27T10:49:10.688Z",
+          "last_processed": "2026-10-27T10:51:10.538Z"
+        }
+      ],
+      "grouping": "inferred insertion bursts separated by >1s; validate counts against configured sizes",
+      "statisticsBeforeDiagnostics": {
+        "temp_files": "0",
+        "temp_bytes": "0",
+        "deadlocks": "0",
+        "xact_commit": "18318",
+        "xact_rollback": "0",
+        "stats_reset": null
+      },
+      "tableStatisticsBeforeDiagnostics": [
+        {
+          "relname": "analytics_events",
+          "seq_scan": "2",
+          "seq_tup_read": "12022",
+          "idx_scan": "16465",
+          "idx_tup_fetch": "3",
+          "n_live_tup": "16451",
+          "n_dead_tup": "0",
+          "last_autoanalyze": "2026-10-27T10:51:00.437Z",
+          "autoanalyze_count": "4"
+        },
+        {
+          "relname": "analytics_outbox",
+          "seq_scan": "1657",
+          "seq_tup_read": "71885227",
+          "idx_scan": "32927",
+          "idx_tup_fetch": "2121419",
+          "n_live_tup": "111011",
+          "n_dead_tup": "3123",
+          "last_autoanalyze": "2026-10-27T10:49:59.190Z",
+          "autoanalyze_count": "3"
+        }
+      ],
+      "indexStatisticsBeforeDiagnostics": [
+        {
+          "relname": "analytics_events",
+          "indexrelname": "analytics_events_name_time_idx",
+          "idx_scan": "0",
+          "idx_tup_read": "0",
+          "idx_tup_fetch": "0"
+        },
+        {
+          "relname": "analytics_events",
+          "indexrelname": "analytics_events_pkey",
+          "idx_scan": "16465",
+          "idx_tup_read": "4",
+          "idx_tup_fetch": "3"
+        },
+        {
+          "relname": "analytics_outbox",
+          "indexrelname": "analytics_outbox_pending_idx",
+          "idx_scan": "16462",
+          "idx_tup_read": "3753217",
+          "idx_tup_fetch": "1708348"
+        },
+        {
+          "relname": "analytics_outbox",
+          "indexrelname": "analytics_outbox_pkey",
+          "idx_scan": "16465",
+          "idx_tup_read": "16465",
+          "idx_tup_fetch": "16465"
+        }
+      ],
+      "indexes": [
+        {
+          "tablename": "analytics_events",
+          "indexname": "analytics_events_name_time_idx",
+          "indexdef": "CREATE INDEX analytics_events_name_time_idx ON public.analytics_events USING btree (event_name, occurred_at)"
+        },
+        {
+          "tablename": "analytics_events",
+          "indexname": "analytics_events_pkey",
+          "indexdef": "CREATE UNIQUE INDEX analytics_events_pkey ON public.analytics_events USING btree (event_id)"
+        },
+        {
+          "tablename": "analytics_outbox",
+          "indexname": "analytics_outbox_pending_idx",
+          "indexdef": "CREATE INDEX analytics_outbox_pending_idx ON public.analytics_outbox USING btree (processed_at, occurred_at)"
+        },
+        {
+          "tablename": "analytics_outbox",
+          "indexname": "analytics_outbox_pkey",
+          "indexdef": "CREATE UNIQUE INDEX analytics_outbox_pkey ON public.analytics_outbox USING btree (id)"
+        }
+      ],
+      "settings": [
+        {
+          "name": "fsync",
+          "setting": "on",
+          "unit": null
+        },
+        {
+          "name": "server_version",
+          "setting": "16.14",
+          "unit": null
+        },
+        {
+          "name": "shared_buffers",
+          "setting": "16384",
+          "unit": "8kB"
+        },
+        {
+          "name": "synchronous_commit",
+          "setting": "on",
+          "unit": null
+        },
+        {
+          "name": "work_mem",
+          "setting": "4096",
+          "unit": "kB"
+        }
+      ],
+      "exactPlanWithoutExecution": {
+        "Plan": {
+          "Node Type": "Limit",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 1.04,
+          "Total Cost": 1.16,
+          "Plan Rows": 1,
+          "Plan Width": 189,
+          "Plans": [
+            {
+              "Node Type": "LockRows",
+              "Parent Relationship": "Outer",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 1.04,
+              "Total Cost": 12328.18,
+              "Plan Rows": 97865,
+              "Plan Width": 189,
+              "Plans": [
+                {
+                  "Node Type": "Incremental Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 1.04,
+                  "Total Cost": 11349.53,
+                  "Plan Rows": 97865,
+                  "Plan Width": 189,
+                  "Sort Key": [
+                    "processed_at",
+                    "occurred_at",
+                    "id"
+                  ],
+                  "Presorted Key": [
+                    "processed_at",
+                    "occurred_at"
+                  ],
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Forward",
+                      "Index Name": "analytics_outbox_pending_idx",
+                      "Relation Name": "analytics_outbox",
+                      "Alias": "analytics_outbox",
+                      "Startup Cost": 0.29,
+                      "Total Cost": 9372.18,
+                      "Plan Rows": 97865,
+                      "Plan Width": 189,
+                      "Index Cond": "(processed_at IS NULL)",
+                      "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "readEquivalentTimings": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.04,
+            "Total Cost": 1.15,
+            "Plan Rows": 1,
+            "Plan Width": 183,
+            "Actual Startup Time": 0.879,
+            "Actual Total Time": 0.88,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 7,
+            "Shared Read Blocks": 4,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.04,
+                "Total Cost": 11349.53,
+                "Plan Rows": 97865,
+                "Plan Width": 183,
+                "Actual Startup Time": 0.877,
+                "Actual Total Time": 0.877,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 7,
+                "Shared Read Blocks": 4,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 9372.18,
+                    "Plan Rows": 97865,
+                    "Plan Width": 183,
+                    "Actual Startup Time": 0.776,
+                    "Actual Total Time": 0.826,
+                    "Actual Rows": 52,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 7,
+                    "Shared Read Blocks": 4,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.243,
+          "Triggers": [],
+          "Execution Time": 0.956
+        },
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.04,
+            "Total Cost": 1.15,
+            "Plan Rows": 1,
+            "Plan Width": 183,
+            "Actual Startup Time": 0.112,
+            "Actual Total Time": 0.113,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 11,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.04,
+                "Total Cost": 11349.53,
+                "Plan Rows": 97865,
+                "Plan Width": 183,
+                "Actual Startup Time": 0.111,
+                "Actual Total Time": 0.111,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 11,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 9372.18,
+                    "Plan Rows": 97865,
+                    "Plan Width": 183,
+                    "Actual Startup Time": 0.025,
+                    "Actual Total Time": 0.075,
+                    "Actual Rows": 52,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 11,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.164,
+          "Triggers": [],
+          "Execution Time": 0.156
+        },
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.04,
+            "Total Cost": 1.15,
+            "Plan Rows": 1,
+            "Plan Width": 183,
+            "Actual Startup Time": 0.177,
+            "Actual Total Time": 0.178,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 11,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.04,
+                "Total Cost": 11349.53,
+                "Plan Rows": 97865,
+                "Plan Width": 183,
+                "Actual Startup Time": 0.175,
+                "Actual Total Time": 0.176,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 11,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 9372.18,
+                    "Plan Rows": 97865,
+                    "Plan Width": 183,
+                    "Actual Startup Time": 0.033,
+                    "Actual Total Time": 0.115,
+                    "Actual Rows": 52,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 11,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.234,
+          "Triggers": [],
+          "Execution Time": 0.232
+        }
+      ],
+      "limitation": "Post-run SELECT diagnostics only; no locking query execution, throughput or commit-time claim from these timings."
+    },
+    "C": {
+      "id": "581a3c97-fe69-40d3-af72-576b22033593",
+      "volumeStatus": "BLOCKED",
+      "integrity": {
+        "source": 111000,
+        "delivered": 26030,
+        "pending": 84970,
+        "failed": 0,
+        "processed_without_analytics": 0,
+        "pending_with_analytics": 0,
+        "delivered_content_mismatch": 0
+      },
+      "stageGroups": [
+        {
+          "stage_id": "891df40a-994b-4f24-b2ff-7c1d44bebc0e",
+          "stage_size": "1000",
+          "run_id": "581a3c97-fe69-40d3-af72-576b22033593",
+          "source": 1000,
+          "processed": 1000,
+          "pending": 0,
+          "first_occurred": "2026-10-27T11:12:17.444Z",
+          "last_occurred": "2026-10-27T11:12:17.452Z",
+          "first_processed": "2026-10-27T11:12:17.839Z",
+          "last_processed": "2026-10-27T11:12:26.119Z"
+        },
+        {
+          "stage_id": "8301ef0d-8159-4e14-9fb8-1973d464ae01",
+          "stage_size": "10000",
+          "run_id": "581a3c97-fe69-40d3-af72-576b22033593",
+          "source": 10000,
+          "processed": 10000,
+          "pending": 0,
+          "first_occurred": "2026-10-27T11:12:26.139Z",
+          "last_occurred": "2026-10-27T11:12:26.718Z",
+          "first_processed": "2026-10-27T11:12:26.764Z",
+          "last_processed": "2026-10-27T11:13:23.986Z"
+        },
+        {
+          "stage_id": "64e1d358-6101-4815-b916-fb8c00a76d29",
+          "stage_size": "100000",
+          "run_id": "581a3c97-fe69-40d3-af72-576b22033593",
+          "source": 100000,
+          "processed": 15030,
+          "pending": 84970,
+          "first_occurred": "2026-10-27T11:13:24.055Z",
+          "last_occurred": "2026-10-27T11:13:31.259Z",
+          "first_processed": "2026-10-27T11:13:31.514Z",
+          "last_processed": "2026-10-27T11:15:31.407Z"
+        }
+      ],
+      "grouping": "explicit fixture stageId",
+      "statisticsBeforeDiagnostics": {
+        "temp_files": "0",
+        "temp_bytes": "0",
+        "deadlocks": "0",
+        "xact_commit": "29365",
+        "xact_rollback": "0",
+        "stats_reset": null
+      },
+      "tableStatisticsBeforeDiagnostics": [
+        {
+          "relname": "analytics_events",
+          "seq_scan": "1",
+          "seq_tup_read": "11011",
+          "idx_scan": "27043",
+          "idx_tup_fetch": "1000",
+          "n_live_tup": "25997",
+          "n_dead_tup": "0",
+          "last_autoanalyze": "2026-10-27T11:15:19.944Z",
+          "autoanalyze_count": "3"
+        },
+        {
+          "relname": "analytics_outbox",
+          "seq_scan": "1971",
+          "seq_tup_read": "12748491",
+          "idx_scan": "53082",
+          "idx_tup_fetch": "2758370",
+          "n_live_tup": "111003",
+          "n_dead_tup": "8016",
+          "last_autoanalyze": "2026-10-27T11:14:20.023Z",
+          "autoanalyze_count": "2"
+        }
+      ],
+      "indexStatisticsBeforeDiagnostics": [
+        {
+          "relname": "analytics_events",
+          "indexrelname": "analytics_events_name_time_idx",
+          "idx_scan": "0",
+          "idx_tup_read": "0",
+          "idx_tup_fetch": "0"
+        },
+        {
+          "relname": "analytics_events",
+          "indexrelname": "analytics_events_pkey",
+          "idx_scan": "27043",
+          "idx_tup_read": "1002",
+          "idx_tup_fetch": "1000"
+        },
+        {
+          "relname": "analytics_outbox",
+          "indexrelname": "analytics_outbox_pending_idx",
+          "idx_scan": "27039",
+          "idx_tup_read": "10270761",
+          "idx_tup_fetch": "2221776"
+        },
+        {
+          "relname": "analytics_outbox",
+          "indexrelname": "analytics_outbox_pkey",
+          "idx_scan": "26043",
+          "idx_tup_read": "26043",
+          "idx_tup_fetch": "26041"
+        }
+      ],
+      "indexes": [
+        {
+          "tablename": "analytics_events",
+          "indexname": "analytics_events_name_time_idx",
+          "indexdef": "CREATE INDEX analytics_events_name_time_idx ON public.analytics_events USING btree (event_name, occurred_at)"
+        },
+        {
+          "tablename": "analytics_events",
+          "indexname": "analytics_events_pkey",
+          "indexdef": "CREATE UNIQUE INDEX analytics_events_pkey ON public.analytics_events USING btree (event_id)"
+        },
+        {
+          "tablename": "analytics_outbox",
+          "indexname": "analytics_outbox_pending_idx",
+          "indexdef": "CREATE INDEX analytics_outbox_pending_idx ON public.analytics_outbox USING btree (processed_at, occurred_at)"
+        },
+        {
+          "tablename": "analytics_outbox",
+          "indexname": "analytics_outbox_pkey",
+          "indexdef": "CREATE UNIQUE INDEX analytics_outbox_pkey ON public.analytics_outbox USING btree (id)"
+        }
+      ],
+      "settings": [
+        {
+          "name": "fsync",
+          "setting": "on",
+          "unit": null
+        },
+        {
+          "name": "server_version",
+          "setting": "16.14",
+          "unit": null
+        },
+        {
+          "name": "shared_buffers",
+          "setting": "16384",
+          "unit": "8kB"
+        },
+        {
+          "name": "synchronous_commit",
+          "setting": "on",
+          "unit": null
+        },
+        {
+          "name": "work_mem",
+          "setting": "4096",
+          "unit": "kB"
+        }
+      ],
+      "exactPlanWithoutExecution": {
+        "Plan": {
+          "Node Type": "Limit",
+          "Parallel Aware": false,
+          "Async Capable": false,
+          "Startup Cost": 1.07,
+          "Total Cost": 1.25,
+          "Plan Rows": 1,
+          "Plan Width": 322,
+          "Plans": [
+            {
+              "Node Type": "LockRows",
+              "Parent Relationship": "Outer",
+              "Parallel Aware": false,
+              "Async Capable": false,
+              "Startup Cost": 1.07,
+              "Total Cost": 16515.54,
+              "Plan Rows": 93076,
+              "Plan Width": 322,
+              "Plans": [
+                {
+                  "Node Type": "Incremental Sort",
+                  "Parent Relationship": "Outer",
+                  "Parallel Aware": false,
+                  "Async Capable": false,
+                  "Startup Cost": 1.07,
+                  "Total Cost": 15584.78,
+                  "Plan Rows": 93076,
+                  "Plan Width": 322,
+                  "Sort Key": [
+                    "processed_at",
+                    "occurred_at",
+                    "id"
+                  ],
+                  "Presorted Key": [
+                    "processed_at",
+                    "occurred_at"
+                  ],
+                  "Plans": [
+                    {
+                      "Node Type": "Index Scan",
+                      "Parent Relationship": "Outer",
+                      "Parallel Aware": false,
+                      "Async Capable": false,
+                      "Scan Direction": "Forward",
+                      "Index Name": "analytics_outbox_pending_idx",
+                      "Relation Name": "analytics_outbox",
+                      "Alias": "analytics_outbox",
+                      "Startup Cost": 0.29,
+                      "Total Cost": 13594.85,
+                      "Plan Rows": 93076,
+                      "Plan Width": 322,
+                      "Index Cond": "(processed_at IS NULL)",
+                      "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))"
+                    }
+                  ]
+                }
+              ]
+            }
+          ]
+        }
+      },
+      "readEquivalentTimings": [
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.07,
+            "Total Cost": 1.24,
+            "Plan Rows": 1,
+            "Plan Width": 316,
+            "Actual Startup Time": 0.291,
+            "Actual Total Time": 0.292,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 19,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.07,
+                "Total Cost": 15584.78,
+                "Plan Rows": 93076,
+                "Plan Width": 316,
+                "Actual Startup Time": 0.29,
+                "Actual Total Time": 0.29,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 26,
+                    "Peak Sort Space Used": 26
+                  }
+                },
+                "Pre-sorted Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 19,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 13594.85,
+                    "Plan Rows": 93076,
+                    "Plan Width": 316,
+                    "Actual Startup Time": 0.096,
+                    "Actual Total Time": 0.167,
+                    "Actual Rows": 135,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 16,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.157,
+          "Triggers": [],
+          "Execution Time": 0.342
+        },
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.07,
+            "Total Cost": 1.24,
+            "Plan Rows": 1,
+            "Plan Width": 316,
+            "Actual Startup Time": 0.163,
+            "Actual Total Time": 0.164,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 16,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.07,
+                "Total Cost": 15584.78,
+                "Plan Rows": 93076,
+                "Plan Width": 316,
+                "Actual Startup Time": 0.162,
+                "Actual Total Time": 0.163,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 26,
+                    "Peak Sort Space Used": 26
+                  }
+                },
+                "Pre-sorted Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 16,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 13594.85,
+                    "Plan Rows": 93076,
+                    "Plan Width": 316,
+                    "Actual Startup Time": 0.033,
+                    "Actual Total Time": 0.1,
+                    "Actual Rows": 135,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 16,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.161,
+          "Triggers": [],
+          "Execution Time": 0.196
+        },
+        {
+          "Plan": {
+            "Node Type": "Limit",
+            "Parallel Aware": false,
+            "Async Capable": false,
+            "Startup Cost": 1.07,
+            "Total Cost": 1.24,
+            "Plan Rows": 1,
+            "Plan Width": 316,
+            "Actual Startup Time": 0.166,
+            "Actual Total Time": 0.167,
+            "Actual Rows": 1,
+            "Actual Loops": 1,
+            "Shared Hit Blocks": 16,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0,
+            "Plans": [
+              {
+                "Node Type": "Incremental Sort",
+                "Parent Relationship": "Outer",
+                "Parallel Aware": false,
+                "Async Capable": false,
+                "Startup Cost": 1.07,
+                "Total Cost": 15584.78,
+                "Plan Rows": 93076,
+                "Plan Width": 316,
+                "Actual Startup Time": 0.165,
+                "Actual Total Time": 0.166,
+                "Actual Rows": 1,
+                "Actual Loops": 1,
+                "Sort Key": [
+                  "processed_at",
+                  "occurred_at",
+                  "id"
+                ],
+                "Presorted Key": [
+                  "processed_at",
+                  "occurred_at"
+                ],
+                "Full-sort Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 26,
+                    "Peak Sort Space Used": 26
+                  }
+                },
+                "Pre-sorted Groups": {
+                  "Group Count": 1,
+                  "Sort Methods Used": [
+                    "top-N heapsort"
+                  ],
+                  "Sort Space Memory": {
+                    "Average Sort Space Used": 25,
+                    "Peak Sort Space Used": 25
+                  }
+                },
+                "Shared Hit Blocks": 16,
+                "Shared Read Blocks": 0,
+                "Shared Dirtied Blocks": 0,
+                "Shared Written Blocks": 0,
+                "Local Hit Blocks": 0,
+                "Local Read Blocks": 0,
+                "Local Dirtied Blocks": 0,
+                "Local Written Blocks": 0,
+                "Temp Read Blocks": 0,
+                "Temp Written Blocks": 0,
+                "Plans": [
+                  {
+                    "Node Type": "Index Scan",
+                    "Parent Relationship": "Outer",
+                    "Parallel Aware": false,
+                    "Async Capable": false,
+                    "Scan Direction": "Forward",
+                    "Index Name": "analytics_outbox_pending_idx",
+                    "Relation Name": "analytics_outbox",
+                    "Alias": "analytics_outbox",
+                    "Startup Cost": 0.29,
+                    "Total Cost": 13594.85,
+                    "Plan Rows": 93076,
+                    "Plan Width": 316,
+                    "Actual Startup Time": 0.032,
+                    "Actual Total Time": 0.099,
+                    "Actual Rows": 135,
+                    "Actual Loops": 1,
+                    "Index Cond": "(processed_at IS NULL)",
+                    "Rows Removed by Index Recheck": 0,
+                    "Filter": "((failed_at IS NULL) OR (failed_at <= (clock_timestamp() - '00:05:00'::interval)))",
+                    "Rows Removed by Filter": 0,
+                    "Shared Hit Blocks": 16,
+                    "Shared Read Blocks": 0,
+                    "Shared Dirtied Blocks": 0,
+                    "Shared Written Blocks": 0,
+                    "Local Hit Blocks": 0,
+                    "Local Read Blocks": 0,
+                    "Local Dirtied Blocks": 0,
+                    "Local Written Blocks": 0,
+                    "Temp Read Blocks": 0,
+                    "Temp Written Blocks": 0
+                  }
+                ]
+              }
+            ]
+          },
+          "Planning": {
+            "Shared Hit Blocks": 0,
+            "Shared Read Blocks": 0,
+            "Shared Dirtied Blocks": 0,
+            "Shared Written Blocks": 0,
+            "Local Hit Blocks": 0,
+            "Local Read Blocks": 0,
+            "Local Dirtied Blocks": 0,
+            "Local Written Blocks": 0,
+            "Temp Read Blocks": 0,
+            "Temp Written Blocks": 0
+          },
+          "Planning Time": 0.16,
+          "Triggers": [],
+          "Execution Time": 0.202
+        }
+      ],
+      "limitation": "Post-run SELECT diagnostics only; no locking query execution, throughput or commit-time claim from these timings."
+    }
+  },
+  "loadReconciliation": {
+    "B": {
+      "runId": "e9335d05-792f-4bb3-b8e3-a9594c5b2576",
+      "loadStatus": "BLOCKED",
+      "acceptedReported": 382,
+      "statuses": [
+        {
+          "status": "GRADED",
+          "count": 425
+        },
+        {
+          "status": "IN_PROGRESS",
+          "count": 350
+        }
+      ],
+      "durability": {
+        "graded": 425,
+        "broken_ledger": 0,
+        "broken_outbox": 0
+      },
+      "scopeStart": "2026-10-27T10:51:11.708Z",
+      "limitation": "Attempts selected by started_at after the owned load API started. Client-timeout outcomes may be ambiguous; no per-response attempt-ID list was retained by k6. This does not change BLOCKED to PASS."
+    },
+    "C": {
+      "runId": "581a3c97-fe69-40d3-af72-576b22033593",
+      "loadStatus": "BLOCKED",
+      "acceptedReported": 844,
+      "statuses": [
+        {
+          "status": "GRADED",
+          "count": 1121
+        }
+      ],
+      "durability": {
+        "graded": 1121,
+        "broken_ledger": 0,
+        "broken_outbox": 0
+      },
+      "scopeStart": "2026-10-27T11:15:32.254Z",
+      "limitation": "Attempts selected by started_at after the owned load API started. Client-timeout outcomes may be ambiguous; no per-response attempt-ID list was retained by k6. This does not change BLOCKED to PASS."
+    }
+  }
+}

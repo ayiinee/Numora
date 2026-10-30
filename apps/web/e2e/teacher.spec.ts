@@ -52,8 +52,10 @@ async function setup(page: Page) {
     failSchools: false,
     emptySchools: false,
     failVerify: false,
-    verifyStatus: 400,
+    verifyStatus: 403,
     failCreate: false,
+    createStatus: 400,
+    createBeforeError: false,
     emptyClass: false,
     denied: 0,
     emptyProgress: false,
@@ -82,10 +84,10 @@ async function setup(page: Page) {
     ],
   };
   await page.route('https://numora-e2e.supabase.co/**', (route) => route.fulfill({ json: {} }));
-  const fail = (status: number, detail: string) => ({
+  const fail = (status: number, detail: string, code = 'FIXTURE_ERROR') => ({
     status,
     contentType: 'application/problem+json',
-    json: { status, code: 'FIXTURE_ERROR', detail },
+    json: { status, code, detail },
   });
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
     const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
@@ -106,15 +108,30 @@ async function setup(page: Page) {
     } else if (path === `/schools/${schoolId}/teacher-verifications`) {
       state.verifyTokens.push(route.request().postDataJSON().token);
       if (state.failVerify)
-        return route.fulfill(fail(state.verifyStatus, 'Token kedaluwarsa atau sudah digunakan.'));
+        return route.fulfill(
+          fail(
+            state.verifyStatus,
+            // Mirrors schools.service.ts: an unusable token is one collapsed 403 whose
+            // detail names every cause together, so the client cannot probe which one.
+            'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+            'INVALID_TEACHER_TOKEN',
+          ),
+        );
       state.verified = true;
       data = { verified: true };
     } else if (path === '/classes') {
       if (route.request().method() === 'POST') {
         const name = route.request().postDataJSON().name;
         state.creates.push(name);
-        if (state.failCreate) return route.fulfill(fail(503, 'Kelas belum dapat dibuat.'));
-        const value = { id: '88888888-8888-4888-8888-888888888888', name, joinCode: 'Ab_cd-234' };
+        const value = {
+          id: `88888888-8888-4888-8888-${String(state.creates.length).padStart(12, '0')}`,
+          name,
+          joinCode: 'Ab_cd-234',
+        };
+        if (state.failCreate) {
+          if (state.createBeforeError) state.classes.push(value);
+          return route.fulfill(fail(state.createStatus, 'Kelas belum dapat dibuat.'));
+        }
         state.classes.push(value);
         data = value;
       } else data = { items: state.classes };
@@ -367,7 +384,7 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await expect(page.getByRole('img', { name: 'QR kode kelas Kelas IX-B' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Unduh PNG QR' })).toHaveAttribute(
       'download',
-      'numora-kode-kelas.png',
+      'qr-kelas-ix-b.png',
     );
     await capture(page, 'invite', width);
     await page.goto(`/teacher/classes/${classId}/settings`);
@@ -429,7 +446,12 @@ test('Teacher failed verification and school loading remain retryable without op
   await page.getByLabel('Token verifikasi').fill('Ab2345Cd');
   state.failVerify = true;
   await page.getByRole('button', { name: 'Verifikasi dan lanjutkan' }).click();
-  await expect(page.locator('main').getByRole('alert')).toContainText('Token kedaluwarsa');
+  const tokenAlert = page.locator('#teacher-token-error');
+  await expect(tokenAlert).toHaveAttribute('role', 'alert');
+  await expect(tokenAlert).toContainText(
+    'Token tidak valid, kedaluwarsa, telah dipakai, atau dicabut.',
+  );
+  await expect(tokenAlert).toContainText('Minta credential baru dari Admin sekolah.');
   await expect(page.getByLabel('Token verifikasi')).toHaveValue('Ab2345Cd');
   await expect(page).toHaveURL(/verification-required$/);
   await capture(page, 'verification-token-error', 390);
@@ -459,6 +481,18 @@ test('Teacher create error, empty classes and students retain recovery and no fa
   state.failCreate = false;
   await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
   await expect(page.locator('.teacher-class-card')).toHaveCount(1);
+  state.failCreate = true;
+  state.createStatus = 503;
+  state.createBeforeError = true;
+  await page.getByLabel('Nama kelas').fill('IX Tersimpan');
+  await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await expect(page.locator('main').getByRole('alert')).toContainText(
+    'Pengiriman tidak dapat dipastikan.',
+  );
+  await expect(page.getByLabel('Nama kelas')).toHaveValue('');
+  await expect(page.getByRole('button', { name: 'Buat kelas', exact: true })).toBeDisabled();
+  await expect(page.locator('.teacher-class-card')).toHaveCount(2);
+  expect(state.creates).toEqual(['IX Retry', 'IX Retry', 'IX Tersimpan']);
   state.classes = [{ id: classId, name: 'Kelas IX-B', joinCode: 'QA2345' }];
   state.emptyClass = true;
   await page.goto(`/teacher/classes/${classId}`);
@@ -612,7 +646,9 @@ test('Teacher desktop invite dialog traps focus, copies the actual code, downloa
   const downloadLink = dialog.getByRole('link', { name: 'Unduh PNG QR' });
   const downloading = page.waitForEvent('download');
   await downloadLink.click();
-  expect((await downloading).suggestedFilename()).toBe('numora-kode-kelas.png');
+  // The file is named after the class so a Teacher with several classes can tell
+  // the downloads apart; "Kelas IX-B" slugs to qr-kelas-ix-b.png.
+  expect((await downloading).suggestedFilename()).toBe('qr-kelas-ix-b.png');
   await downloadLink.focus();
   await page.keyboard.press('Tab');
   await expect(dialog.getByRole('button', { name: 'Tutup dialog' })).toBeFocused();

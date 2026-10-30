@@ -1,3 +1,4 @@
+import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, expect, it } from 'vitest';
 import { AssessmentExplanation, QuestionReviewDetail } from './assessment-review';
@@ -31,11 +32,13 @@ const question: ReviewedQuestionDto = {
 };
 it('renders a dedicated read-only question layout with explanation underneath and navigates', () => {
   const view = render(
-    <AssessmentExplanation
-      questions={[question, { ...question, questionInstanceId: 'q2', stem: 'Soal kedua' }]}
-      title="Pembahasan Drill"
-      resultHref="/student/drill/a/result"
-    />,
+    <QueryClientProvider client={new QueryClient()}>
+      <AssessmentExplanation
+        questions={[question, { ...question, questionInstanceId: 'q2', stem: 'Soal kedua' }]}
+        title="Pembahasan Drill"
+        resultHref="/student/drill/a/result"
+      />
+    </QueryClientProvider>,
   );
   expect(screen.getByText('Sebagian benar')).toBeTruthy();
   expect(view.container.querySelector('.practice-question .practice-choices')).toBeTruthy();

@@ -1,0 +1,30 @@
+{
+  "checkedAt": "2026-10-27T11:30:50.714Z",
+  "workerTests": {
+    "status": "PASS",
+    "reason": null,
+    "observedTests": 4,
+    "runId": "c8d89c09-9487-4b8b-b218-39c46b2dcec4",
+    "passed": 4,
+    "failed": 0,
+    "skipped": 0,
+    "total": 4
+  },
+  "workflowTests": {
+    "tests": 39,
+    "pass": 39,
+    "fail": 0,
+    "skipped": 0
+  },
+  "runtimeStopVerification": "PASS",
+  "primaryApplicationSourceUnchanged": true,
+  "originalResultUnchanged": true,
+  "experimentConfigUnchanged": true,
+  "ownedRunProcessesNeedingInspection": 0,
+  "patchDiffWhitespace": "PASS",
+  "applicationAcceptance": "NOT_ESTABLISHED",
+  "outcomes": {
+    "B": "FAIL",
+    "C": "FAIL"
+  }
+}

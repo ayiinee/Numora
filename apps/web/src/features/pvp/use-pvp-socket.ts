@@ -36,7 +36,11 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     setUncertain(pending.current !== null);
     sending.current = false;
     if (!enabled) return;
-    const url = new URL(process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1');
+    const url = new URL(
+      process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true'
+        ? (process.env.NEXT_PUBLIC_MAIN_API_URL ?? 'http://localhost:3001/api/v1')
+        : (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1'),
+    );
     const s = io(`${url.origin}/pvp`, {
       auth: { authorization: `Bearer ${token}` },
       reconnectionAttempts: 10,

@@ -16,8 +16,8 @@ import {
 } from '@tka/ui';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from './teacher-gate';
-export { TeacherGate } from './teacher-gate';
-import { DataState } from '@/features/core-learning/ui';
+import { DataState, Status } from '@/features/core-learning/ui';
+import { useAuth } from '@/features/onboarding/auth';
 import {
   createTeacherClass,
   getClassStudents,
@@ -26,6 +26,7 @@ import {
   ApiProblem,
 } from '@/lib/api';
 import { MonitoredLevelCard, TeacherClassCard, TeacherStudentRow } from './teacher-presentation';
+import { findTeacherClass, teacherKeys } from './teacher-query';
 import { useTeacherRosterCounts } from './teacher-data';
 import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
 import { TeacherInviteContent } from './teacher-class-tools';
@@ -46,11 +47,24 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
   const [createdCode, setCreatedCode] = useState('');
   const [search, setSearch] = useState('');
   const cache = useQueryClient();
+  const { refresh } = useAuth();
   const query = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
+  // A 403 here means the server ended this Teacher's school membership or class ownership.
+  // Refetching the list can never succeed, so the action re-reads identity instead, which
+  // lets TeacherGate route the Teacher to the right destination.
+  const accessLost = query.error instanceof ApiProblem && query.error.status === 403;
   const counts = useTeacherRosterCounts(token, query.isSuccess ? query.data.items : undefined);
+  // The match rule and the "no result" check have to agree, so the filtered list is
+  // derived once and keeps each card's position in the unfiltered roster for its count.
+  const needle = search.trim().toLocaleLowerCase('id');
+  const visibleClasses = query.isSuccess
+    ? query.data.items
+        .map((cls, index) => ({ cls, index }))
+        .filter(({ cls }) => cls.name.toLocaleLowerCase('id').includes(needle))
+    : [];
   async function create(event: FormEvent) {
     event.preventDefault();
     if (!name.trim() || busy) return;
@@ -61,10 +75,23 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
       const result = await createTeacherClass(token, name.trim());
       setCreatedCode(result.joinCode);
       setName('');
-      await cache.invalidateQueries({ queryKey: ['teacher-classes'] });
+      await cache.invalidateQueries({ queryKey: teacherKeys.classes() });
     } catch (err) {
-      setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
-      setErrorStatus(err instanceof ApiProblem ? err.status : 0);
+      const status = err instanceof ApiProblem ? err.status : 0;
+      setErrorStatus(status);
+      // A network/timeout/server failure can arrive after the insert committed. Class
+      // creation has no idempotency key, so reload the list before another submission.
+      const uncertain =
+        !(err instanceof ApiProblem) || err.status === 0 || err.status === 408 || err.status >= 500;
+      if (uncertain) {
+        setError(
+          'Pengiriman tidak dapat dipastikan. Daftar kelas dimuat ulang, periksa sebelum mencoba lagi.',
+        );
+        setName('');
+        await cache.invalidateQueries({ queryKey: teacherKeys.classes() });
+      } else {
+        setError(err instanceof Error ? err.message : 'Kelas belum dapat dibuat.');
+      }
     } finally {
       setBusy(false);
     }
@@ -154,7 +181,15 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
         <section className="teacher-classes-section">
           <SectionHeader
             title="Kelas yang Anda dampingi"
-            subtitle={query.data ? `${query.data.items.length} kelas` : ''}
+            subtitle={
+              // While a search is active the total alone is misleading: the Guru sees
+              // "3 kelas" above a single card.
+              query.data
+                ? needle.trim()
+                  ? `${visibleClasses.length} dari ${query.data.items.length} kelas cocok`
+                  : `${query.data.items.length} kelas`
+                : ''
+            }
           />
           {query.isSuccess && query.data.items.length > 0 && (
             <Input
@@ -166,29 +201,31 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
               leftIcon={<Icon name="search" />}
             />
           )}
-          {query.isPending || query.isError ? (
-            <DataState
-              pending={query.isPending}
-              error={query.error}
-              retry={() => void query.refetch()}
-            />
+          {query.isPending ? (
+            <DataState pending />
+          ) : accessLost ? (
+            <Status title="Akses kelas Anda berakhir">
+              <p>
+                Keanggotaan sekolah atau kepemilikan kelas ini tidak berlaku lagi. Periksa ulang
+                akun Anda untuk lanjut ke tempat yang tepat.
+              </p>
+              <Button onClick={() => void refresh()}>Periksa ulang akses</Button>
+            </Status>
+          ) : query.isError ? (
+            <DataState pending={false} error={query.error} retry={() => void query.refetch()} />
           ) : query.data.items.length ? (
             <div className="teacher-class-grid">
-              {query.data.items
-                .filter((cls) =>
-                  cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
-                )
-                .map((cls) => (
-                  <TeacherClassCard
-                    key={cls.id}
-                    value={cls}
-                    index={query.data.items.indexOf(cls)}
-                    count={counts.queries[query.data.items.indexOf(cls)]?.data?.items.length}
-                  />
-                ))}
-              {!query.data.items.some((cls) =>
-                cls.name.toLocaleLowerCase('id').includes(search.toLocaleLowerCase('id')),
-              ) && <EmptyState title="Kelas tidak ditemukan" description="Coba nama kelas lain." />}
+              {visibleClasses.map(({ cls, index }) => (
+                <TeacherClassCard
+                  key={cls.id}
+                  value={cls}
+                  index={index}
+                  count={counts.queries[index]?.data?.items.length}
+                />
+              ))}
+              {!visibleClasses.length && (
+                <EmptyState title="Kelas tidak ditemukan" description="Coba nama kelas lain." />
+              )}
             </div>
           ) : (
             <Card>
@@ -224,12 +261,12 @@ function ClassStudentsContent({
   const [sort, setSort] = useState('asc');
   const [inviteOpen, setInviteOpen] = useState(false);
   const classes = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
-  const cls = classes.data?.items.find((value) => value.id === classId);
+  const cls = findTeacherClass(classes.data?.items, classId);
   const query = useQuery({
-    queryKey: ['class-students', classId],
+    queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
   });
   const filtered = query.data?.items
@@ -253,7 +290,13 @@ function ClassStudentsContent({
               </div>
               <div className="teacher-class-overview__code">
                 <span>Kode kelas</span>
-                <strong>{classes.isError ? 'Belum dapat dimuat' : (cls?.joinCode ?? '—')}</strong>
+                <strong>
+                  {classes.isError
+                    ? 'Belum dapat dimuat'
+                    : classes.isPending
+                      ? 'Memuat…'
+                      : (cls?.joinCode ?? '—')}
+                </strong>
                 {classes.isError && (
                   <Button variant="secondary" onClick={() => void classes.refetch()}>
                     Muat ulang kode
@@ -287,7 +330,11 @@ function ClassStudentsContent({
               description="Bagikan kode kelas Anda."
               className="teacher-invite-dialog"
             >
-              <TeacherInviteContent name={query.data.class.name} code={cls?.joinCode} />
+              <TeacherInviteContent
+                name={query.data.class.name}
+                code={cls?.joinCode}
+                pending={classes.isPending}
+              />
             </Dialog>
           </>
         )}
@@ -320,7 +367,13 @@ function ClassStudentsContent({
           <section>
             <SectionHeader
               title="Siswa di kelas ini"
-              subtitle={`${query.data.items.length} siswa bergabung`}
+              subtitle={
+                // Same rule as the class grid: while searching, the roster total alone
+                // would disagree with the rows below it.
+                search.trim()
+                  ? `${filtered?.length ?? 0} dari ${query.data.items.length} siswa cocok`
+                  : `${query.data.items.length} siswa bergabung`
+              }
             />
             {filtered?.length ? (
               <Card className="teacher-students-card">
@@ -394,7 +447,7 @@ function StudentProgressContent({
   studentId: string;
 }) {
   const query = useQuery({
-    queryKey: ['student-progress', classId, studentId],
+    queryKey: teacherKeys.progress(classId, studentId),
     queryFn: () => getTeacherStudentProgress(token, classId, studentId),
   });
   return (

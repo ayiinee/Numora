@@ -1,0 +1,14 @@
+{
+  "source": "PR92 a52b9dbb3b69471ca1993116f429ceec79ee5519",
+  "files": {
+    "0039_admin_invitations": "838870cb8f111cb9921ca4383ffe16fc5a13cbb51c92bb12748bc7b495e108da",
+    "0040_admin_recovery_operations": "86f76304f7fd8a927bffe3d97b0ce96b040219d3e7f12830080ec8d34f4f9f87",
+    "0041_content_revision_guard": "9c5793474b1716697ebcce2d0983a90ca5a5f903cc1dcb9f7e8aa9cbb8952d6c",
+    "0042_historical_report_context": "0ed2fb764e27440cf4afef0631d0b87c2812103c2ed390533ed443a1b537b437",
+    "0043_assessment_policy_approval": "3a000e0e832b731cc869f7c0bca1c439d0c91420298a2f0315c874486b7d3889",
+    "0044_partial_reward_provenance": "efcea7b97d8c9db59b5f3936c20cd7ff847cbb53e4e2f437c7c65021be805ef4",
+    "0045_admin_authored_package_pins": "ed0e208aef6426a9e13f351e15098c1dd303e9897cf62d916a4e9bf6addca274",
+    "0046_pretest_blueprint_approval": "a94f3222cb49fff06a6d84492b99ba813fa4ae05b41ce43e9e04901f0680a88c",
+    "0047_legacy_package_fixture_compatibility": "a224dcf631705cac35595a7d24229cf1f55ce8b923b1b6a2cd47f9a721c07160"
+  }
+}

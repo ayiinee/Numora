@@ -1,6 +1,14 @@
 'use client';
 
-import { createContext, useCallback, useContext, useEffect, useState, type ReactNode } from 'react';
+import {
+  createContext,
+  useCallback,
+  useContext,
+  useEffect,
+  useRef,
+  useState,
+  type ReactNode,
+} from 'react';
 import type { Session } from '@supabase/supabase-js';
 import { ApiProblem, getIdentity, registerIdentity, type IdentityProfile } from '@/lib/api';
 import { getSupabase } from '@/lib/supabase';
@@ -11,6 +19,7 @@ type AuthState =
       status: 'loading' | 'signed_out' | 'registration' | 'disabled' | 'error';
       session?: Session;
       message?: string;
+      retryable?: boolean;
     }
   | { status: 'ready'; session: Session; profile: IdentityProfile };
 
@@ -28,6 +37,7 @@ export { destination };
 export function AuthProvider({ children }: { children: ReactNode }) {
   const [state, setState] = useState<AuthState>({ status: 'loading' });
   const [revision, setRevision] = useState(0);
+  const retryCount = useRef(0);
 
   useEffect(() => {
     let active = true;
@@ -93,6 +103,7 @@ export function AuthProvider({ children }: { children: ReactNode }) {
             status: 'error',
             session,
             message: error instanceof Error ? error.message : 'Sesi belum dapat diperiksa.',
+            retryable: error instanceof ApiProblem && [0, 502, 503, 504].includes(error.status),
           });
         }
       }
@@ -117,8 +128,33 @@ export function AuthProvider({ children }: { children: ReactNode }) {
   }, [revision]);
 
   const refresh = useCallback(async () => {
+    retryCount.current = 0;
     setRevision((value) => value + 1);
   }, []);
+  useEffect(() => {
+    if (state.status !== 'error' || !state.retryable) {
+      if (state.status !== 'loading') retryCount.current = 0;
+      return;
+    }
+    if (retryCount.current >= 8) return;
+    // Retry only the read-only identity check; keep the persisted session intact.
+    const timer = setTimeout(
+      () => {
+        retryCount.current++;
+        setRevision((value) => value + 1);
+      },
+      Math.min(2000 * 2 ** retryCount.current, 30_000),
+    );
+    return () => clearTimeout(timer);
+  }, [state]);
+  useEffect(() => {
+    const invalidate = () => {
+      setState({ status: 'loading' });
+      void refresh();
+    };
+    window.addEventListener('numora:authorization-changed', invalidate);
+    return () => window.removeEventListener('numora:authorization-changed', invalidate);
+  }, [refresh]);
   const register = useCallback(async (role: 'STUDENT' | 'TEACHER') => {
     const { data } = await getSupabase().auth.getSession();
     if (!data.session) throw new Error('Sesi berakhir. Login kembali.');

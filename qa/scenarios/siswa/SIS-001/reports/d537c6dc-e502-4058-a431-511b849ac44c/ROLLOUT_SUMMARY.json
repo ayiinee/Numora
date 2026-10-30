@@ -1,0 +1,611 @@
+{
+  "reviewedAt": "2026-10-27T17:51:14.165Z",
+  "testedCommit": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+  "branch": "feat/qa-scenario-workflow",
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "parentRunId": "5a091494-b077-4a09-95aa-8f06ac18ea21",
+  "identity": {
+    "sha": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+    "dirty": false,
+    "codeHash": "5a3066c3e2d3d2f33a96548540b16608e2b2e123b5ee3da3343e3ec87b34f329",
+    "rulesHash": "af589296a21bc3aed59c5fff445901af538f8deec8051add5cc1cdc3b054b088",
+    "configHash": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "versions": {
+    "node": "24.22.1",
+    "bundledUndici": "7.30.1",
+    "next": "16.4.1",
+    "nextEnv": "16.4.1",
+    "platformExpress": "12.3.2",
+    "express": "5.3.0",
+    "bodyParser": "2.4.0",
+    "multer": "2.5.0"
+  },
+  "regression": {
+    "api": {
+      "passed": 244,
+      "failed": 0,
+      "notRun": 1,
+      "total": 245,
+      "reason": "Original academic workbook fixture unavailable"
+    },
+    "database": {
+      "passed": 61,
+      "failed": 0
+    },
+    "worker": {
+      "passed": 25,
+      "failed": 0
+    },
+    "web": {
+      "passed": 273,
+      "failed": 0
+    },
+    "assessment": {
+      "passed": 21,
+      "failed": 0
+    },
+    "irt": {
+      "passed": 14,
+      "failed": 0
+    },
+    "workflow": {
+      "passed": 40,
+      "failed": 0
+    },
+    "sharedFixtureGuards": {
+      "passed": 3,
+      "failed": 0
+    },
+    "migrationReconciliation": {
+      "passed": 6,
+      "failed": 0
+    },
+    "pvpBrowser": {
+      "passed": 1,
+      "failed": 0,
+      "difficulties": [
+        "easy",
+        "medium",
+        "hard"
+      ]
+    }
+  },
+  "audit": {
+    "before": {
+      "info": 0,
+      "low": 4,
+      "moderate": 17,
+      "high": 8,
+      "critical": 2
+    },
+    "after": {
+      "info": 0,
+      "low": 3,
+      "moderate": 12,
+      "high": 4,
+      "critical": 0
+    },
+    "production": {
+      "info": 0,
+      "low": 2,
+      "moderate": 4,
+      "high": 2,
+      "critical": 0
+    },
+    "removed": [
+      {
+        "id": "GHSA-3w37-wq28-93x7",
+        "package": "next",
+        "severity": "moderate"
+      },
+      {
+        "id": "GHSA-4jqv-mc3x-m676",
+        "package": "next",
+        "severity": "moderate"
+      },
+      {
+        "id": "GHSA-39w2-rjm5-chcv",
+        "package": "next",
+        "severity": "low"
+      },
+      {
+        "id": "GHSA-f87g-xv8r-7p7x",
+        "package": "next",
+        "severity": "moderate"
+      },
+      {
+        "id": "GHSA-mcj8-r9mp-w47p",
+        "package": "next",
+        "severity": "moderate"
+      },
+      {
+        "id": "GHSA-cjq9-62q9-8jv4",
+        "package": "next",
+        "severity": "high"
+      },
+      {
+        "id": "GHSA-2464-fhr4-w9xw",
+        "package": "next",
+        "severity": "critical"
+      },
+      {
+        "id": "GHSA-p3m5-59mp-jv5r",
+        "package": "next",
+        "severity": "high"
+      },
+      {
+        "id": "GHSA-h694-7cp9-m8p3",
+        "package": "next",
+        "severity": "moderate"
+      },
+      {
+        "id": "GHSA-673q-mjm6-r5xr",
+        "package": "next",
+        "severity": "critical"
+      },
+      {
+        "id": "GHSA-27r3-jxmh-p828",
+        "package": "body-parser",
+        "severity": "high"
+      },
+      {
+        "id": "GHSA-q7qp-rjg7-q26m",
+        "package": "multer",
+        "severity": "high"
+      }
+    ],
+    "remaining": [
+      {
+        "id": "GHSA-67mh-4wv8-2f99",
+        "package": "esbuild",
+        "severity": "moderate",
+        "installed": [
+          "0.18.20"
+        ],
+        "patched": ">=0.25.0",
+        "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99"
+      },
+      {
+        "id": "GHSA-w5hq-g745-h8pq",
+        "package": "uuid",
+        "severity": "moderate",
+        "installed": [
+          "8.3.2"
+        ],
+        "patched": ">=11.1.1",
+        "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq"
+      },
+      {
+        "id": "GHSA-68fv-2mgg-jv7q",
+        "package": "source-map-js",
+        "severity": "high",
+        "installed": [
+          "1.2.1"
+        ],
+        "patched": ">=1.2.2",
+        "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q"
+      },
+      {
+        "id": "GHSA-698v-4r3x-3vcv",
+        "package": "vite",
+        "severity": "moderate",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv"
+      },
+      {
+        "id": "GHSA-r825-w8mm-5pxw",
+        "package": "vite",
+        "severity": "moderate",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw"
+      },
+      {
+        "id": "GHSA-587h-7wmj-h5pm",
+        "package": "vite",
+        "severity": "high",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm"
+      },
+      {
+        "id": "GHSA-9jrq-w75r-8gcw",
+        "package": "vite",
+        "severity": "low",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw"
+      },
+      {
+        "id": "GHSA-rq7h-c2jc-7f22",
+        "package": "vite",
+        "severity": "moderate",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22"
+      },
+      {
+        "id": "GHSA-vfpm-58rq-9qcg",
+        "package": "vite",
+        "severity": "moderate",
+        "installed": [
+          "8.3.1"
+        ],
+        "patched": ">=8.3.3",
+        "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg"
+      },
+      {
+        "id": "GHSA-qxg6-89mg-rqv8",
+        "package": "@vitest/mocker",
+        "severity": "moderate",
+        "installed": [
+          "5.0.2"
+        ],
+        "patched": ">=5.0.3",
+        "url": "https://github.com/advisories/GHSA-qxg6-89mg-rqv8"
+      },
+      {
+        "id": "GHSA-xp26-3454-mjgp",
+        "package": "@vitest/mocker",
+        "severity": "moderate",
+        "installed": [
+          "5.0.2"
+        ],
+        "patched": ">=5.0.3",
+        "url": "https://github.com/advisories/GHSA-xp26-3454-mjgp"
+      },
+      {
+        "id": "GHSA-mrhx-c7xc-m3w5",
+        "package": "zod",
+        "severity": "high",
+        "installed": [
+          "4.6.5"
+        ],
+        "patched": ">=4.6.6",
+        "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5"
+      },
+      {
+        "id": "GHSA-4qv8-2p9j-2685",
+        "package": "undici",
+        "severity": "moderate",
+        "installed": [
+          "8.11.2"
+        ],
+        "patched": ">=8.12.2",
+        "url": "https://github.com/advisories/GHSA-4qv8-2p9j-2685"
+      },
+      {
+        "id": "GHSA-f72v-6w45-q472",
+        "package": "undici",
+        "severity": "moderate",
+        "installed": [
+          "8.11.2"
+        ],
+        "patched": ">=8.12.2",
+        "url": "https://github.com/advisories/GHSA-f72v-6w45-q472"
+      },
+      {
+        "id": "GHSA-w74x-v6f9-j3xg",
+        "package": "fast-uri",
+        "severity": "moderate",
+        "installed": [
+          "3.1.8"
+        ],
+        "patched": ">=3.1.9",
+        "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg"
+      },
+      {
+        "id": "GHSA-xhq7-xmqj-769h",
+        "package": "fast-uri",
+        "severity": "low",
+        "installed": [
+          "3.1.8"
+        ],
+        "patched": ">=3.1.9",
+        "url": "https://github.com/advisories/GHSA-xhq7-xmqj-769h"
+      },
+      {
+        "id": "GHSA-wjr9-j795-jxcr",
+        "package": "fast-uri",
+        "severity": "moderate",
+        "installed": [
+          "3.1.8"
+        ],
+        "patched": ">=3.1.9",
+        "url": "https://github.com/advisories/GHSA-wjr9-j795-jxcr"
+      },
+      {
+        "id": "GHSA-333x-w4r6-6crp",
+        "package": "fast-uri",
+        "severity": "low",
+        "installed": [
+          "3.1.8"
+        ],
+        "patched": ">=3.1.9",
+        "url": "https://github.com/advisories/GHSA-333x-w4r6-6crp"
+      },
+      {
+        "id": "GHSA-xjj6-f33q-929c",
+        "package": "undici",
+        "severity": "high",
+        "installed": [
+          "8.11.2"
+        ],
+        "patched": ">=8.12.2",
+        "url": "https://github.com/advisories/GHSA-xjj6-f33q-929c"
+      }
+    ]
+  },
+  "full": {
+    "verdict": "FAIL",
+    "executionSeconds": 948.14,
+    "checks": [
+      {
+        "id": "quality",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 5
+      },
+      {
+        "id": "rewards",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 12
+      },
+      {
+        "id": "components",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 29
+      },
+      {
+        "id": "persistence",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 1
+      },
+      {
+        "id": "connected",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 4
+      },
+      {
+        "id": "accessibility",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 3
+      },
+      {
+        "id": "variety",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 9
+      },
+      {
+        "id": "recovery",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 6
+      },
+      {
+        "id": "velocity",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 5
+      },
+      {
+        "id": "volume",
+        "status": "PASS",
+        "reason": null,
+        "observedTests": 3
+      },
+      {
+        "id": "load",
+        "status": "FAIL",
+        "reason": "DATABASE_RECONCILIATION_FAILED",
+        "observedTests": 3
+      },
+      {
+        "id": "dependencies",
+        "status": "FAIL",
+        "reason": "DEPENDENCY_VULNERABILITIES_REQUIRE_TRIAGE",
+        "observedTests": 1
+      },
+      {
+        "id": "manual-keyboard",
+        "status": "NOT_RUN",
+        "reason": "HUMAN_KEYBOARD_AND_USABILITY_REVIEW_REQUIRED",
+        "observedTests": 0
+      }
+    ],
+    "volume": [
+      {
+        "stageId": "6bd5bc42-3b3e-46bc-b5f8-b912d0bdcde1",
+        "count": 1000,
+        "cumulativeBefore": 0,
+        "insertedMs": 172.29729999999995,
+        "cumulativeInserted": 1000,
+        "drain": {
+          "total": 1000,
+          "pending": 0,
+          "oldest_seconds": 0,
+          "batches": 102,
+          "elapsedMs": 669.5959
+        },
+        "source": 1000,
+        "delivered": 1000,
+        "mismatch": 0,
+        "p50_ms": 570.3715,
+        "p95_ms": 795.63155,
+        "p99_ms": 809.86315,
+        "elapsedMs": 854.3995,
+        "memoryBytes": 83378176,
+        "cpu": {
+          "user": 671000,
+          "system": 281000
+        }
+      },
+      {
+        "stageId": "38a6a818-ad85-4012-8616-b78f3127817e",
+        "count": 10000,
+        "cumulativeBefore": 1000,
+        "insertedMs": 797.5824000000002,
+        "cumulativeInserted": 11000,
+        "drain": {
+          "total": 11000,
+          "pending": 0,
+          "oldest_seconds": 0,
+          "batches": 1000,
+          "elapsedMs": 4895.9293
+        },
+        "source": 11000,
+        "delivered": 11000,
+        "mismatch": 0,
+        "p50_ms": 2651.08,
+        "p95_ms": 4827.7297499999995,
+        "p99_ms": 4910.29222,
+        "elapsedMs": 5744.1191,
+        "memoryBytes": 99594240,
+        "cpu": {
+          "user": 2046000,
+          "system": 671000
+        }
+      },
+      {
+        "stageId": "42bee188-22c0-40f9-8550-50659c438554",
+        "count": 100000,
+        "cumulativeBefore": 11000,
+        "insertedMs": 6077.6481,
+        "cumulativeInserted": 111000,
+        "drain": {
+          "total": 111000,
+          "pending": 0,
+          "oldest_seconds": 0,
+          "batches": 10000,
+          "elapsedMs": 51870.708999999995
+        },
+        "source": 111000,
+        "delivered": 111000,
+        "mismatch": 0,
+        "p50_ms": 34322.1525,
+        "p95_ms": 50433.02579999997,
+        "p99_ms": 51501.28970999999,
+        "elapsedMs": 58359.197700000004,
+        "memoryBytes": 131993600,
+        "cpu": {
+          "user": 8546000,
+          "system": 2468000
+        }
+      }
+    ],
+    "reconciliation": {
+      "source": 111000,
+      "delivered": 111000,
+      "pending": 0,
+      "processed_without_analytics": 0,
+      "mismatch": 0
+    },
+    "load": {
+      "phases": [
+        {
+          "phase": "load",
+          "vus": [
+            10,
+            25,
+            50,
+            100
+          ],
+          "completed": 2823,
+          "integrityErrors": 0,
+          "duration": {
+            "avg": 257.28772127089667,
+            "p(50)": 184.43995,
+            "p(95)": 691.66625,
+            "p(99)": 1154.8637250000002,
+            "max": 1544.313
+          },
+          "errorRate": 0,
+          "throughput": 123.62657834009994,
+          "iterations": 2823
+        },
+        {
+          "phase": "stress",
+          "vus": [
+            250
+          ],
+          "completed": 750,
+          "integrityErrors": 0,
+          "duration": {
+            "max": 4786.9782,
+            "avg": 1417.2868630278729,
+            "p(50)": 1029.4304,
+            "p(95)": 4028.9835,
+            "p(99)": 4407.193103
+          },
+          "errorRate": 0,
+          "throughput": 166.11394044575252,
+          "iterations": 750
+        }
+      ],
+      "reconciliation": {
+        "graded": 3603,
+        "broken": 0,
+        "accepted": 3573
+      },
+      "slo": "NOT_DEFINED",
+      "environment": "LOCAL_SHARED_GENERATOR_AND_SERVER"
+    },
+    "volumeComparison": {
+      "previous100kDrainMs": 29002.4732,
+      "current100kDrainMs": 51870.708999999995,
+      "scope": "Separate local runs, no production SLO or isolated causal attribution"
+    }
+  },
+  "pvp": {
+    "sha": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+    "workingTree": "clean",
+    "checks": [
+      "easy: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+      "medium: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+      "hard: two-browser completed 10-item match, durable result, DEMO projection and own rank",
+      "random READY Drill bank: ten unique families/difficulty, equal questions/order, browser reload reconnect, frozen snapshots",
+      "actual Drill submit → immutable XP ledger → identical class/global account XP"
+    ],
+    "browserVersion": "153.0.8010.12",
+    "environment": "isolated official Playwright installation"
+  },
+  "migration": {
+    "canonicalEntries": 41,
+    "jointCandidateEntries": 50,
+    "adminSource": "a52b9dbb3b69471ca1993116f429ceec79ee5519",
+    "runtimeSource": "e3e71a9772f2d8ae126361162fef95d4b0100152",
+    "sqlBytesUnchanged": true,
+    "sharedDatabaseChanged": false,
+    "mergeCandidateStatus": "PROPOSED_FOR_NORMAL_PR92_INTEGRATION_REVIEW"
+  },
+  "limitations": [
+    "Full verdict remains FAIL while dependency findings remain",
+    "Manual keyboard NOT_RUN",
+    "One original academic-workbook API test NOT_RUN",
+    "Auth fixtures do not verify Google OAuth, staging or production",
+    "Root workspace first sweep hit one notification setup timeout during overlapping build; API retest ran alone without timeout changes",
+    "PVP initial launch/environment/UI/legacy-fixture failures preserved locally; assertions remain strong and final E2E passes"
+  ],
+  "previousResultsUnchanged": true,
+  "experimentConfigurationUnchanged": true
+}

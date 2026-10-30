@@ -1,4 +1,5 @@
 export * from './identity.js';
+export * from './admin-accounts.js';
 export * from './classes.js';
 export * from './operations.js';
 export * from './content.js';

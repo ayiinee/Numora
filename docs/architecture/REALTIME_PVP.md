@@ -123,6 +123,8 @@ Question durations:
 
 ## Durability
 
+**ENGINEERING DECISION — reliability repair, 21 October 2026:** transient Redis/queue failure leaves active matches and server deadlines in PostgreSQL. The one-second durable sweep continues without Redis, and notification errors do not stop other matches. Migration 0039 rejects legacy transient cancellations transactionally so room claims remain intact. API restart retains its explicit `SERVER_RESTARTED` cancellation path. This supersedes the older Redis-loss cancellation descriptions below; see [rollout and verification](../development/RUNTIME_RELIABILITY_2026-10-21.md).
+
 **ENGINEERING DECISION:** PostgreSQL persists active state, answers, pinned content/scoring versions, final results and atomic outbox. Redis holds cache and BullMQ deadline jobs; a database sweep repairs lost jobs. A service interruption cancels affected matches without records. API restart cancels outstanding matches before accepting new fixture-policy matches. Completed history survives Redis restart.
 
 System-wide failure should produce a cancelled/no-win-loss result according to PRD rather than falsely awarding a normal match result.

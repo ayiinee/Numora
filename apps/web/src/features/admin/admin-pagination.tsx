@@ -1,12 +1,13 @@
 'use client';
 
-import { useState } from 'react';
 import { Button } from '@tka/ui';
+import { useState } from 'react';
 import { ADMIN_PAGE_SIZE } from './pagination';
 
 export function AdminPagination({
   offset,
   hasNext,
+  totalItems,
   onChange,
   disabled = false,
   label = 'Halaman data',
@@ -15,6 +16,7 @@ export function AdminPagination({
 }: {
   offset: number;
   hasNext: boolean;
+  totalItems?: number | undefined;
   onChange: (offset: number) => void;
   disabled?: boolean;
   label?: string;
@@ -24,14 +26,19 @@ export function AdminPagination({
   return (
     <nav className="admin-content-actions admin-pagination" aria-label={label}>
       <Button
+        type="button"
         variant="secondary"
         disabled={disabled || offset === 0}
         onClick={() => onChange(Math.max(0, offset - ADMIN_PAGE_SIZE))}
       >
         {previousLabel}
       </Button>
-      <span aria-live="polite">Halaman {Math.floor(offset / ADMIN_PAGE_SIZE) + 1}</span>
+      <span aria-live="polite">
+        Halaman {Math.floor(offset / ADMIN_PAGE_SIZE) + 1}
+        {totalItems !== undefined && ` · Jumlah data: ${totalItems}`}
+      </span>
       <Button
+        type="button"
         variant="secondary"
         disabled={disabled || !hasNext}
         onClick={() => onChange(offset + ADMIN_PAGE_SIZE)}
@@ -43,16 +50,28 @@ export function AdminPagination({
 }
 
 // Unpaginated contracts remain intact, including all choices used by editors.
-export function useAdminPagination<T>(items: T[], resetKey?: unknown) {
+export function useAdminPagination<T>(
+  items: T[],
+  resetKey?: unknown,
+  controlled?: { offset: number; onChange: (offset: number) => void },
+) {
   const [position, setPosition] = useState({ offset: 0, resetKey });
   const lastOffset = Math.max(0, Math.ceil(items.length / ADMIN_PAGE_SIZE) - 1) * ADMIN_PAGE_SIZE;
-  const offset = position.resetKey === resetKey ? Math.min(position.offset, lastOffset) : 0;
+  const offset = controlled
+    ? Math.min(controlled.offset, lastOffset)
+    : position.resetKey === resetKey
+      ? Math.min(position.offset, lastOffset)
+      : 0;
   return {
     items: items.slice(offset, offset + ADMIN_PAGE_SIZE),
     pagination: {
       offset,
+      totalItems: items.length,
       hasNext: offset + ADMIN_PAGE_SIZE < items.length,
-      onChange: (nextOffset: number) => setPosition({ offset: nextOffset, resetKey }),
+      onChange: (nextOffset: number) =>
+        controlled
+          ? controlled.onChange(nextOffset)
+          : setPosition({ offset: nextOffset, resetKey }),
     },
   };
 }

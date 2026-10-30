@@ -1,4 +1,24 @@
-# QA Guide
+# Panduan QA Numora
+
+**ENGINEERING DECISION — workflow tim QA, 27 Oktober 2026.** Mulai dengan prompt: **Mulai QA Numora untuk role siswa** (atau guru/admin). Ikuti [workflow](QA_WORKFLOW.md), [prompt pendek](QA_PROMPTS.md), [strategi terkini](TEST_STRATEGY.md), dan [setup QA Windows](../development/GETTING_STARTED.md#qa-scenario-workflow--27-oktober-2026).
+
+## Aturan aktif untuk semua anggota
+
+- Pengguna sudah menyetujui eksekusi workflow tim dan menutup review PIC. Ikuti [persetujuan eksekusi tim](QA_WORKFLOW.md#persetujuan-eksekusi-tim); anggota langsung melakukan setup dan pengujian tanpa mengulang persetujuan tersebut.
+
+- Penanggung jawab siswa/guru/admin memiliki kelengkapan alur bisnis role masing-masing. Lintas role memiliki satu pemilik utama. PIC infra/helper/CI ditentukan tim, bukan otomatis QA Admin.
+- Sumber expected result mengikuti AGENTS.md, PRD terbaru, klarifikasi disahkan, PRODUCT_CONTEXT, OPEN_DECISIONS dan PRD_MAPPING yang relevan. Kode serta tes lama bukan pengganti requirement. Jangan menebak OPEN.
+- **PRD RULE / keputusan owner aktif:** Tryout 30 soal; siswa maksimal lima kelas aktif; retry satu pool Drill; latest score/stars dengan best/unlock dipertahankan. XP final serta pembulatan prospektif mengikuti [PRODUCT_CONTEXT](../product/PRODUCT_CONTEXT.md), [Drill v2](../development/DRILL_V06_REWARDS.md) dan [alignment](../data/PRD_V06_DATA_ALIGNMENT.md). PGK/akademik/IRT yang belum disahkan tetap OPEN.
+- Keberlakuan required/optional/not-applicable berbeda dengan hasil PASS/FAIL/BLOCKED/NOT_RUN. Nol tes, skip wajib dan bukti versi lain tidak lulus. Profil quick yang lulus tidak membuktikan full.
+- Bedakan bukti static/unit/component, real-database, connected-auth-fixture, benchmark dan manual. Fixture email bukan Google login; konten sintetis bukan persetujuan Curriculum. Benchmark lokal belum memiliki SLO produksi.
+- Codex boleh memperbaiki alat/tes QA sesuai requirement, mempertahankan bukti gagal dan retest. Bug aplikasi dilaporkan kepada developer; jangan melemahkan assertion untuk membuat hijau.
+- Setiap run mencatat identitas kode/aturan, lingkungan, cakupan dan batas kesimpulan. Temuan ditriase sebagai aplikasi/tes/lingkungan/requirement. Hasil manual hanya dicatat setelah manusia mengerjakannya.
+- Setelah satu skenario, berhenti dengan satu rekomendasi dan maksimal dua alternatif. Lanjut adalah tindakan lokal; Bagikan adalah pilihan eksplisit untuk publikasi Google Docs. Tidak otomatis push/merge/deploy atau mengirim pesan tim.
+- Kredensial, dump, log dan browser state tetap lokal/ignored. Ringkasan yang disanitasi dapat dibagikan. Staging tetap NOT_CONFIGURED sampai URL, SHA deployment, akun, OAuth dan isolasi terverifikasi.
+
+## Panduan historis — bukan aturan aktif bila bertentangan
+
+Bagian berikut dipertahankan untuk keterlacakan konteks lama. Angka 35 soal, satu kelas, rotasi varian, expiry pembahasan 90 hari dan formula XP/stars pending di bawah **sudah digantikan** oleh sumber aktif di atas. Scope JOB-06/trial dan bukti lama tetap mempunyai batas versi masing-masing. Gunakan manifest skenario baru untuk eksekusi saat ini.
 
 ## QA should join before implementation ends
 

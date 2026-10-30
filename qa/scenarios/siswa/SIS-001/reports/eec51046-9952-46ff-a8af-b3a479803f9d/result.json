@@ -1,0 +1,386 @@
+{
+  "schemaVersion": 1,
+  "id": "eec51046-9952-46ff-a8af-b3a479803f9d",
+  "scenarioId": "SIS-001",
+  "role": "siswa",
+  "profile": "full",
+  "startedAt": "2026-10-26T20:35:20.512Z",
+  "finishedAt": "2026-10-26T20:41:53.912Z",
+  "parentRunId": "eaca5329-5170-4a6b-a524-e867c60fbf07",
+  "identity": {
+    "sha": "6ba9638c0a60469f1919e675e35d999f2dbde407",
+    "dirty": true,
+    "codeHash": "29dac911c2c190bb38e51a4bcb5b07b855089a3f9f067e110f5a4c2c2a12caec",
+    "rulesHash": "434dd4851b09db7632e1de035dda8b988936a21785f9201ffd17a8814ab2ee59",
+    "configHash": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "environment": {
+    "ready": true,
+    "platform": "win32",
+    "resources": {
+      "logicalCpuCount": 8,
+      "totalMemoryBytes": 16884752384,
+      "freeMemoryBytes": 4061761536
+    },
+    "localEnvironment": "Windows local portable PostgreSQL16 Redis7-Windows-port; WSL onboarding not exercised",
+    "build": {
+      "mode": "production",
+      "lowMemory": true
+    },
+    "profile": "full",
+    "checks": [
+      {
+        "id": "node",
+        "ready": true,
+        "message": "Node 24 required",
+        "version": "24.14.1"
+      },
+      {
+        "id": "pnpm",
+        "ready": true,
+        "message": "Use repository-pinned pnpm",
+        "version": "12.6.0"
+      },
+      {
+        "id": "dependencies",
+        "ready": true,
+        "message": "Run pnpm install --frozen-lockfile"
+      },
+      {
+        "id": "port-3500",
+        "ready": true,
+        "message": "Port 3500 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3501",
+        "ready": true,
+        "message": "Port 3501 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3502",
+        "ready": true,
+        "message": "Port 3502 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "test-environment",
+        "ready": true,
+        "message": "Dedicated test configuration accepted"
+      },
+      {
+        "id": "existing-test-guard",
+        "ready": true,
+        "message": "Existing guard accepted"
+      },
+      {
+        "id": "postgres",
+        "ready": true,
+        "message": "PostgreSQL 16 required",
+        "version": "160014"
+      },
+      {
+        "id": "create-test-database",
+        "ready": true,
+        "message": "Dedicated test account must have CREATEDB for run isolation"
+      },
+      {
+        "id": "redis",
+        "ready": true,
+        "message": "Redis 7 required",
+        "version": "7.4.11"
+      },
+      {
+        "id": "chromium",
+        "ready": true,
+        "message": "Install Chromium: pnpm --filter @tka/web exec playwright install chromium"
+      },
+      {
+        "id": "k6",
+        "ready": true,
+        "message": "Install k6 or set QA_K6_BIN in ignored .env.test.local",
+        "version": "k6.exe v2.3.0 (commit/e088784614, go1.26.8, windows/amd64)"
+      },
+      {
+        "id": "axe",
+        "ready": true,
+        "message": "axe available"
+      },
+      {
+        "id": "pg_dump",
+        "ready": true,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN",
+        "version": "pg_dump (PostgreSQL) 16.15"
+      },
+      {
+        "id": "pg_restore",
+        "ready": true,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN",
+        "version": "pg_restore (PostgreSQL) 16.15"
+      }
+    ],
+    "staging": "NOT_CONFIGURED",
+    "drive": "FOLDER_CONFIGURED_CONNECTION_REQUIRES_CHECK"
+  },
+  "checks": [
+    {
+      "id": "quality",
+      "adapter": "quality",
+      "profile": "quick",
+      "evidence": "static",
+      "files": [
+        "package.json"
+      ],
+      "minimumTests": 4,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "rewards",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/unit/rewards.test.ts",
+        "packages/assessment-engine/src/rewards.spec.ts"
+      ],
+      "minimumTests": 12,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/core-learning/drill.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "apps/web/src/features/core-learning/question-choices.test.tsx"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/learning/drill-reward.integration.spec.ts"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "connected",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/drill.pw.ts"
+      ],
+      "minimumTests": 4,
+      "tags": [
+        "functional",
+        "security",
+        "regression"
+      ],
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "accessibility",
+      "adapter": "accessibility",
+      "profile": "full",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/accessibility.pw.ts"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "variety",
+      "adapter": "variety",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 9,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "recovery",
+      "adapter": "recovery",
+      "profile": "full",
+      "evidence": "real-database",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 6,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 6,
+      "reason": null,
+      "metrics": {
+        "mode": "recovery",
+        "source": "direct-outbox-not-http",
+        "samples": [],
+        "restoreDatabase": "numora_test_qa_eec51046995246ffa8afb3a479803f9d_recovery_restore",
+        "limitation": "Local worker/transport/database rehearsal only. Does not prove Google login, cloud failover, R2 restore, deployment rollback or production RTO/RPO."
+      },
+      "failures": [],
+      "durationMs": 32849,
+      "artifact": "qa/.local/artifacts/eec51046-9952-46ff-a8af-b3a479803f9d/recovery.json"
+    },
+    {
+      "id": "velocity",
+      "adapter": "velocity",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 5,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "volume",
+      "adapter": "volume",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "load",
+      "adapter": "k6",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/performance/drill.k6.js"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 3,
+      "reason": null,
+      "metrics": {
+        "phases": [
+          {
+            "phase": "load",
+            "vus": [
+              10,
+              25,
+              50,
+              100
+            ],
+            "completed": 1878,
+            "integrityErrors": 0,
+            "duration": {
+              "avg": 441.44443121576234,
+              "p(50)": 330.6612,
+              "p(95)": 1255.312175,
+              "p(99)": 1991.5595700000017,
+              "max": 3354.3648
+            },
+            "errorRate": 0,
+            "throughput": 82.06375693517415,
+            "iterations": 1878
+          },
+          {
+            "phase": "stress",
+            "vus": [
+              250
+            ],
+            "completed": 500,
+            "integrityErrors": 0,
+            "duration": {
+              "avg": 2678.1934900319934,
+              "p(50)": 1938.9528,
+              "p(95)": 7091.707409999998,
+              "p(99)": 10101.350540000001,
+              "max": 10451.2908
+            },
+            "errorRate": 0,
+            "throughput": 87.64163926582367,
+            "iterations": 447
+          }
+        ],
+        "reconciliation": {
+          "graded": 2378,
+          "broken": 0,
+          "accepted": 2378
+        },
+        "slo": "NOT_DEFINED",
+        "environment": "LOCAL_SHARED_GENERATOR_AND_SERVER"
+      },
+      "durationMs": 357691,
+      "artifact": "qa/.local/artifacts/eec51046-9952-46ff-a8af-b3a479803f9d/load.json"
+    },
+    {
+      "id": "dependencies",
+      "adapter": "audit",
+      "profile": "full",
+      "evidence": "static",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    },
+    {
+      "id": "manual-keyboard",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/manual/CHECKLIST.md"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "OUTSIDE_FOCUSED_QA_TOOLING_REGRESSION"
+    }
+  ],
+  "verdict": "INCOMPLETE",
+  "limitations": [
+    "Focused recovery and k6 regression after QA tooling correction; other checks are NOT_RUN in this version. Do not merge earlier PASS evidence into current acceptance.",
+    "Uses unchanged application build from parent run and a new isolated clone with prior attempts; tests the revised QA tooling, not a new application build.",
+    "Local baseline has no production SLO. Fixture authentication does not prove real Google OAuth or staging.",
+    "Redis transport probe does not prove degraded API behavior or cloud failover. Manual review and 100k volume completion remain open."
+  ]
+}

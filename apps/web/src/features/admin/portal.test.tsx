@@ -1,8 +1,10 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
-import { AdminHomeScreen } from './home';
+import { AdminEntryScreen } from './entry';
 import { AdminLoginScreen } from './login';
 import { AppShell } from '@/components/shell';
+import { AdminFrame } from './admin-presentation';
+import { AdminAnalyticsScreen } from './analytics';
 
 const mocks = vi.hoisted(() => ({
   state: { status: 'signed_out' } as Record<string, unknown>,
@@ -45,29 +47,74 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 }
 
 describe('Admin portal navigation', () => {
+  it.each([
+    ['SUPER_ADMIN', '/admin/schools'],
+    ['OPERATIONS', '/admin/schools'],
+    ['CONTENT_DATA_MODERATION', '/admin/content'],
+  ])('opens a working module instead of an overview for %s', async (role, target) => {
+    ready(role, ['CONTENT_MANAGE', 'OPERATIONS_MANAGE']);
+    const { container } = render(<AdminEntryScreen />);
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith(target));
+    expect(container.textContent).toBe('');
+  });
+  it.each(['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION', null])(
+    'never shows an overview menu for %s',
+    (role) => {
+      ready(role, [
+        'CONTENT_MANAGE',
+        'OPERATIONS_MANAGE',
+        'ADMIN_ACCOUNTS_MANAGE',
+        'ANALYTICS_CONTENT',
+      ]);
+      render(<AppShell area="admin">Isi modul</AppShell>);
+      expect(screen.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
+      expect(!!screen.queryByRole('link', { name: 'Analytics' })).toBe(role === 'SUPER_ADMIN');
+    },
+  );
+  it.each(['loading', 'error', 'disabled'])(
+    'keeps the %s access state without summary content',
+    (status) => {
+      ready('SUPER_ADMIN', ['OPERATIONS_MANAGE']);
+      mocks.state = { ...mocks.state, status };
+      render(<AdminEntryScreen />);
+      expect(screen.queryByRole('heading', { name: 'Ringkasan Admin' })).toBeNull();
+      expect(mocks.replace).not.toHaveBeenCalled();
+      if (status === 'loading') expect(screen.getByText('Memeriksa akun Admin…')).toBeTruthy();
+      else {
+        fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
+        expect(mocks.refresh).toHaveBeenCalledOnce();
+      }
+    },
+  );
+
+  it('does not offer Content when a stale capability remains after assignment removal', () => {
+    ready(null, ['CONTENT_MANAGE']);
+    render(<AdminEntryScreen />);
+    const main = within(screen.getByRole('main'));
+    expect(main.queryByRole('link', { name: 'Impor soal' })).toBeNull();
+    expect(main.getByText(/Belum ada modul/)).toBeTruthy();
+  });
   it('returns Admin logout to internal login', async () => {
-    ready('SUPER_ADMIN', ['CONTENT_MANAGE']);
+    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE']);
     render(<AppShell area="admin">Konten</AppShell>);
     fireEvent.click(screen.getByRole('button', { name: /^Keluar$/ }));
     await waitFor(() => expect(mocks.logout).toHaveBeenCalledOnce());
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
   });
   it.each([
-    ['SUPER_ADMIN', ['CONTENT_MANAGE'], true, true],
-    ['OPERATIONS', [], true, false],
-    ['CONTENT_DATA_MODERATION', ['CONTENT_MANAGE'], false, true],
+    ['SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE'], true, true],
     [null, [], false, false],
   ] as const)('shows assigned modules for %s', (role, capabilities, operations, content) => {
     ready(role, [...capabilities]);
-    render(<AdminHomeScreen />);
-    const main = within(screen.getByRole('main'));
+    render(<AppShell area="admin">Isi modul</AppShell>);
+    const main = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
     expect(!!main.queryByRole('link', { name: 'Sekolah & credential' })).toBe(operations);
     expect(!!main.queryByRole('link', { name: 'Impor soal' })).toBe(content);
-    if (role === null) expect(main.getByText(/Belum ada modul/)).toBeTruthy();
+    expect(main.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
     expect(mocks.signIn).not.toHaveBeenCalled();
   });
   it('selects only the most specific nested navigation item and drops links after access changes', () => {
-    ready('SUPER_ADMIN', ['CONTENT_MANAGE']);
+    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE']);
     mocks.pathname = '/admin/content/imports';
     const view = render(<AppShell area="admin">Konten</AppShell>);
     const navigation = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
@@ -77,15 +124,78 @@ describe('Admin portal navigation', () => {
     expect(
       navigation.getByRole('link', { name: 'Konten & assessment' }).getAttribute('aria-current'),
     ).toBeNull();
-    expect(
-      navigation.getByRole('link', { name: 'Ringkasan' }).getAttribute('aria-current'),
-    ).toBeNull();
+    expect(navigation.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
     ready('OPERATIONS');
     view.rerender(<AppShell area="admin">Konten</AppShell>);
     expect(navigation.queryByRole('link', { name: 'Impor soal' })).toBeNull();
   });
+  it('Content sees only the read-only operational view and never the management modules', () => {
+    ready('CONTENT_DATA_MODERATION', [
+      'CONTENT_MANAGE',
+      'OPERATIONS_LIMITED_READ',
+      'ANALYTICS_CONTENT',
+      'AUDIT_READ',
+    ]);
+    render(<AppShell area="admin">Bank soal</AppShell>);
+    const main = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
+    expect(
+      main.getByRole('link', { name: 'Sekolah & kelas (baca saja)' }).getAttribute('href'),
+    ).toBe('/admin/structures');
+    for (const name of ['Pengguna & kelas', 'Sekolah & credential', 'Akun Admin'])
+      expect(main.queryByRole('link', { name })).toBeNull();
+    for (const name of ['Ringkasan', 'Analytics'])
+      expect(main.queryByRole('link', { name })).toBeNull();
+  });
+  it.each([AdminEntryScreen, AdminAnalyticsScreen])(
+    'redirects retired Operations pages to schools without rendering them',
+    async (Page) => {
+      ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
+      const { container } = render(<Page />);
+      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/schools'));
+      expect(container.textContent).toBe('');
+    },
+  );
+  it('keeps only operational modules in Operations navigation', () => {
+    ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
+    render(<AppShell area="admin">Sekolah</AppShell>);
+    const navigation = within(screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }));
+    expect(navigation.getByRole('link', { name: 'Sekolah & credential' })).toBeTruthy();
+    expect(navigation.getByRole('link', { name: 'Pengguna & kelas' })).toBeTruthy();
+    for (const name of ['Ringkasan', 'Analytics', 'Konten & assessment', 'Akun Admin'])
+      expect(navigation.queryByRole('link', { name })).toBeNull();
+  });
+  it.each([AdminEntryScreen, AdminAnalyticsScreen])(
+    'redirects retired Content pages to the bank without rendering them',
+    async (Page) => {
+      ready('CONTENT_DATA_MODERATION', ['CONTENT_MANAGE', 'ANALYTICS_CONTENT']);
+      const { container } = render(<Page />);
+      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/content'));
+      expect(container.textContent).toBe('');
+    },
+  );
+  it.each(['CONTENT_DATA_MODERATION', 'OPERATIONS', 'SUPER_ADMIN'])(
+    'hides Content and Operations page banners while preserving the Super banner for %s',
+    (role) => {
+      ready(role, ['CONTENT_MANAGE']);
+      const { container } = render(
+        <AdminFrame title="Judul halaman" description="Deskripsi" icon="book">
+          <h2>Isi modul</h2>
+        </AdminFrame>,
+      );
+      expect(!!container.querySelector('.admin-page-header')).toBe(role === 'SUPER_ADMIN');
+      expect(
+        screen.getByRole('heading', { name: 'Judul halaman' }).classList.contains('sr-only'),
+      ).toBe(role !== 'SUPER_ADMIN');
+      expect(screen.getByRole('heading', { name: 'Isi modul' })).toBeTruthy();
+      expect(!!container.querySelector('.admin-workspace-shell')).toBe(role !== 'SUPER_ADMIN');
+      expect(!!container.querySelector('.admin-operations-shell')).toBe(role === 'OPERATIONS');
+      expect(!!container.querySelector('.admin-content-shell')).toBe(
+        role === 'CONTENT_DATA_MODERATION',
+      );
+    },
+  );
   it('sends signed-out users to internal login and Teachers to their own area', async () => {
-    const view = render(<AdminHomeScreen />);
+    const view = render(<AdminEntryScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
     mocks.state = {
       status: 'ready',
@@ -97,7 +207,7 @@ describe('Admin portal navigation', () => {
         status: 'ACTIVE',
       },
     };
-    view.rerender(<AdminHomeScreen />);
+    view.rerender(<AdminEntryScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/teacher'));
     expect(screen.queryByText(/Selamat datang/)).toBeNull();
   });

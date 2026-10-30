@@ -23,7 +23,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
       - name: Verify checkout and runtime
         run: |
@@ -34,6 +34,8 @@ jobs:
         run: pnpm install --frozen-lockfile
       - name: Script checks
         run: pnpm test:checks
+      - name: Validate QA workflow
+        run: pnpm test:qa-workflow && pnpm qa validate && pnpm exec tsc -p qa/tsconfig.json
       - name: Validate contracts
         run: pnpm contracts:validate && pnpm contracts:types:check
       - name: Lint
@@ -78,7 +80,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
       - name: Verify checkout and runtime
         run: |
@@ -90,7 +92,7 @@ jobs:
       - name: Migrate isolated test database
         run: pnpm --filter @tka/database db:migrate
       - name: Unit and integration tests (no cached test results)
-        run: pnpm exec turbo run test --force
+        run: pnpm exec turbo run test --force --concurrency=1
       - name: QA Admin provisioning tests
         run: pnpm test:qa-admins
       - name: Database upgrade checks
@@ -133,7 +135,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
       - name: Verify checkout and runtime
         run: |
@@ -153,7 +155,13 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
       - name: Install browser for connected E2E
-        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
+        timeout-minutes: 5
+        run: |
+          # Retain main's workaround for the intermittently slow Azure apt mirror.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/apt-mirrors.txt
+          fi
+          pnpm --filter @tka/web exec playwright install --with-deps chromium
       - name: Connected release chain (real API, PostgreSQL and Redis)
         env:
           PGPASSWORD: test_only
@@ -170,10 +178,14 @@ jobs:
           if-no-files-found: warn
           retention-days: 7
 
-  browser:
+  browser-e2e:
     needs: validate
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -182,7 +194,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
       - name: Verify checkout and runtime
         run: |
@@ -191,20 +203,31 @@ jobs:
           pnpm --version
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Validate complete browser partition
+        run: node scripts/qa/browser-shards.mjs plan
       - name: Install browser for fixture E2E
         run: pnpm --filter @tka/web exec playwright install --with-deps chromium
       - name: Browser E2E
         env:
           DEBUG: pw:webserver
-        run: pnpm --filter @tka/web test:e2e
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/.tmp/browser-e2e-${{ matrix.shard }}.json
+        # Keep main's complete test-level partition and one worker per host.
+        # Reporters come from playwright.config.ts so JSON, JUnit and HTML all survive.
+        run: pnpm --filter @tka/web test:e2e --fully-parallel --shard=${{ matrix.shard }}/2
+      - name: Verify exact browser result identities
+        if: always()
+        run: node scripts/qa/browser-shards.mjs verify ${{ matrix.shard }}
       - name: Upload fixture browser diagnostics
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: browser-${{ github.sha }}-${{ github.run_attempt }}
+          name: browser-${{ matrix.shard }}-${{ github.sha }}-${{ github.run_attempt }}
           path: |
             apps/web/playwright-report/
             apps/web/test-results/
+            .tmp/browser-shards.json
+            .tmp/browser-result-${{ matrix.shard }}.json
+          include-hidden-files: true
           if-no-files-found: warn
           retention-days: 7
 
@@ -220,7 +243,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
       - name: Verify checkout and runtime
         run: |
@@ -238,7 +261,7 @@ jobs:
 
   quality:
     name: quality
-    needs: [validate, tests, connected, browser, build-contract]
+    needs: [validate, tests, connected, browser-e2e, build-contract]
     if: always()
     runs-on: ubuntu-latest
     timeout-minutes: 5
@@ -251,7 +274,7 @@ jobs:
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
       - name: Summarize results and enforce every required job
         env:
           CI_NEEDS_JSON: ${{ toJSON(needs) }}

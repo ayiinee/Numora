@@ -1,16 +1,22 @@
 'use client';
+import { Button,Card } from '@tka/ui';
 import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { Button, Card } from '@tka/ui';
-import { AdminFrame, AdminMessage } from './admin-presentation';
-import { GeneratorFilePreview, generatorTypeLabels, useGeneratorToken } from './generator-packages';
+import { useEffect,useState } from 'react';
+import { AdminFrame,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
+import type { GeneratorJsonPreviewDto,GeneratorPackageFileDto } from './generated-types';
 import {
-  getGeneratorPackageFile,
-  importGeneratorJson,
-  validateGeneratorJson,
+getGeneratorPackageFile,
+importGeneratorJson,
+validateGeneratorJson,
 } from './generator-package-api';
-import type { GeneratorJsonPreviewDto, GeneratorPackageFileDto } from './generated-types';
-export function GeneratorJsonImportScreen() {
+import { GeneratorFilePreview,generatorTypeLabels,useGeneratorToken } from './generator-packages';
+export const GeneratorJsonImportScreen = withAdminWorkspace(
+  GeneratorJsonImportScreenProtected,
+  'content',
+);
+function GeneratorJsonImportScreenProtected() {
+  const reportAccessError = useAdminAccessError();
   const token = useGeneratorToken();
   const [file, setFile] = useState<GeneratorPackageFileDto | null>(null),
     [preview, setPreview] = useState<GeneratorJsonPreviewDto | null>(null),
@@ -23,6 +29,7 @@ export function GeneratorJsonImportScreen() {
     try {
       await fn();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Gagal mengimpor JSON.');
     } finally {
       setBusy(false);

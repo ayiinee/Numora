@@ -11,32 +11,55 @@ export function AdminFrame({
   title,
   description,
   icon,
+  management = false,
   children,
 }: {
   title: string;
   description: string;
   icon: IconName;
+  management?: boolean;
   children: ReactNode;
 }) {
   const { state } = useAuth();
+  const contentRole =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.adminRole === 'CONTENT_DATA_MODERATION';
+  const operationsRole =
+    state.status === 'ready' &&
+    state.profile.role === 'ADMIN' &&
+    state.profile.adminRole === 'OPERATIONS';
+  const hidePageHeader = !management && (contentRole || operationsRole);
   return (
-    <AppShell area="admin" className="admin-redesign-shell">
+    <AppShell
+      area="admin"
+      className={`admin-redesign-shell${management ? ' admin-management-shell admin-assessment-shell' : hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}`}
+    >
       <div className="admin-redesign-frame">
-        <header className="admin-page-header">
-          <span className="admin-header-icon">
-            <Icon name={icon} />
-          </span>
-          <div>
-            <span className="admin-eyebrow">Ruang Admin</span>
+        {hidePageHeader ? (
+          <h1 className="sr-only">{title}</h1>
+        ) : management ? (
+          <header className="assessment-page-heading">
             <h1>{title}</h1>
             <p>{description}</p>
-          </div>
-          <Badge variant="default" className="admin-header-badge">
-            {state.status === 'ready' && state.profile.role === 'ADMIN'
-              ? adminRoleLabel(state.profile.adminRole)
-              : 'Admin'}
-          </Badge>
-        </header>
+          </header>
+        ) : (
+          <header className="admin-page-header">
+            <span className="admin-header-icon">
+              <Icon name={icon} />
+            </span>
+            <div>
+              <span className="admin-eyebrow">Ruang Admin</span>
+              <h1>{title}</h1>
+              <p>{description}</p>
+            </div>
+            <Badge variant="default" className="admin-header-badge">
+              {state.status === 'ready' && state.profile.role === 'ADMIN'
+                ? adminRoleLabel(state.profile.adminRole)
+                : 'Admin'}
+            </Badge>
+          </header>
+        )}
         {children}
       </div>
     </AppShell>
@@ -46,7 +69,7 @@ export function AdminFrame({
 export function AdminStats({
   items,
 }: {
-  items: { label: string; value: number; icon: IconName }[];
+  items: { label: string; value: number | null | undefined; icon: IconName }[];
 }) {
   return (
     <div className="admin-stats">
@@ -57,7 +80,7 @@ export function AdminStats({
           </span>
           <div>
             <span>{item.label}</span>
-            <strong>{item.value.toLocaleString('id-ID')}</strong>
+            <strong>{item.value == null ? '—' : item.value.toLocaleString('id-ID')}</strong>
           </div>
         </Card>
       ))}

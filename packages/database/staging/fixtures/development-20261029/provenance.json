@@ -1,0 +1,625 @@
+{
+  "source": "Read-only Development audit and exported snapshot, 29 October 2026",
+  "sourceProjectRef": "pkamenfnwmoeisccnrnk",
+  "scope": "Exact observed history plus schema/function witnesses; original unmatched SQL is not claimed to be byte-identical to canonical SQL.",
+  "history": [
+    {
+      "hash": "71a4fdb33a68638cfe2c0a57f03d4cee140f104d750d0153c6c82b414db9dcad",
+      "created_at": "1790617807491"
+    },
+    {
+      "hash": "2f7f66153f82d0ce03446679eb153059e81813717c9602488fbfaa50dd014e5e",
+      "created_at": "1790667128109"
+    },
+    {
+      "hash": "957844259394c969c4490b2e9d0a2c8c64bd2065c4c1069078ea8e097840ad37",
+      "created_at": "1790667460697"
+    },
+    {
+      "hash": "fb0bbd1b9c369d18fc1949ca4e4e79cd93ff784e5a52440d3b57ab0b15edea56",
+      "created_at": "1790667538248"
+    },
+    {
+      "hash": "2413ceacb3885b37c398874c8bbaceb145f6ef818f7d0c365d957d51c0412e99",
+      "created_at": "1790667628246"
+    },
+    {
+      "hash": "6ed12db9e283f32d51317e9ab5a68b8551ca1b4f13c5694fcd7cea4d19bb7dca",
+      "created_at": "1790667672906"
+    },
+    {
+      "hash": "34b7b8a5021b49373cf7246c1fcc55a48f826788a02e19b86719d650151e9cf5",
+      "created_at": "1790687771604"
+    },
+    {
+      "hash": "729ea8eb1ea28bc7a23cb6fc2c00c0c7465a0b31f6fa0088deeabe7e0532b12b",
+      "created_at": "1790687850730"
+    },
+    {
+      "hash": "496e2007ffa9f3a0cc109b598236eb1983baa8ef0f63029594bcf4214160f203",
+      "created_at": "1790687872052"
+    },
+    {
+      "hash": "360c52b2fc811f0711dcbd6b124c32224f1a60cac66063eecf68cfe726c82186",
+      "created_at": "1790604821659"
+    },
+    {
+      "hash": "e0e17fad6a94e0fab072056bbd24b1b742e996fc9ac725b6fd2cdb32fbbc8f7f",
+      "created_at": "1790690050100"
+    },
+    {
+      "hash": "f483b0eea643ffa859f72d61ae03516e3419237421455cd9343ffd6b471e65d4",
+      "created_at": "1790690135460"
+    },
+    {
+      "hash": "328d719925c127e6a8450c542bdc89d1298f67270458497611e838cd98d12d67",
+      "created_at": "1790709229920"
+    },
+    {
+      "hash": "08ead4cba4223ca75e96e901758dffa6688b4df1ddacdb712db420576a1e8125",
+      "created_at": "1790851657275"
+    },
+    {
+      "hash": "893f4405c10bdcccc5f55c159fc70ac2f00c057d052cda9d61343eb6203e0c71",
+      "created_at": "1790852865208"
+    },
+    {
+      "hash": "8647d641e4fa5ea15038fb428b9f043d8d3acac1de95f631964f6d0dba2e2173",
+      "created_at": "1790854978749"
+    },
+    {
+      "hash": "f8f541c63429e8efd710ad2e9319c978337a1d61027e711824e55183d275e75e",
+      "created_at": "1790860089783"
+    },
+    {
+      "hash": "7cc883a595cd3e697d3ea95f299d2f1b65e41598619efba7ebd67a4a8959cdb5",
+      "created_at": "1790862061674"
+    },
+    {
+      "hash": "21987520506b8a3df6df4d19f976e0717b863e1fb93a284ece9df88a2328891d",
+      "created_at": "1790871930466"
+    },
+    {
+      "hash": "1c13f0b2e933481219e18d9b31b11271bd372463e18eba5abab8b4beb405907b",
+      "created_at": "1790903375690"
+    },
+    {
+      "hash": "d6cbc5ed45c96ffe35c7d4249c837a672edb4d870d436fd51e92eb4c3ae2e2d8",
+      "created_at": "1790947452473"
+    },
+    {
+      "hash": "4470df55efcf56edc3fc08fedbd9859a55e274afe11d2818fee9c5545225b39d",
+      "created_at": "1790948883503"
+    },
+    {
+      "hash": "09fd2c4f02f9b4b01a8338658f7773ed4c6ee98337d5ac015283016dfe6b7255",
+      "created_at": "1791015710305"
+    },
+    {
+      "hash": "1941256344bc27023cca2074d76a725ca9fbc27b7fd2696e446324d0bf2a86de",
+      "created_at": "1791017140826"
+    },
+    {
+      "hash": "bd99a320709c87178387b62d20b7943281b084eebe78909eac291bf601c6cd3a",
+      "created_at": "1791022790448"
+    },
+    {
+      "hash": "7e3b55013bd37f45718fab97850648514ecd864e742c3fbbf9fba1c617e728a0",
+      "created_at": "1791022790449"
+    },
+    {
+      "hash": "7274450e2de6a5c6cac4d938fb0ec76d7fc25322f2bf4beceaf6bfc9a2f9ab1b",
+      "created_at": "1791022790450"
+    },
+    {
+      "hash": "17de70f08978ad5a4cc7f898b17b5d381ac2e31cc4e679db4cced2b8851afc0f",
+      "created_at": "1791022790451"
+    },
+    {
+      "hash": "9d61726f737fc6a1c3ade6af18e22b7e6c02b7f80767f2f0bf66d4d80db9086f",
+      "created_at": "1791032175839"
+    },
+    {
+      "hash": "bb6c3834be89fb97226981323aef48cc4676bffb93acc056f0a60aa763823387",
+      "created_at": "1791097916220"
+    },
+    {
+      "hash": "563cd6feb2e45b738553cad74b88c908e3288fed0e303ba5f72574bc05691a38",
+      "created_at": "1791097920628"
+    },
+    {
+      "hash": "09391db66ce32c3faf94f265640367a1e18f7847a1a68fd4e7e0f23277d7f4d9",
+      "created_at": "1791098840553"
+    },
+    {
+      "hash": "21ee101cf8b257b55669138811f66e19829203b89c8b95273bffba215c29da86",
+      "created_at": "1791104652421"
+    },
+    {
+      "hash": "a9a88e12d4af137e88bfca3a13e6406e311ab593e4fcf4fd14ed095d6aa00419",
+      "created_at": "1791114616363"
+    },
+    {
+      "hash": "680fbf96e18f14f701cb72079d53459c7d931446b1b914e5bba3d336878fc699",
+      "created_at": "1791100529456"
+    },
+    {
+      "hash": "97137bff373ee0d1220fbd8d693dd80ca44c1e97c490200fc8c13c984a0ee051",
+      "created_at": "1791204801052"
+    },
+    {
+      "hash": "39c940098ca2c2a97109d63e5f1240f4ce00777ffcea1be2f9dd12abbcf89eba",
+      "created_at": "1791210467019"
+    },
+    {
+      "hash": "8976f64de5bb581133c57d1df5000bc05cea2a306a7efa61fcc5a04128d68176",
+      "created_at": "1791216531721"
+    },
+    {
+      "hash": "d23695ce321f9a6b9226f580b09a8d2492bd4d21dc71c45c20e00e4a5f97257e",
+      "created_at": "1791216584721"
+    },
+    {
+      "hash": "53b3fb6d7e8c408f1170814fb3bb2f9ba4bc0843a6f3c57dbab4d4ed36180050",
+      "created_at": "1791230664567"
+    },
+    {
+      "hash": "014f57074e35b11a32e5b5dded0959d14214970f33758b721714a99a3248a178",
+      "created_at": "1791257962193"
+    },
+    {
+      "hash": "f1649c7aa45b5ba121064dff5d0032d3ddb83ab862cf74fc1cdfcae03425dfce",
+      "created_at": "1791261680000"
+    },
+    {
+      "hash": "838870cb8f111cb9921ca4383ffe16fc5a13cbb51c92bb12748bc7b495e108da",
+      "created_at": "1791245263806"
+    },
+    {
+      "hash": "86f76304f7fd8a927bffe3d97b0ce96b040219d3e7f12830080ec8d34f4f9f87",
+      "created_at": "1791245270006"
+    },
+    {
+      "hash": "9c5793474b1716697ebcce2d0983a90ca5a5f903cc1dcb9f7e8aa9cbb8952d6c",
+      "created_at": "1791245489591"
+    },
+    {
+      "hash": "0ed2fb764e27440cf4afef0631d0b87c2812103c2ed390533ed443a1b537b437",
+      "created_at": "1791245491190"
+    },
+    {
+      "hash": "3a000e0e832b731cc869f7c0bca1c439d0c91420298a2f0315c874486b7d3889",
+      "created_at": "1791245822719"
+    },
+    {
+      "hash": "efcea7b97d8c9db59b5f3936c20cd7ff847cbb53e4e2f437c7c65021be805ef4",
+      "created_at": "1791245878275"
+    },
+    {
+      "hash": "ed0e208aef6426a9e13f351e15098c1dd303e9897cf62d916a4e9bf6addca274",
+      "created_at": "1791245879894"
+    },
+    {
+      "hash": "a94f3222cb49fff06a6d84492b99ba813fa4ae05b41ce43e9e04901f0680a88c",
+      "created_at": "1791245881584"
+    },
+    {
+      "hash": "a224dcf631705cac35595a7d24229cf1f55ce8b923b1b6a2cd47f9a721c07160",
+      "created_at": "1791245883267"
+    },
+    {
+      "hash": "014f57074e35b11a32e5b5dded0959d14214970f33758b721714a99a3248a178",
+      "created_at": "1791270982628"
+    },
+    {
+      "hash": "69a9c12944424edf18383c0efe5285d143d612882dae7b62f3ef42a39b47ebb1",
+      "created_at": "1791270982629"
+    },
+    {
+      "hash": "115da1c9d42c8a92f0feee2effb3ebbdc4df814c88b39982d1ad040d6385817b",
+      "created_at": "1791296708267"
+    },
+    {
+      "hash": "7aa9e72490786050f64402dfadcf7d8f4bc5aa4cee727012b956eb2199119909",
+      "created_at": "1791320000000"
+    },
+    {
+      "hash": "98de403204585210dd0379f845c3f6edac17dcc3a51117b059771b212a41bb31",
+      "created_at": "1791320000001"
+    },
+    {
+      "hash": "0e821c326e5bff876dc93f348acedbcd5cfd32b770dfa84ea13d47a8da99bc84",
+      "created_at": "1791320000002"
+    },
+    {
+      "hash": "d2d4c415dbe0c6422ab52a94fa78ea34a6a06a61964e994ee724bd7a52036ee9",
+      "created_at": "1791320000003"
+    },
+    {
+      "hash": "c81df91a661589ede9fcdf3a327cbd2a1b9083fd306b8da5ae2b3b63d5c54910",
+      "created_at": "1791320000004"
+    },
+    {
+      "hash": "b8b946898499cf9791dce5b0e23cc58600ed9244f58bf531cf650e1e0601b63f",
+      "created_at": "1791324846965"
+    },
+    {
+      "hash": "de2c9ae7493eb729b0776629dc40ea3b1b56f968462d69e0fa649f4fae9d4651",
+      "created_at": "1791324846966"
+    },
+    {
+      "hash": "5aa86c7155dbcc5330d0a38bf4d36222606ff9b1be088510842a27776123354d",
+      "created_at": "1791324846967"
+    }
+  ],
+  "canonicalHashes": [
+    "71a4fdb33a68638cfe2c0a57f03d4cee140f104d750d0153c6c82b414db9dcad",
+    "3cd50a1cbacf1c62efbe62ed3610cf5c90a4ea77865201c9328dabf7eb3086ff",
+    "eb27ac0dde0d1fb4e6637500b8358e111b9c858c3f8ef3507f6c51432e54e865",
+    "328d719925c127e6a8450c542bdc89d1298f67270458497611e838cd98d12d67",
+    "08ead4cba4223ca75e96e901758dffa6688b4df1ddacdb712db420576a1e8125",
+    "893f4405c10bdcccc5f55c159fc70ac2f00c057d052cda9d61343eb6203e0c71",
+    "8647d641e4fa5ea15038fb428b9f043d8d3acac1de95f631964f6d0dba2e2173",
+    "f8f541c63429e8efd710ad2e9319c978337a1d61027e711824e55183d275e75e",
+    "7cc883a595cd3e697d3ea95f299d2f1b65e41598619efba7ebd67a4a8959cdb5",
+    "1c13f0b2e933481219e18d9b31b11271bd372463e18eba5abab8b4beb405907b",
+    "d6cbc5ed45c96ffe35c7d4249c837a672edb4d870d436fd51e92eb4c3ae2e2d8",
+    "4470df55efcf56edc3fc08fedbd9859a55e274afe11d2818fee9c5545225b39d",
+    "09fd2c4f02f9b4b01a8338658f7773ed4c6ee98337d5ac015283016dfe6b7255",
+    "1941256344bc27023cca2074d76a725ca9fbc27b7fd2696e446324d0bf2a86de",
+    "bd99a320709c87178387b62d20b7943281b084eebe78909eac291bf601c6cd3a",
+    "7e3b55013bd37f45718fab97850648514ecd864e742c3fbbf9fba1c617e728a0",
+    "7274450e2de6a5c6cac4d938fb0ec76d7fc25322f2bf4beceaf6bfc9a2f9ab1b",
+    "17de70f08978ad5a4cc7f898b17b5d381ac2e31cc4e679db4cced2b8851afc0f",
+    "9d61726f737fc6a1c3ade6af18e22b7e6c02b7f80767f2f0bf66d4d80db9086f",
+    "bb6c3834be89fb97226981323aef48cc4676bffb93acc056f0a60aa763823387",
+    "563cd6feb2e45b738553cad74b88c908e3288fed0e303ba5f72574bc05691a38",
+    "09391db66ce32c3faf94f265640367a1e18f7847a1a68fd4e7e0f23277d7f4d9",
+    "21ee101cf8b257b55669138811f66e19829203b89c8b95273bffba215c29da86",
+    "a9a88e12d4af137e88bfca3a13e6406e311ab593e4fcf4fd14ed095d6aa00419",
+    "97137bff373ee0d1220fbd8d693dd80ca44c1e97c490200fc8c13c984a0ee051",
+    "39c940098ca2c2a97109d63e5f1240f4ce00777ffcea1be2f9dd12abbcf89eba",
+    "8976f64de5bb581133c57d1df5000bc05cea2a306a7efa61fcc5a04128d68176",
+    "d23695ce321f9a6b9226f580b09a8d2492bd4d21dc71c45c20e00e4a5f97257e",
+    "53b3fb6d7e8c408f1170814fb3bb2f9ba4bc0843a6f3c57dbab4d4ed36180050",
+    "f1649c7aa45b5ba121064dff5d0032d3ddb83ab862cf74fc1cdfcae03425dfce",
+    "014f57074e35b11a32e5b5dded0959d14214970f33758b721714a99a3248a178",
+    "69a9c12944424edf18383c0efe5285d143d612882dae7b62f3ef42a39b47ebb1",
+    "c73578f8b98860c6ccd3ac948d5f9e73c3cb08755c24e28b6ead9868f61104bb",
+    "6d45031640702da691fc1bb71ce2ca1a7dfafcb5d77decb3ab64105802b48716",
+    "98de403204585210dd0379f845c3f6edac17dcc3a51117b059771b212a41bb31",
+    "0e821c326e5bff876dc93f348acedbcd5cfd32b770dfa84ea13d47a8da99bc84",
+    "d2d4c415dbe0c6422ab52a94fa78ea34a6a06a61964e994ee724bd7a52036ee9",
+    "95a90688ec55c60530f80ff9d2edf9d57e47c3bf950ea0e5ea88d8948ea48fcc",
+    "c7a37091af5d4c290e5f1625ee9d39cbdfe9cd2c380bacd563d74602ceabeb4c",
+    "838870cb8f111cb9921ca4383ffe16fc5a13cbb51c92bb12748bc7b495e108da",
+    "86f76304f7fd8a927bffe3d97b0ce96b040219d3e7f12830080ec8d34f4f9f87",
+    "9c5793474b1716697ebcce2d0983a90ca5a5f903cc1dcb9f7e8aa9cbb8952d6c",
+    "0ed2fb764e27440cf4afef0631d0b87c2812103c2ed390533ed443a1b537b437",
+    "3a000e0e832b731cc869f7c0bca1c439d0c91420298a2f0315c874486b7d3889",
+    "efcea7b97d8c9db59b5f3936c20cd7ff847cbb53e4e2f437c7c65021be805ef4",
+    "ed0e208aef6426a9e13f351e15098c1dd303e9897cf62d916a4e9bf6addca274",
+    "a94f3222cb49fff06a6d84492b99ba813fa4ae05b41ce43e9e04901f0680a88c",
+    "a224dcf631705cac35595a7d24229cf1f55ce8b923b1b6a2cd47f9a721c07160",
+    "0c426463b3f4c1da41a9b757d28159065cd45d0469e86a80eb5b31258d80a45f",
+    "5a04d3832ba18468f7db89ed5c008b14c4c510a76b2b0a5f07d397796649e12b"
+  ],
+  "catalogues": {
+    "content_upload_sessions": {
+      "columns": [
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "byte_length",
+          "type": "integer",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "now()"
+        },
+        {
+          "name": "error",
+          "type": "text",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "file_name",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "file_sha256",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "idempotency_key",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "import_id",
+          "type": "uuid",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "object_key",
+          "type": "text",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "package_id",
+          "type": "uuid",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "preview",
+          "type": "jsonb",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "report",
+          "type": "jsonb",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "revision",
+          "type": "integer",
+          "required": true,
+          "default": "0"
+        },
+        {
+          "name": "state",
+          "type": "text",
+          "required": true,
+          "default": "'RECEIVED'::text"
+        },
+        {
+          "name": "updated_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "now()"
+        }
+      ],
+      "constraints": [
+        {
+          "name": "content_upload_revision_ck",
+          "definition": "CHECK (revision >= 0 AND byte_length >= 0)"
+        },
+        {
+          "name": "content_upload_sessions_actor_user_id_users_id_fk",
+          "definition": "FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "content_upload_sessions_import_id_content_imports_id_fk",
+          "definition": "FOREIGN KEY (import_id) REFERENCES content_imports(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "content_upload_sessions_package_id_assessment_packages_id_fk",
+          "definition": "FOREIGN KEY (package_id) REFERENCES assessment_packages(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "content_upload_sessions_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "content_upload_state_ck",
+          "definition": "CHECK (state = ANY (ARRAY['RECEIVED'::text, 'INVALID'::text, 'PREVIEW'::text, 'VALIDATED'::text, 'SAVED'::text]))"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "content_upload_created_idx",
+          "definition": "CREATE INDEX content_upload_created_idx ON public.content_upload_sessions USING btree (created_at)"
+        },
+        {
+          "name": "content_upload_operation_uq",
+          "definition": "CREATE UNIQUE INDEX content_upload_operation_uq ON public.content_upload_sessions USING btree (actor_user_id, idempotency_key)"
+        },
+        {
+          "name": "content_upload_sessions_pkey",
+          "definition": "CREATE UNIQUE INDEX content_upload_sessions_pkey ON public.content_upload_sessions USING btree (id)"
+        }
+      ],
+      "policies": [
+        {
+          "policyname": "numora_main_access",
+          "permissive": "PERMISSIVE",
+          "roles": ["numora_main_runtime"],
+          "cmd": "ALL",
+          "qual": "true",
+          "with_check": "true"
+        }
+      ],
+      "rls": [
+        {
+          "relrowsecurity": true,
+          "relforcerowsecurity": false
+        }
+      ]
+    },
+    "generator_packages": {
+      "columns": [
+        {
+          "name": "actor_user_id",
+          "type": "uuid",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "assessment_type",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "canonical_package_id",
+          "type": "uuid",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "chapter_id",
+          "type": "uuid",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "created_at",
+          "type": "timestamp with time zone",
+          "required": true,
+          "default": "now()"
+        },
+        {
+          "name": "expected_count",
+          "type": "integer",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "id",
+          "type": "uuid",
+          "required": true,
+          "default": "gen_random_uuid()"
+        },
+        {
+          "name": "level_id",
+          "type": "uuid",
+          "required": false,
+          "default": null
+        },
+        {
+          "name": "mapping_ids",
+          "type": "jsonb",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "operation_fingerprint",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "operation_key",
+          "type": "text",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "request_ids",
+          "type": "jsonb",
+          "required": true,
+          "default": null
+        },
+        {
+          "name": "title",
+          "type": "text",
+          "required": true,
+          "default": null
+        }
+      ],
+      "constraints": [
+        {
+          "name": "generator_packages_actor_user_id_users_id_fk",
+          "definition": "FOREIGN KEY (actor_user_id) REFERENCES users(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "generator_packages_arrays_ck",
+          "definition": "CHECK (jsonb_typeof(mapping_ids) = 'array'::text AND jsonb_typeof(request_ids) = 'array'::text)"
+        },
+        {
+          "name": "generator_packages_canonical_package_id_assessment_packages_id_",
+          "definition": "FOREIGN KEY (canonical_package_id) REFERENCES assessment_packages(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "generator_packages_chapter_id_chapters_id_fk",
+          "definition": "FOREIGN KEY (chapter_id) REFERENCES chapters(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "generator_packages_count_ck",
+          "definition": "CHECK (expected_count =\nCASE assessment_type\n    WHEN 'DRILL'::text THEN 10\n    WHEN 'PRETEST'::text THEN 20\n    WHEN 'TRYOUT'::text THEN 30\n    ELSE NULL::integer\nEND AND jsonb_array_length(mapping_ids) = expected_count AND jsonb_array_length(request_ids) = expected_count)"
+        },
+        {
+          "name": "generator_packages_level_id_levels_id_fk",
+          "definition": "FOREIGN KEY (level_id) REFERENCES levels(id) ON DELETE RESTRICT"
+        },
+        {
+          "name": "generator_packages_pkey",
+          "definition": "PRIMARY KEY (id)"
+        },
+        {
+          "name": "generator_packages_scope_ck",
+          "definition": "CHECK (assessment_type = 'TRYOUT'::text AND chapter_id IS NULL AND level_id IS NULL OR assessment_type = 'DRILL'::text AND chapter_id IS NOT NULL AND level_id IS NOT NULL OR assessment_type = 'PRETEST'::text AND chapter_id IS NOT NULL AND level_id IS NULL)"
+        },
+        {
+          "name": "generator_packages_title_ck",
+          "definition": "CHECK (length(TRIM(BOTH FROM title)) >= 1 AND length(TRIM(BOTH FROM title)) <= 160)"
+        },
+        {
+          "name": "generator_packages_type_ck",
+          "definition": "CHECK (assessment_type = ANY (ARRAY['DRILL'::text, 'PRETEST'::text, 'TRYOUT'::text]))"
+        }
+      ],
+      "indexes": [
+        {
+          "name": "generator_packages_created_idx",
+          "definition": "CREATE INDEX generator_packages_created_idx ON public.generator_packages USING btree (created_at)"
+        },
+        {
+          "name": "generator_packages_operation_uq",
+          "definition": "CREATE UNIQUE INDEX generator_packages_operation_uq ON public.generator_packages USING btree (actor_user_id, operation_key)"
+        },
+        {
+          "name": "generator_packages_pkey",
+          "definition": "CREATE UNIQUE INDEX generator_packages_pkey ON public.generator_packages USING btree (id)"
+        }
+      ],
+      "policies": [
+        {
+          "policyname": "numora_main_access",
+          "permissive": "PERMISSIVE",
+          "roles": ["numora_main_runtime"],
+          "cmd": "ALL",
+          "qual": "true",
+          "with_check": "true"
+        }
+      ],
+      "rls": [
+        {
+          "relrowsecurity": true,
+          "relforcerowsecurity": false
+        }
+      ]
+    }
+  },
+  "aliases": {
+    "32": "115da1c9d42c8a92f0feee2effb3ebbdc4df814c88b39982d1ad040d6385817b",
+    "33": "7aa9e72490786050f64402dfadcf7d8f4bc5aa4cee727012b956eb2199119909",
+    "37": "c81df91a661589ede9fcdf3a327cbd2a1b9083fd306b8da5ae2b3b63d5c54910",
+    "38": "b8b946898499cf9791dce5b0e23cc58600ed9244f58bf531cf650e1e0601b63f"
+  }
+}

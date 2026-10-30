@@ -1,5 +1,13 @@
 # CI baseline and defect handoff — 27 October 2026
 
+## Reconciliation — 30 October 2026
+
+**ENGINEERING EVIDENCE:** the original failure records below are historical. Main `7b49e6a7b0c17407183dfec57c4121a5b0946347` passed [CI 41049422207](https://github.com/ayiinee/Numora/actions/runs/41049422207), including core, both browser shards and quality. This establishes a newer green integration baseline; it does not rewrite or erase the failures at their original SHAs or claim independent QA acceptance.
+
+**ENGINEERING DECISION — owner instruction:** reconcile #108 with this baseline, retain its QA validation and exact browser partition/result guards, and rerun the full required candidate CI before merging. The two conflict resolutions are `.github/workflows/ci.yml` and `apps/web/playwright.config.ts`. Preserve the separate diagnostics jobs, current Node pin, two browser shards, uncached serial workspace tests and all reporters. Candidate results must be recorded against their own head/merge SHA, not copied from the green main run.
+
+## Historical baseline
+
 **ENGINEERING EVIDENCE:** pre-change `main` and `origin/main` were both `6ba9638c0a60469f1919e675e35d999f2dbde407`, with a clean worktree. Local tooling reports Windows, Node `v24.19.0` and pnpm `12.6.0`. The comparison below is the historical Linux GitHub run for that exact main SHA, not a new local full-suite execution.
 
 Baseline: [CI 39421078791](https://github.com/ayiinee/Numora/actions/runs/39421078791), [quality job](https://github.com/ayiinee/Numora/actions/runs/39421078791/job/118621871511), 20 October 2026, 12:17:03–12:36:35 UTC (19:17:03–19:36:35 WIB). Job duration: 19m32s. Times are from the GitHub jobs API; they include task overhead and are not performance benchmarks.

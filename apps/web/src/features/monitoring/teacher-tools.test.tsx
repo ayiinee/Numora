@@ -72,3 +72,13 @@ it('generates and copies QR from the exact class code and exposes the generated 
   expect(copy).toHaveBeenCalledWith('Ab_cd-234');
   expect(screen.getByRole('link', { name: 'Unduh PNG QR' }).getAttribute('href')).toBe(image);
 });
+
+it('separates a class code still loading from a class that has no code', () => {
+  render(<TeacherInviteContent name="IX A" code={undefined} pending />);
+  expect(screen.getByRole('status').textContent).toContain('Memuat kode kelas');
+  expect(screen.queryByText('Kode kelas belum tersedia')).toBeNull();
+  cleanup();
+  render(<TeacherInviteContent name="IX A" code={undefined} />);
+  expect(screen.getByText('Kode kelas belum tersedia')).toBeTruthy();
+  expect(screen.queryByText(/Memuat kode kelas/)).toBeNull();
+});

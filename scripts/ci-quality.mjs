@@ -7,10 +7,12 @@ export const REQUIRED_JOBS = Object.freeze([
   'validate',
   'tests',
   'connected',
-  'browser',
+  'browser-e2e',
   'build-contract',
 ]);
 const RESULTS = new Set(['success', 'failure', 'cancelled', 'skipped']);
+const jobRuns = (name) =>
+  name === 'browser-e2e' ? ['browser-e2e (1)', 'browser-e2e (2)'] : [name];
 
 export function evaluateNeeds(needs) {
   const jobs = REQUIRED_JOBS.map((name) => {
@@ -34,11 +36,11 @@ function status(value) {
 
 export function projectDiagnostics(jobs, artifacts, context) {
   const runUrl = `https://github.com/${context.repository}/actions/runs/${context.runId}`;
-  const expectedArtifacts = ['browser', 'connected-job10', 'connected-job06'].map(
+  const expectedArtifacts = ['browser-1', 'browser-2', 'connected-job10', 'connected-job06'].map(
     (name) => `${name}-${context.sha}-${context.attempt}`,
   );
   return {
-    jobs: REQUIRED_JOBS.map((name) => {
+    jobs: REQUIRED_JOBS.flatMap(jobRuns).map((name) => {
       const job = jobs.find((entry) => entry.name === name);
       return {
         name,
@@ -110,9 +112,11 @@ export function renderSummary(report) {
     '| --- | --- | --- | --- |',
   ];
   for (const job of report.gate.jobs) {
-    const metadata = report.diagnostics?.jobs.find((entry) => entry.name === job.name);
+    const metadata = (report.diagnostics?.jobs ?? []).filter((entry) =>
+      jobRuns(job.name).includes(entry.name),
+    );
     lines.push(
-      `| ${job.name} | ${job.result} | ${elapsed(metadata?.seconds ?? null)} | ${metadata ? `[job log](${metadata.url})` : 'unavailable'} |`,
+      `| ${job.name} | ${job.result} | ${metadata.length ? metadata.map((entry) => elapsed(entry.seconds)).join(' / ') : '—'} | ${metadata.length ? metadata.map((entry) => `[${cell(entry.name)} log](${entry.url})`).join(', ') : 'unavailable'} |`,
     );
   }
   if (!report.checkoutMatches) lines.push('', '**Checkout SHA does not match the workflow SHA.**');
