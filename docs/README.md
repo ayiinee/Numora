@@ -39,6 +39,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 ## Design
 
+- [Backlog UI/UX Admin, 30 Oktober 2026](design/ADMIN_UI_BACKLOG_2026-10-30.md) — prioritas, batas pekerjaan dan kriteria penerimaan setelah integrasi.
 - `design/README.md` — status, provenance, and use of the UI/UX baseline.
 - `design/NUMORA_UI_DESIGN_SYSTEM.md` — team-supplied visual, component, responsive, and accessibility guidance before final UI handoff.
 - `design/NUMORA_UI_SKILL.md` — team-supplied frontend workflow reference, adapted to local document paths; not an installed agent skill.
