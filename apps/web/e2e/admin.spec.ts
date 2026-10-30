@@ -1282,6 +1282,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
   });
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content/imports?mode=json');
+  await page.getByText('Pilih paket tujuan untuk impor JSON', { exact: true }).click();
   await page.getByLabel('Paket tujuan').selectOption(pack.id);
   // setInputFiles does not wait for an enabled input. Respect the package-detail
   // boundary so a delayed onSelect cannot clear a JSON file uploaded too early.

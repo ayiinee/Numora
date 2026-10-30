@@ -100,13 +100,13 @@ export function UploadHistory({
   busy: boolean;
   reset: () => void;
   search: string;
-  setSearch: SetValue<string>;
+  setSearch: (value: string) => void;
   filterType: string;
-  setFilterType: SetValue<string>;
+  setFilterType: (value: string) => void;
   filterStatus: string;
-  setFilterStatus: SetValue<string>;
+  setFilterStatus: (value: string) => void;
   offset: number;
-  setOffset: SetValue<number>;
+  setOffset: (value: number) => void;
   history: UploadListDto;
   historyError: string;
   historyLoading: boolean;
@@ -122,52 +122,58 @@ export function UploadHistory({
           Upload baru
         </Button>
       </div>
-      <div className="upload-history-filters">
-        <label>
-          Cari file atau judul
-          <input
-            value={search}
-            onChange={(e) => {
-              setSearch(e.target.value);
-              setOffset(0);
-            }}
-          />
-        </label>
-        <label>
-          Jenis
-          <select
-            value={filterType}
-            onChange={(e) => {
-              setFilterType(e.target.value);
-              setOffset(0);
-            }}
-          >
-            <option value="">Semua jenis</option>
-            {Object.entries(typeLabels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-        <label>
-          Status
-          <select
-            value={filterStatus}
-            onChange={(e) => {
-              setFilterStatus(e.target.value);
-              setOffset(0);
-            }}
-          >
-            <option value="">Semua status</option>
-            {Object.entries(labels).map(([key, label]) => (
-              <option key={key} value={key}>
-                {label}
-              </option>
-            ))}
-          </select>
-        </label>
-      </div>
+      <details
+        className="import-history-filters"
+        open={Boolean(search || filterStatus || filterType)}
+      >
+        <summary>Filter riwayat</summary>
+        <div className="upload-history-filters">
+          <label>
+            Cari file atau judul
+            <input
+              value={search}
+              onChange={(e) => {
+                setSearch(e.target.value);
+                setOffset(0);
+              }}
+            />
+          </label>
+          <label>
+            Jenis
+            <select
+              value={filterType}
+              onChange={(e) => {
+                setFilterType(e.target.value);
+                setOffset(0);
+              }}
+            >
+              <option value="">Semua jenis</option>
+              {Object.entries(typeLabels).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+          <label>
+            Status
+            <select
+              value={filterStatus}
+              onChange={(e) => {
+                setFilterStatus(e.target.value);
+                setOffset(0);
+              }}
+            >
+              <option value="">Semua status</option>
+              {Object.entries(labels).map(([key, label]) => (
+                <option key={key} value={key}>
+                  {label}
+                </option>
+              ))}
+            </select>
+          </label>
+        </div>
+      </details>
       {historyError ? (
         <AdminMessage message={historyError} error retry={() => setReload((n) => n + 1)} />
       ) : historyLoading ? (
@@ -205,8 +211,8 @@ export function UploadHistory({
                       WIB
                     </small>
                   </td>
-                  <td>{item.actorName}</td>
-                  <td>
+                  <td data-label="Admin">{item.actorName}</td>
+                  <td data-label="Paket tujuan">
                     {item.title ?? 'Belum dipilih'}
                     <small>
                       {item.assessmentType
@@ -214,9 +220,9 @@ export function UploadHistory({
                         : '—'}
                     </small>
                   </td>
-                  <td>{item.questionCount}</td>
-                  <td>{item.validationResult ?? 'Belum divalidasi'}</td>
-                  <td>
+                  <td data-label="Jumlah soal">{item.questionCount}</td>
+                  <td data-label="Validasi">{item.validationResult ?? 'Belum divalidasi'}</td>
+                  <td data-label="Status">
                     <span className={`upload-status upload-status-${item.status.toLowerCase()}`}>
                       {labels[item.status] ?? item.status}
                     </span>
@@ -224,6 +230,7 @@ export function UploadHistory({
                   <td>
                     <Button
                       variant="secondary"
+                      aria-label={`${['PUBLISHED', 'CLOSED', 'ARCHIVED', 'INVALID'].includes(item.status) ? 'Lihat' : 'Lanjutkan'} ${item.fileName}`}
                       disabled={busy}
                       onClick={() => void run(() => open(item.id))}
                     >
@@ -241,6 +248,7 @@ export function UploadHistory({
       <p>{history.total} unggahan</p>
       <AdminPagination
         offset={offset}
+        totalItems={history.total}
         hasNext={offset + ADMIN_PAGE_SIZE < history.total}
         onChange={setOffset}
         disabled={historyLoading || busy}

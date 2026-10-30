@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Impor soal UI-03](ADMIN_IMPORT_UX_2026-10-30.md) memakai fondasi Admin untuk Excel, JSON dan hasil Generator, preview responsif yang mempertahankan isi soal, navigasi/riwayat berbasis URL serta konfirmasi meninggalkan perubahan. Instruksi pemilik melanjutkan UI-03 sekarang menggantikan urutan menunggu review #113; perubahannya berada pada branch terpisah. Gate backend, DRAFT, review dan Publish tetap berlaku.
+
 **ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Generator paket dan pencarian sekolah](ADMIN_GENERATOR_UX_2026-10-30.md) menerapkan UI-01/UI-02 dari main setelah integrasi: pencarian Operations tidak menimpa ikon; Generator memakai direktori, dialog konfigurasi dan detail progres mengikuti fondasi Admin yang disetujui. Kontrak sumber, permission dan handoff ke preview impor dipertahankan. Review dan penerimaan layanan nyata dicatat terpisah. [Galeri audit](screenshots/admin-generator/README.md).
 
 **PROPOSED — backlog, 30 Oktober 2026:** [Backlog UI/UX Admin dan kriteria penerimaan](ADMIN_UI_BACKLOG_2026-10-30.md) memisahkan temuan terkonfirmasi, kandidat audit halaman berikutnya dan gate integrasi. Penyusunan backlog tidak mengubah aplikasi atau aturan produk.

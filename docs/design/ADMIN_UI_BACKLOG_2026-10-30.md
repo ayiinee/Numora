@@ -174,3 +174,9 @@ Template handoff/penutupan: **ID; DRI; route/role; branch/PR/SHA; repro atau des
 | UI-06    | APPLIED pada UI-01/UI-02 — review pending | Audit responsif, keyboard, error, idempotensi dan permission; bukti fixture dibedakan dari connected/CI/deployment.                            |
 
 Status IMPLEMENTED tidak sama dengan DONE repository: review manusia serta pemeriksaan CI branch tetap dicatat sebelum merge. Tidak ada perubahan kontrak backend, migrasi atau policy historis.
+
+## Pelaksanaan UI-03 — instruksi lanjutan pemilik
+
+**ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta implementasi Impor soal dilanjutkan sekarang. UI-03 tidak lagi menunggu review UI-01/UI-02; branch `feat/admin-import-ux` memakai fondasi `97a0733` dari PR #113 agar PR tersebut tetap fokus.
+
+UI-03 berstatus **IMPLEMENTED — review pending**: layout Excel/JSON/Generator diselaraskan, preview soal responsif, riwayat/filter/pagination memakai URL, dan perpindahan sumber menjaga preview melalui konfirmasi. [Laporan implementasi dan batas verifikasi](ADMIN_IMPORT_UX_2026-10-30.md). Status sebelumnya pada tabel adalah snapshot sebelum instruksi lanjutan ini. UI-04/UI-05 tetap AUDIT_FIRST.
