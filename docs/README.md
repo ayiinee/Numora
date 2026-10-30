@@ -63,6 +63,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 - `development/ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan seluruh halaman Content, perbaikan form/pagination/retry/akses, bukti tes dan gate eksternal.
 - `development/ADMIN_OPERATIONS_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan sekolah/credential/pengguna/kelas, perbaikan eligibility transaksi, detail/retry, navigasi dan pencabutan akses.
 - `development/OWNERSHIP.md`
+- [Temuan flow Guru, 20 Oktober 2026](development/TEACHER_GURU_FINDINGS_2026-10-20.md) — tiket GF-01..GF-04 dari polish FE Guru: kontrol ban/unban/takeover/leave tanpa jalur UI, undangan link yang belum masuk kontrak, dan ketidaksesuaian kontrak feedback/riwayat.
 
 ## Testing
 

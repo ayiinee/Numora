@@ -1153,40 +1153,6 @@ a.settings-row:hover {
   color: var(--color-reward);
   margin: 14px 0 4px;
 }
-.teacher-welcome {
-  display: flex;
-  align-items: center;
-  gap: 20px;
-  padding: 28px;
-  background: var(--color-surface);
-  border: 1px solid var(--color-border-light);
-  border-radius: 22px;
-}
-.teacher-welcome > div {
-  flex: 1;
-}
-.teacher-welcome h2 {
-  font-size: 22px;
-  margin-top: 5px;
-}
-.teacher-welcome p {
-  color: var(--color-text-muted);
-  font-size: 12px;
-  margin-top: 8px;
-}
-.create-class summary {
-  cursor: pointer;
-  font-weight: 700;
-  min-height: 44px;
-  align-content: center;
-}
-.create-class summary svg {
-  float: right;
-  color: var(--color-primary);
-}
-.create-class form {
-  margin-top: 20px;
-}
 .class-card {
   display: flex;
   flex-direction: column;
@@ -1241,31 +1207,21 @@ a.settings-row:hover {
   width: 18px;
   height: 18px;
 }
-.teacher-name {
-  font-size: 12px;
-  color: var(--color-text-muted);
-}
 .monitoring-frame {
   min-width: 0;
 }
-.monitoring-heading {
-  margin-bottom: 24px;
-}
-.monitoring-heading h1,
 .admin-content > h1 {
   font-size: 28px;
   letter-spacing: -0.8px;
   font-weight: 800;
   margin: 8px 0;
 }
-.monitoring-heading p,
 .admin-content > p {
   color: var(--color-text-muted);
   font-size: 13px;
   max-width: 80ch;
 }
-.monitoring-notice,
-.monitoring-row {
+.monitoring-notice {
   background: white;
   border: 1px solid var(--color-border-light);
   border-radius: 16px;
@@ -1281,22 +1237,6 @@ a.settings-row:hover {
   display: grid;
   gap: 12px;
   margin: 20px 0;
-}
-.monitoring-row {
-  display: flex;
-  gap: 16px;
-  align-items: center;
-  justify-content: space-between;
-  width: 100%;
-  text-align: left;
-}
-.monitoring-row small {
-  display: block;
-  color: var(--color-text-muted);
-}
-.monitoring-row[aria-pressed='true'] {
-  border-color: var(--color-primary);
-  background: var(--color-primary-light);
 }
 .monitoring-create {
   margin: 24px 0;
@@ -1680,9 +1620,7 @@ a.settings-row:hover {
   .app-topbar.numora-top-bar--context .numora-brand,
   .app-topbar.numora-top-bar--identity .numora-brand,
   .app-topbar.numora-top-bar--context .text-button,
-  .app-topbar.numora-top-bar--identity .text-button,
-  .app-topbar.numora-top-bar--context .teacher-name,
-  .app-topbar.numora-top-bar--identity .teacher-name {
+  .app-topbar.numora-top-bar--identity .text-button {
     color: inherit;
   }
   .app-topbar.numora-top-bar--context :focus-visible,
@@ -1745,8 +1683,7 @@ a.settings-row:hover {
     width: 26px;
     height: 36px;
   }
-  .account-name,
-  .teacher-name {
+  .account-name {
     display: none;
   }
   .topbar-actions {
@@ -1989,18 +1926,6 @@ a.settings-row:hover {
   .assessment-question-nav button {
     flex: 0 0 44px;
   }
-  .teacher-welcome {
-    flex-wrap: wrap;
-    padding: 22px;
-    gap: 14px;
-  }
-  .teacher-welcome h2 {
-    font-size: 19px;
-  }
-  .monitoring-row {
-    flex-wrap: wrap;
-  }
-  .monitoring-heading h1,
   .admin-content > h1 {
     font-size: 24px;
   }
