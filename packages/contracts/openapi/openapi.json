@@ -13292,6 +13292,9 @@
       "AdminVersionsDto": {
         "type": "object",
         "properties": {
+          "total": {
+            "type": "number"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -13304,6 +13307,7 @@
           }
         },
         "required": [
+          "total",
           "items"
         ]
       },
@@ -13502,6 +13506,9 @@
       "AdminVideosDto": {
         "type": "object",
         "properties": {
+          "total": {
+            "type": "number"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -13510,6 +13517,7 @@
           }
         },
         "required": [
+          "total",
           "items"
         ]
       },
@@ -13617,6 +13625,9 @@
       "AdminTryoutDraftsDto": {
         "type": "object",
         "properties": {
+          "total": {
+            "type": "number"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -13625,6 +13636,7 @@
           }
         },
         "required": [
+          "total",
           "items"
         ]
       },
@@ -13766,10 +13778,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminDrillPackageDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateDrillPackageDto": {
@@ -14709,10 +14725,14 @@
             "items": {
               "$ref": "#/components/schemas/ContentPackageDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "CreateContentPackageDto": {
@@ -15986,10 +16006,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminAuditDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "AdminUserDto": {
@@ -16042,11 +16066,15 @@
           "nextOffset": {
             "type": "number",
             "nullable": true
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
           "items",
-          "nextOffset"
+          "nextOffset",
+          "total"
         ]
       },
       "AdminUserDetailDto": {
@@ -16306,11 +16334,15 @@
           "nextOffset": {
             "type": "number",
             "nullable": true
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
           "items",
-          "nextOffset"
+          "nextOffset",
+          "total"
         ]
       },
       "AdminRecoveryDto": {
@@ -16713,6 +16745,9 @@
       "AdminReportsDto": {
         "type": "object",
         "properties": {
+          "total": {
+            "type": "number"
+          },
           "items": {
             "type": "array",
             "items": {
@@ -16725,6 +16760,7 @@
           }
         },
         "required": [
+          "total",
           "items",
           "nextOffset"
         ]
@@ -17421,10 +17457,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminIrtItemDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "AdminIrtBatchDto": {
@@ -17488,10 +17528,14 @@
             "items": {
               "$ref": "#/components/schemas/AdminIrtBatchDto"
             }
+          },
+          "total": {
+            "type": "number"
           }
         },
         "required": [
-          "items"
+          "items",
+          "total"
         ]
       },
       "LeaderboardPeriodDto": {

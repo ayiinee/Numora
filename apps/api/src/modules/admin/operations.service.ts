@@ -1,6 +1,6 @@
 import type { AdminRole } from '../identity/admin-capabilities';
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
+import { and, count, desc, eq, ilike, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import {
   classes,
   classMemberships,
@@ -54,32 +54,39 @@ export class AdminOperationsService {
         detail: 'Data akun Admin hanya tersedia untuk Super Admin.',
       });
     const term = search(query.search);
-    const rows = await getDatabase()
-      .db.select(userFields)
-      .from(users)
-      .where(
-        and(
-          term ? ilike(users.displayName, term) : undefined,
-          role === 'SUPER_ADMIN' ? undefined : inArray(users.role, ['STUDENT', 'TEACHER']),
-          query.role ? eq(users.role, query.role) : undefined,
-          query.status ? eq(users.status, query.status) : undefined,
-          query.affiliation
-            ? and(
-                eq(users.role, 'STUDENT'),
-                query.affiliation === 'SCHOOL'
-                  ? schoolAffiliation
-                  : sql`not (${schoolAffiliation})`,
-              )
-            : undefined,
-          query.schoolId
-            ? sql`((users.role='TEACHER' and exists (select 1 from teacher_school_memberships m where m.teacher_user_id=users.id and m.school_id=${query.schoolId} and m.ended_at is null)) or (users.role='STUDENT' and exists (select 1 from class_memberships m join classes c on c.id=m.class_id where m.student_user_id=users.id and c.school_id=${query.schoolId} and m.left_at is null)))`
-            : undefined,
-        ),
-      )
-      .orderBy(desc(users.createdAt), desc(users.id))
-      .limit(query.limit + 1)
-      .offset(query.offset);
+    const { db } = getDatabase();
+    const matchingRows = () =>
+      db
+        .select(userFields)
+        .from(users)
+        .where(
+          and(
+            term ? ilike(users.displayName, term) : undefined,
+            role === 'SUPER_ADMIN' ? undefined : inArray(users.role, ['STUDENT', 'TEACHER']),
+            query.role ? eq(users.role, query.role) : undefined,
+            query.status ? eq(users.status, query.status) : undefined,
+            query.affiliation
+              ? and(
+                  eq(users.role, 'STUDENT'),
+                  query.affiliation === 'SCHOOL'
+                    ? schoolAffiliation
+                    : sql`not (${schoolAffiliation})`,
+                )
+              : undefined,
+            query.schoolId
+              ? sql`((users.role='TEACHER' and exists (select 1 from teacher_school_memberships m where m.teacher_user_id=users.id and m.school_id=${query.schoolId} and m.ended_at is null)) or (users.role='STUDENT' and exists (select 1 from class_memberships m join classes c on c.id=m.class_id where m.student_user_id=users.id and c.school_id=${query.schoolId} and m.left_at is null)))`
+              : undefined,
+          ),
+        );
+    const [rows, [total]] = await Promise.all([
+      matchingRows()
+        .orderBy(desc(users.createdAt), desc(users.id))
+        .limit(query.limit + 1)
+        .offset(query.offset),
+      db.select({ total: count() }).from(matchingRows().as('filtered_users')),
+    ]);
     return {
+      total: total!.total,
       items: rows.slice(0, query.limit).map(userDto),
       nextOffset: rows.length > query.limit ? query.offset + query.limit : null,
     };
@@ -214,8 +221,9 @@ export class AdminOperationsService {
   }
   async classes(query: AdminClassQueryDto) {
     const term = search(query.search);
-    const rows = await this.classQuery()
-      .where(
+    const { db } = getDatabase();
+    const matchingRows = () =>
+      this.classQuery().where(
         and(
           term ? ilike(classes.name, term) : undefined,
           query.schoolId ? eq(classes.schoolId, query.schoolId) : undefined,
@@ -226,11 +234,16 @@ export class AdminOperationsService {
               ? isNotNull(classes.archivedAt)
               : undefined,
         ),
-      )
-      .orderBy(desc(classes.createdAt), desc(classes.id))
-      .limit(query.limit + 1)
-      .offset(query.offset);
+      );
+    const [rows, [total]] = await Promise.all([
+      matchingRows()
+        .orderBy(desc(classes.createdAt), desc(classes.id))
+        .limit(query.limit + 1)
+        .offset(query.offset),
+      db.select({ total: count() }).from(matchingRows().as('filtered_classes')),
+    ]);
     return {
+      total: total!.total,
       items: rows.slice(0, query.limit).map((r): AdminClassDto => ({
         ...r,
         createdAt: r.createdAt.toISOString(),

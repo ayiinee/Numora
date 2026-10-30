@@ -59,7 +59,7 @@ export async function loadAdminWorkbench(
   });
   if (compactDemos && view === 'questions') parameters.set('catalog', 'COMPACT_DEMO');
   const page = `?${parameters}`;
-  const empty = { items: [] };
+  const empty = { items: [], total: undefined };
   const [
     curriculum,
     versions,
@@ -107,18 +107,18 @@ export async function loadAdminWorkbench(
           ? versions.nextOffset !== null
           : versions.items.length > ADMIN_PAGE_SIZE,
     },
-    videos: adminPage(videos.items),
+    videos: adminPage(videos.items, videos.total),
     reports: {
       ...reports,
       items: reports.items.slice(0, ADMIN_PAGE_SIZE),
       hasNext: reports.nextOffset !== null,
     },
-    irt: adminPage(irt.items),
-    irtBatches: adminPage(irtBatches.items),
-    audit: adminPage(audit.items),
+    irt: adminPage(irt.items, irt.total),
+    irtBatches: adminPage(irtBatches.items, irtBatches.total),
+    audit: adminPage(audit.items, audit.total),
     dashboard,
-    packages: adminPage(packages.items),
-    drillPackages: adminPage(drillPackages.items),
+    packages: adminPage(packages.items, packages.total),
+    drillPackages: adminPage(drillPackages.items, drillPackages.total),
   };
 }
 

@@ -256,8 +256,23 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
       'CONTENT_DATA_MODERATION',
     );
     expect(contentAudit.items).toHaveLength(3);
+    expect(contentAudit.total).toBe(3);
     expect(contentAudit.items.filter((row) => row.actorUserId === null)).toHaveLength(2);
     expect(contentAudit.items.some((row) => row.actorUserId === admin!.id)).toBe(true);
+    expect(
+      (await adminService.audit({ limit: 1, offset: 10, action }, 'CONTENT_DATA_MODERATION')).total,
+    ).toBe(3);
+    expect((await adminService.audit({ limit: 20, offset: 0, action }, 'OPERATIONS')).total).toBe(
+      0,
+    );
+    expect(
+      (
+        await adminService.audit(
+          { limit: 20, offset: 0, action, actorId: student!.id },
+          'CONTENT_DATA_MODERATION',
+        )
+      ).total,
+    ).toBe(0);
     expect(
       (
         await adminService.audit(

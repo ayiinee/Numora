@@ -503,6 +503,7 @@ function PeopleWorkspace({
         <PeopleFooter
           offset={offset}
           count={directory.page.items.length}
+          totalItems={directory.page.total}
           nextOffset={directory.page.nextOffset}
           label={isUsers ? 'Halaman pengguna' : 'Halaman kelas'}
           onChange={(next) => url.update({ offset: next })}

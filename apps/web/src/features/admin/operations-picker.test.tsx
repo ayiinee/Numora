@@ -44,7 +44,7 @@ beforeEach(() => {
   });
   vi.mocked(listAdminSchools).mockResolvedValue({ items: [school], nextOffset: null });
   vi.mocked(getAdminSchool).mockResolvedValue(school);
-  vi.mocked(listAdminUsers).mockResolvedValue({ items: [teacher], nextOffset: null });
+  vi.mocked(listAdminUsers).mockResolvedValue({ items: [teacher], nextOffset: null, total: 1 });
   vi.mocked(getAdminUser).mockResolvedValue(teacher);
 });
 afterEach(cleanup);

@@ -36,6 +36,7 @@ it('loads package choices five at a time and disables next on the final full pag
   };
   vi.mocked(listContentPackages)
     .mockResolvedValueOnce({
+      total: 10,
       items: Array.from({ length: 6 }, (_, i) => ({
         ...pack,
         id: `TEST-${i}`,
@@ -43,6 +44,7 @@ it('loads package choices five at a time and disables next on the final full pag
       })),
     })
     .mockResolvedValueOnce({
+      total: 10,
       items: Array.from({ length: 5 }, (_, i) => ({
         ...pack,
         id: `TEST-${i + 5}`,
@@ -151,7 +153,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
       },
     ],
   };
-  vi.mocked(listContentPackages).mockResolvedValue({ items: [pack] });
+  vi.mocked(listContentPackages).mockResolvedValue({ items: [pack], total: 1 });
   vi.mocked(getContentPackage).mockResolvedValue(pack);
   const preview: PreviewSessionDto = {
     id,

@@ -264,6 +264,7 @@ export class AdminVersionDto {
   @ApiProperty({ type: String, nullable: true }) reviewedAt!: string | null;
 }
 export class AdminVersionsDto {
+  @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminVersionDto] }) items!: AdminVersionDto[];
   @ApiPropertyOptional({ type: Number, nullable: true }) nextOffset?: number | null;
 }
@@ -278,6 +279,7 @@ export class AdminVideoDto {
   @ApiProperty({ enum: videoStatuses }) status!: (typeof videoStatuses)[number];
 }
 export class AdminVideosDto {
+  @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminVideoDto] }) items!: AdminVideoDto[];
 }
 export class ContentMutationDto {
@@ -308,6 +310,7 @@ export class AdminTryoutDraftDto {
   @ApiProperty({ type: [String] }) questionVersionIds!: string[];
 }
 export class AdminTryoutDraftsDto {
+  @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminTryoutDraftDto] }) items!: AdminTryoutDraftDto[];
 }
 export class PublishTryoutPackageDto {

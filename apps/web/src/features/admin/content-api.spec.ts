@@ -39,4 +39,16 @@ describe('admin workbench loading', () => {
     expect(last.versions.items).toHaveLength(5);
     expect(last.versions.hasNext).toBe(false);
   });
+
+  it('preserves the filtered server total without inferring it from one page', async () => {
+    vi.mocked(apiRequest).mockResolvedValue({ items: [{ id: 'first' }], total: 23, nextOffset: 5 });
+    const result = await loadAdminWorkbench('test-token', 0, 'reports', { status: 'OPEN' });
+    expect(result.reports.total).toBe(23);
+    expect(result.reports.items).toHaveLength(1);
+    expect(result.reports.hasNext).toBe(true);
+    expect(apiRequest).toHaveBeenCalledWith(
+      'admin/reports?limit=5&offset=0&status=OPEN',
+      'test-token',
+    );
+  });
 });

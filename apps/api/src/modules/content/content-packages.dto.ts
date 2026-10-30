@@ -119,6 +119,7 @@ export class ContentPackageDto {
 }
 export class ContentPackagesDto {
   @ApiProperty({ type: [ContentPackageDto] }) items!: ContentPackageDto[];
+  @ApiProperty() total!: number;
 }
 export class ContentPackageItemDto {
   @ApiProperty() questionVersionId!: string;
