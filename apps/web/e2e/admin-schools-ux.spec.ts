@@ -3,6 +3,35 @@ import { id } from './fixtures/admin';
 import { setupSchools } from './fixtures/admin-schools';
 
 for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
+  test(`School search text clears the icon for ${role}`, async ({ page }) => {
+    await setupSchools(page, role);
+    await page.goto('/admin/schools');
+    const search = page.getByRole('searchbox', { name: 'Cari sekolah', exact: true });
+    await expect(search).toBeVisible();
+    for (const width of [320, 390, 768, 1440]) {
+      await page.setViewportSize({ width, height: 900 });
+      for (const text of ['', 'SMP Tunas Bangsa']) {
+        await search.fill(text);
+        const clearance = await search.evaluate((element) => {
+          const input = element as HTMLInputElement;
+          const style = getComputedStyle(input);
+          const textStart =
+            input.getBoundingClientRect().left +
+            parseFloat(style.borderLeftWidth) +
+            parseFloat(style.paddingLeft);
+          const icon = input.parentElement!.querySelector('svg')!.getBoundingClientRect();
+          return textStart - icon.right;
+        });
+        expect(
+          clearance,
+          `${role} at ${width}px, ${text ? 'filled' : 'placeholder'}`,
+        ).toBeGreaterThanOrEqual(8);
+      }
+    }
+  });
+}
+
+for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
   test(`School workspace visual audit for ${role}`, async ({ page }) => {
     const { errors } = await setupSchools(page, role);
     await page.goto('/admin/schools');
