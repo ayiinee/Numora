@@ -1223,10 +1223,17 @@ test('Content imports the envelope namespace and completes a durable unscored pr
   const pack = directedPackage();
   pack.source = { ...pack.source!, sourceNamespace: 'TEAM-BANK' };
   const bodies: Record<string, unknown>[] = [];
+  let releasePackage!: () => void;
+  const packageReady = new Promise<void>((resolve) => {
+    releasePackage = resolve;
+  });
   await page.route('http://localhost:3301/api/v1/admin/content/**', async (route) => {
     const path = new URL(route.request().url()).pathname;
     if (path.endsWith('/packages')) return route.fulfill({ json: { items: [pack] } });
-    if (path.endsWith(`/packages/${pack.id}`)) return route.fulfill({ json: pack });
+    if (path.endsWith(`/packages/${pack.id}`)) {
+      await packageReady;
+      return route.fulfill({ json: pack });
+    }
     if (/\/(import-validations|imports)$/.test(path)) {
       bodies.push(route.request().postDataJSON());
       return route.fulfill({
@@ -1268,6 +1275,13 @@ test('Content imports the envelope namespace and completes a durable unscored pr
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content/imports?mode=json');
   await page.getByLabel('Paket tujuan').selectOption(pack.id);
+  // setInputFiles does not wait for an enabled input. Respect the package-detail
+  // boundary so a delayed onSelect cannot clear a JSON file uploaded too early.
+  await expect(page.getByLabel('File soal JSON')).toBeDisabled();
+  releasePackage();
+  await expect(page.getByLabel('Paket tujuan')).toHaveValue(pack.id);
+  await expect(page.getByLabel('File soal JSON')).toBeEnabled();
+  await expect(page.getByLabel('Namespace sumber')).toHaveValue('TEAM-BANK');
   await page.getByLabel('File soal JSON').setInputFiles({
     name: 'team-bank.json',
     mimeType: 'application/json',
@@ -1275,6 +1289,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
       JSON.stringify({ sourceNamespace: 'TEAM-BANK', questions: [{ externalId: 'TEAM-1' }] }),
     ),
   });
+  await expect(page.getByText('1 soal dipilih.', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Namespace sumber')).toHaveValue('TEAM-BANK');
   await page.getByRole('button', { name: 'Konversi ke paket terpilih', exact: true }).click();
   await page.getByRole('button', { name: 'Validasi JSON', exact: true }).click();

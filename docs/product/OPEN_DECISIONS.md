@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 Final
 
+**ENGINEERING DECISION — owner instruction, 29 October 2026:** integrate runtime #102 and QA #109 after accepted Admin #110, preserving canonical SQL 0000–0048, historical XP/pins and source provenance. Development application requires verified backup and isolated upgrade/replay. The [integration and audited history-adoption boundary](../development/RUNTIME_QA_INTEGRATION_2026-10-29.md) does not resolve academic OPEN items or claim independent release acceptance.
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
 
 **PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.
@@ -173,6 +175,10 @@ MAT-01 states 5 levels per subbab but also says Curriculum defines the number of
 The supplied Sprint 2 Goal defines one Student vertical slice and excludes _full_ Admin/Teacher UI from sprint blockers; the specified Admin/Teacher actions are additional prototype requirements. The first partner school has **not been selected**. The **team will decide together** which staging host to use and who owns its setup; no provider or accountable owner is confirmed yet, and the monthly budget is **not set**. DevOps for the domain and Database for Supabase/Google OAuth are **tentative owners pending team confirmation**. Exact participant count, staging hosting/OAuth configuration, and QA evidence still need scoping. Owner: PO + Software + QA. **Status: PARTLY OPEN.**
 
 **ENGINEERING UPDATE, 29 September 2026:** the Database team prepared a shared Supabase Cloud Development project. Development now uses Cloud PostgreSQL/Auth and no longer requires Supabase Local. The Database team owns Google provider/dashboard configuration for this migration. This does not close the separate staging domain, OAuth, hosting, or trial-readiness dependencies above.
+
+## Runtime integration repair — 21 October 2026
+
+**ENGINEERING DECISION — implementation of existing ADR-006/ADR-009 and owner-approved boundaries:** generator demo routes Student learning/PvP to the main API; the existing Chapter 3 allowlist remains usable; PostgreSQL deadlines survive transient Redis failure; Tryout reward validation matches existing six-decimal storage. No academic OPEN item is resolved and no historical result or reward is rewritten. [Scope, migrations and verification](../development/RUNTIME_RELIABILITY_2026-10-21.md).
 
 ## Decision workflow
 

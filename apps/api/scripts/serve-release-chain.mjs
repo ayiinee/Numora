@@ -21,7 +21,8 @@ Object.assign(process.env, {
   TEACHER_TOKEN_PEPPER: 'job06-fixture-only-pepper-not-for-deployment',
   CORS_ORIGINS: 'http://localhost:3400',
   IRT_ENABLED: 'false',
-  // This chain checks the closed PvP boundary, independent of local demo activation.
+  // JOB-06 verifies the policy-disabled boundary; real PvP has its own JOB-16 harness.
+  // Keep local developer .env activation from changing this fixture's expectations.
   PVP_MODE: 'disabled',
   PVP_CONTENT_MODE: 'strict',
   CONTENT_IMPORT_PREVIEW_ENABLED: 'true',

@@ -1,0 +1,2644 @@
+{
+  "schemaVersion": 1,
+  "id": "5a091494-b077-4a09-95aa-8f06ac18ea21",
+  "scenarioId": "SIS-001",
+  "role": "siswa",
+  "profile": "full",
+  "startedAt": "2026-10-27T13:46:15.359Z",
+  "finishedAt": "2026-10-27T14:03:28.930Z",
+  "parentRunId": "581a3c97-fe69-40d3-af72-576b22033593",
+  "identity": {
+    "sha": "598ab47bcba7d79bae9c170b18ee394878397bb5",
+    "dirty": true,
+    "codeHash": "26abc0fa083b5cb85528d33d31b915331c382e6cab89451333b52c53b828a5b2",
+    "rulesHash": "7ccaa15536697ad33e0adba7746b08d5871a774827d5b97e31648b8f8a4f7563",
+    "configHash": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "environment": {
+    "ready": true,
+    "platform": "win32",
+    "resources": {
+      "logicalCpuCount": 8,
+      "totalMemoryBytes": 16884752384,
+      "freeMemoryBytes": 3874848768
+    },
+    "localEnvironment": "Windows local portable PostgreSQL16 Redis7-Windows-port; WSL onboarding not exercised",
+    "build": {
+      "mode": "production",
+      "lowMemory": true
+    },
+    "profile": "full",
+    "checks": [
+      {
+        "id": "node",
+        "ready": true,
+        "message": "Node 24 required",
+        "version": "24.14.1"
+      },
+      {
+        "id": "pnpm",
+        "ready": true,
+        "message": "Use repository-pinned pnpm",
+        "version": "12.6.0"
+      },
+      {
+        "id": "dependencies",
+        "ready": true,
+        "message": "Run pnpm install --frozen-lockfile"
+      },
+      {
+        "id": "port-3500",
+        "ready": true,
+        "message": "Port 3500 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3501",
+        "ready": true,
+        "message": "Port 3501 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "port-3502",
+        "ready": true,
+        "message": "Port 3502 must be free; do not stop unrelated processes"
+      },
+      {
+        "id": "test-environment",
+        "ready": true,
+        "message": "Dedicated test configuration accepted"
+      },
+      {
+        "id": "existing-test-guard",
+        "ready": true,
+        "message": "Existing guard accepted"
+      },
+      {
+        "id": "postgres",
+        "ready": true,
+        "message": "PostgreSQL 16 required",
+        "version": "160014"
+      },
+      {
+        "id": "create-test-database",
+        "ready": true,
+        "message": "Dedicated test account must have CREATEDB for run isolation"
+      },
+      {
+        "id": "redis",
+        "ready": true,
+        "message": "Redis 7 required",
+        "version": "7.4.11"
+      },
+      {
+        "id": "chromium",
+        "ready": true,
+        "message": "Install Chromium: pnpm --filter @tka/web exec playwright install chromium"
+      },
+      {
+        "id": "k6",
+        "ready": true,
+        "message": "Install k6 or set QA_K6_BIN in ignored .env.test.local",
+        "version": "k6.exe v2.3.0 (commit/e088784614, go1.26.8, windows/amd64)"
+      },
+      {
+        "id": "axe",
+        "ready": true,
+        "message": "axe available"
+      },
+      {
+        "id": "pg_dump",
+        "ready": true,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN",
+        "version": "pg_dump (PostgreSQL) 16.15"
+      },
+      {
+        "id": "pg_restore",
+        "ready": true,
+        "message": "PostgreSQL 16 client tools must be in PATH or QA_PG_BIN",
+        "version": "pg_restore (PostgreSQL) 16.15"
+      }
+    ],
+    "staging": "NOT_CONFIGURED",
+    "drive": "FOLDER_CONFIGURED_CONNECTION_REQUIRES_CHECK"
+  },
+  "checks": [
+    {
+      "id": "quality",
+      "adapter": "quality",
+      "profile": "quick",
+      "evidence": "static",
+      "files": [
+        "package.json"
+      ],
+      "minimumTests": 4,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 5,
+      "reason": null,
+      "counts": [
+        {
+          "name": "lint",
+          "code": 0,
+          "timedOut": false
+        },
+        {
+          "name": "exec turbo run typecheck --concurrency=1 --env-mode=loose",
+          "code": 0,
+          "timedOut": false
+        },
+        {
+          "name": "exec tsc -p qa/tsconfig.json",
+          "code": 0,
+          "timedOut": false
+        },
+        {
+          "name": "contracts:validate",
+          "code": 0,
+          "timedOut": false
+        },
+        {
+          "name": "contracts:types:check",
+          "code": 0,
+          "timedOut": false
+        }
+      ],
+      "durationMs": 89222
+    },
+    {
+      "id": "rewards",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/unit/rewards.test.ts",
+        "packages/assessment-engine/src/rewards.spec.ts"
+      ],
+      "minimumTests": 12,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 12,
+      "reason": null,
+      "counts": {
+        "passed": 12,
+        "failed": 0,
+        "skipped": 0
+      },
+      "failures": [],
+      "durationMs": 3178,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/rewards.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/rewards.log"
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/core-learning/drill.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "apps/web/src/features/core-learning/question-choices.test.tsx"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 29,
+      "reason": null,
+      "counts": {
+        "passed": 29,
+        "failed": 0,
+        "skipped": 0
+      },
+      "failures": [],
+      "durationMs": 55044,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/components.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/components.log"
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/learning/drill-reward.integration.spec.ts"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 1,
+      "reason": null,
+      "counts": {
+        "passed": 1,
+        "failed": 0,
+        "skipped": 0
+      },
+      "failures": [],
+      "durationMs": 5250,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/persistence.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/persistence.log"
+    },
+    {
+      "id": "connected",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/drill.pw.ts"
+      ],
+      "minimumTests": 4,
+      "tags": [
+        "functional",
+        "security",
+        "regression"
+      ],
+      "required": true,
+      "status": "PASS",
+      "observedTests": 4,
+      "reason": null,
+      "counts": {
+        "passed": 4,
+        "failed": 0,
+        "skipped": 0,
+        "total": 4
+      },
+      "failures": [],
+      "durationMs": 19911,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/connected.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/connected.log"
+    },
+    {
+      "id": "accessibility",
+      "adapter": "accessibility",
+      "profile": "full",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/accessibility.pw.ts"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 3,
+      "reason": null,
+      "counts": {
+        "passed": 3,
+        "failed": 0,
+        "skipped": 0,
+        "total": 3
+      },
+      "failures": [],
+      "durationMs": 17794,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/accessibility.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/accessibility.log"
+    },
+    {
+      "id": "variety",
+      "adapter": "variety",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 9,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 9,
+      "reason": null,
+      "metrics": {
+        "mode": "variety",
+        "source": "direct-outbox-not-http",
+        "samples": [],
+        "reconciliation": {
+          "source": 4,
+          "delivered": 4,
+          "mismatch": 0,
+          "p50_ms": 92.652,
+          "p95_ms": 165.03679999999997,
+          "p99_ms": 175.11535999999995
+        },
+        "limitation": "Invalid envelopes are checked at the generator contract boundary; this does not prove worker-side rejection of malformed internal database rows. API input rejection is covered by connected HTTP tests."
+      },
+      "failures": [],
+      "durationMs": 2376,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/variety.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/variety.log"
+    },
+    {
+      "id": "recovery",
+      "adapter": "recovery",
+      "profile": "full",
+      "evidence": "real-database",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 6,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 6,
+      "reason": null,
+      "metrics": {
+        "mode": "recovery",
+        "source": "direct-outbox-not-http",
+        "samples": [],
+        "restoreDatabase": "numora_test_qa_5a091494b0774a0995aa8f06ac18ea21_recovery_restore",
+        "limitation": "Local worker/transport/database rehearsal only. Does not prove Google login, cloud failover, R2 restore, deployment rollback or production RTO/RPO."
+      },
+      "failures": [],
+      "durationMs": 12571,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/recovery.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/recovery.log"
+    },
+    {
+      "id": "velocity",
+      "adapter": "velocity",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 5,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 5,
+      "reason": null,
+      "metrics": {
+        "mode": "velocity",
+        "source": "direct-outbox-not-http",
+        "samples": [
+          {
+            "rate": 5,
+            "elapsedMs": 201.92359999999996,
+            "total": 1,
+            "pending": 1,
+            "oldest_seconds": 0.203943
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 1213.3557,
+            "total": 6,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 2201.8093,
+            "total": 11,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 3206.9727,
+            "total": 16,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 4200.9769,
+            "total": 21,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 5204.6731,
+            "total": 26,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 6202.0448,
+            "total": 31,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 7205.2041,
+            "total": 36,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 8209.3952,
+            "total": 41,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 9202.4601,
+            "total": 46,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 10209.8728,
+            "total": 51,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 11210.4735,
+            "total": 56,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 12210.8656,
+            "total": 61,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 13210.5699,
+            "total": 66,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 14200.125900000001,
+            "total": 71,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 15208.4682,
+            "total": 76,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 16209.568,
+            "total": 81,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 17210.3211,
+            "total": 86,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 18207.4643,
+            "total": 91,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 19202.9209,
+            "total": 96,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 20201.922,
+            "total": 101,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 21205.9015,
+            "total": 106,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 22208.545,
+            "total": 111,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 23206.2911,
+            "total": 116,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 24199.7062,
+            "total": 121,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 25201.9933,
+            "total": 126,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 26212.4634,
+            "total": 131,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 27209.3622,
+            "total": 136,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 28203.1182,
+            "total": 141,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 29201.2983,
+            "total": 146,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 30212.8544,
+            "total": 151,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 31213.3371,
+            "total": 156,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 32211.118599999998,
+            "total": 161,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 33203.278999999995,
+            "total": 166,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 34201.634999999995,
+            "total": 171,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 35214.096399999995,
+            "total": 176,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 36209.102,
+            "total": 181,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 37212.3281,
+            "total": 186,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 38201.82520000001,
+            "total": 191,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 39212.826,
+            "total": 196,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 40214.462499999994,
+            "total": 201,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 41211.4197,
+            "total": 206,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 42207.134399999995,
+            "total": 211,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 43202.288799999995,
+            "total": 216,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 44203.1547,
+            "total": 221,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 45210.851200000005,
+            "total": 226,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 46201.3603,
+            "total": 231,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 47200.1213,
+            "total": 236,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 48211.4164,
+            "total": 241,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 49210.826400000005,
+            "total": 246,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 50212.2726,
+            "total": 251,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 51201.0971,
+            "total": 256,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 52203.380399999995,
+            "total": 261,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 53204.243700000006,
+            "total": 266,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 54210.1125,
+            "total": 271,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 55205.9356,
+            "total": 276,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 56214.970799999996,
+            "total": 281,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 57215.193,
+            "total": 286,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 58214.064,
+            "total": 291,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 5,
+            "elapsedMs": 59213.058000000005,
+            "total": 296,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 107.22179999999935,
+            "total": 301,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 1114.9897999999957,
+            "total": 311,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 2101.982400000001,
+            "total": 321,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 3114.5046,
+            "total": 331,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 4110.9784,
+            "total": 341,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 5111.78839999999,
+            "total": 351,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 6102.8225999999995,
+            "total": 361,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 7111.161699999997,
+            "total": 371,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 8100.029800000004,
+            "total": 381,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 9099.8707,
+            "total": 391,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 10112.849600000001,
+            "total": 401,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 11107.357900000003,
+            "total": 411,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 12108.080600000001,
+            "total": 421,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 13104.6829,
+            "total": 431,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 14110.740900000004,
+            "total": 441,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 15111.987099999998,
+            "total": 451,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 16111.827600000004,
+            "total": 461,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 17107.350999999995,
+            "total": 471,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 18109.905899999998,
+            "total": 481,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 19103.32549999999,
+            "total": 491,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 20109.663499999995,
+            "total": 501,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 21114.606799999994,
+            "total": 511,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 22102.275200000004,
+            "total": 521,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 23110.517699999997,
+            "total": 531,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 24105.889899999995,
+            "total": 541,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 25111.320599999992,
+            "total": 551,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 26099.778399999996,
+            "total": 561,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 27100.554799999998,
+            "total": 571,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 28100.377500000002,
+            "total": 581,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 29111.534400000004,
+            "total": 591,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 30112.213999999993,
+            "total": 601,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 31114.967900000003,
+            "total": 611,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 32099.9666,
+            "total": 621,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 33102.5165,
+            "total": 631,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 34102.0797,
+            "total": 641,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 35106.572499999995,
+            "total": 651,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 36104.947199999995,
+            "total": 661,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 37109.8211,
+            "total": 671,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 38103.9411,
+            "total": 681,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 39101.015499999994,
+            "total": 691,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 40100.307499999995,
+            "total": 701,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 41101.196599999996,
+            "total": 711,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 42107.262,
+            "total": 721,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 43114.50199999999,
+            "total": 731,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 44101.337799999994,
+            "total": 741,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 45114.57639999999,
+            "total": 751,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 46099.571299999996,
+            "total": 761,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 47102.461899999995,
+            "total": 771,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 48110.1551,
+            "total": 781,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 49112.871199999994,
+            "total": 791,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 50106.5502,
+            "total": 801,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 51112.17939999999,
+            "total": 811,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 52111.3621,
+            "total": 821,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 53114.8845,
+            "total": 831,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 54099.66279999999,
+            "total": 841,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 55114.766,
+            "total": 851,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 56110.0668,
+            "total": 861,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 57108.7182,
+            "total": 871,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 58113.38159999999,
+            "total": 881,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 10,
+            "elapsedMs": 59109.4424,
+            "total": 891,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 63.41369999999006,
+            "total": 901,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 1056.3931999999913,
+            "total": 921,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 2054.9932999999874,
+            "total": 941,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 3052.2541999999958,
+            "total": 961,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 4051.7783999999956,
+            "total": 981,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 5058.7258,
+            "total": 1001,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 6049.404399999999,
+            "total": 1021,
+            "pending": 1,
+            "oldest_seconds": 0.04837
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 7053.964399999997,
+            "total": 1041,
+            "pending": 1,
+            "oldest_seconds": 0.047958
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 8050.337599999999,
+            "total": 1061,
+            "pending": 1,
+            "oldest_seconds": 0.048393
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 9049.448599999989,
+            "total": 1081,
+            "pending": 1,
+            "oldest_seconds": 0.047557
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 10052.815799999997,
+            "total": 1101,
+            "pending": 1,
+            "oldest_seconds": 0.047851
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 11052.030299999999,
+            "total": 1121,
+            "pending": 1,
+            "oldest_seconds": 0.048055
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 12058.739099999992,
+            "total": 1141,
+            "pending": 1,
+            "oldest_seconds": 0.049155
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 13052.971199999985,
+            "total": 1161,
+            "pending": 1,
+            "oldest_seconds": 0.048073
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 14057.89409999999,
+            "total": 1181,
+            "pending": 1,
+            "oldest_seconds": 0.04692
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 15057.581300000005,
+            "total": 1201,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 16056.9464,
+            "total": 1221,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 17050.52889999999,
+            "total": 1241,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 18057.72129999999,
+            "total": 1261,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 19064.654999999984,
+            "total": 1281,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 20061.30339999999,
+            "total": 1301,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 21060.58589999999,
+            "total": 1321,
+            "pending": 1,
+            "oldest_seconds": 0.047601
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 22064.93679999998,
+            "total": 1341,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 23057.675299999988,
+            "total": 1361,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 24059.48579999998,
+            "total": 1381,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 25051.808799999984,
+            "total": 1401,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 26051.62139999999,
+            "total": 1421,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 27062.659499999994,
+            "total": 1441,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 28052.2822,
+            "total": 1461,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 29052.829299999998,
+            "total": 1481,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 30057.342499999984,
+            "total": 1501,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 31056.023100000006,
+            "total": 1521,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 32057.971399999995,
+            "total": 1541,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 33056.649900000004,
+            "total": 1561,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 34061.273499999996,
+            "total": 1581,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 35058.072,
+            "total": 1601,
+            "pending": 1,
+            "oldest_seconds": 0.049482
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 36062.99579999999,
+            "total": 1621,
+            "pending": 1,
+            "oldest_seconds": 0.049515
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 37063.582299999995,
+            "total": 1641,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 38056.55219999999,
+            "total": 1661,
+            "pending": 1,
+            "oldest_seconds": 0.048536
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 39057.4685,
+            "total": 1681,
+            "pending": 1,
+            "oldest_seconds": 0.048667
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 40051.426900000006,
+            "total": 1701,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 41061.799599999984,
+            "total": 1721,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 42064.07059999999,
+            "total": 1741,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 43060.808999999994,
+            "total": 1761,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 44056.72169999998,
+            "total": 1781,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 45059.0457,
+            "total": 1801,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 46064.751000000004,
+            "total": 1821,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 47055.66530000001,
+            "total": 1841,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 48060.90060000001,
+            "total": 1861,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 49058.7527,
+            "total": 1881,
+            "pending": 1,
+            "oldest_seconds": 0.047796
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 50058.96579999999,
+            "total": 1901,
+            "pending": 1,
+            "oldest_seconds": 0.046932
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 51057.10779999998,
+            "total": 1921,
+            "pending": 1,
+            "oldest_seconds": 0.048163
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 52057.3256,
+            "total": 1941,
+            "pending": 1,
+            "oldest_seconds": 0.047281
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 53062.57969999999,
+            "total": 1961,
+            "pending": 1,
+            "oldest_seconds": 0.049628
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 54050.12119999998,
+            "total": 1981,
+            "pending": 1,
+            "oldest_seconds": 0.048145
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 55052.57279999998,
+            "total": 2001,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 56063.96869999998,
+            "total": 2021,
+            "pending": 1,
+            "oldest_seconds": 0.061951
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 57050.15269999999,
+            "total": 2041,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 58053.616200000004,
+            "total": 2061,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 20,
+            "elapsedMs": 59053.9071,
+            "total": 2081,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 45.752699999982724,
+            "total": 2101,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 1043.1349000000046,
+            "total": 2131,
+            "pending": 1,
+            "oldest_seconds": 0.032926
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 2037.4845999999961,
+            "total": 2161,
+            "pending": 1,
+            "oldest_seconds": 0.033229
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 3039.643299999996,
+            "total": 2191,
+            "pending": 1,
+            "oldest_seconds": 0.032439
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 4038.3610000000044,
+            "total": 2221,
+            "pending": 1,
+            "oldest_seconds": 0.032174
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 5037.674399999989,
+            "total": 2251,
+            "pending": 1,
+            "oldest_seconds": 0.032478
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 6034.647399999987,
+            "total": 2281,
+            "pending": 1,
+            "oldest_seconds": 0.031454
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 7047.0390999999945,
+            "total": 2311,
+            "pending": 1,
+            "oldest_seconds": 0.047917
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 8046.6745999999985,
+            "total": 2341,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 9034.366000000009,
+            "total": 2371,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 10042.1679,
+            "total": 2401,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 11037.93359999999,
+            "total": 2431,
+            "pending": 1,
+            "oldest_seconds": 0.032757
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 12039.28839999999,
+            "total": 2461,
+            "pending": 1,
+            "oldest_seconds": 0.032173
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 13034.854099999997,
+            "total": 2491,
+            "pending": 1,
+            "oldest_seconds": 0.032662
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 14033.200199999992,
+            "total": 2521,
+            "pending": 2,
+            "oldest_seconds": 0.062961
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 15035.985599999985,
+            "total": 2551,
+            "pending": 1,
+            "oldest_seconds": 0.032691
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 16045.00099999999,
+            "total": 2581,
+            "pending": 1,
+            "oldest_seconds": 0.032971
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 17036.844699999987,
+            "total": 2611,
+            "pending": 1,
+            "oldest_seconds": 0.032557
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 18038.367,
+            "total": 2641,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 19038.9007,
+            "total": 2671,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 20041.849799999996,
+            "total": 2701,
+            "pending": 1,
+            "oldest_seconds": 0.032587
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 21033.97570000001,
+            "total": 2731,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 22039.1207,
+            "total": 2761,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 23039.114499999996,
+            "total": 2791,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 24045.75159999999,
+            "total": 2821,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 25043.6624,
+            "total": 2851,
+            "pending": 1,
+            "oldest_seconds": 0.031457
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 26044.118099999992,
+            "total": 2881,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 27034.592399999994,
+            "total": 2911,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 28034.506200000003,
+            "total": 2941,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 29047.040600000008,
+            "total": 2971,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 30045.6777,
+            "total": 3001,
+            "pending": 1,
+            "oldest_seconds": 0.047442
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 31044.131599999993,
+            "total": 3031,
+            "pending": 2,
+            "oldest_seconds": 0.063081
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 32043.320000000007,
+            "total": 3061,
+            "pending": 1,
+            "oldest_seconds": 0.032061
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 33042.01319999999,
+            "total": 3091,
+            "pending": 2,
+            "oldest_seconds": 0.062721
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 34047.4014,
+            "total": 3121,
+            "pending": 1,
+            "oldest_seconds": 0.048169
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 35035.70259999999,
+            "total": 3151,
+            "pending": 1,
+            "oldest_seconds": 0.031466
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 36037.88639999999,
+            "total": 3181,
+            "pending": 1,
+            "oldest_seconds": 0.031672
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 37044.78109999999,
+            "total": 3211,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 38035.58350000001,
+            "total": 3241,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 39033.14259999999,
+            "total": 3271,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 40038.19569999998,
+            "total": 3301,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 41039.454,
+            "total": 3331,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 42036.379400000005,
+            "total": 3361,
+            "pending": 2,
+            "oldest_seconds": 0.065066
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 43037.6427,
+            "total": 3391,
+            "pending": 1,
+            "oldest_seconds": 0.032501
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 44045.63130000001,
+            "total": 3421,
+            "pending": 1,
+            "oldest_seconds": 0.033717
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 45038.08869999999,
+            "total": 3451,
+            "pending": 1,
+            "oldest_seconds": 0.033091
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 46039.438399999985,
+            "total": 3481,
+            "pending": 1,
+            "oldest_seconds": 0.032153
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 47036.61679999999,
+            "total": 3511,
+            "pending": 1,
+            "oldest_seconds": 0.032355
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 48035.69750000001,
+            "total": 3541,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 49036.2187,
+            "total": 3571,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 50035.09459999998,
+            "total": 3601,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 51033.62700000001,
+            "total": 3631,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 52035.62299999999,
+            "total": 3661,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 53033.8983,
+            "total": 3691,
+            "pending": 2,
+            "oldest_seconds": 0.061623
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 54047.890199999994,
+            "total": 3721,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 55044.9742,
+            "total": 3751,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 56046.76240000001,
+            "total": 3781,
+            "pending": 0,
+            "oldest_seconds": 0
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 57039.10579999999,
+            "total": 3811,
+            "pending": 1,
+            "oldest_seconds": 0.033114
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 58045.02799999999,
+            "total": 3841,
+            "pending": 1,
+            "oldest_seconds": 0.032878
+          },
+          {
+            "rate": 30,
+            "elapsedMs": 59042.0968,
+            "total": 3871,
+            "pending": 1,
+            "oldest_seconds": 0.031874
+          }
+        ],
+        "drainMs": 111.59349999998813,
+        "reconciliation": {
+          "source": 3900,
+          "delivered": 3900,
+          "mismatch": 0,
+          "p50_ms": 33.428,
+          "p95_ms": 64.81115000000001,
+          "p99_ms": 66.37913
+        }
+      },
+      "failures": [],
+      "durationMs": 243033,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/velocity.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/velocity.log"
+    },
+    {
+      "id": "volume",
+      "adapter": "volume",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 3,
+      "reason": null,
+      "metrics": {
+        "mode": "volume",
+        "source": "direct-outbox-not-http",
+        "samples": [
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "count": 1000,
+            "cumulativeBefore": 0,
+            "insertedMs": 116.81269999999995,
+            "cumulativeInserted": 1000,
+            "drain": {
+              "total": 1000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 102,
+              "elapsedMs": 515.8399
+            },
+            "source": 1000,
+            "delivered": 1000,
+            "mismatch": 0,
+            "p50_ms": 482.3585,
+            "p95_ms": 615.8774999999999,
+            "p99_ms": 624.5391,
+            "elapsedMs": 640.9464,
+            "memoryBytes": 101396480,
+            "cpu": {
+              "user": 375000,
+              "system": 218000
+            }
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "count": 10000,
+            "cumulativeBefore": 1000,
+            "insertedMs": 279.38970000000006,
+            "cumulativeInserted": 11000,
+            "drain": {
+              "total": 11000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 1000,
+              "elapsedMs": 3947.5901000000003
+            },
+            "source": 11000,
+            "delivered": 11000,
+            "mismatch": 0,
+            "p50_ms": 1381.933,
+            "p95_ms": 3712.6765999999966,
+            "p99_ms": 3928.6257400000004,
+            "elapsedMs": 4264.6886,
+            "memoryBytes": 132263936,
+            "cpu": {
+              "user": 1390000,
+              "system": 437000
+            }
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "count": 100000,
+            "cumulativeBefore": 11000,
+            "insertedMs": 5810.8589,
+            "cumulativeInserted": 111000,
+            "drain": {
+              "total": 111000,
+              "pending": 0,
+              "oldest_seconds": 0,
+              "batches": 10000,
+              "elapsedMs": 29002.4732
+            },
+            "source": 111000,
+            "delivered": 111000,
+            "mismatch": 0,
+            "p50_ms": 15015.567,
+            "p95_ms": 27371.47874999997,
+            "p99_ms": 28880.216889999996,
+            "elapsedMs": 35224.865699999995,
+            "memoryBytes": 191651840,
+            "cpu": {
+              "user": 7484000,
+              "system": 2343000
+            }
+          }
+        ],
+        "experiment": "cumulative-stop-on-first-incomplete",
+        "drainBudgetMs": 120000,
+        "snapshotIntervalMs": 1000,
+        "backlogSamples": [
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "total": 1000,
+            "pending": 1000,
+            "oldest_seconds": 0.118807,
+            "elapsedMs": 3.4991999999999734,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "92f3f1d0-4914-42d9-8205-dab15cf580fd",
+            "total": 1000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 515.8138,
+            "batches": 102,
+            "final": true
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 10000,
+            "oldest_seconds": 0.280677,
+            "elapsedMs": 3.903099999999995,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 6020,
+            "oldest_seconds": 1.182192,
+            "elapsedMs": 1006.7197999999999,
+            "batches": 398,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 3850,
+            "oldest_seconds": 2.109907,
+            "elapsedMs": 2014.6299,
+            "batches": 615,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 1810,
+            "oldest_seconds": 3.067388,
+            "elapsedMs": 3021.6175000000003,
+            "batches": 819,
+            "final": false
+          },
+          {
+            "stageId": "c80e83ee-abf8-48ed-ae07-90e635d9984f",
+            "total": 11000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 3947.5728,
+            "batches": 1000,
+            "final": true
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 100000,
+            "oldest_seconds": 5.813329,
+            "elapsedMs": 83.10000000000036,
+            "batches": 0,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 97250,
+            "oldest_seconds": 6.7151,
+            "elapsedMs": 1071.9230000000007,
+            "batches": 275,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 93250,
+            "oldest_seconds": 7.63246,
+            "elapsedMs": 2147.8897000000015,
+            "batches": 675,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 87430,
+            "oldest_seconds": 8.465886,
+            "elapsedMs": 3210.9871000000003,
+            "batches": 1257,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 82330,
+            "oldest_seconds": 8.977285,
+            "elapsedMs": 4287.4835,
+            "batches": 1767,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 77860,
+            "oldest_seconds": 9.890753,
+            "elapsedMs": 5358.3945,
+            "batches": 2214,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 75520,
+            "oldest_seconds": 10.731032,
+            "elapsedMs": 6467.0604,
+            "batches": 2448,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 72670,
+            "oldest_seconds": 11.587116,
+            "elapsedMs": 7534.4635,
+            "batches": 2733,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 69460,
+            "oldest_seconds": 12.589601,
+            "elapsedMs": 8584.1206,
+            "batches": 3054,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 66260,
+            "oldest_seconds": 13.03967,
+            "elapsedMs": 9647.5718,
+            "batches": 3374,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 61730,
+            "oldest_seconds": 13.995297,
+            "elapsedMs": 10696.8173,
+            "batches": 3827,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 57560,
+            "oldest_seconds": 14.745857,
+            "elapsedMs": 11771.6683,
+            "batches": 4244,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 53320,
+            "oldest_seconds": 15.37034,
+            "elapsedMs": 12828.826600000002,
+            "batches": 4668,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 50080,
+            "oldest_seconds": 16.187046,
+            "elapsedMs": 13895.3556,
+            "batches": 4992,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 46570,
+            "oldest_seconds": 16.990955,
+            "elapsedMs": 14960.0361,
+            "batches": 5343,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 43290,
+            "oldest_seconds": 17.810295,
+            "elapsedMs": 16052.164900000002,
+            "batches": 5671,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 38960,
+            "oldest_seconds": 18.504507,
+            "elapsedMs": 17120.076999999997,
+            "batches": 6104,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 33750,
+            "oldest_seconds": 19.433841,
+            "elapsedMs": 18195.929799999998,
+            "batches": 6625,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 31110,
+            "oldest_seconds": 20.450171,
+            "elapsedMs": 19270.296500000004,
+            "batches": 6889,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 27840,
+            "oldest_seconds": 21.402673,
+            "elapsedMs": 20342.458100000003,
+            "batches": 7216,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 24350,
+            "oldest_seconds": 22.335344,
+            "elapsedMs": 21426.581899999997,
+            "batches": 7565,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 20320,
+            "oldest_seconds": 23.297436,
+            "elapsedMs": 22504.331,
+            "batches": 7968,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 15660,
+            "oldest_seconds": 24.208311,
+            "elapsedMs": 23591.149299999997,
+            "batches": 8434,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 11160,
+            "oldest_seconds": 25.157286,
+            "elapsedMs": 24699.6751,
+            "batches": 8884,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 8710,
+            "oldest_seconds": 26.1706,
+            "elapsedMs": 25800.007100000003,
+            "batches": 9129,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 5910,
+            "oldest_seconds": 27.185278,
+            "elapsedMs": 26877.612800000003,
+            "batches": 9409,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 3060,
+            "oldest_seconds": 28.206001,
+            "elapsedMs": 27954.258,
+            "batches": 9694,
+            "final": false
+          },
+          {
+            "stageId": "d1db9baa-14b2-45e7-baa6-2c26403950a5",
+            "total": 111000,
+            "pending": 0,
+            "oldest_seconds": 0,
+            "elapsedMs": 29002.4507,
+            "batches": 10000,
+            "final": true
+          }
+        ],
+        "remainingBacklog": {
+          "total": 111000,
+          "pending": 0,
+          "oldest_seconds": 0,
+          "elapsedMs": 29002.4507,
+          "batches": 10000,
+          "final": true
+        }
+      },
+      "failures": [],
+      "durationMs": 41488,
+      "artifact": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/volume.json",
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/volume.log"
+    },
+    {
+      "id": "load",
+      "adapter": "k6",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/performance/drill.k6.js"
+      ],
+      "minimumTests": 3,
+      "required": true,
+      "status": "PASS",
+      "observedTests": 3,
+      "reason": null,
+      "metrics": {
+        "phases": [
+          {
+            "phase": "load",
+            "vus": [
+              10,
+              25,
+              50,
+              100
+            ],
+            "completed": 2853,
+            "integrityErrors": 0,
+            "duration": {
+              "p(95)": 694.83295,
+              "p(99)": 1307.695,
+              "max": 1993.8893,
+              "avg": 248.4210512377677,
+              "p(50)": 165.70005
+            },
+            "errorRate": 0,
+            "throughput": 125.35799188121537,
+            "iterations": 2853
+          },
+          {
+            "phase": "stress",
+            "vus": [
+              250
+            ],
+            "completed": 807,
+            "integrityErrors": 0,
+            "duration": {
+              "avg": 1487.8917853432604,
+              "p(50)": 1106.39275,
+              "p(95)": 4047.0635250000028,
+              "p(99)": 4928.568577,
+              "max": 5266.565
+            },
+            "errorRate": 0,
+            "throughput": 147.54054478851592,
+            "iterations": 807
+          }
+        ],
+        "reconciliation": {
+          "graded": 3660,
+          "broken": 0,
+          "accepted": 3660
+        },
+        "slo": "NOT_DEFINED",
+        "environment": "LOCAL_SHARED_GENERATOR_AND_SERVER"
+      },
+      "durationMs": 350010,
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/load.log"
+    },
+    {
+      "id": "dependencies",
+      "adapter": "audit",
+      "profile": "full",
+      "evidence": "static",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "FAIL",
+      "observedTests": 1,
+      "reason": "DEPENDENCY_VULNERABILITIES_REQUIRE_TRIAGE",
+      "metrics": {
+        "vulnerabilities": {
+          "info": 0,
+          "low": 4,
+          "moderate": 17,
+          "high": 8,
+          "critical": 2
+        }
+      },
+      "durationMs": 2824,
+      "log": "qa/.local/artifacts/5a091494-b077-4a09-95aa-8f06ac18ea21/dependencies.log"
+    },
+    {
+      "id": "manual-keyboard",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/manual/CHECKLIST.md"
+      ],
+      "minimumTests": 1,
+      "required": true,
+      "status": "NOT_RUN",
+      "observedTests": 0,
+      "reason": "HUMAN_KEYBOARD_AND_USABILITY_REVIEW_REQUIRED",
+      "durationMs": 1
+    }
+  ],
+  "verdict": "FAIL",
+  "limitations": [
+    "Synthetic PG content and email auth fixtures; not Google login, academic content approval or staging acceptance.",
+    "Local performance is a baseline with no approved production SLO; generator and application share one machine.",
+    "Manual keyboard/UAT evidence is separate; automated accessibility is not a complete accessibility certification.",
+    "Variety invalid-envelope rejection is contract/generator evidence; connected tests cover API input rejection.",
+    "Recovery is local database/worker/transport rehearsal, not cloud failover, R2 recovery or production RTO/RPO."
+  ],
+  "preparation": {
+    "ready": true,
+    "databaseReady": true,
+    "stages": [
+      {
+        "name": "@tka/database",
+        "ready": true
+      },
+      {
+        "name": "@tka/assessment-engine",
+        "ready": true
+      },
+      {
+        "name": "@tka/irt-orchestration",
+        "ready": true
+      },
+      {
+        "name": "@tka/api",
+        "ready": true
+      },
+      {
+        "name": "@tka/worker",
+        "ready": true
+      },
+      {
+        "name": "migration",
+        "ready": true
+      },
+      {
+        "name": "@tka/web",
+        "ready": true
+      }
+    ],
+    "reason": null
+  },
+  "executionStartedAt": "2026-10-27T13:49:23.943Z"
+}

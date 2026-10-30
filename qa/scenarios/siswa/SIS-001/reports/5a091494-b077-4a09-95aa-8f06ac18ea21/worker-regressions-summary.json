@@ -1,0 +1,158 @@
+{
+  "total": 25,
+  "passed": 25,
+  "failed": 0,
+  "skipped": 0,
+  "cases": [
+    {
+      "file": "class-leaderboard.spec.ts",
+      "name": "class leaderboard calendar rolls to a new period at Thursday 00:00 WIB",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "class-leaderboard.spec.ts",
+      "name": "class leaderboard projection against PostgreSQL ranks only class XP, retries safely, and archives the prior week",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "irt-v3.spec.ts",
+      "name": "IRT notification failures and opt-in does no queue/database work while disabled",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "irt-v3.spec.ts",
+      "name": "IRT notification failures and opt-in retains the quota error even when PostgreSQL delivery bookkeeping is unavailable",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback rejects invalid limits and reports an empty queue without work",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback respects the public limit and preserves full event contents with bounded SQL work",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback acknowledges partial and complete redelivery without rewriting existing analytics",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback rolls back a failed group and isolates insert failure without counting it twice",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback rolls back a failed group and isolates acknowledgment failure without counting it twice",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-batch.integration.spec.ts",
+      "name": "atomic outbox groups and poison-event fallback lets two consumers acknowledge disjoint groups exactly once",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-order.integration.spec.ts",
+      "name": "outbox candidate order regression preserves chronological selection and the UUID tie-breaker",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox-order.integration.spec.ts",
+      "name": "outbox candidate order regression skips a locked earliest event and delivers it after release",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox.integration.spec.ts",
+      "name": "durable analytics outbox records an event once and safely retries duplicate delivery",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "outbox.integration.spec.ts",
+      "name": "durable analytics outbox reports cooldown/backlog, rolls delivery back, and retries concurrently without a duplicate",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "pvp-leaderboard.integration.spec.ts",
+      "name": "PvP projection, best record and archive projects best valid points independently by difficulty, excludes forfeit/cancel and reconciles before archive",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "tryout-recovery.integration.spec.ts",
+      "name": "TryOut recovery on real PostgreSQL without browser or Redis recovers due attempts, races manual/auto safely, keeps raw answers and never expires Drill",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "tryout-recovery.integration.spec.ts",
+      "name": "TryOut recovery on real PostgreSQL without browser or Redis isolates invalid attempts and reports their overdue backlog without partially grading",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "tryout-recovery.integration.spec.ts",
+      "name": "TryOut recovery on real PostgreSQL without browser or Redis rolls grading back when transactional outbox insertion fails, then retries once",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "tryout-recovery.integration.spec.ts",
+      "name": "TryOut recovery on real PostgreSQL without browser or Redis posts manual TryOut XP through a non-owner runtime LOGIN with RLS",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle exits once on quota exhaustion before creating a BullMQ consumer or touching business jobs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle stops both job schedules on runtime quota errors and suppresses duplicate failures",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle limits transient error logs, keeps durable jobs running, and stops normally",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle bounds shutdown when the provider prevents BullMQ from closing",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle waits for both notification and IRT polling before closing the database",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "worker-runtime.spec.ts",
+      "name": "worker Redis outage lifecycle bounds startup when Redis cannot connect and removes signal listeners",
+      "status": "passed",
+      "failure": ""
+    }
+  ]
+}

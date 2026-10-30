@@ -1,0 +1,15 @@
+{
+  "checkedAt": "2026-10-27T12:10:41.297Z",
+  "applicationSourceUnchanged": true,
+  "previousResultsUnchanged": true,
+  "configUnchanged": true,
+  "workerTransactionsMeasured": 600,
+  "workerMismatches": 0,
+  "directSubmitAcknowledged": 260,
+  "retryChecks": 2,
+  "correlatedSubmitAcknowledged": 1454,
+  "correlatedDurabilityMismatches": 0,
+  "oldTimeoutReproduced": false,
+  "activeOwnedInvestigationProcesses": 0,
+  "outcome": "INVESTIGATION_COMPLETE_ISSUES_OPEN"
+}

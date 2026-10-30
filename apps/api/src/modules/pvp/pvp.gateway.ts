@@ -123,9 +123,16 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         if (previousMatch && previousMatch !== state.matchId)
           await engine.disconnect(user.id, previousMatch);
         socket.data.matchId = state.matchId;
-        await this.scheduler.schedule(state.matchId, user.id);
-        state = await engine.snapshot(user.id, state.matchId);
-        await this.broadcast(state.matchId);
+        const committedMatchId = state.matchId;
+        // Durable command state is acknowledged before transient queue/broadcast work.
+        setImmediate(() => {
+          void this.scheduler
+            .schedule(committedMatchId, user.id)
+            .then(() => this.broadcast(committedMatchId))
+            .catch(() =>
+              this.logger.warn('PvP post-command notification delayed; durable state retained.'),
+            );
+        });
       }
       const ack = this.envelope(
         'command:acknowledged',

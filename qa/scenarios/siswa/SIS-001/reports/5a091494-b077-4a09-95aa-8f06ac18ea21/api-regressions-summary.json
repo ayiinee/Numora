@@ -1,0 +1,1436 @@
+{
+  "total": 238,
+  "passed": 236,
+  "failed": 1,
+  "skipped": 1,
+  "cases": [
+    {
+      "file": "health/health.controller.spec.ts",
+      "name": "HealthController returns the application health contract",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads rejects an invalid session before querying Class data",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads rejects Student and unverified Teacher before querying Class data",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads returns owned active Classes in the public response shape",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads rejects another Teacher’s Class before querying its Students",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads rejects archived Classes and an ended school membership",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/classes/classes.service.spec.ts",
+      "name": "ClassesService Teacher reads returns only the Class and Student identity fields after authorization",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-import.validation.spec.ts",
+      "name": "question import contract semantics runtime schema equals its machine-readable source",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-import.validation.spec.ts",
+      "name": "question import contract semantics keeps content hash stable across provenance, reviewer claims and MCMA key ordering",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports matches normalized names within parents, accepts draft masters, and rejects ambiguous names",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports recomputes automatic fields after destination changes without flattening Tryout",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports permits academic nulls for preview but not final import",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports fills only blank Drill scope and its single indicator",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports preserves supplied values and identifies missing sources without substituting target",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports retains exact source mapping and level conflicts",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports does not guess ambiguous indicators or Pretest/Tryout levels",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports supports explicit corrections and preserves source provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Intake mapping keeps source data and strict final imports rejects archived and wrong-parent choices after validation",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Tryout indicator exemption ignores Excel indicator  and keeps provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Tryout indicator exemption ignores Excel indicator UNKNOWN and keeps provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Tryout indicator exemption ignores Excel indicator TEST-CP and keeps provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Tryout indicator exemption keeps indicator mandatory for DRILL",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "Tryout indicator exemption keeps indicator mandatory for PRETEST",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-intake.mapping.spec.ts",
+      "name": "allows unmapped Tryout material and optional chapter/difficulty while retaining provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview rejects anonymous and every non-content principal on new and legacy routes",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview validates ten samples without creating import records; media may be held",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview rejects malformed items, oversized batches and bodies at the HTTP boundary",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview rejects wrong scope, duplicate IDs, incomplete Category key, malformed PGK and forged media atomically",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview concurrent prepare creates one batch and one version per identity, replay conflicts are rejected",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview holds missing media, protects imported versions from legacy revision/publication",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview requires review for type, indicator or level changes even when the new master scope exists",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview verifies all six fixture media via actual upload API and creates new ready-to-preview revisions",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview rolls back partial writes when a later item fails at persistence",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview concurrent preview creation pins all ten items and strips review media/key/provenance",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview saves PG, MCMA, Category partial/null and rejects foreign identifiers and stale changes",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview validates media phase and keeps historical snapshot through reimport",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview serializes save/submit and returns one unscored review with all six media usages",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview revocation and feature disabling stop operations without erasing evidence",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview directs three purposes, binds templates, replaces membership atomically and protects review/history",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview enforces main/compute/Data API boundaries and leaves every production learning table empty",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview publishes reviewed PG packages with approval pins, protects stale approvals and serves only owned/released media",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview tracks upload-first intake, source recovery, draft edits, idempotency and one-confirmation publication",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content-preview.integration.spec.ts",
+      "name": "TEST ONLY content chain: HTTP → PostgreSQL main → storage fixture → pinned preview persists incomplete intake mapping, restores legacy dropped rows, rejects spoofed relations and rechecks levels at Publish",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL rejects missing/invalid auth and non-Admin roles on every added controller",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL validates inputs, writes taxonomy transactionally, and rejects duplicate and forged actor IDs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL publishes only reviewed PG with READY ancestry and preserves old content during concurrent revisions",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL retains draft Tryout work, pins version IDs and refuses unapproved publication or published edits",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL stores more than three videos, archives without losing reports, and audits Admin follow-up",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL shows no IRT parameters below 30 responses or for an unfinished batch",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/content.integration.spec.ts",
+      "name": "Admin/content through HTTP and real PostgreSQL rejects unsafe video writes and activation of invalid imported metadata",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL rejects a question mapped to another curriculum level without changing package history",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL protects new endpoints and rejects forged identity/invalid inputs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL publishes complete packages once under concurrent requests and preserves pinned items",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL reads incomplete legacy metadata honestly and rejects publication until configured",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL plays an Admin-published package through the canonical engine, reports an answer and prepares IRT",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL rejects publication with policies and option shapes unsupported by the canonical runtime",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/drill-packages.integration.spec.ts",
+      "name": "Drill packages through HTTP/PostgreSQL rejects incomplete, unready and malformed content; rolls back audit failures",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.http.spec.ts",
+      "name": "Excel HTTP boundary with real guard, validation and parser; no database writes denies missing authentication and Operations on parse and template endpoints",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.http.spec.ts",
+      "name": "Excel HTTP boundary with real guard, validation and parser; no database writes parses multipart content and downloads a native template for authorized content Admins",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.http.spec.ts",
+      "name": "Excel HTTP boundary with real guard, validation and parser; no database writes rejects invalid namespace, .xls and oversized upload using problem+json",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary keeps all intake rows and native image bytes when metadata is blank or content needs correction",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary reads the supplied academic workbooks without discarding unresolved metadata",
+      "status": "skipped",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary reads PG/MCMA/Category and floating pictures by native row/column despite gaps and fractions",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary reads independently generated native Place in Cell and floating fixtures for all three types",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary keeps identities stable across filename/row changes and namespaces separate for media",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary reports empty text, unknown keys, duplicates and misplaced images instead of fixing data silently",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary accepts legacy aliases/instruction rows and a stem-anchored image without parsing example sheets",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary rejects .xls, excess questions, expanded ZIP bombs and external IMAGE formulas",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/excel-import.spec.ts",
+      "name": "Excel import at the trust boundary validates through the existing importer and never writes during parsing",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder pg-latex",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder mcma",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder category-boolean",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder category-custom",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder rejects tampered content without silently normalizing a sealed payload",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder rejects unknown fields, media, invalid keys, empty text and unknown rubric UUID",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/generator.spec.ts",
+      "name": "generation candidate boundary uses the Numora decoder requires complete category keys and unique statements",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.integration.spec.ts",
+      "name": "media reservation concurrency and audit with local PostgreSQL does not grant media access to the compute role",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.integration.spec.ts",
+      "name": "media reservation concurrency and audit with local PostgreSQL concurrent retries create one durable row and one audit record for each transition",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) requires active Admin even for completion; rejects anonymous/student/disabled",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) rejects traversal, SVG, oversize, invalid checksum and injected object keys",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) reuses a pending reservation and refuses changed data with the same key",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) hides other-actor reservations and rejects malformed upload IDs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) verifies once, completes idempotently, and never issues another PUT for verified media",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/media-uploads.spec.ts",
+      "name": "media upload API (guard and validation real; database/R2 isolated) does not verify an expired pending reservation",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) fails closed when disabled or misconfigured without contacting R2",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) signs only the pending object, content type and length; no network required",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) keeps GET renewal available when upload is disabled and ignores test transport in production",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) publishes only the actual verified bytes to a separate final key",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) propagates scoped temporary credentials to GET and PUT signatures",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) rejects checksum/type/size mismatch without publishing",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) rejects spoofed PNG bytes even if its claimed checksum matches",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/r2-media.storage.spec.ts",
+      "name": "R2 media storage (SDK network mocked) does not expose SDK error messages or signed URLs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/youtube-url.spec.ts",
+      "name": "curated YouTube URLs accepts watch, short, shorts and embed video links",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/content/youtube-url.spec.ts",
+      "name": "curated YouTube URLs rejects unsafe schemes, host spoofing, credentials, ports and non-video links",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/feedback/feedback.integration.spec.ts",
+      "name": "feedback and Admin operations over HTTP/PostgreSQL rejects invalid roles, verification, disabled accounts and foreign-class recipients",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/feedback/feedback.integration.spec.ts",
+      "name": "feedback and Admin operations over HTTP/PostgreSQL enforces body/input limits and creates exactly one feedback across concurrent retries",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/feedback/feedback.integration.spec.ts",
+      "name": "feedback and Admin operations over HTTP/PostgreSQL limits Teacher history and cursors to the current owned class, including previous-school records",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/feedback/feedback.integration.spec.ts",
+      "name": "feedback and Admin operations over HTTP/PostgreSQL scopes Student inbox and preserves the first read time on concurrent mark-read",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/feedback/feedback.integration.spec.ts",
+      "name": "feedback and Admin operations over HTTP/PostgreSQL protects every Admin read route, validates filters and omits auth/email/join secrets",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/admin-permissions.spec.ts",
+      "name": "PRD v0.6 Admin permissions denies unassigned legacy Admins and separates operations from content",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/admin-permissions.spec.ts",
+      "name": "PRD v0.6 Admin permissions only Super Admin can access unrestricted audit/admin account management",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService rejects missing and invalid bearer tokens",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService creates one Google Student profile with Mandiri affiliation",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService rejects a second role selection even under a duplicate insert race",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService does not register a non-Google account",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService reports an unverified Teacher and rejects disabled accounts",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/identity/identity.service.spec.ts",
+      "name": "IdentityService keeps registration diagnostics free of credentials, profile data and raw database errors",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-integration.integration.spec.ts",
+      "name": "IRT integration through HTTP/PostgreSQL snapshots pseudonymous canonical input, deduplicates batches, and accepts identical output retries",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-integration.integration.spec.ts",
+      "name": "IRT integration through HTTP/PostgreSQL rejects insufficient/forged output, retries failed jobs, and keeps historical scores unchanged",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-integration.integration.spec.ts",
+      "name": "IRT integration through HTTP/PostgreSQL rejects unrepresentable parameters without changing batch state",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-integration.integration.spec.ts",
+      "name": "IRT integration through HTTP/PostgreSQL freezes only responses graded before an explicit-timezone cutoff",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-integration.integration.spec.ts",
+      "name": "IRT integration through HTTP/PostgreSQL hides legacy parameters flagged as insufficient even with thirty samples",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer protects all operations and validates body/header/default-off without exposing dependencies",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer deduplicates concurrent prepare and preserves empty answers/privacy/frozen input",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer rejects empty/unapproved data atomically and enforces main/compute roles",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer authorizes manual retry only once, fences expired workers and retains identical input",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer rolls back invalid adoption, permits explicit retry, and copies evidence idempotently without release",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer preserves insufficient decisions and copies GPCM steps without inventing parameters",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer rejects incomplete manifests, incorrect provenance and duplicate output items",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer rolls back acceptance and every canonical write when a later GPCM step fails",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer connects real Admin API → PostgreSQL → Redis → TEST ONLY consumer → canonical, recovering lost queue state",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer records bounded transport cooldown without consuming the compute retry authorization",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-requests.integration.spec.ts",
+      "name": "JOB-10 v3 foundation, TEST ONLY scientific consumer persists cooldown after an actual failed Redis connection without authorizing execution",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/irt/irt-scoring.integration.spec.ts",
+      "name": "PROPOSED IRT v2 integration, TEST ONLY model/scale/PGK answers freezes submitted PG/MCMA/Category including unanswered items, validates per-attempt output and never releases scores",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/leaderboards/leaderboards.integration.spec.ts",
+      "name": "leaderboard current visibility, dense rank, mode and archive authorization shows precise XP/zero, reranks visible members immediately and separates DEMO/official points",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/leaderboards/leaderboards.integration.spec.ts",
+      "name": "leaderboard current visibility, dense rank, mode and archive authorization preserves legacy archive ranks, requires current membership and rejects unknown periods/roles",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary enforces authentication, role and UUID validation through HTTP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary preserves zero scores, pinned level context and pending rewards without exposing unreleased Tryout",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary rejects foreign, non-visible and wrong-level cursors instead of silently skipping records",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary paginates equal and sub-millisecond PostgreSQL timestamps without omissions or duplicates",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary intersects historical class and level for rows and precise cursors without leaking another class",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/assessment-history.integration.spec.ts",
+      "name": "Assessment history PostgreSQL and HTTP boundary retains finished records and stored scores after source taxonomy/package archive",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/drill-chapter3-override.spec.ts",
+      "name": "limits the exception to the explicit package IDs and policy version",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/drill-chapter3-override.spec.ts",
+      "name": "grades selected and unselected MCMA decisions; omitted answers get zero",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/drill-chapter3-override.spec.ts",
+      "name": "grades partial Category answers without treating omitted statements as correct",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/drill-chapter3-override.spec.ts",
+      "name": "keeps ordinary Drill rewards strict; the one-off partial reward fits the integer ledger",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/drill-reward.integration.spec.ts",
+      "name": "Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY) posts once, rolls back all effects on failure, retries a single package and leaves legacy XP untouched",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.flow.integration.spec.ts",
+      "name": "Drill lifecycle against PostgreSQL keeps reward/submit atomic and idempotent, reuses the MVP package, and protects historical results",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service-access.spec.ts",
+      "name": "Drill access and duplicate submit does not return another Student’s attempt or its answer data",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service-access.spec.ts",
+      "name": "Drill access and duplicate submit refuses to change an answer after finalization",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service-access.spec.ts",
+      "name": "Drill access and duplicate submit returns the prior result on duplicate submit without writing another outbox event",
+      "status": "failed",
+      "failure": "Error: expected { …(17) } to match object { score: 80, mastered: true, xp: 105 }\n(14 matching properties omitted from actual)\n    at _Assertion.__VITEST_RESOLVES__ (file:///D:/Dev/Numora/node_modules/.pnpm/vitest@5.0.2_@types+node@24_a6c93465f86ec8d9d31e72a1fa9fe443/node_modules/vitest/dist/chunks/index.DGdajAO2.js:2435:33)\n    at _Assertion.propertyGetter (file:///D:/Dev/Numora/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1570:27)\n    at Reflect.get (<anonymous>)\n    at Object.proxyGetter [as get] (file:///D:/Dev/Numora/node_modules/.pnpm/chai@6.2.2/node_modules/chai/index.js:1659:22)\n    at D:/Dev/Numora/apps/api/src/modules/learning/learning.service-access.spec.ts:94:67\n    at file:///D:/Dev/Numora/node_modules/.pnpm/vitest@5.0.2_@types+node@24_a6c93465f86ec8d9d31e72a1fa9fe443/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:1628:35\n    at file:///D:/Dev/Numora/node_modules/.pnpm/vitest@5.0.2_@types+node@24_a6c93465f86ec8d9d31e72a1fa9fe443/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:2783:26\n    at file:///D:/Dev/Numora/node_modules/.pnpm/vitest@5.0.2_@types+node@24_a6c93465f86ec8d9d31e72a1fa9fe443/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:3319:20\n    at new Promise (<anonymous>)\n    at runWithCancel (file:///D:/Dev/Numora/node_modules/.pnpm/vitest@5.0.2_@types+node@24_a6c93465f86ec8d9d31e72a1fa9fe443/node_modules/vitest/dist/chunks/run.C5UmxDPh.js:3314:10)"
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy keeps 7/10 locked and unlocks at 8/10, independently of stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy reuses the sole MVP variant for retries",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy does not expose answer key or explanation in an active attempt",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy preserves the pinned legacy explanation expiry",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 0/10 0 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 1/10 1 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 5/10 1 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 6/10 2 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 9/10 2 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy v0.6 gives 10/10 3 stars",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy uses server duration 600 seconds for 97 XP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy uses server duration 899 seconds for 80 XP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy uses server duration 900 seconds for 80 XP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy uses server duration 901 seconds for 80 XP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/learning.service.spec.ts",
+      "name": "Drill domain policy rounds only the final sum and applies the formula to failed attempts too",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) allows independent Students, does not consume Skip, and concurrently starts one pinned 20-item session",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) applies all placement boundaries additively and leaves Drill completion/latest/best intact",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) serializes start/Skip/submit and can Skip even when no approved package is available",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) delivers 30 mixed questions, validates raw answers, freezes one submission and keeps grading/release gated",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) auto-finalizes without a browser, survives repeated recovery and locks Past packages for every Student",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/pretest-tryout.integration.spec.ts",
+      "name": "Pretest and continued Tryout lifecycle (isolated TEST/DEMO) resumes pinned content after package archive and allows Skip without any available package",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/student-dashboard.integration.spec.ts",
+      "name": "Student dashboard ownership, affiliation and IRT privacy returns real metrics, hides Tryout scores, refreshes class eligibility, and rejects Teachers",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/student-pgk.integration.spec.ts",
+      "name": "Student typed answer HTTP → PostgreSQL and published result reads (TEST ONLY) saves/resumes three shapes, preserves release/ownership and refuses unapproved PGK grading",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/student-pgk.integration.spec.ts",
+      "name": "Student typed answer HTTP → PostgreSQL and published result reads (TEST ONLY) reads STANDARD only from a published canonical batch, keeps history consistent and hides unpublished evidence",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/tryout.flow.integration.spec.ts",
+      "name": "Tryout lifecycle against PostgreSQL allows both affiliations, preserves snapshots, enforces HTTP authorization and hides unreleased results",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/tryout.policy.spec.ts",
+      "name": "Tryout time and PG score policy gives ten minutes normally and caps a late Sunday start at 23:59:00 WIB",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/learning/tryout.policy.spec.ts",
+      "name": "Tryout time and PG score policy normalizes earned points against pinned maximum points",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery validates HTTP filters, role, identifiers and read response status",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery permits the API runtime and denies a browser role through RLS even if table select is granted",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery keeps category null, scores zero, visibility and level availability authoritative",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery rolls back outbox with its source, retries delivery exactly once, and separates feedback read state",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery uses durable broadcast cursor across batches and excludes newly registered students",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery keeps pagination valid after marking the cursor read, isolates accounts and archives without deleting",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery preserves microsecond pagination and rejects cursors from a different kind filter",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery delivers a real invitation once and disables actions after decline",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/notifications/notifications.integration.spec.ts",
+      "name": "materials and durable notification delivery notifies new submissions for an already released package without backfilling historical attempts",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database reports an empty bank and rejects create without leaving a partial package",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database requires ten families even when nine have extra versions/variants",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database mixes chapters, uses latest READY versions, and never writes during availability",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database excludes incorrect usage, statuses, unsupported content and non-READY hierarchy/level",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database accepts existing CONTENT_VALID evidence and avoids an older difficulty after revision",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database uses only the accepted uncalibrated pool in temporary DEMO mode and preserves room pins",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database revalidates selected content and rolls back all package/room writes on downstream failure",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.integration.spec.ts",
+      "name": "PvP READY Drill bank with its own isolated PostgreSQL database draws all three difficulties in both modes and pins content/order across reconnect and revision",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling reads imported wrapped options consistently for eligibility, display and scoring",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling rejects 0 distinct families without repeating or padding",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling rejects 9 distinct families without repeating or padding",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling counts families, not versions or variants",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling excludes malformed keys, PGK and unsupported media while accepting empty media",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling samples ten unique families from 10 with controlled randomness",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling samples ten unique families from 24 with controlled randomness",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp-drill-bank.spec.ts",
+      "name": "PvP random Drill sampling chooses one variant randomly within each family",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy serializes concurrent join and create retries, permits Mandiri, and enforces ownership",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy keeps answers immutable, rejects late answers, and advances only from server state",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy finalizes ten questions once with atomic outbox and pinned content, without class XP",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy handles reconnect at 20 seconds, dual disconnect and restart without leaderboard records",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy limits invitations to current classmates and expires fixture invitations",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy retains host room and guest history, resets Ready, permits replacement and enforces one active room",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy reconnects at exactly 20 seconds and preserves terminal state; earliest expired deadline loses regardless of slot",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.flow.integration.spec.ts",
+      "name": "PvP PostgreSQL engine with TEST ONLY policy releases a disconnected waiting guest at grace expiry but cancels an expired host",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.policy.spec.ts",
+      "name": "PvP policy and boundaries defaults to strict content and permits temporary content only in explicit DEMO mode",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.policy.spec.ts",
+      "name": "PvP policy and boundaries keeps owner-accepted real content available without enabling synthetic fixtures",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.policy.spec.ts",
+      "name": "PvP policy and boundaries keeps real accounts gated without an approved policy",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.policy.spec.ts",
+      "name": "PvP policy and boundaries uses server durations and floors the speed bonus at boundaries",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.policy.spec.ts",
+      "name": "PvP policy and boundaries rejects unknown fields, invalid versions, spoofed events and missing request IDs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.runtime.integration.spec.ts",
+      "name": "runtime policy and READY Drill publication boundary defaults off, rejects invalid modes and seeds three immutable replay-safe DEMO packages",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.runtime.integration.spec.ts",
+      "name": "runtime policy and READY Drill publication boundary requires live scheduling and ignores prebuilt PvP packages when selecting READY Drill content",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.runtime.integration.spec.ts",
+      "name": "runtime policy and READY Drill publication boundary official mode uses the READY Drill bank without separate PvP package approval",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.runtime.integration.spec.ts",
+      "name": "runtime policy and READY Drill publication boundary disables new rooms while keeping an active match and retries recoverable",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.transport.integration.spec.ts",
+      "name": "PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY policy authenticates handshake, validates commands and returns personalized snapshots without keys",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.transport.integration.spec.ts",
+      "name": "PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY policy repairs missed timeout jobs from PostgreSQL and cancels safely when Redis is lost",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.transport.integration.spec.ts",
+      "name": "PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY policy enforces REST Student authorization, ownership, DTO validation and top10/own-rank privacy",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/pvp/pvp.transport.integration.spec.ts",
+      "name": "PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY policy keeps the default production module gated even with test environment and Redis configured",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/student-support.integration.spec.ts",
+      "name": "Student reports and recommendations through HTTP/PostgreSQL protects Student support and rejects forged reporter IDs",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/student-support.integration.spec.ts",
+      "name": "Student reports and recommendations through HTTP/PostgreSQL does not expose unsafe URLs from imported READY video metadata",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/student-support.integration.spec.ts",
+      "name": "Student reports and recommendations through HTTP/PostgreSQL returns only curated recommendations, caps three, and scopes reports to actual owned items",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/student-support.integration.spec.ts",
+      "name": "Student reports and recommendations through HTTP/PostgreSQL keeps concurrent report retries idempotent and rejects reuse for another actor or payload",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/support-events.integration.spec.ts",
+      "name": "gated support interactions and transactional events authenticates even when disabled and does not record unapproved payloads",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/support-events.integration.spec.ts",
+      "name": "gated support interactions and transactional events deduplicates concurrent interaction retries, derives actor, and rejects changed payload or ownership",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/support-events.integration.spec.ts",
+      "name": "gated support interactions and transactional events records one outbox event for a committed report across concurrent retries",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/support-events.integration.spec.ts",
+      "name": "gated support interactions and transactional events records retry creation atomically and emits nothing twice when start resumes the same attempt",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/reports/support-events.integration.spec.ts",
+      "name": "gated support interactions and transactional events rolls back a report if its outbox insert fails, then permits the same request to retry",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/onboarding-compatibility.integration.spec.ts",
+      "name": "onboarding compatibility and collision transactions accepts case-sensitive legacy SHA-256 and unversioned HMAC tokens without rewriting hashes",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/onboarding-compatibility.integration.spec.ts",
+      "name": "onboarding compatibility and collision transactions retries a token collision, preserves 72h expiry, and rolls back reissue when all collisions fail",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/onboarding-compatibility.integration.spec.ts",
+      "name": "onboarding compatibility and collision transactions keeps shared class codes reusable, supports legacy codes, and permits concurrent joins below the five-class cap",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/teacher-flow.integration.spec.ts",
+      "name": "Teacher verification and Class flow against PostgreSQL enforces token expiry/single use, multiple classes, Teacher ownership and teacherless takeover",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/teacher-token.spec.ts",
+      "name": "versioned teacher token compatibility generates eight unambiguous characters and hashes with the server pepper",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/teacher-token.spec.ts",
+      "name": "versioned teacher token compatibility retains case-sensitive legacy SHA-256 tokens",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/schools/teacher-token.spec.ts",
+      "name": "versioned teacher token compatibility rejects missing pepper and public secret configuration",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries accepts new/legacy teacher tokens and rejects unsupported formats through the real DTO",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries accepts short and legacy/QA class codes while preserving input for service normalization",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries returns problem+json with Retry-After and prevents the business mutation",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries allows Teacher takeover with a separate limiter scope while rejecting Student and Admin",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries fails takeover closed when its code limiter is unavailable",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.http.spec.ts",
+      "name": "short-code HTTP boundaries fails closed on limiter outage and rejects unauthorized roles before limiting",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.redis.integration.spec.ts",
+      "name": "code limiter outage does not accept code attempts when Redis is missing",
+      "status": "passed",
+      "failure": ""
+    },
+    {
+      "file": "modules/security/code-attempt.redis.integration.spec.ts",
+      "name": "atomic code limits across API instances shares the quota and TTL, rejects excess concurrency, then resets after expiry",
+      "status": "passed",
+      "failure": ""
+    }
+  ]
+}

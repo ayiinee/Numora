@@ -1,0 +1,20 @@
+{
+  "id": "6f074427-90de-449d-97c0-e91c26bec6fd",
+  "parentInvestigation": "28974b1c-2adf-456a-988a-e6dec4bf3026",
+  "startedAt": "2026-10-27T11:57:45.832Z",
+  "phase": "COMPLETED",
+  "phases": [
+    {
+      "phase": "load",
+      "code": 0,
+      "timedOut": false
+    },
+    {
+      "phase": "stress",
+      "code": 0,
+      "timedOut": false
+    }
+  ],
+  "originalK6Hash": "9148bc26f2eb2de312fdf745f8b9084ad53906d5e10b0283b06818b280d41b1d",
+  "finishedAt": "2026-10-27T12:03:58.993Z"
+}

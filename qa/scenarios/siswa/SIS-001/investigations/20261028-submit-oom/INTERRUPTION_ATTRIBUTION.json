@@ -1,0 +1,1079 @@
+{
+  "runId": "838c1952-e8f9-4681-8396-ea74365157a1",
+  "method": "READ_ONLY_EXISTING_STREAM_TIMESTAMPS_NO_NEW_LOAD",
+  "stageMarkers": {
+    "load": {
+      "firstStartAt": "2026-10-27T20:43:09.078Z",
+      "lastMetricAt": "2026-10-27T20:47:49.080Z",
+      "elapsedMs": 280002
+    },
+    "stress": {
+      "firstStartAt": "2026-10-27T20:47:50.238Z",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "elapsedMs": 69998
+    }
+  },
+  "missingSubmitResponses": 117,
+  "byPhase": {
+    "load": 1,
+    "stress": 116
+  },
+  "maximumUnobservedWaitMs": 1184,
+  "minimumUnobservedWaitMs": 538,
+  "missing": [
+    {
+      "operationId": "load:vus_100:43:15",
+      "attemptId": "d9a6648e-f232-45e2-bd0e-d5aef5cfba53",
+      "sentAt": "2026-10-28T03:47:48.398119+07:00",
+      "phase": "load",
+      "lastMetricAt": "2026-10-27T20:47:49.080Z",
+      "untilLastMetricMs": 682,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:1:2",
+      "attemptId": "aa0254b2-680a-4641-9fa3-ce1f66b0ae01",
+      "sentAt": "2026-10-28T03:48:59.0521667+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1184,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:2:2",
+      "attemptId": "9c6829d4-36e4-4898-8b3d-2d1021667a19",
+      "sentAt": "2026-10-28T03:48:59.0622703+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1174,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:8:2",
+      "attemptId": "6cd36ccd-3d75-4a75-8e02-f509cb73eda4",
+      "sentAt": "2026-10-28T03:48:59.1040264+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1132,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:137:2",
+      "attemptId": "65f6672a-792d-4bfd-b212-ea1256f5a5cc",
+      "sentAt": "2026-10-28T03:48:59.1077509+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1129,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:12:2",
+      "attemptId": "7fd746cb-b20e-4bb1-a755-b68aef575d04",
+      "sentAt": "2026-10-28T03:48:59.0612243+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1175,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:15:2",
+      "attemptId": "3332c302-a318-45fc-aea6-fccce6867287",
+      "sentAt": "2026-10-28T03:48:59.1091768+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1127,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:7:2",
+      "attemptId": "bf87683e-c9ca-463f-9f86-ccd6037275c3",
+      "sentAt": "2026-10-28T03:48:59.0855065+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1151,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:9:2",
+      "attemptId": "5166dcaa-e570-4f44-b5bb-fc06c43958cc",
+      "sentAt": "2026-10-28T03:48:59.0839874+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1153,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:6:2",
+      "attemptId": "3f012c06-2e35-4335-99ad-e0494ef4f710",
+      "sentAt": "2026-10-28T03:48:59.1434569+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1093,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:14:2",
+      "attemptId": "7f917cfa-e8e3-47a6-9a23-b21b9807295f",
+      "sentAt": "2026-10-28T03:48:59.1289211+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1108,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:250:2",
+      "attemptId": "2bb293e5-a399-4ff5-a3bd-3e9ec715e8aa",
+      "sentAt": "2026-10-28T03:48:59.067248+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1169,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:81:2",
+      "attemptId": "84b08f5d-d058-4207-ba1c-3ecb57f395f1",
+      "sentAt": "2026-10-28T03:48:59.1252214+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1111,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:3:2",
+      "attemptId": "6e50a307-c98c-4c4d-8d98-f7ed3a51412c",
+      "sentAt": "2026-10-28T03:48:59.1389154+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1098,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:122:2",
+      "attemptId": "96f1e19c-0394-4c41-afb2-954eab8ec1db",
+      "sentAt": "2026-10-28T03:48:59.0942515+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1142,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:10:2",
+      "attemptId": "c4385a94-3f1f-4e15-a14d-308705fedc47",
+      "sentAt": "2026-10-28T03:48:59.1262958+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1110,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:49:2",
+      "attemptId": "aff4c5bc-c81c-4407-b43c-94a5db3efa3f",
+      "sentAt": "2026-10-28T03:48:59.1644629+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1072,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:18:2",
+      "attemptId": "5cc7bbe3-685b-4230-8d76-2bc02f6d5a50",
+      "sentAt": "2026-10-28T03:48:59.1284126+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1108,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:79:2",
+      "attemptId": "8a309d7f-5189-466b-bd5a-86779ce8f51f",
+      "sentAt": "2026-10-28T03:48:59.1679369+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1069,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:74:2",
+      "attemptId": "7169a0b5-9cf9-491c-b495-0d332c314e11",
+      "sentAt": "2026-10-28T03:48:59.1750105+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1061,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:121:2",
+      "attemptId": "aa75b0c2-7563-417b-9659-ae1a4ac0c3ca",
+      "sentAt": "2026-10-28T03:48:59.1578829+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1079,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:43:2",
+      "attemptId": "de766a46-d62b-4e88-9406-f36152fa8b3d",
+      "sentAt": "2026-10-28T03:48:59.1434569+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1093,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:103:2",
+      "attemptId": "56064768-b057-4fb7-88f8-5dfe4c3f74e2",
+      "sentAt": "2026-10-28T03:48:59.1679369+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1069,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:129:2",
+      "attemptId": "327af81e-7501-462e-9717-6c3a97c90899",
+      "sentAt": "2026-10-28T03:48:59.1031602+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1133,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:171:2",
+      "attemptId": "c4d98729-f116-4f49-b0ed-3a88089448fd",
+      "sentAt": "2026-10-28T03:48:59.2367753+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1000,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:66:2",
+      "attemptId": "51c11a7a-78fc-4f8a-95c2-58dcdf513ea9",
+      "sentAt": "2026-10-28T03:48:59.1758907+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1061,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:109:2",
+      "attemptId": "289f8cd6-f952-4c32-9d79-ad6c017b4c35",
+      "sentAt": "2026-10-28T03:48:59.209072+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1027,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:123:2",
+      "attemptId": "d750517c-f91f-4300-8668-216acb69762d",
+      "sentAt": "2026-10-28T03:48:59.1999626+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1037,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:32:2",
+      "attemptId": "487aed0e-ed00-46d7-aafe-5335a575edf3",
+      "sentAt": "2026-10-28T03:48:59.1610765+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1075,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:11:2",
+      "attemptId": "31428322-b080-404f-a9ba-002f422e7621",
+      "sentAt": "2026-10-28T03:48:59.1851611+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1051,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:89:2",
+      "attemptId": "a8c4130f-f29d-438b-91f7-b32181ff9cec",
+      "sentAt": "2026-10-28T03:48:59.2151586+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1021,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:104:2",
+      "attemptId": "2f72852b-6a65-489f-8877-af05e197ad25",
+      "sentAt": "2026-10-28T03:48:59.1892105+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1047,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:106:2",
+      "attemptId": "c5349a4f-45b8-4685-b339-febbd1502fab",
+      "sentAt": "2026-10-28T03:48:59.2258336+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1011,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:76:2",
+      "attemptId": "d28e98fe-b72a-4a71-a1ce-f66af323e8f4",
+      "sentAt": "2026-10-28T03:48:59.209072+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1027,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:20:2",
+      "attemptId": "c79a1c0a-4a50-473f-9721-20dfd1f86cb2",
+      "sentAt": "2026-10-28T03:48:59.2218446+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1015,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:86:2",
+      "attemptId": "5f257f23-5e13-4ed2-88da-68df031c20ac",
+      "sentAt": "2026-10-28T03:48:59.2907842+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 946,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:110:2",
+      "attemptId": "82accd09-9b02-4148-bf91-5d4a28f5678b",
+      "sentAt": "2026-10-28T03:48:59.2625585+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 974,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:4:2",
+      "attemptId": "8bbc03ae-cbc3-4473-8f69-a0802f82a3e0",
+      "sentAt": "2026-10-28T03:48:59.2490785+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 987,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:44:2",
+      "attemptId": "55da0989-1716-435b-8a69-9876d21ec1b2",
+      "sentAt": "2026-10-28T03:48:59.2654177+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 971,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:119:2",
+      "attemptId": "ede79f50-e1e1-47b9-a42d-368bb9455c7a",
+      "sentAt": "2026-10-28T03:48:59.2130229+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1023,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:84:2",
+      "attemptId": "3bfa3b3c-1e16-406e-b63e-d109704370cb",
+      "sentAt": "2026-10-28T03:48:59.2641659+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 972,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:136:2",
+      "attemptId": "dfa18a42-60d9-4c10-8d26-d148bbb088cb",
+      "sentAt": "2026-10-28T03:48:59.2759242+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 961,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:17:2",
+      "attemptId": "1408bf31-7f7e-43e6-9f13-f45700279562",
+      "sentAt": "2026-10-28T03:48:59.1434569+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1093,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:50:2",
+      "attemptId": "0bb84327-cf7c-4029-8106-9e931ba5bff2",
+      "sentAt": "2026-10-28T03:48:59.0839874+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1153,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:101:2",
+      "attemptId": "e67af544-b9fc-4426-b70d-179231915775",
+      "sentAt": "2026-10-28T03:48:59.1289211+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1108,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:5:2",
+      "attemptId": "33f63dcc-659d-44cd-a081-c7d62b101415",
+      "sentAt": "2026-10-28T03:48:59.2630688+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 973,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:83:2",
+      "attemptId": "bf92682a-edac-4a1f-baa3-645387d3c8d9",
+      "sentAt": "2026-10-28T03:48:59.2187526+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1018,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:142:2",
+      "attemptId": "74e7cddc-8b74-4b8e-84f0-a3d2e5ad647a",
+      "sentAt": "2026-10-28T03:48:59.3196202+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 917,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:48:2",
+      "attemptId": "849f4fab-fa8f-4de2-bc80-2b096af487ad",
+      "sentAt": "2026-10-28T03:48:59.120647+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 1116,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:138:2",
+      "attemptId": "26b84b8a-69ee-4b7a-969d-afe9c5fee241",
+      "sentAt": "2026-10-28T03:48:59.2719342+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 965,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:186:2",
+      "attemptId": "8a5a0503-2414-41f3-903d-b11d7138eb45",
+      "sentAt": "2026-10-28T03:48:59.2679325+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 969,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:183:2",
+      "attemptId": "f959f954-200c-4922-818b-25c818f8b13e",
+      "sentAt": "2026-10-28T03:48:59.4507279+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 786,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:78:2",
+      "attemptId": "fa348743-3f99-4f49-a068-79445ebe9cd1",
+      "sentAt": "2026-10-28T03:48:59.4230752+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 813,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:135:2",
+      "attemptId": "969f0d85-889a-423e-b888-fd5289e677e1",
+      "sentAt": "2026-10-28T03:48:59.4592878+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 777,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:184:2",
+      "attemptId": "91665c82-dbdc-4d55-862f-8d60b349b63e",
+      "sentAt": "2026-10-28T03:48:59.4453713+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 791,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:128:2",
+      "attemptId": "b117aff3-e5e8-491a-b151-c53e74565868",
+      "sentAt": "2026-10-28T03:48:59.4350888+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 801,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:120:2",
+      "attemptId": "3f9eb177-39f5-4100-a704-35a607d1fa48",
+      "sentAt": "2026-10-28T03:48:59.4151466+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 821,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:127:2",
+      "attemptId": "f1e89ec5-7440-4a5d-bd94-89ac28a732a4",
+      "sentAt": "2026-10-28T03:48:59.3057738+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 931,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:87:2",
+      "attemptId": "62c66c79-72e2-40ea-9993-08db3030c089",
+      "sentAt": "2026-10-28T03:48:59.2408351+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 996,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:223:2",
+      "attemptId": "65b21d43-3ef4-44eb-a802-b9d95b972a7c",
+      "sentAt": "2026-10-28T03:48:59.440385+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 796,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:124:2",
+      "attemptId": "84deb80c-5f52-4744-830d-730cab5c6454",
+      "sentAt": "2026-10-28T03:48:59.316982+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 920,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:172:2",
+      "attemptId": "5aa903bb-b4aa-4fd1-873a-1d4b12836aab",
+      "sentAt": "2026-10-28T03:48:59.3481833+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 888,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:108:2",
+      "attemptId": "b8808a81-90ad-43a7-834d-48b7ae7191c9",
+      "sentAt": "2026-10-28T03:48:59.3459437+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 891,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:75:2",
+      "attemptId": "71463215-9d37-49d3-bfdc-882363ba9ea7",
+      "sentAt": "2026-10-28T03:48:59.4527849+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 784,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:13:2",
+      "attemptId": "5ec31d19-7c80-468e-aefc-3174baaea3ec",
+      "sentAt": "2026-10-28T03:48:59.2921716+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 944,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:125:2",
+      "attemptId": "442672bb-75dd-403c-a00e-37fb4e4b05bc",
+      "sentAt": "2026-10-28T03:48:59.4728085+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 764,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:185:2",
+      "attemptId": "c9d1f530-d692-43e1-ab9c-160abcad31fc",
+      "sentAt": "2026-10-28T03:48:59.3441854+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 892,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:80:2",
+      "attemptId": "a098c4ea-4a19-4c02-b5b2-7d655c150efb",
+      "sentAt": "2026-10-28T03:48:59.318521+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 918,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:164:2",
+      "attemptId": "f460cb55-2e9b-43da-9828-7fb192d738b1",
+      "sentAt": "2026-10-28T03:48:59.3217099+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 915,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:95:2",
+      "attemptId": "8c22ef43-10bc-4a19-bd01-5f36c21c6f9f",
+      "sentAt": "2026-10-28T03:48:59.4993088+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 737,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:19:2",
+      "attemptId": "60e2c8e5-eb1b-4636-be1a-137092bd0a1f",
+      "sentAt": "2026-10-28T03:48:59.3574359+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 879,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:126:2",
+      "attemptId": "42cd837c-672c-43fa-aef2-ca443d511ddd",
+      "sentAt": "2026-10-28T03:48:59.3112025+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 925,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:45:2",
+      "attemptId": "422c6b73-6a5e-4314-9d6f-8710ed5a2007",
+      "sentAt": "2026-10-28T03:48:59.3406641+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 896,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:134:2",
+      "attemptId": "974b147d-f8f6-41bd-98be-7823a374e85e",
+      "sentAt": "2026-10-28T03:48:59.3563959+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 880,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:70:2",
+      "attemptId": "0a31e4f2-4e4e-4e31-947d-3e6378f48beb",
+      "sentAt": "2026-10-28T03:48:59.3721469+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 864,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:85:2",
+      "attemptId": "017faf5a-0c75-4d66-a479-c698fa78edef",
+      "sentAt": "2026-10-28T03:48:59.374678+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 862,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:82:2",
+      "attemptId": "4a657110-4ca1-464d-947d-c2862b61e9d0",
+      "sentAt": "2026-10-28T03:48:59.4250226+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 811,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:28:2",
+      "attemptId": "e7819b73-5fa8-4413-b210-dc492920bad0",
+      "sentAt": "2026-10-28T03:48:59.3993155+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 837,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:132:2",
+      "attemptId": "127ceb73-03d6-42e2-a722-c2d45cbeacbe",
+      "sentAt": "2026-10-28T03:48:59.4139628+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 823,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:91:2",
+      "attemptId": "f73b2d20-b0f8-4115-9982-f5671ff745e2",
+      "sentAt": "2026-10-28T03:48:59.3676449+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 869,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:88:2",
+      "attemptId": "cbfa4247-9e65-48eb-874c-84659bee6f40",
+      "sentAt": "2026-10-28T03:48:59.3794328+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 857,
+      "committedAtOriginalSnapshot": true
+    },
+    {
+      "operationId": "stress:vus_250:156:2",
+      "attemptId": "50a9f8de-03d6-4004-9d8b-a2338440f36f",
+      "sentAt": "2026-10-28T03:48:59.3908816+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 846,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:193:2",
+      "attemptId": "982dcfce-8852-42a3-bd4e-ad63c5f5dbc0",
+      "sentAt": "2026-10-28T03:48:59.4005152+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 836,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:98:2",
+      "attemptId": "28892e15-a00e-496a-9c54-fa0c5b850467",
+      "sentAt": "2026-10-28T03:48:59.5043038+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 732,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:102:2",
+      "attemptId": "013d6386-3308-4d45-ad77-32135e7f45e3",
+      "sentAt": "2026-10-28T03:48:59.5246184+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 712,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:197:2",
+      "attemptId": "a9d2f55a-0240-4b77-b4af-5d6bd125bb84",
+      "sentAt": "2026-10-28T03:48:59.4681127+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 768,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:60:2",
+      "attemptId": "411a6347-0333-412d-beba-787591466d61",
+      "sentAt": "2026-10-28T03:48:59.413457+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 823,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:99:2",
+      "attemptId": "d8b943ce-eeae-4265-b9c9-d963dd1a59c3",
+      "sentAt": "2026-10-28T03:48:59.4912582+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 745,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:200:2",
+      "attemptId": "45e6c0fe-7ce8-4979-baa3-05c2c5948133",
+      "sentAt": "2026-10-28T03:48:59.5321468+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 704,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:158:2",
+      "attemptId": "71f74972-a10f-4ac6-ae58-2038d3223fcb",
+      "sentAt": "2026-10-28T03:48:59.4905738+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 746,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:160:2",
+      "attemptId": "6fe71120-f56f-4706-aff0-a3730205dc05",
+      "sentAt": "2026-10-28T03:48:59.5321468+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 704,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:188:2",
+      "attemptId": "504d816b-6723-4366-8199-85fafd4b4cc9",
+      "sentAt": "2026-10-28T03:48:59.5465272+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 690,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:90:2",
+      "attemptId": "8c418f41-5faa-40de-8560-2221f764ebe9",
+      "sentAt": "2026-10-28T03:48:59.5470331+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 689,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:130:2",
+      "attemptId": "bfaddd3a-5f41-4709-8393-0af0a2418c82",
+      "sentAt": "2026-10-28T03:48:59.5220191+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 714,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:96:2",
+      "attemptId": "73a2d580-1490-4243-8da7-a0dc3e16baf2",
+      "sentAt": "2026-10-28T03:48:59.5561005+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 680,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:159:2",
+      "attemptId": "6e762db6-42a7-4d42-8a4c-552d2227048b",
+      "sentAt": "2026-10-28T03:48:59.5606139+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 676,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:59:2",
+      "attemptId": "34bfd3e3-10b4-40d2-bbcf-abd41496f376",
+      "sentAt": "2026-10-28T03:48:59.5595913+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 677,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:100:2",
+      "attemptId": "7e4a649a-c806-43a0-a3b1-95aec06b0b51",
+      "sentAt": "2026-10-28T03:48:59.5470331+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 689,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:141:2",
+      "attemptId": "432348bd-6169-4674-b9ab-806db0d907a0",
+      "sentAt": "2026-10-28T03:48:59.5465272+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 690,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:97:2",
+      "attemptId": "520652df-e59f-42fc-88d2-01fb61c6e970",
+      "sentAt": "2026-10-28T03:48:59.5759152+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 661,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:72:2",
+      "attemptId": "57754a40-7e08-46ce-ab85-35f7b2758e2a",
+      "sentAt": "2026-10-28T03:48:59.5470331+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 689,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:187:2",
+      "attemptId": "62cc126d-ef77-48b7-b610-25623b81bdb0",
+      "sentAt": "2026-10-28T03:48:59.5870015+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 649,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:151:2",
+      "attemptId": "dff31dcf-1891-4f7b-a2db-2f822a69d1b9",
+      "sentAt": "2026-10-28T03:48:59.5893474+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 647,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:22:2",
+      "attemptId": "2eae4102-bede-45dd-9523-d8233c2f5c7c",
+      "sentAt": "2026-10-28T03:48:59.5875069+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 649,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:199:2",
+      "attemptId": "edbc97e1-2470-4fd3-bbc4-42b0a34e7c9d",
+      "sentAt": "2026-10-28T03:48:59.6157602+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 621,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:16:2",
+      "attemptId": "cd2cad21-01ce-45c7-bde8-32d29807bd64",
+      "sentAt": "2026-10-28T03:48:59.5875069+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 649,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:161:2",
+      "attemptId": "1326a198-71c1-4524-9165-1e5a73f6198e",
+      "sentAt": "2026-10-28T03:48:59.5838847+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 653,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:114:2",
+      "attemptId": "905692f4-55de-4360-a457-7456478e4b32",
+      "sentAt": "2026-10-28T03:48:59.6486617+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 588,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:77:2",
+      "attemptId": "2784423f-fe24-4197-9763-754b664d0ba0",
+      "sentAt": "2026-10-28T03:48:59.6570135+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 579,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:155:2",
+      "attemptId": "37b2c54a-57e7-4ecb-a33f-33ea19e099af",
+      "sentAt": "2026-10-28T03:48:59.648153+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 588,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:192:2",
+      "attemptId": "0a842b7f-af42-4776-8471-036b76d0bb8d",
+      "sentAt": "2026-10-28T03:48:59.648153+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 588,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:176:2",
+      "attemptId": "ae072d32-2de7-447c-83cf-b862270c0ff3",
+      "sentAt": "2026-10-28T03:48:59.6988762+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 538,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:165:2",
+      "attemptId": "dc621586-d921-495a-89ed-f18e9a726341",
+      "sentAt": "2026-10-28T03:48:59.6689222+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 568,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:93:2",
+      "attemptId": "4f5ba2ad-9003-4a54-bb8c-a564bc47742b",
+      "sentAt": "2026-10-28T03:48:59.6024829+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 634,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:131:2",
+      "attemptId": "a8c20ee0-e52b-4a07-b7f4-ded64c9f17f2",
+      "sentAt": "2026-10-28T03:48:59.6014979+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 635,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:157:2",
+      "attemptId": "b38d2827-8f07-4d94-97f3-56a3e8e897ed",
+      "sentAt": "2026-10-28T03:48:59.6322186+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 604,
+      "committedAtOriginalSnapshot": false
+    },
+    {
+      "operationId": "stress:vus_250:133:2",
+      "attemptId": "1749bd8c-5bf9-4be7-b795-0908ba626cc2",
+      "sentAt": "2026-10-28T03:48:59.6864635+07:00",
+      "phase": "stress",
+      "lastMetricAt": "2026-10-27T20:49:00.236Z",
+      "untilLastMetricMs": 550,
+      "committedAtOriginalSnapshot": false
+    }
+  ],
+  "limitation": "Last recorded metric is a bounded proxy for generator termination, not an exact network cancellation timestamp. Missing responses are not automatically HTTP15s timeouts; gracefulStop10s can interrupt earlier."
+}

@@ -45,6 +45,7 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 ## Development
 
+- [Runtime/QA integration after Admin #110](development/RUNTIME_QA_INTEGRATION_2026-10-29.md) — canonical 0049, historical XP compatibility, exact Development history adoption and backup/rehearsal procedure.
 - [Ferdi PR stabilization, 28 October 2026](development/FERDI_PR_STABILIZATION_2026-10-28.md) — current PR blockers, preserved integration path, XP review packet and separate #102 migration handoff.
 - [Ferdi Admin integration, 26 October 2026](development/FERDI_ADMIN_INTEGRATION_2026-10-26.md) — PR #92 reconciliation, partial Tryout XP correction, isolated test evidence and remaining review gates.
 

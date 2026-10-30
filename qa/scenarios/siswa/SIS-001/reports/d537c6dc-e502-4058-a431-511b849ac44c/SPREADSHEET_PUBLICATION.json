@@ -1,0 +1,68 @@
+{
+  "schemaVersion": 1,
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "testedCommit": "820a76bfc279feb50e2a2826f23c4f9d8488d9cd",
+  "status": "PUBLISHED_VERIFIED",
+  "spreadsheetId": "1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs",
+  "documentUrl": "https://docs.google.com/spreadsheets/d/1YW-7ikBhBhptl_d600O8TTiZ6bdtqz0PpnJ8I2syPDs/edit",
+  "title": "Main Spreadsheet",
+  "tab": {
+    "id": 202610280,
+    "title": "QA_Person_A_20261028",
+    "index": 11,
+    "ranges": ["A1:N47"]
+  },
+  "dashboardRange": "Ringkasan!M1:Z20",
+  "navigationRange": "QA!J2:J6",
+  "account": "User explicitly selected alternate account after campus write returned 403",
+  "verification": {
+    "verifiedAt": "2026-10-27T18:22:20.282Z",
+    "source": "native Google Sheets readback",
+    "caseCount": 15,
+    "pass": 12,
+    "fail": 2,
+    "blocked": 0,
+    "notRun": 1,
+    "passRate": 0.8,
+    "cellErrors": [],
+    "existingInspectedValuesChanged": [],
+    "personCInspectedNonemptyCells": 116,
+    "oldDashboardInspectedNonemptyCells": 139,
+    "visualPreview": "UNAVAILABLE_COMPUTER_USE_RUNTIME_INITIALIZATION_FAILED"
+  },
+  "fullVerdict": "FAIL",
+  "pullRequest": "https://github.com/ayiinee/Numora/pull/109",
+  "driveFolderPublication": {
+    "status": "PUBLISHED_VERIFIED",
+    "documentId": "1J-hrO1hpN5vJ5_eswp9lVXWq2WHpjjQvUJmDRHSsLNQ",
+    "documentUrl": "https://docs.google.com/document/d/1J-hrO1hpN5vJ5_eswp9lVXWq2WHpjjQvUJmDRHSsLNQ",
+    "teamFolderId": "1i2_3VLW7qlAz6-XPvFRGV-VtuJEb13YS",
+    "roleFolderId": "1czyp89HC3lWi3kHX0kBk6PvJdidaO80L",
+    "userProvidedParentFolderId": "1NHAQNoP6oBTIL0zDdTU0i4aSct85k2wq",
+    "verifiedParentIds": ["1czyp89HC3lWi3kHX0kBk6PvJdidaO80L"],
+    "verifiedAt": "2026-10-27T18:22:20.281Z",
+    "contentReadbackMatched": true,
+    "documentCharacters": 5234,
+    "repeatShareReusedVerifiedDocument": true,
+    "existingInheritedAccess": "anyone/writer",
+    "permissionsChanged": false,
+    "restrictedTeamAccessVerified": false,
+    "history": [
+      {
+        "status": "PERMISSION_DENIED",
+        "target": "Spreadsheet",
+        "account": "Initially selected campus account"
+      },
+      {
+        "status": "NOT_FOUND",
+        "target": "Previous configured Drive folder",
+        "accounts": "Both selected accounts"
+      },
+      {
+        "status": "DESTINATION_UPDATED",
+        "reason": "User supplied accessible Big Data parent folder; created the authorized Numora QA role structure"
+      }
+    ]
+  },
+  "historicalResultUnchanged": true
+}

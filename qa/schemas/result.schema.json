@@ -1,0 +1,75 @@
+{
+  "type": "object",
+  "required": [
+    "schemaVersion",
+    "id",
+    "scenarioId",
+    "role",
+    "profile",
+    "startedAt",
+    "finishedAt",
+    "identity",
+    "checks",
+    "verdict",
+    "limitations"
+  ],
+  "properties": {
+    "schemaVersion": {
+      "const": 1
+    },
+    "id": {
+      "type": "string",
+      "pattern": "^[a-f0-9-]{36}$"
+    },
+    "scenarioId": {
+      "type": "string"
+    },
+    "role": {
+      "enum": ["siswa", "guru", "admin", "cross-role"]
+    },
+    "profile": {
+      "enum": ["quick", "standard", "full"]
+    },
+    "startedAt": {
+      "type": "string"
+    },
+    "finishedAt": {
+      "type": ["string", "null"]
+    },
+    "identity": {
+      "type": "object",
+      "required": ["sha", "codeHash", "rulesHash", "configHash", "manifestHash"]
+    },
+    "checks": {
+      "type": "array",
+      "items": {
+        "type": "object",
+        "required": ["id", "status", "evidence", "observedTests"],
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "enum": ["PASS", "FAIL", "BLOCKED", "NOT_RUN"]
+          },
+          "evidence": {
+            "type": "string"
+          },
+          "observedTests": {
+            "type": "integer",
+            "minimum": 0
+          }
+        }
+      }
+    },
+    "verdict": {
+      "enum": ["PASS", "FAIL", "BLOCKED", "INCOMPLETE"]
+    },
+    "limitations": {
+      "type": "array",
+      "items": {
+        "type": "string"
+      }
+    }
+  }
+}

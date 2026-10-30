@@ -1,0 +1,33 @@
+{
+  "schemaVersion": 1,
+  "id": "GRU-001",
+  "role": "guru",
+  "title": "Ganti dengan satu tujuan bisnis guru",
+  "priority": 1,
+  "sources": [
+    {
+      "id": "POLICY",
+      "path": "docs/product/PRODUCT_CONTEXT.md",
+      "section": "Ganti dengan aturan yang disahkan"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-001",
+      "title": "Ganti dengan kondisi dan expected result",
+      "source": "POLICY",
+      "checks": ["replace-check"],
+      "applicability": "required"
+    }
+  ],
+  "checks": [
+    {
+      "id": "replace-check",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": ["qa/scenarios/guru/GRU-001/unit/replace.test.ts"],
+      "minimumTests": 1
+    }
+  ]
+}

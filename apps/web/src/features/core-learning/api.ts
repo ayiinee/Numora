@@ -26,7 +26,10 @@ import type {
   TryoutPackageDto,
 } from './generated-types';
 
-const baseUrl = process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1';
+const baseUrl =
+  process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true'
+    ? (process.env.NEXT_PUBLIC_MAIN_API_URL ?? 'http://localhost:3001/api/v1')
+    : (process.env.NEXT_PUBLIC_API_URL ?? 'http://localhost:3001/api/v1');
 
 export class LearningApiError extends Error {
   constructor(

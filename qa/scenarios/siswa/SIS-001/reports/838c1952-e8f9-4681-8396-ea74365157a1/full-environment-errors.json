@@ -1,0 +1,20 @@
+{
+  "runId": "838c1952-e8f9-4681-8396-ea74365157a1",
+  "windowStart": "2026-10-27T20:35:06.510Z",
+  "windowEnd": "2026-10-27T20:49:11.292Z",
+  "errors": [
+    {
+      "at": "2026-10-28T03:44:24.328+07:00",
+      "error": "out of memory"
+    },
+    {
+      "at": "2026-10-28T03:44:24.341+07:00",
+      "error": "out of memory"
+    },
+    {
+      "at": "2026-10-28T03:45:05.719+07:00",
+      "error": "out of memory"
+    }
+  ],
+  "note": "Only PostgreSQL out-of-memory lines retained; correlation does not prove each request stack."
+}

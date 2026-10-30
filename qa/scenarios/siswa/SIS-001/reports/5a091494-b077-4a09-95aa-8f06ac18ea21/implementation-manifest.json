@@ -1,0 +1,26 @@
+{
+  "finishedAt": "2026-10-27T14:04:28.132Z",
+  "baseCommit": "598ab47bcba7d79bae9c170b18ee394878397bb5",
+  "branch": "feat/qa-scenario-workflow",
+  "run": "5a091494-b077-4a09-95aa-8f06ac18ea21",
+  "files": {
+    "apps/worker/src/outbox.ts": "f0201193ace250ce8dc5ddd336df19a12cb15ded9230de8dfcbe399450f7ae6b",
+    "apps/api/src/modules/learning/drill-assessment.service.ts": "154e66f3bda81866e3c7033319c09ed81078c10708ec167d25740c0c38b22360",
+    "apps/api/src/modules/learning/drill-reward.integration.spec.ts": "92f22b2bca2e38a4e5467b51ff5bb981b28a4cf53bce5daf9f5bf65a68d45c43",
+    "apps/api/src/modules/learning/learning.service-access.spec.ts": "7f8a8daf0fd869a8c5748d9d57446b7987c2f849f8f8c7fecc54e5e16b728b46",
+    "qa/runtime/pipeline.mjs": "4f78ab43077c5c2f17bd8c8114a5814771a4a98ab71cb1f98c329384b720c32a",
+    "docs/testing/QA_WORKFLOW.md": "2f23f0ddca8dcf28137879ee286c9263e5211e7e3a11ec412f200c92115afece",
+    "apps/worker/src/outbox-order.integration.spec.ts": "03497316ec3ae212d1c2affa45f14d28273d8ad04f5574dae6d755db6bb186fd",
+    "apps/worker/src/outbox-batch.integration.spec.ts": "5709dcf31a547add4c147df1324d3114110b03c431bad30cc5881ec7aeb27c8e",
+    "scripts/qa/volume-flow.mjs": "0cb3939d1109f8b8762b7ddd789279c7b47c1eb57dce96fa6bf7ae63590de255",
+    "scripts/qa/volume-flow.test.mjs": "4ae7b0b7cc73b980e8df1c53fe8112bc040eb9806879fb508f4d38e995f51ded"
+  },
+  "patchSha256": "234378fc7b3d52a94e54e21e36f557fa00e2de7297ee524f8f3481bbec458b7e",
+  "applied": true,
+  "committed": false,
+  "pushed": false,
+  "schemaChanged": false,
+  "reverseApplyCheck": "PASS",
+  "previousResultsUnchanged": true,
+  "experimentConfigUnchanged": true
+}

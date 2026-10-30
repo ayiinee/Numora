@@ -1,0 +1,327 @@
+{
+  "observedAt": "2026-10-27T14:14:10.689Z",
+  "runtime": {
+    "node": "24.14.1",
+    "undici": "7.24.4",
+    "platform": "win32"
+  },
+  "node24": {
+    "version": "v24.22.1",
+    "date": "2026-10-20",
+    "files": [
+      "aix-ppc64",
+      "headers",
+      "linux-arm64",
+      "linux-ppc64le",
+      "linux-s390x",
+      "linux-x64",
+      "linux-x64-musl",
+      "osx-arm64-tar",
+      "osx-x64-pkg",
+      "osx-x64-tar",
+      "src",
+      "win-arm64-7z",
+      "win-arm64-zip",
+      "win-x64-7z",
+      "win-x64-exe",
+      "win-x64-msi",
+      "win-x64-zip"
+    ],
+    "npm": "11.19.1",
+    "v8": "13.6.233.17",
+    "uv": "1.52.1",
+    "zlib": "1.3.2.1-motley",
+    "openssl": "3.5.9",
+    "modules": "137",
+    "lts": "Krypton",
+    "security": true
+  },
+  "nodeCandidate": {
+    "version": "24.22.1",
+    "bundledUndici": "7.30.1",
+    "source": "https://raw.githubusercontent.com/nodejs/node/v24.22.1/deps/undici/src/package.json"
+  },
+  "sharp": "0.35.5",
+  "versions": [
+    {
+      "name": "next",
+      "requested": "16.4.1",
+      "version": "16.4.1",
+      "engines": {
+        "node": ">=20.9.0"
+      },
+      "dependencies": {
+        "postcss": "8.5.23",
+        "@next/env": "16.4.1",
+        "styled-jsx": "5.1.6",
+        "@swc/helpers": "0.5.23",
+        "caniuse-lite": "^1.0.30001579",
+        "baseline-browser-mapping": "^2.9.19"
+      },
+      "peerDependencies": {
+        "sass": "^1.3.0",
+        "react": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+        "react-dom": "^18.2.0 || 19.0.0-rc-de68d2f4-20241204 || ^19.0.0",
+        "@playwright/test": "^1.51.1",
+        "@opentelemetry/api": "^1.1.0",
+        "babel-plugin-react-compiler": "*"
+      },
+      "url": "https://registry.npmjs.org/next/16.4.1"
+    },
+    {
+      "name": "@next/env",
+      "requested": "16.4.1",
+      "version": "16.4.1",
+      "url": "https://registry.npmjs.org/%40next%2Fenv/16.4.1"
+    },
+    {
+      "name": "zod",
+      "requested": "4.6.6",
+      "version": "4.6.6",
+      "url": "https://registry.npmjs.org/zod/4.6.6"
+    },
+    {
+      "name": "body-parser",
+      "requested": "2.4.0",
+      "version": "2.4.0",
+      "engines": {
+        "node": ">=18"
+      },
+      "dependencies": {
+        "qs": "^6.16.1",
+        "bytes": "^3.1.2",
+        "debug": "^4.4.3",
+        "type-is": "^2.1.0",
+        "raw-body": "^3.0.2",
+        "iconv-lite": "^0.7.3",
+        "http-errors": "^2.0.1",
+        "on-finished": "^2.4.1",
+        "content-type": "^2.1.0"
+      },
+      "url": "https://registry.npmjs.org/body-parser/2.4.0"
+    },
+    {
+      "name": "multer",
+      "requested": "2.5.0",
+      "version": "2.5.0",
+      "engines": {
+        "node": ">= 10.16.0"
+      },
+      "dependencies": {
+        "busboy": "^1.6.0",
+        "type-is": "^1.6.18",
+        "append-field": "^1.0.0"
+      },
+      "url": "https://registry.npmjs.org/multer/2.5.0"
+    },
+    {
+      "name": "vitest",
+      "requested": "5.0.3",
+      "version": "5.0.3",
+      "engines": {
+        "node": "^22.12.0 || ^24.0.0 || >=26.0.0"
+      },
+      "dependencies": {
+        "chai": "^6.2.2",
+        "obug": "^2.1.4",
+        "std-env": "^4.2.0",
+        "tinyexec": "^1.3.0",
+        "picomatch": "^4.0.7",
+        "tinybench": "^6.1.4",
+        "tinyglobby": "^0.2.17",
+        "@types/chai": "^5.2.2",
+        "expect-type": "^1.4.0",
+        "magic-string": "^1.2.3",
+        "@vitest/mocker": "5.0.3",
+        "es-module-lexer": "^2.3.2",
+        "why-is-node-running": "3.2.1"
+      },
+      "peerDependencies": {
+        "vite": "^6.4.0 || ^7.0.0 || ^8.0.0",
+        "jsdom": "*",
+        "happy-dom": "*",
+        "@vitest/ui": "5.0.3",
+        "@types/node": "^22.0.0 || >=24.0.0",
+        "@edge-runtime/vm": "*",
+        "@opentelemetry/api": "^1.9.0",
+        "@vitest/coverage-v8": "5.0.3",
+        "@vitest/browser-preview": "5.0.3",
+        "@vitest/coverage-istanbul": "5.0.3",
+        "@vitest/browser-playwright": "5.0.3",
+        "@vitest/browser-webdriverio": "^5.0.0-beta.5 || >=5.0.0"
+      },
+      "url": "https://registry.npmjs.org/vitest/5.0.3"
+    },
+    {
+      "name": "vite",
+      "requested": "8.3.3",
+      "version": "8.3.3",
+      "engines": {
+        "node": "^20.19.0 || >=22.12.0"
+      },
+      "dependencies": {
+        "postcss": "^8.5.28",
+        "rolldown": "~1.2.11",
+        "picomatch": "^4.0.7",
+        "tinyglobby": "^0.2.17",
+        "lightningcss": "^1.33.0"
+      },
+      "peerDependencies": {
+        "tsx": "^4.8.1",
+        "jiti": ">=1.21.0",
+        "less": "^4.0.0",
+        "sass": "^1.70.0",
+        "yaml": "^2.4.2",
+        "stylus": ">=0.54.8",
+        "terser": "^5.16.0",
+        "esbuild": "^0.27.0 || ^0.28.0",
+        "sugarss": "^5.0.0",
+        "@types/node": "^20.19.0 || >=22.12.0",
+        "sass-embedded": "^1.70.0",
+        "@vitejs/devtools": "^0.7.1"
+      },
+      "url": "https://registry.npmjs.org/vite/8.3.3"
+    },
+    {
+      "name": "undici",
+      "requested": "8.12.2",
+      "version": "8.12.2",
+      "engines": {
+        "node": ">=22.19.0"
+      },
+      "url": "https://registry.npmjs.org/undici/8.12.2"
+    },
+    {
+      "name": "source-map-js",
+      "requested": "1.2.2",
+      "version": "1.2.2",
+      "engines": {
+        "node": ">=0.10.0"
+      },
+      "url": "https://registry.npmjs.org/source-map-js/1.2.2"
+    },
+    {
+      "name": "fast-uri",
+      "requested": "3.1.9",
+      "version": "3.1.9",
+      "url": "https://registry.npmjs.org/fast-uri/3.1.9"
+    },
+    {
+      "name": "uuid",
+      "requested": "11.1.1",
+      "version": "11.1.1",
+      "url": "https://registry.npmjs.org/uuid/11.1.1"
+    },
+    {
+      "name": "esbuild",
+      "requested": "0.25.0",
+      "version": "0.25.0",
+      "engines": {
+        "node": ">=18"
+      },
+      "url": "https://registry.npmjs.org/esbuild/0.25.0"
+    },
+    {
+      "name": "@nestjs/platform-express",
+      "requested": "latest",
+      "version": "12.3.2",
+      "dependencies": {
+        "cors": "2.8.6",
+        "tslib": "2.8.1",
+        "multer": "2.5.0",
+        "express": "5.3.0",
+        "path-to-regexp": "8.4.2"
+      },
+      "peerDependencies": {
+        "@nestjs/core": "^12.0.0",
+        "@nestjs/common": "^12.0.0"
+      },
+      "url": "https://registry.npmjs.org/%40nestjs%2Fplatform-express/latest"
+    },
+    {
+      "name": "express",
+      "requested": "latest",
+      "version": "5.3.0",
+      "engines": {
+        "node": ">= 18"
+      },
+      "dependencies": {
+        "qs": "^6.16.0",
+        "depd": "^2.0.0",
+        "etag": "^1.8.1",
+        "once": "^1.4.0",
+        "send": "^1.1.0",
+        "vary": "^1.1.2",
+        "debug": "^4.4.0",
+        "fresh": "^2.0.0",
+        "cookie": "^0.7.1",
+        "router": "^2.2.0",
+        "accepts": "^2.0.0",
+        "type-is": "^2.1.0",
+        "parseurl": "^1.3.3",
+        "statuses": "^2.0.1",
+        "encodeurl": "^2.0.0",
+        "mime-types": "^3.0.0",
+        "proxy-addr": "^2.0.8",
+        "body-parser": "^2.3.0",
+        "escape-html": "^1.0.3",
+        "http-errors": "^2.0.0",
+        "on-finished": "^2.4.1",
+        "content-type": "^2.0.0",
+        "finalhandler": "^2.1.0",
+        "range-parser": "^1.2.1",
+        "serve-static": "^2.2.0",
+        "cookie-signature": "^1.2.1",
+        "merge-descriptors": "^2.0.0",
+        "content-disposition": "^2.0.1"
+      },
+      "url": "https://registry.npmjs.org/express/latest"
+    },
+    {
+      "name": "jsdom",
+      "requested": "latest",
+      "version": "30.1.3",
+      "engines": {
+        "node": "^22.22.2 || ^24.15.0 || >=26.0.0"
+      },
+      "dependencies": {
+        "saxes": "^6.0.0",
+        "parse5": "^8.0.1",
+        "undici": "^8.12.1",
+        "css-tree": "^3.2.1",
+        "data-urls": "^8.0.0",
+        "lru-cache": "^11.5.3",
+        "decimal.js": "^10.6.0",
+        "whatwg-url": "^17.2.0",
+        "tough-cookie": "^6.0.2",
+        "@exodus/bytes": "^1.16.0",
+        "whatwg-mimetype": "^5.0.0",
+        "w3c-xmlserializer": "^6.0.0",
+        "webidl-conversions": "^8.0.1",
+        "xml-name-validator": "^5.0.0",
+        "@bramus/specificity": "^2.4.2",
+        "@asamuzakjp/css-color": "^7.1.3",
+        "html-encoding-sniffer": "^7.0.0",
+        "@asamuzakjp/dom-selector": "^10.0.3",
+        "is-potential-custom-element-name": "^1.0.1",
+        "@csstools/css-syntax-patches-for-csstree": "^1.1.15"
+      },
+      "peerDependencies": {
+        "canvas": "^3.2.3"
+      },
+      "url": "https://registry.npmjs.org/jsdom/latest"
+    },
+    {
+      "name": "drizzle-kit",
+      "requested": "latest",
+      "version": "0.31.11",
+      "dependencies": {
+        "tsx": "^4.21.0",
+        "esbuild": "^0.25.4",
+        "@drizzle-team/brocli": "^0.10.2",
+        "@esbuild-kit/esm-loader": "^2.5.5"
+      },
+      "url": "https://registry.npmjs.org/drizzle-kit/latest"
+    }
+  ]
+}

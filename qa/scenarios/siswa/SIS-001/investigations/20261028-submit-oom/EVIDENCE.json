@@ -1,0 +1,233 @@
+{
+  "schemaVersion": 1,
+  "investigationId": "d854de9e-a511-4d80-8e20-c11609ccdf2f",
+  "parentFullRunId": "838c1952-e8f9-4681-8396-ea74365157a1",
+  "recordedAt": "2026-10-27T23:31:20.975Z",
+  "testedIdentity": {
+    "sha": "70188e88d8fb9eee1f5f470af10a2f83c9369970",
+    "dirty": true,
+    "codeHash": "ac09af4497c7018c851eecdb46c57b11875ade3394c2d46e42248ac4e8ae95d5",
+    "rulesHash": "af589296a21bc3aed59c5fff445901af538f8deec8051add5cc1cdc3b054b088",
+    "configHash": "1957e7f851995a2633dd8ac6a68ffab39380f43bbd1dd364476f40dd5e3bf96f",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "scope": "CONTROLLED_FAULT_DIAGNOSTIC_NOT_FULL_OR_CAPACITY",
+  "startedAt": "2026-10-27T23:24:28.857Z",
+  "finishedAt": "2026-10-27T23:27:11.002Z",
+  "status": "DIAGNOSTIC_COMPLETE",
+  "caseCount": 2,
+  "cases": [
+    {
+      "name": "postcommit-sqlstate53200",
+      "status": "PASS",
+      "attemptId": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+      "operation": "postcommit-sqlstate53200.submit",
+      "injectedFault": "SQLSTATE53200_AT_POSTCOMMIT_EXPLANATION_DELIVERY",
+      "before": {
+        "id": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+        "status": "IN_PROGRESS",
+        "score": null,
+        "ledger_count": 0,
+        "xp": null,
+        "completion_events": 0,
+        "explanation_manifests": 0
+      },
+      "committedWhileResponsePending": {
+        "id": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+        "status": "GRADED",
+        "score": "80.00",
+        "ledger_count": 1,
+        "xp": "130.000000",
+        "completion_events": 1,
+        "explanation_manifests": 0
+      },
+      "client": {
+        "status": 500,
+        "error": null,
+        "sentAt": "2026-10-27T23:26:54.435Z",
+        "receivedAt": "2026-10-27T23:26:54.502Z"
+      },
+      "getStatus": 200,
+      "retryStatuses": [
+        201,
+        201
+      ],
+      "result": {
+        "score": 80,
+        "reward": {
+          "policyCode": "DRILL_PRD_V06",
+          "policyVersion": 2,
+          "baseXp": 80,
+          "bonusXp": 49.9845,
+          "totalXp": 130,
+          "durationSeconds": 0.279,
+          "detail": {
+            "calculationMode": "FULL_CORRECT_ONLY",
+            "fullCorrectCount": 8,
+            "partialCorrectEquivalent": 0,
+            "correctEquivalent": 8,
+            "fallbackReason": null
+          }
+        }
+      },
+      "after": {
+        "id": "ddf5d651-97ff-4db8-aec5-075efb06f2ab",
+        "status": "GRADED",
+        "score": "80.00",
+        "ledger_count": 1,
+        "xp": "130.000000",
+        "completion_events": 1,
+        "explanation_manifests": 1
+      }
+    },
+    {
+      "name": "postcommit-http15s",
+      "status": "PASS",
+      "attemptId": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+      "operation": "postcommit-http15s.submit",
+      "injectedFault": "16S_DELIVERY_DELAY_WITH_ORIGINAL_HTTP15S",
+      "before": {
+        "id": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+        "status": "IN_PROGRESS",
+        "score": null,
+        "ledger_count": 0,
+        "xp": null,
+        "completion_events": 0,
+        "explanation_manifests": 0
+      },
+      "committedWhileResponsePending": {
+        "id": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+        "status": "GRADED",
+        "score": "80.00",
+        "ledger_count": 1,
+        "xp": "130.000000",
+        "completion_events": 1,
+        "explanation_manifests": 0
+      },
+      "client": {
+        "status": 0,
+        "error": "TimeoutError",
+        "sentAt": "2026-10-27T23:26:54.813Z",
+        "receivedAt": "2026-10-27T23:27:09.821Z"
+      },
+      "getStatus": 200,
+      "retryStatuses": [
+        201,
+        201
+      ],
+      "result": {
+        "score": 80,
+        "reward": {
+          "policyCode": "DRILL_PRD_V06",
+          "policyVersion": 2,
+          "baseXp": 80,
+          "bonusXp": 49.987888888889,
+          "totalXp": 130,
+          "durationSeconds": 0.218,
+          "detail": {
+            "calculationMode": "FULL_CORRECT_ONLY",
+            "fullCorrectCount": 8,
+            "partialCorrectEquivalent": 0,
+            "correctEquivalent": 8,
+            "fallbackReason": null
+          }
+        }
+      },
+      "after": {
+        "id": "af9d4972-e072-4552-ae2e-a28ae9a385d7",
+        "status": "GRADED",
+        "score": "80.00",
+        "ledger_count": 1,
+        "xp": "130.000000",
+        "completion_events": 1,
+        "explanation_manifests": 1
+      }
+    }
+  ],
+  "databaseSettings": [
+    {
+      "name": "hash_mem_multiplier",
+      "setting": "2",
+      "unit": null
+    },
+    {
+      "name": "lock_timeout",
+      "setting": "0",
+      "unit": "ms"
+    },
+    {
+      "name": "maintenance_work_mem",
+      "setting": "65536",
+      "unit": "kB"
+    },
+    {
+      "name": "max_connections",
+      "setting": "100",
+      "unit": null
+    },
+    {
+      "name": "max_parallel_workers_per_gather",
+      "setting": "2",
+      "unit": null
+    },
+    {
+      "name": "shared_buffers",
+      "setting": "16384",
+      "unit": "8kB"
+    },
+    {
+      "name": "statement_timeout",
+      "setting": "0",
+      "unit": "ms"
+    },
+    {
+      "name": "work_mem",
+      "setting": "4096",
+      "unit": "kB"
+    }
+  ],
+  "faultsRemoved": true,
+  "cleanup": {
+    "pid": 13864,
+    "exitCode": 1,
+    "ownedOnly": true
+  },
+  "memory": {
+    "observedWindow": {
+      "first": "2026-10-27T23:25:12.4236935Z",
+      "last": "2026-10-27T23:27:28.5070654Z"
+    },
+    "samples": 60,
+    "minimumCommitHeadroomBytes": 213008384,
+    "maximumCommitUsageRatio": 0.9888080211047269,
+    "minimumAvailablePhysicalBytes": 2638503936,
+    "notHistoricalPeak": true
+  },
+  "extraEnvironmentIncident": {
+    "kind": "POWERSHELL_INITIALIZATION_OUT_OF_MEMORY",
+    "observedDuring": "post-diagnostic inspection in this investigation",
+    "exactTimestampRecorded": false
+  },
+  "historicalFullVerdictUnchanged": "FAIL",
+  "manual": "NOT_RUN",
+  "oauth": "NOT_RUN",
+  "staging": "NOT_CONFIGURED",
+  "externalAcceptance": "OPEN",
+  "benchmarkRerun": "NOT_RUN_RESOURCE_PRESSURE_AND_NO_CAPACITY_FIX",
+  "businessCodeChanged": false,
+  "limits": {
+    "httpTimeoutSeconds": 15,
+    "gracefulStopSeconds": 10,
+    "drainSeconds": 120,
+    "fullSeconds": 3600,
+    "baselineVus": [
+      10,
+      25,
+      50,
+      100
+    ],
+    "stressVus": 250,
+    "stageSeconds": 60
+  }
+}

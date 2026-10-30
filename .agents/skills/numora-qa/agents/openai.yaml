@@ -1,0 +1,4 @@
+interface:
+  display_name: 'Numora QA'
+  short_description: 'Pengujian skenario dan laporan tim QA Numora'
+  default_prompt: 'Gunakan $numora-qa untuk memulai atau melanjutkan QA Numora.'

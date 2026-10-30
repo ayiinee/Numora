@@ -1,0 +1,55 @@
+{
+  "schemaVersion": 1,
+  "sourceRun": "c4d65512-857c-41b9-bd20-0a9181066e0c",
+  "mode": "artifact-only",
+  "applied": false,
+  "baseCommit": "6ba9638c0a60469f1919e675e35d999f2dbde407",
+  "branch": "feat/qa-scenario-workflow",
+  "baseline": {
+    "apps/worker/src/outbox.ts": {
+      "exists": true,
+      "sha256": "691b5caf184510690f6b115460cb2a545e0d5cebef8ec65c878880270c01b0ec"
+    },
+    "apps/worker/src/outbox-order.integration.spec.ts": {
+      "exists": false,
+      "sha256": null
+    },
+    "qa/runtime/pipeline.mjs": {
+      "exists": true,
+      "sha256": "6bd783b1572e3d3af0b130e361b2654993016c92317c7b32c1a6246604187ac0"
+    },
+    "scripts/qa/volume-flow.mjs": {
+      "exists": false,
+      "sha256": null
+    },
+    "scripts/qa/volume-flow.test.mjs": {
+      "exists": false,
+      "sha256": null
+    },
+    "qa/config.json": {
+      "exists": true,
+      "sha256": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4"
+    },
+    "qa/scenarios/siswa/SIS-001/reports/c4d65512-857c-41b9-bd20-0a9181066e0c/result.json": {
+      "exists": true,
+      "sha256": "e3131ce27e67393ba633e0b1e6eb765bf9bc1906151aafa31a9471fff52f2ee5"
+    }
+  },
+  "patches": {
+    "01-worker-order.patch": {
+      "sha256": "754bee41bc395d151135320fe8130f5c81edba9a83eebad16c1c48085730ddbf",
+      "files": [
+        "apps/worker/src/outbox.ts",
+        "apps/worker/src/outbox-order.integration.spec.ts"
+      ]
+    },
+    "02-qa-volume.patch": {
+      "sha256": "d3b1e9bf7da73638d4ff39fd0ebcc941454c863d6cc4ea6c4a0e1c1fbc8d2bed",
+      "files": [
+        "qa/runtime/pipeline.mjs",
+        "scripts/qa/volume-flow.mjs",
+        "scripts/qa/volume-flow.test.mjs"
+      ]
+    }
+  }
+}

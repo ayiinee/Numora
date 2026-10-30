@@ -1,0 +1,100 @@
+{
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "observedAt": "2026-10-27T17:53:51.578Z",
+  "method": "READ_ONLY durable SQL and original generator evidence; no re-execution or result mutation",
+  "reportedReconciliation": {
+    "graded": 3603,
+    "broken": 0,
+    "accepted": 3573
+  },
+  "allDatabaseFixtureCounts": {
+    "all_attempts": 3836,
+    "graded": 3630,
+    "not_graded": 206,
+    "broken_graded": 1
+  },
+  "allDatabaseCountsScope": "Includes earlier regression fixtures and legacy rows excluded by the original load adapter; must not substitute for load-only integrity.",
+  "packages": [
+    {
+      "package_id": "c4d8e4b9-71ae-4390-9ba8-500a14becaa7",
+      "name": "TEST ONLY READY Drill",
+      "release_at": "2026-10-27T16:10:02.328Z",
+      "graded": 4,
+      "broken_graded": 0
+    },
+    {
+      "package_id": "df010324-9935-48c3-bbd1-928b3821bc1f",
+      "name": "TEST ONLY READY Drill",
+      "release_at": "2026-10-27T16:10:29.113Z",
+      "graded": 3,
+      "broken_graded": 0
+    },
+    {
+      "package_id": "38dc2396-aa27-4897-9fa1-34b9be678e18",
+      "name": "TEST ONLY READY Drill",
+      "release_at": "2026-10-27T16:16:27.542Z",
+      "graded": 3618,
+      "broken_graded": 0
+    },
+    {
+      "package_id": "5c3c655e-975f-42a0-98f4-d148e5499d87",
+      "name": "TEST ONLY single package",
+      "release_at": null,
+      "graded": 5,
+      "broken_graded": 1
+    }
+  ],
+  "gradedByMinuteUtc": [
+    {
+      "completed_utc": "2026-10-27 16:09",
+      "graded": 5
+    },
+    {
+      "completed_utc": "2026-10-27 16:10",
+      "graded": 7
+    },
+    {
+      "completed_utc": "2026-10-27 16:16",
+      "graded": 172
+    },
+    {
+      "completed_utc": "2026-10-27 16:17",
+      "graded": 311
+    },
+    {
+      "completed_utc": "2026-10-27 16:18",
+      "graded": 635
+    },
+    {
+      "completed_utc": "2026-10-27 16:19",
+      "graded": 805
+    },
+    {
+      "completed_utc": "2026-10-27 16:20",
+      "graded": 783
+    },
+    {
+      "completed_utc": "2026-10-27 16:21",
+      "graded": 617
+    },
+    {
+      "completed_utc": "2026-10-27 16:22",
+      "graded": 295
+    }
+  ],
+  "interruptedIterationsObserved": 249,
+  "postRunObservation": {
+    "latestLoadPackage": {
+      "package_id": "38dc2396-aa27-4897-9fa1-34b9be678e18",
+      "name": "TEST ONLY READY Drill",
+      "release_at": "2026-10-27T16:16:27.542Z",
+      "graded": 3618,
+      "broken_graded": 0
+    },
+    "note": "The load package now has 3618 GRADED rows versus 3603 new graded rows observed by the adapter. This includes 15 commits completed after the run snapshot; the original snapshot is retained. No per-attempt client receipts exist for attribution."
+  },
+  "conclusion": "OPEN: 30 more newly GRADED attempts than k6 completion counter; ledger/outbox counts intact. Interrupted VU iterations can omit final client-side counters, but no per-attempt client receipt was captured, so these 30 cannot be attributed conclusively. Preserve FAIL and investigate with correlated client receipts.",
+  "nextDiagnostic": "Keep current VU/duration/gracefulStop/HTTP timeout. Capture per-attempt acknowledged/invalid responses and interrupted-iteration evidence; reconcile exact identity and content, retaining unmatched commits as incomplete instead of inventing acceptance.",
+  "productDataLossConfirmed": false,
+  "loadPassing": false
+}

@@ -1,0 +1,14 @@
+{
+  "runId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "scenarioId": "SIS-001",
+  "role": "siswa",
+  "reportHash": "06a21b31e9b9852a729ed5860da4b148a4bb9ee6ab4b4b29e742d021244b8a8d",
+  "folderId": "1i2_3VLW7qlAz6-XPvFRGV-VtuJEb13YS",
+  "title": "SIS-001 — d537c6dc-e502-4058-a431-511b849ac44c",
+  "reportPath": "qa/scenarios/siswa/SIS-001/reports/d537c6dc-e502-4058-a431-511b849ac44c/report.md",
+  "requestedAt": "2026-10-27T18:21:57.879Z",
+  "explicitAction": true,
+  "status": "PUBLISHED",
+  "documentUrl": "https://docs.google.com/document/d/1J-hrO1hpN5vJ5_eswp9lVXWq2WHpjjQvUJmDRHSsLNQ",
+  "verifiedAt": "2026-10-27T18:21:58.364Z"
+}

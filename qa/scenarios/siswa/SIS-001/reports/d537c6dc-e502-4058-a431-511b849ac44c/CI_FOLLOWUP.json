@@ -1,0 +1,63 @@
+{
+  "sourceRunId": "d537c6dc-e502-4058-a431-511b849ac44c",
+  "fullRunResultUnchanged": true,
+  "initialCiFailures": [
+    {
+      "pullRequest": 109,
+      "head": "48b4d4a6cbd4616ff2daf7399417950a6617f3fc",
+      "jobUrl": "https://github.com/ayiinee/Numora/actions/runs/40554988513/job/122368529555",
+      "reason": "Fixture compared PostgreSQL numeric decimal string 80.000000 to integer 80"
+    },
+    {
+      "pullRequest": 102,
+      "head": "9bdc9e93b99da67c004aa5c317499bc0d58191e3",
+      "jobUrl": "https://github.com/ayiinee/Numora/actions/runs/40540679365/job/122317901176",
+      "reason": "Same persisted base_xp type mismatch"
+    }
+  ],
+  "fixtureCorrection": {
+    "combinedBranchCommit": "2fc382f370571ee98d39b98152b372dd4e9939ca",
+    "focusedPr102Commit": "7f3313f1932776d70c650928ba3cc2583f8822e6",
+    "file": "apps/web/e2e-connected/release-chain.spec.ts",
+    "expectedBaseXp": 80,
+    "expectedPolicyVersion": 2,
+    "productCodeChanged": false,
+    "assertionsWeakened": false
+  },
+  "localAttempts": [
+    {
+      "id": "2bf91bf7-4bed-41e9-84db-68798d0f546b",
+      "sha": "2fc382f370571ee98d39b98152b372dd4e9939ca",
+      "status": "BLOCKED",
+      "reason": "API did not become ready within unchanged 60000ms webServer limit",
+      "browserCases": "NOT_RUN"
+    },
+    {
+      "id": "4a45a4f6-cc87-46ab-a31a-6395fb12f778",
+      "sha": "2fc382f370571ee98d39b98152b372dd4e9939ca",
+      "cleanSource": true,
+      "buildReusedFromSameSource": true,
+      "status": "FAIL",
+      "passed": 2,
+      "failed": 1,
+      "notRun": 3,
+      "failure": "Anonymous URL redirect check at release-chain.spec.ts:551; browser URL was empty at 420000ms test timeout",
+      "passingCases": [
+        "Drill save/resume/submit/XP/monitoring/retry/unlock",
+        "Token lifecycle, HTTP authorization and membership races"
+      ],
+      "acceptance": {
+        "google": "NOT_RUN",
+        "reviewedCurriculum": "NOT_PROVIDED",
+        "staging": "NOT_RUN",
+        "independentQa": "PENDING"
+      }
+    }
+  ],
+  "independentHarnessFinding": {
+    "observed": "Local developer PvP demo activation leaked into JOB-06; availability returned PVP_CONTENT_UNAVAILABLE instead of the suite's declared disabled-policy boundary",
+    "correction": "Explicitly pin PVP_MODE disabled and PVP_CONTENT_MODE strict in JOB-06 harness; real PvP remains in JOB-16",
+    "causedAnonymousTimeout": "NOT_ESTABLISHED"
+  },
+  "limits": "Historical failures remain immutable. These local attempts do not establish full connected release-chain acceptance. Final PR head requires its own CI; a later green CI does not erase local failures or the full SIS-001 load/dependency FAIL."
+}

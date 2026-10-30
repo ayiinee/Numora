@@ -1,14 +1,16 @@
 # Getting Started
 
+For scenario QA, start at the [QA workflow section](#qa-scenario-workflow--27-oktober-2026) below. The development/cloud instructions are separate from disposable local testing.
+
 ## Prerequisites
 
 - Git
-- Node.js 24 LTS
+- Node.js 24 LTS, minimum 24.22.1 (see `.node-version`)
 - Corepack
 
 pnpm is pinned by the repository. Obtain the isolated cloud development credentials from the cloud team before running the apps.
 
-On Windows, run `node --version` in the terminal you will use for development. It must report v24; an older system installation can take precedence over a user-installed Node 24 in `PATH`.
+On Windows, run `node --version` in the terminal you will use for development. It must report at least v24.22.1 and remain on major 24; an older system installation can take precedence over a user-installed Node 24 in `PATH`. This minimum includes the patched bundled Undici 7.30.1. Updating an npm Undici dependency does not update Node's built-in `fetch`. A portable Node installation may be selected for the current shell without replacing the global installation or restarting Codex. Verify `node -p "JSON.stringify({node:process.versions.node,undici:process.versions.undici})"` before setup. CI uses the same pinned runtime.
 
 ## First run
 
@@ -172,3 +174,63 @@ After building database and assessment-engine, an operator can supply DATABASE_U
 3. `docs/product/OPEN_DECISIONS.md`
 4. `docs/development/PROJECT_STRUCTURE.md` for code placement.
 5. relevant module/API/data docs and ADRs.
+
+## QA scenario workflow — 27 Oktober 2026
+
+ENGINEERING DECISION — standar tim QA Windows. [QA Guide](../testing/QA_GUIDE.md), [workflow](../testing/QA_WORKFLOW.md) dan [prompt](../testing/QA_PROMPTS.md) adalah pintu masuk sehari-hari.
+
+### Prasyarat lokal
+
+Gunakan Git, Node 24, pnpm yang dipin packageManager repository, Chromium Playwright, k6, PostgreSQL 16 dan Redis 7. Jalur layanan langsung utama adalah WSL2 Ubuntu 24.04; ini tidak membutuhkan Docker. Pemeriksaan awal dilakukan dari PowerShell:
+
+    node --version
+    pnpm --version
+    wsl --list --verbose
+    pnpm install --frozen-lockfile
+    pnpm --filter @tka/web exec playwright install chromium
+
+Jika WSL belum aktif, operator menjalankan instalasi resmi WSL/Ubuntu 24.04 dan menyelesaikan restart atau prompt admin yang diperlukan. Jangan menganggap keberadaan wsl.exe berarti distro siap. Pada Ubuntu 24.04, pasang layanan langsung:
+
+    sudo apt update
+    sudo apt install postgresql-16 postgresql-client-16 redis-server
+    sudo service postgresql start
+    sudo service redis-server start
+
+Verifikasi major PostgreSQL 16 dan Redis 7 sebelum dipakai; package/repository yang berbeda dapat menyediakan major lain. Bind ke localhost/protected mode, jangan membuka layanan ke LAN. Buat akun PostgreSQL khusus tes dengan LOGIN CREATEDB memakai password lokal yang dibuat operator (bukan akun superuser/cloud), lalu buat database numora_test milik akun itu. Masukkan password melalui prompt/database admin, bukan prompt Codex/chat atau file tracked. Windows memakai koneksi localhost ke layanan WSL.
+
+pg_dump/pg_restore versi 16 perlu tersedia dari terminal Node Windows. Gunakan PostgreSQL client Windows 16 dan set QA_PG_BIN ke direktori bin bila belum di PATH; layanan server boleh tetap di WSL. Alternatif layanan Windows/lokal yang sudah ada boleh dipakai jika doctor memverifikasi versi serta isolasinya. Tidak ada fallback ke endpoint cloud.
+
+Pasang k6 Windows dari distribusi resmi; set QA_K6_BIN di konfigurasi lokal bila binary belum di PATH. @axe-core/playwright disediakan lockfile. Setup tidak men-download executable atau menaikkan hak admin tanpa operator mengetahui langkahnya.
+
+### Konfigurasi dan pemeriksaan
+
+    pnpm qa setup --profile full
+    pnpm qa doctor --profile full
+    pnpm qa validate
+    pnpm qa start --role siswa
+    pnpm qa run --scenario SIS-001 --profile full
+
+setup mempertahankan .env.test.local yang sudah ada. Konfigurasi file ini dari .env.test.example dengan NODE_ENV=test, TEST_DATABASE_URL localhost menuju numora_test, TEST_REDIS_URL localhost, BULLMQ_PREFIX numora:test:<alias>, dan migration URL identik TEST_DATABASE_URL. Kosongkan DATABASE_URL/REDIS_URL runtime yang diwarisi terminal. Jangan menyalin .env cloud atau vault akun nyata.
+
+Tambahan opsional di .env.test.local:
+
+    QA_PG_BIN=C:\Program Files\PostgreSQL\16\bin
+    QA_K6_BIN=C:\Tools\k6\k6.exe
+
+doctor memeriksa versi Node/pnpm, dependency, guard existing, koneksi/version PostgreSQL/Redis, CREATEDB, Chromium, k6 dan client backup. Ia tidak menampilkan connection URL/password. Layanan belum tersedia menghasilkan Blocked, bukan Pass. Build/API/browser baru dijalankan setelah layanan siap.
+
+setup juga memberikan petunjuk read-only Windows: kesiapan WSL/distro Ubuntu 24.04, token admin saat ini dan sinyal restart Windows servicing. Nilai unknown tidak dianggap false. Sinyal tersebut tidak memastikan semua kebutuhan restart WSL; pemasangan OS/elevasi/restart tetap langkah operator. Layanan localhost alternatif yang sudah lulus doctor tetap boleh digunakan.
+
+Setiap run connected membuat database numora_test_qa_<run-id-tanpa-strip> dan prefix Redis sendiri, menerapkan migrasi existing, membangun backend/worker/web test-only, lalu memulai anggaran tes 60 menit. Port 3500–3502 harus kosong; jangan menghentikan proses pengguna lain untuk mengambil port. Aplikasi web/API tes tidak menggunakan cloud auth/data.
+
+### Laporan, cleanup, dan troubleshooting
+
+Laporan tersimpan pada folder skenario reports/run-id; artefak besar/state berada pada qa/.local. Sesudah selesai, pnpm qa cleanup --run <run-id> hanya membersihkan DB/prefix yang tercatat milik run dan mempertahankan laporan. Dump restore lokal tetap ignored; operator dapat menghapus artefak run yang sudah tidak diperlukan.
+
+- NODE_ENV/URL runtime ditolak: gunakan terminal tes bersih dan .env.test.local, jangan melemahkan guard.
+- PostgreSQL tidak terhubung: periksa layanan, port, DB numora_test dan password; CREATEDB diperlukan untuk isolasi.
+- Redis major tidak cocok: gunakan Redis 7; prefix tidak mengisolasi quota layanan cloud.
+- Chromium/k6/client backup hilang: pasang prasyarat yang diminta doctor; tes wajib tetap terlihat Blocked.
+- Beberapa sesi cocok: pilih --session; status hanya membersihkan lock PID yang sudah mati.
+- Stale: baca fingerprint dan retest versi baru. Jangan mengganti SHA laporan lama.
+- Staging/Drive belum terkonfigurasi: hasil lokal tetap tersimpan; ikuti onboarding workflow. Izin tiga anggota folder Drive harus diverifikasi, bukan memakai link publik.

@@ -344,6 +344,13 @@
       "when": 1793031573231,
       "tag": "0048_tryout_partial_reward_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 49,
+      "version": "7",
+      "when": 1793291287346,
+      "tag": "0049_pvp_transient_queue_guard",
+      "breakpoints": true
     }
   ]
 }

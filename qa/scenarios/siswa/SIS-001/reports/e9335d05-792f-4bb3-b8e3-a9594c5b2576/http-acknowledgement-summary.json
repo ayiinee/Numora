@@ -1,0 +1,136 @@
+{
+  "B": {
+    "load": {
+      "completed": 382,
+      "integrityErrors": 0,
+      "requests": {
+        "count": 5256,
+        "rate": 8.482631165516782
+      },
+      "errorRate": {
+        "rate": 0.018835616438356163,
+        "passes": 99,
+        "fails": 5157
+      },
+      "checks": [
+        {
+          "name": "start accepted",
+          "path": "::start accepted",
+          "id": "797a7329974508020945acd3ea9879ed",
+          "passes": 425,
+          "fails": 99
+        },
+        {
+          "path": "::answer acknowledged",
+          "id": "5612b818e16464d84d57af7556c54c21",
+          "passes": 4250,
+          "fails": 0,
+          "name": "answer acknowledged"
+        },
+        {
+          "name": "submit accepted",
+          "path": "::submit accepted",
+          "id": "4b25ba2ee6c847189998e8cf137c3322",
+          "passes": 382,
+          "fails": 0
+        }
+      ]
+    },
+    "stress": {
+      "completed": 0,
+      "integrityErrors": 0,
+      "requests": {
+        "count": 1034,
+        "rate": 17.11391593628272
+      },
+      "errorRate": {
+        "rate": 0.758220502901354,
+        "passes": 784,
+        "fails": 250
+      },
+      "checks": [
+        {
+          "name": "start accepted",
+          "path": "::start accepted",
+          "id": "797a7329974508020945acd3ea9879ed",
+          "passes": 0,
+          "fails": 784
+        }
+      ]
+    }
+  },
+  "C": {
+    "load": {
+      "completed": 844,
+      "integrityErrors": 0,
+      "requests": {
+        "count": 10228,
+        "rate": 37.56842736611162
+      },
+      "errorRate": {
+        "rate": 0,
+        "passes": 0,
+        "fails": 10228
+      },
+      "checks": [
+        {
+          "name": "start accepted",
+          "path": "::start accepted",
+          "id": "797a7329974508020945acd3ea9879ed",
+          "passes": 844,
+          "fails": 0
+        },
+        {
+          "name": "answer acknowledged",
+          "path": "::answer acknowledged",
+          "id": "5612b818e16464d84d57af7556c54c21",
+          "passes": 8440,
+          "fails": 0
+        },
+        {
+          "path": "::submit accepted",
+          "id": "4b25ba2ee6c847189998e8cf137c3322",
+          "passes": 844,
+          "fails": 0,
+          "name": "submit accepted"
+        }
+      ]
+    },
+    "stress": {
+      "completed": 0,
+      "integrityErrors": 0,
+      "requests": {
+        "count": 3547,
+        "rate": 49.940202977935286
+      },
+      "errorRate": {
+        "rate": 0.07048209754722301,
+        "passes": 250,
+        "fails": 3297
+      },
+      "checks": [
+        {
+          "fails": 0,
+          "name": "start accepted",
+          "path": "::start accepted",
+          "id": "797a7329974508020945acd3ea9879ed",
+          "passes": 277
+        },
+        {
+          "id": "5612b818e16464d84d57af7556c54c21",
+          "passes": 2770,
+          "fails": 0,
+          "name": "answer acknowledged",
+          "path": "::answer acknowledged"
+        },
+        {
+          "id": "4b25ba2ee6c847189998e8cf137c3322",
+          "passes": 0,
+          "fails": 250,
+          "name": "submit accepted",
+          "path": "::submit accepted"
+        }
+      ]
+    }
+  }
+}
