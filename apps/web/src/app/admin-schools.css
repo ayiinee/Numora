@@ -108,6 +108,10 @@
   font: inherit;
   color: inherit;
 }
+/* Keep icon clearance when the Operations workspace applies its input reset. */
+.admin-schools-shell #school-search {
+  padding-inline-start: 38px;
+}
 .schools-table {
   table-layout: fixed;
   border-collapse: collapse;

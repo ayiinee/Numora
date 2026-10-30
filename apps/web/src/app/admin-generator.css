@@ -1,0 +1,433 @@
+/* Generator follows the approved operational Admin layout. */
+.admin-generator-workspace {
+  min-width: 0;
+}
+.admin-generator-workspace .generator-taskbar {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  margin-bottom: 24px;
+}
+.admin-generator-workspace .generator-taskbar a {
+  color: var(--color-primary);
+  font-weight: 600;
+  text-decoration: none;
+}
+.generator-directory,
+.generator-detail {
+  background: var(--color-surface-raised);
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+  overflow: hidden;
+  min-width: 0;
+}
+.generator-section-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 20px;
+  padding: 24px;
+}
+.generator-section-heading h2 {
+  margin: 0 0 5px;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+  overflow-wrap: anywhere;
+}
+.generator-section-heading p {
+  margin: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.generator-section-heading > .numora-button {
+  flex-shrink: 0;
+}
+.generator-table {
+  width: 100%;
+  border-collapse: collapse;
+  table-layout: fixed;
+  text-align: left;
+}
+.generator-table th {
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  font-weight: 500;
+  font-size: 12px;
+}
+.generator-table td,
+.generator-table th {
+  border-block: 1px solid var(--color-border-light);
+  padding: 18px 20px;
+  vertical-align: middle;
+  overflow-wrap: anywhere;
+}
+.generator-table th:first-child {
+  width: 33%;
+}
+.generator-table th:nth-child(2) {
+  width: 18%;
+}
+.generator-table th:nth-child(3) {
+  width: 16%;
+}
+.generator-table th:nth-child(4) {
+  width: 18%;
+}
+.generator-table th:last-child {
+  width: 15%;
+}
+.generator-table td:first-child > strong {
+  display: block;
+  font-weight: 600;
+  margin-bottom: 4px;
+}
+.generator-table td > span:not(.generator-status) {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.generator-table .numora-button {
+  white-space: normal;
+  text-align: center;
+  padding-inline: 12px;
+}
+.generator-status {
+  display: inline-flex;
+  align-items: center;
+  width: fit-content;
+  font-weight: 600;
+  font-size: 12px;
+  line-height: 18px;
+  padding: 4px 8px;
+  border-radius: 6px;
+  color: #535e6e;
+  background: #f0f2f5;
+}
+.generator-status.is-generating {
+  color: #722cce;
+  background: #f5edff;
+}
+.generator-status.is-failed {
+  color: #8c4c0f;
+  background: #fff3df;
+}
+.generator-status.is-ready {
+  color: #246949;
+  background: #eaf6ef;
+}
+.generator-directory-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px;
+  padding: 20px 24px;
+}
+.generator-directory-footer > p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.generator-directory-footer .admin-pagination {
+  margin: 0;
+}
+.generator-directory .admin-state,
+.admin-generator-workspace .generator-results > .admin-state {
+  margin: 20px;
+  border: 0;
+  box-shadow: none;
+  background: var(--color-bg);
+  border-radius: 8px;
+}
+.generator-detail {
+  padding-bottom: 24px;
+}
+.generator-detail .generator-section-heading {
+  align-items: flex-start;
+}
+.generator-detail .generator-section-heading h2 {
+  margin-top: 12px;
+}
+.generator-progress {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 28px 56px;
+  margin: 0 24px;
+  padding: 24px 0;
+  border-block: 1px solid var(--color-border-light);
+}
+.generator-progress dt {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin-bottom: 6px;
+}
+.generator-progress dd {
+  margin: 0;
+  font-size: 24px;
+  line-height: 32px;
+  font-weight: 650;
+}
+.generator-progress dd > span {
+  font-size: 14px;
+  font-weight: 400;
+  color: var(--color-text-muted);
+}
+.generator-status-copy,
+.generator-detail > .generator-footnote {
+  margin: 20px 24px;
+  max-width: 72ch;
+}
+.generator-detail-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+  margin-inline: 24px;
+}
+.generator-detail-actions:empty {
+  display: none;
+}
+.generator-detail-actions a {
+  color: var(--color-primary);
+  padding-block: 12px;
+}
+.generator-identity {
+  margin: 24px 24px 0;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-light);
+  font-size: 13px;
+}
+.generator-identity summary {
+  color: var(--color-primary);
+  cursor: pointer;
+}
+.generator-identity dl {
+  margin: 16px 0 0;
+}
+.generator-identity dt {
+  color: var(--color-text-muted);
+}
+.generator-identity dd {
+  margin: 4px 0 16px;
+  overflow-wrap: anywhere;
+}
+.generator-dialog {
+  width: min(600px, calc(100vw - 32px));
+  max-height: calc(100% - 32px);
+  border-radius: 16px;
+}
+.generator-dialog[open] {
+  display: grid;
+  grid-template-rows: auto auto minmax(0, 1fr) auto;
+  overflow: hidden;
+}
+.generator-dialog .numora-dialog__content {
+  overflow: auto;
+  min-height: 0;
+  overscroll-behavior: contain;
+  padding: 4px;
+  margin-inline: -4px;
+}
+.generator-dialog .numora-dialog__header {
+  align-items: center;
+}
+.generator-dialog .numora-dialog__header h2 {
+  font-size: 20px;
+}
+.generator-dialog .numora-dialog__description {
+  font-size: 14px;
+  line-height: 22px;
+}
+.generator-dialog .generator-fields {
+  display: grid;
+  min-width: 0;
+  padding: 0;
+  margin: 0;
+  border: 0;
+}
+.generator-dialog .generator-fields > label {
+  margin-block: 18px 7px;
+  font-weight: 600;
+  font-size: 13px;
+}
+.generator-dialog .generator-fields > label:first-child {
+  margin-top: 0;
+}
+.generator-dialog .generator-fields > input,
+.generator-dialog .generator-fields > select {
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 11px 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+}
+.generator-source-summary {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  gap: 20px;
+  padding: 16px;
+  background: var(--color-bg);
+  border-radius: 8px;
+  margin: 20px 0 0;
+}
+.generator-source-summary dt {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-bottom: 5px;
+}
+.generator-source-summary dd {
+  margin: 0;
+  font-size: 20px;
+  line-height: 28px;
+  font-weight: 650;
+}
+.generator-source-note,
+.generator-footnote {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  line-height: 21px;
+}
+.generator-dialog .generator-footnote {
+  margin: 18px 0 0;
+}
+.generator-feedback {
+  padding: 14px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  margin-bottom: 18px;
+}
+.generator-feedback p {
+  margin: 0 0 10px;
+}
+.generator-dialog .numora-dialog__actions {
+  display: flex;
+  justify-content: flex-end;
+  gap: 10px;
+}
+@media (max-width: 1023px) {
+  .generator-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .generator-table,
+  .generator-table tbody {
+    display: block;
+  }
+  .generator-table tr {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr) auto;
+    gap: 16px 24px;
+    padding: 24px;
+    border-top: 1px solid var(--color-border-light);
+  }
+  .generator-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .generator-table td:first-child {
+    grid-column: 1;
+    grid-row: 1;
+  }
+  .generator-table td:nth-child(2) {
+    grid-column: 2;
+    grid-row: 1;
+  }
+  .generator-table td:nth-child(3) {
+    grid-column: 1;
+  }
+  .generator-table td:nth-child(4) {
+    grid-column: 2;
+  }
+  .generator-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    color: var(--color-text-muted);
+    font-size: 12px;
+    margin-bottom: 6px;
+  }
+  .generator-table td:last-child {
+    grid-column: 1 / -1;
+  }
+  .generator-directory-footer {
+    flex-wrap: wrap;
+  }
+}
+@media (max-width: 767px) {
+  .generator-section-heading {
+    padding: 20px 16px;
+    gap: 12px;
+    flex-wrap: wrap;
+  }
+  .generator-section-heading > div {
+    flex: 1;
+    min-width: 140px;
+  }
+  .generator-table tr {
+    padding: 20px 16px;
+    grid-template-columns: minmax(0, 1fr) minmax(0, 1.4fr);
+    gap: 12px 16px;
+  }
+  .generator-table td:first-child,
+  .generator-table td:nth-child(2),
+  .generator-table td:nth-child(3),
+  .generator-table td:nth-child(4),
+  .generator-table td:last-child {
+    grid-row: auto;
+  }
+  .generator-table td:first-child,
+  .generator-table td:nth-child(2),
+  .generator-table td:last-child {
+    grid-column: 1 / -1;
+  }
+  .generator-table td:nth-child(3) {
+    grid-column: 1;
+  }
+  .generator-table td:nth-child(4) {
+    grid-column: 2;
+  }
+  .generator-table td:nth-child(2) {
+    margin-top: -6px;
+  }
+  .generator-directory-footer {
+    padding: 20px 16px;
+  }
+  .generator-directory-footer .admin-pagination {
+    width: 100%;
+    gap: 8px;
+    justify-content: space-between;
+  }
+  .generator-directory-footer .admin-pagination .numora-button {
+    padding-inline: 10px;
+  }
+  .generator-progress {
+    margin-inline: 16px;
+    gap: 24px;
+  }
+  .generator-status-copy,
+  .generator-detail > .generator-footnote {
+    margin-inline: 16px;
+  }
+  .generator-detail-actions {
+    margin-inline: 16px;
+  }
+  .generator-identity {
+    margin-inline: 16px;
+  }
+  .generator-dialog .generator-fields > input,
+  .generator-dialog .generator-fields > select {
+    font-size: 16px;
+  }
+  .generator-dialog .numora-dialog__actions > .numora-button {
+    flex: 1;
+  }
+}

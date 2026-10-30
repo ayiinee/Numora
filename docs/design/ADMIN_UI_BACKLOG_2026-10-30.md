@@ -161,3 +161,16 @@ Item selesai setelah AC terbukti, lint/typecheck/build dan tes terkait lulus, se
 Template handoff/penutupan: **ID; DRI; route/role; branch/PR/SHA; repro atau desain akhir; AC; tes/screenshot; batas fixture/connected; dependency/OPEN; reviewer; next action**. Dokumen ini tidak otomatis membuat issue, mengirim pesan, push, merge atau deploy.
 
 **Langkah berikutnya setelah gate terpenuhi:** verifikasi/perbaiki UI-01, kemudian audit Generator paket (UI-02). Bila muncul blocker baru, triase bukti dan ubah urutan secara eksplisit.
+
+## Pelaksanaan lanjutan — 30 Oktober 2026
+
+**ENGINEERING DECISION — instruksi pemilik:** jalankan urutan backlog setelah fondasi integrasi masuk main. Snapshot WAITING_INTEGRATION di atas mempertahankan keadaan saat rencana disusun. Implementasi dilanjutkan dari main `bf3d87bad7211151326d0a68b6add436dcd3bf87` pada branch `feat/admin-generator-ux`; smoke awal 23/23 lulus dengan fixture localhost.
+
+| ID       | Status pelaksanaan                        | Bukti / langkah berikutnya                                                                                                                     |
+| -------- | ----------------------------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------- |
+| UI-01    | IMPLEMENTED — review pending              | Perbaikan selector padding pencarian sekolah; geometri Operations gagal sebelum perbaikan dan lulus sesudahnya.                                |
+| UI-02    | IMPLEMENTED — review pending              | Direktori lima paket, dialog konfigurasi, detail progres dan handoff impor existing. [Audit dan verifikasi](ADMIN_GENERATOR_UX_2026-10-30.md). |
+| UI-03–05 | AUDIT_FIRST                               | Belum diimplementasikan dalam perubahan ini; lanjut UI-03 setelah review UI-01/UI-02.                                                          |
+| UI-06    | APPLIED pada UI-01/UI-02 — review pending | Audit responsif, keyboard, error, idempotensi dan permission; bukti fixture dibedakan dari connected/CI/deployment.                            |
+
+Status IMPLEMENTED tidak sama dengan DONE repository: review manusia serta pemeriksaan CI branch tetap dicatat sebelum merge. Tidak ada perubahan kontrak backend, migrasi atau policy historis.
