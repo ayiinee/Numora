@@ -1,5 +1,5 @@
 import { BadRequestException, Inject, Injectable, NotFoundException } from '@nestjs/common';
-import { and, desc, eq, gte, lte, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, gte, lte, sql } from 'drizzle-orm';
 import { unionAll } from 'drizzle-orm/pg-core';
 import {
   attemptAnswers,
@@ -49,11 +49,17 @@ export class ReportsService {
             page.to ? lte(table.reportedAt, new Date(page.to)) : undefined,
           ),
         );
-    const rows = await unionAll(query(questionReports, 'QUESTION'), query(videoReports, 'VIDEO'))
-      .orderBy(desc(sql`reported_at`), desc(sql`id`))
-      .limit(page.limit + 1)
-      .offset(page.offset);
+    const combined = () =>
+      unionAll(query(questionReports, 'QUESTION'), query(videoReports, 'VIDEO'));
+    const [rows, [total]] = await Promise.all([
+      combined()
+        .orderBy(desc(sql`reported_at`), asc(sql`kind`), asc(sql`id`))
+        .limit(page.limit + 1)
+        .offset(page.offset),
+      db.select({ total: count() }).from(combined().as('filtered_reports')),
+    ]);
     return {
+      total: total!.total,
       items: rows
         .slice(0, page.limit)
         .map((r) => ({ ...r, reportedAt: r.reportedAt.toISOString() })),

@@ -233,12 +233,14 @@ export function PeopleFooter({
   offset,
   count,
   nextOffset,
+  totalItems,
   onChange,
   label,
 }: {
   offset: number;
   count: number;
   nextOffset: number | null;
+  totalItems?: number | undefined;
   onChange: (offset: number) => void;
   label: string;
 }) {
@@ -252,6 +254,7 @@ export function PeopleFooter({
         label={label}
         offset={offset}
         hasNext={nextOffset !== null}
+        totalItems={totalItems}
         onChange={(next) => onChange(next < offset ? next : nextOffset!)}
       />
     </footer>

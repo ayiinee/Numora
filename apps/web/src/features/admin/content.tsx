@@ -286,6 +286,20 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
       }}
     />
   );
+  const totalItems = current
+    ? {
+        curriculum: undefined,
+        questions: current.versions.total,
+        verification: undefined,
+        videos: current.videos.totalItems,
+        packages: current.packages.totalItems,
+        drillPackages: current.drillPackages.totalItems,
+        directedPackages: undefined,
+        reports: current.reports.total,
+        irt: undefined,
+        audit: current.audit.totalItems,
+      }[view]
+    : undefined;
   const hasNext = current
     ? {
         curriculum: false,
@@ -718,7 +732,10 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                 >
                   Sebelumnya
                 </Button>
-                <span>Halaman {offset / ADMIN_PAGE_SIZE + 1}</span>
+                <span aria-live="polite">
+                  Halaman {offset / ADMIN_PAGE_SIZE + 1}
+                  {totalItems !== undefined && ` · Jumlah data: ${totalItems}`}
+                </span>
                 <Button
                   disabled={!hasNext || busy || loading}
                   onClick={() => {

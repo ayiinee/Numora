@@ -1,11 +1,16 @@
 # Pagination dan pencarian Admin — 7 Oktober 2026
 
+**ENGINEERING DECISION — rekonsiliasi Aini, 30 Oktober 2026:** PR #100 memakai layout, permission, filter, URL context dan editor dari main `5837951`. Total diambil dari hasil tanpa LIMIT dengan filter dan batas akses yang sama; jumlah baris satu halaman tidak digunakan sebagai total. Report memakai satu UNION ALL dengan urutan `reportedAt DESC, kind ASC, id ASC` sebelum LIMIT/OFFSET; kategori/tanggal/filter existing tetap berlaku. Tes pagination memakai kategori fixture unik supaya laporan skenario lain tidak ikut dihitung. Angka verifikasi 7 Oktober di bawah bersifat historis; periksa CI kandidat baru.
+
+**ENGINEERING VERIFICATION — CI `41008176211`:** cleanup per baris pada fixture lama bertentangan dengan guard riwayat laporan yang melarang DELETE. Fixture kini dipertahankan dalam kategori unik sampai database test disposable dibuang oleh teardown layanan CI. Tidak menonaktifkan trigger atau menghapus constraint; rerun tetap terisolasi lewat UUID/kategori baru. Reproduksi lokal juga harus memakai database test disposable, bukan database Development bersama.
+
 **ENGINEERING DECISION — instruksi pemilik:** daftar pada fitur Admin menampilkan maksimal lima data per halaman. Pencarian dan filter menggunakan ruang horizontal yang tersedia, dengan wrapping pada layar kecil.
 
 ## Perilaku UI
 
-- Daftar pengguna dan kelas meminta `limit=5` dan mengikuti `nextOffset` dari API. Menerapkan pencarian/filter mengembalikan daftar ke halaman pertama.
+- Daftar pengguna dan kelas meminta `limit=5`, mengikuti `nextOffset`, dan menampilkan total hasil dari API. Total mengikuti pencarian/filter aktif; menerapkan pencarian/filter mengembalikan daftar ke halaman pertama.
 - Versi soal, video, laporan, draf Tryout, paket Drill, batch/parameter IRT, audit umum, dan pilihan paket menampilkan lima data. Endpoint tanpa metadata pagination dibaca dengan satu baris tambahan untuk menentukan ketersediaan halaman berikutnya; baris tambahan tidak ditampilkan.
+- Kontrol pagination menampilkan nomor halaman dan total hasil. Filter versi soal dan laporan dihitung di server, sehingga angka mencerminkan seluruh hasil yang cocok, bukan hanya baris halaman aktif.
 - Sekolah, token Guru, materi, soal dalam detail paket, preview Excel, dan laporan impor memakai pagination lokal atas respons/file lengkap yang sudah tersedia. Dropdown referensi, opsi jawaban, dan checklist validasi tetap memuat informasi yang diperlukan oleh editor.
 - Tombol Sebelumnya/Berikutnya dan nomor halaman memakai komponen bersama. Tombol dinonaktifkan pada batas halaman dan selama operasi yang memerlukan lock.
 - Pagination tidak menghapus draf editor atau pilihan soal Excel. Pergantian sekolah/paket mengembalikan halaman daftar detail ke awal.
@@ -13,7 +18,7 @@
 
 ## Batas implementasi
 
-Kontrak NestJS, schema database, assignment Admin, dan aturan akademik tetap mengikuti sumber yang berlaku. Daftar memakai mekanisme offset yang telah tersedia; perubahan ke cursor bukan bagian dari revisi tampilan ini. Audit umum hanya dimuat dan ditampilkan untuk Super Admin.
+Kontrak NestJS, schema database, assignment Admin, dan aturan akademik tetap mengikuti sumber yang berlaku. Daftar memakai mekanisme offset yang telah tersedia; perubahan ke cursor bukan bagian dari revisi tampilan ini. Akses audit mengikuti capability dan scope domain pada server terbaru; total audit memakai scope yang sama dan tidak membuka jumlah data di luar hak akses. Tampilan dengan dua daftar (verifikasi atau IRT) tidak menjumlahkan dua total berbeda menjadi satu jumlah global.
 
 ## Verifikasi
 

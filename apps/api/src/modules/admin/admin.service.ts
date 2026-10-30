@@ -57,65 +57,74 @@ export class AdminService {
             string | null
           >`case when exists (select 1 from users u where u.id=audit_logs.actor_user_id and u.role='ADMIN') then audit_logs.actor_user_id else null end`
         : sql<string | null>`${auditLogs.actorUserId}`;
-    const rows = await getDatabase()
-      .db.select({
-        id: auditLogs.id,
-        actorUserId: actor,
-        action: auditLogs.action,
-        entityType: auditLogs.entityType,
-        entityId: auditLogs.entityId,
-        createdAt: auditLogs.createdAt,
-      })
-      .from(auditLogs)
-      .where(
-        and(
-          role === 'SUPER_ADMIN'
-            ? undefined
-            : inArray(
-                auditLogs.entityType,
-                role === 'OPERATIONS'
-                  ? [
-                      'school',
-                      'teacher_verification_token',
-                      'class',
-                      'class_membership',
-                      'teacher_school_membership',
-                    ]
-                  : [
-                      'chapter',
-                      'subchapter',
-                      'competency',
-                      'level',
-                      'question',
-                      'question_version',
-                      'question_variant',
-                      'assessment_package',
-                      'drill_package',
-                      'tryout_package',
-                      'question_report',
-                      'video_report',
-                      'video',
-                      'video_mapping',
-                      'content_import',
-                      'content_media_upload',
-                      'content_preview_session',
-                      'irt_request',
-                      'analysis_request',
-                      'tryout_batch',
-                      'irt_batch',
-                    ],
-              ),
-          page.action ? eq(auditLogs.action, page.action) : undefined,
-          page.entityType ? eq(auditLogs.entityType, page.entityType) : undefined,
-          page.actorId ? eq(actor, page.actorId) : undefined,
-          page.from ? gte(auditLogs.createdAt, new Date(page.from)) : undefined,
-          page.to ? lte(auditLogs.createdAt, new Date(page.to)) : undefined,
-        ),
-      )
-      .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
-      .limit(page.limit)
-      .offset(page.offset);
+    const { db } = getDatabase();
+    const matchingRows = () =>
+      db
+        .select({
+          id: auditLogs.id,
+          actorUserId: actor,
+          action: auditLogs.action,
+          entityType: auditLogs.entityType,
+          entityId: auditLogs.entityId,
+          createdAt: auditLogs.createdAt,
+        })
+        .from(auditLogs)
+        .where(
+          and(
+            role === 'SUPER_ADMIN'
+              ? undefined
+              : inArray(
+                  auditLogs.entityType,
+                  role === 'OPERATIONS'
+                    ? [
+                        'school',
+                        'teacher_verification_token',
+                        'class',
+                        'class_membership',
+                        'teacher_school_membership',
+                      ]
+                    : [
+                        'chapter',
+                        'subchapter',
+                        'competency',
+                        'level',
+                        'question',
+                        'question_version',
+                        'question_variant',
+                        'assessment_package',
+                        'drill_package',
+                        'tryout_package',
+                        'question_report',
+                        'video_report',
+                        'video',
+                        'video_mapping',
+                        'content_import',
+                        'content_media_upload',
+                        'content_preview_session',
+                        'irt_request',
+                        'analysis_request',
+                        'tryout_batch',
+                        'irt_batch',
+                      ],
+                ),
+            page.action ? eq(auditLogs.action, page.action) : undefined,
+            page.entityType ? eq(auditLogs.entityType, page.entityType) : undefined,
+            page.actorId ? eq(actor, page.actorId) : undefined,
+            page.from ? gte(auditLogs.createdAt, new Date(page.from)) : undefined,
+            page.to ? lte(auditLogs.createdAt, new Date(page.to)) : undefined,
+          ),
+        );
+    const [rows, [total]] = await Promise.all([
+      matchingRows()
+        .orderBy(desc(auditLogs.createdAt), desc(auditLogs.id))
+        .limit(page.limit)
+        .offset(page.offset),
+      db.select({ total: count() }).from(matchingRows().as('filtered_audit')),
+    ]);
     // Metadata from legacy token events is deliberately excluded from this general list.
-    return { items: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })) };
+    return {
+      total: total!.total,
+      items: rows.map((r) => ({ ...r, createdAt: r.createdAt.toISOString() })),
+    };
   }
 }

@@ -1,30 +1,30 @@
 'use client';
 import { apiRequest } from '@/lib/api';
-import { Badge,Button,Card } from '@tka/ui';
-import { useEffect,useState } from 'react';
-import { AdminPagination,useAdminPagination } from './admin-pagination';
+import { Badge, Button, Card } from '@tka/ui';
+import { useEffect, useState } from 'react';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
 import { AdminMessage } from './admin-presentation';
 import { useAdminAccessError } from './admin-workspace';
 import {
-approveContentPackage,
-archiveContentPackage,
-createContentPackage,
-getContentPackage,
-listContentPackages,
-publishContentPackage,
-reviewImportedQuestion,
-updateContentPackage,
+  approveContentPackage,
+  archiveContentPackage,
+  createContentPackage,
+  getContentPackage,
+  listContentPackages,
+  publishContentPackage,
+  reviewImportedQuestion,
+  updateContentPackage,
 } from './content-package-api';
-import { createPreview,submitPreview } from './content-preview-api';
+import { createPreview, submitPreview } from './content-preview-api';
 import { ContentRichText } from './content-rich-text';
 import type {
-AdminCurriculumDto,
-ContentPackageDetailDto,
-ContentPackageDto,
-CreateContentPackageDto,
-PreviewMediaDto,
+  AdminCurriculumDto,
+  ContentPackageDetailDto,
+  ContentPackageDto,
+  CreateContentPackageDto,
+  PreviewMediaDto,
 } from './generated-types';
-import { ADMIN_PAGE_SIZE,adminPage } from './pagination';
+import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 type Usage = CreateContentPackageDto['assessmentType'];
 
 export function ContentPackageWorkspace({
@@ -48,6 +48,7 @@ export function ContentPackageWorkspace({
   const [offset, setOffset] = useState(0);
   const [packages, setPackages] = useState<ContentPackageDto[]>([]);
   const [hasNext, setHasNext] = useState(false);
+  const [totalItems, setTotalItems] = useState<number>();
   const [curriculum, setCurriculum] = useState<AdminCurriculumDto['items']>([]);
   const [detail, setDetail] = useState<ContentPackageDetailDto | null>(null);
   const itemPage = useAdminPagination(detail?.items ?? [], detail?.id);
@@ -81,6 +82,7 @@ export function ContentPackageWorkspace({
           const page = adminPage(p.items);
           setPackages(page.items);
           setHasNext(page.hasNext);
+          setTotalItems(p.total);
           setCurriculum(c.items);
           setError('');
         }
@@ -266,6 +268,7 @@ export function ContentPackageWorkspace({
       <AdminPagination
         offset={offset}
         hasNext={hasNext}
+        totalItems={totalItems}
         disabled={locked || loading}
         onChange={setOffset}
         label="Halaman paket"

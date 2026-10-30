@@ -72,6 +72,7 @@ const data = {
     ],
   },
   versions: {
+    total: 1,
     hasNext: false,
     items: [
       {
@@ -97,6 +98,7 @@ const data = {
     ],
   },
   videos: {
+    totalItems: 1,
     hasNext: false,
     items: [
       {
@@ -112,6 +114,7 @@ const data = {
     ],
   },
   reports: {
+    total: 2,
     hasNext: false,
     nextOffset: null,
     items: [
@@ -137,8 +140,9 @@ const data = {
       },
     ],
   },
-  irt: { items: [], hasNext: false },
+  irt: { totalItems: 0, items: [], hasNext: false },
   irtBatches: {
+    totalItems: 1,
     hasNext: false,
     items: [
       {
@@ -155,6 +159,7 @@ const data = {
     ],
   },
   audit: {
+    totalItems: 1,
     hasNext: false,
     items: [
       {
@@ -169,6 +174,7 @@ const data = {
   },
   dashboard: { schools: 0, chapters: 0, questions: 0, readyVersions: 0, openReports: 0 },
   packages: {
+    totalItems: 1,
     hasNext: false,
     items: [
       {
@@ -182,6 +188,7 @@ const data = {
     ],
   },
   drillPackages: {
+    totalItems: 1,
     hasNext: false,
     items: [
       {
@@ -336,7 +343,7 @@ describe('Admin content UI', () => {
     );
     fireEvent.click(screen.getByRole('checkbox', { name: /Tampilkan seluruh materi demo/ }));
     expect(screen.getByText(/9 entri materi/)).toBeTruthy();
-    expect(within(pager).getByText('Halaman 1')).toBeTruthy();
+    expect(within(pager).getByText('Halaman 1 · Jumlah data: 9')).toBeTruthy();
   });
   it('uses five-item bank pages and server nextOffset so a full final page cannot open an empty page', async () => {
     context.state.profile = {
@@ -346,6 +353,7 @@ describe('Admin content UI', () => {
     vi.mocked(loadAdminWorkbench).mockImplementation(async (_t, offset) => ({
       ...data,
       versions: {
+        total: 10,
         items: Array.from({ length: 5 }, (_, i) => ({
           ...data.versions.items[0]!,
           id: `version-${offset + i}`,
@@ -362,7 +370,7 @@ describe('Admin content UI', () => {
     await screen.findByRole('heading', { name: 'Soal 6' });
     expect(screen.queryByRole('heading', { name: 'Soal 1' })).toBeNull();
     const secondPager = screen.getByRole('navigation', { name: 'Halaman data' });
-    expect(within(secondPager).getByText('Halaman 2')).toBeTruthy();
+    expect(within(secondPager).getByText('Halaman 2 · Jumlah data: 10')).toBeTruthy();
     expect(
       within(secondPager).getByRole('button', { name: 'Berikutnya' }).hasAttribute('disabled'),
     ).toBe(true);
@@ -442,6 +450,7 @@ describe('Admin content UI', () => {
     vi.mocked(loadAdminWorkbench).mockResolvedValue({
       ...data,
       drillPackages: {
+        totalItems: 1,
         hasNext: false,
         items: [
           {
@@ -720,6 +729,7 @@ describe('Admin content UI', () => {
       ...data,
       versions: {
         items: versions.slice(offset, offset + 5),
+        total: versions.length,
         hasNext: offset === 0,
         nextOffset: offset === 0 ? 5 : null,
       },

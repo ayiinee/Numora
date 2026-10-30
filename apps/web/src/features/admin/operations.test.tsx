@@ -110,11 +110,15 @@ beforeEach(() => {
     },
     session: { access_token: 'test-token' },
   };
-  vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5 });
+  vi.mocked(listAdminUsers).mockResolvedValue({ items: [user], nextOffset: 5, total: 6 });
   vi.mocked(getAdminUser).mockResolvedValue(user);
   vi.mocked(getAdminMemberships).mockResolvedValue({ items: [], nextOffset: null });
   vi.mocked(getAdminRoster).mockResolvedValue({ items: [], nextOffset: null });
-  vi.mocked(listAdminClasses).mockResolvedValue({ items: [adminClass], nextOffset: null });
+  vi.mocked(listAdminClasses).mockResolvedValue({
+    items: [adminClass],
+    nextOffset: null,
+    total: 1,
+  });
   vi.mocked(getAdminClass).mockResolvedValue(adminClass);
 });
 
@@ -275,6 +279,7 @@ describe('Admin operations UI', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Pilih sekolah' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Sekolah TEST' }));
     vi.mocked(listAdminUsers).mockResolvedValueOnce({
+      total: 1,
       items: [{ ...user, id: adminClass.teacherId, role: 'TEACHER', displayName: 'Guru TEST' }],
       nextOffset: null,
     });
@@ -307,7 +312,7 @@ describe('Admin operations UI', () => {
   it('uses nextOffset for pagination and retries a failed list request', async () => {
     vi.mocked(listAdminUsers)
       .mockRejectedValueOnce(new Error('Daftar belum tersedia.'))
-      .mockResolvedValueOnce({ items: [user], nextOffset: 5 });
+      .mockResolvedValueOnce({ items: [user], nextOffset: 5, total: 6 });
     render(<AdminOperationsScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Coba lagi' }));
     await screen.findByText('Siswa TEST');

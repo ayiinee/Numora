@@ -45,6 +45,7 @@ export class AdminReportDto {
   @ApiProperty() reportedAt!: string;
 }
 export class AdminReportsDto {
+  @ApiProperty() total!: number;
   @ApiProperty({ type: [AdminReportDto] }) items!: AdminReportDto[];
   @ApiProperty({ type: Number, nullable: true }) nextOffset!: number | null;
 }

@@ -33,6 +33,7 @@ export class AdminAuditDto {
 }
 export class AdminAuditListDto {
   @ApiProperty({ type: [AdminAuditDto] }) items!: AdminAuditDto[];
+  @ApiProperty() total!: number;
 }
 
 @ApiTags('admin')

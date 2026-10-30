@@ -101,6 +101,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     versions: {
+      total: 1,
       hasNext: false,
       items: [
         {
@@ -131,6 +132,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     videos: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
@@ -146,6 +148,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     reports: {
+      total: 1,
       hasNext: false,
       nextOffset: null,
       items: [
@@ -162,6 +165,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     irt: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
@@ -179,6 +183,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     irtBatches: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
@@ -195,6 +200,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     audit: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
@@ -209,6 +215,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
     },
     dashboard: { schools: 3, chapters: 1, questions: 1, readyVersions: 1, openReports: 1 },
     packages: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
@@ -222,6 +229,7 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       ],
     },
     drillPackages: {
+      totalItems: 1,
       hasNext: false,
       items: [
         {
