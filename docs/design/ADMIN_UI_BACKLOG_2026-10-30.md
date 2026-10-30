@@ -180,3 +180,9 @@ Status IMPLEMENTED tidak sama dengan DONE repository: review manusia serta pemer
 **ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta implementasi Impor soal dilanjutkan sekarang. UI-03 tidak lagi menunggu review UI-01/UI-02; branch `feat/admin-import-ux` memakai fondasi `97a0733` dari PR #113 agar PR tersebut tetap fokus.
 
 UI-03 berstatus **IMPLEMENTED — review pending**: layout Excel/JSON/Generator diselaraskan, preview soal responsif, riwayat/filter/pagination memakai URL, dan perpindahan sumber menjaga preview melalui konfirmasi. [Laporan implementasi dan batas verifikasi](ADMIN_IMPORT_UX_2026-10-30.md). Status sebelumnya pada tabel adalah snapshot sebelum instruksi lanjutan ini. UI-04/UI-05 tetap AUDIT_FIRST.
+
+## Pelaksanaan UI-04 — instruksi lanjutan pemilik
+
+**ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta Analytics dirombak menjadi dashboard serta ditempatkan sebagai menu/halaman pertama Admin. Implementasi mempertahankan scope portal Analytics untuk Super Admin berizin; Operations/Content tetap mengikuti tujuan dan capability existing. Analytics existing menggantikan tujuan awal Super Admin, tanpa mengembalikan halaman Ringkasan.
+
+UI-04 berstatus **IMPLEMENTED — review pending** pada branch `feat/admin-analytics-dashboard`, berbasis commit UI-03 `45bf3d8`. KPI, perbandingan aktivitas, tindak lanjut, cakupan Drill dan rincian menampilkan seluruh 22 agregat existing. Nol/null, sumber gagal, timestamp WIB, pembaruan gagal dan akses dicabut dibedakan. [Audit, kontrak metrik dan verifikasi](ADMIN_ANALYTICS_UX_2026-10-30.md). UI-05 tetap AUDIT_FIRST. Review, CI branch dan penerimaan layanan nyata tetap menjadi bukti terpisah.

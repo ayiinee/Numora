@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { apiRequest, ApiProblem } from '@/lib/api';
 import { AdminIrtScreen } from './irt-requests';
@@ -67,6 +67,8 @@ beforeEach(() => {
   vi.resetAllMocks();
   mocks.state.profile.capabilities = ['CONTENT_MANAGE', 'ANALYTICS_CONTENT'];
   mocks.state.profile.adminRole = 'CONTENT_DATA_MODERATION';
+  mocks.state.profile.id = 'TEST';
+  mocks.state.session.access_token = 'TEST ONLY';
 });
 afterEach(cleanup);
 it('clears selected request and every queue after server access is revoked', async () => {
@@ -146,5 +148,48 @@ it('clears analytics on access revocation and renders unavailable distinctly fro
   mocks.state.profile.capabilities = [];
   view.rerender(<AdminAnalyticsScreen />);
   expect(screen.queryByText('TEST real zero')).toBeNull();
+  expect(screen.getByText('Akses analytics Admin diperlukan.')).toBeTruthy();
+});
+
+const analyticsSnapshot = (label: string) => ({
+  generatedAt: '2026-10-30T08:00:00Z',
+  source: 'POSTGRESQL',
+  metrics: [{ key: 'test', label, domain: 'STRUCTURE', value: 5, unavailableReason: null }],
+});
+
+it('ignores a late analytics response from the previous identity and token', async () => {
+  mocks.state.profile.adminRole = 'SUPER_ADMIN';
+  let resolveOld!: (value: unknown) => void;
+  const oldRequest = new Promise((resolve) => {
+    resolveOld = resolve;
+  });
+  vi.mocked(apiRequest).mockImplementation((_path, token) =>
+    token === 'TEST ONLY' ? oldRequest : Promise.resolve(analyticsSnapshot('TEST current account')),
+  );
+  const view = render(<AdminAnalyticsScreen />);
+  await waitFor(() => expect(apiRequest).toHaveBeenCalled());
+  mocks.state.profile.id = 'TEST SECOND ACCOUNT';
+  mocks.state.session.access_token = 'TEST SECOND TOKEN';
+  view.rerender(<AdminAnalyticsScreen />);
+  await screen.findByText('TEST current account');
+  await act(async () => resolveOld(analyticsSnapshot('TEST previous account')));
+  expect(screen.queryByText('TEST previous account')).toBeNull();
+  expect(screen.getByText('TEST current account')).toBeTruthy();
+});
+
+it('does not restore analytics when an in-flight response finishes after capability revocation', async () => {
+  mocks.state.profile.adminRole = 'SUPER_ADMIN';
+  let resolve!: (value: unknown) => void;
+  vi.mocked(apiRequest).mockReturnValue(
+    new Promise((done) => {
+      resolve = done;
+    }),
+  );
+  const view = render(<AdminAnalyticsScreen />);
+  await waitFor(() => expect(apiRequest).toHaveBeenCalled());
+  mocks.state.profile.capabilities = [];
+  view.rerender(<AdminAnalyticsScreen />);
+  await act(async () => resolve(analyticsSnapshot('TEST revoked snapshot')));
+  expect(screen.queryByText('TEST revoked snapshot')).toBeNull();
   expect(screen.getByText('Akses analytics Admin diperlukan.')).toBeTruthy();
 });

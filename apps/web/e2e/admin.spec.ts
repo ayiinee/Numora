@@ -9,6 +9,7 @@ import type {
 } from '../src/features/admin/generated-types';
 import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generated-types';
 import { selectContentSection } from './fixtures/admin';
+import { analyticsSnapshot } from './fixtures/admin-analytics';
 
 function directedPackage(
   usage: ContentPackageDetailDto['assessmentType'] = 'DRILL',
@@ -512,6 +513,7 @@ async function setup(page: Page) {
         '/admin/irt/batches': state.data.irtBatches,
         '/admin/audit-logs': state.data.audit,
         '/admin/dashboard': state.data.dashboard,
+        '/admin/analytics': analyticsSnapshot(),
         '/admin/content/tryout-packages': state.data.packages,
         '/admin/content/drill-packages': state.data.drillPackages,
       };
@@ -815,7 +817,9 @@ for (const width of [390, 1280]) {
         await expect(page).toHaveURL(/\/admin\/content$/);
         await expect(page.locator('.admin-page-header')).toHaveCount(0);
         await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-      } else if (role === 'OPERATIONS' || role === 'SUPER_ADMIN') {
+      } else if (role === 'SUPER_ADMIN') {
+        await expect(page).toHaveURL(/\/admin\/analytics$/);
+      } else if (role === 'OPERATIONS') {
         await expect(page).toHaveURL(/\/admin\/schools$/);
         if (role === 'OPERATIONS') await expect(page.locator('.admin-page-header')).toHaveCount(0);
       } else {
