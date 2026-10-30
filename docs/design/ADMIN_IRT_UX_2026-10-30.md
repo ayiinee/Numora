@@ -1,0 +1,55 @@
+# Request IRT & publikasi — UI-05
+
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026.** Branch `feat/admin-irt-publication-ux`, berdasarkan Analytics `01fd68e`. Status **IMPLEMENTED — review pending**. Instruksi pemilik: layout, komponen dan tipografi ringkas, mudah dilihat serta tidak membingungkan Admin, mengikuti arah Akun Admin yang disetujui.
+
+## Audit dan keputusan
+
+Baseline menampilkan alur empat tahap, form persiapan selalu terbuka, daftar request dengan UUID dominan, detail teknis panjang, dan batch/blocker dalam satu halaman. Informasi pengamatan dan tindakan bersaing; request, execution, adopsi serta publikasi berisiko disamakan.
+
+Implementasi memakai dua bagian: **Batch & publikasi** sebagai awal, lalu **Request analisis**. Batch menonjolkan nama, status, jadwal tutup, batas rilis WIB, pengerjaan final/belum final serta alasan utama rilis tertahan. Semua blocker dan tindak lanjut tetap tersedia pada rincian; kode teknis dibuka sesuai kebutuhan. Daftar request memakai judul paket ketika tersedia pada halaman batch yang dimuat, referensi singkat, status, batas analisis dan tombol detail. Tidak dibuat pencarian/filter global atau total dari jumlah baris halaman.
+
+Detail request menggantikan direktori di bagian yang sama. Request, komputasi dan adopsi memiliki label terpisah; publikasi diarahkan kembali ke batch. **Baris respons snapshot bukan jumlah soal atau peserta unik.** Tidak ada payload soal pada kontrak halaman ini. Pemilik tidak menyertakan gambar baru; fokus kejelasan diterapkan pada data/status yang memang dikirim API, bukan membuat soal atau data akademik pengganti.
+
+Persiapan pindah ke dialog dengan batch dan dua versi konfigurasi disahkan. Pilihan dipertahankan ketika dialog ditutup dan saat network error, selama workspace masih terbuka. Mengganti konteks mengosongkan pilihan konfigurasi agar pin tidak tertukar. Pilihan batch mengikuti halaman batch yang dimuat, bukan seluruh database.
+
+Retry dan adopsi memakai konfirmasi yang menjelaskan request, snapshot serta dampaknya. Dialog tidak dapat ditutup saat POST pending. Ref guard mencegah submit ganda; key idempotensi dipertahankan setelah kegagalan dan dibuang setelah berhasil. Retry memakai snapshot/pin yang sama. Membuka detail, mengganti bagian, menggeser halaman dan membuka rincian tidak memicu POST.
+
+## Sumber perilaku dan batas keamanan fungsional
+
+- [Admin IRT/Analytics](../api/ADMIN_IRT_ANALYTICS.md), [runbook v3](../development/IRT_V3_RUNBOOK.md), [ADR-011](../adr/ADR-011-separated-irt-compute.md), DTO generated, `apps/api/src/modules/irt/irt-operations.service.ts` dan `packages/irt-orchestration/src/orchestration.ts` tetap menjadi acuan.
+- Super Admin dan Content/Data/Moderation aktif dengan `CONTENT_MANAGE` dapat membuka workspace; Operations, assignment kosong dan akun tanpa capability ditolak. Guard presentasi memakai helper existing; setiap endpoint tetap mengotorisasi di NestJS. Capability lama tidak memberi akses pada assignment kosong.
+- Opsi, batch, daftar request dan detail dimuat independen. Kegagalan pilihan konfigurasi tidak menghapus riwayat sehat. Pada kegagalan konfigurasi sementara, detail/retry tetap dapat dibaca dan endpoint menguji kelayakan; saat flag diketahui `enabled:false`, persiapan/retry/adopsi dinonaktifkan dengan alasan yang jelas.
+- 401/403 dari reader atau mutasi menutup semua payload dan dialog, bukan menyisakan data/tindakan lama. Identitas/assignment/capability menjadi key workspace. Cleanup token/unmount mengabaikan respons terlambat; persiapan yang selesai setelah akses hilang tidak mengubah URL menjadi detail akun lama.
+- Pagination tetap lima data; sentinel keenam hanya menentukan halaman berikutnya. Parameter URL `view`, `batchesOffset`, `requestsOffset` dan `requestId` menjaga konteks saat refresh/Back. Tidak ada klaim total global atau penyaringan lintas halaman.
+- Jadwal berasal dari timestamp server; flag overdue berasal dari server, bukan kalkulasi browser. Jadwal tutup tidak dianggap bukti batch telah ditutup. Status publikasi hanya mengikuti `publishedAt`, dengan mode/versi yang tersimpan.
+- Eligibility UI mengikuti guard existing: request COMPLETED/CANCELLED tidak menawarkan retry; adopsi membutuhkan request RUNNING dengan execution SUCCEEDED dan belum diterima. Endpoint tetap memeriksa lease, evidence, provenance, pin serta persetujuan; tombol aktif bukan pengesahan ilmiah.
+- **OPEN tetap OPEN:** kontrak hasil peserta/mapping, pengesahan Data/AI, producer dan kebijakan rilis tidak diciptakan frontend. Tidak ada tombol force release, endpoint publikasi baru, scoring/fallback lokal, perubahan parameter produk, migrasi atau penulisan hasil/XP historis. Adopsi tidak memublikasikan nilai/pembahasan.
+
+## Struktur kode
+
+`irt-requests.tsx` menyusun akses, URL, reader dan dialog persiapan; `irt-request-detail.tsx` memiliki detail serta lifecycle konfirmasi retry/adopsi; `irt-presentation.tsx` menangani daftar/status/blocker; `irt-model.ts` memetakan label dan kelayakan tampilan. `admin-irt.css` memakai namespace IRT dengan fondasi management existing. DTO tidak disalin menjadi tipe respons manual; Dialog, Button, Pagination, URL helper serta operational query dipakai ulang. Tidak menambah dependency/framework.
+
+Plus Jakarta Sans, kanvas abu terang, panel putih, ungu Numora dan warna status dipertahankan. Teks utama 13–15 px, label sekunder minimal 12 px, heading 18 px; UUID/hash dapat dibungkus tanpa dipotong. Label form dan hint dipisahkan secara aksesibel. Detail teknis memakai native details/summary; modal memakai native Dialog existing dengan focus trap, Escape dan pengembalian fokus.
+
+## Referensi
+
+Referensi adalah panduan presentasi, tidak mengubah kontrak atau kebijakan Numora.
+
+- [Dribbble Admin UI](https://dribbble.com/tags/admin-ui); metadata/deskripsi [Workflow orchestration run details](https://dribbble.com/shots/26825006-Workflow-Orchestration-App-Data-Pipeline-Run-Details), [Flow observability](https://dribbble.com/shots/27681473-Flow-Data-Pipeline-Health-Observability-Dashboard), [Document approval](https://dribbble.com/shots/26946360-Document-Approval-Platform-UI-UXDesign), dan [Abyssale approval](https://dribbble.com/shots/25797605-Abyssale-Approval-Kanban). Ide yang relevan adalah pemisahan status dan konteks run; tidak menyalin kanban atau mengklaim timeline/durasi yang tidak dimiliki API. Tidak mengklaim kecocokan visual screenshot Dribbble.
+- [Carbon data table](https://www.carbondesignsystem.com/building-blocks/core/components/data-table/guidelines): hirarki direktori, tindakan per baris dan rincian bertahap. Layout memakai daftar responsif karena satu batch memerlukan status/jadwal/alasan, bukan menjejalkan tabel lebar pada ponsel.
+- [GOV.UK details](https://design-system.service.gov.uk/components/details/), [summary list](https://design-system.service.gov.uk/components/summary-list/), [error message](https://design-system.service.gov.uk/components/error-message/), [warning text](https://design-system.service.gov.uk/components/warning-text/): informasi utama tetap terlihat, metadata dipisahkan, error menjaga isian dan tindakan berdampak dijelaskan sebelum konfirmasi.
+- `ui-ux-pro-max`: pencarian workflow/progressive disclosure tidak menemukan entri spesifik. Pencarian loading/accessibility/stacking menemukan tiga panduan yang dipakai untuk feedback pending dan interaksi modal. Tidak mengklaim rekomendasi layout dari hasil kosong; layout mengikuti fondasi repo dan sumber primer di atas.
+- Context7: pola cleanup asynchronous diperiksa pada [React Effect cleanup](https://react.dev/learn/synchronizing-with-effects#fetching-data), dengan versi terpasang React 19.3.0 sebagai konteks. Rujukan konseptual memakai dokumentasi resmi react.dev; panduan CSS dibaca dari Next terpasang 16.4.1.
+
+## Loop audit dan verifikasi
+
+1. Baseline: **1/1** audit visual, lima lebar 1440/1024/768/390/320 px, fixture sintetis; tidak ada POST dari observasi.
+2. Putaran visual pertama: **1/1** lulus. Audit label memperbaiki jadwal tutup, status adopsi/publikasi, arti baris snapshot dan pemisahan hint/nama form. Unit terkait **8/8** lulus, termasuk submit ganda dan respons terlambat setelah akses dicabut.
+3. Putaran interaksi: **13/21** lulus. Satu kegagalan produk: kode blocker panjang melebar pada 320 px, diperbaiki dengan wrapping pada workspace. Tujuh kegagalan assertion: locator alert menangkap route announcer Next.js atau nama tombol pending juga memuat teks status loading. Locator diperbaiki dengan scope dialog/state tanpa mengurangi assertion data, key operasi, guard atau pending. Satu run sebelumnya dihentikan untuk memperbaiki accessible label; tidak dihitung sebagai kelulusan.
+4. Putaran ketiga: **25/25 browser lulus**, termasuk 21 skenario baru dan empat regresi IRT/Analytics existing. Konfirmasi diuji batal/pending/503/403, key retry/prepare dipertahankan, pin POST tetap sama, status terminal dan adopsi diperiksa tanpa publikasi. Nol pelanggaran Axe otomatis pada workspace batch/detail 320 px (WCAG 2 A/AA dan 2.1 AA); ini tidak menggantikan penilaian manual aksesibilitas.
+5. Unit lengkap: **58 file / 418 tes lulus**. Root lint lulus. Typecheck pertama menangkap opsi `exact` yang tidak dimiliki locator ByRole Testing Library serta tipe prop optional yang perlu menerima undefined secara eksplisit; keduanya diperbaiki dan TypeScript lulus. Screenshot detail dinormalisasi ke scroll awal/topbar statis hanya saat capture agar sticky header tidak tampil di tengah gambar full-page. Screenshot dialog memakai viewport 390×844; perilaku viewport 390×568, zoom 125%, reduced motion, scroll kontrol dan focus trap diuji terpisah.
+6. `next build --webpack` lulus. Smoke **build produksi lokal 54/54 browser lulus**: 22 IRT UX, 4 IRT/Analytics existing, 13 Analytics UX, 6 sidebar, 8 portal lintas assignment dan 1 regresi perakitan soal Content. Super dan Content dapat membaca; Operations/null ditolak tanpa request IRT. Batch/detail sempit kembali lulus Axe otomatis dengan nol pelanggaran. Sesudah koreksi terakhir, **8/8 unit terkait** diulang dan lulus. Review dan CI branch masih terpisah.
+
+Perintah verifikasi: `pnpm --dir apps/web exec vitest run --maxWorkers=1`, `pnpm lint`, `pnpm --dir apps/web exec next typegen`, `pnpm --dir apps/web exec tsc --noEmit --incremental false`, dan `next build --webpack` dari `apps/web`. Smoke memakai `NUMORA_E2E_PRODUCTION=true` dengan `playwright test admin-irt-ux.spec.ts admin-irt-analytics.spec.ts admin-analytics-ux.spec.ts admin-sidebar.spec.ts admin.spec.ts --grep 'IRT|analytics|Analytics|Unified Admin portal|Admin sidebar|Admin mobile menu'`. Override config lokal hanya memisahkan cache/output dan environment fixture. Node 24.22.1 / pnpm 12.6.0; build low-memory satu worker.
+
+Bukti memakai fixture Supabase/API localhost:3300/3301, cache/build terisolasi dan data sintetis. Tidak menjalankan operasi Cloud, compute nyata, migrasi atau publikasi peserta. Layanan development pengguna pada 3000/3001 tetap berjalan. Review manusia, CI branch, layanan nyata, QA independen dan penerimaan ilmiah merupakan bukti terpisah. [Galeri audit](screenshots/admin-irt/README.md).

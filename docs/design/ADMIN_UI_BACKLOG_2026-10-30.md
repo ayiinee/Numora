@@ -186,3 +186,9 @@ UI-03 berstatus **IMPLEMENTED — review pending**: layout Excel/JSON/Generator 
 **ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta Analytics dirombak menjadi dashboard serta ditempatkan sebagai menu/halaman pertama Admin. Implementasi mempertahankan scope portal Analytics untuk Super Admin berizin; Operations/Content tetap mengikuti tujuan dan capability existing. Analytics existing menggantikan tujuan awal Super Admin, tanpa mengembalikan halaman Ringkasan.
 
 UI-04 berstatus **IMPLEMENTED — review pending** pada branch `feat/admin-analytics-dashboard`, berbasis commit UI-03 `45bf3d8`. KPI, perbandingan aktivitas, tindak lanjut, cakupan Drill dan rincian menampilkan seluruh 22 agregat existing. Nol/null, sumber gagal, timestamp WIB, pembaruan gagal dan akses dicabut dibedakan. [Audit, kontrak metrik dan verifikasi](ADMIN_ANALYTICS_UX_2026-10-30.md). UI-05 tetap AUDIT_FIRST. Review, CI branch dan penerimaan layanan nyata tetap menjadi bukti terpisah.
+
+## Pelaksanaan UI-05 — instruksi lanjutan pemilik
+
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** pemilik meminta Request IRT & publikasi dilanjutkan dengan arah Admin yang sama. Branch `feat/admin-irt-publication-ux` berbasis Analytics `01fd68e`. Batch menjadi fokus awal, request/detail terpisah dan konteks disimpan pada URL. Form persiapan dipindah ke dialog; retry/adopsi dikonfirmasi dan mempertahankan idempotensi pada kegagalan. Source count, status, pin dan blocker tidak diganti oleh inferensi frontend.
+
+Status **IMPLEMENTED — review pending**; [laporan UI-05](ADMIN_IRT_UX_2026-10-30.md) mencatat hasil iterasi dan batas verifikasi. UI-06 dipakai sebagai kriteria audit, bukan klaim penerimaan layanan nyata. Semua item UI-01–UI-05 memiliki implementasi lokal; review/CI/integrasi branch serta penerimaan Data/AI dan QA tetap dicatat terpisah.

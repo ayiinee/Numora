@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Request IRT & publikasi UI-05](ADMIN_IRT_UX_2026-10-30.md) memakai direktori batch/request, detail berdasarkan URL, dialog persiapan dengan pilihan yang dipertahankan, dan konfirmasi retry/adopsi. Label membedakan baris respons, komputasi, adopsi dan publikasi. Blocker serta batas waktu tetap dari server; tidak ada rilis paksa atau perubahan aturan ilmiah. [Galeri audit](screenshots/admin-irt/README.md).
+
 **ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Analytics UI-04](ADMIN_ANALYTICS_UX_2026-10-30.md) menerapkan dashboard agregat dengan KPI, perbandingan aktivitas, tindak lanjut, cakupan Drill dan rincian operasional. Analytics menjadi menu/halaman awal Super Admin berizin. Label menjelaskan akun, keanggotaan, versi dan rilis; nol, data tidak tersedia dan snapshot sebelumnya dibedakan. Akses Operations/Content, kontrak dan sumber data tetap mengikuti fondasi existing. [Galeri audit](screenshots/admin-analytics/README.md).
 
 **ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Impor soal UI-03](ADMIN_IMPORT_UX_2026-10-30.md) memakai fondasi Admin untuk Excel, JSON dan hasil Generator, preview responsif yang mempertahankan isi soal, navigasi/riwayat berbasis URL serta konfirmasi meninggalkan perubahan. Instruksi pemilik melanjutkan UI-03 sekarang menggantikan urutan menunggu review #113; perubahannya berada pada branch terpisah. Gate backend, DRAFT, review dan Publish tetap berlaku.
