@@ -20,7 +20,7 @@
     "format": "prettier --write .",
     "format:check": "prettier --check .",
     "ci": "pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check && pnpm lint && pnpm typecheck && pnpm test && pnpm build",
-    "test:checks": "node --test scripts/ci-quality.test.mjs scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/qa-admins.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs scripts/upload-question-media.test.mjs apps/api/scripts/teacher-demo-accounts.test.mjs",
+    "test:checks": "node --test scripts/ci-quality.test.mjs scripts/check-dev-env.test.mjs scripts/validate-contracts.test.mjs scripts/test-release-chain-guard.test.mjs scripts/qa-accounts.test.mjs scripts/qa-admins.test.mjs scripts/check-test-env.test.mjs scripts/qa-smoke-contract.test.mjs scripts/upload-question-media.test.mjs apps/api/scripts/teacher-demo-accounts.test.mjs scripts/validate-curriculum-indicators.test.mjs",
     "test:prd-v06": "node --test scripts/prd-v06-data.test.mjs",
     "test:release-chain": "node scripts/test-release-chain.mjs",
     "test:irt-chain": "node scripts/test-irt-chain.mjs",
@@ -54,7 +54,8 @@
     "media:upload:samples": "node --env-file-if-exists=.env.media-upload.local scripts/upload-question-media.mjs",
     "db:seed:scenarios": "dotenv -e .env -- pnpm --filter @tka/database db:seed:scenarios",
     "db:cleanup:development": "dotenv -e .env -- pnpm --filter @tka/database db:cleanup:development",
-    "dev:generator": "node scripts/run-generator-demo.mjs"
+    "dev:generator": "node scripts/run-generator-demo.mjs",
+    "data:curriculum:validate": "node scripts/validate-curriculum-indicators.mjs"
   },
   "devDependencies": {
     "@axe-core/playwright": "4.11.1",
