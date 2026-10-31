@@ -1,24 +1,30 @@
 'use client';
-import Link from 'next/link';
-import { useEffect, useState } from 'react';
-import { Button } from '@tka/ui';
-import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
-import { ContentImportSteps } from './content-import-steps';
-import { GeneratorFilePreview, generatorTypeLabels, useGeneratorToken } from './generator-packages';
-import {
-  getGeneratorPackageFile,
-  validateGeneratorJson,
-  importGeneratorJson,
-} from './generator-package-api';
+import { apiRequest } from '@/lib/api';
+import { Button } from '@tka/ui';
+import Link from 'next/link';
+import { useEffect,useState } from 'react';
+import { AdminFrame,AdminLoading,AdminMessage } from './admin-presentation';
+import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
 import { downloadFile } from './content-excel-api';
+import { ContentImportSteps } from './content-import-steps';
 import type {
-  GeneratorPackageFileDto,
-  GeneratorJsonPreviewDto,
-  ContentPackageDetailDto,
+ContentPackageDetailDto,
+GeneratorJsonPreviewDto,
+GeneratorPackageFileDto,
 } from './generated-types';
-export function GeneratorImportWorkflow({ id }: { id: string }) {
+import {
+getGeneratorPackageFile,
+importGeneratorJson,
+validateGeneratorJson,
+} from './generator-package-api';
+import { GeneratorFilePreview,generatorTypeLabels,useGeneratorToken } from './generator-packages';
+export const GeneratorImportWorkflow = withAdminWorkspace(
+  GeneratorImportWorkflowProtected,
+  'content',
+);
+function GeneratorImportWorkflowProtected({ id }: { id: string }) {
+  const reportAccessError = useAdminAccessError();
   const token = useGeneratorToken();
   const { state } = useAuth();
   const [file, setFile] = useState<GeneratorPackageFileDto | null>(null),
@@ -36,6 +42,7 @@ export function GeneratorImportWorkflow({ id }: { id: string }) {
     try {
       await fn();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal.');
     } finally {
       setBusy(false);

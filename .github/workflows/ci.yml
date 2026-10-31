@@ -8,17 +8,54 @@ on:
 permissions:
   contents: read
 
+env:
+  TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
+
 jobs:
-  quality:
-    env:
-      TEACHER_TOKEN_PEPPER: fixture-only-teacher-token-pepper-not-for-deployment
+  validate:
     runs-on: ubuntu-latest
     timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - name: Verify checkout and runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+          pnpm --version
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Script checks
+        run: pnpm test:checks
+      - name: Validate QA workflow
+        run: pnpm test:qa-workflow && pnpm qa validate && pnpm exec tsc -p qa/tsconfig.json
+      - name: Validate contracts
+        run: pnpm contracts:validate && pnpm contracts:types:check
+      - name: Lint
+        run: pnpm lint
+      - name: Typecheck
+        run: pnpm typecheck
+
+  tests:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      NODE_ENV: test
+      TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+      TEST_REDIS_URL: redis://localhost:6379
+      DATABASE_MIGRATION_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
     services:
       redis:
         image: redis:7
-        ports:
-          - 6379:6379
+        ports: [6379:6379]
         options: >-
           --health-cmd "redis-cli ping"
           --health-interval 10s
@@ -29,95 +66,225 @@ jobs:
         env:
           POSTGRES_PASSWORD: test_only
           POSTGRES_DB: numora_test
-        ports:
-          - 5432:5432
+        ports: [5432:5432]
         options: >-
           --health-cmd "pg_isready -U postgres -d numora_test"
           --health-interval 10s
           --health-timeout 5s
           --health-retries 5
-
     steps:
       - name: Checkout
         uses: actions/checkout@v4
-
       - name: Enable Corepack
         run: corepack enable
-
       - name: Setup Node.js
         uses: actions/setup-node@v4
         with:
-          node-version: 24
+          node-version: 24.22.1
           cache: pnpm
-
+      - name: Verify checkout and runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+          pnpm --version
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Migrate isolated test database
+        run: pnpm --filter @tka/database db:migrate
+      - name: Unit and integration tests (no cached test results)
+        run: pnpm exec turbo run test --force --concurrency=1
+      - name: QA Admin provisioning tests
+        run: pnpm test:qa-admins
+      - name: Database upgrade checks
+        run: pnpm --filter @tka/database db:upgrade-check
+      - name: Staging bridge checks on isolated fixtures
+        run: pnpm --filter @tka/database db:staging:bridge-check
 
-      - name: Validate contracts
-        run: pnpm test:checks && pnpm contracts:validate && pnpm contracts:types:check
-
-      - name: Lint
-        run: pnpm lint
-
-      - name: Typecheck
-        run: pnpm typecheck
-
-      - name: Test
+  connected:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    env:
+      TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+      TEST_REDIS_URL: redis://localhost:6379
+    services:
+      redis:
+        image: redis:7
+        ports: [6379:6379]
+        options: >-
+          --health-cmd "redis-cli ping"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+      postgres:
+        image: postgres:16
         env:
-          NODE_ENV: test
-          TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
-          TEST_REDIS_URL: redis://localhost:6379
-          DATABASE_MIGRATION_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
+          POSTGRES_PASSWORD: test_only
+          POSTGRES_DB: numora_test
+        ports: [5432:5432]
+        options: >-
+          --health-cmd "pg_isready -U postgres -d numora_test"
+          --health-interval 10s
+          --health-timeout 5s
+          --health-retries 5
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - name: Verify checkout and runtime
         run: |
-          pnpm --filter @tka/database db:migrate
-          pnpm test
-          pnpm test:qa-admins
-          pnpm --filter @tka/database db:upgrade-check
-          pnpm --filter @tka/database db:staging:bridge-check
-
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+          pnpm --version
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: JOB-10 connected IRT foundation on one SHA
-        env:
-          TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test?sslmode=disable
-          TEST_REDIS_URL: redis://localhost:6379
         run: pnpm test:irt-chain
-
       - name: Upload JOB-10 connected evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: job10-connected-${{ github.sha }}
+          name: connected-job10-${{ github.sha }}-${{ github.run_attempt }}
           path: .tmp/job10-evidence/connected.json
           if-no-files-found: warn
-
-      - name: Install browser for E2E
-        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
-
+          retention-days: 7
+      - name: Install browser for connected E2E
+        timeout-minutes: 5
+        run: |
+          # Retain main's workaround for the intermittently slow Azure apt mirror.
+          if [ -f /etc/apt/apt-mirrors.txt ]; then
+            sudo sed -i 's|http://azure\.archive\.ubuntu\.com/ubuntu/|https://archive.ubuntu.com/ubuntu/|g' /etc/apt/apt-mirrors.txt
+          fi
+          pnpm --filter @tka/web exec playwright install --with-deps chromium
       - name: Connected release chain (real API, PostgreSQL and Redis)
         env:
           PGPASSWORD: test_only
           TEST_DATABASE_URL: postgres://postgres:test_only@localhost:5432/numora_test_job06?sslmode=disable
-          TEST_REDIS_URL: redis://localhost:6379
         run: |
           psql -h localhost -U postgres -d postgres -c 'CREATE DATABASE numora_test_job06'
           pnpm test:release-chain
-
       - name: Upload sanitized release-chain evidence
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: job06-connected-${{ github.sha }}
+          name: connected-job06-${{ github.sha }}-${{ github.run_attempt }}
           path: .tmp/job06-evidence/connected.json
           if-no-files-found: warn
+          retention-days: 7
 
+  browser-e2e:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    strategy:
+      fail-fast: false
+      matrix:
+        shard: [1, 2]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - name: Verify checkout and runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+          pnpm --version
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
+      - name: Validate complete browser partition
+        run: node scripts/qa/browser-shards.mjs plan
+      - name: Install browser for fixture E2E
+        run: pnpm --filter @tka/web exec playwright install --with-deps chromium
       - name: Browser E2E
         env:
           DEBUG: pw:webserver
-        run: pnpm --filter @tka/web test:e2e
+          PLAYWRIGHT_JSON_OUTPUT_FILE: ${{ github.workspace }}/.tmp/browser-e2e-${{ matrix.shard }}.json
+        # Keep main's complete test-level partition and one worker per host.
+        # Reporters come from playwright.config.ts so JSON, JUnit and HTML all survive.
+        run: pnpm --filter @tka/web test:e2e --fully-parallel --shard=${{ matrix.shard }}/2
+      - name: Verify exact browser result identities
+        if: always()
+        run: node scripts/qa/browser-shards.mjs verify ${{ matrix.shard }}
+      - name: Upload fixture browser diagnostics
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: browser-${{ matrix.shard }}-${{ github.sha }}-${{ github.run_attempt }}
+          path: |
+            apps/web/playwright-report/
+            apps/web/test-results/
+            .tmp/browser-shards.json
+            .tmp/browser-result-${{ matrix.shard }}.json
+          include-hidden-files: true
+          if-no-files-found: warn
+          retention-days: 7
 
+  build-contract:
+    needs: validate
+    runs-on: ubuntu-latest
+    timeout-minutes: 25
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Enable Corepack
+        run: corepack enable
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+          cache: pnpm
+      - name: Verify checkout and runtime
+        run: |
+          test "$(git rev-parse HEAD)" = "$GITHUB_SHA"
+          node --version
+          pnpm --version
+      - name: Install dependencies
+        run: pnpm install --frozen-lockfile
       - name: Build
         run: pnpm build
-
       - name: Check OpenAPI freshness
         run: |
           pnpm openapi:generate
           git diff --exit-code -- packages/contracts/openapi/openapi.json
+
+  quality:
+    name: quality
+    needs: [validate, tests, connected, browser-e2e, build-contract]
+    if: always()
+    runs-on: ubuntu-latest
+    timeout-minutes: 5
+    permissions:
+      contents: read
+      actions: read
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+      - name: Setup Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: 24.22.1
+      - name: Summarize results and enforce every required job
+        env:
+          CI_NEEDS_JSON: ${{ toJSON(needs) }}
+          GITHUB_TOKEN: ${{ github.token }}
+        run: node scripts/ci-quality.mjs
+      - name: Upload sanitized quality summary
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: quality-${{ github.sha }}-${{ github.run_attempt }}
+          path: .tmp/ci-diagnostics/quality.json
+          if-no-files-found: warn
+          retention-days: 7

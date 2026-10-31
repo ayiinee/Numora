@@ -10,8 +10,31 @@ import { getClassStudents, getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
+import { findTeacherClass, teacherKeys } from './teacher-query';
 
-export function TeacherInviteContent({ name, code }: { name: string; code: string | undefined }) {
+/**
+ * Teachers keep a QR file per class, so a single fixed name would bury older
+ * downloads as "numora-kode-kelas (2).png".
+ */
+function qrFileName(name: string): string {
+  const slug = name
+    .normalize('NFKD')
+    .replace(/[^a-zA-Z0-9]+/g, '-')
+    .replace(/^-+|-+$/g, '')
+    .toLocaleLowerCase('id');
+  return slug ? `qr-${slug}` : 'qr-kelas';
+}
+
+export function TeacherInviteContent({
+  name,
+  code,
+  pending = false,
+}: {
+  name: string;
+  code: string | undefined;
+  /** The class list has not answered yet; that is not the same as a class without a code. */
+  pending?: boolean;
+}) {
   const [qr, setQr] = useState('');
   const [qrError, setQrError] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
@@ -82,7 +105,7 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
             )}
             <p>QR berisi kode kelas di atas.</p>
             {qr && (
-              <a className="button-link" href={qr} download="numora-kode-kelas.png">
+              <a className="button-link" href={qr} download={`${qrFileName(name)}.png`}>
                 <Icon name="arrow" /> Unduh PNG QR
               </a>
             )}
@@ -100,6 +123,10 @@ export function TeacherInviteContent({ name, code }: { name: string; code: strin
             </TeacherAnnouncement>
           </Card>
         </>
+      ) : pending ? (
+        <p className="teacher-help-text" role="status">
+          Memuat kode kelas…
+        </p>
       ) : (
         <TeacherUnavailable
           title="Kode kelas belum tersedia"
@@ -127,14 +154,14 @@ function ClassTools({
   classId: string;
 }) {
   const classes = useQuery({
-    queryKey: ['teacher-classes'],
+    queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
   });
   const roster = useQuery({
-    queryKey: ['class-students', classId],
+    queryKey: teacherKeys.roster(classId),
     queryFn: () => getClassStudents(token, classId),
   });
-  const cls = classes.data?.items.find((value) => value.id === classId);
+  const cls = findTeacherClass(classes.data?.items, classId);
   return (
     <TeacherShell
       title="Undang siswa"

@@ -1,0 +1,945 @@
+{
+  "reviewId": "DEP-20261027-001",
+  "observedAt": "2026-10-27T03:21:23.64Z",
+  "timezone": "Asia/Jakarta",
+  "historicalRunId": "eaca5329-5170-4a6b-a524-e867c60fbf07",
+  "identity": {
+    "sha": "6ba9638c0a60469f1919e675e35d999f2dbde407",
+    "dirty": true,
+    "codeHash": "bb756c57ced4a4c19c5b14195598d4964b98c94cf6a0097d51ca67180f54a495",
+    "rulesHash": "30fcd486e899fd090dee008c65aa078035f766de86b131d44f78de9585af3812",
+    "configHash": "64588cc1a8e83e788c95f36a290f94fa71df578e1ad8a1b604216ae7fb501cd4",
+    "environmentHash": "fdcced96938c209db423ed45084c435d0221f95248671df102d01cc71775713a",
+    "manifestHash": "159e153096ec3b1f35ab8f259470e37974e60d6da9aac6c12e72d65803a45ada"
+  },
+  "lockfileSha256": "3ab7f6f5c17e7f0787c6ffbdf6827e9bdb9ffba2776796e8ebe50e4a523a9f3b",
+  "fullAudit": {
+    "info": 0,
+    "low": 4,
+    "moderate": 17,
+    "high": 8,
+    "critical": 2
+  },
+  "productionAudit": {
+    "info": 0,
+    "low": 3,
+    "moderate": 8,
+    "high": 6,
+    "critical": 2
+  },
+  "auditExecution": "COMPLETED_WITH_FINDINGS",
+  "technicalReview": "COMPLETE",
+  "developerReview": "CLOSED_BY_USER_APPROVAL",
+  "remediation": "NOT_RUN",
+  "chatDelivery": "NOT_SENT_NOT_REQUIRED_FOR_EXECUTION",
+  "runtimeObserved": {
+    "node": "24.14.1",
+    "bundledUndici": "7.24.4",
+    "platform": "win32"
+  },
+  "advisories": [
+    {
+      "id": "GHSA-67mh-4wv8-2f99",
+      "package": "esbuild",
+      "severity": "moderate",
+      "title": "esbuild enables any website to send any requests to the development server and read the response",
+      "affectedRange": "<=0.24.2",
+      "patchedRange": ">=0.25.0",
+      "url": "https://github.com/advisories/GHSA-67mh-4wv8-2f99",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "0.18.20",
+          "paths": [
+            "packages__database>drizzle-kit>@esbuild-kit/esm-loader>@esbuild-kit/core-utils>esbuild"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-w5hq-g745-h8pq",
+      "package": "uuid",
+      "severity": "moderate",
+      "title": "uuid: Missing buffer bounds check in v3/v5/v6 when buf is provided",
+      "affectedRange": "<11.1.1",
+      "patchedRange": ">=11.1.1",
+      "url": "https://github.com/advisories/GHSA-w5hq-g745-h8pq",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "8.3.2",
+          "paths": [
+            "apps__api>exceljs>uuid"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-68fv-2mgg-jv7q",
+      "package": "source-map-js",
+      "severity": "high",
+      "title": "source-map-js allows event-loop denial of service through indexed source-map section offsets",
+      "affectedRange": ">=1.0.0 <1.2.2",
+      "patchedRange": ">=1.2.2",
+      "url": "https://github.com/advisories/GHSA-68fv-2mgg-jv7q",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "1.2.1",
+          "paths": [
+            "apps__worker>vitest>vite>postcss>source-map-js",
+            "apps__worker>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "apps__worker>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "apps__worker>vitest>jsdom>css-tree>source-map-js",
+            "apps__worker>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "apps__worker>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "packages__ui>vitest>vite>postcss>source-map-js",
+            "packages__ui>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "packages__ui>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "packages__ui>vitest>jsdom>css-tree>source-map-js",
+            "packages__ui>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "packages__ui>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            ".>vitest>vite>postcss>source-map-js",
+            ".>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            ".>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            ".>vitest>jsdom>css-tree>source-map-js",
+            ".>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            ".>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "packages__assessment-engine>vitest>vite>postcss>source-map-js",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "packages__assessment-engine>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "packages__assessment-engine>vitest>jsdom>css-tree>source-map-js",
+            "packages__assessment-engine>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "packages__assessment-engine>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "apps__web>next>postcss>source-map-js",
+            "apps__web>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "apps__web>jsdom>css-tree>source-map-js",
+            "apps__web>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "apps__web>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "apps__web>vitest>vite>postcss>source-map-js",
+            "apps__web>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "apps__web>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "apps__web>vitest>jsdom>css-tree>source-map-js",
+            "apps__web>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "apps__web>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "apps__web>@tailwindcss/postcss>postcss>source-map-js",
+            "apps__web>@tailwindcss/postcss>@tailwindcss/node>source-map-js",
+            "apps__api>vitest>vite>postcss>source-map-js",
+            "apps__api>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "apps__api>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "apps__api>vitest>jsdom>css-tree>source-map-js",
+            "apps__api>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "apps__api>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "packages__database>vitest>vite>postcss>source-map-js",
+            "packages__database>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "packages__database>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "packages__database>vitest>jsdom>css-tree>source-map-js",
+            "packages__database>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "packages__database>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js",
+            "packages__irt-orchestration>vitest>vite>postcss>source-map-js",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite>postcss>source-map-js",
+            "packages__irt-orchestration>vitest>jsdom>@bramus/specificity>css-tree>source-map-js",
+            "packages__irt-orchestration>vitest>jsdom>css-tree>source-map-js",
+            "packages__irt-orchestration>vitest>jsdom>@csstools/css-syntax-patches-for-csstree>css-tree>source-map-js",
+            "packages__irt-orchestration>vitest>jsdom>@asamuzakjp/dom-selector>css-tree>source-map-js"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-3w37-wq28-93x7",
+      "package": "next",
+      "severity": "moderate",
+      "title": "Next.js: Pending `use cache` fill can leak Draft Mode content into regular responses and persisted pages",
+      "affectedRange": ">=16.3.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-3w37-wq28-93x7",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-4jqv-mc3x-m676",
+      "package": "next",
+      "severity": "moderate",
+      "title": "Next.js has cache poisoning of SSG and ISR pages in self-hosted applications",
+      "affectedRange": ">=16.0.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-4jqv-mc3x-m676",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-39w2-rjm5-chcv",
+      "package": "next",
+      "severity": "low",
+      "title": "Next.js has information disclosure in development server's Model Context Protocol endpoint",
+      "affectedRange": ">=16.0.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-39w2-rjm5-chcv",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-f87g-xv8r-7p7x",
+      "package": "next",
+      "severity": "moderate",
+      "title": "Next.js has information disclosure in App Router metadata image routes via dynamicParams bypass",
+      "affectedRange": ">=16.0.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-f87g-xv8r-7p7x",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-mcj8-r9mp-w47p",
+      "package": "next",
+      "severity": "moderate",
+      "title": "Next.js has cache poisoning in SSG/ISR rendering that leads to cross-user content substitution and persistent denial of service",
+      "affectedRange": ">=16.0.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-mcj8-r9mp-w47p",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-cjq9-62q9-8jv4",
+      "package": "next",
+      "severity": "high",
+      "title": "Next.js has Server-Side Request Forgery in Image Optimization",
+      "affectedRange": ">=16.0.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-cjq9-62q9-8jv4",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-698v-4r3x-3vcv",
+      "package": "vite",
+      "severity": "moderate",
+      "title": "launch-editor: escapeCmdArgs() omits % escaping on Windows",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-698v-4r3x-3vcv",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-r825-w8mm-5pxw",
+      "package": "vite",
+      "severity": "moderate",
+      "title": "launch-editor: Editor CLI flag misinterpretation causing arbitrary command execution for some editors",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-r825-w8mm-5pxw",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-587h-7wmj-h5pm",
+      "package": "vite",
+      "severity": "high",
+      "title": "launch-editor: `fs.existsSync()` existence check can be bypassed on Windows",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-587h-7wmj-h5pm",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-9jrq-w75r-8gcw",
+      "package": "vite",
+      "severity": "low",
+      "title": "Vite: Cross origin script execution through Vite custom middleware",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-9jrq-w75r-8gcw",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-rq7h-c2jc-7f22",
+      "package": "vite",
+      "severity": "moderate",
+      "title": "Vite: Files outside `server.fs.allow` could be served when project paths match system paths on non-Windows machine",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-rq7h-c2jc-7f22",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-vfpm-58rq-9qcg",
+      "package": "vite",
+      "severity": "moderate",
+      "title": "Vite: First 4 bytes of files outside of `server.fs` setting is exposed by `?vite-wasm-instance`",
+      "affectedRange": ">=8.3.0 <=8.3.2",
+      "patchedRange": ">=8.3.3",
+      "url": "https://github.com/advisories/GHSA-vfpm-58rq-9qcg",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.3.1",
+          "paths": [
+            "apps__worker>vitest>vite",
+            "apps__worker>vitest>@vitest/mocker>vite",
+            "packages__ui>vitest>vite",
+            "packages__ui>vitest>@vitest/mocker>vite",
+            ".>vitest>vite",
+            ".>vitest>@vitest/mocker>vite",
+            "packages__assessment-engine>vitest>vite",
+            "packages__assessment-engine>vitest>@vitest/mocker>vite",
+            "apps__web>vitest>vite",
+            "apps__web>vitest>@vitest/mocker>vite",
+            "apps__api>vitest>vite",
+            "apps__api>vitest>@vitest/mocker>vite",
+            "packages__database>vitest>vite",
+            "packages__database>vitest>@vitest/mocker>vite",
+            "packages__irt-orchestration>vitest>vite",
+            "packages__irt-orchestration>vitest>@vitest/mocker>vite"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-qxg6-89mg-rqv8",
+      "package": "@vitest/mocker",
+      "severity": "moderate",
+      "title": "Vitest: Code injection via unauthenticated manual mock registration",
+      "affectedRange": ">=5.0.0-beta.1 <5.0.3",
+      "patchedRange": ">=5.0.3",
+      "url": "https://github.com/advisories/GHSA-qxg6-89mg-rqv8",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "5.0.2",
+          "paths": [
+            "apps__worker>vitest>@vitest/mocker",
+            "packages__ui>vitest>@vitest/mocker",
+            ".>vitest>@vitest/mocker",
+            "packages__assessment-engine>vitest>@vitest/mocker",
+            "apps__web>vitest>@vitest/mocker",
+            "apps__api>vitest>@vitest/mocker",
+            "packages__database>vitest>@vitest/mocker",
+            "packages__irt-orchestration>vitest>@vitest/mocker"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-xp26-3454-mjgp",
+      "package": "@vitest/mocker",
+      "severity": "moderate",
+      "title": "Vitest: Windows backslash traversal bypasses the @vitest/mocker redirect allowlist fix",
+      "affectedRange": ">=5.0.0-rc.2 <5.0.3",
+      "patchedRange": ">=5.0.3",
+      "url": "https://github.com/advisories/GHSA-xp26-3454-mjgp",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "5.0.2",
+          "paths": [
+            "apps__worker>vitest>@vitest/mocker",
+            "packages__ui>vitest>@vitest/mocker",
+            ".>vitest>@vitest/mocker",
+            "packages__assessment-engine>vitest>@vitest/mocker",
+            "apps__web>vitest>@vitest/mocker",
+            "apps__api>vitest>@vitest/mocker",
+            "packages__database>vitest>@vitest/mocker",
+            "packages__irt-orchestration>vitest>@vitest/mocker"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-2464-fhr4-w9xw",
+      "package": "next",
+      "severity": "critical",
+      "title": "Next.js: Unauthenticated Remote Code Execution in Image Optimization API when SVG files are used",
+      "affectedRange": ">=16.0.0 <=16.4.0",
+      "patchedRange": ">=16.4.1",
+      "url": "https://github.com/advisories/GHSA-2464-fhr4-w9xw",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-p3m5-59mp-jv5r",
+      "package": "next",
+      "severity": "high",
+      "title": "Next.js: Denial of Service in App Router using Server Actions",
+      "affectedRange": ">=16.0.0 <=16.4.0",
+      "patchedRange": ">=16.4.1",
+      "url": "https://github.com/advisories/GHSA-p3m5-59mp-jv5r",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-h694-7cp9-m8p3",
+      "package": "next",
+      "severity": "moderate",
+      "title": "next.js cache leak across root param values in nested 'use cache' functions",
+      "affectedRange": ">=16.3.0 <16.3.8",
+      "patchedRange": ">=16.3.8",
+      "url": "https://github.com/advisories/GHSA-h694-7cp9-m8p3",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-673q-mjm6-r5xr",
+      "package": "next",
+      "severity": "critical",
+      "title": "Next.js: Unauthenticated Remote Code Execution in `use cache` functions returning typed arrays",
+      "affectedRange": ">=16.0.0 <=16.4.0",
+      "patchedRange": ">=16.4.1",
+      "url": "https://github.com/advisories/GHSA-673q-mjm6-r5xr",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "16.3.6",
+          "paths": [
+            "apps__web>next"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-mrhx-c7xc-m3w5",
+      "package": "zod",
+      "severity": "high",
+      "title": "Zod can exhaust memory while validating oversized constrained collections",
+      "affectedRange": "<4.6.6",
+      "patchedRange": ">=4.6.6",
+      "url": "https://github.com/advisories/GHSA-mrhx-c7xc-m3w5",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "4.6.5",
+          "paths": [
+            "apps__web>zod"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-27r3-jxmh-p828",
+      "package": "body-parser",
+      "severity": "high",
+      "title": "body-parser vulnerable to Denial of Service via trailing bytes after a compressed request body",
+      "affectedRange": ">=2.0.0 <2.4.0",
+      "patchedRange": ">=2.4.0",
+      "url": "https://github.com/advisories/GHSA-27r3-jxmh-p828",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "2.3.0",
+          "paths": [
+            "apps__api>@nestjs/core>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/swagger>@nestjs/core>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/platform-socket.io>@nestjs/websockets>@nestjs/core>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/websockets>@nestjs/core>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/testing>@nestjs/core>@nestjs/platform-express>express>body-parser",
+            "apps__api>@nestjs/testing>@nestjs/platform-express>express>body-parser"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-4qv8-2p9j-2685",
+      "package": "undici",
+      "severity": "moderate",
+      "title": "undici vulnerable to Denial of Service via unbounded memory in the EventSource parser",
+      "affectedRange": ">=8.0.0 <8.12.2",
+      "patchedRange": ">=8.12.2",
+      "url": "https://github.com/advisories/GHSA-4qv8-2p9j-2685",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.11.2",
+          "paths": [
+            "apps__worker>vitest>jsdom>undici",
+            "packages__ui>vitest>jsdom>undici",
+            ".>vitest>jsdom>undici",
+            "packages__assessment-engine>vitest>jsdom>undici",
+            "apps__web>jsdom>undici",
+            "apps__web>vitest>jsdom>undici",
+            "apps__api>vitest>jsdom>undici",
+            "packages__database>vitest>jsdom>undici",
+            "packages__irt-orchestration>vitest>jsdom>undici"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-f72v-6w45-q472",
+      "package": "undici",
+      "severity": "moderate",
+      "title": "undici vulnerable to Subresource Integrity bypass via non-lowercase algorithm tokens",
+      "affectedRange": ">=8.0.0 <8.12.2",
+      "patchedRange": ">=8.12.2",
+      "url": "https://github.com/advisories/GHSA-f72v-6w45-q472",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.11.2",
+          "paths": [
+            "apps__worker>vitest>jsdom>undici",
+            "packages__ui>vitest>jsdom>undici",
+            ".>vitest>jsdom>undici",
+            "packages__assessment-engine>vitest>jsdom>undici",
+            "apps__web>jsdom>undici",
+            "apps__web>vitest>jsdom>undici",
+            "apps__api>vitest>jsdom>undici",
+            "packages__database>vitest>jsdom>undici",
+            "packages__irt-orchestration>vitest>jsdom>undici"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-q7qp-rjg7-q26m",
+      "package": "multer",
+      "severity": "high",
+      "title": "multer vulnerable to Denial of Service via a pending asynchronous fileFilter after request teardown",
+      "affectedRange": ">=2.0.0 <2.5.0",
+      "patchedRange": ">=2.5.0",
+      "url": "https://github.com/advisories/GHSA-q7qp-rjg7-q26m",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "2.4.0",
+          "paths": [
+            "apps__api>@nestjs/core>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/swagger>@nestjs/core>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/platform-socket.io>@nestjs/websockets>@nestjs/core>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/websockets>@nestjs/core>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/testing>@nestjs/core>@nestjs/platform-express>multer",
+            "apps__api>@nestjs/testing>@nestjs/platform-express>multer"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-w74x-v6f9-j3xg",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "title": "fast-uri vulnerable to URI scheme spoofing via percent-encoded scheme decoding",
+      "affectedRange": ">=3.0.0 <3.1.9",
+      "patchedRange": ">=3.1.9",
+      "url": "https://github.com/advisories/GHSA-w74x-v6f9-j3xg",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "3.1.8",
+          "paths": [
+            ".>ajv-formats>ajv>fast-uri",
+            ".>ajv>fast-uri",
+            "apps__api>ajv>fast-uri",
+            "apps__api>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv-formats>ajv>fast-uri"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-xhq7-xmqj-769h",
+      "package": "fast-uri",
+      "severity": "low",
+      "title": "fast-uri vulnerable to improper path equivalence in relative reference normalization",
+      "affectedRange": ">=3.0.0 <3.1.9",
+      "patchedRange": ">=3.1.9",
+      "url": "https://github.com/advisories/GHSA-xhq7-xmqj-769h",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "3.1.8",
+          "paths": [
+            ".>ajv-formats>ajv>fast-uri",
+            ".>ajv>fast-uri",
+            "apps__api>ajv>fast-uri",
+            "apps__api>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv-formats>ajv>fast-uri"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-wjr9-j795-jxcr",
+      "package": "fast-uri",
+      "severity": "moderate",
+      "title": "fast-uri vulnerable to host confusion via unchecked WHATWG host canonicalization",
+      "affectedRange": ">=3.1.3 <3.1.9",
+      "patchedRange": ">=3.1.9",
+      "url": "https://github.com/advisories/GHSA-wjr9-j795-jxcr",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "3.1.8",
+          "paths": [
+            ".>ajv-formats>ajv>fast-uri",
+            ".>ajv>fast-uri",
+            "apps__api>ajv>fast-uri",
+            "apps__api>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv-formats>ajv>fast-uri"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-333x-w4r6-6crp",
+      "package": "fast-uri",
+      "severity": "low",
+      "title": "fast-uri vulnerable to scheme injection via an unescaped first-segment colon in suffix references",
+      "affectedRange": ">=3.0.0 <3.1.9",
+      "patchedRange": ">=3.1.9",
+      "url": "https://github.com/advisories/GHSA-333x-w4r6-6crp",
+      "scope": "production-graph-and-possibly-development",
+      "findings": [
+        {
+          "version": "3.1.8",
+          "paths": [
+            ".>ajv-formats>ajv>fast-uri",
+            ".>ajv>fast-uri",
+            "apps__api>ajv>fast-uri",
+            "apps__api>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@nestjs/schematics>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/schematics-cli>@angular-devkit/schematics>@angular-devkit/core>ajv-formats>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv>fast-uri",
+            "apps__api>@nestjs/cli>@angular-devkit/core>ajv-formats>ajv>fast-uri"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    },
+    {
+      "id": "GHSA-xjj6-f33q-929c",
+      "package": "undici",
+      "severity": "high",
+      "title": "undici vulnerable to Denial of Service via unhandled error on excessive content-encodings",
+      "affectedRange": ">=8.0.0 <8.12.2",
+      "patchedRange": ">=8.12.2",
+      "url": "https://github.com/advisories/GHSA-xjj6-f33q-929c",
+      "scope": "development-graph-only",
+      "findings": [
+        {
+          "version": "8.11.2",
+          "paths": [
+            "apps__worker>vitest>jsdom>undici",
+            "packages__ui>vitest>jsdom>undici",
+            ".>vitest>jsdom>undici",
+            "packages__assessment-engine>vitest>jsdom>undici",
+            "apps__web>jsdom>undici",
+            "apps__web>vitest>jsdom>undici",
+            "apps__api>vitest>jsdom>undici",
+            "packages__database>vitest>jsdom>undici",
+            "packages__irt-orchestration>vitest>jsdom>undici"
+          ]
+        }
+      ],
+      "exploitation": "NOT_TESTED",
+      "remediation": "NOT_RUN"
+    }
+  ],
+  "limitations": [
+    "Scope is dependency-graph inclusion, not proof of a reachable exploit.",
+    "Do not subtract mitigated findings from original audit counts.",
+    "Runtime Node finding is separate from the 31 npm advisories.",
+    "Team workflow execution approved by user; no external developer response or completed remediation is asserted."
+  ],
+  "historicalProposedRolloutRecommendation": "HOLD_BROAD_ROLLOUT_PENDING_DEVELOPER_REVIEW_AND_REMEDIATION",
+  "rolloutDecision": "APPROVED_FOR_TEAM_QA_EXECUTION_BY_USER",
+  "userApproval": {
+    "by": "Pengguna dalam chat QA Numora",
+    "recordedAt": "2026-10-27T03:29:56.5589866Z",
+    "timezone": "Asia/Jakarta",
+    "quote": "Review PIC itu sudah selesai karena saya sudah approved semuanya, mereka cukup menjalankan",
+    "scope": "Penggunaan workflow QA oleh anggota tim; review PIC tidak diminta ulang",
+    "resultEvidence": "Unchanged; audit findings and remediation NOT_RUN remain recorded",
+    "externalReviewerResponseClaimed": false
+  },
+  "decisionHistory": [
+    {
+      "at": "2026-10-27T03:21:23.64Z",
+      "basis": "Initial technical review snapshot",
+      "status": "PENDING_DEVELOPER_REVIEW"
+    },
+    {
+      "at": "2026-10-27T03:29:56.5589866Z",
+      "basis": "Explicit user instruction in current chat",
+      "status": "CLOSED_BY_USER_APPROVAL"
+    }
+  ]
+}

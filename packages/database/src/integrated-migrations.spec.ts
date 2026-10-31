@@ -47,6 +47,63 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     }
   }
 
+  it.each([28, 31])(
+    'upgrades an Admin fork from main baseline %i without replay or history loss',
+    async (baseline) => {
+      await fixture(baseline, async (client, folder) => {
+        const fork = readMigrationFiles({
+          migrationsFolder: resolve('staging/fixtures/admin-stack-branch'),
+        });
+        for (const entry of fork) {
+          for (const statement of entry.sql) if (statement.trim()) await client.unsafe(statement);
+          await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+        }
+        const before =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        const [school] =
+          await client`INSERT INTO schools(code,name,address) VALUES('TEST-ADMIN-FORK','Preserved school','Preserved address') RETURNING *`;
+        await migrateIntegratedDatabase(client, folder);
+        const after =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        expect(after.slice(0, before.length)).toEqual(before);
+        expect((await client`SELECT * FROM schools WHERE id=${school!.id}`)[0]).toEqual(school);
+        expect(
+          (
+            await client`SELECT to_regclass('public.admin_invitations') AS accounts, to_regclass('public.pretest_chapter_states') AS pretest`
+          )[0],
+        ).toMatchObject({ accounts: 'admin_invitations', pretest: 'pretest_chapter_states' });
+        expect(
+          await client`SELECT column_name FROM information_schema.columns WHERE table_name='questions' AND column_name='usage_type'`,
+        ).toHaveLength(1);
+        await migrateIntegratedDatabase(client, folder);
+        expect(
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+        ).toEqual(after);
+      });
+    },
+  );
+
+  it('refuses an Admin fork with unknown history before applying missing DDL', async () => {
+    await fixture(28, async (client, folder) => {
+      const entry = readMigrationFiles({
+        migrationsFolder: resolve('staging/fixtures/admin-stack-branch'),
+      })[0]!;
+      for (const statement of entry.sql) if (statement.trim()) await client.unsafe(statement);
+      await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis}),('unknown-admin-history',${entry.folderMillis + 1})`;
+      const before =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await expect(migrateIntegratedDatabase(client, folder)).rejects.toThrow(
+        'Migration history would skip',
+      );
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(before);
+      expect(
+        (await client`SELECT to_regclass('public.pretest_chapter_states') AS pretest`)[0]!.pretest,
+      ).toBeNull();
+    });
+  });
+
   it.each([4, 9])(
     'preserves IRT fork history and snapshots after baseline %i and repeat migration',
     async (baselineCount) => {

@@ -1,5 +1,11 @@
 # Panduan Struktur Folder Numora
 
+## QA scenario workflow — 27 Oktober 2026
+
+**ENGINEERING DECISION:** penempatan baru untuk tes khusus QA adalah `qa/scenarios/<role>/<scenario-id>/`: SCENARIO.md, scenario.json, CASES.md, tes yang relevan serta reports/run-id. Role adalah siswa/guru/admin/cross-role. Manifest merujuk tes aturan bersama yang tetap dekat modul asal; tidak perlu memindahkan seluruh tes existing. Runtime test-only dan konfigurasi ada pada qa/runtime dan qa/configs, registry/CLI pada scripts/qa. Helper reusable memakai packages/testing ketika benar-benar dipakai bersama. qa/.local berisi state, lock, resource dan artefak ignored. Panduan aktif ada di docs/testing/QA_GUIDE.md dan QA_WORKFLOW.md.
+
+Bagian struktur historis di bawah yang menyebut lokasi E2E belum ditetapkan tidak berlaku untuk workflow ini. Sumber perilaku tetap PRD/klarifikasi terbaru sesuai AGENTS.md; referensi v0.5/35 soal/TBC lama di bagian historis tidak menggantikan aturan terbaru.
+
 Panduan utama untuk menentukan **di mana kode fitur dikerjakan** dalam monorepo Numora. Berlaku untuk Frontend, Backend, Database, QA, dan pekerjaan lintas tim. Dokumen ini menjelaskan penempatan kode; aturan produk tetap mengikuti PRD v0.5 dan [PRODUCT_CONTEXT](../product/PRODUCT_CONTEXT.md). Batas tanggung jawab modul mengikuti [MODULE_BOUNDARIES](../architecture/MODULE_BOUNDARIES.md), sedangkan pembagian orang dan reviewer mengikuti [OWNERSHIP](OWNERSHIP.md).
 
 ## 1. Status dan cara membaca
@@ -43,21 +49,21 @@ Pohon ini sengaja ringkas. Lihat [ARCHITECTURE](../architecture/ARCHITECTURE.md)
 
 ## 3. Cari tempat kerja berdasarkan tugas
 
-| Tugas | Lokasi utama | Catatan |
-|---|---|---|
-| Halaman atau route Student, Teacher, Admin | `apps/web/src/app/` | Route menyusun halaman, memanggil modul fitur, dan menangani layout. Struktur URL final mengikuti kebutuhan produk. |
-| UI dan state khusus fitur | `apps/web/src/features/<fitur>/` | Kelompokkan berdasarkan kemampuan, bukan berdasarkan nama anggota tim. |
-| Klien HTTP lintas fitur | `apps/web/src/lib/api.ts` atau utilitas bersama yang tumbuh darinya | Gunakan API NestJS untuk data produk. Supabase browser hanya untuk kebutuhan auth yang diizinkan. |
-| Komponen presentasi yang benar-benar dipakai lintas fitur | `packages/ui/src/` | Contoh yang sudah ada: `Button`. Ikuti [panduan desain](../design/README.md). |
-| Endpoint, otorisasi, dan aturan backend | `apps/api/src/modules/<domain>/` | Controller menangani batas HTTP; service/domain menangani aturan. Lihat [MODULE_BOUNDARIES](../architecture/MODULE_BOUNDARIES.md). |
-| WebSocket PvP | `apps/api/src/modules/pvp/` **dibuat saat fitur dikerjakan** | Gateway dan aturan match tetap di backend; lihat [REALTIME_PVP](../architecture/REALTIME_PVP.md). |
-| Job terjadwal, antrean, outbox | `apps/worker/src/` | Tambahkan folder job per kemampuan saat ada job nyata; jangan memindahkan kebenaran bisnis tahan lama ke Redis. |
-| Tabel, relasi, dan constraint DB | `packages/database/src/schema/` | Buat migrasi Drizzle di `packages/database/drizzle/`; ubah seed di `packages/database/src/seed.ts` jika perlu. |
-| Kontrak REST | `packages/contracts/openapi/openapi.json` | Dihasilkan dari NestJS setelah controller/DTO berubah; jangan edit hasil generate sebagai sumber utama. |
-| Kontrak soal, event, WebSocket | `packages/contracts/questions/`, `events/`, `websocket/` | Perbarui skema dan penjelasan di `docs/data/` atau `docs/api/` bersama perubahan kontrak. |
-| Tes unit/integrasi satu modul | Dekat modul yang diuji, seperti `apps/api/src/health/health.controller.spec.ts` | Sesuaikan dengan tool dan [TEST_STRATEGY](../testing/TEST_STRATEGY.md). |
-| Alur E2E lintas peran | Lokasi runner E2E **belum ditetapkan** | QA dan pemilik fitur menyepakati penempatan saat runner Playwright ditambahkan. Jangan menganggap `packages/testing` sudah menjadi suite E2E. |
-| Konfigurasi environment dan CI | `.env.example`, `.github/`, `package.json` | Koordinasikan perubahan lintas tim; jangan commit rahasia. |
+| Tugas                                                     | Lokasi utama                                                                    | Catatan                                                                                                                                       |
+| --------------------------------------------------------- | ------------------------------------------------------------------------------- | --------------------------------------------------------------------------------------------------------------------------------------------- |
+| Halaman atau route Student, Teacher, Admin                | `apps/web/src/app/`                                                             | Route menyusun halaman, memanggil modul fitur, dan menangani layout. Struktur URL final mengikuti kebutuhan produk.                           |
+| UI dan state khusus fitur                                 | `apps/web/src/features/<fitur>/`                                                | Kelompokkan berdasarkan kemampuan, bukan berdasarkan nama anggota tim.                                                                        |
+| Klien HTTP lintas fitur                                   | `apps/web/src/lib/api.ts` atau utilitas bersama yang tumbuh darinya             | Gunakan API NestJS untuk data produk. Supabase browser hanya untuk kebutuhan auth yang diizinkan.                                             |
+| Komponen presentasi yang benar-benar dipakai lintas fitur | `packages/ui/src/`                                                              | Contoh yang sudah ada: `Button`. Ikuti [panduan desain](../design/README.md).                                                                 |
+| Endpoint, otorisasi, dan aturan backend                   | `apps/api/src/modules/<domain>/`                                                | Controller menangani batas HTTP; service/domain menangani aturan. Lihat [MODULE_BOUNDARIES](../architecture/MODULE_BOUNDARIES.md).            |
+| WebSocket PvP                                             | `apps/api/src/modules/pvp/` **dibuat saat fitur dikerjakan**                    | Gateway dan aturan match tetap di backend; lihat [REALTIME_PVP](../architecture/REALTIME_PVP.md).                                             |
+| Job terjadwal, antrean, outbox                            | `apps/worker/src/`                                                              | Tambahkan folder job per kemampuan saat ada job nyata; jangan memindahkan kebenaran bisnis tahan lama ke Redis.                               |
+| Tabel, relasi, dan constraint DB                          | `packages/database/src/schema/`                                                 | Buat migrasi Drizzle di `packages/database/drizzle/`; ubah seed di `packages/database/src/seed.ts` jika perlu.                                |
+| Kontrak REST                                              | `packages/contracts/openapi/openapi.json`                                       | Dihasilkan dari NestJS setelah controller/DTO berubah; jangan edit hasil generate sebagai sumber utama.                                       |
+| Kontrak soal, event, WebSocket                            | `packages/contracts/questions/`, `events/`, `websocket/`                        | Perbarui skema dan penjelasan di `docs/data/` atau `docs/api/` bersama perubahan kontrak.                                                     |
+| Tes unit/integrasi satu modul                             | Dekat modul yang diuji, seperti `apps/api/src/health/health.controller.spec.ts` | Sesuaikan dengan tool dan [TEST_STRATEGY](../testing/TEST_STRATEGY.md).                                                                       |
+| Alur E2E lintas peran                                     | Lokasi runner E2E **belum ditetapkan**                                          | QA dan pemilik fitur menyepakati penempatan saat runner Playwright ditambahkan. Jangan menganggap `packages/testing` sudah menjadi suite E2E. |
+| Konfigurasi environment dan CI                            | `.env.example`, `.github/`, `package.json`                                      | Koordinasikan perubahan lintas tim; jangan commit rahasia.                                                                                    |
 
 ## 4. Struktur fitur Frontend
 
@@ -104,12 +110,12 @@ Ini contoh penempatan, bukan kewajiban membuat semua subfolder. Pilih nama sesua
 
 ## 6. Pekerjaan lintas lapisan: contoh nyata
 
-| Alur | Frontend | API/domain | Database/kontrak/tes |
-|---|---|---|---|
-| Student mengerjakan Drill | `features/core-learning/` dan route Student | `content`, `assessments`, `scoring`, `progress` | Schema versi soal/attempt/progres; OpenAPI; tes 7/10 dan 8/10, submit ganda, otorisasi. |
-| Guru membuat kelas dan melihat progres | `features/onboarding/` untuk verifikasi, `features/monitoring/` untuk daftar/detail | `schools`, `classes`, `monitoring` | Schema token/kelas; OpenAPI; tes token sekali pakai dan akses hanya kelas milik Guru. |
-| Admin mengelola sekolah/token | `features/admin/` dan route Admin | `admin` mengorkestrasi `schools` | Schema dan audit; OpenAPI; tes hak akses dan pencabutan token. |
-| Student bermain PvP | `features/pvp/` dan route Student | `pvp` untuk gateway, waktu, jawaban, skor; modul terkait untuk konten/XP | Kontrak `websocket/`; penyimpanan hasil tahan lama; tes reconnect, scoring, dan forfeit. |
+| Alur                                   | Frontend                                                                            | API/domain                                                               | Database/kontrak/tes                                                                     |
+| -------------------------------------- | ----------------------------------------------------------------------------------- | ------------------------------------------------------------------------ | ---------------------------------------------------------------------------------------- |
+| Student mengerjakan Drill              | `features/core-learning/` dan route Student                                         | `content`, `assessments`, `scoring`, `progress`                          | Schema versi soal/attempt/progres; OpenAPI; tes 7/10 dan 8/10, submit ganda, otorisasi.  |
+| Guru membuat kelas dan melihat progres | `features/onboarding/` untuk verifikasi, `features/monitoring/` untuk daftar/detail | `schools`, `classes`, `monitoring`                                       | Schema token/kelas; OpenAPI; tes token sekali pakai dan akses hanya kelas milik Guru.    |
+| Admin mengelola sekolah/token          | `features/admin/` dan route Admin                                                   | `admin` mengorkestrasi `schools`                                         | Schema dan audit; OpenAPI; tes hak akses dan pencabutan token.                           |
+| Student bermain PvP                    | `features/pvp/` dan route Student                                                   | `pvp` untuk gateway, waktu, jawaban, skor; modul terkait untuk konten/XP | Kontrak `websocket/`; penyimpanan hasil tahan lama; tes reconnect, scoring, dan forfeit. |
 
 Contoh ini menunjukkan **pemilik lokasi kode**, bukan daftar fitur yang sudah selesai atau perubahan scope uji coba pertama. Scope prototipe saat ini ada di [SPRINT_2_GOAL](SPRINT_2_GOAL.md); kebijakan produk yang masih terbuka ada di [OPEN_DECISIONS](../product/OPEN_DECISIONS.md).
 

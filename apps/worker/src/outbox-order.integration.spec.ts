@@ -1,0 +1,82 @@
+import { randomUUID } from 'node:crypto';
+import { afterAll, describe, expect, it } from 'vitest';
+import { eq, sql } from 'drizzle-orm';
+import {
+  analyticsEvents,
+  analyticsOutbox,
+  closeDatabaseConnection,
+  getDatabase,
+} from '@tka/database';
+import { drainOutboxBatch } from './outbox.js';
+
+// The package setup creates a migrated localhost database per integration file.
+const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
+
+integration('outbox candidate order regression', () => {
+  afterAll(async () => closeDatabaseConnection());
+
+  it('preserves chronological selection and the UUID tie-breaker', async () => {
+    const { db } = getDatabase();
+    const expected = [
+      '00000000-0000-4000-8000-000000000003',
+      '00000000-0000-4000-8000-000000000001',
+      '00000000-0000-4000-8000-000000000002',
+    ];
+    for (const id of [...expected].reverse())
+      await db.insert(analyticsOutbox).values({
+        id,
+        eventName: 'drill_completed',
+        entityType: 'assessmentAttempt',
+        entityId: randomUUID(),
+        occurredAt: new Date(id === expected[0] ? '2020-01-01T00:00:00Z' : '2020-01-01T00:00:01Z'),
+        payload: { fixture: true, order: id },
+      });
+    for (let i = 0; i < expected.length; i++) {
+      expect(await drainOutboxBatch(1)).toEqual({ processed: 1, failed: 0 });
+      const delivered = await db.select({ id: analyticsEvents.eventId }).from(analyticsEvents);
+      expect(delivered.map((row) => row.id).sort()).toEqual(expected.slice(0, i + 1).sort());
+    }
+  });
+
+  it('skips a locked earliest event and delivers it after release', async () => {
+    // One connection holds a lock while another runs the actual worker query.
+    expect(Number(process.env.DB_POOL_MAX ?? 10)).toBeGreaterThanOrEqual(2);
+    const { db } = getDatabase();
+    const ids = [randomUUID(), randomUUID()];
+    await db.insert(analyticsOutbox).values(
+      ids.map((id, index) => ({
+        id,
+        eventName: 'drill_completed',
+        entityType: 'assessmentAttempt',
+        entityId: randomUUID(),
+        occurredAt: new Date(Date.UTC(2020, 0, 2, 0, 0, index)),
+        payload: { fixture: true },
+      })),
+    );
+    await db.transaction(async (tx) => {
+      await tx.execute(sql`select id from analytics_outbox where id = ${ids[0]}::uuid for update`);
+      let timer: ReturnType<typeof setTimeout> | undefined;
+      try {
+        const result = await Promise.race([
+          drainOutboxBatch(1),
+          new Promise<never>((_, reject) => {
+            timer = setTimeout(() => reject(new Error('LOCKED_EVENT_NOT_SKIPPED')), 3000);
+          }),
+        ]);
+        expect(result).toEqual({ processed: 1, failed: 0 });
+        expect(
+          await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[0]!)),
+        ).toHaveLength(0);
+        expect(
+          await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[1]!)),
+        ).toHaveLength(1);
+      } finally {
+        clearTimeout(timer);
+      }
+    });
+    expect(await drainOutboxBatch(1)).toEqual({ processed: 1, failed: 0 });
+    expect(
+      await db.select().from(analyticsEvents).where(eq(analyticsEvents.eventId, ids[0]!)),
+    ).toHaveLength(1);
+  }, 15000);
+});

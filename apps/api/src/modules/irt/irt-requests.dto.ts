@@ -41,6 +41,7 @@ export class IrtRequestDto {
   @ApiProperty() id!: string;
   @ApiProperty({ enum: [3], type: Number }) contractVersion!: number;
   @ApiProperty() contextId!: string;
+  @ApiProperty({ type: [IrtConfigurationPinDto] }) configurationPins!: IrtConfigurationPinDto[];
   @ApiProperty() packageId!: string;
   @ApiProperty({ enum: ['PENDING', 'RUNNING', 'COMPLETED', 'FAILED', 'CANCELLED'] })
   status!: string;

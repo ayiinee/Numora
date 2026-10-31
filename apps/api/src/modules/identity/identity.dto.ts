@@ -1,8 +1,10 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsIn } from 'class-validator';
+import { IsDefined, IsIn } from 'class-validator';
+import { ADMIN_CAPABILITIES, type AdminCapability } from './admin-capabilities';
 
 export class RegisterProfileDto {
   @ApiProperty({ enum: ['STUDENT', 'TEACHER'] })
+  @IsDefined()
   @IsIn(['STUDENT', 'TEACHER'])
   role!: 'STUDENT' | 'TEACHER';
 }
@@ -15,8 +17,8 @@ export class IdentityProfileDto {
   })
   adminRole?: 'SUPER_ADMIN' | 'OPERATIONS' | 'CONTENT_DATA_MODERATION' | null;
 
-  @ApiProperty({ type: [String], enum: ['CONTENT_MANAGE'], required: false })
-  capabilities?: 'CONTENT_MANAGE'[];
+  @ApiProperty({ type: [String], enum: [...ADMIN_CAPABILITIES], required: false })
+  capabilities?: AdminCapability[];
 
   @ApiProperty({ format: 'uuid' })
   id!: string;

@@ -27,19 +27,41 @@ integration('runtime policy and READY Drill publication boundary', () => {
     fixture = await pvpFixture();
     for (const difficulty of ['MEDIUM', 'HARD']) {
       for (let i = 0; i < 10; i++) {
-        const [q] = await getDatabase().db.insert(questions).values({
-          primaryCompetencyId: fixture.competency.id, usageType: 'DRILL', status: 'READY',
-        }).returning();
-        const [variant] = await getDatabase().db.insert(questionVariants).values({
-          questionId: q!.id, variantCode: randomUUID(), kind: 'ORIGINAL', origin: 'TEST',
-        }).returning();
-        await getDatabase().db.insert(questionVersions).values({
-          variantId: variant!.id, versionNumber: 1, questionType: 'SINGLE_CHOICE',
-          stem: { text: 'TEST ONLY: 1 + 1?' },
-          optionsOrStatements: [{ id: 'A', content: { text: '2' } }, { id: 'B', content: { text: '3' } }],
-          answerKey: { optionId: 'A' }, explanation: { text: 'TEST ONLY: 2' },
-          difficulty, contentStatus: 'READY', reviewedByUserId: fixture.contentAdmin.id, reviewedAt: new Date(),
-        });
+        const [q] = await getDatabase()
+          .db.insert(questions)
+          .values({
+            primaryCompetencyId: fixture.competency.id,
+            usageType: 'DRILL',
+            status: 'READY',
+          })
+          .returning();
+        const [variant] = await getDatabase()
+          .db.insert(questionVariants)
+          .values({
+            questionId: q!.id,
+            variantCode: randomUUID(),
+            kind: 'ORIGINAL',
+            origin: 'TEST',
+          })
+          .returning();
+        await getDatabase()
+          .db.insert(questionVersions)
+          .values({
+            variantId: variant!.id,
+            versionNumber: 1,
+            questionType: 'SINGLE_CHOICE',
+            stem: { text: 'TEST ONLY: 1 + 1?' },
+            optionsOrStatements: [
+              { id: 'A', content: { text: '2' } },
+              { id: 'B', content: { text: '3' } },
+            ],
+            answerKey: { optionId: 'A' },
+            explanation: { text: 'TEST ONLY: 2' },
+            difficulty,
+            contentStatus: 'READY',
+            reviewedByUserId: fixture.contentAdmin.id,
+            reviewedAt: new Date(),
+          });
       }
     }
   });
@@ -110,8 +132,11 @@ integration('runtime policy and READY Drill publication boundary', () => {
     expect(state.difficulties.every((d) => d.available)).toBe(true);
     const room = await engine.create(fixture.students[0]!.id, 'easy', randomUUID());
     expect(room.isDemo).toBe(false);
-    const [match] = await getDatabase().client`select package_id from pvp_matches where id=${room.matchId}`;
-    const [pack] = await getDatabase().db.select().from(assessmentPackages)
+    const [match] = await getDatabase()
+      .client`select package_id from pvp_matches where id=${room.matchId}`;
+    const [pack] = await getDatabase()
+      .db.select()
+      .from(assessmentPackages)
       .where(eq(assessmentPackages.id, match!.package_id));
     expect(pack!.curriculumApproval).toBeNull();
     expect(pack!.frozenAt).not.toBeNull();

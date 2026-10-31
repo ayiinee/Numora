@@ -1,10 +1,33 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Generator paket dan pencarian sekolah](ADMIN_GENERATOR_UX_2026-10-30.md) menerapkan UI-01/UI-02 dari main setelah integrasi: pencarian Operations tidak menimpa ikon; Generator memakai direktori, dialog konfigurasi dan detail progres mengikuti fondasi Admin yang disetujui. Kontrak sumber, permission dan handoff ke preview impor dipertahankan. Review dan penerimaan layanan nyata dicatat terpisah. [Galeri audit](screenshots/admin-generator/README.md).
+
+**PROPOSED — backlog, 30 Oktober 2026:** [Backlog UI/UX Admin dan kriteria penerimaan](ADMIN_UI_BACKLOG_2026-10-30.md) memisahkan temuan terkonfirmasi, kandidat audit halaman berikutnya dan gate integrasi. Penyusunan backlog tidak mengubah aplikasi atau aturan produk.
+
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pretest Authoring](ADMIN_PRETEST_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui. Direktori lima paket, detail terpisah, editor terfokus, pemilih soal berdasarkan bab dan susunan lima per halaman menggantikan form UUID sebagai alur utama. Review editorial dan kesiapan publikasi tetap mengikuti server; pin lama/blueprint asal dipertahankan, dan arsip memerlukan konfirmasi. [Galeri audit](screenshots/admin-pretest/README.md).
+
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Konten & assessment](ADMIN_ASSESSMENT_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui, termasuk Super Admin dan Content. Bank soal menonjolkan pertanyaan, semua pilihan/pernyataan dan rumus; kunci detail dipetakan ke label yang konsisten tanpa mengubah sumber. Navigasi dikelompokkan di desktop dan memakai pemilih bagian di ponsel; editor serta filter dibuka sesuai kebutuhan. Review editorial, kesiapan publikasi, hak akses dan histori tetap terpisah. [Galeri audit](screenshots/admin-assessment/README.md).
+
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pengguna & kelas](ADMIN_PEOPLE_UX_2026-10-27.md) mengikuti arah Akun Admin/Sekolah yang telah disetujui. Tab pengguna/kelas, tabel responsif, filter bertahap dengan pencarian nama sekolah/Guru, detail penuh dan riwayat keanggotaan memakai `admin-management.css` serta CSS khusus `admin-people.css`. Halaman tetap baca saja; kontrak API, izin server dan pagination lima data dipertahankan. [Galeri verifikasi](screenshots/admin-people/README.md).
+
+**ENGINEERING DECISION - pemilik, 27 Oktober 2026:** arah Akun Admin disetujui sebagai referensi perbaikan berikutnya: ringkas, profesional, mudah dipindai dan tidak membingungkan. [Sekolah & credential](ADMIN_SCHOOLS_UX_2026-10-27.md) menerapkan daftar sekolah, ruang sekolah terpilih dan dialog aksi. Fondasi token/shell/button dipakai bersama melalui `admin-management.css`; aturan produk tetap mengikuti PRD/API.
+
+**ENGINEERING DECISION - pemilik, 27 Oktober 2026:** halaman Akun Admin memakai [layout operasional ringkas dan profesional](ADMIN_ACCOUNTS_UX_2026-10-27.md), dengan daftar akun, tab undangan, dan dialog aksi. Perubahan dibatasi pada halaman tersebut dan tetap memakai komponen, font, serta aturan akses Numora.
+
+**ENGINEERING FIX - 27 Oktober 2026:** seluruh sidebar desktop Admin, termasuk Super Admin, dapat digulir di dalam tinggi viewport. Scroll sidebar tidak diteruskan ke halaman utama saat mencapai batas. Semua menu dan identitas akun tetap dapat dicapai pada layar pendek, termasuk melalui keyboard. Regresi browser memeriksa roda mouse, Tab hingga menu terakhir, dan menu mobile; otorisasi serta struktur navigasi tetap mengikuti assignment.
+
+**ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
+
 **ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.
 
-**ENGINEERING DECISION — owner UI request, 7 October 2026:** all web pages use `#F3ECCB` as their outer page background through the shared `--color-bg` token. Cards, headers, hero panels, and state surfaces retain their semantic colors.
+**ENGINEERING DECISION — owner UI request, 7 October 2026:** the shared outer background token remains `#F3ECCB`; Content/Operations retain their owner-requested scoped grey AdminLTE canvas. Cards, headers, hero panels, and state surfaces retain their semantic colors.
 
 **ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.
+**ENGINEERING UPDATE — 7 October 2026, Operations redesign:** Admin Operasional now follows the Admin Content AdminLTE palette and shell, with compact school/credential panels and responsive user/class filters and details. Shared styling is opt-in for Content/Operations; Super keeps its previous theme. [Operations redesign and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md#redesign-adminlte).
+
+**ENGINEERING UPDATE — 7 October 2026:** Admin Operasional now opens Sekolah & credential directly. Ringkasan, Analytics and the large page banner are removed from its portal; Super Admin retains them. This presentation change preserves server permissions and stored data. [Operations UX scope and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md).
+
+**ENGINEERING UPDATE — 6 October 2026:** Admin Content, Data & Moderation uses the owner-supplied AdminLTE reference: white sidebar/topbar, purple accent, grey canvas, compact cards, deep-linked workbench tabs and readable version/report review. Content opens the bank; Ringkasan, Analytics and the large page banner remain removed. [UX scope and acceptance](ADMIN_CONTENT_UX_2026-10-06.md), [portable browser gallery](screenshots/admin-content/README.md). Operations/Super visual iterations and external release gates remain separate.
 
 **ENGINEERING DECISION — Aini, 5 October 2026:** remove the standalone development Admin mock and use the shared portal at `/admin`, internal login at `/admin/login`, and content tools under `/admin/content`. The `/admin/preview` frame mapping below is historical; that route no longer exists. Real unscored question preview remains part of the importer workflow. [Portal scope and validation](../development/ADMIN_PORTAL_2026-10-05.md).
 

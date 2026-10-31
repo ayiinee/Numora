@@ -140,6 +140,69 @@ describe('session initialization', () => {
     expect(mocks.signOut).toHaveBeenCalledWith({ scope: 'local' });
   });
 
+  it('recovers automatically after a temporary network failure without clearing the session', async () => {
+    vi.useFakeTimers();
+    const { ApiProblem } = await import('@/lib/api');
+    mocks.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL_SESSION', session);
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    mocks.getIdentity
+      .mockRejectedValueOnce(new ApiProblem(0, 'NETWORK_ERROR', 'Koneksi ke server gagal.'))
+      .mockResolvedValue(profile);
+    mount();
+    await act(async () => {});
+    expect(screen.getByText('error')).toBeTruthy();
+
+    await act(async () => vi.advanceTimersByTimeAsync(2000));
+    expect(screen.getByText('ready')).toBeTruthy();
+    expect(mocks.getIdentity).toHaveBeenCalledTimes(2);
+    expect(mocks.signOut).not.toHaveBeenCalled();
+  });
+
+  it('bounds automatic retries when the API remains unavailable', async () => {
+    vi.useFakeTimers();
+    const { ApiProblem } = await import('@/lib/api');
+    mocks.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL_SESSION', session);
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    mocks.getIdentity.mockRejectedValue(new ApiProblem(503, 'UNAVAILABLE', 'Coba lagi.'));
+    mount();
+    await act(async () => {});
+    for (let attempt = 0; attempt < 8; attempt++) {
+      await act(async () => vi.advanceTimersByTimeAsync(Math.min(2000 * 2 ** attempt, 30_000)));
+    }
+    expect(mocks.getIdentity).toHaveBeenCalledTimes(9);
+    await act(async () => vi.advanceTimersByTimeAsync(90_000));
+    expect(mocks.getIdentity).toHaveBeenCalledTimes(9);
+    expect(screen.getByText('error')).toBeTruthy();
+    expect(mocks.signOut).not.toHaveBeenCalled();
+  });
+
+  it('does not retry an authorization denial or retry after unmount', async () => {
+    vi.useFakeTimers();
+    const { ApiProblem } = await import('@/lib/api');
+    mocks.onAuthStateChange.mockImplementation((callback) => {
+      callback('INITIAL_SESSION', session);
+      return { data: { subscription: { unsubscribe: vi.fn() } } };
+    });
+    mocks.getIdentity.mockRejectedValue(new ApiProblem(403, 'ACCOUNT_DISABLED', 'Disabled'));
+    mount();
+    await act(async () => {});
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(screen.getByText('disabled')).toBeTruthy();
+    expect(mocks.getIdentity).toHaveBeenCalledTimes(1);
+    cleanup();
+
+    mocks.getIdentity.mockRejectedValue(new ApiProblem(0, 'NETWORK_ERROR', 'Network'));
+    mount();
+    await act(async () => {});
+    cleanup();
+    await act(async () => vi.advanceTimersByTimeAsync(60_000));
+    expect(mocks.getIdentity).toHaveBeenCalledTimes(2);
+  });
+
   it('does not show the previous account when sessions change before identity loads', async () => {
     let emit: ((event: string, value: Session | null) => void) | undefined;
     let finishPrevious: ((value: typeof profile) => void) | undefined;

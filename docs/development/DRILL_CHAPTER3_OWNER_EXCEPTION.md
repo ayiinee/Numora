@@ -50,3 +50,7 @@ node --env-file=../Numora/.env .scratch/check_chapter3_student.cjs
 ```
 
 Database target mengikuti `.env` lokal yang dikonfigurasi; tidak ada deployment VPS dalam pekerjaan ini. Skrip operasi/mapping berada pada `.scratch/` ignored; audit dan allowlist canonical tersimpan di database.
+
+## Runtime repair — 7 October 2026
+
+**ENGINEERING VERIFICATION:** after merging the generator integration, the generic runtime approval filter also excluded the existing owner-accepted packages before their policy allowlist was evaluated. Drill start now accepts either the normal runtime approval or a non-demo package explicitly present in `DRILL_CH3_OWNER_ACCEPTED_2026_10_07` v1. `package_can_distribute`, PUBLISHED status, hierarchy, ten-item validation, immutable policy pins and level locks still apply. Read-only Development verification finds the same 12 accepted packages; no content, approvals or student history were reseeded.

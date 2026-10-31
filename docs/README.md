@@ -39,22 +39,34 @@ Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.
 
 ## Design
 
+- [Backlog UI/UX Admin, 30 Oktober 2026](design/ADMIN_UI_BACKLOG_2026-10-30.md) — prioritas, batas pekerjaan dan kriteria penerimaan setelah integrasi.
 - `design/README.md` — status, provenance, and use of the UI/UX baseline.
 - `design/NUMORA_UI_DESIGN_SYSTEM.md` — team-supplied visual, component, responsive, and accessibility guidance before final UI handoff.
 - `design/NUMORA_UI_SKILL.md` — team-supplied frontend workflow reference, adapted to local document paths; not an installed agent skill.
 
 ## Development
 
+- [Runtime/QA integration after Admin #110](development/RUNTIME_QA_INTEGRATION_2026-10-29.md) — canonical 0049, historical XP compatibility, exact Development history adoption and backup/rehearsal procedure.
+- [Ferdi PR stabilization, 28 October 2026](development/FERDI_PR_STABILIZATION_2026-10-28.md) — current PR blockers, preserved integration path, XP review packet and separate #102 migration handoff.
+- [Ferdi Admin integration, 26 October 2026](development/FERDI_ADMIN_INTEGRATION_2026-10-26.md) — PR #92 reconciliation, partial Tryout XP correction, isolated test evidence and remaining review gates.
+
 - `development/PROJECT_STRUCTURE.md` — panduan utama lokasi kode, struktur folder saat ini dan yang direncanakan, serta contoh kerja lintas tim.
 - `development/GETTING_STARTED.md`
+- [Development startup verification](development/DEV_STARTUP_VERIFICATION.md) — source SHA, health/runtime/worker/probe evidence, service dependency audit and handoff, and owner-deferred teammate reproduction.
 - `development/SPRINT_2_GOAL.md` — first Student vertical slice and additional Teacher UI needed for the prototype trial.
 - `development/CORE_LEARNING_BACKEND_STATUS.md` — implementasi backend, bukti lokal, dan pekerjaan Core Learning yang tersisa.
 - `development/STUDENT_AREA_IMPLEMENTATION.md` — integrasi desain siswa, migrasi PvP, verifikasi dan QA staging.
 - `development/GIT_WORKFLOW.md`
+- [CI diagnostics](development/CI_DIAGNOSTICS.md) — independent required jobs, aggregate quality gate, artifact handling and reproduction.
+- [CI baseline and handoff, 27 October 2026](development/CI_BASELINE_2026-10-27.md) — historical main evidence and open feature failures, distinct from candidate validation.
 - `development/CODING_STANDARDS.md`
 - `development/ENVIRONMENTS.md`
 - [Development recovery, 6 October 2026](development/DEV_SCHEMA_RECOVERY_2026-10-06.md) — historical schema-recovery evidence, API watcher fix, and later migration mapping; not a migration runbook.
+- `development/ADMIN_CONTENT_DEMO_CLEANUP_2026-10-07.md` — pembersihan fixture Content pada Development, backup, data yang dipertahankan dan verifikasi reader kosong.
+- `development/ADMIN_CONTENT_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan seluruh halaman Content, perbaikan form/pagination/retry/akses, bukti tes dan gate eksternal.
+- `development/ADMIN_OPERATIONS_FUNCTIONAL_AUDIT_2026-10-07.md` — pemeriksaan sekolah/credential/pengguna/kelas, perbaikan eligibility transaksi, detail/retry, navigasi dan pencabutan akses.
 - `development/OWNERSHIP.md`
+- [Temuan flow Guru, 20 Oktober 2026](development/TEACHER_GURU_FINDINGS_2026-10-20.md) — tiket GF-01..GF-04 dari polish FE Guru: kontrol ban/unban/takeover/leave tanpa jalur UI, undangan link yang belum masuk kontrak, dan ketidaksesuaian kontrak feedback/riwayat.
 
 ## Testing
 
@@ -83,3 +95,5 @@ See `adr/README.md` and the individual ADR files.
 - **ENGINEERING DECISION** — approved during technical alignment.
 - **PROPOSED** — recommendation pending approval.
 - **OPEN** — unresolved product/academic decision.
+
+- [Admin Content/Operations synchronization with main, 7 October 2026](development/ADMIN_MAIN_SYNC_2026-10-07.md) ? combined scope, migration compatibility and verification limits.

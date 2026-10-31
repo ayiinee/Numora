@@ -1,0 +1,6 @@
+{
+  "apps/worker/src/outbox.ts": "0d5d7be6a33b9fff1dbaf5ba874a6211cb52b982da5ab3d6cbb21f9f5885dc55",
+  "apps/api/src/modules/learning/drill-assessment.service.ts": "43a233f85c6f191995ad591f40c87ef77506c1d0fef7be7523e6bab0628fb0a7",
+  "qa/config.json": "d15c87afef5471615a1b24ee1270adb88b7bd6fccd8cec547b993ddfcee1e47e",
+  "qa/scenarios/siswa/SIS-001/reports/581a3c97-fe69-40d3-af72-576b22033593/result.json": "44ce75b1890f930e90e7cedfea325d3d136353532002223b0f9162c1959d6c13"
+}

@@ -10,12 +10,7 @@ import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement } from './teacher-ui';
 import { getTeacherFeedback, sendTeacherFeedback } from './teacher-feedback-api';
-
-const formatter = new Intl.DateTimeFormat('id-ID', {
-  timeZone: 'Asia/Jakarta',
-  dateStyle: 'medium',
-  timeStyle: 'short',
-});
+import { jakartaTime, teacherAccessFailure, teacherKeys } from './teacher-query';
 export function TeacherFeedbackScreen({
   classId,
   studentId,
@@ -43,7 +38,7 @@ function Feedback({
   studentId: string;
 }) {
   const progress = useQuery({
-    queryKey: ['student-progress', classId, studentId],
+    queryKey: teacherKeys.progress(classId, studentId),
     queryFn: () => getTeacherStudentProgress(token, classId, studentId),
   });
   return (
@@ -96,15 +91,12 @@ export function FeedbackWorkspace({
   const [error, setError] = useState<unknown>(null);
   const [success, setSuccess] = useState('');
   const history = useInfiniteQuery({
-    queryKey: ['teacher-feedback', classId, studentId],
+    queryKey: teacherKeys.feedback(classId, studentId),
     initialPageParam: 0,
     queryFn: ({ pageParam }) => getTeacherFeedback(token, classId, studentId, pageParam),
     getNextPageParam: (last) => last.nextOffset ?? undefined,
   });
-  const accessFailure = [error, history.error].find(
-    (failure): failure is ApiProblem =>
-      failure instanceof ApiProblem && [401, 403, 404].includes(failure.status),
-  );
+  const accessFailure = teacherAccessFailure(error, history.error);
   const entries = [
     ...new Map(
       (history.data?.pages.flatMap((page) => page.items) ?? []).map((item) => [item.id, item]),
@@ -129,7 +121,7 @@ export function FeedbackWorkspace({
       request.current = null;
       setBody('');
       setSuccess(`Feedback berhasil dikirim kepada ${studentName}.`);
-      void cache.invalidateQueries({ queryKey: ['teacher-feedback', classId, studentId] });
+      void cache.invalidateQueries({ queryKey: teacherKeys.feedback(classId, studentId) });
     } catch (err) {
       setError(err);
     } finally {
@@ -222,7 +214,7 @@ export function FeedbackWorkspace({
                   <strong>{item.teacherName}</strong>
                 </div>
                 <p>{item.body}</p>
-                <time dateTime={item.sentAt}>{formatter.format(new Date(item.sentAt))} WIB</time>
+                <time dateTime={item.sentAt}>{jakartaTime.format(new Date(item.sentAt))} WIB</time>
               </Card>
             ))}
             {!entries.length && (

@@ -88,26 +88,28 @@ describe('Drill access and duplicate submit', () => {
     };
     const db = {
       transaction: (run: (value: typeof tx) => unknown) => run(tx),
-      select: vi
-        .fn()
-        .mockImplementationOnce(() =>
-          query([
-            {
-              id: attemptId,
-              studentId,
-              levelId: 'level',
-              levelTitle: 'Level 1',
-              status: 'GRADED',
-              completedAt,
-              score: '80',
-              rawPoints: '8',
-              stars: 2,
-              isDemo: true,
-            },
-          ]),
-        )
-        .mockImplementationOnce(() => query([{ questionCount: 10, correctCount: 8 }]))
-        .mockImplementationOnce(() => query([{ xpAmount: 105 }])),
+      select: vi.fn().mockImplementationOnce(() =>
+        query([
+          {
+            id: attemptId,
+            studentId,
+            levelId: 'level',
+            levelTitle: 'Level 1',
+            status: 'GRADED',
+            completedAt,
+            score: '80',
+            rawPoints: '8',
+            stars: 2,
+            isDemo: true,
+            questionCount: 10,
+            correctCount: 8,
+            reward: { id: 'stored-reward', xpAmount: 105 },
+            item: null,
+            version: null,
+            savedAnswer: null,
+          },
+        ]),
+      ),
     };
     vi.mocked(getDatabase).mockReturnValue({ db } as never);
     await expect(learning().submit('Bearer valid', attemptId)).resolves.toMatchObject({

@@ -1,0 +1,317 @@
+{
+  "schemaVersion": 1,
+  "id": "SIS-001",
+  "role": "siswa",
+  "title": "Siswa menyelesaikan Drill sampai hasil dan XP tersimpan",
+  "priority": 1,
+  "sources": [
+    {
+      "id": "DRILL",
+      "path": "docs/product/PRODUCT_CONTEXT.md",
+      "section": "current Drill v0.6 and approved clarifications"
+    },
+    {
+      "id": "REWARDS",
+      "path": "docs/development/DRILL_V06_REWARDS.md",
+      "section": "once-rounded prospective policy v2"
+    },
+    {
+      "id": "AUTH",
+      "path": "docs/api/AUTHORIZATION.md"
+    },
+    {
+      "id": "OUTBOX",
+      "path": "docs/adr/ADR-007-transactional-outbox.md"
+    },
+    {
+      "id": "EVENT",
+      "path": "packages/contracts/events/analytics-event.schema.json"
+    },
+    {
+      "id": "WORKFLOW",
+      "path": "docs/testing/QA_WORKFLOW.md"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-001",
+      "title": "Save, offline retry, refresh, submit and reopen preserve the correct result",
+      "source": "DRILL",
+      "checks": [
+        "components",
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-002",
+      "title": "70 fails mastery; 80 unlocks; latest zero never erases best/unlock",
+      "source": "DRILL",
+      "checks": [
+        "persistence",
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-003",
+      "title": "Student A/B, anonymous and wrong-role access are denied",
+      "source": "AUTH",
+      "checks": [
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-004",
+      "title": "Invalid input, premature results and locked levels are rejected",
+      "source": "AUTH",
+      "checks": [
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-005",
+      "title": "XP formula, rounding and 900-second boundaries",
+      "source": "REWARDS",
+      "checks": [
+        "rewards",
+        "persistence",
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-006",
+      "title": "Concurrent submit posts one result, XP and completion event; rollback is atomic",
+      "source": "REWARDS",
+      "checks": [
+        "persistence",
+        "connected"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-007",
+      "title": "Code quality and contract checks remain visible",
+      "source": "WORKFLOW",
+      "checks": [
+        "quality"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-008",
+      "title": "Supported viewports and automated accessibility",
+      "source": "WORKFLOW",
+      "checks": [
+        "accessibility"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-009",
+      "title": "HTTP load/stress produces measurable latency and reconciled accepted results",
+      "source": "WORKFLOW",
+      "checks": [
+        "load"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-010",
+      "title": "Volume preserves event identity/content at 1k, 10k and 100k",
+      "source": "OUTBOX",
+      "checks": [
+        "volume"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-011",
+      "title": "Velocity records incoming/processed rate, backlog and drain time",
+      "source": "OUTBOX",
+      "checks": [
+        "velocity"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-012",
+      "title": "Supported payload variety survives the worker; invalid generator envelopes are rejected by contract",
+      "source": "EVENT",
+      "checks": [
+        "variety"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-013",
+      "title": "Worker redelivery and DB/Redis transport recovery preserve durable data; local backup restores",
+      "source": "OUTBOX",
+      "checks": [
+        "recovery"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-014",
+      "title": "Dependency findings are recorded for triage",
+      "source": "WORKFLOW",
+      "checks": [
+        "dependencies"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-015",
+      "title": "Human keyboard and usability review",
+      "source": "WORKFLOW",
+      "checks": [
+        "manual-keyboard"
+      ],
+      "applicability": "required"
+    }
+  ],
+  "checks": [
+    {
+      "id": "quality",
+      "adapter": "quality",
+      "profile": "quick",
+      "evidence": "static",
+      "files": [
+        "package.json"
+      ],
+      "minimumTests": 4
+    },
+    {
+      "id": "rewards",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/unit/rewards.test.ts",
+        "packages/assessment-engine/src/rewards.spec.ts"
+      ],
+      "minimumTests": 12
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/core-learning/drill.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "apps/web/src/features/core-learning/question-choices.test.tsx"
+      ],
+      "minimumTests": 3
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/learning/drill-reward.integration.spec.ts"
+      ],
+      "minimumTests": 1
+    },
+    {
+      "id": "connected",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/drill.pw.ts"
+      ],
+      "minimumTests": 4,
+      "tags": [
+        "functional",
+        "security",
+        "regression"
+      ]
+    },
+    {
+      "id": "accessibility",
+      "adapter": "accessibility",
+      "profile": "full",
+      "evidence": "connected-auth-fixture",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/e2e/accessibility.pw.ts"
+      ],
+      "minimumTests": 3
+    },
+    {
+      "id": "variety",
+      "adapter": "variety",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 9
+    },
+    {
+      "id": "recovery",
+      "adapter": "recovery",
+      "profile": "full",
+      "evidence": "real-database",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 6
+    },
+    {
+      "id": "velocity",
+      "adapter": "velocity",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 5
+    },
+    {
+      "id": "volume",
+      "adapter": "volume",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/runtime/pipeline.mjs"
+      ],
+      "minimumTests": 3
+    },
+    {
+      "id": "load",
+      "adapter": "k6",
+      "profile": "full",
+      "evidence": "benchmark",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/performance/drill.k6.js"
+      ],
+      "minimumTests": 3
+    },
+    {
+      "id": "dependencies",
+      "adapter": "audit",
+      "profile": "full",
+      "evidence": "static",
+      "files": [
+        "pnpm-lock.yaml"
+      ],
+      "minimumTests": 1
+    },
+    {
+      "id": "manual-keyboard",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": [
+        "qa/scenarios/siswa/SIS-001/manual/CHECKLIST.md"
+      ],
+      "minimumTests": 1
+    }
+  ]
+}

@@ -1,55 +1,59 @@
 'use client';
 import Link from 'next/link';
-import { apiRequest } from '@/lib/api';
-import { MaterialChoices } from './content-mapping';
-import { ContentImportSteps } from './content-import-steps';
-import { GeneratorImportWorkflow } from './generator-import-workflow';
-import { useEffect, useRef, useState } from 'react';
-import { Button } from '@tka/ui';
+import { JsonContentImportScreen } from './content-import-json';
 import { useAuth } from '@/features/onboarding/auth';
+import { apiRequest } from '@/lib/api';
+import { Button } from '@tka/ui';
+import { useEffect, useRef, useState } from 'react';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
+import { uploadExcelMedia, type UploadCache } from './content-excel-api';
 import { ContentExcelPreview } from './content-excel-preview';
-import { downloadFile, uploadExcelMedia, type UploadCache } from './content-excel-api';
-import {
-  getUpload,
-  listUploads,
-  receiveUpload,
-  saveUpload,
-  uploadTemplate,
-  validateUpload,
-} from './content-upload-api';
+import { ContentImportSteps } from './content-import-steps';
+import { MaterialChoices } from './content-mapping';
 import {
   archiveContentPackage,
   getContentPackage,
   publishContentPackage,
 } from './content-package-api';
+import {
+  getUpload,
+  listUploads,
+  receiveUpload,
+  saveUpload,
+  validateUpload,
+} from './content-upload-api';
+import { labels, typeLabels } from './content-upload-labels';
+import { UploadHistory, UploadSourcePanel } from './content-upload-panels';
 import type {
-  ExcelIntakeDto,
   AdminCurriculumDto,
-  UploadDestinationDto,
+  ExcelIntakeDto,
   SaveUploadDraftDto,
+  UploadDestinationDto,
   UploadDetailDto,
   UploadListDto,
 } from './generated-types';
-
-const labels: Record<string, string> = {
-  RECEIVED: 'Diterima',
-  INVALID: 'Perlu perbaikan',
-  PREVIEW: 'Belum divalidasi',
-  VALIDATED: 'Isi valid',
-  DRAFT: 'Draft',
-  PUBLISHED: 'Terbit',
-  CLOSED: 'Ditutup',
-  ARCHIVED: 'Diarsipkan',
-};
-const typeLabels = { TRYOUT: 'Tryout', PRETEST: 'Pretest', DRILL: 'Drill' };
-export function ContentImportScreen({ generatorPackageId }: { generatorPackageId?: string } = {}) {
+import { GeneratorImportWorkflow } from './generator-import-workflow';
+import { ADMIN_PAGE_SIZE } from './pagination';
+export const ContentImportScreen = withAdminWorkspace(ContentImportScreenProtected, 'content');
+function ContentImportScreenProtected({
+  generatorPackageId,
+  mode,
+}: { generatorPackageId?: string; mode?: string } = {}) {
   const { state } = useAuth();
+  if (mode === 'json') return <JsonContentImportScreen />;
   if (generatorPackageId)
     return <GeneratorImportWorkflow key={generatorPackageId} id={generatorPackageId} />;
-  return <UploadContent key={state.status === 'ready' ? state.profile.id : state.status} />;
+  return (
+    <UploadContent
+      key={
+        state.status === 'ready' ? state.profile.id + ':' + state.profile.adminRole : state.status
+      }
+    />
+  );
 }
 function UploadContent() {
+  const reportAccessError = useAdminAccessError();
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' &&
@@ -106,6 +110,7 @@ function UploadContent() {
     try {
       await action();
     } catch (e) {
+      reportAccessError(e);
       setError(e instanceof Error ? e.message : 'Permintaan gagal. Coba lagi.');
     } finally {
       running.current = false;
@@ -156,7 +161,10 @@ function UploadContent() {
     if (!token) return;
     void apiRequest<AdminCurriculumDto>('admin/content/curriculum', token)
       .then(setCurriculum)
-      .catch((e) => setError(e instanceof Error ? e.message : 'Materi tidak dapat dimuat.'));
+      .catch((e) => {
+        reportAccessError(e);
+        setError(e instanceof Error ? e.message : 'Materi tidak dapat dimuat.');
+      });
     const id = new URLSearchParams(window.location.search).get('upload');
     if (id) void run(() => open(id));
     // Restore once for the authenticated admin; later changes are explicit.
@@ -167,7 +175,7 @@ function UploadContent() {
     setHistoryLoading(true);
     setHistoryError('');
     const query = new URLSearchParams({
-      limit: '20',
+      limit: String(ADMIN_PAGE_SIZE),
       offset: String(offset),
       ...(search ? { search } : {}),
       ...(filterStatus ? { status: filterStatus } : {}),
@@ -178,6 +186,7 @@ function UploadContent() {
         if (active) setHistory(data);
       })
       .catch((e) => {
+        reportAccessError(e);
         if (active) setHistoryError(e instanceof Error ? e.message : 'Riwayat gagal dimuat.');
       })
       .finally(() => {
@@ -287,6 +296,7 @@ function UploadContent() {
       ) : (
         <div className="content-upload-workflow">
           <nav className="upload-tabs" aria-label="Pengelolaan unggahan">
+            <Link href="/admin/content/imports?mode=json">Impor JSON &amp; preview</Link>
             <button
               type="button"
               className={tab === 'upload' ? 'is-active' : ''}
@@ -338,57 +348,9 @@ function UploadContent() {
                 </div>
               )}
               {step === 1 && (
-                <section className="upload-panel" aria-labelledby="upload-heading">
-                  <h2 id="upload-heading">1. Upload Excel</h2>
-                  <p>
-                    Gunakan template berikut. Jenis paket dan judul dipilih setelah soal diperiksa.
-                  </p>
-                  <Button
-                    variant="secondary"
-                    disabled={busy}
-                    onClick={() =>
-                      void run(async () =>
-                        downloadFile(await uploadTemplate(token), 'NUMORA_EXCEL_V5.xlsx'),
-                      )
-                    }
-                  >
-                    Unduh template Excel
-                  </Button>
-                  <div
-                    className={`excel-dropzone${dragging ? ' excel-dropzone-active' : ''}`}
-                    onDragOver={(e) => {
-                      e.preventDefault();
-                      if (!busy) setDragging(true);
-                    }}
-                    onDragLeave={() => setDragging(false)}
-                    onDrop={(e) => {
-                      e.preventDefault();
-                      setDragging(false);
-                      if (busy) return;
-                      if (e.dataTransfer.files.length !== 1) {
-                        setError('Upload satu file Excel.');
-                        return;
-                      }
-                      choose(e.dataTransfer.files[0]!);
-                    }}
-                  >
-                    <p>Tarik dan lepas file Excel di sini, atau pilih file.</p>
-                    <label>
-                      File soal Excel
-                      <input
-                        type="file"
-                        accept=".xlsx"
-                        disabled={busy}
-                        onChange={(e) => {
-                          const file = e.target.files?.[0];
-                          e.target.value = '';
-                          if (file) choose(file);
-                        }}
-                      />
-                    </label>
-                    <small>.xlsx, maksimal 10 MiB. Gambar harus tertanam di Excel.</small>
-                  </div>
-                </section>
+                <UploadSourcePanel
+                  {...{ busy, token, run, dragging, setDragging, setError, choose }}
+                />
               )}
               {step === 2 && (
                 <section className="upload-panel">
@@ -980,149 +942,26 @@ function UploadContent() {
               )}
             </>
           ) : (
-            <section className="upload-panel">
-              <div className="upload-history-heading">
-                <h2>Riwayat unggahan</h2>
-                <Button disabled={busy} onClick={reset}>
-                  Upload baru
-                </Button>
-              </div>
-              <div className="upload-history-filters">
-                <label>
-                  Cari file atau judul
-                  <input
-                    value={search}
-                    onChange={(e) => {
-                      setSearch(e.target.value);
-                      setOffset(0);
-                    }}
-                  />
-                </label>
-                <label>
-                  Jenis
-                  <select
-                    value={filterType}
-                    onChange={(e) => {
-                      setFilterType(e.target.value);
-                      setOffset(0);
-                    }}
-                  >
-                    <option value="">Semua jenis</option>
-                    {Object.entries(typeLabels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-                <label>
-                  Status
-                  <select
-                    value={filterStatus}
-                    onChange={(e) => {
-                      setFilterStatus(e.target.value);
-                      setOffset(0);
-                    }}
-                  >
-                    <option value="">Semua status</option>
-                    {Object.entries(labels).map(([key, label]) => (
-                      <option key={key} value={key}>
-                        {label}
-                      </option>
-                    ))}
-                  </select>
-                </label>
-              </div>
-              {historyError ? (
-                <AdminMessage message={historyError} error retry={() => setReload((n) => n + 1)} />
-              ) : historyLoading ? (
-                <p role="status">Memuat riwayat…</p>
-              ) : !history.items.length ? (
-                <p>Belum ada unggahan yang sesuai filter.</p>
-              ) : (
-                <div
-                  className="upload-history-scroll"
-                  role="region"
-                  aria-label="Tabel riwayat unggahan"
-                  tabIndex={0}
-                >
-                  <table className="upload-history-table">
-                    <thead>
-                      <tr>
-                        <th>File / waktu</th>
-                        <th>Admin</th>
-                        <th>Judul / jenis</th>
-                        <th>Soal</th>
-                        <th>Validasi</th>
-                        <th>Status</th>
-                        <th>Tindakan</th>
-                      </tr>
-                    </thead>
-                    <tbody>
-                      {history.items.map((item) => (
-                        <tr key={item.id}>
-                          <td>
-                            <strong>{item.fileName}</strong>
-                            <small>
-                              {new Date(item.createdAt).toLocaleString('id-ID', {
-                                timeZone: 'Asia/Jakarta',
-                              })}{' '}
-                              WIB
-                            </small>
-                          </td>
-                          <td>{item.actorName}</td>
-                          <td>
-                            {item.title ?? 'Belum dipilih'}
-                            <small>
-                              {item.assessmentType
-                                ? typeLabels[item.assessmentType as keyof typeof typeLabels]
-                                : '—'}
-                            </small>
-                          </td>
-                          <td>{item.questionCount}</td>
-                          <td>{item.validationResult ?? 'Belum divalidasi'}</td>
-                          <td>
-                            <span
-                              className={`upload-status upload-status-${item.status.toLowerCase()}`}
-                            >
-                              {labels[item.status] ?? item.status}
-                            </span>
-                          </td>
-                          <td>
-                            <Button
-                              variant="secondary"
-                              disabled={busy}
-                              onClick={() => void run(() => open(item.id))}
-                            >
-                              {['PUBLISHED', 'CLOSED', 'ARCHIVED', 'INVALID'].includes(item.status)
-                                ? 'Lihat'
-                                : 'Lanjutkan'}
-                            </Button>
-                          </td>
-                        </tr>
-                      ))}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-              <div className="upload-actions">
-                <Button
-                  variant="secondary"
-                  disabled={!offset || historyLoading}
-                  onClick={() => setOffset((n) => Math.max(0, n - 20))}
-                >
-                  Sebelumnya
-                </Button>
-                <span>{history.total} unggahan</span>
-                <Button
-                  variant="secondary"
-                  disabled={offset + 20 >= history.total || historyLoading}
-                  onClick={() => setOffset((n) => n + 20)}
-                >
-                  Berikutnya
-                </Button>
-              </div>
-            </section>
+            <UploadHistory
+              {...{
+                busy,
+                reset,
+                search,
+                setSearch,
+                filterType,
+                setFilterType,
+                filterStatus,
+                setFilterStatus,
+                offset,
+                setOffset,
+                history,
+                historyError,
+                historyLoading,
+                setReload,
+                run,
+                open,
+              }}
+            />
           )}
         </div>
       )}

@@ -13,7 +13,7 @@ import {
 } from 'drizzle-orm/pg-core';
 import { attemptAnswers } from './assessments.js';
 import { classes } from './classes.js';
-import { subchapters } from './content.js';
+import { subchapters, questionVersions } from './content.js';
 import { users } from './identity.js';
 
 export const reportStatus = pgEnum('report_status', ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED']);
@@ -98,6 +98,10 @@ export const questionReports = pgTable(
     details: text('details'),
     status: reportStatus('status').notNull().default('OPEN'),
     followUp: text('follow_up'),
+    revisionQuestionVersionId: uuid('revision_question_version_id').references(
+      () => questionVersions.id,
+      { onDelete: 'restrict' },
+    ),
     reportedAt: timestamp('reported_at', { withTimezone: true }).notNull().defaultNow(),
   },
   (table) => [index('question_reports_status_time_idx').on(table.status, table.reportedAt)],
@@ -119,6 +123,14 @@ export const videoReports = pgTable(
       levelId: string | null;
       subchapterId: string;
       videoId: string;
+    }>(),
+    targetSnapshot: jsonb('target_snapshot').$type<{
+      title: string;
+      url: string;
+      source: string;
+      videoId: string;
+      subchapterId: string;
+      recommendationOrder: number;
     }>(),
     category: text('category').notNull(),
     details: text('details'),

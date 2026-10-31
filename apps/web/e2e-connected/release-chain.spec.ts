@@ -55,6 +55,7 @@ const requiredChecks = [
   'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
 ];
 const contexts: BrowserContext[] = [];
+const browserResources: { test: string; contexts: number; pages: number }[] = [];
 
 async function call(
   request: APIRequestContext,
@@ -128,6 +129,17 @@ async function submit(page: Page) {
 }
 
 test.describe.serial('JOB-06 connected release chain', () => {
+  test.afterEach(async () => {
+    const info = test.info();
+    const owned = contexts.splice(0);
+    browserResources.push({
+      test: info.title,
+      contexts: owned.length,
+      pages: owned.reduce((sum, context) => sum + context.pages().length, 0),
+    });
+    // Persisted business state survives; browser resources must not accumulate across cases.
+    await Promise.all(owned.map((context) => context.close()));
+  });
   test.beforeAll(async ({ request }) => {
     fixtures = (await (await request.get(`${fixtureBase}/fixtures`)).json()) as Fixtures;
     expect(fixtures.sha).toBe(
@@ -158,6 +170,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
           content: 'TEST_ONLY_DEMO',
           irtRelease: 'TEST_ONLY_SYNTHETIC_RELEASE_NO_MODEL_EXECUTION',
           checks,
+          browserResources,
           acceptance: {
             google: 'NOT_RUN',
             reviewedCurriculum: 'NOT_PROVIDED',
@@ -180,16 +193,27 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const admin = await login(browser, 'admin');
     await admin.goto('/admin/schools');
     await admin
+      .locator('.schools-page-heading')
+      .getByRole('button', { name: 'Tambah sekolah', exact: true })
+      .click();
+    const schoolForm = admin.getByRole('dialog', { name: 'Tambah sekolah', exact: true });
+    await schoolForm
       .getByRole('textbox', { name: 'Kode sekolah', exact: true })
       .fill(`JOB06-${Date.now()}`);
-    await admin
+    await schoolForm
       .getByRole('textbox', { name: 'Nama sekolah', exact: true })
       .fill('JOB06 Test School');
+    await schoolForm.getByLabel('Alamat sekolah', { exact: false }).fill('Jalan JOB06 Test');
     const created = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/admin/schools'),
     );
-    await admin.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
-    school = (await (await created).json()) as AdminSchoolDto;
+    await schoolForm.getByRole('button', { name: 'Simpan sekolah', exact: true }).click();
+    const schoolResponse = await created;
+    expect(schoolResponse.status()).toBe(201);
+    school = (await schoolResponse.json()) as AdminSchoolDto;
+    expect(school).toMatchObject({ name: 'JOB06 Test School', address: 'Jalan JOB06 Test' });
+    await expect(schoolForm).toHaveCount(0);
+    await expect(admin.getByRole('heading', { name: school.name, exact: true })).toBeVisible();
     const issued = admin.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/teacher-tokens'),
     );
@@ -394,7 +418,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       rewards: {
         attempt_id: string;
         xp_amount: string | number;
-        base_xp: number;
+        base_xp: string | number;
         policy_version: number;
       }[];
     };
@@ -411,7 +435,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(persisted.rewards).toHaveLength(3);
     expect(new Set(persisted.rewards.map((r) => r.attempt_id)).size).toBe(3);
     const persistedReward = persisted.rewards.find((r) => r.attempt_id === attempt.id)!;
-    expect(persistedReward).toMatchObject({ base_xp: 80, policy_version: 2 });
+    expect(Number(persistedReward.base_xp)).toBe(80);
+    expect(persistedReward.policy_version).toBe(2);
     expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
     await expect(
@@ -544,7 +569,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     browser,
     request,
   }) => {
-    const anonymous = await browser.newPage();
+    const anonymousContext = await browser.newContext();
+    contexts.push(anonymousContext);
+    const anonymous = await anonymousContext.newPage();
     await anonymous.goto('http://localhost:3400/teacher');
     await expect(anonymous).toHaveURL('http://localhost:3400/');
     await anonymous.close();
@@ -591,9 +618,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(signedInAgain).toHaveURL(/\/teacher$/);
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
-    await expect(admin).toHaveURL(/\/admin$/);
+    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(
+      admin.getByRole('heading', { name: 'Sekolah & credential', exact: true }),
+    ).toBeVisible();
+    await expect(admin.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
     await admin.goto('/student/learn');
-    await expect(admin).toHaveURL(/\/admin$/);
+    await expect(admin).toHaveURL(/\/admin\/schools$/);
     const foreign = await login(browser, 'foreignTeacher');
     await foreign.goto(`/teacher/classes/${cls.id}`);
     await expect(
@@ -1024,7 +1055,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     await admin.goto(`/admin/content/preview-sessions/${preview.id}`);
     await expect(admin).toHaveURL(/\/admin\/content\/preview-sessions\/[0-9a-f-]{36}$/);
-    await expect(admin.getByText(/DRAFT.*preview internal/, { exact: true })).toBeVisible();
+    await expect(admin.getByText(/Preview internal.*tanpa scoring/, { exact: true })).toBeVisible();
     const sessionId = new URL(admin.url()).pathname.split('/').at(-1)!;
     for (let i = 0; i < 10; i++) {
       await expect(admin.getByText(new RegExp(`Soal ${i + 1}/10`))).toBeVisible();

@@ -2,15 +2,23 @@ import { defineConfig } from '@playwright/test';
 export default defineConfig({
   testDir: './e2e',
   workers: 1,
-  reporter: 'line',
-  // Allow the 192-case regression plus server startup and teardown to finish in CI.
-  globalTimeout: 900_000,
+  reporter: process.env.CI
+    ? [
+        ['line'],
+        ['json'],
+        ['junit', { outputFile: 'playwright-report/junit.xml' }],
+        ['html', { outputFolder: 'playwright-report/html', open: 'never' }],
+      ]
+    : 'line',
+  // Retain main's suite limit and its complete two-shard regression.
+  globalTimeout: 1_500_000,
   timeout: 90_000,
   expect: { timeout: 20_000 },
   use: {
     baseURL: 'http://localhost:3300',
     browserName: 'chromium',
     trace: 'retain-on-failure',
+    screenshot: 'only-on-failure',
   },
   webServer: {
     command: `node node_modules/next/dist/bin/next ${process.env.NUMORA_E2E_PRODUCTION === 'true' ? 'start' : 'dev'} -p 3300${process.env.NUMORA_E2E_WEBPACK === 'true' && process.env.NUMORA_E2E_PRODUCTION !== 'true' ? ' --webpack' : ''}`,

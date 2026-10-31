@@ -1,26 +1,36 @@
 'use client';
-import Link from 'next/link';
-import { useEffect, useRef, useState, type ReactNode } from 'react';
-import { useRouter } from 'next/navigation';
-import { Button, Card } from '@tka/ui';
+
 import { useAuth } from '@/features/onboarding/auth';
+import { Button } from '@tka/ui';
+import Link from 'next/link';
+import { useRouter } from 'next/navigation';
+import { useCallback, useEffect, useRef, useState, type ReactNode } from 'react';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
+import { adminOffset, useAdminUrl } from './admin-url';
+import { AdminPagination, useAdminPagination } from './admin-pagination';
+import { downloadFile } from './content-excel-api';
+import { ContentExcelPreview } from './content-excel-preview';
 import {
-  createGeneratorPackage,
-  generatorPackageCatalog,
+  GeneratorCreateDialog,
+  generatorError,
+  generatorTypeLabels,
+} from './generator-package-form';
+import type { GeneratorPackageDto, GeneratorPackageFileDto } from './generated-types';
+import {
   getGeneratorPackage,
   getGeneratorPackageFile,
   listGeneratorPackages,
   retryGeneratorPackage,
 } from './generator-package-api';
-import { downloadFile } from './content-excel-api';
-import { ContentExcelPreview } from './content-excel-preview';
-import type {
-  GeneratorPackageCatalogDto,
-  GeneratorPackageDto,
-  GeneratorPackageFileDto,
-} from './generated-types';
-export const generatorTypeLabels = { TRYOUT: 'Tryout', DRILL: 'Drill', PRETEST: 'Pretest' };
+
+export { generatorTypeLabels } from './generator-package-form';
+const statusLabels: Record<GeneratorPackageDto['status'], string> = {
+  GENERATING: 'Sedang dibuat',
+  FAILED: 'Perlu dicoba lagi',
+  READY: 'Siap diimpor',
+  IMPORTED: 'Sudah diimpor',
+};
 export function useGeneratorToken() {
   const { state } = useAuth();
   return state.status === 'ready' &&
@@ -30,19 +40,15 @@ export function useGeneratorToken() {
     ? state.session.access_token
     : null;
 }
-function GeneratorNav() {
-  return (
-    <nav className="admin-content-actions" aria-label="Generator paket">
-      <Link href="/admin/content/generator">Generate paket</Link>
-      <Link href="/admin/content/imports">Impor soal</Link>
-    </nav>
-  );
-}
 export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }) {
   return (
     <ContentExcelPreview
-      excel={{ envelope: { questions: file.items.map((i) => i.question) }, media: [], issues: [] }}
-      selected={new Set(file.items.map((i) => i.question.externalId))}
+      excel={{
+        envelope: { questions: file.items.map((item) => item.question) },
+        media: [],
+        issues: [],
+      }}
+      selected={new Set(file.items.map((item) => item.question.externalId))}
       report={null}
       disabled
       hideIndicator={file.assessmentType === 'TRYOUT'}
@@ -54,194 +60,96 @@ export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }
     />
   );
 }
-export function GeneratorPackageScreen() {
-  const token = useGeneratorToken(),
-    router = useRouter();
-  const [catalog, setCatalog] = useState<GeneratorPackageCatalogDto | null>(null),
-    [type, setType] = useState<'TRYOUT' | 'DRILL' | 'PRETEST'>('TRYOUT'),
-    [scope, setScope] = useState(''),
-    [title, setTitle] = useState('Paket Tryout'),
-    [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
-  const key = useRef<string | null>(null);
-  const [activeId, setActiveId] = useState<string | undefined>();
+export const GeneratorPackageScreen = withAdminWorkspace(
+  GeneratorPackageScreenProtected,
+  'content',
+);
+function GeneratorPackageScreenProtected() {
+  const token = useGeneratorToken();
+  const url = useAdminUrl();
+  const activeId = url.params.get('package') || undefined;
+  const [creating, setCreating] = useState(false);
   useEffect(() => {
-    setActiveId(new URLSearchParams(window.location.search).get('package') ?? undefined);
-  }, []);
-  async function load() {
-    if (!token) return;
-    try {
-      setCatalog(await generatorPackageCatalog(token));
-      setError('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal memuat sumber generator.');
-    }
-  }
-  useEffect(() => {
-    void load();
-  }, [token]);
-  const choices = catalog?.options.filter((o) => o.assessmentType === type) ?? [],
-    choice =
-      choices.find((o) => (o.scopeId ?? 'GLOBAL') === scope) ??
-      (type === 'TRYOUT' ? choices[0] : null);
-  async function generate() {
-    if (!token || !choice) return;
-    setBusy(true);
-    setError('');
-    try {
-      key.current ??= crypto.randomUUID();
-      const result = await createGeneratorPackage(token, key.current, {
-        assessmentType: type,
-        title,
-        ...(choice.scopeId ? { scopeId: choice.scopeId } : {}),
-      });
-      key.current = null;
-      setActiveId(result.id);
-      window.history.replaceState(null, '', `?package=${result.id}`);
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Generate gagal.');
-    } finally {
-      setBusy(false);
-    }
-  }
+    if (activeId) setCreating(false);
+  }, [activeId]);
   return (
     <AdminFrame
-      title="Generator paket soal"
-      description="Generate dan lihat riwayat paket di sini. Hasil selesai langsung masuk ke preview impor soal."
+      title="Generator paket"
+      description="Buat kandidat soal, pantau prosesnya, lalu periksa hasil melalui Impor soal."
       icon="book"
+      management
     >
-      <GeneratorNav />
-      {process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' && (
-        <p role="status">
-          DEMO LOKAL — Soal dan approval TEST ONLY, bukan persetujuan akademik produksi.
-        </p>
-      )}
-      {!token ? (
-        <AdminMessage message="Akses Super Admin atau Content/Data/Moderation diperlukan." />
-      ) : (
-        <>
-          {error && <AdminMessage message={error} error retry={() => void load()} />}
-          {!catalog && !error ? (
-            <AdminLoading message="Memuat original mapped yang disetujui…" />
-          ) : (
-            <Card className="admin-generator-form">
-              <label htmlFor="generator-type">Tujuan paket</label>
-              <select
-                id="generator-type"
-                disabled={busy}
-                value={type}
-                onChange={(e) => {
-                  const value = e.target.value as typeof type;
-                  setType(value);
-                  setScope('');
-                  setTitle(`Paket ${generatorTypeLabels[value]}`);
-                  key.current = null;
-                }}
-              >
-                {Object.entries(generatorTypeLabels).map(([value, label]) => (
-                  <option value={value} key={value}>
-                    {label}
-                  </option>
-                ))}
-              </select>
-              <label htmlFor="generator-title">Judul paket</label>
-              <input
-                id="generator-title"
-                maxLength={160}
-                value={title}
-                disabled={busy}
-                onChange={(e) => {
-                  setTitle(e.target.value);
-                  key.current = null;
-                }}
-              />
-              {type !== 'TRYOUT' && (
-                <>
-                  <label htmlFor="generator-scope">
-                    {type === 'DRILL' ? 'Subbab dan level' : 'Bab'}
-                  </label>
-                  <select
-                    id="generator-scope"
-                    value={scope}
-                    disabled={busy}
-                    onChange={(e) => {
-                      setScope(e.target.value);
-                      key.current = null;
-                    }}
-                  >
-                    <option value="">Pilih scope</option>
-                    {choices.map((o) => (
-                      <option key={o.scopeId} value={o.scopeId ?? ''}>
-                        {o.scopeLabel}
-                      </option>
-                    ))}
-                  </select>
-                </>
-              )}
-              {choice ? (
-                <p>
-                  {choice.requiredCount} soal per paket. {choice.availableCount} original mapped
-                  dari keluarga berbeda tersedia.
-                  {!choice.canGenerate ? ' Sumber belum cukup untuk satu paket.' : ''}
-                </p>
-              ) : (
-                <p>
-                  {choices.length
-                    ? 'Pilih scope untuk melihat jumlah soal.'
-                    : 'Belum ada sumber mapped dengan tujuan dan scope ini.'}
-                </p>
-              )}
-              <p>
-                Generate menyimpan kandidat, belum membuat soal DRAFT atau menerbitkan paket. Hasil
-                selesai langsung dibuka pada langkah Preview & tujuan di Impor soal.
-              </p>
-              <Button
-                disabled={busy || !!activeId || !choice?.canGenerate || !title.trim()}
-                loading={busy}
-                onClick={() => void generate()}
-              >
-                Generate paket
-              </Button>
-            </Card>
-          )}
-          {activeId && (
-            <Button
-              variant="secondary"
-              onClick={() => {
-                setActiveId(undefined);
-                router.replace('/admin/content/generator');
-              }}
-            >
-              Lihat riwayat paket
+      <div className="admin-generator-workspace">
+        <div className="generator-taskbar">
+          {activeId ? (
+            <Button variant="ghost" onClick={() => url.update({ package: null })}>
+              Kembali ke riwayat
             </Button>
+          ) : (
+            <Link href="/admin/content">Bank soal & assessment</Link>
           )}
-          <GeneratorResultsScreen
-            {...(activeId ? { id: activeId } : {})}
-            embedded
-            autoOpen
-            onSelect={(id) => {
-              setActiveId(id);
-              window.history.replaceState(null, '', `?package=${id}`);
+          {activeId ? (
+            <Link href="/admin/content/imports">Impor soal</Link>
+          ) : (
+            <Button onClick={() => setCreating(true)}>Generate paket</Button>
+          )}
+        </div>
+        {process.env.NEXT_PUBLIC_GENERATOR_DEMO === 'true' && (
+          <p className="generator-footnote" role="status">
+            DEMO LOKAL — Soal dan persetujuan TEST ONLY; bukan persetujuan akademik produksi.
+          </p>
+        )}
+        <GeneratorResultsScreen
+          key={activeId ?? 'directory'}
+          {...(activeId ? { id: activeId } : {})}
+          embedded
+          autoOpen
+          onSelect={(id) => url.update({ package: id })}
+        />
+        {!activeId && token && (
+          <GeneratorCreateDialog
+            open={creating}
+            token={token}
+            onClose={() => setCreating(false)}
+            onCreated={(id) => {
+              setCreating(false);
+              url.update({ package: id, offset: null });
             }}
           />
-        </>
-      )}
+        )}
+      </div>
     </AdminFrame>
   );
 }
 function ResultsFrame({ embedded, children }: { embedded: boolean; children: ReactNode }) {
-  return embedded ? (
-    <section aria-label="Hasil generator">
-      <h2>Hasil generator</h2>
+  const body = (
+    <section className="generator-results" aria-label="Hasil generator">
       {children}
     </section>
+  );
+  return embedded ? (
+    body
   ) : (
-    <AdminFrame title="Generator paket" description="Generate dan tinjau hasil paket." icon="book">
-      {children}
+    <AdminFrame
+      title="Detail paket generator"
+      description="Pantau progres dan periksa hasil paket sebelum diimpor."
+      icon="book"
+      management
+    >
+      <div className="admin-generator-workspace">
+        <div className="generator-taskbar">
+          <Link href="/admin/content/generator">Kembali ke riwayat</Link>
+        </div>
+        {body}
+      </div>
     </AdminFrame>
   );
 }
-export function GeneratorResultsScreen({
+export const GeneratorResultsScreen = withAdminWorkspace(
+  GeneratorResultsScreenProtected,
+  'content',
+);
+function GeneratorResultsScreenProtected({
   id,
   embedded = false,
   autoOpen = false,
@@ -252,87 +160,283 @@ export function GeneratorResultsScreen({
   autoOpen?: boolean;
   onSelect?: (id: string) => void;
 }) {
+  const onAccessError = useAdminAccessError();
   const token = useGeneratorToken();
   const router = useRouter();
-  const [items, setItems] = useState<GeneratorPackageDto[]>([]),
-    [current, setCurrent] = useState<GeneratorPackageDto | null>(null),
-    [file, setFile] = useState<GeneratorPackageFileDto | null>(null),
-    [error, setError] = useState(''),
-    [busy, setBusy] = useState(false);
+  const url = useAdminUrl();
+  const [items, setItems] = useState<GeneratorPackageDto[] | null>(null);
+  const [current, setCurrent] = useState<GeneratorPackageDto | null>(null);
+  const [file, setFile] = useState<GeneratorPackageFileDto | null>(null);
+  const [error, setError] = useState('');
+  const [refreshing, setRefreshing] = useState(false);
+  const [action, setAction] = useState<'retry' | 'preview' | 'download' | null>(null);
   const retryKey = useRef<string | null>(null);
-  async function load() {
-    if (!token) return;
+  const active = useRef(false);
+  const scope = useRef(0);
+  const serial = useRef(0);
+  const mutating = useRef(false);
+  const heading = useRef<HTMLHeadingElement>(null);
+  const load = useCallback(async () => {
+    if (!token || mutating.current) return;
+    const request = ++serial.current;
+    setRefreshing(true);
     try {
-      if (id) setCurrent(await getGeneratorPackage(token, id));
-      else setItems((await listGeneratorPackages(token)).items);
-      setError('');
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Gagal memuat hasil.');
+      const data = id ? await getGeneratorPackage(token, id) : await listGeneratorPackages(token);
+      if (active.current && serial.current === request) {
+        if ('items' in data) setItems(data.items);
+        else setCurrent(data);
+        setError('');
+      }
+    } catch (cause) {
+      if (active.current && serial.current === request) {
+        onAccessError(cause);
+        setError(generatorError(cause, 'Riwayat generator belum dapat dimuat.'));
+      }
+    } finally {
+      if (active.current && serial.current === request) setRefreshing(false);
     }
-  }
+  }, [token, id, onAccessError]);
   useEffect(() => {
+    active.current = true;
+    scope.current += 1;
+    mutating.current = false;
+    setAction(null);
+    retryKey.current = null;
     setFile(null);
+    setCurrent(null);
+    setItems(null);
+    setError('');
     void load();
-  }, [token, id]);
+    return () => {
+      active.current = false;
+      scope.current += 1;
+      serial.current += 1;
+    };
+  }, [load]);
   useEffect(() => {
     if (!id || current?.status !== 'GENERATING') return;
-    const timer = setInterval(() => void load(), 3000);
-    return () => clearInterval(timer);
-  }, [token, id, current?.status]);
+    let stopped = false;
+    let timer: ReturnType<typeof setTimeout>;
+    async function poll() {
+      await load();
+      if (!stopped) timer = setTimeout(() => void poll(), 3000);
+    }
+    timer = setTimeout(() => void poll(), 3000);
+    return () => {
+      stopped = true;
+      clearTimeout(timer);
+    };
+  }, [id, current?.status, load]);
   useEffect(() => {
-    if (autoOpen && current && current.id === id && ['READY', 'IMPORTED'].includes(current.status))
-      router.replace(`/admin/content/imports?generatorPackage=${current.id}`);
+    if (autoOpen && current?.id === id && current && ['READY', 'IMPORTED'].includes(current.status))
+      router.replace(`/admin/content/imports?generatorPackage=${encodeURIComponent(current.id)}`);
   }, [autoOpen, current, id, router]);
-  async function run(fn: () => Promise<void>) {
-    setBusy(true);
+  useEffect(() => {
+    if (current?.id) heading.current?.focus();
+  }, [current?.id]);
+  async function perform(kind: 'retry' | 'preview' | 'download') {
+    if (!token || !current || mutating.current) return;
+    const identity = scope.current;
+    const valid = () => active.current && scope.current === identity;
+    mutating.current = true;
+    serial.current += 1;
+    setRefreshing(false);
+    setAction(kind);
     setError('');
     try {
-      await fn();
-    } catch (e) {
-      setError(e instanceof Error ? e.message : 'Permintaan gagal.');
+      if (kind === 'retry') {
+        retryKey.current ??= crypto.randomUUID();
+        const result = await retryGeneratorPackage(token, current.id, retryKey.current);
+        if (valid()) {
+          setCurrent(result);
+          retryKey.current = null;
+        }
+      } else {
+        const json = await getGeneratorPackageFile(token, current.id);
+        if (valid()) {
+          if (kind === 'preview') setFile(json);
+          else
+            downloadFile(
+              new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }),
+              `generator-${current.assessmentType.toLowerCase()}-${current.id}.json`,
+            );
+        }
+      }
+    } catch (cause) {
+      if (valid()) {
+        onAccessError(cause);
+        setError(generatorError(cause, 'Permintaan belum berhasil. Coba lagi.'));
+      }
     } finally {
-      setBusy(false);
+      if (valid()) {
+        mutating.current = false;
+        setAction(null);
+      }
     }
   }
+  const page = useAdminPagination(items ?? [], token, {
+    offset: adminOffset(url.params.get('offset')),
+    onChange: (offset) => url.update({ offset: offset || null }),
+  });
   return (
     <ResultsFrame embedded={embedded}>
-      {!embedded && <GeneratorNav />}
       {!token ? (
-        <AdminMessage message="Akses Content Admin diperlukan." />
+        <AdminMessage message="Akses Super Admin atau Content/Data/Moderation diperlukan." />
       ) : (
         <>
-          {error && <AdminMessage message={error} error retry={() => void load()} />}
-          {id && !current && !error && <AdminLoading message="Memuat hasil generator…" />}
-          {current && current.id === id && (
-            <Card className="admin-generator-form">
-              <h2>{current.title}</h2>
-              <p>
-                {generatorTypeLabels[current.assessmentType]} · {current.completedCount}/
-                {current.expectedCount} soal selesai ·{' '}
-                {current.status === 'GENERATING'
-                  ? 'Sedang generate'
-                  : current.status === 'READY'
-                    ? 'JSON siap'
-                    : current.status === 'IMPORTED'
-                      ? 'Sudah diimpor DRAFT'
-                      : 'Perlu retry'}
-              </p>
-              <div className="admin-content-actions">
-                <Button variant="secondary" disabled={busy} onClick={() => void load()}>
+          {error && <AdminMessage error message={error} retry={() => void load()} />}
+          {!id && (
+            <div className="generator-directory">
+              <header className="generator-section-heading">
+                <div>
+                  <h2>Riwayat paket</h2>
+                  <p>Riwayat terbaru dari server. Maksimal 5 paket per halaman.</p>
+                </div>
+                <Button
+                  variant="secondary"
+                  disabled={refreshing}
+                  onClick={() => void load()}
+                  loading={refreshing && items !== null}
+                >
+                  Muat ulang
+                </Button>
+              </header>
+              {items === null ? (
+                !error && <AdminLoading message="Memuat riwayat generator..." />
+              ) : !items.length ? (
+                <AdminMessage message="Belum ada paket generator. Pilih Generate paket untuk membuat kandidat soal." />
+              ) : (
+                <>
+                  <table className="generator-table">
+                    <caption className="sr-only">Riwayat paket generator yang dimuat</caption>
+                    <thead>
+                      <tr>
+                        <th scope="col">Paket</th>
+                        <th scope="col">Status</th>
+                        <th scope="col">Soal selesai</th>
+                        <th scope="col">Dibuat (WIB)</th>
+                        <th scope="col">Tindakan</th>
+                      </tr>
+                    </thead>
+                    <tbody>
+                      {page.items.map((pack) => (
+                        <tr key={pack.id}>
+                          <td>
+                            <strong>{pack.title}</strong>
+                            <span>{generatorTypeLabels[pack.assessmentType]}</span>
+                          </td>
+                          <td>
+                            <span className={`generator-status is-${pack.status.toLowerCase()}`}>
+                              {statusLabels[pack.status]}
+                            </span>
+                          </td>
+                          <td data-label="Soal selesai">
+                            {pack.completedCount}/{pack.expectedCount}
+                            {pack.failedCount > 0 && (
+                              <span>{pack.failedCount} perlu dicoba lagi</span>
+                            )}
+                          </td>
+                          <td data-label="Dibuat (WIB)">
+                            <time dateTime={pack.createdAt}>
+                              {new Date(pack.createdAt).toLocaleString('id-ID', {
+                                timeZone: 'Asia/Jakarta',
+                                dateStyle: 'medium',
+                                timeStyle: 'short',
+                              })}
+                            </time>
+                          </td>
+                          <td>
+                            {onSelect ? (
+                              <Button
+                                variant="secondary"
+                                aria-label={`Lihat detail ${pack.title}`}
+                                onClick={() => onSelect(pack.id)}
+                              >
+                                Lihat detail
+                              </Button>
+                            ) : (
+                              <Link
+                                href={`/admin/content/generator?package=${encodeURIComponent(pack.id)}`}
+                              >
+                                Lihat detail
+                              </Link>
+                            )}
+                          </td>
+                        </tr>
+                      ))}
+                    </tbody>
+                  </table>
+                  <footer className="generator-directory-footer">
+                    <p>
+                      Menampilkan {page.pagination.offset + 1}–
+                      {Math.min(page.pagination.offset + page.items.length, items.length)} dari{' '}
+                      {items.length} paket yang dimuat.
+                    </p>
+                    <AdminPagination
+                      offset={page.pagination.offset}
+                      hasNext={page.pagination.hasNext}
+                      onChange={page.pagination.onChange}
+                      label="Halaman riwayat generator"
+                      disabled={refreshing}
+                    />
+                  </footer>
+                </>
+              )}
+            </div>
+          )}
+          {id && !current && !error && <AdminLoading message="Memuat detail paket generator..." />}
+          {current?.id === id && current && (
+            <article className="generator-detail">
+              <header className="generator-section-heading">
+                <div>
+                  <span className={`generator-status is-${current.status.toLowerCase()}`}>
+                    {statusLabels[current.status]}
+                  </span>
+                  <h2 ref={heading} tabIndex={-1}>
+                    {current.title}
+                  </h2>
+                  <p>
+                    {generatorTypeLabels[current.assessmentType]} · {current.expectedCount} soal per
+                    paket
+                  </p>
+                </div>
+                <Button
+                  variant="secondary"
+                  disabled={refreshing || action !== null}
+                  loading={refreshing}
+                  onClick={() => void load()}
+                >
                   Perbarui status
                 </Button>
+              </header>
+              <dl className="generator-progress">
+                <div>
+                  <dt>Soal selesai</dt>
+                  <dd>
+                    {current.completedCount}
+                    <span> dari {current.expectedCount}</span>
+                  </dd>
+                </div>
+                <div>
+                  <dt>Perlu dicoba lagi</dt>
+                  <dd>{current.failedCount}</dd>
+                </div>
+              </dl>
+              <p className="generator-status-copy" role="status">
+                {current.status === 'GENERATING'
+                  ? 'Pembuatan soal sedang berjalan. Status diperbarui otomatis; kamu dapat kembali ke riwayat.'
+                  : current.status === 'FAILED'
+                    ? 'Sebagian proses belum berhasil. Coba kembali proses yang gagal tanpa membuat paket baru.'
+                    : autoOpen
+                      ? 'Hasil siap. Membuka Preview & tujuan di Impor soal...'
+                      : 'Hasil siap diperiksa melalui preview impor. Konten belum otomatis diterbitkan.'}
+              </p>
+              <div className="generator-detail-actions">
                 {current.failedCount > 0 && (
                   <Button
-                    disabled={busy}
-                    onClick={() =>
-                      void run(async () => {
-                        retryKey.current ??= crypto.randomUUID();
-                        setCurrent(
-                          await retryGeneratorPackage(token, current.id, retryKey.current),
-                        );
-                        retryKey.current = null;
-                      })
-                    }
+                    disabled={action !== null || refreshing}
+                    loading={action === 'retry'}
+                    onClick={() => void perform('retry')}
                   >
                     Coba generate lagi
                   </Button>
@@ -340,72 +444,49 @@ export function GeneratorResultsScreen({
                 {['READY', 'IMPORTED'].includes(current.status) && (
                   <>
                     <Button
-                      disabled={busy}
-                      onClick={() =>
-                        void run(async () =>
-                          setFile(await getGeneratorPackageFile(token, current.id)),
-                        )
-                      }
+                      disabled={action !== null}
+                      loading={action === 'preview'}
+                      onClick={() => void perform('preview')}
                     >
                       Lihat hasil
                     </Button>
                     <Button
                       variant="secondary"
-                      disabled={busy}
-                      onClick={() =>
-                        void run(async () => {
-                          const json = await getGeneratorPackageFile(token, current.id);
-                          downloadFile(
-                            new Blob([JSON.stringify(json, null, 2)], { type: 'application/json' }),
-                            `generator-${current.assessmentType.toLowerCase()}-${current.id}.json`,
-                          );
-                        })
-                      }
+                      disabled={action !== null}
+                      loading={action === 'download'}
+                      onClick={() => void perform('download')}
                     >
                       Unduh JSON
                     </Button>
                     <Link
-                      className="admin-generator-link"
-                      href={`/admin/content/imports?generatorPackage=${current.id}`}
+                      href={`/admin/content/imports?generatorPackage=${encodeURIComponent(current.id)}`}
                     >
-                      Impor JSON & preview
+                      Preview & impor
                     </Link>
                   </>
                 )}
               </div>
               {current.packageId && (
-                <p>
-                  Paket DRAFT sudah tersimpan. Publication tetap mengikuti review dan validasi
-                  paket.
+                <p className="generator-footnote">
+                  Paket sudah diimpor. Status publikasi mengikuti review dan validasi paket.
                 </p>
               )}
-            </Card>
+              <details className="generator-identity">
+                <summary>Identitas paket</summary>
+                <dl>
+                  <dt>ID generator</dt>
+                  <dd>{current.id}</dd>
+                  {current.packageId && (
+                    <>
+                      <dt>ID paket hasil impor</dt>
+                      <dd>{current.packageId}</dd>
+                    </>
+                  )}
+                </dl>
+              </details>
+            </article>
           )}
           {file && <GeneratorFilePreview file={file} />}
-          {!id &&
-            (items.length ? (
-              <div className="admin-generator-history">
-                {items.map((p) => (
-                  <Card key={p.id}>
-                    {onSelect ? (
-                      <Button variant="secondary" onClick={() => onSelect(p.id)}>
-                        {p.title}
-                      </Button>
-                    ) : (
-                      <Link href={`/admin/content/generator?package=${p.id}`}>
-                        <strong>{p.title}</strong>
-                      </Link>
-                    )}
-                    <p>
-                      {generatorTypeLabels[p.assessmentType]} · {p.completedCount}/{p.expectedCount}{' '}
-                      · {p.status}
-                    </p>
-                  </Card>
-                ))}
-              </div>
-            ) : (
-              <AdminMessage message="Belum ada hasil paket generator." />
-            ))}
         </>
       )}
     </ResultsFrame>

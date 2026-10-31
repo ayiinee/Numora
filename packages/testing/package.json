@@ -5,6 +5,6 @@
   "scripts": {
     "build": "node -e \"console.log('testing: fixture helpers are source-only')\"",
     "typecheck": "node -e \"console.log('testing: no typed helpers yet')\"",
-    "test": "node -e \"console.log('testing: no package tests yet')\""
+    "test": "node --test *.test.mjs"
   }
 }

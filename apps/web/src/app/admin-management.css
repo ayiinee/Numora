@@ -1,0 +1,77 @@
+/* Approved operational foundation shared by account and school administration. */
+.admin-management-shell,
+.admin-management-dialog {
+  --color-bg: #f7f8fa;
+  --color-primary: #722cce;
+  --color-primary-strong: #6020b4;
+  --color-primary-light: #f5edff;
+  --color-text: #27313f;
+  --color-text-muted: #626d7c;
+  --color-border-light: #dde1e8;
+  --color-surface-raised: #fff;
+  --radius-md: 8px;
+  --text-base: 14px;
+  --text-sm: 13px;
+  --touch-target-min: 44px;
+  color: var(--color-text);
+  font-size: 14px;
+  line-height: 1.6;
+}
+.admin-management-shell {
+  background: #f7f8fa;
+}
+.admin-management-shell .app-workspace {
+  background: #f7f8fa;
+  min-width: 0;
+}
+.admin-management-shell .app-content {
+  max-width: 1440px;
+  width: 100%;
+  padding: 36px 32px;
+}
+.admin-management-shell .app-topbar.numora-top-bar--context {
+  background: #fff;
+  color: var(--color-text);
+  border-bottom: 1px solid var(--color-border-light);
+  box-shadow: none;
+}
+.admin-management-shell .app-topbar.numora-top-bar--context .numora-brand,
+.admin-management-shell .app-topbar.numora-top-bar--context .text-button {
+  color: var(--color-primary);
+}
+.admin-management-shell .app-topbar .menu-toggle {
+  background: var(--color-primary-light);
+  color: var(--color-primary);
+}
+.admin-management-shell .numora-button,
+.admin-management-dialog .numora-button {
+  font-size: 14px;
+  font-weight: 600;
+}
+.admin-management-shell .numora-button--secondary,
+.admin-management-dialog .numora-button--secondary {
+  background: #fff;
+  border: 1px solid var(--color-border-light);
+  color: var(--color-text);
+}
+.admin-management-shell .numora-button--secondary:hover:not(:disabled),
+.admin-management-dialog .numora-button--secondary:hover:not(:disabled) {
+  background: #f7f8fa;
+  border-color: #b7bfcc;
+}
+
+.admin-management-shell :focus-visible,
+.admin-management-dialog :focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 3px;
+}
+@media (max-width: 767px) {
+  .admin-management-shell .app-content {
+    padding: 24px 16px;
+  }
+  .admin-management-dialog input,
+  .admin-management-dialog select,
+  .admin-management-dialog textarea {
+    font-size: 16px;
+  }
+}

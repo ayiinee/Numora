@@ -1,5 +1,6 @@
 import { test, expect, type Page } from '@playwright/test';
 import { mkdirSync, writeFileSync } from 'node:fs';
+import { execFileSync } from 'node:child_process';
 import { resolve } from 'node:path';
 import type { Session } from '@supabase/supabase-js';
 import type { LeaderboardDto, PvpSnapshotDto } from '../src/features/core-learning/generated-types';
@@ -120,8 +121,12 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
         result.players.find((p) => p.studentId === fixtures.actors.mandiri!.profileId)!.points,
       );
       await host.goto(`/student/leaderboards?difficulty=${difficulty}`);
-      await expect(host.getByText('Leaderboard PvP DEMO', { exact: true })).toBeVisible();
+      await expect(host.getByRole('heading', { name: 'Leaderboard PvP', exact: true })).toBeVisible();
+      await expect(host.getByRole('button', { name: label, exact: true })).toHaveAttribute('aria-pressed', 'true');
       await expect(host.getByRole('heading', { name: 'Posisimu' })).toBeVisible();
+      const ownCard = host.getByRole('complementary').filter({ has: host.getByRole('heading', { name: 'Posisimu' }) });
+      await expect(ownCard).toContainText(`#${board.ownEntry!.rank}`);
+      await expect(ownCard).toContainText(new Intl.NumberFormat('id-ID', { maximumFractionDigits: 0 }).format(Number(board.ownEntry!.points)));
       checks.push(
         `${difficulty}: two-browser completed 10-item match, durable result, DEMO projection and own rank`,
       );
@@ -131,7 +136,7 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
       headers: headers('school'),
       data: { levelId: '00000000-0000-4000-8000-000000000102' },
     });
-    expect(started.ok()).toBe(true);
+    expect(started.ok(), `Drill fixture start ${started.status()}: ${await started.text()}`).toBe(true);
     const attempt = await started.json();
     for (const item of attempt.questions) {
       const saved = await request.patch(
@@ -173,7 +178,7 @@ test('two browsers: Mandiri + School, real Nest/Postgres/Redis â†’ DEMO match â†
       JSON.stringify(
         {
           baseSha: fixtures.sha,
-          workingTree: 'uncommitted increment',
+          workingTree: execFileSync('git', ['status', '--porcelain'], { cwd: resolve(__dirname, '../../..'), encoding: 'utf8' }).trim() ? 'dirty' : 'clean',
           environment: 'isolated localhost',
           auth: 'TEST FIXTURE; real staging identities still required',
           checks,

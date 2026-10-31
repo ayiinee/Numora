@@ -1,0 +1,9 @@
+{
+  "totalVirtualKiB": 18586168,
+  "phase": "FULL_VELOCITY_AFTER_DIAGNOSTIC",
+  "note": "Post-failure observation, not peak or per-request attribution. No unrelated process was stopped and no experiment limits changed.",
+  "totalPhysicalKiB": 16489016,
+  "freePhysicalKiB": 2437144,
+  "observedAt": "2026-10-27T20:40:25.5848974Z",
+  "freeVirtualKiB": 1111512
+}

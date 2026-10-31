@@ -1,0 +1,47 @@
+{
+  "status": "PASS",
+  "kind": "negative-runtime-check",
+  "runId": "c9867e02-9952-41b1-a4fe-6fd5fff7ceec",
+  "finishedAt": "2026-10-27T11:26:57.787Z",
+  "durationMs": 120191.4043,
+  "drainElapsedMs": 120002.5677,
+  "experimentOutcome": "BLOCKED_EXPECTED",
+  "checks": [
+    {
+      "name": "volume-1000-event-identity-and-payload",
+      "status": "BLOCKED",
+      "reason": "Volume drain budget exhausted or backlog remains; capacity conclusion remains incomplete"
+    },
+    {
+      "name": "volume-10000-event-identity-and-payload",
+      "count": 10000,
+      "status": "NOT_RUN",
+      "reason": "PREVIOUS_STAGE_BLOCKED: volume-1000-event-identity-and-payload"
+    },
+    {
+      "name": "volume-100000-event-identity-and-payload",
+      "count": 100000,
+      "status": "NOT_RUN",
+      "reason": "PREVIOUS_STAGE_BLOCKED: volume-1000-event-identity-and-payload"
+    }
+  ],
+  "actualInsertedStages": [
+    {
+      "stage_size": "1000",
+      "run_id": "c9867e02-9952-41b1-a4fe-6fd5fff7ceec",
+      "source": 1000,
+      "pending": 1000,
+      "marked_failed": 1000
+    }
+  ],
+  "unchangedDrainBoundSeconds": 120,
+  "validationCorrection": {
+    "status": "CORRECTED",
+    "originalValidation": "FAIL_TOOL_ONLY",
+    "reason": "Strict array equality compared postgres Result subclass against a plain Array. Values matched; validator now normalizes the container.",
+    "repeatedExperiment": false,
+    "databaseRecheck": "READ_ONLY",
+    "checkedAt": "2026-10-27T11:26:57.784Z"
+  },
+  "explanation": "PASS verifies harness stop behavior; the underlying intentional cooldown experiment remains BLOCKED. No 10k/100k rows were inserted."
+}

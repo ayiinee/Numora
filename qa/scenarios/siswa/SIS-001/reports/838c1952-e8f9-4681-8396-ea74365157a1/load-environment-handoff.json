@@ -1,0 +1,140 @@
+{
+  "runId": "535619d2-f5b3-4a89-b7c4-929fe2183a35",
+  "source": "b33954b0678551bdea78e4bb40c9f7eb8568e9c1",
+  "recordedAt": "2026-10-27T20:36:47.039Z",
+  "histogram": {
+    "start_requested:0:none": 2137,
+    "start_response:201:none": 2130,
+    "submit_requested:0:none": 2112,
+    "submit_response:201:none": 2078,
+    "iteration_finished:0:none": 2095,
+    "submit_response:500:1500": 17,
+    "start_response:500:1500": 7
+  },
+  "postgresErrors": [
+    {
+      "at": "2026-10-28 03:31:05.427 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.429 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.428 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.438 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.462 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.468 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.474 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.498 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.503 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.505 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.520 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.539 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.554 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.557 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.582 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.610 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.638 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.648 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.702 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.959 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.974 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.976 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:05.986 +07",
+      "error": "out of memory",
+      "context": []
+    },
+    {
+      "at": "2026-10-28 03:31:06.054 +07",
+      "error": "out of memory",
+      "context": []
+    }
+  ],
+  "interpretation": "HTTP500 responses at 03:31:05 WIB correlate with PostgreSQL out-of-memory errors. This establishes local resource failure, not per-request stack attribution or production capacity. No business-data loss demonstrated; all graded identities reconcile. The one integrity counter violation cannot be attributed solely from current start-response fields.",
+  "unattributedIntegrityCounter": 1,
+  "stress": "NOT_RUN_AFTER_FAILED_LOAD_PHASE",
+  "parametersUnchanged": true
+}

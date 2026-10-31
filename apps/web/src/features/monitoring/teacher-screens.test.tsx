@@ -14,7 +14,7 @@ import {
   ApiProblem,
 } from '@/lib/api';
 
-const auth = vi.hoisted(() => ({ logout: vi.fn(), replace: vi.fn() }));
+const auth = vi.hoisted(() => ({ logout: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
   useRouter: () => ({ replace: auth.replace }),
   usePathname: () => '/teacher',
@@ -34,6 +34,7 @@ vi.mock('@/features/onboarding/auth', () => ({
       },
     },
     logout: auth.logout,
+    refresh: auth.refresh,
   }),
 }));
 vi.mock('@/lib/api', async (original) => ({
@@ -49,9 +50,9 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
-it('retries create without clearing input on failure and displays the exact server join code', async () => {
+it('retains input after explicit validation rejection and displays the exact server join code', async () => {
   vi.mocked(createTeacherClass)
-    .mockRejectedValueOnce(new Error('Kelas belum dapat dibuat.'))
+    .mockRejectedValueOnce(new ApiProblem(400, 'INVALID_CLASS', 'Kelas belum dapat dibuat.'))
     .mockResolvedValueOnce({ id: 'class-test', name: 'IX A', joinCode: 'Ab_Cd-234' });
   render(<TeacherDashboardScreen />);
   fireEvent.click(screen.getByText('Buat kelas baru'));
@@ -88,6 +89,30 @@ it('provides a login destination after a create request reports an expired sessi
   );
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('IX A');
 });
+it.each([
+  new ApiProblem(0, 'NETWORK_ERROR', 'Koneksi ke server gagal.'),
+  new ApiProblem(408, 'REQUEST_TIMEOUT', 'Permintaan berakhir.'),
+  new ApiProblem(500, 'SERVER_ERROR', 'Respons gagal setelah commit.'),
+  new ApiProblem(503, 'UNAVAILABLE', 'Layanan belum tersedia.'),
+  new Error('Respons tidak dapat dibaca.'),
+])('reconciles an indeterminate create without inviting a blind retry: %s', async (failure) => {
+  vi.mocked(createTeacherClass).mockRejectedValue(failure);
+  render(<TeacherDashboardScreen />);
+  await screen.findByRole('heading', { name: 'Kelas saya' });
+  fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX Terputus' } });
+  const initialCalls = vi.mocked(getTeacherClasses).mock.calls.length;
+  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+
+  await screen.findByText(/Pengiriman tidak dapat dipastikan/);
+  // The class may exist server-side, so the form must not offer the same name again.
+  expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('');
+  expect(screen.getByRole('button', { name: 'Buat kelas' })).toHaveProperty('disabled', true);
+  expect(createTeacherClass).toHaveBeenCalledOnce();
+  await waitFor(() =>
+    expect(vi.mocked(getTeacherClasses).mock.calls.length).toBeGreaterThan(initialCalls),
+  );
+});
+
 it('filters and sorts names without mutating or replacing server identities', async () => {
   vi.mocked(getClassStudents).mockResolvedValue({
     class: { id: 'class-test', name: 'IX A' },
@@ -108,6 +133,24 @@ it('filters and sorts names without mutating or replacing server identities', as
   fireEvent.change(screen.getByLabelText('Cari siswa'), { target: { value: 'AYU' } });
   expect(screen.getAllByRole('link', { name: /Lihat progres/ })).toHaveLength(1);
   expect(getClassStudents).toHaveBeenCalledWith('test-teacher', 'class-test');
+});
+it('keeps the class search result and its no-match notice on the same rule', async () => {
+  vi.mocked(getTeacherClasses).mockResolvedValue({
+    items: [
+      { id: 'c1', name: 'Kelas IX A', joinCode: 'AAAAAA' },
+      { id: 'c2', name: 'Kelas Pendampingan', joinCode: 'BBBBBB' },
+    ],
+  });
+  render(<TeacherDashboardScreen />);
+  expect(await screen.findAllByRole('link', { name: /^Buka Kelas/ })).toHaveLength(2);
+  fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'pendampingan' } });
+  expect(screen.getByText('Kelas Pendampingan')).toBeTruthy();
+  expect(screen.queryByText('Kelas IX A')).toBeNull();
+  expect(screen.queryByText('Kelas tidak ditemukan')).toBeNull();
+
+  fireEvent.change(screen.getByLabelText('Cari kelas'), { target: { value: 'tidak-ada' } });
+  expect(screen.getByText('Kelas tidak ditemukan')).toBeTruthy();
+  expect(screen.queryAllByRole('link', { name: /^Buka Kelas/ })).toHaveLength(0);
 });
 it('preserves zero, distinct best/latest, null and authoritative access state as read-only values', async () => {
   vi.mocked(getTeacherStudentProgress).mockResolvedValue({
@@ -186,4 +229,20 @@ it('withholds total students when one class roster fails and recovers without a 
   failed = false;
   fireEvent.click(screen.getByRole('button', { name: 'Muat ulang jumlah siswa' }));
   await waitFor(() => expect(label.parentElement?.querySelector('strong')?.textContent).toBe('2'));
+});
+
+it('re-checks identity instead of offering a retry that can never succeed once access is revoked', async () => {
+  vi.mocked(getTeacherClasses).mockRejectedValue(
+    new ApiProblem(403, 'SCHOOL_FORBIDDEN', 'Akses sekolah ditolak.'),
+  );
+  render(<TeacherDashboardScreen />);
+  // LearningProvider retries a failed query once with a ~1s backoff, so the settled
+  // error state appears after that window rather than on the first tick.
+  await screen.findByText('Akses kelas Anda berakhir', {}, { timeout: 5000 });
+  expect(screen.queryByRole('button', { name: 'Coba lagi' })).toBeNull();
+
+  vi.mocked(getTeacherClasses).mockClear();
+  fireEvent.click(screen.getByRole('button', { name: 'Periksa ulang akses' }));
+  await waitFor(() => expect(auth.refresh).toHaveBeenCalledOnce());
+  expect(getTeacherClasses).not.toHaveBeenCalled();
 });
