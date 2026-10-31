@@ -3286,7 +3286,7 @@ a.settings-row:hover {
   overflow-wrap: anywhere;
 }
 .practice-stem .katex {
-  color: var(--color-primary-strong);
+  color: inherit;
   font-size: 1.05em;
 }
 .practice-choices {
@@ -3806,7 +3806,7 @@ a.settings-row:hover {
   margin: 12px 0;
 }
 .drill-review__question .katex {
-  color: var(--color-primary);
+  color: inherit;
 }
 .drill-review__answer {
   display: flex;

@@ -46,6 +46,8 @@ Backend menyelesaikan `CH-GP` melalui `chapters.code`, kemudian `SC-OG` melalui 
 
 Indikator dan level belum ditetapkan oleh persetujuan master bab/subbab ini. Jangan memakai kode bab/subbab sebagai pengganti `competencyCode` atau mengisi level berdasarkan perkiraan.
 
+Bahan ekstraksi 23 indikator dan 50 level subbab dari PR #66 dipertahankan pada [rekonsiliasi indikator/level](CURRICULUM_INDICATOR_RECONCILIATION.md), dengan validator offline dan catatan sumber yang masih OPEN. Proposal tersebut belum menjadi input seeder atau persetujuan Curriculum; perilaku seeder bab/subbab di bawah tetap berlaku.
+
 ## Perilaku seeder
 
 **ENGINEERING DECISION:** seeder terpisah dari seed DEMO, migrasi, dan impor soal. Hanya INSERT pada `public.chapters` dan `public.subchapters`. Tidak menambah indikator, level, soal, paket, akun, progres, atau gambar R2. Untuk impor soal, `competencies` dan `levels` yang cocok tetap harus disiapkan melalui pekerjaan master berikutnya; dua tabel ini saja belum memenuhi `MASTER_SCOPE_NOT_FOUND` pada importer.

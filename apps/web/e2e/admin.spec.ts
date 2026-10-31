@@ -1564,7 +1564,12 @@ for (const width of [390, 1280])
       await expect(page.getByAltText('TEST embedded image')).toBeVisible();
       await expect(page.getByLabel('Jenis paket')).toBeVisible();
       await expect(page.getByText('AUTO-Q1', { exact: true })).toHaveCount(0);
-      await page.getByText('Pilihan dan pembahasan', { exact: true }).click();
+      const explanationSummary = page.getByText('Pilihan dan pembahasan', { exact: true });
+      await expect(explanationSummary.locator('..')).toHaveAttribute('open', '');
+      await expect(page.getByText('TEST explanation')).toBeVisible();
+      await explanationSummary.click();
+      await expect(page.getByText('TEST explanation')).toBeHidden();
+      await explanationSummary.click();
       await expect(page.getByText('TEST explanation')).toBeVisible();
       await page.getByRole('button', { name: 'Edit soal AUTO-Q1' }).click();
       await page.getByLabel('Teks soal').fill('TEST corrected [[asset:image]]');
@@ -1636,13 +1641,14 @@ for (const width of [390, 1280])
       await expect(page.getByRole('link', { name: 'Lihat bank soal' })).toBeVisible();
       await page.getByRole('button', { name: 'Riwayat unggahan' }).click();
       await expect(page.getByRole('table')).toContainText('TEST new package');
+      await page.getByText('Filter riwayat', { exact: true }).click();
       await page.getByLabel('Cari file atau judul').fill('TEST');
       await page.getByLabel('Status').selectOption('PUBLISHED');
       await page.screenshot({
         path: resolve(out, `history-${usage}-${width}.png`),
         fullPage: true,
       });
-      await page.getByRole('button', { name: 'Lihat', exact: true }).click();
+      await page.getByRole('button', { name: `Lihat ${state.fileName}`, exact: true }).click();
       await page.reload();
       await expect(page.getByRole('heading', { name: '4. Detail paket' })).toBeVisible();
       expect(
