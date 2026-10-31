@@ -1,6 +1,6 @@
 import type { IconName } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
-import { adminCanAccess } from './admin-access';
+import { adminCanAccess, adminCanReadAnalytics } from './admin-access';
 
 export function adminRoleLabel(role: IdentityProfile['adminRole']) {
   switch (role) {
@@ -26,6 +26,13 @@ export type AdminNavigationItem = {
 export function adminNavigation(profile: IdentityProfile | null): AdminNavigationItem[] {
   const items: AdminNavigationItem[] = [];
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE' || !profile.adminRole) return items;
+  if (adminCanReadAnalytics(profile))
+    items.push({
+      href: '/admin/analytics',
+      label: 'Analytics',
+      description: 'Pantau aktivitas belajar, cakupan konten dan rilis dari data tersimpan.',
+      icon: 'chart',
+    });
   if (profile.capabilities?.includes('ADMIN_ACCOUNTS_MANAGE'))
     items.push({
       href: '/admin/accounts',
@@ -87,18 +94,6 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       },
     );
   }
-  if (
-    profile.capabilities?.some(
-      (cap) => cap === 'ANALYTICS_OPERATIONS' || cap === 'ANALYTICS_CONTENT',
-    )
-  )
-    items.push({
-      href: '/admin/analytics',
-      label: 'Analytics',
-      description:
-        'Lihat ringkasan aktivitas siswa, cakupan konten, dan kesehatan rilis sesuai akses.',
-      icon: 'chart',
-    });
   if (adminCanAccess(profile, 'content'))
     items.push({
       href: '/admin/irt',

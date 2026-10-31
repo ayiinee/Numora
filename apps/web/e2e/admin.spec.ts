@@ -9,6 +9,7 @@ import type {
 } from '../src/features/admin/generated-types';
 import type { AdminUserDto, AdminClassDto } from '../src/features/admin/generated-types';
 import { selectContentSection } from './fixtures/admin';
+import { analyticsSnapshot } from './fixtures/admin-analytics';
 
 function directedPackage(
   usage: ContentPackageDetailDto['assessmentType'] = 'DRILL',
@@ -512,6 +513,7 @@ async function setup(page: Page) {
         '/admin/irt/batches': state.data.irtBatches,
         '/admin/audit-logs': state.data.audit,
         '/admin/dashboard': state.data.dashboard,
+        '/admin/analytics': analyticsSnapshot(),
         '/admin/content/tryout-packages': state.data.packages,
         '/admin/content/drill-packages': state.data.drillPackages,
       };
@@ -815,7 +817,9 @@ for (const width of [390, 1280]) {
         await expect(page).toHaveURL(/\/admin\/content$/);
         await expect(page.locator('.admin-page-header')).toHaveCount(0);
         await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-      } else if (role === 'OPERATIONS' || role === 'SUPER_ADMIN') {
+      } else if (role === 'SUPER_ADMIN') {
+        await expect(page).toHaveURL(/\/admin\/analytics$/);
+      } else if (role === 'OPERATIONS') {
         await expect(page).toHaveURL(/\/admin\/schools$/);
         if (role === 'OPERATIONS') await expect(page.locator('.admin-page-header')).toHaveCount(0);
       } else {
@@ -1282,6 +1286,7 @@ test('Content imports the envelope namespace and completes a durable unscored pr
   });
   await page.setViewportSize({ width: 375, height: 900 });
   await page.goto('/admin/content/imports?mode=json');
+  await page.getByText('Pilih paket tujuan untuk impor JSON', { exact: true }).click();
   await page.getByLabel('Paket tujuan').selectOption(pack.id);
   // setInputFiles does not wait for an enabled input. Respect the package-detail
   // boundary so a delayed onSelect cannot clear a JSON file uploaded too early.
@@ -1559,7 +1564,12 @@ for (const width of [390, 1280])
       await expect(page.getByAltText('TEST embedded image')).toBeVisible();
       await expect(page.getByLabel('Jenis paket')).toBeVisible();
       await expect(page.getByText('AUTO-Q1', { exact: true })).toHaveCount(0);
-      await page.getByText('Pilihan dan pembahasan', { exact: true }).click();
+      const explanationSummary = page.getByText('Pilihan dan pembahasan', { exact: true });
+      await expect(explanationSummary.locator('..')).toHaveAttribute('open', '');
+      await expect(page.getByText('TEST explanation')).toBeVisible();
+      await explanationSummary.click();
+      await expect(page.getByText('TEST explanation')).toBeHidden();
+      await explanationSummary.click();
       await expect(page.getByText('TEST explanation')).toBeVisible();
       await page.getByRole('button', { name: 'Edit soal AUTO-Q1' }).click();
       await page.getByLabel('Teks soal').fill('TEST corrected [[asset:image]]');
@@ -1631,13 +1641,14 @@ for (const width of [390, 1280])
       await expect(page.getByRole('link', { name: 'Lihat bank soal' })).toBeVisible();
       await page.getByRole('button', { name: 'Riwayat unggahan' }).click();
       await expect(page.getByRole('table')).toContainText('TEST new package');
+      await page.getByText('Filter riwayat', { exact: true }).click();
       await page.getByLabel('Cari file atau judul').fill('TEST');
       await page.getByLabel('Status').selectOption('PUBLISHED');
       await page.screenshot({
         path: resolve(out, `history-${usage}-${width}.png`),
         fullPage: true,
       });
-      await page.getByRole('button', { name: 'Lihat', exact: true }).click();
+      await page.getByRole('button', { name: `Lihat ${state.fileName}`, exact: true }).click();
       await page.reload();
       await expect(page.getByRole('heading', { name: '4. Detail paket' })).toBeVisible();
       expect(

@@ -174,3 +174,21 @@ Template handoff/penutupan: **ID; DRI; route/role; branch/PR/SHA; repro atau des
 | UI-06    | APPLIED pada UI-01/UI-02 — review pending | Audit responsif, keyboard, error, idempotensi dan permission; bukti fixture dibedakan dari connected/CI/deployment.                            |
 
 Status IMPLEMENTED tidak sama dengan DONE repository: review manusia serta pemeriksaan CI branch tetap dicatat sebelum merge. Tidak ada perubahan kontrak backend, migrasi atau policy historis.
+
+## Pelaksanaan UI-03 — instruksi lanjutan pemilik
+
+**ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta implementasi Impor soal dilanjutkan sekarang. UI-03 tidak lagi menunggu review UI-01/UI-02; branch `feat/admin-import-ux` memakai fondasi `97a0733` dari PR #113 agar PR tersebut tetap fokus.
+
+UI-03 berstatus **IMPLEMENTED — review pending**: layout Excel/JSON/Generator diselaraskan, preview soal responsif, riwayat/filter/pagination memakai URL, dan perpindahan sumber menjaga preview melalui konfirmasi. [Laporan implementasi dan batas verifikasi](ADMIN_IMPORT_UX_2026-10-30.md). Status sebelumnya pada tabel adalah snapshot sebelum instruksi lanjutan ini. UI-04/UI-05 tetap AUDIT_FIRST.
+
+## Pelaksanaan UI-04 — instruksi lanjutan pemilik
+
+**ENGINEERING DECISION — 30 Oktober 2026:** pemilik meminta Analytics dirombak menjadi dashboard serta ditempatkan sebagai menu/halaman pertama Admin. Implementasi mempertahankan scope portal Analytics untuk Super Admin berizin; Operations/Content tetap mengikuti tujuan dan capability existing. Analytics existing menggantikan tujuan awal Super Admin, tanpa mengembalikan halaman Ringkasan.
+
+UI-04 berstatus **IMPLEMENTED — review pending** pada branch `feat/admin-analytics-dashboard`, berbasis commit UI-03 `45bf3d8`. KPI, perbandingan aktivitas, tindak lanjut, cakupan Drill dan rincian menampilkan seluruh 22 agregat existing. Nol/null, sumber gagal, timestamp WIB, pembaruan gagal dan akses dicabut dibedakan. [Audit, kontrak metrik dan verifikasi](ADMIN_ANALYTICS_UX_2026-10-30.md). UI-05 tetap AUDIT_FIRST. Review, CI branch dan penerimaan layanan nyata tetap menjadi bukti terpisah.
+
+## Pelaksanaan UI-05 — instruksi lanjutan pemilik
+
+**ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** pemilik meminta Request IRT & publikasi dilanjutkan dengan arah Admin yang sama. Branch `feat/admin-irt-publication-ux` berbasis Analytics `01fd68e`. Batch menjadi fokus awal, request/detail terpisah dan konteks disimpan pada URL. Form persiapan dipindah ke dialog; retry/adopsi dikonfirmasi dan mempertahankan idempotensi pada kegagalan. Source count, status, pin dan blocker tidak diganti oleh inferensi frontend.
+
+Status **IMPLEMENTED — review pending**; [laporan UI-05](ADMIN_IRT_UX_2026-10-30.md) mencatat hasil iterasi dan batas verifikasi. UI-06 dipakai sebagai kriteria audit, bukan klaim penerimaan layanan nyata. Semua item UI-01–UI-05 memiliki implementasi lokal; review/CI/integrasi branch serta penerimaan Data/AI dan QA tetap dicatat terpisah.

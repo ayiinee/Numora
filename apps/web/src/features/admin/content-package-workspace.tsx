@@ -33,12 +33,14 @@ export function ContentPackageWorkspace({
   onSelect,
   refreshKey,
   busyChanged,
+  embedded = false,
 }: {
   token: string;
   disabled: boolean;
   onSelect: (p: ContentPackageDetailDto | null) => void;
   refreshKey: number;
   busyChanged?: (busy: boolean) => void;
+  embedded?: boolean;
 }) {
   const reportAccessError = useAdminAccessError();
   const [usage, setUsage] = useState<Usage>('DRILL');
@@ -172,7 +174,11 @@ export function ContentPackageWorkspace({
       })(),
   );
   return (
-    <Card id="paket-soal" className="content-import-card">
+    <Card
+      id="paket-soal"
+      className="content-import-card"
+      style={embedded ? { border: 0, boxShadow: 'none', paddingTop: 0 } : undefined}
+    >
       <h2>Tujuan & paket soal</h2>
       <p>
         Satu file untuk satu paket. PG, MCMA, dan Kategori adalah format jawaban dalam tujuan yang

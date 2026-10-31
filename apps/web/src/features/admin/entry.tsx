@@ -5,6 +5,7 @@ import { useRouter } from 'next/navigation';
 import { useAuth } from '@/features/onboarding/auth';
 import { destination } from '@/features/onboarding/destination';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { adminCanReadAnalytics } from './admin-access';
 
 export function AdminEntryScreen() {
   const { state, refresh } = useAuth();
@@ -13,8 +14,9 @@ export function AdminEntryScreen() {
     state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE'
       ? state.profile
       : null;
-  const target =
-    profile?.adminRole === 'CONTENT_DATA_MODERATION'
+  const target = adminCanReadAnalytics(profile)
+    ? '/admin/analytics'
+    : profile?.adminRole === 'CONTENT_DATA_MODERATION'
       ? '/admin/content'
       : profile?.adminRole === 'SUPER_ADMIN' || profile?.adminRole === 'OPERATIONS'
         ? '/admin/schools'
