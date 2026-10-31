@@ -1,10 +1,53 @@
-import { expect, it } from 'vitest';
+import { afterAll, expect, it, vi } from 'vitest';
+import { closeDatabaseConnection, getDatabase } from '@tka/database';
+import { sql } from 'drizzle-orm';
 import {
   allowsChapter3Override,
   gradeChapter3Answer,
   CHAPTER3_POLICY_CODE,
+  chapter3RuntimeEligibility,
 } from './drill-chapter3-override';
 import { drillReward } from './drill.policy';
+
+afterAll(async () => {
+  await closeDatabaseConnection();
+  vi.unstubAllEnvs();
+});
+
+it.skipIf(!process.env.TEST_DATABASE_URL)(
+  'admits only non-demo packages explicitly allowed by the pinned owner policy before manifest approval',
+  async () => {
+    const testUrl = process.env.TEST_DATABASE_URL!;
+    const target = new URL(testUrl);
+    expect(['localhost', '127.0.0.1']).toContain(target.hostname);
+    expect(target.pathname).toMatch(/^\/numora_test(?:_[a-z0-9_]+)?$/);
+    vi.stubEnv('DATABASE_URL', testUrl);
+    const cases = [
+      { code: CHAPTER3_POLICY_CODE, version: 1, ids: ['package'], demo: false, want: true },
+      { code: CHAPTER3_POLICY_CODE, version: 1, ids: ['other'], demo: false, want: false },
+      { code: CHAPTER3_POLICY_CODE, version: 2, ids: ['package'], demo: false, want: false },
+      { code: 'DRILL_PRD_V06', version: 1, ids: ['package'], demo: false, want: false },
+      { code: CHAPTER3_POLICY_CODE, version: 1, ids: ['package'], demo: true, want: false },
+      { code: CHAPTER3_POLICY_CODE, version: 1, ids: null, demo: false, want: false },
+      { code: CHAPTER3_POLICY_CODE, version: 1, ids: 'package', demo: false, want: false },
+    ];
+    await getDatabase().db.transaction(
+      async (tx) => {
+        for (const c of cases) {
+          const rows = await tx.execute(sql`
+          with assessment_packages(id,is_demo) as (values ('package',${c.demo}::boolean)),
+          scoring_policy_versions(policy_code,version,configuration) as (
+            values (${c.code}::text,${c.version}::integer,${JSON.stringify({ packageIds: c.ids })}::jsonb)
+          )
+          select coalesce(${chapter3RuntimeEligibility()},false) as eligible
+          from assessment_packages cross join scoring_policy_versions`);
+          expect(rows[0]?.eligible, JSON.stringify(c)).toBe(c.want);
+        }
+      },
+      { accessMode: 'read only' },
+    );
+  },
+);
 
 it('limits the exception to the explicit package IDs and policy version', () => {
   const p = {
