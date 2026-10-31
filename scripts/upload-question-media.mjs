@@ -149,6 +149,15 @@ export async function uploadAsset(
   { baseUrl, token, runId = 'sample-v1', fetchImpl = fetch },
 ) {
   const base = new URL(baseUrl);
+  const hostname = base.hostname.replace(/\.$/, '');
+  if (
+    ['r2.dev', 'r2.cloudflarestorage.com'].some(
+      (domain) => hostname === domain || hostname.endsWith(`.${domain}`),
+    )
+  )
+    throw new MediaUploadError(
+      'API_BASE_URL must point to the application backend, not an R2 bucket/storage URL.',
+    );
   if (
     base.username ||
     base.password ||
