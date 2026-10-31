@@ -84,6 +84,58 @@ test('failed PUT never completes or changes JSON', async () => {
   assert.equal(copy.uploadedToR2, false);
 });
 
+test('rejects R2 backend destinations before sending an Admin token or file bytes', async () => {
+  for (const baseUrl of [
+    'https://r2.dev/api/v1',
+    'https://pub-test.r2.dev/api/v1',
+    'https://nested.pub-test.r2.dev/api/v1',
+    'https://PUB-TEST.R2.DEV./api/v1',
+    'https://r2.cloudflarestorage.com/api/v1',
+    `https://${'a'.repeat(32)}.r2.cloudflarestorage.com/api/v1`,
+    `https://${'a'.repeat(32)}.R2.CLOUDFLARESTORAGE.COM./api/v1`,
+  ]) {
+    let calls = 0;
+    const copy = structuredClone(asset);
+    await assert.rejects(
+      uploadAsset(copy, Buffer.from('123'), {
+        ...settings,
+        baseUrl,
+        fetchImpl: async () => {
+          calls++;
+          return jsonResponse(receipt);
+        },
+      }),
+      /application backend, not an R2/,
+      baseUrl,
+    );
+    assert.equal(calls, 0, baseUrl);
+    assert.equal(copy.uploadedToR2, false);
+    assert.equal(copy.objectKey, null);
+  }
+});
+
+test('allows HTTPS backend hosts containing similar text without matching an R2 domain', async () => {
+  for (const baseUrl of [
+    'https://api.numora.example/api/v1',
+    'https://r2.dev.example.test/api/v1',
+    'https://example-r2.dev/api/v1',
+  ]) {
+    let calls = 0;
+    const result = await uploadAsset(asset, Buffer.from('123'), {
+      ...settings,
+      baseUrl,
+      fetchImpl: async (url, init) => {
+        calls++;
+        assert.equal(url, `${baseUrl}/admin/content/media/uploads`);
+        assert.equal(init.headers.Authorization, 'Bearer TEST_ONLY');
+        return jsonResponse(receipt);
+      },
+    });
+    assert.equal(calls, 1);
+    assert.equal(result.uploadId, receipt.uploadId);
+  }
+});
+
 test('mismatched checksum/unverified receipt cannot confirm a local key', () => {
   for (const change of [
     { status: 'PENDING' },
