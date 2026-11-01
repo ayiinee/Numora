@@ -1,0 +1,337 @@
+/* Shared Admin navigation, derived from the approved operational foundation. */
+.app-shell--admin {
+  --admin-sidebar-width: 248px;
+  --admin-nav-surface: #fff;
+  --admin-nav-text: #27313f;
+  --admin-nav-muted: #626d7c;
+  --admin-nav-border: #e4e7ed;
+  --admin-nav-accent: #722cce;
+  --admin-nav-selected: #f5edff;
+  --admin-nav-hover: #f5f6f9;
+}
+
+.app-shell--admin .app-sidebar {
+  display: grid;
+  grid-template-rows: auto minmax(0, 1fr) auto;
+  width: var(--admin-sidebar-width);
+  padding: 0;
+  overflow: hidden;
+  background: var(--admin-nav-surface);
+  border-right: 1px solid var(--admin-nav-border);
+}
+
+.app-shell--admin .app-workspace {
+  margin-left: var(--admin-sidebar-width);
+}
+
+.app-shell--admin .app-sidebar[hidden] {
+  display: none;
+}
+
+.app-shell--admin[data-sidebar-collapsed='true'] .app-workspace {
+  margin-left: 0;
+}
+
+.app-shell--admin .admin-sidebar-heading {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 76px;
+  margin: 0 12px;
+  padding: 14px 0;
+  border-bottom: 1px solid var(--admin-nav-border);
+}
+
+.app-shell--admin .app-brand {
+  display: flex;
+  flex: 1;
+  align-items: center;
+  min-width: 0;
+  min-height: 0;
+  margin: 0;
+  padding: 0;
+}
+
+.app-shell--admin .app-brand .numora-brand {
+  color: var(--admin-nav-accent);
+  font-size: 20px;
+  gap: 8px;
+}
+
+.app-shell--admin .admin-sidebar-toggle {
+  display: inline-grid;
+  flex: none;
+  place-items: center;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: 1px solid var(--admin-nav-border);
+  border-radius: 8px;
+  background: var(--admin-nav-surface);
+  color: var(--admin-nav-muted);
+}
+
+.app-shell--admin .admin-sidebar-toggle svg {
+  width: 18px;
+  height: 18px;
+}
+
+.app-shell--admin .admin-sidebar-toggle:hover {
+  background: var(--admin-nav-hover);
+  color: var(--admin-nav-accent);
+}
+
+.app-shell--admin .admin-sidebar-open {
+  display: none;
+  margin-right: 12px;
+}
+
+.app-shell--admin .admin-navigation {
+  display: flex;
+  flex-direction: column;
+  gap: 18px;
+  min-height: 0;
+  padding: 12px;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-width: thin;
+  scrollbar-gutter: stable;
+  scroll-padding-block: 12px;
+}
+
+.app-shell--admin .admin-navigation-group {
+  display: grid;
+  gap: 4px;
+}
+
+.app-shell--admin .admin-navigation-heading {
+  margin: 0 12px 4px;
+  color: var(--admin-nav-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  font-weight: 600;
+}
+
+.app-shell--admin .admin-navigation a {
+  position: relative;
+  display: flex;
+  flex: none;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  padding: 11px 10px;
+  border-radius: 8px;
+  color: var(--admin-nav-text);
+  font-size: 14px;
+  font-weight: 500;
+  line-height: 1.5;
+  text-decoration: none;
+  transition:
+    background-color 140ms ease,
+    color 140ms ease;
+}
+
+.app-shell--admin .admin-navigation a > svg {
+  flex: none;
+  width: 18px;
+  height: 18px;
+  color: var(--admin-nav-muted);
+}
+
+.app-shell--admin .admin-navigation a > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+
+.app-shell--admin .admin-navigation a:hover {
+  background: var(--admin-nav-hover);
+  color: var(--admin-nav-text);
+}
+
+.app-shell--admin .admin-navigation a[aria-current='page'] {
+  background: var(--admin-nav-selected);
+  color: var(--admin-nav-accent);
+  font-weight: 650;
+}
+
+.app-shell--admin .admin-navigation a[aria-current='page']::before {
+  position: absolute;
+  inset: 12px auto 12px 0;
+  width: 3px;
+  border-radius: 3px;
+  background: currentColor;
+  content: '';
+}
+
+.app-shell--admin .admin-navigation a[aria-current='page'] > svg {
+  color: inherit;
+}
+
+.app-shell--admin .admin-navigation a:focus-visible,
+.app-shell--admin .app-brand:focus-visible,
+.app-shell--admin .admin-sidebar-toggle:focus-visible,
+.app-shell--admin .admin-menu-toggle:focus-visible {
+  outline: 2px solid var(--admin-nav-accent);
+  outline-offset: 2px;
+}
+
+.app-shell--admin .admin-sidebar-account {
+  align-items: center;
+  gap: 12px;
+  margin: 0 12px;
+  padding: 18px 4px;
+  border-top: 1px solid var(--admin-nav-border);
+  color: var(--admin-nav-text);
+}
+
+.app-shell--admin .admin-sidebar-account .account-avatar {
+  width: 38px;
+  height: 38px;
+  background: var(--admin-nav-selected);
+  color: var(--admin-nav-accent);
+  font-size: 14px;
+}
+
+.app-shell--admin .admin-sidebar-account strong {
+  overflow: visible;
+  color: var(--admin-nav-text);
+  font-size: 13px;
+  font-weight: 650;
+  line-height: 1.5;
+  white-space: normal;
+  overflow-wrap: anywhere;
+}
+
+.app-shell--admin .admin-sidebar-account small {
+  display: block;
+  margin-top: 2px;
+  color: var(--admin-nav-muted);
+  font-size: 12px;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+.app-shell--admin .admin-navigation-empty {
+  padding: 12px;
+  color: var(--admin-nav-muted);
+  font-size: 13px;
+}
+
+/* A native modal supplies focus containment, Escape and focus restoration on mobile. */
+.app-shell--admin .admin-navigation-drawer {
+  inset: 0 auto 0 0;
+  width: 328px;
+  max-width: calc(100% - 24px);
+  height: auto;
+  max-height: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+  border-right: 1px solid var(--admin-nav-border);
+  border-radius: 0;
+  background: var(--admin-nav-surface);
+  color: var(--admin-nav-text);
+}
+
+.app-shell--admin .admin-navigation-drawer[open] {
+  display: flex;
+  flex-direction: column;
+  gap: 0;
+}
+
+.app-shell--admin .admin-navigation-drawer .numora-dialog__header {
+  flex: none;
+  align-items: center;
+  margin: 0 20px;
+  padding: 16px 0;
+  border-bottom: 1px solid var(--admin-nav-border);
+}
+
+.app-shell--admin .admin-navigation-drawer .numora-dialog__header h2 {
+  color: var(--admin-nav-text);
+  font-size: 18px;
+  line-height: 1.5;
+}
+
+.app-shell--admin .admin-navigation-drawer .numora-dialog__content {
+  flex: 1;
+  min-height: 0;
+  padding: 0;
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+}
+
+.app-shell--admin .admin-navigation-drawer .numora-dialog__actions {
+  display: block;
+  flex: none;
+  margin: 0;
+  padding: 0;
+  border: 0;
+}
+
+@media (min-width: 960px) {
+  .app-shell--admin[data-sidebar-collapsed='true'] .admin-sidebar-open {
+    display: inline-grid;
+  }
+}
+
+@media (max-width: 959px) {
+  .app-shell--admin .app-sidebar {
+    display: none;
+  }
+
+  .app-shell--admin .app-workspace {
+    margin-left: 0;
+  }
+
+  .app-shell--admin .app-topbar.numora-top-bar--context {
+    min-height: 72px;
+    padding-inline: 16px;
+    background: var(--admin-nav-surface);
+    color: var(--admin-nav-text);
+  }
+
+  .app-shell--admin .app-topbar .numora-brand,
+  .app-shell--admin .app-topbar .text-button {
+    color: var(--admin-nav-accent);
+  }
+
+  .app-shell--admin .app-topbar .admin-menu-toggle {
+    flex: none;
+    margin-right: 12px;
+    border: 1px solid var(--admin-nav-border);
+    border-radius: 8px;
+    background: var(--admin-nav-surface);
+    color: var(--admin-nav-text);
+  }
+
+  .app-shell--admin .app-topbar :focus-visible {
+    outline-color: var(--admin-nav-accent);
+  }
+
+  .app-shell--admin .topbar-actions {
+    gap: 8px;
+  }
+}
+
+@media (max-height: 480px) {
+  .app-shell--admin .admin-sidebar-heading {
+    min-height: 64px;
+    padding-block: 10px;
+  }
+
+  .app-shell--admin .admin-sidebar-account {
+    padding-block: 12px;
+  }
+
+  .app-shell--admin .admin-navigation {
+    gap: 12px;
+    padding-block: 10px;
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .app-shell--admin .admin-navigation a {
+    transition: none;
+  }
+}

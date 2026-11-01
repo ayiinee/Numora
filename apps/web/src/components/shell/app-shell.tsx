@@ -1,13 +1,15 @@
 'use client';
 
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname, useRouter } from 'next/navigation';
-import { BottomNav, Brand, Icon, TopBar, type IconName, type TopBarProps } from '@tka/ui';
+import { BottomNav, Brand, Dialog, Icon, TopBar, type IconName, type TopBarProps } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { activeAdminHref, adminNavigation } from '@/features/admin/navigation';
+import { AdminAccount, AdminNavigation } from './admin-navigation';
 
 type Area = 'student' | 'teacher' | 'admin';
+const ADMIN_SIDEBAR_STORAGE_KEY = 'numora:admin-sidebar-collapsed';
 const navigation: Record<Area, { href: string; label: string; icon: IconName }[]> = {
   student: [
     { href: '/student', label: 'Belajar', icon: 'graduation' },
@@ -55,20 +57,46 @@ export function AppShell({
   const { state, logout } = useAuth();
   const [menuOpen, setMenuOpen] = useState(false);
   const menuButton = useRef<HTMLButtonElement>(null);
+  const [sidebarCollapsed, setSidebarCollapsed] = useState(false);
+  const sidebarOpenButton = useRef<HTMLButtonElement>(null);
+  const sidebarCloseButton = useRef<HTMLButtonElement>(null);
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
-  const contentAdmin =
-    area === 'admin' &&
-    profile?.role === 'ADMIN' &&
-    profile.adminRole === 'CONTENT_DATA_MODERATION';
-  const operationsAdmin =
-    area === 'admin' && profile?.role === 'ADMIN' && profile.adminRole === 'OPERATIONS';
-  const workspaceAdmin = contentAdmin || operationsAdmin;
+  const isAdmin = area === 'admin';
   const adminItems = adminNavigation(profile);
   const adminActive = activeAdminHref(pathname, adminItems);
   const areaName =
     area === 'student' ? 'Ruang belajar' : area === 'teacher' ? 'Ruang guru' : 'Ruang admin';
+  useEffect(() => {
+    if (!isAdmin) return;
+    try {
+      setSidebarCollapsed(sessionStorage.getItem(ADMIN_SIDEBAR_STORAGE_KEY) === 'true');
+    } catch {
+      // The sidebar still works when browser storage is unavailable.
+    }
+  }, [isAdmin]);
+  function toggleSidebar(collapsed: boolean) {
+    setSidebarCollapsed(collapsed);
+    try {
+      sessionStorage.setItem(ADMIN_SIDEBAR_STORAGE_KEY, String(collapsed));
+    } catch {
+      // Keep the in-memory preference when browser storage is unavailable.
+    }
+    requestAnimationFrame(() => {
+      (collapsed ? sidebarOpenButton : sidebarCloseButton).current?.focus();
+    });
+  }
+  useEffect(() => {
+    if (!isAdmin || !menuOpen) return;
+    const desktop = window.matchMedia('(min-width: 960px)');
+    const closeOnDesktop = () => {
+      if (desktop.matches) setMenuOpen(false);
+    };
+    closeOnDesktop();
+    desktop.addEventListener('change', closeOnDesktop);
+    return () => desktop.removeEventListener('change', closeOnDesktop);
+  }, [isAdmin, menuOpen]);
   const active = (href: string) =>
     area === 'admin'
       ? href === adminActive
@@ -96,19 +124,54 @@ export function AppShell({
       </Link>
     ));
   return (
-    <div className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''} ${className}`}>
+    <div
+      className={`app-shell app-shell--${area}${focus ? ' app-shell--focus' : ''} ${className}`}
+      data-sidebar-collapsed={isAdmin && sidebarCollapsed ? 'true' : undefined}
+    >
       <a className="skip-link" href="#main-content">
         Lewati ke konten
       </a>
       {!focus && (
-        <aside className="app-sidebar">
-          <Link href={`/${area}`} className="app-brand">
-            <Brand />
-          </Link>
-          <p className="nav-caption">
-            {contentAdmin ? 'Content workspace' : operationsAdmin ? 'Operasional' : areaName}
-          </p>
-          <nav aria-label={`Navigasi ${areaName}`}>{links()}</nav>
+        <aside
+          id={isAdmin ? 'admin-sidebar' : undefined}
+          className="app-sidebar"
+          hidden={isAdmin && sidebarCollapsed}
+        >
+          {isAdmin ? (
+            <div className="admin-sidebar-heading">
+              <Link href="/admin" className="app-brand">
+                <Brand />
+              </Link>
+              <button
+                ref={sidebarCloseButton}
+                type="button"
+                className="admin-sidebar-toggle"
+                aria-label="Tutup sidebar"
+                aria-controls="admin-sidebar"
+                aria-expanded={!sidebarCollapsed}
+                title="Tutup sidebar"
+                onClick={() => toggleSidebar(true)}
+              >
+                <Icon name="back" />
+              </button>
+            </div>
+          ) : (
+            <Link href={`/${area}`} className="app-brand">
+              <Brand />
+            </Link>
+          )}
+          {isAdmin ? (
+            <AdminNavigation
+              items={adminItems}
+              activeHref={adminActive}
+              onNavigate={() => setMenuOpen(false)}
+            />
+          ) : (
+            <>
+              <p className="nav-caption">{areaName}</p>
+              <nav aria-label={`Navigasi ${areaName}`}>{links()}</nav>
+            </>
+          )}
           {area === 'student' && (
             <div className="sidebar-note">
               <Icon name="spark" />
@@ -120,21 +183,25 @@ export function AppShell({
               <p>Temukan ritme belajarmu bersama NUMORA.</p>
             </div>
           )}
-          <div className="sidebar-account">
-            <span className="account-avatar">
-              {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
-            </span>
-            <div>
-              <strong>{profile?.displayName || 'NUMORA'}</strong>
-              <small>
-                {area === 'student'
-                  ? profile?.studentAffiliation === 'SCHOOL'
-                    ? 'Siswa sekolah'
-                    : 'Siswa mandiri'
-                  : areaName}
-              </small>
+          {isAdmin ? (
+            <AdminAccount profile={profile} />
+          ) : (
+            <div className="sidebar-account">
+              <span className="account-avatar">
+                {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
+              </span>
+              <div>
+                <strong>{profile?.displayName || 'NUMORA'}</strong>
+                <small>
+                  {area === 'student'
+                    ? profile?.studentAffiliation === 'SCHOOL'
+                      ? 'Siswa sekolah'
+                      : 'Siswa mandiri'
+                    : areaName}
+                </small>
+              </div>
             </div>
-          </div>
+          )}
         </aside>
       )}
       <div className="app-workspace">
@@ -144,12 +211,27 @@ export function AppShell({
           variant={headerVariant ?? (focus ? 'assessment' : 'context')}
           logo={
             <>
-              {workspaceAdmin && (
+              {isAdmin && (
+                <button
+                  ref={sidebarOpenButton}
+                  type="button"
+                  className="admin-sidebar-toggle admin-sidebar-open"
+                  aria-label="Buka sidebar"
+                  aria-controls="admin-sidebar"
+                  aria-expanded={!sidebarCollapsed}
+                  title="Buka sidebar"
+                  onClick={() => toggleSidebar(false)}
+                >
+                  <Icon name="menu" />
+                </button>
+              )}
+              {isAdmin && (
                 <button
                   ref={menuButton}
                   type="button"
-                  className="menu-toggle content-menu-toggle"
+                  className="menu-toggle admin-menu-toggle"
                   aria-label="Menu navigasi"
+                  aria-haspopup="dialog"
                   aria-expanded={menuOpen}
                   aria-controls="mobile-menu"
                   onClick={() => setMenuOpen(!menuOpen)}
@@ -174,22 +256,6 @@ export function AppShell({
           right={
             <div className="topbar-actions">
               {actions}
-              {workspaceAdmin && (
-                <div
-                  className="content-topbar-account"
-                  aria-label={operationsAdmin ? 'Akun Admin Operasional' : 'Akun Admin Content'}
-                >
-                  <span className="account-avatar" aria-hidden="true">
-                    {profile.displayName.slice(0, 1).toUpperCase() || 'N'}
-                  </span>
-                  <div>
-                    <strong>{profile.displayName}</strong>
-                    <small>
-                      {operationsAdmin ? 'Admin Operasional' : 'Content, Data & Moderation'}
-                    </small>
-                  </div>
-                </div>
-              )}
               {area !== 'admin' ? (
                 <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
                   <span className="account-avatar">
@@ -216,7 +282,7 @@ export function AppShell({
                   <Icon name="logout" /> {loggingOut ? 'Keluar…' : 'Keluar'}
                 </button>
               )}
-              {area !== 'student' && !workspaceAdmin && (
+              {area === 'teacher' && (
                 <button
                   ref={menuButton}
                   type="button"
@@ -232,20 +298,37 @@ export function AppShell({
             </div>
           }
         />
-        {menuOpen && (
-          <nav
-            id="mobile-menu"
-            className="mobile-menu"
-            aria-label="Menu navigasi"
-            onKeyDown={(event) => {
-              if (event.key === 'Escape') {
-                setMenuOpen(false);
-                menuButton.current?.focus();
-              }
-            }}
+        {menuOpen && isAdmin ? (
+          <Dialog
+            open
+            onClose={() => setMenuOpen(false)}
+            title="Menu admin"
+            className="admin-navigation-drawer"
+            actions={<AdminAccount profile={profile} />}
           >
-            {links()}
-          </nav>
+            <AdminNavigation
+              items={adminItems}
+              activeHref={adminActive}
+              onNavigate={() => setMenuOpen(false)}
+              mobile
+            />
+          </Dialog>
+        ) : (
+          menuOpen && (
+            <nav
+              id="mobile-menu"
+              className="mobile-menu"
+              aria-label="Menu navigasi"
+              onKeyDown={(event) => {
+                if (event.key === 'Escape') {
+                  setMenuOpen(false);
+                  menuButton.current?.focus();
+                }
+              }}
+            >
+              {links()}
+            </nav>
+          )
         )}
         <main id="main-content" className="app-content" tabIndex={-1}>
           {logoutError && (

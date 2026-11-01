@@ -1,5 +1,7 @@
 # NUMORA UI DESIGN SYSTEM
 
+**ENGINEERING DECISION — instruksi pemilik, 2 November 2026:** [Navigasi Admin](ADMIN_NAVIGATION_UX_2026-11-02.md) mengikuti fondasi operasional yang disetujui untuk semua subrole. Sidebar 248 px dengan tombol buka/tutup memisahkan logo, navigasi scroll dan akun; mobile menggunakan drawer native. `admin-navigation.css` menggantikan aturan chrome sidebar lama, tanpa mengubah gaya halaman atau akses modul.
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Pretest Authoring](ADMIN_PRETEST_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui. Direktori lima paket, detail terpisah, editor terfokus, pemilih soal berdasarkan bab dan susunan lima per halaman menggantikan form UUID sebagai alur utama. Review editorial dan kesiapan publikasi tetap mengikuti server; pin lama/blueprint asal dipertahankan, dan arsip memerlukan konfirmasi. [Galeri audit](screenshots/admin-pretest/README.md).
 
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** [Konten & assessment](ADMIN_ASSESSMENT_UX_2026-10-27.md) mengikuti fondasi Admin yang telah disetujui, termasuk Super Admin dan Content. Bank soal menonjolkan pertanyaan, semua pilihan/pernyataan dan rumus; kunci detail dipetakan ke label yang konsisten tanpa mengubah sumber. Navigasi dikelompokkan di desktop dan memakai pemilih bagian di ponsel; editor serta filter dibuka sesuai kebutuhan. Review editorial, kesiapan publikasi, hak akses dan histori tetap terpisah. [Galeri audit](screenshots/admin-assessment/README.md).

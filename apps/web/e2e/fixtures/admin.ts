@@ -63,6 +63,7 @@ export async function setup(page: Page) {
     { jwt, userId: id(100) },
   );
   const state = {
+    displayName: 'Admin DEMO',
     adminRole: 'SUPER_ADMIN' as 'SUPER_ADMIN' | 'OPERATIONS' | 'CONTENT_DATA_MODERATION' | null,
     schools: [
       { id: id(101), code: 'SMP-TEST-JKT', name: 'SMPN 1 Jakarta — DEMO', status: 'ACTIVE' },
@@ -135,7 +136,7 @@ export async function setup(page: Page) {
                 : state.adminRole === 'CONTENT_DATA_MODERATION'
                   ? ['CONTENT_MANAGE', 'OPERATIONS_LIMITED_READ', 'ANALYTICS_CONTENT', 'AUDIT_READ']
                   : [],
-          displayName: 'Admin DEMO',
+          displayName: state.displayName,
           email: 'admin@example.test',
           teacherVerified: null,
           studentAffiliation: null,

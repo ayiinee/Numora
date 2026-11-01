@@ -1,4 +1,4 @@
-/* Owner-supplied AdminLTE reference, 6 October 2026. Shared opt-in theme for Content and Operations; Super retains its theme. */
+/* Content/Operations page theme; shared Admin navigation lives in admin-navigation.css. */
 .admin-workspace-shell {
   --color-primary: #6200d9;
   --color-primary-hover: #5000b5;
@@ -28,39 +28,6 @@
   --card-padding: 24px;
   --card-radius: var(--radius-lg);
 }
-.admin-workspace-shell .app-sidebar {
-  border-color: var(--color-border-light);
-  padding: 0 12px 18px;
-  overflow-y: auto;
-}
-.admin-workspace-shell .app-brand {
-  min-height: 68px;
-  display: flex;
-  align-items: center;
-  margin: 0 8px 24px;
-}
-.admin-workspace-shell .nav-caption {
-  font-size: 10px;
-  padding: 0 12px;
-  letter-spacing: 1px;
-}
-.admin-workspace-shell .app-sidebar nav {
-  gap: 4px;
-}
-.admin-workspace-shell .app-sidebar nav a {
-  font-size: 13px;
-  min-height: 48px;
-  gap: 10px;
-  padding: 10px 12px;
-  border-radius: var(--radius-sm);
-}
-.admin-workspace-shell .app-sidebar nav a svg {
-  width: 20px;
-  height: 20px;
-}
-.admin-workspace-shell .sidebar-account {
-  margin-top: auto;
-}
 .admin-workspace-shell .app-content {
   max-width: 1440px;
   padding: 24px 28px 40px;
@@ -76,24 +43,6 @@
 }
 .admin-workspace-shell .topbar-actions {
   gap: 20px;
-}
-.admin-workspace-shell .content-topbar-account {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  min-width: 0;
-}
-.admin-workspace-shell .content-topbar-account strong {
-  display: block;
-  max-width: 200px;
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-  font-size: 12px;
-}
-.admin-workspace-shell .content-topbar-account small {
-  font-size: 10px;
-  color: var(--color-text-muted);
 }
 .admin-workspace-shell .account-avatar {
   width: 34px;
@@ -732,12 +681,6 @@
   }
 }
 @media (min-width: 960px) {
-  .admin-workspace-shell .app-sidebar {
-    width: 224px;
-  }
-  .admin-workspace-shell .app-workspace {
-    margin-left: 224px;
-  }
   .admin-workspace-shell .admin-content-row:has(> .content-question-summary) {
     grid-template-columns: minmax(0, 1fr) 250px;
     gap: 24px;
@@ -761,20 +704,6 @@
   .admin-workspace-shell .app-topbar.numora-top-bar--context {
     padding-inline: 20px;
   }
-  .admin-workspace-shell .content-menu-toggle {
-    margin-right: 10px;
-  }
-  .admin-workspace-shell .app-topbar .menu-toggle {
-    background: transparent;
-    border-color: transparent;
-    color: var(--color-text);
-  }
-  .admin-workspace-shell .mobile-menu {
-    padding: 12px 20px;
-  }
-  .admin-workspace-shell .content-topbar-account > div {
-    display: none;
-  }
   .admin-workspace-shell .app-topbar .numora-brand {
     color: var(--color-primary);
   }
@@ -797,12 +726,6 @@
   }
   .admin-workspace-shell .topbar-actions {
     gap: 8px;
-  }
-  .admin-workspace-shell .content-menu-toggle {
-    margin-right: 2px;
-  }
-  .admin-workspace-shell .content-topbar-account {
-    display: none;
   }
   .admin-workspace-shell .content-view-intro {
     gap: 12px;
