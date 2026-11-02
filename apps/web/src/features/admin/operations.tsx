@@ -59,6 +59,7 @@ function OperationsScreen() {
         title="Pengguna & kelas"
         description="Telusuri data operasional akun dan kelas."
         icon="users"
+        management
       >
         {state.status === 'loading' || url.search === null ? (
           <AdminLoading message="Memeriksa akses Admin..." />
@@ -98,7 +99,7 @@ function OperationsScreen() {
   return (
     <AppShell
       area="admin"
-      className={`admin-redesign-shell admin-management-shell admin-people-shell${operations ? ' admin-workspace-shell admin-operations-shell' : ''}`}
+      className={`admin-redesign-shell admin-management-shell admin-people-shell${operations ? ' admin-operations-shell' : ''}`}
     >
       <div className="people-frame">
         <header className="people-page-heading">

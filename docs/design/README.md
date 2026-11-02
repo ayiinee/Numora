@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Operasional](ADMIN_OPERATIONS_PARITY_2026-11-02.md) melepas CSS workspace legacy dari Sekolah & credential serta Pengguna & kelas agar memakai fondasi Super Admin, termasuk loading dan akses ditolak. Pengembangan berlanjut sambil menunggu review independen #117/#118; approval, merge dan deploy tetap terpisah.
+
 **ENGINEERING IMPLEMENTATION — 2 November 2026:** [Navigasi Admin](ADMIN_NAVIGATION_UX_2026-11-02.md) memakai sidebar bersama 248 px dengan tombol buka/tutup, pembatas di bawah logo, kelompok menu, navigasi yang di-scroll sendiri dan akun tetap di bawah. Drawer ponsel memakai Dialog native existing. Capability, tujuan awal dan batas modul tetap mengikuti server. [Galeri audit](screenshots/admin-navigation/README.md).
 
 **ENGINEERING IMPLEMENTATION — 30 Oktober 2026:** [Request IRT & publikasi UI-05](ADMIN_IRT_UX_2026-10-30.md) memakai direktori batch/request, detail berdasarkan URL, dialog persiapan dengan pilihan yang dipertahankan, dan konfirmasi retry/adopsi. Label membedakan baris respons, komputasi, adopsi dan publikasi. Blocker serta batas waktu tetap dari server; tidak ada rilis paksa atau perubahan aturan ilmiah. [Galeri audit](screenshots/admin-irt/README.md).

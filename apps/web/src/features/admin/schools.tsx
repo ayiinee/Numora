@@ -341,6 +341,7 @@ function AdminSchoolsScreenContent() {
         title="Sekolah & credential"
         description="Kelola sekolah dan akses verifikasi Guru."
         icon="school"
+        management
       >
         {!urlReady || state.status === 'loading' ? (
           <AdminLoading message="Memeriksa akses Admin..." />
@@ -372,7 +373,7 @@ function AdminSchoolsScreenContent() {
   return (
     <AppShell
       area="admin"
-      className={`admin-redesign-shell admin-management-shell admin-schools-shell${operations ? ' admin-workspace-shell admin-operations-shell' : ''}`}
+      className={`admin-redesign-shell admin-management-shell admin-schools-shell${operations ? ' admin-operations-shell' : ''}`}
     >
       <div className="schools-frame">
         {selected && (

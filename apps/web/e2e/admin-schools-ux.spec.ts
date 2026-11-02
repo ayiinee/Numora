@@ -42,6 +42,18 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
         true,
       );
+      if (width >= 768) {
+        const input = await page.getByRole('searchbox', { name: 'Cari sekolah' }).boundingBox();
+        const submit = await page
+          .getByRole('button', { name: 'Cari sekolah', exact: true })
+          .boundingBox();
+        expect(Math.abs(input!.y - submit!.y)).toBeLessThan(2);
+      }
+      if (width >= 1024) {
+        const topbar = await page.locator('.app-topbar').boundingBox();
+        const brand = await page.locator('.admin-sidebar-heading').boundingBox();
+        expect(Math.abs(topbar!.height - brand!.height)).toBeLessThanOrEqual(1);
+      }
       await page.screenshot({
         path: test.info().outputPath(`schools-list-${width}.png`),
         fullPage: true,
