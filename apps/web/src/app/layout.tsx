@@ -10,6 +10,7 @@ import './admin-management.css';
 import './admin-accounts.css';
 import './admin-schools.css';
 import './admin-people.css';
+import './admin-structures.css';
 import './admin-assessment.css';
 import './admin-pretest.css';
 import './admin-generator.css';

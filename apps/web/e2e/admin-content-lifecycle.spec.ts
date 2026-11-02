@@ -146,10 +146,22 @@ test('moderation opens the archived target directly without fetching current ban
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/admin/reports/QUESTION/${userId}`);
+    const reportHeading = page.getByRole('heading', { name: 'Detail laporan', exact: true });
+    await expect(reportHeading).toBeVisible();
+    expect((await reportHeading.boundingBox())!.height).toBeGreaterThan(20);
+    await expect(page.locator('.admin-management-shell')).toBeVisible();
+    await expect(page.locator('.app-sidebar a[aria-current="page"]')).toHaveAttribute(
+      'href',
+      '/admin/content',
+    );
+    await expect(page.getByText('TEST laporan versi lama')).toBeVisible();
+    await page.screenshot({
+      path: test.info().outputPath(`report-detail-${width}.png`),
+      fullPage: true,
+    });
     await expect(
       page.getByRole('link', { name: /Buka versi yang dilaporkan \(v1, ARCHIVED\)/ }),
     ).toHaveAttribute('href', `/admin/content/versions/${versionId}`);
-    await expect(page.getByText('TEST laporan versi lama')).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth + 1),
     ).toBe(true);

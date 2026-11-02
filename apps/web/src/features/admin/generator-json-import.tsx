@@ -1,16 +1,16 @@
 'use client';
-import { Button,Card } from '@tka/ui';
+import { Button, Card } from '@tka/ui';
 import Link from 'next/link';
-import { useEffect,useState } from 'react';
-import { AdminFrame,AdminMessage } from './admin-presentation';
-import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
-import type { GeneratorJsonPreviewDto,GeneratorPackageFileDto } from './generated-types';
+import { useEffect, useState } from 'react';
+import { AdminFrame, AdminMessage } from './admin-presentation';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
+import type { GeneratorJsonPreviewDto, GeneratorPackageFileDto } from './generated-types';
 import {
-getGeneratorPackageFile,
-importGeneratorJson,
-validateGeneratorJson,
+  getGeneratorPackageFile,
+  importGeneratorJson,
+  validateGeneratorJson,
 } from './generator-package-api';
-import { GeneratorFilePreview,generatorTypeLabels,useGeneratorToken } from './generator-packages';
+import { GeneratorFilePreview, generatorTypeLabels, useGeneratorToken } from './generator-packages';
 export const GeneratorJsonImportScreen = withAdminWorkspace(
   GeneratorJsonImportScreenProtected,
   'content',
@@ -60,90 +60,95 @@ function GeneratorJsonImportScreenProtected() {
       title="Impor soal JSON"
       description="Buka JSON generator, lihat preview, validasi, lalu simpan paket DRAFT."
       icon="book"
+      management
     >
-      <nav className="admin-content-actions">
-        <Link href="/admin/content/imports">Impor Excel</Link>
-        <Link href="/admin/content/generator/results">Hasil generator</Link>
-      </nav>
-      {!token ? (
-        <AdminMessage message="Akses Content Admin diperlukan." />
-      ) : (
-        <>
-          {error && <AdminMessage message={error} error />}
-          {saved && <p role="status">Paket dan seluruh soal tersimpan sebagai DRAFT.</p>}
-          <Card className="admin-generator-form">
-            <label htmlFor="generator-json-file">File paket JSON</label>
-            <input
-              id="generator-json-file"
-              type="file"
-              accept=".json,application/json"
-              disabled={busy}
-              onChange={(e) => {
-                const selected = e.target.files?.[0];
-                if (selected)
-                  void run(async () => {
-                    setFile(null);
-                    setPreview(null);
-                    setSaved(false);
-                    if (selected.size > 2 * 1024 * 1024) throw new Error('JSON maksimal 2 MiB.');
-                    await inspect(JSON.parse(await selected.text()) as GeneratorPackageFileDto);
-                  });
-              }}
-            />
-            <p>
-              File diverifikasi terhadap kandidat, lineage dan approval aslinya. Isi, kunci,
-              kategori, jumlah dan scope mengikuti validasi impor soal. Mengubah JSON hasil
-              generator ditolak; revisi dilakukan sebagai versi baru setelah impor.
-            </p>
-            {file && (
-              <>
-                <h2>{file.title}</h2>
-                <p>
-                  {generatorTypeLabels[file.assessmentType]} · {file.expectedCount} soal
-                </p>
-                <Button
-                  disabled={busy}
-                  variant="secondary"
-                  onClick={() =>
+      <div className="admin-import-workspace">
+        <nav className="import-navigation" aria-label="Jalur impor generator">
+          <Link href="/admin/content/imports">Impor Excel</Link>
+          <Link href="/admin/content/generator/results">Hasil generator</Link>
+        </nav>
+        {!token ? (
+          <AdminMessage message="Akses Content Admin diperlukan." />
+        ) : (
+          <>
+            {error && <AdminMessage message={error} error />}
+            {saved && <p role="status">Paket dan seluruh soal tersimpan sebagai DRAFT.</p>}
+            <Card className="content-import-card admin-generator-form">
+              <label htmlFor="generator-json-file">File paket JSON</label>
+              <input
+                id="generator-json-file"
+                type="file"
+                accept=".json,application/json"
+                disabled={busy}
+                onChange={(e) => {
+                  const selected = e.target.files?.[0];
+                  if (selected)
                     void run(async () => {
-                      setPreview(await validateGeneratorJson(token, file.generatorPackageId, file));
-                    })
-                  }
-                >
-                  Validasi JSON
-                </Button>
-                <Button
-                  disabled={busy || !preview?.report.canImportDraft || saved}
-                  loading={busy}
-                  onClick={() =>
-                    void run(async () => {
-                      await importGeneratorJson(token, file.generatorPackageId, file);
-                      setSaved(true);
-                    })
-                  }
-                >
-                  Simpan paket DRAFT
-                </Button>
-              </>
-            )}
-            {preview && (
-              <p role="status">
-                {preview.report.canImportDraft
-                  ? 'Validasi lulus. Siap disimpan sebagai DRAFT.'
-                  : 'Validasi belum lulus.'}
+                      setFile(null);
+                      setPreview(null);
+                      setSaved(false);
+                      if (selected.size > 2 * 1024 * 1024) throw new Error('JSON maksimal 2 MiB.');
+                      await inspect(JSON.parse(await selected.text()) as GeneratorPackageFileDto);
+                    });
+                }}
+              />
+              <p>
+                File diverifikasi terhadap kandidat, lineage dan approval aslinya. Isi, kunci,
+                kategori, jumlah dan scope mengikuti validasi impor soal. Mengubah JSON hasil
+                generator ditolak; revisi dilakukan sebagai versi baru setelah impor.
               </p>
-            )}
-            {preview?.report.items
-              .filter((i) => i.blockers.length)
-              .map((i) => (
-                <p role="alert" key={i.externalId}>
-                  {i.externalId}: {i.blockers.join(', ')}
+              {file && (
+                <>
+                  <h2>{file.title}</h2>
+                  <p>
+                    {generatorTypeLabels[file.assessmentType]} · {file.expectedCount} soal
+                  </p>
+                  <Button
+                    disabled={busy}
+                    variant="secondary"
+                    onClick={() =>
+                      void run(async () => {
+                        setPreview(
+                          await validateGeneratorJson(token, file.generatorPackageId, file),
+                        );
+                      })
+                    }
+                  >
+                    Validasi JSON
+                  </Button>
+                  <Button
+                    disabled={busy || !preview?.report.canImportDraft || saved}
+                    loading={busy}
+                    onClick={() =>
+                      void run(async () => {
+                        await importGeneratorJson(token, file.generatorPackageId, file);
+                        setSaved(true);
+                      })
+                    }
+                  >
+                    Simpan paket DRAFT
+                  </Button>
+                </>
+              )}
+              {preview && (
+                <p role="status">
+                  {preview.report.canImportDraft
+                    ? 'Validasi lulus. Siap disimpan sebagai DRAFT.'
+                    : 'Validasi belum lulus.'}
                 </p>
-              ))}
-          </Card>
-          {preview && <GeneratorFilePreview file={preview.file} />}
-        </>
-      )}
+              )}
+              {preview?.report.items
+                .filter((i) => i.blockers.length)
+                .map((i) => (
+                  <p role="alert" key={i.externalId}>
+                    {i.externalId}: {i.blockers.join(', ')}
+                  </p>
+                ))}
+            </Card>
+            {preview && <GeneratorFilePreview file={preview.file} />}
+          </>
+        )}
+      </div>
     </AdminFrame>
   );
 }

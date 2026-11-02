@@ -255,7 +255,7 @@ export function Reports({
   );
 }
 
-function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
+export function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
   return {
     OPEN: 'Terbuka',
     IN_REVIEW: 'Sedang ditinjau',

@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/api';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { resolveReport } from './content-api';
+import { reportStatusLabel } from './content-report-panels';
 import { ContentPayload } from './content-payload';
 import type { AdminReportDetailDto, ResolveReportDto } from './generated-types';
 export function ReportDetailScreen({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
@@ -70,8 +71,11 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
       title="Detail laporan"
       description="Target berdasarkan versi atau snapshot saat dilaporkan."
       icon="chat"
+      management
     >
-      <Link href="/admin/content?view=reports">Kembali ke daftar laporan</Link>
+      <Link className="assessment-back-link" href="/admin/content?view=reports">
+        Kembali ke daftar laporan
+      </Link>
       {!token ? (
         <AdminMessage message="Akses moderasi diperlukan." login />
       ) : (
@@ -85,7 +89,9 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                 <h2>{data.category}</h2>
                 <p>{data.details || 'Tanpa rincian tambahan.'}</p>
                 <p>
-                  {data.status} · {new Date(data.reportedAt).toLocaleString('id-ID')}
+                  {reportStatusLabel(data.status)} ·{' '}
+                  {new Date(data.reportedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}{' '}
+                  WIB
                 </p>
                 {data.question && (
                   <>
@@ -152,13 +158,15 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                   <label>
                     Status tindak lanjut
                     <select name="status" defaultValue={data.status}>
-                      {['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'].map((s) => (
-                        <option key={s}>{s}</option>
+                      {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((s) => (
+                        <option key={s} value={s}>
+                          {reportStatusLabel(s)}
+                        </option>
                       ))}
                     </select>
                   </label>
                   <label>
-                    Alasan / resolution
+                    Catatan tindak lanjut
                     <textarea
                       name="followUp"
                       required
@@ -177,7 +185,7 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                       />
                     </label>
                   )}
-                  <Button disabled={busy}>Simpan resolution</Button>
+                  <Button disabled={busy}>Simpan tindak lanjut</Button>
                 </form>
               </Card>
             )

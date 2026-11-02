@@ -42,7 +42,7 @@ it('discards the previous report target when navigation to another report fails'
   view.rerender(<ReportDetailScreen kind="VIDEO" id="new" />);
   await screen.findByText('New report unavailable');
   expect(screen.queryByText('Old target')).toBeNull();
-  expect(screen.queryByRole('button', { name: 'Simpan resolution' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Simpan tindak lanjut' })).toBeNull();
 });
 it('clears a loaded report and its mutation form when server access is revoked', async () => {
   mock.api.mockResolvedValueOnce({
@@ -56,9 +56,14 @@ it('clears a loaded report and its mutation form when server access is revoked',
   });
   render(<ReportDetailScreen kind="QUESTION" id="report" />);
   await screen.findByText('Protected target');
+  fireEvent.change(screen.getByLabelText('Status tindak lanjut'), {
+    target: { value: 'IN_REVIEW' },
+  });
+  expect(screen.getByRole('option', { name: 'Sedang ditinjau' })).toBeTruthy();
   mock.api.mockRejectedValueOnce(new ApiProblem(403, 'FORBIDDEN', 'Role revoked'));
-  fireEvent.submit(screen.getByRole('button', { name: 'Simpan resolution' }).closest('form')!);
+  fireEvent.submit(screen.getByRole('button', { name: 'Simpan tindak lanjut' }).closest('form')!);
   await screen.findByText('Role revoked');
+  expect(JSON.parse(mock.api.mock.calls.at(-1)![2].body)).toMatchObject({ status: 'IN_REVIEW' });
   expect(screen.queryByText('Protected target')).toBeNull();
 });
 it('separates rich review from approved rubric publication and clears payload after revocation', async () => {

@@ -3,7 +3,13 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AdminStructuresScreen } from './structures';
 const mocks = vi.hoisted(() => ({ api: vi.fn(), state: {} as Record<string, unknown> }));
 vi.mock('@/features/onboarding/auth', () => ({ useAuth: () => ({ state: mocks.state }) }));
-vi.mock('@/lib/api', () => ({ apiRequest: mocks.api }));
+vi.mock('@/lib/api', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@/lib/api')>()),
+  apiRequest: mocks.api,
+}));
+vi.mock('@/components/shell', () => ({
+  AppShell: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
+}));
 vi.mock('./admin-presentation', () => ({
   AdminFrame: ({ children }: { children: React.ReactNode }) => <main>{children}</main>,
   AdminLoading: ({ message }: { message: string }) => <p>{message}</p>,
@@ -11,6 +17,7 @@ vi.mock('./admin-presentation', () => ({
 }));
 beforeEach(() => {
   vi.resetAllMocks();
+  window.history.replaceState(null, '', '/admin/structures');
   mocks.state = {
     status: 'ready',
     profile: {
@@ -63,9 +70,11 @@ it('Content navigates school counts to limited classes without requesting indivi
   );
   render(<AdminStructuresScreen />);
   expect((await screen.findByRole('note')).textContent).toContain('Akses baca saja');
-  expect((await screen.findByText(/Credential: 2 tersedia/)).textContent).toContain('1 terpakai');
+  await screen.findByText('2 tersedia');
+  fireEvent.click(screen.getByText('Status lainnya'));
+  expect(screen.getByText('Terpakai').nextElementSibling?.textContent).toBe('1');
   expect(screen.queryByRole('button', { name: /buat|edit|generate|regenerate|ban/i })).toBeNull();
-  fireEvent.click(await screen.findByRole('button', { name: 'Lihat kelas sekolah' }));
+  fireEvent.click(await screen.findByRole('button', { name: /Lihat kelas sekolah/ }));
   await screen.findByText(/Tanpa Guru aktif/);
   expect(mocks.api.mock.calls.every(([path]) => String(path).startsWith('admin/structures/'))).toBe(
     true,

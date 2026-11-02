@@ -1,13 +1,19 @@
 'use client';
-import { ADMIN_PAGE_SIZE } from './pagination';
-import { useEffect, useState } from 'react';
-import { Button, Card } from '@tka/ui';
+
+import { useState } from 'react';
+import { Button, Icon, Tabs } from '@tka/ui';
+import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
-import { apiRequest } from '@/lib/api';
-import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { AdminLoading, AdminMessage } from './admin-presentation';
+import { adminOffset, useAdminUrl } from './admin-url';
+import { useOperationalQuery } from './operational-query';
+import { PeopleEmpty, PeopleFooter } from './operations-panels';
+import { ADMIN_PAGE_SIZE } from './pagination';
 import type { AdminStructureClassesDto, AdminStructureSchoolsDto } from './generated-types';
+
 export function AdminStructuresScreen() {
   const { state } = useAuth();
+  const url = useAdminUrl();
   const token =
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
@@ -15,170 +21,260 @@ export function AdminStructuresScreen() {
     state.profile.capabilities?.includes('OPERATIONS_LIMITED_READ')
       ? state.session.access_token
       : null;
+  const tab = url.params.get('view') === 'classes' ? 'classes' : 'schools';
+  const identity =
+    state.status === 'ready'
+      ? JSON.stringify([state.profile.id, state.profile.adminRole, state.profile.capabilities])
+      : state.status;
+  const panel =
+    token && url.search !== null ? (
+      <StructurePanel key={`${identity}:${url.search}`} token={token} />
+    ) : null;
   return (
-    <AdminFrame
-      title="Sekolah dan kelas — baca saja"
-      description="View terbatas sesuai PRD: struktur dan jumlah anggota untuk perencanaan konten."
-      icon="school"
+    <AppShell
+      area="admin"
+      className="admin-redesign-shell admin-management-shell admin-people-shell admin-structures-shell"
     >
-      {state.status === 'loading' ? (
-        <AdminLoading message="Memeriksa akses…" />
-      ) : !token ? (
-        <AdminMessage error message="Akses struktur operasional belum tersedia." login />
-      ) : (
-        <StructurePanel
-          key={state.status === 'ready' ? state.profile.id + state.profile.adminRole : ''}
-          token={token}
-        />
-      )}
-    </AdminFrame>
+      <div className="people-frame">
+        <header className="people-page-heading">
+          <div>
+            <h1>Sekolah & kelas</h1>
+            <p>Lihat struktur sekolah dan jumlah anggota untuk perencanaan konten.</p>
+          </div>
+          <span className="people-readonly">
+            <Icon name="lock" />
+            Baca saja
+          </span>
+        </header>
+        {state.status === 'loading' || url.search === null ? (
+          <AdminLoading message="Memeriksa akses…" />
+        ) : !token ? (
+          <AdminMessage error message="Akses struktur operasional belum tersedia." login />
+        ) : (
+          <Tabs
+            label="Jenis struktur"
+            value={tab}
+            onChange={(view) => url.update({ view, search: null, offset: null, schoolId: null })}
+            items={[
+              { value: 'schools', label: 'Sekolah', content: tab === 'schools' ? panel : null },
+              { value: 'classes', label: 'Kelas', content: tab === 'classes' ? panel : null },
+            ]}
+          />
+        )}
+        <p className="people-access-note" role="note">
+          <Icon name="info" />
+          Akses baca saja. Data ditampilkan sebagai struktur dan jumlah. Pengelolaan sekolah, Guru,
+          credential, dan data individual siswa tersedia sesuai izin Admin Operasional dan Super
+          Admin.
+        </p>
+      </div>
+    </AppShell>
   );
 }
+
 function StructurePanel({ token }: { token: string }) {
-  const [tab, setTab] = useState<'schools' | 'classes'>('schools'),
-    [data, setData] = useState<AdminStructureClassesDto | AdminStructureSchoolsDto | null>(null),
-    [error, setError] = useState(''),
-    [offset, setOffset] = useState(0),
-    [search, setSearch] = useState(''),
-    [filter, setFilter] = useState(''),
-    [schoolId, setSchoolId] = useState(''),
-    [revision, setRevision] = useState(0);
-  useEffect(() => {
-    let active = true;
-    setData(null);
-    setError('');
-    const query = new URLSearchParams({
-      offset: String(offset),
-      limit: String(ADMIN_PAGE_SIZE),
-      search: filter,
-    });
-    if (tab === 'classes' && schoolId) query.set('schoolId', schoolId);
-    void apiRequest<AdminStructureClassesDto | AdminStructureSchoolsDto>(
-      `admin/structures/${tab}?${query}`,
-      token,
-    )
-      .then((value) => {
-        if (active) setData(value);
-      })
-      .catch((error) => {
-        if (active) setError(error.message);
-      });
-    return () => {
-      active = false;
-    };
-  }, [token, tab, offset, filter, schoolId, revision]);
+  const url = useAdminUrl();
+  const tab = url.params.get('view') === 'classes' ? 'classes' : 'schools';
+  const offset = adminOffset(url.params.get('offset'));
+  const filter = url.params.get('search') ?? '';
+  const schoolId = tab === 'classes' ? (url.params.get('schoolId') ?? '') : '';
+  const [search, setSearch] = useState(filter);
+  const query = new URLSearchParams({
+    offset: String(offset),
+    limit: String(ADMIN_PAGE_SIZE),
+    search: filter,
+  });
+  if (schoolId) query.set('schoolId', schoolId);
+  const { data, error, denied, retry } = useOperationalQuery<
+    AdminStructureClassesDto | AdminStructureSchoolsDto
+  >(`admin/structures/${tab}?${query}`, token);
+  const reset = () => url.update({ search: null, offset: null, schoolId: null });
+  if (denied) return <AdminMessage error message={error!} login retry={retry} />;
   return (
-    <div className="page-stack">
-      <p role="note">
-        Akses baca saja. Pengelolaan sekolah, Guru, credential, dan data individual siswa tersedia
-        untuk Admin Operasional dan Super Admin.
-      </p>
-      <nav aria-label="Jenis struktur" className="admin-content-actions">
-        <Button
-          variant={tab === 'schools' ? 'primary' : 'secondary'}
-          onClick={() => {
-            setTab('schools');
-            setOffset(0);
-            setSchoolId('');
+    <section
+      className="people-surface"
+      aria-label={tab === 'schools' ? 'Daftar sekolah' : 'Daftar kelas'}
+    >
+      <div className="people-toolbar">
+        <div>
+          <h2>{tab === 'schools' ? 'Daftar sekolah' : 'Daftar kelas'}</h2>
+          <p>
+            {tab === 'schools'
+              ? 'Jumlah kelas, Guru terverifikasi, siswa, dan status credential.'
+              : 'Jumlah siswa dan ketersediaan Guru, tanpa data individual.'}
+          </p>
+        </div>
+        <form
+          className="people-search structures-search"
+          role="search"
+          onSubmit={(event) => {
+            event.preventDefault();
+            url.update({ search: search.trim(), offset: null });
           }}
         >
-          Sekolah
-        </Button>
-        <Button
-          variant={tab === 'classes' ? 'primary' : 'secondary'}
-          onClick={() => {
-            setTab('classes');
-            setOffset(0);
-          }}
-        >
-          Kelas
-        </Button>
-      </nav>
-      <form
-        onSubmit={(event) => {
-          event.preventDefault();
-          setFilter(search.trim());
-          setOffset(0);
-        }}
-      >
-        <label htmlFor="structure-search">Cari struktur</label>
-        <input
-          id="structure-search"
-          className="text-input"
-          maxLength={100}
-          value={search}
-          onChange={(event) => setSearch(event.target.value)}
-        />
-        <Button type="submit" variant="secondary">
-          Cari
-        </Button>
-      </form>
+          <div>
+            <label className="sr-only" htmlFor="structure-search">
+              Cari struktur
+            </label>
+            <Icon name="search" />
+            <input
+              id="structure-search"
+              type="search"
+              maxLength={100}
+              placeholder={tab === 'schools' ? 'Nama atau kode sekolah' : 'Nama kelas'}
+              value={search}
+              onChange={(event) => setSearch(event.target.value)}
+            />
+          </div>
+          <Button type="submit" variant="secondary">
+            Cari
+          </Button>
+        </form>
+      </div>
+      {(filter || schoolId) && (
+        <div className="people-applied">
+          {filter && <span>Pencarian: {filter}</span>}
+          {schoolId && <span>Kelas dari sekolah terpilih</span>}
+          <Button variant="ghost" onClick={reset}>
+            Hapus filter
+          </Button>
+        </div>
+      )}
       {error ? (
-        <AdminMessage error message={error} retry={() => setRevision((value) => value + 1)} />
+        <AdminMessage error message={error} retry={retry} />
       ) : !data ? (
         <AdminLoading message="Memuat struktur…" />
       ) : (
         <>
-          {!data.items.length && <p>Belum ada struktur sesuai filter.</p>}
-          <div className="page-stack">
-            {data.items.map((item) => (
-              <Card key={item.id}>
-                <h2>{item.name}</h2>
-                <p>
-                  {'schoolName' in item ? item.schoolName : item.code} · {item.studentCount} siswa
-                  aktif
-                </p>
-                {'classCount' in item ? (
-                  <>
-                    <p>
-                      {item.classCount} kelas aktif · {item.activeTeacherCount} Guru aktif dan
-                      terverifikasi
-                    </p>
-                    <p>
-                      Credential: {item.availableCredentialCount} tersedia ·{' '}
-                      {item.usedCredentialCount} terpakai · {item.expiredCredentialCount}{' '}
-                      kedaluwarsa · {item.revokedCredentialCount} dicabut
-                    </p>
-                    <Button
-                      variant="secondary"
-                      onClick={() => {
-                        setSchoolId(item.id);
-                        setTab('classes');
-                        setOffset(0);
-                        setFilter('');
-                        setSearch('');
-                      }}
-                    >
-                      Lihat kelas sekolah
-                    </Button>
-                  </>
-                ) : (
-                  <p>
-                    {item.archivedAt ? 'Diarsipkan' : 'Kelas aktif'} ·{' '}
-                    {item.teacherActive ? 'Dengan Guru aktif' : 'Tanpa Guru aktif'}
-                  </p>
-                )}
-              </Card>
-            ))}
-          </div>
-          <div className="admin-content-actions">
-            <Button
-              variant="secondary"
-              disabled={!offset}
-              onClick={() => setOffset(Math.max(0, offset - ADMIN_PAGE_SIZE))}
-            >
-              Sebelumnya
-            </Button>
-            <Button
-              variant="secondary"
-              disabled={data.nextOffset === null}
-              onClick={() => setOffset(data.nextOffset!)}
-            >
-              Berikutnya
-            </Button>
-          </div>
+          {!data.items.length ? (
+            <PeopleEmpty
+              title="Belum ada struktur sesuai filter."
+              description="Coba kata kunci lain atau kembali ke daftar tanpa filter."
+              {...(filter || schoolId ? { reset } : {})}
+            />
+          ) : (
+            <StructureTable
+              data={data}
+              schools={tab === 'schools'}
+              onSchool={(id) => {
+                url.update({ view: 'classes', schoolId: id, offset: null, search: null });
+              }}
+            />
+          )}
+          <PeopleFooter
+            offset={offset}
+            count={data.items.length}
+            nextOffset={data.nextOffset}
+            label="Halaman struktur"
+            onChange={(next) => url.update({ offset: next || null })}
+          />
         </>
       )}
-    </div>
+    </section>
+  );
+}
+
+function StructureTable({
+  data,
+  schools,
+  onSchool,
+}: {
+  data: AdminStructureClassesDto | AdminStructureSchoolsDto;
+  schools: boolean;
+  onSchool: (id: string) => void;
+}) {
+  return (
+    <table className={`people-table structures-table${schools ? ' structures-schools-table' : ''}`}>
+      <caption className="sr-only">
+        {schools ? 'Struktur sekolah dan jumlah anggota' : 'Struktur kelas dan jumlah anggota'}
+      </caption>
+      <thead>
+        <tr>
+          <th scope="col">{schools ? 'Sekolah' : 'Kelas'}</th>
+          <th scope="col">{schools ? 'Kelas aktif' : 'Sekolah'}</th>
+          <th scope="col">{schools ? 'Guru terverifikasi' : 'Ketersediaan Guru'}</th>
+          <th scope="col">Siswa aktif</th>
+          <th scope="col">{schools ? 'Credential' : 'Status'}</th>
+          {schools && <th scope="col">Penelusuran</th>}
+        </tr>
+      </thead>
+      <tbody>
+        {data.items.map((item) => (
+          <tr key={item.id}>
+            <td className="structures-name">
+              <strong>{item.name}</strong>
+              {'code' in item && (
+                <span>
+                  {item.code} · {item.status === 'ACTIVE' ? 'Aktif' : 'Nonaktif'}
+                </span>
+              )}
+            </td>
+            <td>
+              <span className="people-cell-label">{schools ? 'Kelas aktif' : 'Sekolah'}</span>
+              {'classCount' in item ? item.classCount : item.schoolName}
+            </td>
+            <td>
+              <span className="people-cell-label">
+                {schools ? 'Guru terverifikasi' : 'Ketersediaan Guru'}
+              </span>
+              {'activeTeacherCount' in item
+                ? item.activeTeacherCount
+                : item.teacherActive
+                  ? 'Dengan Guru aktif'
+                  : 'Tanpa Guru aktif'}
+            </td>
+            <td>
+              <span className="people-cell-label">Siswa aktif</span>
+              {item.studentCount}
+            </td>
+            <td>
+              <span className="people-cell-label">{schools ? 'Credential' : 'Status'}</span>
+              {'availableCredentialCount' in item ? (
+                <div className="structures-credentials">
+                  <span>{item.availableCredentialCount} tersedia</span>
+                  <details>
+                    <summary aria-label={`Status lainnya untuk ${item.name}`}>
+                      Status lainnya
+                    </summary>
+                    <dl>
+                      <div>
+                        <dt>Terpakai</dt>
+                        <dd>{item.usedCredentialCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Kedaluwarsa</dt>
+                        <dd>{item.expiredCredentialCount}</dd>
+                      </div>
+                      <div>
+                        <dt>Dicabut</dt>
+                        <dd>{item.revokedCredentialCount}</dd>
+                      </div>
+                    </dl>
+                  </details>
+                </div>
+              ) : (
+                <span
+                  className="people-status"
+                  data-status={item.archivedAt ? 'ARCHIVED' : 'ACTIVE'}
+                >
+                  {item.archivedAt ? 'Diarsipkan' : 'Kelas aktif'}
+                </span>
+              )}
+            </td>
+            {'classCount' in item && (
+              <td className="structures-action">
+                <Button
+                  variant="secondary"
+                  aria-label={`Lihat kelas sekolah ${item.name}`}
+                  onClick={() => onSchool(item.id)}
+                >
+                  Lihat kelas sekolah
+                </Button>
+              </td>
+            )}
+          </tr>
+        ))}
+      </tbody>
+    </table>
   );
 }

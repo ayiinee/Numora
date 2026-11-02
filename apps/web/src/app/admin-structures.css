@@ -1,0 +1,99 @@
+/* Limited Content reader reuses the operational list without management actions. */
+.admin-structures-shell .structures-search {
+  grid-template-columns: minmax(0, 1fr) auto;
+  width: 330px;
+  min-width: min(100%, 300px);
+}
+.admin-structures-shell .structures-search input[type='search'] {
+  width: 100%;
+}
+.structures-table th:first-child {
+  width: 25%;
+}
+.structures-schools-table th:nth-child(2),
+.structures-schools-table th:nth-child(4) {
+  width: 10%;
+}
+.structures-schools-table th:nth-child(3) {
+  width: 14%;
+}
+.structures-schools-table th:nth-child(5) {
+  width: 18%;
+}
+.structures-schools-table th:last-child {
+  width: 23%;
+}
+.structures-name strong {
+  display: block;
+  font-weight: 650;
+}
+.structures-name > span {
+  display: block;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  margin-top: 4px;
+}
+.structures-credentials summary {
+  min-height: 44px;
+  padding-block: 11px;
+  color: var(--color-primary);
+  cursor: pointer;
+  font-size: 12px;
+}
+.structures-credentials dl {
+  margin: 0;
+  font-size: 12px;
+}
+.structures-credentials dl > div {
+  display: flex;
+  justify-content: space-between;
+  gap: 8px;
+}
+.structures-credentials dd {
+  margin: 0;
+}
+.structures-action .numora-button {
+  white-space: normal;
+}
+@media (max-width: 1199px) {
+  .structures-table,
+  .structures-table tbody {
+    display: block;
+  }
+  .structures-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    overflow: hidden;
+    clip-path: inset(50%);
+  }
+  .structures-table tbody tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    padding: 20px 24px;
+    border-top: 1px solid #e8ebef;
+  }
+  .structures-table tbody td,
+  .structures-table tbody td:first-child,
+  .structures-table tbody td:last-child {
+    display: block;
+    padding: 0;
+    border: 0;
+  }
+  .structures-table .structures-name,
+  .structures-table .structures-action {
+    grid-column: 1 / -1;
+  }
+  .structures-table .people-cell-label {
+    display: block;
+  }
+}
+@media (max-width: 767px) {
+  .admin-structures-shell .structures-search > button {
+    grid-column: 1 / -1;
+  }
+  .structures-table tbody tr {
+    padding-inline: 16px;
+  }
+}
