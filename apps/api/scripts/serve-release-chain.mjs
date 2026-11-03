@@ -60,6 +60,8 @@ const levelTwo = '00000000-0000-4000-8000-000000000103';
 const actors = {};
 for (const [alias, role] of [
   ['admin', 'ADMIN'],
+  ['adminOperations', 'ADMIN'],
+  ['adminContent', 'ADMIN'],
   ['teacher', 'TEACHER'],
   ['foreignTeacher', 'TEACHER'],
   ['unverified', 'TEACHER'],
@@ -91,7 +93,14 @@ for (const [alias, role] of [
     .values({
       authUserId: id,
       role,
-      adminRole: role === 'ADMIN' ? 'SUPER_ADMIN' : null,
+      adminRole:
+        role !== 'ADMIN'
+          ? null
+          : alias === 'adminOperations'
+            ? 'OPERATIONS'
+            : alias === 'adminContent'
+              ? 'CONTENT_DATA_MODERATION'
+              : 'SUPER_ADMIN',
       displayName: user.user_metadata.name,
       email: user.email,
       status: alias === 'disabled' ? 'DISABLED' : 'ACTIVE',
@@ -142,32 +151,28 @@ for (let i = 0; i < 10; i++) {
 await client`update assessment_packages set status='ARCHIVED' where level_id='00000000-0000-4000-8000-000000000102' and is_demo=true and status='PUBLISHED'`;
 for (const levelId of ['00000000-0000-4000-8000-000000000102', levelTwo]) {
   const id = randomUUID();
-  await db
-    .insert(assessmentPackages)
-    .values({
-      id,
-      familyCode: `JOB06-DRILL-TEST-${id}`,
-      packageVersion: 1,
-      name: `Drill Level ${levelId === levelTwo ? 2 : 1}`,
-      assessmentType: 'DRILL',
-      chapterId: '00000000-0000-4000-8000-000000000100',
-      levelId,
-      variantIndex: 1,
-      isDemo: true,
-      scoringPolicyVersionId: drillPolicy,
-      releaseAt: new Date(),
-      status: 'PUBLISHED',
-    });
-  await db
-    .insert(packageItems)
-    .values(
-      readyDrillVersions.map((questionVersionId, i) => ({
-        packageId: id,
-        questionVersionId,
-        displayOrder: i + 1,
-        maxPoints: '1',
-      })),
-    );
+  await db.insert(assessmentPackages).values({
+    id,
+    familyCode: `JOB06-DRILL-TEST-${id}`,
+    packageVersion: 1,
+    name: `Drill Level ${levelId === levelTwo ? 2 : 1}`,
+    assessmentType: 'DRILL',
+    chapterId: '00000000-0000-4000-8000-000000000100',
+    levelId,
+    variantIndex: 1,
+    isDemo: true,
+    scoringPolicyVersionId: drillPolicy,
+    releaseAt: new Date(),
+    status: 'PUBLISHED',
+  });
+  await db.insert(packageItems).values(
+    readyDrillVersions.map((questionVersionId, i) => ({
+      packageId: id,
+      questionVersionId,
+      displayOrder: i + 1,
+      maxPoints: '1',
+    })),
+  );
 }
 
 // TEST ONLY access/release fixture: 30 PG items; no approved academic bank or IRT model.

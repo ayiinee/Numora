@@ -29,7 +29,12 @@ import type {
   TokenDto,
   IdentityProfileDto,
 } from '../src/lib/generated-api-types';
-import type { ImportReportDto, PreviewSessionDto } from '../src/features/admin/generated-types';
+import type {
+  AdminStructureClassesDto,
+  AdminStructureSchoolsDto,
+  ImportReportDto,
+  PreviewSessionDto,
+} from '../src/features/admin/generated-types';
 
 // Auth is an explicitly isolated email fixture. No product API route mocks or service overrides.
 type Actor = { profileId: string; session: Session };
@@ -53,6 +58,7 @@ const requiredChecks = [
   'tryout-mandiri-school-snapshot-idempotency-xp-at-submit-irt-privacy-level-and-teacher-history',
   'draft-content-import-ten-items-pg-mcma-category-media-save-resume-null-review',
   'five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress',
+  'admin-super-operations-content-connected-ui-and-server-boundaries',
 ];
 const contexts: BrowserContext[] = [];
 const browserResources: { test: string; contexts: number; pages: number }[] = [];
@@ -1182,5 +1188,144 @@ test.describe.serial('JOB-06 connected release chain', () => {
       latestStars: 2,
     });
     checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
+  });
+
+  test('all three Admin subroles retain their landing, shared UI and real server permissions', async ({
+    browser,
+    request,
+  }) => {
+    for (const [alias, role] of [
+      ['admin', 'SUPER_ADMIN'],
+      ['adminOperations', 'OPERATIONS'],
+      ['adminContent', 'CONTENT_DATA_MODERATION'],
+    ] as const) {
+      const profile = await body<IdentityProfileDto>(request, alias, 'identity/me');
+      expect(profile.adminRole).toBe(role);
+      await call(
+        request,
+        alias,
+        `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/ban`,
+        'POST',
+        undefined,
+        403,
+      );
+    }
+
+    const superAdmin = await login(browser, 'admin');
+    await superAdmin.goto('/admin');
+    await expect(superAdmin).toHaveURL(/\/admin\/analytics$/);
+    await expect(superAdmin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(superAdmin.locator('[data-metric]')).toHaveCount(22);
+    await call(request, 'admin', 'admin/accounts?limit=5&offset=0');
+
+    const operations = await login(browser, 'adminOperations');
+    await operations.goto('/admin');
+    await expect(operations).toHaveURL(/\/admin\/schools$/);
+    await expect(
+      operations.getByRole('heading', { name: 'Sekolah & credential', exact: true }),
+    ).toBeVisible();
+    await operations
+      .getByRole('searchbox', { name: 'Cari sekolah', exact: true })
+      .fill(school.name);
+    await operations.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
+    await expect(operations.locator('.schools-directory-table tbody tr')).toHaveCount(1);
+    await operations.getByRole('button', { name: `Kelola ${school.name}`, exact: true }).click();
+    await expect(
+      operations.getByRole('button', { name: 'Terbitkan token', exact: true }),
+    ).toBeVisible();
+    await operations.goto('/admin/operations?role=STUDENT');
+    await expect(
+      operations.getByRole('heading', { name: 'Daftar pengguna', exact: true }),
+    ).toBeVisible();
+    await expect(operations.locator('.people-users-table tbody tr').first()).toBeVisible();
+    await expect(
+      operations
+        .locator('.app-sidebar')
+        .getByRole('link', { name: 'Konten & assessment', exact: true }),
+    ).toHaveCount(0);
+    await call(request, 'adminOperations', 'admin/accounts', 'GET', undefined, 403);
+    await call(request, 'adminOperations', 'admin/content/versions', 'GET', undefined, 403);
+    await operations.goto('/admin/content');
+    await expect(
+      operations
+        .getByRole('alert')
+        .filter({ hasText: 'Akses memerlukan Super Admin atau Admin Content' }),
+    ).toBeVisible();
+
+    const content = await login(browser, 'adminContent');
+    await content.goto('/admin');
+    await expect(content).toHaveURL(/\/admin\/content$/);
+    await expect(content.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
+    await expect(
+      content.locator('.app-sidebar').getByRole('link', { name: 'Akun Admin', exact: true }),
+    ).toHaveCount(0);
+    const limited = await body<AdminStructureSchoolsDto>(
+      request,
+      'adminContent',
+      'admin/structures/schools?offset=0&limit=5',
+    );
+    expect(limited.items.length).toBeGreaterThan(0);
+    for (const item of limited.items)
+      expect(Object.keys(item).sort()).toEqual(
+        [
+          'id',
+          'name',
+          'code',
+          'status',
+          'classCount',
+          'activeTeacherCount',
+          'studentCount',
+          'availableCredentialCount',
+          'usedCredentialCount',
+          'expiredCredentialCount',
+          'revokedCredentialCount',
+        ].sort(),
+      );
+    await content.goto('/admin/structures');
+    await expect(
+      content.getByRole('heading', { name: 'Sekolah & kelas', exact: true }),
+    ).toBeVisible();
+    await expect(content.getByRole('table')).toBeVisible();
+    const classPath = `admin/structures/classes?offset=0&limit=5&schoolId=${school.id}`;
+    const classes = await body<AdminStructureClassesDto>(request, 'adminContent', classPath);
+    expect(classes.items.length).toBeGreaterThan(0);
+    for (const item of classes.items)
+      expect(Object.keys(item).sort()).toEqual(
+        [
+          'id',
+          'name',
+          'schoolId',
+          'schoolName',
+          'studentCount',
+          'teacherActive',
+          'createdAt',
+          'archivedAt',
+        ].sort(),
+      );
+    await content.goto(`/admin/structures?view=classes&schoolId=${school.id}`);
+    await expect(content.getByRole('tab', { name: 'Kelas', exact: true })).toHaveAttribute(
+      'aria-selected',
+      'true',
+    );
+    await expect(
+      content.getByRole('table').getByText(classes.items[0]!.name, { exact: true }),
+    ).toBeVisible();
+    await content.reload();
+    await expect(content.getByText('Kelas dari sekolah terpilih', { exact: true })).toBeVisible();
+    await expect(content.getByRole('button', { name: /terbitkan|cabut|ban/i })).toHaveCount(0);
+    for (const path of [
+      'admin/users',
+      'admin/accounts',
+      'admin/schools',
+      `admin/classes/${cls.id}/roster`,
+    ])
+      await call(request, 'adminContent', path, 'GET', undefined, 403);
+    await content.goto('/admin/operations');
+    await expect(
+      content
+        .getByRole('alert')
+        .filter({ hasText: 'Halaman ini hanya tersedia untuk Admin Operasional' }),
+    ).toBeVisible();
+    checks.push('admin-super-operations-content-connected-ui-and-server-boundaries');
   });
 });
