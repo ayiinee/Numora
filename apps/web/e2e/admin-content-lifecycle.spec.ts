@@ -146,6 +146,8 @@ test('moderation opens the archived target directly without fetching current ban
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/admin/reports/QUESTION/${userId}`);
+    // Auth hydration remounts this detail; wait for its payload before measuring the heading.
+    await expect(page.getByText('TEST laporan versi lama')).toBeVisible();
     const reportHeading = page.getByRole('heading', { name: 'Detail laporan', exact: true });
     await expect(reportHeading).toBeVisible();
     expect((await reportHeading.boundingBox())!.height).toBeGreaterThan(20);
@@ -154,7 +156,6 @@ test('moderation opens the archived target directly without fetching current ban
       'href',
       '/admin/content',
     );
-    await expect(page.getByText('TEST laporan versi lama')).toBeVisible();
     await page.screenshot({
       path: test.info().outputPath(`report-detail-${width}.png`),
       fullPage: true,
