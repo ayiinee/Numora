@@ -38,7 +38,7 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       href: '/admin/accounts',
       label: 'Akun Admin',
       description: 'Invite internal dan kelola assignment serta status akun.',
-      icon: 'users',
+      icon: 'lock',
     });
   if (adminCanAccess(profile, 'operations')) {
     items.push(
@@ -78,13 +78,13 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
         href: '/admin/content/pretest',
         label: 'Pretest authoring',
         description: 'Siapkan dan review paket 20 soal. Publikasi ke siswa masih dibatasi.',
-        icon: 'book',
+        icon: 'target',
       },
       {
         href: '/admin/content/generator',
         label: 'Generator paket',
         description: 'Generate paket Tryout, Drill atau Pretest.',
-        icon: 'book',
+        icon: 'spark',
       },
       {
         href: '/admin/content/imports',
@@ -100,18 +100,19 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       label: 'Request IRT & publikasi',
       description:
         'Pantau analisis Tryout, penerimaan hasil ilmiah, hambatan, dan batas rilis 72 jam.',
-      icon: 'chart',
+      icon: 'chart-box',
     });
   if (profile.adminRole === 'OPERATIONS') {
     return items.filter(({ href }) => href !== '/admin/analytics');
   }
   if (profile.adminRole === 'CONTENT_DATA_MODERATION') {
-    // Content opens the bank directly; these pages are temporarily out of its portal.
+    // Content opens the bank directly; Analytics stays outside this portal.
     const contentItems = items.filter(({ href }) => href !== '/admin/analytics');
     const order = [
       '/admin/content',
       '/admin/content/imports',
       '/admin/content/pretest',
+      '/admin/content/generator',
       '/admin/irt',
       '/admin/structures',
     ];

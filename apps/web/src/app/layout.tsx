@@ -16,6 +16,7 @@ import './admin-generator.css';
 import './admin-import.css';
 import './admin-analytics.css';
 import './admin-irt.css';
+import './admin-navigation.css';
 import { AuthProvider } from '@/features/onboarding/auth';
 import 'katex/dist/katex.min.css';
 
