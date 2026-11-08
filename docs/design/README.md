@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** ikon bab pada halaman Latihan memakai empat ilustrasi kiriman pemilik untuk kategori Bilangan, Aljabar, Geometri dan Pengukuran, serta Data dan Peluang. Aset WebP transparan di `apps/web/public/illustrations/chapters/` dipilih berdasarkan kategori API, termasuk pada bab selesai. Ukuran mengikuti slot kartu existing dan status selesai tetap terlihat melalui hitungan level.
+
 **ENGINEERING DECISION — penyesuaian pemilik, 8 November 2026:** ikon Shortcut Belajar berukuran 64 × 64 px, tersusun simetris dengan jarak label 8 px. Tinggi dasar hero ponsel menjadi 150 px dengan lebar responsif, mengikuti acuan 270 × 150 px dan dapat bertambah sesuai isi. Jarak header ke hero 20 px, hero ke titik indikator sekitar 14 px, titik indikator ke Shortcut Belajar 30 px, Shortcut ke Aktivitas 32 px, serta Aktivitas ke Kelas pada tata letak bertumpuk 24 px. Target sentuh indikator tetap 44 px.
 
 **ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** Shortcut Belajar memakai tiga ilustrasi kiriman pemilik untuk Latihan Soal, Tryout, dan PvP, dengan label di bawah gambar. Aset transparan dioptimalkan menjadi WebP 384 × 384 px.

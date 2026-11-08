@@ -7884,6 +7884,15 @@ a.settings-row:hover {
   background: var(--color-primary-light);
   color: var(--color-success);
 }
+.material-chapter .material-chapter__icon--illustrated {
+  background: transparent;
+}
+.material-chapter__icon--illustrated img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .material-chapter__copy {
   display: contents;
 }

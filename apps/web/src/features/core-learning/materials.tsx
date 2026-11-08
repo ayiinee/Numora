@@ -162,25 +162,30 @@ const categoryNames: Record<NonNullable<MaterialChapterDto['category']>, string>
   statistics: 'Statistika',
 };
 
-function chapterIcon(chapter: MaterialChapterDto) {
-  if (chapter.totalLevels > 0 && chapter.completedLevels === chapter.totalLevels) return 'verified';
-  if (chapter.category === 'algebra') return 'calculator';
-  if (chapter.category === 'geometry') return 'globe';
-  if (chapter.category === 'numbers') return 'numbers';
-  if (chapter.category === 'statistics') return 'chart-box';
-  return 'book';
-}
+const chapterImages: Record<NonNullable<MaterialChapterDto['category']>, string> = {
+  algebra: '/illustrations/chapters/algebra.webp',
+  geometry: '/illustrations/chapters/geometry.webp',
+  numbers: '/illustrations/chapters/numbers.webp',
+  statistics: '/illustrations/chapters/statistics.webp',
+};
 
 function MaterialChapterLink({ chapter }: { chapter: MaterialChapterDto }) {
   const completed = chapter.totalLevels > 0 && chapter.completedLevels === chapter.totalLevels;
+  const image = chapter.category ? chapterImages[chapter.category] : undefined;
   return (
     <Card
       className={`material-chapter material-chapter--${chapter.category ?? 'other'}${completed ? ' is-completed' : ''}`}
       padding="none"
     >
       <Link className="material-chapter__toggle" href={`/student/learn/${chapter.id}`}>
-        <span className="material-chapter__icon">
-          <Icon name={chapterIcon(chapter)} />
+        <span
+          className={`material-chapter__icon${image ? ' material-chapter__icon--illustrated' : ''}`}
+        >
+          {image ? (
+            <img src={image} width={36} height={36} alt="" />
+          ) : (
+            <Icon name={completed ? 'verified' : 'book'} />
+          )}
         </span>
         <span className="material-chapter__copy">
           <small>
