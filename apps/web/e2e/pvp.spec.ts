@@ -253,7 +253,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         true,
       );
       const bounds = await page
-        .locator('.numora-card, .pvp-hero, .pvp-header, .pvp-ranking-hero')
+        .locator('.numora-card, .student-illustrated-hero, .pvp-header')
         .evaluateAll((elements) =>
           elements.map((element) => {
             const r = element.getBoundingClientRect();

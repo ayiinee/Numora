@@ -4838,63 +4838,6 @@ a.settings-row:hover {
   border-radius: var(--radius-full);
   padding: 4px 6px;
 }
-.pvp-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 20px;
-  padding: 16px;
-  color: white;
-  background: linear-gradient(
-    115deg,
-    var(--color-primary-strong),
-    var(--color-primary) 65%,
-    var(--numora-purple-400)
-  );
-  box-shadow: var(--shadow-md);
-}
-.pvp-hero__badges {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10px;
-  margin-bottom: 14px;
-}
-.pvp-hero__badges span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--pvp-glass);
-  padding: 4px 8px;
-  border-radius: var(--radius-full);
-}
-.pvp-hero__badges span:first-child {
-  background: var(--color-accent);
-  color: var(--numora-peach-900);
-}
-.pvp-hero h1 {
-  max-width: 78%;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.25;
-  margin-bottom: 6px;
-}
-.pvp-hero p {
-  max-width: 78%;
-  font-size: 12px;
-  line-height: 1.6;
-  color: white;
-}
-.pvp-hero__art {
-  position: absolute;
-  right: 16px;
-  bottom: 32px;
-  width: 60px;
-  height: 76px;
-  border-radius: 14px;
-  background: var(--pvp-glass);
-  display: grid;
-  place-items: center;
-}
 .pvp-lobby-layout,
 .pvp-lobby-main,
 .pvp-lobby-context,
@@ -5843,15 +5786,6 @@ a.settings-row:hover {
     position: sticky;
     top: 24px;
     align-self: start;
-  }
-  .pvp-hero {
-    padding: 24px;
-  }
-  .pvp-hero h1 {
-    font-size: 26px;
-  }
-  .pvp-hero p {
-    font-size: 14px;
   }
   .pvp-waiting-layout {
     grid-template-columns: minmax(0, 1fr) 300px;
