@@ -154,6 +154,12 @@ Ini adalah kontrak konseptual, bukan perintah mengganti enum database sekarang. 
 
 Inventaris lokal yang diperiksa: **Drill 1.150 original = 1.067 generator + 83 original berstok konseptual; Tryout 30 = 27 generator + 3 berstok; total 1.180 = 1.094 generator + 86 berstok; 0 HOLD**. Ini cakupan bank lokal, bukan bukti semua item sudah approved, dapat dipakai endpoint produksi, tersimpan di database saat ini, atau PASS IRT. Katalog generator ini tidak memuat Pretest; arsip/import Pretest adalah cakupan terpisah.
 
+## Handoff kontrak kalibrasi dan hasil peserta — 8 November 2026
+
+**ENGINEERING IMPLEMENTATION:** [kontrak `irt-calibration-v1`](IRT_CALIBRATION_CONTRACT_V1.md) menetapkan input frozen, parameter 2PL/GPCM, hasil peserta Tryout, identitas respondent–attempt–package–batch, assigned/delivered arm, status data kurang/gagal dan pin eksekusi. Schema, contoh tersanitasi serta validator JavaScript/Python dipelihara identik di kedua repo dan diuji dengan shared conformance vectors. Kontrak generator HTTP v1 dan notification compute v3 tidak berubah.
+
+Bentuk pertukaran data bukan lagi OPEN seluruhnya. Policy numerik/akademik, adapter snapshot/digest/resource policy, scientific producer, adopter/persistence dan finalizer publikasi masih diperlukan. Scope executable kontrak baru adalah Level Drill dan batch Tryout; Indikator/Bab belum dicakup. Guard `RESPONDENT_CONTRACT_NOT_APPROVED` tetap berlaku pada runtime v3 item-only sampai jalur baru selesai diuji. Kontrak tidak memublikasikan nilai, mengubah database atau menulis ulang XP/histori.
+
 ## Keputusan yang tetap OPEN
 
 | Topik | Yang masih perlu diselesaikan | Pemilik |
@@ -161,8 +167,8 @@ Inventaris lokal yang diperiksa: **Drill 1.150 original = 1.067 generator + 83 o
 | Sampel dan quality gate | Checkpoint X, minimum item/arm, precision, convergence/fit, toleransi PASS/DRIFT dan uncertainty; validasi melalui simulasi/evidence. | Data/AI + Curriculum |
 | Anchor/linking | Jumlah beta sudah ditetapkan: Drill 3, Tryout 5. Pemilihan anchor/blueprint, kestabilan dan kecukupan pada batas itu, DIF/leakage, linking indikator, reach/selection bias dan learning over time masih perlu validasi. | Data/AI + Curriculum |
 | IRT Bab | Dimensi, window/reference scale, minimum coverage, invariance dan interval laporan. | Data/AI + Product |
-| Nilai dan rubrik | Metode mapping acuan, per-arm fallback, serentak per batch, first valid, prinsip item invalid/maksimum nol dan presisi telah diputuskan. Review rubrik Drill, minimum cakupan setelah exclusion, tie rounding, spesifikasi estimator/prior/mapping dan kontrak hasil peserta masih diperlukan. | Product + Curriculum + Data/AI + Software |
-| Eksperimen/assignment | Nomor 7 selesai: original boleh menjadi fallback distribusi sementara; siswa lama bukan fresh di eksperimen baru. Detail assigned-vs-delivered arm, analisis crossover/attrition, lifecycle, invalidasi teknis, mapping blueprint/ID dan pergantian paket atomik masih perlu kontrak. Exposure lintas fitur diterima untuk beta Drill; jangan menerapkan exclusion global lama pada scope itu. | Data/AI + Software + Curriculum |
+| Nilai dan rubrik | Metode mapping acuan, per-arm fallback, serentak per batch, first valid, prinsip item invalid/maksimum nol dan presisi telah diputuskan. Review rubrik Drill, minimum cakupan setelah exclusion, tie rounding, spesifikasi estimator/prior/mapping serta implementasi producer/adopter hasil peserta masih diperlukan. Bentuk payload sudah ditetapkan pada kontrak v1. | Product + Curriculum + Data/AI + Software |
+| Eksperimen/assignment | Nomor 7 selesai: original boleh menjadi fallback distribusi sementara; siswa lama bukan fresh di eksperimen baru. Assigned-vs-delivered arm, identitas/version dan exclusion crossover sudah direpresentasikan kontrak v1; analisis crossover/attrition, lifecycle, invalidasi teknis, mapping blueprint/ID dan pergantian paket atomik masih perlu implementasi/validasi. Exposure lintas fitur diterima untuk beta Drill; jangan menerapkan exclusion global lama pada scope itu. | Data/AI + Software + Curriculum |
 | Adjustment/reuse | Daftar kontrol yang boleh diubah, bounds, budget/stop rule, multi-output evidence dan validasi otomatis yang kelak boleh digunakan. | Data/AI + Curriculum |
 | Insiden/fairness | Kapan/berapa kompensasi atau penghentian sesi perlu dilakukan; prinsip tidak menulis ulang histori sudah disepakati. | Product + Curriculum |
 | Beta/integrasi | Kalender dua batch, paket/anchor yang dipilih, PIC bernama, kesiapan runtime/deployment dan penerimaan QA. Tidak ada ETA/PIC yang diasumsikan dari dokumen ini. | Product/Admin + Data/AI + Software/QA |
