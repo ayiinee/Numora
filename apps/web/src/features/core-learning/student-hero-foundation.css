@@ -1,0 +1,28 @@
+/* Shared typography and spacing for illustrated student banners. */
+.student-illustrated-hero {
+  --student-hero-title-size: clamp(19px, 2vw, 24px);
+  --student-hero-body-size: 12px;
+  --student-hero-badge-size: 10px;
+  --student-hero-copy-gap: 4px;
+  --student-hero-inset: 20px;
+  --student-hero-badge-top: 12px;
+  --student-hero-radius: 27px 54px 21px 42px / 26px 30px 37px 33px;
+}
+
+@media (max-width: 699px) {
+  .student-illustrated-hero {
+    --student-hero-title-size: clamp(16px, 4.5vw, 19px);
+    --student-hero-body-size: 10px;
+    --student-hero-copy-gap: 3px;
+    --student-hero-inset: 14px;
+    --student-hero-badge-top: 10px;
+    --student-hero-radius: 25px 46px 20px 38px / 24px 29px 34px 30px;
+  }
+}
+
+@media (max-width: 359px) {
+  .student-illustrated-hero {
+    --student-hero-title-size: 16px;
+    --student-hero-inset: 12px;
+  }
+}

@@ -344,7 +344,33 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           exact: true,
         }),
       ).toHaveAttribute('aria-pressed', 'true');
-      await expect(page.getByLabel('Podium Global PvP')).toBeVisible();
+      const podium = page.getByRole('list', { name: 'Podium Global PvP' });
+      await expect(podium).toBeVisible();
+      const medals = podium.getByRole('img');
+      await expect(medals).toHaveCount(3);
+      await expect(medals.nth(0)).toHaveAccessibleName('Peringkat 1');
+      await expect(medals.nth(1)).toHaveAccessibleName('Peringkat 2');
+      await expect(medals.nth(2)).toHaveAccessibleName('Peringkat 3');
+      await expect
+        .poll(() =>
+          medals.evaluateAll((images) =>
+            images.every((img) => (img as HTMLImageElement).naturalWidth > 0),
+          ),
+        )
+        .toBe(true);
+      const [first, second, third] = await medals.evaluateAll((images) =>
+        images.map((image) => {
+          const { x, y } = image.getBoundingClientRect();
+          return { x, y };
+        }),
+      );
+      expect(second!.x).toBeLessThan(first!.x);
+      expect(first!.x).toBeLessThan(third!.x);
+      expect(first!.y).toBeLessThan(second!.y);
+      expect(second!.y).toBeLessThan(third!.y);
+      await expect(
+        page.getByRole('list', { name: 'Peringkat berikutnya' }).getByRole('listitem'),
+      ).toHaveCount(7);
       await expect(page.getByText('#8', { exact: true })).toBeVisible();
       if (width < 960) {
         const order = await page.evaluate(() =>

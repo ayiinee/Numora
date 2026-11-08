@@ -1,0 +1,194 @@
+@import './student-hero-foundation.css';
+
+/* Shared artwork layout for Home, the PvP lobby, and leaderboard arenas. */
+.student-illustrated-hero {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) minmax(0, 48%);
+  grid-template-rows: auto 1fr;
+  overflow: hidden;
+  min-width: 0;
+  min-height: clamp(220px, 22vw, 252px);
+  padding: 0;
+  border-radius: var(--student-hero-radius);
+  background-color: var(--numora-purple-800);
+  background-image:
+    radial-gradient(
+      ellipse 43% 85% at -4% 112%,
+      var(--student-hero-wave),
+      transparent 99%,
+      transparent
+    ),
+    radial-gradient(ellipse 49% 94% at -4% 116%, rgb(255 255 255 / 8%) 99%, transparent),
+    radial-gradient(ellipse 31% 78% at 64% -36%, rgb(255 255 255 / 12%) 99%, transparent),
+    radial-gradient(ellipse 44% 82% at 105% 122%, var(--student-hero-wave) 2%, transparent 99%),
+    radial-gradient(ellipse at 77% 45%, var(--student-hero-glow), transparent 57%),
+    linear-gradient(
+      112deg,
+      var(--student-hero-base),
+      var(--student-hero-mid) 48%,
+      var(--student-hero-end)
+    );
+  color: var(--color-text-inverse);
+  box-shadow: 0 8px 24px rgb(45 27 80 / 7%);
+}
+
+.student-illustrated-hero--pvp {
+  --student-hero-base: #1939c8;
+  --student-hero-mid: #2154d9;
+  --student-hero-end: #6637df;
+  --student-hero-wave: rgb(126 140 255 / 54%);
+  --student-hero-glow: rgb(81 168 255 / 44%);
+  --student-hero-art: url('/illustrations/student-heroes/pvp-duel-trophy.webp');
+}
+
+.student-illustrated-hero--drill {
+  --student-hero-base: var(--numora-purple-800);
+  --student-hero-mid: var(--numora-purple-700);
+  --student-hero-end: var(--numora-purple-500);
+  --student-hero-wave: rgb(192 131 255 / 49%);
+  --student-hero-glow: rgb(221 140 255 / 42%);
+  --student-hero-art: url('/illustrations/student-heroes/drill-owl.webp');
+}
+
+.student-illustrated-hero--tryout {
+  --student-hero-base: #153782;
+  --student-hero-mid: #1a50bf;
+  --student-hero-end: #2481e9;
+  --student-hero-wave: rgb(96 167 255 / 50%);
+  --student-hero-glow: rgb(71 182 255 / 42%);
+  --student-hero-art: url('/illustrations/student-heroes/tryout-exam.webp');
+}
+
+.student-illustrated-hero--easy {
+  --student-hero-base: #115960;
+  --student-hero-mid: #117568;
+  --student-hero-end: #107b85;
+  --student-hero-wave: rgb(74 227 167 / 46%);
+  --student-hero-glow: rgb(54 216 151 / 42%);
+  --student-hero-art: url('/illustrations/student-heroes/leaderboard-easy-trophy.webp');
+}
+
+.student-illustrated-hero--medium {
+  --student-hero-base: #4a0db4;
+  --student-hero-mid: #6819cb;
+  --student-hero-end: #8739e1;
+  --student-hero-wave: rgb(195 133 255 / 55%);
+  --student-hero-glow: rgb(207 111 255 / 43%);
+  --student-hero-art: url('/illustrations/student-heroes/leaderboard-medium-trophy.webp');
+}
+
+.student-illustrated-hero--hard {
+  --student-hero-base: #9c212f;
+  --student-hero-mid: #812f24;
+  --student-hero-end: #3d127f;
+  --student-hero-wave: rgb(255 102 101 / 54%);
+  --student-hero-glow: rgb(246 117 48 / 44%);
+  --student-hero-art: url('/illustrations/student-heroes/leaderboard-hard-trophy.webp');
+}
+
+.student-illustrated-hero::after {
+  content: '';
+  grid-area: 1 / 2 / span 2;
+  margin: 8px var(--student-hero-inset) 8px 0;
+  background-image: var(--student-hero-art);
+  /* Keep the full illustration within its own column. */
+  background-size: contain;
+  background-position: center;
+  background-repeat: no-repeat;
+  pointer-events: none;
+}
+
+.student-illustrated-hero__badges {
+  grid-area: 1 / 1;
+  margin-top: var(--student-hero-badge-top);
+  padding-inline: var(--student-hero-inset);
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.student-illustrated-hero__badges > span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-height: 0;
+  padding: 3px 9px;
+  border-radius: var(--radius-full);
+  background: rgb(17 10 50 / 28%);
+  font-size: var(--student-hero-badge-size);
+  font-weight: var(--font-bold);
+  line-height: 1.4;
+  letter-spacing: 0.03em;
+}
+
+.student-illustrated-hero__badges svg {
+  flex: none;
+}
+
+.student-illustrated-hero__copy {
+  grid-area: 2 / 1;
+  align-self: start;
+  display: grid;
+  gap: var(--student-hero-copy-gap);
+  max-width: 400px;
+  margin-top: var(--space-2);
+  padding-bottom: var(--space-4);
+  padding-inline: var(--student-hero-inset);
+}
+
+.student-illustrated-hero__copy :is(h1, h2) {
+  margin: 0;
+  color: inherit;
+  font-size: var(--student-hero-title-size);
+  font-weight: var(--font-extrabold);
+  line-height: 1.08;
+  overflow-wrap: anywhere;
+}
+
+.student-illustrated-hero__copy > p {
+  margin: 0;
+  color: inherit;
+  font-size: var(--student-hero-body-size);
+  line-height: 1.35;
+}
+
+.student-illustrated-hero__rule {
+  display: flex;
+  align-items: flex-start;
+  gap: var(--space-2);
+  padding-top: var(--space-1);
+}
+
+.student-illustrated-hero__rule svg {
+  flex: none;
+  margin-top: 1px;
+}
+
+@media (max-width: 699px) {
+  .student-illustrated-hero {
+    --student-hero-body-size: 12px;
+
+    grid-template-columns: minmax(0, 1fr) minmax(0, var(--student-hero-art-width, 52%));
+    min-height: clamp(182px, 47vw, 232px);
+  }
+
+  .student-illustrated-hero::after {
+    grid-area: 2 / 2;
+    margin: 0 4px 2px 0;
+  }
+
+  .student-illustrated-hero__badges {
+    grid-column: 1 / -1;
+  }
+
+  .student-illustrated-hero__badges > span {
+    padding: 3px 8px;
+  }
+}
+
+@media (max-width: 359px) {
+  .student-illustrated-hero__badges > span {
+    padding-inline: 6px;
+  }
+}

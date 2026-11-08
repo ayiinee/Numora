@@ -1,5 +1,9 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** header Leaderboard siswa memakai pola yang sama dengan header Materi dan hanya menampilkan tombol Kembali serta judul. Pada desktop, filter Periode berada di sebelah kanan tab jenis peringkat. Pada ponsel, filter berada di bawah tab.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** halaman Leaderboard siswa memakai podium 2–1–3 dan panel daftar yang menyatu untuk Global PvP, Kelas, dan Aktivitas Global. Podium berbentuk tiga balok dengan atap miring, alas sejajar, dan pita medali yang menggantung dari bibir atap masing-masing. Tinggi balok menurun dari peringkat 1 ke 3. Jika ada peringkat seri di tiga entri teratas, panel menampilkan semua peserta sebagai satu daftar. Skor PvP memakai PTS, sedangkan Kelas dan Aktivitas Global memakai XP.
+
 **ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** sidebar siswa menempatkan Profil sebagai menu terakhir di atas identitas akun dan memakai ikon jam untuk Tryout. Kartu motivasi dihapus. Navigasi bawah ponsel mengikuti urutan Belajar, Latihan, Tryout, PvP, dan Profil.
 
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Content](ADMIN_CONTENT_PARITY_2026-11-02.md) memperbarui limited structures, detail laporan, JSON generator lama dan frame akses sesuai fondasi modern. Struktur tetap baca saja, tanpa data individual atau aksi Operations; layar bank/impor/Pretest/Generator/IRT existing tetap digunakan bersama. Review/merge/deploy terpisah dari hasil lokal.

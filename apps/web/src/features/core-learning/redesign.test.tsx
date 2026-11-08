@@ -653,7 +653,7 @@ describe('responsive learning composition', () => {
     renderStudent(<LeaderboardsScreen />);
     await screen.findByText('Server student');
     expect(screen.getByText('#37')).toBeTruthy();
-    expect(screen.getByLabelText('Peringkat 2')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Peringkat 2' })).toBeTruthy();
   });
   it('mounts Home with its query provider and truthful empty states, including a zero score', async () => {
     renderStudent(<NewStudentDashboard />);

@@ -5684,60 +5684,6 @@ a.settings-row:hover {
   background: var(--color-success);
   color: white;
 }
-.pvp-ranking-hero {
-  padding: 16px;
-  border-radius: 20px;
-  color: white;
-  box-shadow: var(--shadow-md);
-  background: linear-gradient(120deg, var(--color-success), var(--pvp-green-deep));
-}
-.pvp-ranking-hero--medium {
-  background: linear-gradient(120deg, var(--color-primary-strong), var(--numora-purple-400));
-}
-.pvp-ranking-hero--hard {
-  background: linear-gradient(
-    120deg,
-    var(--color-danger),
-    var(--numora-peach-900) 60%,
-    var(--numora-purple-900)
-  );
-}
-.pvp-ranking-hero > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10px;
-}
-.pvp-ranking-hero > div span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--pvp-glass);
-  padding: 4px 8px;
-  border-radius: var(--radius-full);
-}
-.pvp-ranking-hero h2 {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.35;
-  margin: 12px 0 4px;
-}
-.pvp-ranking-hero > p {
-  font-size: 12px;
-  line-height: 1.6;
-}
-.pvp-ranking-hero__rule {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--pvp-glass);
-  padding: 10px;
-  border-radius: 14px;
-  margin-top: 14px;
-}
-.pvp-ranking-hero__rule svg {
-  flex-shrink: 0;
-}
 .pvp-ranking-layout {
   display: flex;
   flex-direction: column;
@@ -5887,10 +5833,7 @@ a.settings-row:hover {
   border-left: 6px solid var(--color-primary-strong);
   background: var(--color-selected);
 }
-.pvp-ranking-shell--hard .pvp-ranking-list li {
-  border-radius: 12px;
-  background: var(--color-secondary-light);
-}
+
 @media (min-width: 960px) {
   .pvp-lobby-layout {
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -6045,9 +5988,6 @@ a.settings-row:hover {
 @media (max-width: 699px) {
   .pvp-header__connection {
     display: none;
-  }
-  .pvp-ranking-hero h2 {
-    font-size: 20px;
   }
   .pvp-ranking-podium .leaderboard-podium__place:not(.leaderboard-podium__place--1) .numora-avatar {
     width: 56px !important;
@@ -8327,6 +8267,9 @@ a.settings-row:hover {
   padding: 10px 16px;
   color: white;
   text-align: center;
+}
+.materials-header,
+.pvp-ranking-shell .pvp-header {
   background-color: var(--numora-purple-700);
   background-image:
     linear-gradient(rgb(131 36 255 / 32%), rgb(131 36 255 / 32%)),
