@@ -766,10 +766,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
     );
     await page.locator(`a[href="/student/learn/${chapterId}"]`).click();
     await page.getByRole('link', { name: /Persamaan fixture/ }).click();
-    await page
-      .locator('.adventure-focus')
-      .getByRole('button', { name: 'Lanjutkan latihan' })
-      .click();
+    await page.getByRole('button', { name: /^Level 1,/ }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Lanjutkan latihan' }).click();
     await page.getByRole('radio').first().check();
     await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
     await page.reload();
@@ -1911,8 +1909,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await fixtures(page);
     const output = resolve(process.cwd(), '../../.tmp/redesign-phase3');
     await mkdir(output, { recursive: true });
-    await page.route('http://localhost:3301/api/v1/students/me/dashboard', (route) =>
-      route.fulfill({
+    await page.route('http://localhost:3301/api/v1/students/me/dashboard', async (route) => {
+      return route.fulfill({
         json: {
           displayName: 'Kirino S.',
           totalXp: 320,
@@ -1933,8 +1931,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             pendingPolicies: [],
           },
         },
-      }),
-    );
+      });
+    });
     await page.route('http://localhost:3301/api/v1/tryout/packages/current', (route) =>
       route.fulfill({
         json: {
@@ -1981,8 +1979,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             ][i],
             order: i + 1,
             status: i < 2 ? 'completed' : i === 2 ? 'inProgress' : 'locked',
-            latestScore: i < 2 ? 100 : null,
+            latestScore: i === 0 ? 0 : i === 1 ? 100 : null,
             bestScore: i < 2 ? 100 : null,
+            latestStars: i === 0 ? 0 : i === 1 ? 3 : null,
           })),
         },
       }),
@@ -2060,7 +2059,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         width: innerWidth,
         cards: Array.from(
           document.querySelectorAll(
-            '.practice-question,.adventure-summary,.adventure-focus,.drill-review',
+            '.practice-question,.adventure-summary,.drill-review',
           ),
         ).map((el) => {
           const r = el.getBoundingClientRect();
@@ -2091,14 +2090,77 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto(`/student/learn/${chapterId}`);
     await expect(page.getByRole('link', { name: /Persamaan fixture/ })).toBeVisible();
     await capture('chapter');
+    if (width === 320) await page.setViewportSize({ width, height: 760 });
     await page.goto(`/student/learn/${chapterId}/${subchapterId}`);
+    const map = page.getByRole('list', { name: 'Peta level latihan' });
+    const currentMedal = map.getByRole('button', { name: /^Level 3,/ });
+    const firstMedal = map.getByRole('button', { name: /^Level 1,/ });
     await expect(
-      page.locator('.adventure-focus').getByRole('heading', { name: 'Bentuk Kuadrat Sempurna' }),
-    ).toBeVisible();
+      page.locator('header.adventure-summary').getByRole('heading', { level: 1 }),
+    ).toHaveText('Subbab 2.1: Faktorisasi & Bentuk Kuadrat');
+    await expect(page.locator('.learning-map-shell .app-mobile-header')).toHaveCount(0);
+    await expect(currentMedal).toBeInViewport();
+    const isAboveDock = async (medal: typeof currentMedal) => {
+      const marker = (await medal.boundingBox())!;
+      const dock = (await page.locator('.adventure-mobile-action').boundingBox())!;
+      return marker.y + marker.height <= dock.y;
+    };
+    if (width < 960) {
+      await expect.poll(() => isAboveDock(currentMedal)).toBe(true);
+    }
+    await expect(currentMedal).toHaveAttribute('aria-current', 'step');
+    await expect(currentMedal).toHaveAttribute('aria-pressed', 'true');
+    expect((await firstMedal.boundingBox())!.y).toBeGreaterThan(
+      (await currentMedal.boundingBox())!.y,
+    );
+    const { width: medalWidth, height: medalHeight } = (await firstMedal.boundingBox())!;
+    expect(Math.min(medalWidth, medalHeight)).toBeGreaterThanOrEqual(44);
     expect(await page.locator('.level-path__step--locked button').count()).toBe(0);
     await expect(page.locator('.adventure-summary')).not.toContainText('80');
-    await expect(page.locator('.adventure-shortcuts')).toHaveCount(0);
-    await expect(page.locator('.adventure-focus')).toContainText('≥80');
+    await expect(page.getByText('Standar ketuntasan:', { exact: true })).toHaveCount(0);
+    const hideDevIndicator = 'nextjs-portal { visibility: hidden; }';
+    await page.screenshot({
+      path: resolve(output, `level-map-viewport-${width}.png`),
+      style: hideDevIndicator,
+    });
+    await firstMedal.focus();
+    await expect(firstMedal).toHaveCSS('outline-style', 'solid');
+    if (width < 960) await expect.poll(() => isAboveDock(firstMedal)).toBe(true);
+    await page.keyboard.press('Enter');
+    const detail = page.getByRole('dialog');
+    await expect(detail.getByRole('heading', { name: 'Pengenalan Suku & Faktor' })).toBeVisible();
+    const dialogBox = (await detail.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(Math.abs(dialogBox.x + dialogBox.width / 2 - viewport.width / 2)).toBeLessThan(12);
+    expect(Math.abs(dialogBox.y + dialogBox.height / 2 - viewport.height / 2)).toBeLessThan(3);
+    await expect(detail.getByText('Bintang terakhir: 0 / 3')).toBeVisible();
+    await expect(detail.getByRole('button', { name: 'Latihan lagi' })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/student/learn/${chapterId}/${subchapterId}$`));
+    await page.screenshot({
+      path: resolve(output, `level-map-detail-${width}.png`),
+      style: hideDevIndicator,
+    });
+    await page.keyboard.press('Escape');
+    await expect(detail).toHaveCount(0);
+    await expect(firstMedal).toBeFocused();
+    if (width < 960) {
+      const dock = page.locator('.adventure-mobile-action');
+      await expect(dock.locator('strong')).toHaveText('Pengenalan Suku & Faktor');
+      await expect(dock.locator('small')).toHaveText('Selesai');
+      const dockButton = page.getByRole('button', { name: 'Detail level' });
+      const dockBox = (await dockButton.boundingBox())!;
+      expect(dockBox.y + dockBox.height).toBeLessThanOrEqual(
+        (await page.locator('.student-bottom-nav').boundingBox())!.y,
+      );
+      await dockButton.click();
+      await expect(detail.getByRole('heading', { name: 'Pengenalan Suku & Faktor' })).toBeVisible();
+      await detail.getByRole('button', { name: 'Tutup dialog' }).click();
+      await expect(dockButton).toBeFocused();
+    }
+    await currentMedal.click();
+    await expect(detail.getByRole('button', { name: 'Lanjutkan latihan' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    if (width === 320) await page.setViewportSize({ width, height: 940 });
     await capture('level-map');
     await page.goto(`/student/drill/${attemptId}`);
     await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();

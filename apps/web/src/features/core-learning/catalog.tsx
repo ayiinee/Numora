@@ -4,12 +4,11 @@ import { useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useQuery, useMutation } from '@tanstack/react-query';
-import { Card, EmptyState, Icon } from '@tka/ui';
+import { Card, EmptyState, Icon, ProgressBar } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { learningApi, request } from './api';
 import { DataState, StudentGate } from './ui';
 import { LevelPath } from './level-path';
-import { StudentIdentityHeader } from './dashboard-presentation';
 import { useStudentToken } from './student-session';
 import { ChapterPretest } from './pretest-screens';
 import { MaterialsHeader, MaterialSubchapterList } from './materials';
@@ -76,39 +75,15 @@ export function SubchapterScreen() {
   return (
     <StudentGate>
       {(token) => (
-        <SubchapterLayout token={token} chapterId={chapterId} subchapterId={subchapterId} />
+        <StudentLayout
+          title="Langkah belajarmu"
+          backHref={`/student/learn/${chapterId}`}
+          className="learning-map-shell"
+        >
+          <SubchapterContent token={token} subchapterId={subchapterId} />
+        </StudentLayout>
       )}
     </StudentGate>
-  );
-}
-function SubchapterLayout({
-  token,
-  chapterId,
-  subchapterId,
-}: {
-  token: string;
-  chapterId: string;
-  subchapterId: string;
-}) {
-  const dashboard = useQuery({
-    queryKey: ['student-dashboard'],
-    queryFn: () => learningApi.dashboard(token),
-  });
-  const tryout = useQuery({
-    queryKey: ['current-tryout'],
-    queryFn: () => learningApi.currentTryout(token),
-  });
-  return (
-    <StudentLayout
-      title="Langkah belajarmu"
-      backHref={`/student/learn/${chapterId}`}
-      className="learning-map-shell"
-      mobileHeader={
-        dashboard.data && <StudentIdentityHeader data={dashboard.data} tryout={tryout.data} />
-      }
-    >
-      <SubchapterContent token={token} subchapterId={subchapterId} />
-    </StudentLayout>
   );
 }
 function SubchapterContent({ token, subchapterId }: { token: string; subchapterId: string }) {
@@ -126,14 +101,32 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
-  const levels = [...query.data.levels].sort((a, b) => a.order - b.order);
+  const { levels, subchapter } = query.data;
+  const completed = levels.filter((level) => level.status === 'completed').length;
   return (
-    <div className="page-stack learning-catalog">
+    <div className="learning-adventure">
+      <header className="adventure-summary">
+        <Card>
+          <span className="eyebrow">Subbab</span>
+          <h1>{subchapter.title}</h1>
+          <ProgressBar
+            value={completed}
+            max={levels.length}
+            variant="success"
+            label="Level subbab selesai"
+          />
+          <p>
+            {completed} / {levels.length} level selesai
+          </p>
+        </Card>
+      </header>
       {levels.length ? (
         <LevelPath
+          key={query.data.subchapter.id}
           data={query.data}
           pending={start.isPending}
-          pendingLevelId={start.variables}
+          requestedLevelId={start.variables}
+          startError={start.error?.message}
           onStart={(id) => {
             if (starting.current) return;
             starting.current = true;
@@ -150,11 +143,6 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
           title="Level belum tersedia"
           description="Level latihan akan muncul setelah diterbitkan."
         />
-      )}
-      {start.isError && (
-        <p className="form-error" role="alert">
-          {start.error.message}
-        </p>
       )}
     </div>
   );

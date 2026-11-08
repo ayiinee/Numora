@@ -976,14 +976,55 @@ describe('responsive learning composition', () => {
     ).toBe('0');
     expect(document.body.innerHTML).not.toContain('NaN');
   });
-  it('resumes only an accessible level through the API and keeps locked levels non-interactive', async () => {
+});
+
+describe('subchapter level details', () => {
+  const prototype = HTMLDialogElement.prototype;
+  const nativeShow = Object.getOwnPropertyDescriptor(prototype, 'showModal');
+  const nativeClose = Object.getOwnPropertyDescriptor(prototype, 'close');
+
+  beforeEach(() => {
+    Object.defineProperties(prototype, {
+      showModal: {
+        configurable: true,
+        value(this: HTMLDialogElement) {
+          this.open = true;
+        },
+      },
+      close: {
+        configurable: true,
+        value(this: HTMLDialogElement) {
+          this.open = false;
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    if (nativeShow) Object.defineProperty(prototype, 'showModal', nativeShow);
+    else Reflect.deleteProperty(prototype, 'showModal');
+    if (nativeClose) Object.defineProperty(prototype, 'close', nativeClose);
+    else Reflect.deleteProperty(prototype, 'close');
+  });
+
+  it('selects accessible levels without starting and resumes through the server', async () => {
     vi.mocked(learningApi.subchapter).mockResolvedValue({
       subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 0 },
       levels: [
         {
+          id: 'done-test',
+          title: 'Level selesai',
+          order: 1,
+          status: 'completed',
+          latestScore: 0,
+          bestScore: 100,
+          latestStars: 0,
+        },
+        {
           id: 'open-test',
           title: 'Level terbuka',
-          order: 0,
+          order: 2,
           status: 'inProgress',
           latestScore: 0,
           bestScore: 0,
@@ -991,7 +1032,7 @@ describe('responsive learning composition', () => {
         {
           id: 'locked-test',
           title: 'Level terkunci',
-          order: 1,
+          order: 3,
           status: 'locked',
           latestScore: null,
           bestScore: null,
@@ -1008,11 +1049,121 @@ describe('responsive learning composition', () => {
       questions: [],
     });
     renderStudent(<SubchapterScreen />);
-    const resume = (await screen.findAllByRole('button', { name: 'Lanjutkan latihan' }))[0]!;
-    expect(screen.queryByRole('button', { name: 'Mulai latihan' })).toBeNull();
-    expect(screen.getByText('Terkunci')).toBeTruthy();
-    fireEvent.click(resume);
+    const map = await screen.findByRole('list', { name: 'Peta level latihan' });
+    expect(screen.getByRole('heading', { level: 1, name: 'Subbab fiktif' })).toBeTruthy();
+    expect(learningApi.dashboard).not.toHaveBeenCalled();
+    expect(screen.queryByText('Standar ketuntasan:', { exact: true })).toBeNull();
+    const [locked, active, first] = within(map).getAllByRole('listitem');
+    expect(within(locked!).queryByRole('button')).toBeNull();
+    expect(within(locked!).getByText(/Level 3, Level terkunci, Terkunci/)).toBeTruthy();
+    const activeMedal = within(active!).getByRole('button');
+    expect(activeMedal.getAttribute('aria-current')).toBe('step');
+    const completedMedal = within(first!).getByRole('button', { name: /^Level 1,/ });
+    fireEvent.click(completedMedal);
+    expect(completedMedal.getAttribute('aria-pressed')).toBe('true');
+    expect(activeMedal.getAttribute('aria-current')).toBe('step');
+    expect(learningApi.start).not.toHaveBeenCalled();
+    const detail = within(screen.getByRole('dialog', { name: 'Level selesai' }));
+    expect(detail.getByText('Bintang terakhir: 0 / 3')).toBeTruthy();
+    expect(detail.getByText('0')).toBeTruthy();
+    expect(detail.getByText('100')).toBeTruthy();
+    expect(detail.getByRole('link', { name: 'Riwayat level' }).getAttribute('href')).toBe(
+      '/student/assessment?levelId=done-test',
+    );
+    expect(detail.getByRole('button', { name: 'Latihan lagi' })).toBeTruthy();
+    fireEvent.click(detail.getByRole('button', { name: 'Tutup dialog' }));
+    expect(document.activeElement).toBe(completedMedal);
+    fireEvent.click(activeMedal);
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Level terbuka' })).getByRole('button', {
+        name: 'Lanjutkan latihan',
+      }),
+    );
     await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/drill/resume-test'));
     expect(learningApi.start).toHaveBeenCalledExactlyOnceWith('test-token', 'open-test');
+  });
+
+  it('keeps the empty subchapter state outside the map', async () => {
+    vi.mocked(learningApi.subchapter).mockResolvedValue({
+      subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab kosong', order: 1 },
+      levels: [],
+    });
+    renderStudent(<SubchapterScreen />);
+    expect(await screen.findByText('Level belum tersedia')).toBeTruthy();
+    expect(screen.queryByRole('list', { name: 'Peta level latihan' })).toBeNull();
+  });
+
+  it.each([
+    { status: 'completed', level: 'Judul 2', label: 'Selesai', action: 'Latihan lagi' },
+    { status: 'locked', level: 'Judul 1', label: 'Terkunci', action: null },
+  ] as const)(
+    'uses the appropriate fallback when all levels are $status',
+    async ({ status, level, label, action }) => {
+      vi.mocked(learningApi.subchapter).mockResolvedValue({
+        subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 1 },
+        levels: [2, 1].map((order) => ({
+          id: `level-${order}`,
+          title: `Judul ${order}`,
+          order,
+          status,
+          latestScore: null,
+          bestScore: null,
+        })),
+      });
+      renderStudent(<SubchapterScreen />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Detail level' }));
+      const detail = within(screen.getByRole('dialog', { name: level }));
+      expect(detail.getByText(label)).toBeTruthy();
+      if (action) expect(detail.getByRole('button', { name: action })).toBeTruthy();
+      else expect(detail.getAllByRole('button')).toHaveLength(1);
+    },
+  );
+
+  it('starts a single level, blocks duplicate requests, and allows retry after an error', async () => {
+    vi.mocked(learningApi.subchapter).mockResolvedValue({
+      subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 1 },
+      levels: [
+        {
+          id: 'only',
+          title: 'Latihan tunggal',
+          order: 1,
+          status: 'open',
+          latestScore: null,
+          bestScore: null,
+        },
+      ],
+    });
+    let rejectStart!: (error: Error) => void;
+    vi.mocked(learningApi.start)
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            rejectStart = reject;
+          }),
+      )
+      .mockResolvedValueOnce({
+        id: 'new-attempt',
+        levelId: 'only',
+        levelTitle: 'Latihan tunggal',
+        status: 'inProgress',
+        startedAt: '2026-10-01T00:00:00Z',
+        isDemo: true,
+        questions: [],
+      });
+    renderStudent(<SubchapterScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Level 1, Latihan tunggal,/ }));
+    const detail = within(screen.getByRole('dialog', { name: 'Latihan tunggal' }));
+    const startButton = detail.getByRole('button', { name: 'Mulai latihan' });
+    fireEvent.click(startButton);
+    fireEvent.click(startButton);
+    expect(
+      (await detail.findByRole<HTMLButtonElement>('button', { name: 'Membuka latihan…' })).disabled,
+    ).toBe(true);
+    expect(learningApi.start).toHaveBeenCalledExactlyOnceWith('test-token', 'only');
+    await act(async () => rejectStart(new Error('Latihan belum bisa dibuka.')));
+    expect((await detail.findByRole('alert')).textContent).toBe('Latihan belum bisa dibuka.');
+    fireEvent.click(detail.getByRole('button', { name: 'Mulai latihan' }));
+    await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/drill/new-attempt'));
+    expect(learningApi.start).toHaveBeenNthCalledWith(2, 'test-token', 'only');
   });
 });
