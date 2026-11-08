@@ -39,6 +39,7 @@ vi.mock('./content-package-workspace', () => ({
 }));
 function renderImporter() {
   render(<ContentImportScreen />);
+  fireEvent.click(screen.getByText('Pilih paket tujuan untuk impor JSON'));
   fireEvent.click(screen.getByRole('button', { name: 'Pilih paket TEST' }));
 }
 vi.mock('./content-excel-api', () => ({

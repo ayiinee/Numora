@@ -171,6 +171,7 @@ for (const width of [320, 1440])
     const keys = await fixture(page);
     await page.setViewportSize({ width, height: 900 });
     await page.goto('/admin/irt');
+    await page.getByRole('button', { name: 'Siapkan request', exact: true }).click();
     await page.getByLabel('Konteks batch').selectOption(id);
     await page.getByRole('combobox', { name: 'Model IRT', exact: true }).selectOption(id);
     await page
@@ -184,14 +185,18 @@ for (const width of [320, 1440])
     await expect(page.getByRole('heading', { name: 'Detail request', exact: true })).toBeVisible();
     expect(keys).toHaveLength(2);
     expect(keys[0]).toBe(keys[1]);
-    await expect(page.getByText('Scientific decision: PASS', { exact: false })).toBeVisible();
-    await expect(page.getByText('Adoption: belum diterima.', { exact: false })).toBeVisible();
+    await expect(page.getByText('Keputusan ilmiah: PASS', { exact: true })).toBeVisible();
+    await expect(page.locator('.irt-states')).toContainText('Belum diadopsi');
+    await page.getByRole('button', { name: 'Lihat batch & publikasi', exact: true }).click();
     await expect(page.getByText('SLA 72 jam terlewati; hasil belum dipublikasikan.')).toBeVisible();
+    await page.getByText('Rincian kesiapan', { exact: false }).click();
     await expect(
-      page.getByText('Blocker persiapan dan publikasi', { exact: true }).locator('..'),
+      page.getByText('Rincian kesiapan', { exact: false }).locator('..'),
     ).toHaveAttribute('open', '');
     await expect(
-      page.getByText('Kontrak hasil peserta dan mapping menunggu pengesahan Data.'),
+      page
+        .locator('.irt-blockers')
+        .getByText('Kontrak hasil peserta dan mapping menunggu pengesahan Data.', { exact: true }),
     ).toBeVisible();
     expect(
       await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),

@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 Final
 
+**ENGINEERING DECISION — instruksi pemilik, 30 Oktober 2026:** Analytics menjadi dashboard dan menu pertama/tujuan `/admin` untuk Super Admin aktif dengan capability Analytics. Operations tetap ke sekolah dan Content/Data/Moderation tetap ke konten; assignment kosong tidak memperoleh modul. Ini menggantikan tujuan awal Super Admin pada keputusan 27 Oktober di bawah, tanpa mengembalikan Ringkasan atau memperluas izin API. Dashboard hanya memakai agregat existing, tanpa tren, periode, atau aturan akademik baru. [Implementasi dan verifikasi UI-04](../design/ADMIN_ANALYTICS_UX_2026-10-30.md).
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
 
 **PRD RULE:** the owner-approved [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), supplied 4 October 2026, is authoritative. Earlier product/module rules apply only where they do not conflict. The historical text below is superseded context, not a second current specification.

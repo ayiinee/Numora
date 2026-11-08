@@ -12,7 +12,8 @@ const nextConfig: NextConfig = {
     .map((origin) => new URL(origin.trim()).hostname),
   distDir: process.env.NUMORA_WEB_DIST_DIR ?? '.next',
   transpilePackages: ['@tka/ui'],
-  agentRules: false,
+  // Keep the tracked Next.js guidance in AGENTS.md instead of deleting it on startup.
+  agentRules: true,
   ...(process.env.NUMORA_LOW_MEMORY === 'true'
     ? { experimental: { cpus: 1, webpackBuildWorker: false, webpackMemoryOptimizations: true } }
     : {}),

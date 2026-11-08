@@ -47,6 +47,17 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 }
 
 describe('Admin portal navigation', () => {
+  it('opens Analytics first for Super Admin with the required capability', async () => {
+    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ANALYTICS_CONTENT']);
+    const entry = render(<AdminEntryScreen />);
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/analytics'));
+    entry.unmount();
+    render(<AppShell area="admin">Analytics</AppShell>);
+    const links = within(
+      screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }),
+    ).getAllByRole('link');
+    expect(links[0]!.getAttribute('href')).toBe('/admin/analytics');
+  });
   it.each([
     ['SUPER_ADMIN', '/admin/schools'],
     ['OPERATIONS', '/admin/schools'],

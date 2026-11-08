@@ -248,12 +248,13 @@ it('tracks failed files, searches history and restores a stored preview after re
   await screen.findByText('TEST parse failed');
   fireEvent.click(screen.getByRole('button', { name: 'Riwayat unggahan' }));
   await screen.findByText('TEST.xlsx');
+  fireEvent.click(screen.getByText('Filter riwayat'));
   fireEvent.change(screen.getByLabelText('Cari file atau judul'), { target: { value: 'TEST' } });
   await waitFor(() =>
     expect(vi.mocked(listUploads).mock.calls.at(-1)![1]).toContain('search=TEST'),
   );
   vi.mocked(getUpload).mockResolvedValue(structuredClone(fresh));
-  fireEvent.click(screen.getByRole('button', { name: 'Lanjutkan' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Lanjutkan TEST.xlsx' }));
   await screen.findByText('TEST stem');
   cleanup();
   render(<ContentImportScreen />);

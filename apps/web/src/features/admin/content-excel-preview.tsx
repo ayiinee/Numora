@@ -300,7 +300,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
           tabIndex={0}
         >
           <table className="excel-preview-table">
-            <caption>Isi soal dari Excel</caption>
+            <caption>Isi soal dari {sourceFormat}</caption>
             <thead>
               <tr>
                 <th scope="col">
@@ -314,6 +314,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
                         select(new Set(e.target.checked ? questions.map((q) => q.externalId) : []))
                       }
                     />
+                    <span>Pilih semua soal</span>
                   </label>
                 </th>
                 <th scope="col">Soal / gambar</th>
@@ -359,11 +360,11 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
                             onChange={() => toggle(q.externalId)}
                           />
                         </label>
-                        <span>{questions.indexOf(q) + 1}</span>
+                        <span>Soal {questions.indexOf(q) + 1}</span>
                       </td>
                       <th scope="row">
                         <div className="excel-preview-stem">{rich(q.stem.text)}</div>
-                        <details>
+                        <details open>
                           <summary>Pilihan dan pembahasan</summary>
                           <ol className="excel-preview-options">
                             {q.options.map((o) => (
@@ -377,49 +378,54 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
                           {rich(q.explanation.text)}
                         </details>
                       </th>
-                      <td>
+                      <td data-label="Format dan materi">
                         <Badge>
                           {q.type === 'SINGLE_CHOICE'
-                            ? 'PG'
+                            ? 'Pilihan ganda'
                             : q.type === 'CATEGORY'
                               ? 'Kategori'
-                              : 'MCMA'}
+                              : 'Pilihan ganda kompleks'}
                         </Badge>
-                        <p>
-                          {String(q.metadata.chapterName ?? q.chapterCode ?? 'Bab belum dipetakan')}
-                          <br />
-                          {String(
-                            q.metadata.subchapterName ??
-                              q.subchapterCode ??
-                              'Subbab belum dipetakan',
-                          )}
-                          {!hideIndicator && (
-                            <>
-                              <br />
-                              {String(
-                                q.metadata.competencyName ??
-                                  q.competencyCode ??
-                                  'Indikator belum dipetakan',
-                              )}
-                            </>
-                          )}
-                        </p>
-                        <small>
-                          Level {q.metadata.sourceLevelNumber ?? 'belum dipilih'} ·{' '}
-                          {q.difficulty === 'EASY'
-                            ? 'Mudah'
-                            : q.difficulty === 'MEDIUM'
-                              ? 'Sedang'
-                              : q.difficulty === 'HARD'
-                                ? 'Sulit'
-                                : 'Kesulitan belum diisi'}
-                        </small>
-                        <small>
-                          {String(q.metadata.sourceSheet)} · baris{' '}
-                          {String(q.metadata.sourceRowNumber)}
-                        </small>
+                        <details className="excel-source-details">
+                          <summary>Materi dan sumber</summary>
+                          <p>
+                            {String(
+                              q.metadata.chapterName ?? q.chapterCode ?? 'Bab belum dipetakan',
+                            )}
+                            <br />
+                            {String(
+                              q.metadata.subchapterName ??
+                                q.subchapterCode ??
+                                'Subbab belum dipetakan',
+                            )}
+                            {!hideIndicator && (
+                              <>
+                                <br />
+                                {String(
+                                  q.metadata.competencyName ??
+                                    q.competencyCode ??
+                                    'Indikator belum dipetakan',
+                                )}
+                              </>
+                            )}
+                          </p>
+                          <small>
+                            Level {q.metadata.sourceLevelNumber ?? 'belum dipilih'} ·{' '}
+                            {q.difficulty === 'EASY'
+                              ? 'Mudah'
+                              : q.difficulty === 'MEDIUM'
+                                ? 'Sedang'
+                                : q.difficulty === 'HARD'
+                                  ? 'Sulit'
+                                  : 'Kesulitan belum diisi'}
+                          </small>
+                          <small>
+                            {String(q.metadata.sourceSheet)} · baris{' '}
+                            {String(q.metadata.sourceRowNumber)}
+                          </small>
+                        </details>
                       </td>
-                      <td>
+                      <td data-label="Kunci jawaban">
                         {'optionId' in key ? (
                           <Badge variant="success">{key.optionId}</Badge>
                         ) : 'optionIds' in key ? (
@@ -443,7 +449,7 @@ export function ContentExcelPreview<Q extends ExcelQuestionDto | IntakeQuestionD
                           </ul>
                         )}
                       </td>
-                      <td>
+                      <td data-label="Status soal dan gambar">
                         <div className="excel-row-actions">
                           <Badge variant={q.metadata.assetManifest.length ? 'info' : 'default'}>
                             {q.metadata.assetManifest.length

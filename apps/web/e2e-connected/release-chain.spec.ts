@@ -618,13 +618,16 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await expect(signedInAgain).toHaveURL(/\/teacher$/);
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin\/analytics$/);
+    await expect(admin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(admin.locator('[data-metric]')).toHaveCount(22);
+    await expect(admin.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
+    await admin.goto('/admin/schools');
     await expect(
       admin.getByRole('heading', { name: 'Sekolah & credential', exact: true }),
     ).toBeVisible();
-    await expect(admin.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
     await admin.goto('/student/learn');
-    await expect(admin).toHaveURL(/\/admin\/schools$/);
+    await expect(admin).toHaveURL(/\/admin\/analytics$/);
     const foreign = await login(browser, 'foreignTeacher');
     await foreign.goto(`/teacher/classes/${cls.id}`);
     await expect(

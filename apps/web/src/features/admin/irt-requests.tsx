@@ -1,52 +1,46 @@
 'use client';
-import { ADMIN_PAGE_SIZE } from './pagination';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
-import { Button, Card } from '@tka/ui';
+import { Button, Dialog } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
+import { adminCanAccess } from './admin-access';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
+import { AdminPagination } from './admin-pagination';
+import { adminOffset, useAdminUrl } from './admin-url';
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { adminAccessDenied, useOperationalQuery } from './operational-query';
+import { IrtBatchCard, IrtRequestRow } from './irt-presentation';
+import { IrtRequestDetail } from './irt-request-detail';
+import { irtTime } from './irt-model';
 import type {
   IrtRequestDto,
   IrtRequestsDto,
   IrtOperationalOptionsDto,
   IrtBatchHealthListDto,
+  IrtBatchHealthDto,
 } from './generated-types';
-const reasons: Record<string, string> = {
-  CONFIGURATION_APPROVALS_MISSING: 'Model IRT dan quality gate yang disahkan belum lengkap.',
-  IRT_DATASET_EMPTY: 'Belum ada attempt selesai untuk snapshot analisis.',
-  IRT_V3_DISABLED: 'Compute belum diaktifkan pada environment ini.',
-  MEASUREMENT_CONTEXT_MISSING: 'Konteks pengukuran belum tersedia dari handoff Data.',
-  BATCH_NOT_CLOSED: 'Batch belum ditutup.',
-  ATTEMPTS_NOT_FINALIZED: 'Ada attempt yang belum difinalisasi.',
-  SCIENTIFIC_PACKAGE_NOT_FROZEN: 'Paket belum lolos freeze dan quality gate ilmiah.',
-  RELEASE_POLICY_NOT_APPROVED: 'Policy rilis belum disahkan.',
-  SEALED_RUBRIC_MISSING: 'Rubric sealed belum lengkap.',
-  SCIENTIFIC_ARTIFACT_NOT_ADOPTED: 'Evidence ilmiah belum diterima dan diadopsi.',
-  RESPONDENT_CONTRACT_NOT_APPROVED: 'Kontrak hasil peserta dan mapping menunggu pengesahan Data.',
-};
-const time = (value: string) =>
-  new Date(value).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' }) + ' WIB';
+
 export function AdminIrtScreen() {
   const { state } = useAuth();
-  const allowed =
-    state.status === 'ready' &&
-    state.profile.role === 'ADMIN' &&
-    state.profile.status === 'ACTIVE' &&
-    state.profile.capabilities?.includes('CONTENT_MANAGE');
+  const profile = state.status === 'ready' ? state.profile : null;
   return (
     <AdminFrame
       title="Request IRT & publikasi"
-      description="Pantau analisis Tryout, penerimaan hasil ilmiah, dan kesiapan rilis nilai serta pembahasan."
+      description="Tinjau analisis Tryout dan kesiapan rilis nilai serta pembahasan."
       icon="chart"
+      management
     >
       {state.status === 'loading' ? (
         <AdminLoading message="Memeriksa akses..." />
-      ) : !allowed || state.status !== 'ready' ? (
+      ) : !adminCanAccess(profile, 'content') || state.status !== 'ready' ? (
         <AdminMessage error message="Akses Content diperlukan." login />
       ) : (
         <IrtPanel
-          key={state.profile.id + state.profile.adminRole}
+          key={JSON.stringify([
+            state.profile.id,
+            state.profile.adminRole,
+            state.profile.capabilities,
+          ])}
           token={state.session.access_token}
         />
       )}
@@ -54,15 +48,19 @@ export function AdminIrtScreen() {
   );
 }
 function IrtPanel({ token }: { token: string }) {
+  const url = useAdminUrl();
+  return url.search === null ? (
+    <AdminLoading message="Memuat ruang IRT..." />
+  ) : (
+    <IrtWorkspace token={token} url={url} />
+  );
+}
+function IrtWorkspace({ token, url }: { token: string; url: ReturnType<typeof useAdminUrl> }) {
   const { refresh } = useAuth();
-  const [denied, setDenied] = useState(false);
-  const [requestOffset, setRequestOffset] = useState(0),
-    [batchOffset, setBatchOffset] = useState(0),
-    [contextId, setContextId] = useState(''),
-    [busy, setBusy] = useState(false),
-    [error, setError] = useState(''),
-    [selected, setSelected] = useState<IrtRequestDto | null>(null);
-  const keys = useRef(new Map<string, string>());
+  const view = url.params.get('view') === 'requests' ? 'requests' : 'batches';
+  const requestId = url.params.get('requestId');
+  const requestOffset = adminOffset(url.params.get('requestsOffset')),
+    batchOffset = adminOffset(url.params.get('batchesOffset'));
   const requests = useOperationalQuery<IrtRequestsDto>(
     `admin/irt/requests?limit=${ADMIN_PAGE_SIZE + 1}&offset=${requestOffset}`,
     token,
@@ -72,66 +70,103 @@ function IrtPanel({ token }: { token: string }) {
     token,
   );
   const options = useOperationalQuery<IrtOperationalOptionsDto>('admin/irt/options', token);
-  const accessLost = denied || requests.denied || batches.denied || options.denied;
+  const [denied, setDenied] = useState(false),
+    [busy, setBusy] = useState(false),
+    [creating, setCreating] = useState(false),
+    [error, setError] = useState('');
+  const [draftBatch, setDraftBatch] = useState<IrtBatchHealthDto | null>(null);
+  const [model, setModel] = useState(''),
+    [quality, setQuality] = useState('');
+  const pending = useRef(false),
+    epoch = useRef(0),
+    keys = useRef(new Map<string, string>());
+  const accessLost = Boolean(denied || requests.denied || batches.denied || options.denied);
   useEffect(() => {
-    if (accessLost) setSelected(null);
-  }, [accessLost]);
-  const configurations =
-    options.data?.configurations.filter((c) => !c.contextId || c.contextId === contextId) ?? [];
-  async function mutation(path: string, body?: object) {
-    if (busy) return;
-    setBusy(true);
+    epoch.current++;
+    setCreating(false);
+    setBusy(false);
     setError('');
-    const fingerprint = path + JSON.stringify(body ?? null);
-    let key = keys.current.get(fingerprint);
-    if (!key) {
-      key = crypto.randomUUID();
-      keys.current.set(fingerprint, key);
+    setDraftBatch(null);
+    setModel('');
+    setQuality('');
+    pending.current = false;
+    keys.current.clear();
+    return () => {
+      epoch.current++;
+    };
+  }, [token, accessLost]);
+  const currentBatch =
+    batches.data?.items.find((batch) => batch.contextId === draftBatch?.contextId) ?? draftBatch;
+  const configurations =
+    options.data?.configurations.filter(
+      (configuration) =>
+        !configuration.contextId || configuration.contextId === currentBatch?.contextId,
+    ) ?? [];
+  const eligibleBatches =
+    batches.data?.items
+      .slice(0, ADMIN_PAGE_SIZE)
+      .filter((batch) => batch.contextId && !batch.prepareBlockers.length) ?? [];
+  function chooseBatch(batch: IrtBatchHealthDto | null) {
+    if (batch?.contextId !== draftBatch?.contextId) {
+      setModel('');
+      setQuality('');
     }
-    try {
-      const result = await apiRequest<IrtRequestDto>(path, token, {
-        method: 'POST',
-        headers: { 'Idempotency-Key': key },
-        ...(body ? { body: JSON.stringify(body) } : {}),
-      });
-      setSelected(result);
-      keys.current.delete(fingerprint);
-      requests.retry();
-      batches.retry();
-    } catch (e) {
-      if (adminAccessDenied(e)) setDenied(true);
-      setError(e instanceof Error ? e.message : 'Permintaan gagal.');
-    } finally {
-      setBusy(false);
-    }
+    setDraftBatch(batch);
+    setError('');
   }
-  function prepare(event: FormEvent<HTMLFormElement>) {
+  async function prepare(event: FormEvent<HTMLFormElement>) {
     event.preventDefault();
-    const form = new FormData(event.currentTarget);
-    const pins = ['model', 'quality'].map((name) =>
-      configurations.find((c) => c.approvalId === form.get(name)),
-    );
-    if (pins.some((p) => !p) || !contextId) {
-      setError('Pilih konteks dan dua versi konfigurasi yang disahkan.');
+    if (pending.current || accessLost) return;
+    const pins = [
+      configurations.find((item) => item.approvalId === model && item.kind === 'IRT_MODEL'),
+      configurations.find((item) => item.approvalId === quality && item.kind === 'QUALITY_GATE'),
+    ];
+    if (
+      !currentBatch?.contextId ||
+      currentBatch.prepareBlockers.length ||
+      !options.data?.enabled ||
+      pins.some((pin) => !pin)
+    ) {
+      setError(
+        'Pilih batch tanpa kendala persiapan serta model dan quality gate yang masih disahkan.',
+      );
       return;
     }
-    void mutation('admin/irt/requests', {
-      contextId,
+    const body = {
+      contextId: currentBatch.contextId,
       configurationPins: pins.map((pin) => ({ approvalId: pin!.approvalId, digest: pin!.digest })),
-    });
-  }
-  async function detail(id: string) {
-    if (busy) return;
-    setSelected(null);
-    setError('');
+    };
+    const fingerprint = JSON.stringify(body),
+      generation = epoch.current;
+    const key = keys.current.get(fingerprint) ?? crypto.randomUUID();
+    keys.current.set(fingerprint, key);
+    pending.current = true;
     setBusy(true);
+    setError('');
     try {
-      setSelected(await apiRequest<IrtRequestDto>(`admin/irt/requests/${id}`, token));
-    } catch (e) {
-      if (adminAccessDenied(e)) setDenied(true);
-      setError(e instanceof Error ? e.message : 'Detail gagal dimuat.');
+      const result = await apiRequest<IrtRequestDto>('admin/irt/requests', token, {
+        method: 'POST',
+        headers: { 'Idempotency-Key': key },
+        body: JSON.stringify(body),
+      });
+      if (generation !== epoch.current) return;
+      keys.current.delete(fingerprint);
+      setCreating(false);
+      setDraftBatch(null);
+      setModel('');
+      setQuality('');
+      requests.retry();
+      batches.retry();
+      url.update({ view: 'requests', requestId: result.id });
+    } catch (cause) {
+      if (generation !== epoch.current) return;
+      if (adminAccessDenied(cause)) setDenied(true);
+      setError(cause instanceof Error ? cause.message : 'Request belum dapat disiapkan.');
     } finally {
-      setBusy(false);
+      if (generation === epoch.current) {
+        pending.current = false;
+        setBusy(false);
+      }
     }
   }
   if (accessLost)
@@ -149,252 +184,301 @@ function IrtPanel({ token }: { token: string }) {
       />
     );
   return (
-    <div className="admin-content page-stack">
-      <ol className="content-workflow" aria-label="Alur analisis dan rilis">
-        {[
-          ['Siapkan analisis', 'Pilih batch dan konfigurasi yang sudah disahkan.'],
-          ['Jalankan compute', 'Pantau execution, kegagalan, dan percobaan ulang.'],
-          ['Terima hasil ilmiah', 'Adopsi memerlukan evidence yang lolos pemeriksaan.'],
-          [
-            'Rilis ke peserta',
-            'Nilai dan pembahasan dibuka bersama setelah seluruh syarat terpenuhi.',
-          ],
-        ].map(([title, description], index) => (
-          <li key={title}>
-            <span className="content-step-number" aria-hidden="true">
-              0{index + 1}
-            </span>
-            <h3>{title}</h3>
-            <p>{description}</p>
-          </li>
-        ))}
-      </ol>
-      <p className="admin-context-note">
-        Nilai dan pembahasan hanya terbuka setelah finalisasi hasil dipublikasikan. Execution
-        SUCCEEDED belum berarti rilis peserta.
-      </p>
-      {error && <p role="alert">{error}</p>}
-      <Card>
-        <h2>Siapkan request</h2>
-        {options.error && <AdminMessage error message={options.error} retry={options.retry} />}
-        {!options.data && !options.error && <p role="status">Memuat pilihan konfigurasi...</p>}
-        {options.data && !options.data.enabled && <p role="status">{reasons.IRT_V3_DISABLED}</p>}
-        <form onSubmit={prepare} className="admin-content-form">
-          <label className="admin-content-field">
-            <span>Konteks batch</span>
-            <select required value={contextId} onChange={(e) => setContextId(e.target.value)}>
-              <option value="">Pilih batch siap diproses</option>
-              {batches.data?.items
-                .filter((b) => b.contextId && !b.prepareBlockers.length)
-                .map((b) => (
-                  <option key={b.id} value={b.contextId!}>
-                    {b.title} - tutup {time(b.closesAt)}
-                  </option>
-                ))}
-            </select>
-          </label>
-          {(['model', 'quality'] as const).map((name) => (
-            <label key={name} className="admin-content-field">
-              <span>{name === 'model' ? 'Model IRT' : 'Quality gate'}</span>
-              <select required name={name} key={contextId + name}>
-                <option value="">Pilih versi sealed yang disahkan</option>
-                {configurations
-                  .filter((c) => c.kind === (name === 'model' ? 'IRT_MODEL' : 'QUALITY_GATE'))
-                  .map((c) => (
-                    <option key={c.approvalId} value={c.approvalId}>
-                      {c.code} v{c.version} - disahkan {time(c.approvedAt)}
-                    </option>
-                  ))}
-              </select>
-            </label>
-          ))}
-          <Button type="submit" disabled={busy || !options.data?.enabled}>
-            Siapkan request IRT
+    <div className="admin-irt-workspace">
+      <div className="irt-toolbar">
+        <nav className="irt-tabs" aria-label="Bagian IRT">
+          <Button
+            variant="ghost"
+            aria-current={view === 'batches' ? 'page' : undefined}
+            disabled={busy}
+            onClick={() => url.update({ view: 'batches' })}
+          >
+            Batch & publikasi
           </Button>
-        </form>
-        {batches.data &&
-          !batches.data.items.some((b) => b.contextId && !b.prepareBlockers.length) && (
-            <p role="status">Belum ada batch siap diproses. Periksa blocker batch di bawah.</p>
-          )}
-      </Card>
-      <Card>
-        <h2>Request dan execution</h2>
-        <Button onClick={requests.retry}>Perbarui request</Button>
-        {requests.error ? (
-          <AdminMessage error message={requests.error} retry={requests.retry} />
-        ) : !requests.data ? (
-          <AdminLoading message="Memuat request..." />
-        ) : !requests.data.items.length ? (
-          <p>Belum ada request pada halaman ini.</p>
-        ) : (
-          <ul className="monitoring-list">
-            {requests.data.items.slice(0, ADMIN_PAGE_SIZE).map((r) => (
-              <li key={r.id} className="admin-content-row">
-                <Button disabled={busy} onClick={() => void detail(r.id)}>
-                  Detail request {r.id}
-                </Button>
-                <p>
-                  {r.status} - generation {r.dispatchGeneration} - execution{' '}
-                  {r.execution?.status ?? 'belum dimulai'}
-                </p>
-                <p>
-                  Batas {time(r.dueAt)} {r.overdue ? ' - overdue execution/adoption' : ''}
-                </p>
-                {r.failureCode && <p>{r.failureCode}</p>}
-              </li>
-            ))}
-          </ul>
-        )}
-        <Pagination
-          offset={requestOffset}
-          count={requests.data?.items.length ?? 0}
-          setOffset={setRequestOffset}
+          <Button
+            variant="ghost"
+            aria-current={view === 'requests' ? 'page' : undefined}
+            disabled={busy}
+            onClick={() => url.update({ view: 'requests' })}
+          >
+            Request analisis
+          </Button>
+        </nav>
+        <Button
+          disabled={busy || options.data?.enabled === false}
+          onClick={() => {
+            setError('');
+            setCreating(true);
+          }}
+        >
+          Siapkan request
+        </Button>
+      </div>
+      <p className="irt-intro">
+        Komputasi berhasil, evidence diadopsi, dan hasil terbit adalah status yang berbeda. Seluruh
+        batas waktu ditampilkan dalam WIB.
+      </p>
+      {options.error && (
+        <AdminMessage
+          error
+          message={`Pilihan konfigurasi belum dapat dimuat. ${options.error}`}
+          retry={options.retry}
         />
-      </Card>
-      {selected && (
-        <Card>
-          <h2>Detail request</h2>
-          <p style={{ overflowWrap: 'anywhere' }}>{selected.id}</p>
-          <p>
-            Snapshot {selected.rowCount} item respons - generation {selected.dispatchGeneration}
-          </p>
-          <p>
-            Execution: {selected.execution?.status ?? 'belum dimulai'} - percobaan{' '}
-            {selected.execution?.attemptNumber ?? 0}
-            {selected.execution?.leaseExpired ? ' - lease expired' : ''}
-          </p>
-          <p>
-            Adoption: {selected.acceptedExecutionId ? 'diterima' : 'belum diterima'}. Publication
-            diperiksa terpisah pada batch.
-          </p>
-          <details>
-            <summary>Pin konfigurasi dan digest</summary>
-            <p style={{ overflowWrap: 'anywhere' }}>
-              Input {selected.inputDigest}
-              <br />
-              Snapshot {selected.snapshotDigest}
-            </p>
-            <ul>
-              {selected.configurationPins.map((p) => (
-                <li key={p.approvalId} style={{ overflowWrap: 'anywhere' }}>
-                  {p.approvalId}: {p.digest}
-                </li>
+      )}
+      {options.data?.enabled === false && (
+        <p className="irt-notice" role="status">
+          Analisis IRT belum diaktifkan pada environment ini. Riwayat tetap dapat dibaca; persiapan,
+          pengiriman ulang, dan adopsi menunggu aktivasi oleh pengelola.
+        </p>
+      )}
+      {view === 'batches' ? (
+        <section aria-labelledby="irt-batches-title">
+          <header className="irt-section-heading">
+            <div>
+              <h2 id="irt-batches-title">Batch & kesiapan publikasi</h2>
+              <p>Lima batch per halaman. Periksa kendala sebelum menyiapkan analisis.</p>
+            </div>
+            <Button variant="secondary" disabled={busy} onClick={batches.retry}>
+              Perbarui batch
+            </Button>
+          </header>
+          {batches.error ? (
+            <AdminMessage error message={batches.error} retry={batches.retry} />
+          ) : !batches.data ? (
+            <AdminLoading message="Memuat batch..." />
+          ) : !batches.data.items.length ? (
+            <AdminMessage message="Belum ada batch pada halaman ini." />
+          ) : (
+            <div className="irt-batches">
+              {batches.data.items.slice(0, ADMIN_PAGE_SIZE).map((batch) => (
+                <IrtBatchCard
+                  key={batch.id}
+                  batch={batch}
+                  disabled={busy || options.data?.enabled === false}
+                  prepare={() => {
+                    chooseBatch(batch);
+                    setCreating(true);
+                  }}
+                />
+              ))}
+            </div>
+          )}
+          <AdminPagination
+            label="Halaman batch"
+            offset={batchOffset}
+            hasNext={(batches.data?.items.length ?? 0) > ADMIN_PAGE_SIZE}
+            disabled={busy || !batches.data}
+            onChange={(offset) => url.update({ batchesOffset: offset || null })}
+          />
+        </section>
+      ) : requestId ? (
+        <IrtRequestDetail
+          key={requestId}
+          id={requestId}
+          token={token}
+          enabled={options.data?.enabled}
+          title={
+            batches.data?.items.find(
+              (batch) =>
+                batch.contextId ===
+                requests.data?.items.find((request) => request.id === requestId)?.contextId,
+            )?.title
+          }
+          onBack={() => url.update({ requestId: null })}
+          onBatches={() => url.update({ view: 'batches' })}
+          onRefresh={() => {
+            requests.retry();
+            batches.retry();
+          }}
+          onDenied={setDenied}
+          onBusyChange={setBusy}
+        />
+      ) : (
+        <section aria-labelledby="irt-requests-title">
+          <header className="irt-section-heading">
+            <div>
+              <h2 id="irt-requests-title">Request analisis</h2>
+              <p>Lima request per halaman. Detail menampilkan snapshot, evidence dan tindakan.</p>
+            </div>
+            <Button variant="secondary" disabled={busy} onClick={requests.retry}>
+              Perbarui request
+            </Button>
+          </header>
+          {requests.error ? (
+            <AdminMessage error message={requests.error} retry={requests.retry} />
+          ) : !requests.data ? (
+            <AdminLoading message="Memuat request..." />
+          ) : !requests.data.items.length ? (
+            <AdminMessage message="Belum ada request pada halaman ini." />
+          ) : (
+            <ul className="irt-requests">
+              {requests.data.items.slice(0, ADMIN_PAGE_SIZE).map((request) => (
+                <IrtRequestRow
+                  key={request.id}
+                  request={request}
+                  title={
+                    batches.data?.items.find((batch) => batch.contextId === request.contextId)
+                      ?.title
+                  }
+                  disabled={busy}
+                  onOpen={() => url.update({ requestId: request.id })}
+                />
               ))}
             </ul>
-          </details>
-          <ul>
-            {selected.artifacts.map((a) => (
-              <li key={a.id} style={{ overflowWrap: 'anywhere' }}>
-                Scientific decision: {a.scientificDecision} - artifact {a.id} - {a.digest}
-              </li>
-            ))}
-          </ul>
-          {selected.execution?.failureCode && <p role="alert">{selected.execution.failureCode}</p>}
-          <div className="admin-content-actions">
-            <Button disabled={busy} onClick={() => void detail(selected.id)}>
-              Perbarui detail
-            </Button>
-            <Button
-              disabled={
-                busy ||
-                !!selected.acceptedExecutionId ||
-                !(
-                  selected.status === 'FAILED' ||
-                  selected.execution?.status === 'FAILED' ||
-                  selected.execution?.leaseExpired
+          )}
+          <AdminPagination
+            label="Halaman request"
+            offset={requestOffset}
+            hasNext={(requests.data?.items.length ?? 0) > ADMIN_PAGE_SIZE}
+            disabled={busy || !requests.data}
+            onChange={(offset) => url.update({ requestsOffset: offset || null })}
+          />
+        </section>
+      )}
+      <details className="irt-guide">
+        <summary>Pahami alur analisis dan rilis</summary>
+        <ol>
+          <li>
+            <strong>Siapkan request.</strong> Pilih batch tanpa kendala dan dua versi konfigurasi
+            yang disahkan. Server membekukan input analisis.
+          </li>
+          <li>
+            <strong>Pantau komputasi.</strong> Periksa request, execution dan kegagalan. Pengiriman
+            ulang tetap memakai snapshot yang sama.
+          </li>
+          <li>
+            <strong>Adopsi evidence.</strong> Server memvalidasi hasil ilmiah, provenance dan pin.
+            Komputasi berhasil belum berarti evidence diterima.
+          </li>
+          <li>
+            <strong>Periksa publikasi.</strong> Nilai serta pembahasan terbuka bersama setelah
+            finalisasi terbit. Pengesahan Data/AI dan syarat rilis tetap berlaku.
+          </li>
+        </ol>
+      </details>
+      <Dialog
+        open={creating}
+        onClose={() => {
+          if (!pending.current) setCreating(false);
+        }}
+        title="Siapkan request IRT"
+        description="Buat snapshot analisis dengan konfigurasi yang sudah disahkan. Tindakan ini tidak memublikasikan hasil peserta."
+        pending={busy}
+        className="irt-prepare-dialog"
+      >
+        <form onSubmit={(event) => void prepare(event)} className="irt-prepare-form">
+          {batches.error && <AdminMessage error message={batches.error} retry={batches.retry} />}
+          {!batches.data && !batches.error && <p role="status">Memuat pilihan batch...</p>}
+          <label>
+            <span id="irt-context-label">Konteks batch</span>
+            <select
+              aria-labelledby="irt-context-label"
+              aria-describedby="irt-context-hint"
+              required
+              value={currentBatch?.contextId ?? ''}
+              disabled={busy}
+              onChange={(event) =>
+                chooseBatch(
+                  event.target.value
+                    ? (eligibleBatches.find((batch) => batch.contextId === event.target.value) ??
+                        currentBatch)
+                    : null,
                 )
               }
-              onClick={() => void mutation(`admin/irt/requests/${selected.id}/retry`)}
             >
-              Retry request
+              <option value="">Pilih batch siap diproses</option>
+              {currentBatch?.contextId &&
+                !eligibleBatches.some((batch) => batch.contextId === currentBatch.contextId) && (
+                  <option value={currentBatch.contextId}>{currentBatch.title}</option>
+                )}
+              {eligibleBatches.map((batch) => (
+                <option key={batch.id} value={batch.contextId!}>
+                  {batch.title}
+                </option>
+              ))}
+            </select>
+            <small id="irt-context-hint">
+              Pilihan mengikuti halaman batch yang dibuka dan dipertahankan selama halaman ini
+              terbuka.
+            </small>
+          </label>
+          {currentBatch && (
+            <p className="irt-muted">Tutup batch: {irtTime(currentBatch.closesAt)}</p>
+          )}
+          {batches.data && !eligibleBatches.length && !currentBatch && (
+            <p className="irt-notice" role="status">
+              Belum ada batch siap diproses pada halaman ini. Periksa kendala atau buka halaman
+              batch berikutnya.
+            </p>
+          )}
+          {options.error && <AdminMessage error message={options.error} retry={options.retry} />}
+          {!options.data && !options.error && <p role="status">Memuat pilihan konfigurasi...</p>}
+          {(['IRT_MODEL', 'QUALITY_GATE'] as const).map((kind) => {
+            const available = configurations.filter((configuration) => configuration.kind === kind);
+            const selected = available.find(
+              (configuration) =>
+                configuration.approvalId === (kind === 'IRT_MODEL' ? model : quality),
+            );
+            return (
+              <label key={kind}>
+                <span id={`irt-${kind}-label`}>
+                  {kind === 'IRT_MODEL' ? 'Model IRT' : 'Quality gate'}
+                </span>
+                <select
+                  aria-labelledby={`irt-${kind}-label`}
+                  aria-describedby={`irt-${kind}-hint`}
+                  required
+                  disabled={busy || !currentBatch?.contextId}
+                  value={kind === 'IRT_MODEL' ? model : quality}
+                  onChange={(event) =>
+                    (kind === 'IRT_MODEL' ? setModel : setQuality)(event.target.value)
+                  }
+                >
+                  <option value="">Pilih versi yang disahkan</option>
+                  {available.map((configuration) => (
+                    <option key={configuration.approvalId} value={configuration.approvalId}>
+                      {configuration.code} v{configuration.version} ·{' '}
+                      {irtTime(configuration.approvedAt)}
+                    </option>
+                  ))}
+                </select>
+                <small id={`irt-${kind}-hint`}>
+                  {currentBatch?.contextId && !available.length
+                    ? 'Belum ada versi yang sesuai. Periksa pengesahan konfigurasi.'
+                    : selected
+                      ? `Disahkan ${irtTime(selected.approvedAt)}. Konfigurasi mengikuti konteks yang dipilih.`
+                      : 'Hanya versi terkunci dan disahkan sesuai konteks yang ditampilkan.'}
+                </small>
+              </label>
+            );
+          })}
+          {error && (
+            <p className="irt-alert" role="alert">
+              {error}
+            </p>
+          )}
+          <div className="irt-form-actions">
+            <Button variant="secondary" disabled={busy} onClick={() => setCreating(false)}>
+              Tutup, simpan pilihan
             </Button>
             <Button
+              type="submit"
+              loading={busy}
               disabled={
-                busy || !!selected.acceptedExecutionId || selected.execution?.status !== 'SUCCEEDED'
+                busy ||
+                !options.data?.enabled ||
+                !batches.data ||
+                !currentBatch?.contextId ||
+                !!currentBatch.prepareBlockers.length ||
+                !model ||
+                !quality
               }
-              onClick={() => void mutation(`admin/irt/requests/${selected.id}/adopt`)}
             >
-              Adopsi evidence
+              Siapkan request IRT
             </Button>
           </div>
-        </Card>
-      )}
-      <Card>
-        <h2>Batch dan SLA rilis 72 jam</h2>
-        <Button onClick={batches.retry}>Perbarui batch</Button>
-        {batches.error ? (
-          <AdminMessage error message={batches.error} retry={batches.retry} />
-        ) : !batches.data ? (
-          <AdminLoading message="Memuat batch..." />
-        ) : !batches.data.items.length ? (
-          <p>Belum ada batch pada halaman ini.</p>
-        ) : (
-          <ul className="monitoring-list">
-            {batches.data.items.slice(0, ADMIN_PAGE_SIZE).map((b) => (
-              <li className="admin-content-row" key={b.id}>
-                <h3>{b.title}</h3>
-                <p>
-                  {b.status} - {b.finalizedAttemptCount} attempt selesai, {b.activeAttemptCount}{' '}
-                  belum final
-                </p>
-                <p>
-                  Tutup {time(b.closesAt)} - batas rilis {time(b.dueAt)}
-                </p>
-                {b.overdue && <p role="alert">SLA 72 jam terlewati; hasil belum dipublikasikan.</p>}
-                <p>
-                  {b.publishedAt
-                    ? `Published ${b.publicationMode} v${b.publicationVersion} pada ${time(b.publishedAt)}`
-                    : 'Hasil peserta belum dipublikasikan.'}
-                </p>
-                <details open={b.prepareBlockers.length > 0 || b.publicationBlockers.length > 0}>
-                  <summary>Blocker persiapan dan publikasi</summary>
-                  <h4>Persiapan request</h4>
-                  <ul>
-                    {b.prepareBlockers.map((code) => (
-                      <li key={code}>{reasons[code] ?? code}</li>
-                    ))}
-                  </ul>
-                  <h4>Publikasi hasil</h4>
-                  <ul>
-                    {b.publicationBlockers.map((code) => (
-                      <li key={code}>{reasons[code] ?? code}</li>
-                    ))}
-                  </ul>
-                </details>
-              </li>
-            ))}
-          </ul>
-        )}
-        <Pagination
-          offset={batchOffset}
-          count={batches.data?.items.length ?? 0}
-          setOffset={setBatchOffset}
-        />
-      </Card>
+        </form>
+      </Dialog>
     </div>
-  );
-}
-function Pagination({
-  offset,
-  count,
-  setOffset,
-}: {
-  offset: number;
-  count: number;
-  setOffset: (n: number) => void;
-}) {
-  return (
-    <nav aria-label="Halaman data" className="admin-content-actions">
-      <Button disabled={!offset} onClick={() => setOffset(Math.max(0, offset - ADMIN_PAGE_SIZE))}>
-        Sebelumnya
-      </Button>
-      <span>Halaman {offset / ADMIN_PAGE_SIZE + 1}</span>
-      <Button
-        disabled={count <= ADMIN_PAGE_SIZE}
-        onClick={() => setOffset(offset + ADMIN_PAGE_SIZE)}
-      >
-        Berikutnya
-      </Button>
-    </nav>
   );
 }

@@ -1,7 +1,8 @@
 'use client';
+import { ImportNavigation } from './content-import-navigation';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
-import { Badge, Button, Card } from '@tka/ui';
+import { Button, Card } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { AdminPagination, useAdminPagination } from './admin-pagination';
@@ -36,6 +37,7 @@ export function JsonContentImportScreen() {
   );
 }
 function ContentImportContent() {
+  const targetPanel = useRef<HTMLDetailsElement>(null);
   const { state, refresh } = useAuth();
   const token =
     state.status === 'ready' &&
@@ -211,472 +213,496 @@ function ContentImportContent() {
   }
   return (
     <AdminFrame
-      title="Impor & preview soal"
+      title="Impor soal"
       description="Masukkan bank soal dari Curriculum. Cek isinya sebelum disimpan dan direview."
       icon="book"
+      management
     >
-      <Badge>DRAFT — preview internal</Badge>
-      {state.status === 'loading' ? (
-        <AdminLoading message="Memeriksa akses konten…" />
-      ) : !token || denied ? (
-        <AdminMessage
-          message="Akses memerlukan Super Admin atau Admin Content, Data & Moderation."
-          login={state.status === 'signed_out'}
-          {...(state.status === 'ready'
-            ? {
-                retry: () => {
-                  setDenied(false);
-                  void refresh();
-                },
-              }
-            : {})}
+      <div className="admin-import-workspace">
+        <ImportNavigation
+          active="json"
+          disabled={busy || editing}
+          dirty={questions.length > 0 && !report?.id}
         />
-      ) : (
-        <>
-          <ContentPackageWorkspace
-            token={token}
-            disabled={busy || editing}
-            busyChanged={setPackageBusy}
-            refreshKey={packageRefresh}
-            onSelect={(p) => {
-              const same = p?.id === targetPackage?.id;
-              if (same && p?.contentRevision !== targetPackage?.contentRevision && !report?.id)
-                reset();
-              setTargetPackage(p);
-              if (!same) {
-                reset();
-                setExcel(null);
-                setQuestions([]);
-                setSelected(new Set());
-                setConverted(false);
-                uploadCache.current.clear();
-              }
-              if (p?.source) setNamespace(p.source.sourceNamespace);
-            }}
-          />
-          <ol className="content-workflow content-import-steps" aria-label="Tahapan impor">
-            {[
-              ['Pilih file', 'JSON berisi 1–100 soal, maksimal 2 MiB.'],
-              ['Validasi isi', 'Periksa format, taxonomy, dan referensi media.'],
-              ['Simpan draf', 'Konten masuk bank soal sebagai DRAFT.'],
-              ['Coba & review', 'Preview internal tidak menghitung nilai siswa.'],
-            ].map(([title, description], index) => (
-              <li
-                key={title}
-                aria-current={
-                  index === (sessionId ? 3 : report?.id ? 3 : report ? 2 : questions.length ? 1 : 0)
-                    ? 'step'
-                    : undefined
+        <p className="import-context-note">
+          Impor JSON menyimpan soal sebagai DRAFT. Preview tidak menghitung nilai siswa.
+        </p>
+        {state.status === 'loading' ? (
+          <AdminLoading message="Memeriksa akses konten…" />
+        ) : !token || denied ? (
+          <AdminMessage
+            message="Akses memerlukan Super Admin atau Admin Content, Data & Moderation."
+            login={state.status === 'signed_out'}
+            {...(state.status === 'ready'
+              ? {
+                  retry: () => {
+                    setDenied(false);
+                    void refresh();
+                  },
                 }
-              >
-                <span className="content-step-number" aria-hidden="true">
-                  0{index + 1}
-                </span>
-                <h3>{title}</h3>
-                <p>{description}</p>
-              </li>
-            ))}
-          </ol>
-          <Card className="content-import-card">
-            <h2>File sumber soal</h2>
-            <p>
-              Gunakan nama sumber yang konsisten untuk melacak impor dan revisi dari bank yang sama.
-            </p>
-            <label>
-              Namespace sumber
-              <input
-                value={namespace}
-                maxLength={128}
-                disabled={busy || editing || !!targetPackage?.source}
-                onChange={(e) => {
-                  setNamespace(e.target.value);
-                  reset();
-                  if (excel) {
+              : {})}
+          />
+        ) : (
+          <>
+            <ol className="content-workflow content-import-steps" aria-label="Tahapan impor">
+              {[
+                ['Pilih file', 'JSON berisi 1–100 soal, maksimal 2 MiB.'],
+                ['Validasi isi', 'Periksa format, taxonomy, dan referensi media.'],
+                ['Simpan draf', 'Konten masuk bank soal sebagai DRAFT.'],
+                ['Coba & review', 'Preview internal tidak menghitung nilai siswa.'],
+              ].map(([title, description], index) => (
+                <li
+                  key={title}
+                  aria-current={
+                    index ===
+                    (sessionId ? 3 : report?.id ? 3 : report ? 2 : questions.length ? 1 : 0)
+                      ? 'step'
+                      : undefined
+                  }
+                >
+                  <span className="content-step-number" aria-hidden="true">
+                    0{index + 1}
+                  </span>
+                  <h3>{title}</h3>
+                  <p>{description}</p>
+                </li>
+              ))}
+            </ol>
+            <details className="import-target-panel" ref={targetPanel}>
+              <summary>
+                {targetPackage
+                  ? `Paket tujuan: ${targetPackage.name}`
+                  : 'Pilih paket tujuan untuk impor JSON'}
+              </summary>
+              <ContentPackageWorkspace
+                embedded
+                token={token}
+                disabled={busy || editing}
+                busyChanged={setPackageBusy}
+                refreshKey={packageRefresh}
+                onSelect={(p) => {
+                  if (p && targetPanel.current) targetPanel.current.open = false;
+                  const same = p?.id === targetPackage?.id;
+                  if (same && p?.contentRevision !== targetPackage?.contentRevision && !report?.id)
+                    reset();
+                  setTargetPackage(p);
+                  if (!same) {
+                    reset();
+                    setExcel(null);
+                    setQuestions([]);
+                    setSelected(new Set());
+                    setConverted(false);
+                    uploadCache.current.clear();
+                  }
+                  if (p?.source) setNamespace(p.source.sourceNamespace);
+                }}
+              />
+            </details>
+            <Card className="content-import-card">
+              <h2>File sumber soal</h2>
+              <p>
+                Gunakan nama sumber yang konsisten untuk melacak impor dan revisi dari bank yang
+                sama.
+              </p>
+              <label>
+                Namespace sumber
+                <input
+                  value={namespace}
+                  maxLength={128}
+                  disabled={busy || editing || !!targetPackage?.source}
+                  onChange={(e) => {
+                    setNamespace(e.target.value);
+                    reset();
+                    if (excel) {
+                      setExcel(null);
+                      setQuestions([]);
+                      uploadCache.current.clear();
+                    }
+                  }}
+                />
+              </label>
+              <div className="admin-content-actions">
+                <Button
+                  variant="secondary"
+                  disabled={busy || editing || !targetPackage?.source}
+                  onClick={() =>
+                    void run(async () =>
+                      downloadFile(
+                        await downloadExcelTemplate(token, targetPackage!.id),
+                        `NUMORA_EXCEL_V4_${targetPackage!.assessmentType}.xlsx`,
+                      ),
+                    )
+                  }
+                >
+                  Unduh template Excel
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={busy || editing || !targetPackage?.source || !targetPackage.isDemo}
+                  onClick={() =>
+                    void run(async () =>
+                      downloadFile(
+                        await downloadExcelTemplate(token, targetPackage!.id, true),
+                        `NUMORA_EXCEL_V4_${targetPackage!.assessmentType}_CONTOH.xlsx`,
+                      ),
+                    )
+                  }
+                >
+                  Unduh contoh penuh DEMO
+                </Button>
+              </div>
+              <label>
+                File soal Excel
+                <input
+                  type="file"
+                  accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
+                  disabled={busy || editing || !namespace}
+                  onChange={(e) => {
+                    const file = e.target.files?.[0];
+                    if (!file) return;
+                    setConverted(false);
+                    setFileName(file.name);
+                    reset();
                     setExcel(null);
                     setQuestions([]);
                     uploadCache.current.clear();
-                  }
-                }}
-              />
-            </label>
-            <div className="admin-content-actions">
-              <Button
-                variant="secondary"
-                disabled={busy || editing || !targetPackage?.source}
-                onClick={() =>
-                  void run(async () =>
-                    downloadFile(
-                      await downloadExcelTemplate(token, targetPackage!.id),
-                      `NUMORA_EXCEL_V4_${targetPackage!.assessmentType}.xlsx`,
-                    ),
-                  )
-                }
-              >
-                Unduh template Excel
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={busy || editing || !targetPackage?.source || !targetPackage.isDemo}
-                onClick={() =>
-                  void run(async () =>
-                    downloadFile(
-                      await downloadExcelTemplate(token, targetPackage!.id, true),
-                      `NUMORA_EXCEL_V4_${targetPackage!.assessmentType}_CONTOH.xlsx`,
-                    ),
-                  )
-                }
-              >
-                Unduh contoh penuh DEMO
-              </Button>
-            </div>
-            <label>
-              File soal Excel
-              <input
-                type="file"
-                accept=".xlsx,application/vnd.openxmlformats-officedocument.spreadsheetml.sheet"
-                disabled={busy || editing || !namespace}
-                onChange={(e) => {
-                  const file = e.target.files?.[0];
-                  if (!file) return;
-                  setConverted(false);
-                  setFileName(file.name);
-                  reset();
-                  setExcel(null);
-                  setQuestions([]);
-                  uploadCache.current.clear();
-                  void run(async () => {
-                    if (file.size > 10 * 1024 * 1024)
-                      throw Error('Batas file Excel adalah 10 MiB.');
-                    const parsed = await parseExcelFile(
-                      token,
-                      file,
-                      namespace,
-                      targetPackage?.source ? targetPackage.id : undefined,
-                    );
-                    parsed.envelope.questions.sort(
-                      (a, b) => (a.metadata.sourceOrder ?? 0) - (b.metadata.sourceOrder ?? 0),
-                    );
-                    setExcel(parsed);
-                    setSelected(new Set(parsed.envelope.questions.map((q) => q.externalId)));
-                    setQuestions(parsed.envelope.questions);
-                    setReport(parsed.report);
-                  });
-                }}
-              />
-            </label>
-            <label>
-              File soal JSON
-              <input
-                type="file"
-                accept="application/json,.json"
-                disabled={busy || editing}
-                onChange={(e) => void choose(e.target.files?.[0])}
-              />
-            </label>
-            <p>
-              {questions.length
-                ? `${questions.length} soal dipilih.`
-                : 'Belum ada file. Pilih questions.draft.json atau envelope questions.'}
-            </p>
-            {!targetPackage && (
-              <p>Pilih paket untuk menyimpan. File lama tetap dapat dipreview tanpa tujuan.</p>
-            )}
-            {targetPackage && !targetPackage.source && (
-              <p>
-                Paket lama belum mempunyai sumber terarah. Buat versi paket baru dengan metadata
-                sumber.
-              </p>
-            )}
-            {targetPackage?.source && !excel?.envelope.binding && questions.length > 0 && (
-              <>
-                <p>
-                  File V3/JSON belum terikat paket. Konversi menetapkan tujuan{' '}
-                  {targetPackage.assessmentType} dan memberi urutan 1–{questions.length} sesuai
-                  preview. Periksa kesesuaian materi sebelum validasi.
-                </p>
-                <Button
-                  variant="secondary"
-                  disabled={busy || editing || !!excel?.issues.length || !!report?.id}
-                  onClick={() => {
-                    reset();
-                    setConverted(true);
-                    if (excel) {
-                      const numbered = excel.envelope.questions.map((q, i) => ({
-                        ...q,
-                        metadata: { ...q.metadata, sourceOrder: i + 1 },
-                      }));
-                      setExcel({ ...excel, envelope: { ...excel.envelope, questions: numbered } });
-                      setQuestions(numbered.filter((q) => selected.has(q.externalId)));
-                    } else
-                      setQuestions(
-                        questions.map((q, i) => ({
-                          ...q,
-                          metadata: {
-                            ...(q.metadata && typeof q.metadata === 'object' ? q.metadata : {}),
-                            sourceOrder: i + 1,
-                          },
-                        })),
-                      );
-                  }}
-                >
-                  Konversi ke paket terpilih
-                </Button>
-              </>
-            )}
-            <div className="admin-content-actions">
-              <Button
-                disabled={
-                  busy ||
-                  editing ||
-                  !questions.length ||
-                  !namespace ||
-                  !!excel?.issues.length ||
-                  !!report?.id ||
-                  !directed
-                }
-                onClick={() =>
-                  void run(async () => setReport(await validateImport(token, bodyFor(questions))))
-                }
-              >
-                Validasi JSON
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={
-                  busy ||
-                  editing ||
-                  !questions.length ||
-                  !report?.canImportDraft ||
-                  !!report.id ||
-                  !!excel?.issues.length ||
-                  !directed
-                }
-                onClick={() =>
-                  void run(async () => {
-                    let body = bodyFor(questions);
-                    if (excel && selectedEnvelope) {
-                      const uploaded = await uploadExcelMedia(
+                    void run(async () => {
+                      if (file.size > 10 * 1024 * 1024)
+                        throw Error('Batas file Excel adalah 10 MiB.');
+                      const parsed = await parseExcelFile(
                         token,
-                        selectedEnvelope,
-                        excel.media,
-                        uploadCache.current,
-                        setProgress,
+                        file,
+                        namespace,
+                        targetPackage?.source ? targetPackage.id : undefined,
                       );
-                      body = bodyFor(uploaded.questions);
-                      setExcel({
-                        ...excel,
-                        envelope: {
-                          ...excel.envelope,
-                          questions: excel.envelope.questions.map(
-                            (q) =>
-                              uploaded.questions.find((u) => u.externalId === q.externalId) ?? q,
-                          ),
-                        },
-                      });
-                      setQuestions(uploaded.questions);
-                      const validated = await validateImport(token, body);
-                      setReport(validated);
-                      if (!validated.canImportDraft || validated.items.some((i) => !i.canPreview))
-                        throw Error('Validasi media/konten belum lolos. Soal belum disimpan.');
-                    }
-                    importKey.current ??= crypto.randomUUID();
-                    setReport(await importContent(token, body, importKey.current));
-                    setPackageRefresh((n) => n + 1);
-                  })
-                }
-              >
-                Impor sebagai DRAFT
-              </Button>
-              <Button
-                variant="secondary"
-                disabled={busy || editing || !report?.id || !readyIds.length}
-                onClick={() =>
-                  void run(async () => {
-                    previewKey.current ??= crypto.randomUUID();
-                    setSessionId(
-                      (
-                        await createPreview(
-                          token,
-                          { questionVersionIds: readyIds },
-                          previewKey.current,
-                        )
-                      ).id,
-                    );
-                  })
-                }
-              >
-                Preview soal siap ({readyIds.length})
-              </Button>
-            </div>
-            {excel && (
-              <Button
-                variant="secondary"
-                disabled={
-                  busy || editing || !!excel.issues.length || !selectedEnvelope?.questions.length
-                }
-                onClick={() =>
-                  downloadFile(
-                    new Blob(
-                      [
-                        JSON.stringify(
-                          {
-                            ...selectedEnvelope,
-                            ...(directed ? { target: bodyFor(questions).target } : {}),
-                          },
-                          null,
-                          2,
-                        ),
-                      ],
-                      {
-                        type: 'application/json',
-                      },
-                    ),
-                    'questions.draft.json',
-                  )
-                }
-              >
-                Ekspor JSON{' '}
-                {selectedEnvelope?.questions.some((q) =>
-                  q.metadata.assetManifest.some((a) => !a.objectKey),
-                )
-                  ? '(media belum diunggah)'
-                  : ''}
-              </Button>
-            )}
-            {busy && <p role="status">{progress || 'Memproses…'}</p>}
-            {error && <AdminMessage error message={error} />}
-            {sessionId && (
-              <Link href={`/admin/content/preview-sessions/${sessionId}`}>Buka sesi preview</Link>
-            )}
-          </Card>
-          {excel && (
-            <ContentExcelPreview
-              excel={excel}
-              selected={selected}
-              report={report}
-              disabled={busy || !!report?.id}
-              editingChanged={setEditing}
-              select={(ids) => changePreview(excel, ids)}
-              edit={(question) =>
-                changePreview(
-                  {
-                    ...excel,
-                    envelope: {
-                      ...excel.envelope,
-                      questions: excel.envelope.questions.map((q) =>
-                        q.externalId === question.externalId ? question : q,
-                      ),
-                    },
-                  },
-                  selected,
-                )
-              }
-              retry={() => setError('Pilih ulang Excel jika gambar preview tidak dapat dibaca.')}
-              move={(id, direction) => {
-                const rows = [...excel.envelope.questions];
-                const from = rows.findIndex((q) => q.externalId === id);
-                const to = from + direction;
-                if (to < 0 || to >= rows.length) return;
-                [rows[from], rows[to]] = [rows[to]!, rows[from]!];
-                changePreview(
-                  {
-                    ...excel,
-                    envelope: {
-                      ...excel.envelope,
-                      questions: rows.map((q, i) => ({
-                        ...q,
-                        metadata: { ...q.metadata, sourceOrder: i + 1 },
-                      })),
-                    },
-                  },
-                  selected,
-                );
-              }}
-            />
-          )}
-          {report && (
-            <Card className="content-import-card">
-              <h2>Laporan {report.id ? 'impor' : 'validasi'}</h2>
-              {report.package && (
+                      parsed.envelope.questions.sort(
+                        (a, b) => (a.metadata.sourceOrder ?? 0) - (b.metadata.sourceOrder ?? 0),
+                      );
+                      setExcel(parsed);
+                      setSelected(new Set(parsed.envelope.questions.map((q) => q.externalId)));
+                      setQuestions(parsed.envelope.questions);
+                      setReport(parsed.report);
+                    });
+                  }}
+                />
+              </label>
+              <label>
+                File soal JSON
+                <input
+                  type="file"
+                  accept="application/json,.json"
+                  disabled={busy || editing}
+                  onChange={(e) => void choose(e.target.files?.[0])}
+                />
+              </label>
+              <p>
+                {questions.length
+                  ? `${questions.length} soal dipilih.`
+                  : 'Belum ada file. Pilih questions.draft.json atau envelope questions.'}
+              </p>
+              {!targetPackage && (
+                <p>Pilih paket untuk menyimpan. File lama tetap dapat dipreview tanpa tujuan.</p>
+              )}
+              {targetPackage && !targetPackage.source && (
+                <p>
+                  Paket lama belum mempunyai sumber terarah. Buat versi paket baru dengan metadata
+                  sumber.
+                </p>
+              )}
+              {targetPackage?.source && !excel?.envelope.binding && questions.length > 0 && (
                 <>
                   <p>
-                    {report.package.actualCount}/{report.package.expectedCount} soal ·{' '}
-                    {report.package.canSaveDraft ? 'Boleh disimpan DRAFT' : 'Penyimpanan ditolak'} ·
-                    belum diterbitkan
+                    File V3/JSON belum terikat paket. Konversi menetapkan tujuan{' '}
+                    {targetPackage.assessmentType} dan memberi urutan 1–{questions.length} sesuai
+                    preview. Periksa kesesuaian materi sebelum validasi.
                   </p>
-                  {report.package.blockers.length > 0 && (
-                    <p role="alert">{report.package.blockers.join(', ')}</p>
-                  )}
-                  <p>
-                    {report.items.filter((i) => i.change === 'ADD').length} ditambah ·{' '}
-                    {report.items.filter((i) => i.change === 'REVISE').length} direvisi ·{' '}
-                    {report.items.filter((i) => i.change === 'KEEP').length} tetap ·{' '}
-                    {report.items.filter((i) => i.change === 'REUSE').length} digunakan ulang ·{' '}
-                    {report.package.removedVersionIds.length} dilepas dari paket. Soal yang dilepas
-                    tetap tersimpan dalam histori.
-                  </p>
-                  <ul>
-                    {report.package.checks.map((c) => (
-                      <li key={c.code}>
-                        {c.passed ? 'Lolos' : 'Belum'}: {c.detail}
-                      </li>
-                    ))}
-                  </ul>
+                  <Button
+                    variant="secondary"
+                    disabled={busy || editing || !!excel?.issues.length || !!report?.id}
+                    onClick={() => {
+                      reset();
+                      setConverted(true);
+                      if (excel) {
+                        const numbered = excel.envelope.questions.map((q, i) => ({
+                          ...q,
+                          metadata: { ...q.metadata, sourceOrder: i + 1 },
+                        }));
+                        setExcel({
+                          ...excel,
+                          envelope: { ...excel.envelope, questions: numbered },
+                        });
+                        setQuestions(numbered.filter((q) => selected.has(q.externalId)));
+                      } else
+                        setQuestions(
+                          questions.map((q, i) => ({
+                            ...q,
+                            metadata: {
+                              ...(q.metadata && typeof q.metadata === 'object' ? q.metadata : {}),
+                              sourceOrder: i + 1,
+                            },
+                          })),
+                        );
+                    }}
+                  >
+                    Konversi ke paket terpilih
+                  </Button>
                 </>
               )}
-              <ul className="monitoring-list">
-                {reportPage.items.map((item, i) => (
-                  <li key={`${item.externalId}:${i}`}>
-                    <strong>{item.externalId || 'Objek tanpa ID'}</strong>
-                    <p>
-                      {item.outcome} ·{' '}
-                      {item.canImportDraft ? 'Dapat diimpor DRAFT' : 'Impor ditolak'} ·{' '}
-                      {item.canPreview ? 'Media siap' : 'Preview tertahan'}
-                    </p>
-                    {item.questionVersionId && (
-                      <Link href={`/admin/content/versions/${item.questionVersionId}`}>
-                        Buka detail & review versi
-                      </Link>
-                    )}
-                    <ContentBlockers
-                      codes={item.blockers}
-                      empty="Tidak ada hambatan teknis. Persetujuan akademik belum diberikan."
-                    />
-                    {item.issues?.map((issue) => (
-                      <p key={issue.code}>
-                        {issue.sheet
-                          ? `${issue.sheet}${issue.row ? ` · baris ${issue.row}` : ''}: `
-                          : ''}
-                        {issue.detail} ({issue.code})
-                      </p>
-                    ))}
-                  </li>
-                ))}
-              </ul>
-              <AdminPagination
-                {...reportPage.pagination}
-                disabled={busy || editing}
-                label="Halaman laporan impor"
-              />
+              <div className="admin-content-actions">
+                <Button
+                  disabled={
+                    busy ||
+                    editing ||
+                    !questions.length ||
+                    !namespace ||
+                    !!excel?.issues.length ||
+                    !!report?.id ||
+                    !directed
+                  }
+                  onClick={() =>
+                    void run(async () => setReport(await validateImport(token, bodyFor(questions))))
+                  }
+                >
+                  Validasi JSON
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={
+                    busy ||
+                    editing ||
+                    !questions.length ||
+                    !report?.canImportDraft ||
+                    !!report.id ||
+                    !!excel?.issues.length ||
+                    !directed
+                  }
+                  onClick={() =>
+                    void run(async () => {
+                      let body = bodyFor(questions);
+                      if (excel && selectedEnvelope) {
+                        const uploaded = await uploadExcelMedia(
+                          token,
+                          selectedEnvelope,
+                          excel.media,
+                          uploadCache.current,
+                          setProgress,
+                        );
+                        body = bodyFor(uploaded.questions);
+                        setExcel({
+                          ...excel,
+                          envelope: {
+                            ...excel.envelope,
+                            questions: excel.envelope.questions.map(
+                              (q) =>
+                                uploaded.questions.find((u) => u.externalId === q.externalId) ?? q,
+                            ),
+                          },
+                        });
+                        setQuestions(uploaded.questions);
+                        const validated = await validateImport(token, body);
+                        setReport(validated);
+                        if (!validated.canImportDraft || validated.items.some((i) => !i.canPreview))
+                          throw Error('Validasi media/konten belum lolos. Soal belum disimpan.');
+                      }
+                      importKey.current ??= crypto.randomUUID();
+                      setReport(await importContent(token, body, importKey.current));
+                      setPackageRefresh((n) => n + 1);
+                    })
+                  }
+                >
+                  Impor sebagai DRAFT
+                </Button>
+                <Button
+                  variant="secondary"
+                  disabled={busy || editing || !report?.id || !readyIds.length}
+                  onClick={() =>
+                    void run(async () => {
+                      previewKey.current ??= crypto.randomUUID();
+                      setSessionId(
+                        (
+                          await createPreview(
+                            token,
+                            { questionVersionIds: readyIds },
+                            previewKey.current,
+                          )
+                        ).id,
+                      );
+                    })
+                  }
+                >
+                  Preview soal siap ({readyIds.length})
+                </Button>
+              </div>
+              {excel && (
+                <Button
+                  variant="secondary"
+                  disabled={
+                    busy || editing || !!excel.issues.length || !selectedEnvelope?.questions.length
+                  }
+                  onClick={() =>
+                    downloadFile(
+                      new Blob(
+                        [
+                          JSON.stringify(
+                            {
+                              ...selectedEnvelope,
+                              ...(directed ? { target: bodyFor(questions).target } : {}),
+                            },
+                            null,
+                            2,
+                          ),
+                        ],
+                        {
+                          type: 'application/json',
+                        },
+                      ),
+                      'questions.draft.json',
+                    )
+                  }
+                >
+                  Ekspor JSON{' '}
+                  {selectedEnvelope?.questions.some((q) =>
+                    q.metadata.assetManifest.some((a) => !a.objectKey),
+                  )
+                    ? '(media belum diunggah)'
+                    : ''}
+                </Button>
+              )}
+              {busy && <p role="status">{progress || 'Memproses…'}</p>}
+              {error && <AdminMessage error message={error} />}
+              {sessionId && (
+                <Link href={`/admin/content/preview-sessions/${sessionId}`}>Buka sesi preview</Link>
+              )}
             </Card>
-          )}
-          <details className="content-media-disclosure">
-            <summary>Unggah gambar pendukung (opsional)</summary>
-            <p>
-              Unggah gambar yang dirujuk di dalam JSON. Gunakan referensi aset yang sudah
-              diverifikasi, lalu validasi ulang file soal.
-            </p>
-            <MediaUpload
-              token={token}
-              onAccessDenied={() => {
-                reset();
-                setQuestions([]);
-                setDenied(true);
-              }}
-            />
-          </details>
-        </>
-      )}
+            {excel && (
+              <ContentExcelPreview
+                excel={excel}
+                selected={selected}
+                report={report}
+                disabled={busy || !!report?.id}
+                editingChanged={setEditing}
+                select={(ids) => changePreview(excel, ids)}
+                edit={(question) =>
+                  changePreview(
+                    {
+                      ...excel,
+                      envelope: {
+                        ...excel.envelope,
+                        questions: excel.envelope.questions.map((q) =>
+                          q.externalId === question.externalId ? question : q,
+                        ),
+                      },
+                    },
+                    selected,
+                  )
+                }
+                retry={() => setError('Pilih ulang Excel jika gambar preview tidak dapat dibaca.')}
+                move={(id, direction) => {
+                  const rows = [...excel.envelope.questions];
+                  const from = rows.findIndex((q) => q.externalId === id);
+                  const to = from + direction;
+                  if (to < 0 || to >= rows.length) return;
+                  [rows[from], rows[to]] = [rows[to]!, rows[from]!];
+                  changePreview(
+                    {
+                      ...excel,
+                      envelope: {
+                        ...excel.envelope,
+                        questions: rows.map((q, i) => ({
+                          ...q,
+                          metadata: { ...q.metadata, sourceOrder: i + 1 },
+                        })),
+                      },
+                    },
+                    selected,
+                  );
+                }}
+              />
+            )}
+            {report && (
+              <Card className="content-import-card">
+                <h2>Laporan {report.id ? 'impor' : 'validasi'}</h2>
+                {report.package && (
+                  <>
+                    <p>
+                      {report.package.actualCount}/{report.package.expectedCount} soal ·{' '}
+                      {report.package.canSaveDraft ? 'Boleh disimpan DRAFT' : 'Penyimpanan ditolak'}{' '}
+                      · belum diterbitkan
+                    </p>
+                    {report.package.blockers.length > 0 && (
+                      <p role="alert">{report.package.blockers.join(', ')}</p>
+                    )}
+                    <p>
+                      {report.items.filter((i) => i.change === 'ADD').length} ditambah ·{' '}
+                      {report.items.filter((i) => i.change === 'REVISE').length} direvisi ·{' '}
+                      {report.items.filter((i) => i.change === 'KEEP').length} tetap ·{' '}
+                      {report.items.filter((i) => i.change === 'REUSE').length} digunakan ulang ·{' '}
+                      {report.package.removedVersionIds.length} dilepas dari paket. Soal yang
+                      dilepas tetap tersimpan dalam histori.
+                    </p>
+                    <ul>
+                      {report.package.checks.map((c) => (
+                        <li key={c.code}>
+                          {c.passed ? 'Lolos' : 'Belum'}: {c.detail}
+                        </li>
+                      ))}
+                    </ul>
+                  </>
+                )}
+                <ul className="monitoring-list">
+                  {reportPage.items.map((item, i) => (
+                    <li key={`${item.externalId}:${i}`}>
+                      <strong>{item.externalId || 'Objek tanpa ID'}</strong>
+                      <p>
+                        {item.outcome} ·{' '}
+                        {item.canImportDraft ? 'Dapat diimpor DRAFT' : 'Impor ditolak'} ·{' '}
+                        {item.canPreview ? 'Media siap' : 'Preview tertahan'}
+                      </p>
+                      {item.questionVersionId && (
+                        <Link href={`/admin/content/versions/${item.questionVersionId}`}>
+                          Buka detail & review versi
+                        </Link>
+                      )}
+                      <ContentBlockers
+                        codes={item.blockers}
+                        empty="Tidak ada hambatan teknis. Persetujuan akademik belum diberikan."
+                      />
+                      {item.issues?.map((issue) => (
+                        <p key={issue.code}>
+                          {issue.sheet
+                            ? `${issue.sheet}${issue.row ? ` · baris ${issue.row}` : ''}: `
+                            : ''}
+                          {issue.detail} ({issue.code})
+                        </p>
+                      ))}
+                    </li>
+                  ))}
+                </ul>
+                <AdminPagination
+                  {...reportPage.pagination}
+                  disabled={busy || editing}
+                  label="Halaman laporan impor"
+                />
+              </Card>
+            )}
+            <details className="content-media-disclosure">
+              <summary>Unggah gambar pendukung (opsional)</summary>
+              <p>
+                Unggah gambar yang dirujuk di dalam JSON. Gunakan referensi aset yang sudah
+                diverifikasi, lalu validasi ulang file soal.
+              </p>
+              <MediaUpload
+                token={token}
+                onAccessDenied={() => {
+                  reset();
+                  setQuestions([]);
+                  setDenied(true);
+                }}
+              />
+            </details>
+          </>
+        )}
+      </div>
     </AdminFrame>
   );
 }

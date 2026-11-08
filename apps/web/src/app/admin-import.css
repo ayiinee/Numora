@@ -1,0 +1,779 @@
+/* UI-03 uses the approved Admin management foundation. */
+.admin-import-workspace {
+  min-width: 0;
+}
+.admin-import-workspace .import-navigation {
+  display: flex;
+  gap: 4px 24px;
+  flex-wrap: wrap;
+  border-bottom: 1px solid var(--color-border-light);
+  margin: 0 0 24px;
+}
+.import-navigation > a,
+.import-navigation > button {
+  display: inline-flex;
+  align-items: center;
+  min-height: 48px;
+  padding: 10px 0;
+  border: 0;
+  border-bottom: 2px solid transparent;
+  background: none;
+  font: inherit;
+  font-weight: 500;
+  color: var(--color-text-muted);
+  text-decoration: none;
+  cursor: pointer;
+}
+.import-navigation > [aria-current] {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+  font-weight: 600;
+}
+.import-navigation > [aria-disabled='true'],
+.import-navigation > button:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+.admin-import-workspace .content-upload-workflow {
+  min-width: 0;
+}
+.admin-import-workspace .upload-panel,
+.admin-import-workspace .content-import-card,
+.admin-import-workspace .content-media-disclosure {
+  min-width: 0;
+  background: #fff;
+  border: 1px solid var(--color-border-light);
+  border-radius: 12px;
+  box-shadow: none;
+  padding: 24px;
+  margin: 0 0 24px;
+}
+.admin-import-workspace h2 {
+  margin: 0 0 8px;
+  font-size: 18px;
+  line-height: 26px;
+  font-weight: 700;
+}
+.admin-import-workspace h3 {
+  font-size: 15px;
+  line-height: 23px;
+  font-weight: 650;
+}
+.admin-import-workspace p {
+  max-width: 80ch;
+}
+.admin-import-workspace .upload-panel > p,
+.admin-import-workspace .content-import-card > p {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 8px 0 20px;
+}
+.admin-import-workspace input:not([type='checkbox']):not([type='radio']),
+.admin-import-workspace select,
+.admin-import-workspace textarea {
+  min-width: 0;
+  width: 100%;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: #fff;
+  color: var(--color-text);
+  font: inherit;
+}
+.admin-import-workspace input[type='checkbox'],
+.admin-import-workspace input[type='radio'] {
+  accent-color: var(--color-primary);
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+}
+.admin-import-workspace label {
+  color: var(--color-text);
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-import-workspace label > input,
+.admin-import-workspace label > select {
+  margin-top: 7px;
+}
+.admin-import-workspace .upload-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  padding: 0;
+  margin: 0 0 24px;
+  list-style: none;
+  border: 1px solid var(--color-border-light);
+  background: #fff;
+  border-radius: 10px;
+  overflow: hidden;
+}
+.admin-import-workspace .upload-steps li {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-width: 0;
+  padding: 16px;
+  border: 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.admin-import-workspace .upload-steps li > span {
+  display: grid;
+  place-items: center;
+  flex-shrink: 0;
+  width: 26px;
+  height: 26px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 50%;
+  background: #fff;
+  font-size: 12px;
+}
+.admin-import-workspace .upload-steps li[aria-current] {
+  color: var(--color-primary);
+  background: var(--color-primary-light);
+  font-weight: 600;
+}
+.admin-import-workspace .upload-steps li[aria-current] > span {
+  background: var(--color-primary);
+  border-color: var(--color-primary);
+  color: #fff;
+}
+.admin-import-workspace .upload-file-summary {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 20px;
+  padding: 16px 20px;
+  margin: 0 0 20px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+  background: #fff;
+}
+.admin-import-workspace .upload-file-summary > strong {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
+.admin-import-workspace .upload-file-summary > span {
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.admin-import-workspace .upload-file-summary > button {
+  margin-left: auto;
+}
+.admin-import-workspace .excel-dropzone {
+  padding: 28px;
+  margin-top: 20px;
+  border: 1px dashed #a8b1bf;
+  border-radius: 10px;
+  background: var(--color-bg);
+}
+.admin-import-workspace .excel-dropzone-active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.admin-import-workspace .excel-dropzone > p {
+  margin: 0 0 20px;
+  font-weight: 500;
+}
+.admin-import-workspace .excel-dropzone > small {
+  display: block;
+  color: var(--color-text-muted);
+  margin-top: 12px;
+}
+.admin-import-workspace input[type='file'] {
+  font-size: 13px;
+  padding: 8px;
+}
+.admin-import-workspace input[type='file']::file-selector-button {
+  min-height: 36px;
+  margin-right: 12px;
+  padding: 7px 12px;
+  background: var(--color-primary-light);
+  color: var(--color-primary-strong);
+  border: 0;
+  border-radius: 6px;
+  font: inherit;
+  font-weight: 600;
+  cursor: pointer;
+}
+.admin-import-workspace .upload-fields,
+.admin-import-workspace .upload-history-filters,
+.admin-import-workspace .admin-search-toolbar {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 16px;
+  margin-block: 20px;
+}
+.admin-import-workspace .upload-fields > label,
+.admin-import-workspace .upload-history-filters > label,
+.admin-import-workspace .admin-search-toolbar > label {
+  display: block;
+  min-width: 0;
+}
+.admin-import-workspace .upload-history-filters {
+  grid-template-columns: minmax(0, 2fr) minmax(0, 1fr) minmax(0, 1fr);
+  padding: 16px;
+  background: var(--color-bg);
+  border-radius: 8px;
+}
+.admin-import-workspace .upload-history-heading {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 16px;
+}
+.admin-import-workspace .upload-history-scroll {
+  overflow: visible;
+}
+.admin-import-workspace .upload-history-table {
+  width: 100%;
+  min-width: 0;
+  table-layout: fixed;
+  border-collapse: collapse;
+  font-size: 13px;
+}
+.admin-import-workspace .upload-history-table th,
+.admin-import-workspace .upload-history-table td {
+  padding: 14px 10px;
+  border: 0;
+  border-bottom: 1px solid var(--color-border-light);
+  text-align: left;
+  vertical-align: top;
+  overflow-wrap: anywhere;
+}
+.admin-import-workspace .upload-history-table th {
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 500;
+  background: var(--color-bg);
+}
+.admin-import-workspace .upload-history-table th:first-child {
+  width: 24%;
+}
+.admin-import-workspace .upload-history-table small {
+  display: block;
+  margin-top: 6px;
+  color: var(--color-text-muted);
+}
+.admin-import-workspace .upload-actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 10px;
+  margin-top: 24px;
+  padding-top: 20px;
+  border-top: 1px solid var(--color-border-light);
+}
+.admin-import-workspace .upload-mapping-panel {
+  min-width: 0;
+  padding: 18px;
+  margin: 16px 0;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: #fff;
+}
+.admin-import-workspace .upload-mapping-panel summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-import-workspace .upload-alert,
+.admin-import-workspace .excel-issues {
+  padding: 16px;
+  margin-bottom: 20px;
+  border: 1px solid #e8cfa9;
+  border-radius: 8px;
+  background: #fff7e9;
+  color: #754919;
+}
+.admin-import-workspace .upload-problems {
+  padding-left: 20px;
+  color: #754919;
+  font-size: 13px;
+}
+.admin-import-workspace .upload-package-summary {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 20px;
+  padding-block: 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-import-workspace .upload-package-summary dt {
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.admin-import-workspace .upload-package-summary dd {
+  margin: 4px 0 0;
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.admin-import-workspace .upload-checklist {
+  padding: 0;
+  list-style: none;
+}
+.admin-import-workspace .upload-checklist li {
+  display: flex;
+  gap: 12px;
+  align-items: flex-start;
+  padding: 12px 0;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-import-workspace .upload-checklist .is-valid {
+  color: #246949;
+}
+.admin-import-workspace .upload-checklist .is-pending {
+  color: #8c4c0f;
+}
+.admin-import-workspace .upload-confirm {
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  padding: 18px 0;
+  font-size: 14px;
+}
+.admin-import-workspace .import-context-note {
+  color: var(--color-text-muted);
+  font-size: 13px;
+  margin: 0 0 20px;
+}
+.admin-import-workspace .content-import-steps {
+  display: grid;
+  grid-template-columns: repeat(4, minmax(0, 1fr));
+  gap: 12px;
+  padding: 0;
+  margin: 0 0 24px;
+  list-style: none;
+}
+.admin-import-workspace .content-import-steps > li {
+  padding: 14px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: #fff;
+}
+.admin-import-workspace .content-import-steps h3 {
+  margin: 6px 0;
+  font-size: 13px;
+}
+.admin-import-workspace .content-import-steps p {
+  margin: 0;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-import-workspace .content-import-steps > li[aria-current] {
+  border-color: var(--color-primary);
+  background: var(--color-primary-light);
+}
+.admin-import-workspace .content-step-number {
+  font-size: 12px;
+  color: var(--color-primary);
+}
+.admin-import-workspace .content-media-disclosure > summary {
+  cursor: pointer;
+  font-weight: 600;
+}
+.admin-import-workspace .content-import-card > label {
+  display: block;
+  margin-block: 16px;
+}
+.admin-import-workspace .content-import-card .admin-content-actions {
+  flex-wrap: wrap;
+}
+.admin-import-workspace .excel-preview-card {
+  padding: 0;
+  border-radius: 8px;
+  overflow: hidden;
+  margin: 20px 0;
+}
+.admin-import-workspace .excel-preview-heading {
+  padding: 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 16px;
+  border-bottom: 1px solid var(--color-border-light);
+}
+.admin-import-workspace .excel-preview-heading > div {
+  flex: 1;
+  min-width: 160px;
+}
+.admin-import-workspace .excel-preview-heading h2 {
+  font-size: 16px;
+}
+.admin-import-workspace .excel-preview-heading p {
+  margin: 6px 0 0;
+  color: var(--color-text-muted);
+  font-size: 13px;
+}
+.admin-import-workspace .excel-preview-summary {
+  padding: 16px 20px;
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+  align-items: center;
+  background: var(--color-bg);
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-import-workspace .excel-preview-summary > span:last-child {
+  flex-basis: 100%;
+}
+.admin-import-workspace .excel-preview-scroll {
+  min-width: 0;
+  overflow: visible;
+  max-height: none;
+}
+.admin-import-workspace .excel-preview-table {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  border: 0;
+}
+.admin-import-workspace .excel-preview-table caption {
+  display: block;
+  padding: 12px 20px;
+  text-align: left;
+  font-size: 12px;
+  color: var(--color-text-muted);
+}
+.admin-import-workspace .excel-preview-table thead,
+.admin-import-workspace .excel-preview-table tbody {
+  display: block;
+}
+.admin-import-workspace .excel-preview-table thead tr {
+  display: block;
+  padding: 0 20px 12px;
+}
+.admin-import-workspace .excel-preview-table thead th {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+}
+.admin-import-workspace .excel-preview-table thead th:first-child {
+  position: static;
+  width: auto;
+  height: auto;
+  clip-path: none;
+  display: block;
+  padding: 0;
+  border: 0;
+  background: none;
+}
+.admin-import-workspace .excel-select-control {
+  display: inline-flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+}
+.admin-import-workspace .excel-select-control input {
+  margin: 0;
+}
+.admin-import-workspace .excel-preview-table tbody > tr {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) 220px;
+  gap: 16px 24px;
+  padding: 20px;
+  border-top: 1px solid var(--color-border-light);
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td,
+.admin-import-workspace .excel-preview-table tbody > tr > th {
+  display: block;
+  min-width: 0;
+  width: auto;
+  padding: 0;
+  border: 0;
+  font-size: 14px;
+  font-weight: 400;
+  text-align: left;
+  overflow-wrap: anywhere;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td:first-child {
+  grid-column: 1/-1;
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+}
+.admin-import-workspace .excel-preview-table th[scope='row'] {
+  grid-column: 1;
+  grid-row: 2 / span 3;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td:nth-child(3) {
+  grid-column: 2;
+  grid-row: 2;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td:nth-child(4) {
+  grid-column: 2;
+  grid-row: 3;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td:nth-child(5) {
+  grid-column: 2;
+  grid-row: 4;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td:nth-child(6) {
+  grid-column: 1/-1;
+}
+.admin-import-workspace .excel-preview-table tbody > tr > td[data-label]::before {
+  content: attr(data-label);
+  display: block;
+  margin-bottom: 8px;
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 600;
+}
+.admin-import-workspace .excel-preview-table tbody > tr:has(td[colspan]) {
+  display: block;
+}
+.admin-import-workspace .excel-preview-stem {
+  margin: 0 0 16px;
+  line-height: 1.7;
+  font-weight: 500;
+}
+.admin-import-workspace .excel-preview-options {
+  padding: 0;
+  list-style: none;
+  margin: 16px 0;
+  display: grid;
+  gap: 10px;
+}
+.admin-import-workspace .excel-preview-options li {
+  display: flex;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border-light);
+  border-radius: 8px;
+  background: var(--color-bg);
+}
+.admin-import-workspace .excel-preview-options li > div {
+  min-width: 0;
+}
+.admin-import-workspace .excel-preview-table summary {
+  min-height: 44px;
+  cursor: pointer;
+  color: var(--color-primary);
+  font-size: 13px;
+  padding-block: 10px;
+}
+.admin-import-workspace .excel-preview-table .excel-row-actions {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 10px;
+}
+.admin-import-workspace .excel-preview-table .excel-row-actions > span {
+  font-size: 12px;
+}
+.admin-import-workspace .excel-preview-card > .admin-pagination {
+  margin: 0;
+  padding: 16px 20px;
+  border-top: 1px solid var(--color-border-light);
+  justify-content: space-between;
+}
+.admin-import-workspace .excel-question-editor {
+  padding: 20px;
+  background: var(--color-bg);
+  border-radius: 8px;
+}
+.admin-import-workspace .excel-question-editor label {
+  display: block;
+  margin-block: 14px;
+}
+.admin-import-workspace .excel-question-editor .excel-choice {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.admin-import-workspace .excel-question-editor .excel-choice input {
+  width: 18px;
+}
+.import-leave-dialog {
+  max-height: calc(100% - 32px);
+}
+.import-leave-dialog .numora-dialog__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 12px;
+}
+.import-leave-link {
+  color: var(--color-primary);
+  font-weight: 600;
+  padding: 12px;
+}
+@media (max-width: 1100px) {
+  .admin-import-workspace .upload-history-table,
+  .admin-import-workspace .upload-history-table tbody {
+    display: block;
+  }
+  .admin-import-workspace .upload-history-table thead {
+    position: absolute;
+    width: 1px;
+    height: 1px;
+    clip-path: inset(50%);
+    overflow: hidden;
+  }
+  .admin-import-workspace .upload-history-table tr {
+    display: grid;
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+    gap: 16px;
+    border-block: 1px solid var(--color-border-light);
+    padding: 20px 0;
+  }
+  .admin-import-workspace .upload-history-table td {
+    display: block;
+    padding: 0;
+    border: 0;
+    min-width: 0;
+  }
+  .admin-import-workspace .upload-history-table td:first-child,
+  .admin-import-workspace .upload-history-table td:last-child {
+    grid-column: 1/-1;
+  }
+  .admin-import-workspace .upload-history-table td[data-label]::before {
+    content: attr(data-label);
+    display: block;
+    font-size: 12px;
+    color: var(--color-text-muted);
+    margin-bottom: 6px;
+  }
+}
+@media (max-width: 767px) {
+  .admin-import-workspace .import-navigation {
+    gap: 0 18px;
+  }
+  .import-navigation > a,
+  .import-navigation > button {
+    font-size: 13px;
+  }
+  .admin-import-workspace .upload-panel,
+  .admin-import-workspace .content-import-card,
+  .admin-import-workspace .content-media-disclosure {
+    padding: 20px 16px;
+  }
+  .admin-import-workspace .upload-steps,
+  .admin-import-workspace .content-import-steps {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
+  }
+  .admin-import-workspace .upload-steps li {
+    padding: 12px;
+    font-size: 12px;
+    gap: 8px;
+  }
+  .admin-import-workspace .upload-fields,
+  .admin-import-workspace .upload-history-filters,
+  .admin-import-workspace .admin-search-toolbar {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-import-workspace .excel-dropzone {
+    padding: 20px 16px;
+  }
+  .admin-import-workspace .excel-preview-card {
+    padding: 0;
+  }
+  .admin-import-workspace .excel-preview-table tbody > tr {
+    display: block;
+    padding: 16px;
+  }
+  .admin-import-workspace .excel-preview-table tbody > tr > td,
+  .admin-import-workspace .excel-preview-table tbody > tr > th {
+    margin-bottom: 18px;
+  }
+  .admin-import-workspace .excel-preview-heading,
+  .admin-import-workspace .excel-preview-summary {
+    padding: 16px;
+  }
+  .admin-import-workspace .excel-preview-table caption {
+    padding-inline: 16px;
+  }
+  .admin-import-workspace .excel-preview-table thead tr {
+    padding-inline: 16px;
+  }
+  .admin-import-workspace .excel-preview-card > .admin-pagination {
+    padding: 16px;
+    gap: 8px;
+  }
+  .admin-import-workspace .admin-pagination > .numora-button {
+    padding-inline: 10px;
+  }
+  .admin-import-workspace .upload-package-summary {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .admin-import-workspace .upload-file-summary {
+    padding: 16px;
+  }
+  .admin-import-workspace .upload-actions > .numora-button {
+    flex: 1 1 auto;
+  }
+  .admin-import-workspace input:not([type='checkbox']):not([type='radio']),
+  .admin-import-workspace select,
+  .admin-import-workspace textarea {
+    font-size: 16px;
+  }
+}
+.admin-import-workspace .import-target-panel {
+  margin: 0 0 24px;
+  background: #fff;
+  border: 1px solid var(--color-border-light);
+  border-radius: 10px;
+}
+.admin-import-workspace .import-target-panel > summary {
+  padding: 18px 20px;
+  min-height: 44px;
+  cursor: pointer;
+  font-weight: 600;
+  color: var(--color-primary);
+  overflow-wrap: anywhere;
+}
+.admin-import-workspace .import-target-panel > .content-import-card {
+  border: 0;
+  margin: 0;
+  border-radius: 0;
+  padding-top: 0;
+}
+.admin-import-workspace .content-import-steps > li:not([aria-current]) p {
+  display: none;
+}
+.admin-import-workspace .excel-preview-card {
+  border: 0;
+  border-block: 1px solid var(--color-border-light);
+  border-radius: 0;
+}
+/* Override the upload table's historical 260px question minimum. */
+.admin-import-workspace .excel-preview-table th:nth-child(2),
+.admin-import-workspace .excel-preview-table td:nth-child(3) {
+  min-width: 0;
+  width: auto;
+}
+.admin-import-workspace .excel-preview-table .excel-source-details {
+  margin-top: 8px;
+}
+.admin-import-workspace .excel-preview-table tbody > tr:nth-child(even) {
+  background: #fff;
+}
+.admin-import-workspace .content-upload-workflow {
+  --color-primary: inherit;
+  --color-primary-hover: #6020b4;
+  --color-primary-strong: inherit;
+  --color-primary-light: inherit;
+  --radius-md: inherit;
+}
+.admin-import-workspace .import-history-filters {
+  margin-block: 16px;
+}
+.admin-import-workspace .import-history-filters > summary {
+  cursor: pointer;
+  min-height: 44px;
+  padding-block: 10px;
+  color: var(--color-primary);
+  font-size: 13px;
+  font-weight: 600;
+}
+.admin-import-workspace .import-history-filters .upload-history-filters {
+  margin: 8px 0 20px;
+}
+.admin-import-workspace .excel-preview-table th[scope='row'] details > strong {
+  display: block;
+  margin-top: 16px;
+  margin-bottom: 6px;
+}
