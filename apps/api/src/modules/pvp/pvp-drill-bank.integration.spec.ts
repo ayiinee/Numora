@@ -351,6 +351,7 @@ integration(
         temporary.push(
           await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', {
             optionsOrStatements: importedOptions,
+            media: {},
           }),
         );
       const excluded = [
