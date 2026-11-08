@@ -4,6 +4,9 @@ import { QueryClient, QueryClientProvider } from '@tanstack/react-query';
 import { LeaderboardsScreen } from './leaderboards';
 import { request, learningApi } from './api';
 import type { ReactNode } from 'react';
+vi.mock('@/features/onboarding/user-avatar', async () => ({
+  UserAvatar: (await import('@tka/ui')).Avatar,
+}));
 vi.mock('./student-session', () => ({ useStudentToken: () => 'TEST_ONLY_TOKEN' }));
 vi.mock('./api', () => ({ request: vi.fn(), learningApi: { dashboard: vi.fn() } }));
 vi.mock('./ui', () => ({

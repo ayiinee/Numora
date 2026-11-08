@@ -5,6 +5,7 @@ import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { EmptyState, Icon } from '@tka/ui';
 import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
+import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
@@ -48,9 +49,8 @@ function DashboardReady({
   catalog: UseQueryResult<Catalog, Error>;
 }) {
   const { state } = useAuth();
-  const avatar =
-    state.status === 'ready' ? state.session.user?.user_metadata?.avatar_url : undefined;
-  const avatarUrl = typeof avatar === 'string' ? avatar : undefined;
+  const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
+  const avatarUrl = photo.data?.url ?? undefined;
   const tryout = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),

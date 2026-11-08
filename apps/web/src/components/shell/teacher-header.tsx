@@ -1,6 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Avatar, Icon } from '@tka/ui';
+import { Icon } from '@tka/ui';
+import { OwnAvatar as Avatar } from '@/features/onboarding/user-avatar';
 
 export function TeacherHeader({
   title,

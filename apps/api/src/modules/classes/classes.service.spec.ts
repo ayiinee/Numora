@@ -89,10 +89,42 @@ describe('ClassesService Teacher reads', () => {
   });
 
   it('returns only the Class and Student identity fields after authorization', async () => {
-    database([ownedClass], [{ id: 'membership-id' }], [{ id: schoolId }], [{ id: 'student-id', displayName: 'Nisa' }]);
+    database(
+      [ownedClass],
+      [{ id: 'membership-id' }],
+      [{ id: schoolId }],
+      [{ id: 'student-id', displayName: 'Nisa' }],
+    );
     await expect(service().students('Bearer ok', classId)).resolves.toEqual({
       class: { id: classId, name: 'IX A' },
       items: [{ id: 'student-id', displayName: 'Nisa' }],
+    });
+  });
+
+  it('protects the banned roster with the same ownership and active-school checks', async () => {
+    const select = database([{ ...ownedClass, teacherUserId: 'another-teacher' }]);
+    await expect(service().bannedStudents('Bearer ok', classId)).rejects.toThrow(
+      ForbiddenException,
+    );
+    expect(select).toHaveBeenCalledTimes(1);
+    database([ownedClass], []);
+    await expect(service().bannedStudents('Bearer ok', classId)).rejects.toThrow(
+      ForbiddenException,
+    );
+    database([ownedClass], [{ id: 'membership' }], []);
+    await expect(service().bannedStudents('Bearer ok', classId)).rejects.toThrow(
+      ForbiddenException,
+    );
+    database(
+      [ownedClass],
+      [{ id: 'membership' }],
+      [{ id: schoolId }],
+      [],
+      [{ id: 'student', displayName: 'Nisa' }],
+    );
+    await expect(service().bannedStudents('Bearer ok', classId)).resolves.toEqual({
+      class: { id: classId, name: 'IX A' },
+      items: [{ id: 'student', displayName: 'Nisa' }],
     });
   });
 });

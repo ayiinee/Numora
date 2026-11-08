@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, Button, Card, EmptyState, Icon } from '@tka/ui';
+import { Button, Card, EmptyState, Icon } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import { learningApi, request } from './api';
 import type { LeaderboardDto, LeaderboardPeriodsDto } from './generated-types';
 import { useStudentToken } from './student-session';
@@ -323,7 +324,7 @@ function RankingData({
                     <span className="pvp-rank-number" aria-label={`Peringkat ${entry.rank}`}>
                       {entry.rank}
                     </span>
-                    <Avatar name={entry.displayName} />
+                    <Avatar userId={entry.studentId} name={entry.displayName} />
                     <div>
                       <strong>{entry.displayName}</strong>
                       {entry.studentId === own?.studentId && <small>KAMU</small>}
