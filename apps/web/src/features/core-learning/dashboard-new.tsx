@@ -27,7 +27,7 @@ function DashboardContent({ token }: { token: string }) {
   const catalog = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
   if (dashboard.isPending || dashboard.isError)
     return (
-      <AppShell className="student-home-shell">
+      <AppShell className="student-home-shell" showTopbarProfile={false}>
         <DataState
           pending={dashboard.isPending}
           error={dashboard.error}
@@ -59,10 +59,10 @@ function DashboardReady({
     <StudentHomeIdentityHeader data={data} avatarUrl={avatarUrl} tryout={tryout.data} />
   );
   return (
-    <AppShell className="student-home-shell" mobileHeader={header}>
+    <AppShell className="student-home-shell" mobileHeader={header} showTopbarProfile={false}>
       <div className="sh-layout">
+        <div className="sh-desktop-identity">{header}</div>
         <div className="sh-main">
-          <div className="sh-desktop-identity">{header}</div>
           <StudentHomeCarousel
             activeDrill={data.activeDrill}
             tryout={tryout.data}

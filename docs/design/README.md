@@ -1,10 +1,20 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — penyesuaian pemilik, 8 November 2026:** ikon Shortcut Belajar berukuran 64 × 64 px, tersusun simetris dengan jarak label 8 px. Tinggi dasar hero ponsel menjadi 150 px dengan lebar responsif, mengikuti acuan 270 × 150 px dan dapat bertambah sesuai isi. Jarak header ke hero 20 px, hero ke titik indikator sekitar 14 px, titik indikator ke Shortcut Belajar 30 px, Shortcut ke Aktivitas 32 px, serta Aktivitas ke Kelas pada tata letak bertumpuk 24 px. Target sentuh indikator tetap 44 px.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** Shortcut Belajar memakai tiga ilustrasi kiriman pemilik untuk Latihan Soal, Tryout, dan PvP, dengan label di bawah gambar. Aset transparan dioptimalkan menjadi WebP 384 × 384 px.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** Beranda desktop mengikuti lebar dan padding area konten lobi PvP. Header identitas membentang di atas dua kolom. Carousel, shortcut, dan aktivitas berada di kolom utama, sedangkan Kelas dan Feedback berada di panel kanan 300 px dengan jarak 24 px dari kolom utama.
+
 **ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** header Leaderboard siswa memakai pola yang sama dengan header Materi dan hanya menampilkan tombol Kembali serta judul. Pada desktop, filter Periode berada di sebelah kanan tab jenis peringkat. Pada ponsel, filter berada di bawah tab.
 
 **ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** halaman Leaderboard siswa memakai podium 2–1–3 dan panel daftar yang menyatu untuk Global PvP, Kelas, dan Aktivitas Global. Podium berbentuk tiga balok dengan atap miring, alas sejajar, dan pita medali yang menggantung dari bibir atap masing-masing. Tinggi balok menurun dari peringkat 1 ke 3. Jika ada peringkat seri di tiga entri teratas, panel menampilkan semua peserta sebagai satu daftar. Skor PvP memakai PTS, sedangkan Kelas dan Aktivitas Global memakai XP.
 
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** carousel Beranda memakai tata letak hero PvP untuk slide Drill dan Tryout. Teks dan tombol berada di kolom kiri, ilustrasi transparan berada di kolom kanan, dan tinggi banner dapat mengikuti isi. [Aset hero siswa](../../apps/web/public/illustrations/student-heroes/README.md).
+
 **ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** sidebar siswa menempatkan Profil sebagai menu terakhir di atas identitas akun dan memakai ikon jam untuk Tryout. Kartu motivasi dihapus. Navigasi bawah ponsel mengikuti urutan Belajar, Latihan, Tryout, PvP, dan Profil.
+
+**ENGINEERING DECISION — perbaikan tampilan siswa, 8 November 2026:** sidebar siswa dapat digulir sendiri saat tinggi jendela terbatas. Header Belajar membungkus nama dan judul pengumuman. Pada mobile, XP berada di kiri notifikasi dan pola mengikuti lebar header. Carousel Belajar memakai kembali tinggi dasar 160 px dan 156 px di bawah 360 px. Banner Belajar, PvP, dan arena peringkat dapat bertambah tinggi sesuai isi agar judul dan tombol tetap terlihat.
 
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Content](ADMIN_CONTENT_PARITY_2026-11-02.md) memperbarui limited structures, detail laporan, JSON generator lama dan frame akses sesuai fondasi modern. Struktur tetap baca saja, tanpa data individual atau aksi Operations; layar bank/impor/Pretest/Generator/IRT existing tetap digunakan bersama. Review/merge/deploy terpisah dari hasil lokal.
 

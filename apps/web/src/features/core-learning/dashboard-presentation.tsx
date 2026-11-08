@@ -5,6 +5,7 @@ import { useNotificationSummary } from './notification-queries';
 import { Avatar, Icon, ProgressBar, Skeleton } from '@tka/ui';
 import type { StudentDashboardDto, CurrentTryoutDto, DashboardDrillDto } from './generated-types';
 import type { AssessmentRecord } from './types';
+import { StudentIllustratedHero } from './student-illustrated-hero';
 
 const tryoutLabels: Record<CurrentTryoutDto['state'], string> = {
   unavailable: 'Belum tersedia',
@@ -209,18 +210,13 @@ export function StudentIdentityHeader({
 
 export function HomeTryoutSkeleton() {
   return (
-    <div
-      className="sh-hero sh-hero--tryout student-home-hero"
-      role="status"
-      aria-label="Memuat Tryout"
-    >
-      <span className="sh-hero__eyebrow">TRYOUT</span>
-      <div className="sh-hero__copy">
+    <StudentIllustratedHero variant="tryout" className="sh-hero" badges={<span>TRYOUT</span>}>
+      <div className="sh-hero__loading" role="status" aria-label="Memuat Tryout">
         <Skeleton height={32} width="75%" />
         <Skeleton height={16} width="90%" />
-        <Skeleton height={44} width={140} />
+        <Skeleton height={44} width="min(100%, 140px)" />
       </div>
-    </div>
+    </StudentIllustratedHero>
   );
 }
 
@@ -249,67 +245,52 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
               ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
               : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
   return (
-    <div
-      className="sh-hero sh-hero--tryout student-home-hero"
-      aria-label={data.title ?? 'Tryout Matematika'}
+    <StudentIllustratedHero
+      variant="tryout"
+      className="sh-hero"
+      badges={
+        <>
+          <span>TRYOUT</span>
+          <span>
+            {tryoutLabels[data.state]}
+            {data.isDemo ? ' · Demo' : ''}
+          </span>
+          {(data.questionCount != null || data.durationSeconds != null) && (
+            <span>
+              {data.questionCount != null ? `${data.questionCount} soal` : ''}
+              {data.questionCount != null && data.durationSeconds != null ? ' · ' : ''}
+              {data.durationSeconds != null ? `${Math.ceil(data.durationSeconds / 60)} menit` : ''}
+            </span>
+          )}
+        </>
+      }
+      title={data.title ?? 'Tryout Matematika'}
+      description={description}
     >
-      <span className="sh-hero__eyebrow">TRYOUT</span>
-      <div className="sh-hero__copy">
-        <span className="sh-hero__state">
-          {tryoutLabels[data.state]}
-          {data.isDemo ? ' · Demo' : ''}
-        </span>
-        <h2>{data.title ?? 'Tryout Matematika'}</h2>
-        <p>{description}</p>
-        {(data.questionCount != null || data.durationSeconds != null) && (
-          <p className="sh-hero__meta">
-            {data.questionCount != null ? `${data.questionCount} soal` : ''}
-            {data.questionCount != null && data.durationSeconds != null ? ' · ' : ''}
-            {data.durationSeconds != null ? `${Math.ceil(data.durationSeconds / 60)} menit` : ''}
-          </p>
-        )}
-        <Link className="sh-hero__action" href={action.href}>
-          {action.label}
-          <Icon name="chevron" width={18} height={18} />
-        </Link>
-      </div>
-    </div>
+      <Link className="sh-hero__action" href={action.href}>
+        {action.label}
+        <Icon name="chevron" width={14} height={14} />
+      </Link>
+    </StudentIllustratedHero>
   );
 }
 
 export function HomeFeatures(_: { data: StudentDashboardDto }) {
-  const features: {
-    title: string;
-    image: string;
-    imageWidth: number;
-    imageHeight: number;
-    href: string;
-    tone: string;
-    subtitle?: string | undefined;
-  }[] = [
+  const features = [
     {
       title: 'Latihan Soal',
-      image: '/illustrations/student-home/reference-practice.png',
-      imageWidth: 76,
-      imageHeight: 78,
+      image: '/illustrations/student-home/shortcut-practice.webp',
       href: '/student/learn',
-      tone: 'violet',
     },
     {
       title: 'Tryout',
-      image: '/illustrations/student-home/reference-tryout.png',
-      imageWidth: 93,
-      imageHeight: 77,
+      image: '/illustrations/student-home/shortcut-tryout.webp',
       href: '/student/tryout',
-      tone: 'blue',
     },
     {
       title: 'PvP',
-      image: '/illustrations/student-home/reference-pvp.png',
-      imageWidth: 99,
-      imageHeight: 71,
+      image: '/illustrations/student-home/shortcut-pvp.webp',
       href: '/student/pvp',
-      tone: 'mint',
     },
   ];
   return (
@@ -319,16 +300,11 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
       </div>
       <div className="sh-shortcuts__grid">
         {features.map((item) => (
-          <Link
-            key={item.title}
-            className={`sh-shortcut sh-shortcut--${item.tone}`}
-            href={item.href}
-          >
+          <Link key={item.href} className="sh-shortcut" href={item.href}>
             <span className="sh-shortcut__icon">
-              <img src={item.image} width={item.imageWidth} height={item.imageHeight} alt="" />
+              <img src={item.image} width={384} height={384} alt="" />
             </span>
             <strong>{item.title}</strong>
-            {item.subtitle && <small>{item.subtitle}</small>}
           </Link>
         ))}
       </div>

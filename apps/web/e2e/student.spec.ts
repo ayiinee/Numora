@@ -488,17 +488,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         .toBe(true);
     }
     for (const [slide, asset] of [
-      ['drill', 'drill-owl-background.png'],
-      ['tryout', 'tryout-exam-background.png'],
+      ['drill', 'drill-owl.webp'],
+      ['tryout', 'tryout-exam.webp'],
     ]) {
       const background = await page
         .locator(`.sh-carousel__slide--${slide} .sh-hero`)
-        .evaluate((hero) => getComputedStyle(hero).backgroundImage);
+        .evaluate((hero) => getComputedStyle(hero, '::after').backgroundImage);
       expect(background).toContain(asset);
       expect(
         await page.evaluate(async (filename) => {
           const picture = new Image();
-          picture.src = `/illustrations/student-home/${filename}`;
+          picture.src = `/illustrations/student-heroes/${filename}`;
           await picture.decode();
           return picture.naturalWidth > 0 && picture.naturalHeight > 0;
         }, asset),
@@ -538,6 +538,26 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       };
     });
     expect(bounds.overflow).toBe(false);
+    if (width >= 960) {
+      const desktop = await page.locator('.sh-layout').evaluate((layout) => {
+        const rect = (selector: string) => layout.querySelector(selector)!.getBoundingClientRect();
+        const identity = rect('.sh-desktop-identity');
+        const main = rect('.sh-main');
+        const aside = rect('.sh-aside');
+        return {
+          headerSpansColumns: identity.left === main.left && identity.right === aside.right,
+          columnsAlign: main.top === aside.top,
+          columnGap: aside.left - main.right,
+          asideWidth: aside.width,
+        };
+      });
+      expect(desktop).toEqual({
+        headerSpansColumns: true,
+        columnsAlign: true,
+        columnGap: 24,
+        asideWidth: 300,
+      });
+    }
     if (width < 700) {
       const cards = bounds.cards.filter((card) =>
         [
