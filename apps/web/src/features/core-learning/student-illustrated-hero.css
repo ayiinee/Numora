@@ -173,6 +173,10 @@
     min-height: clamp(182px, 47vw, 232px);
   }
 
+  .student-illustrated-hero--pvp {
+    min-height: var(--student-hero-compact-height);
+  }
+
   .student-illustrated-hero::after {
     grid-area: 2 / 2;
     margin: 0 4px 2px 0;

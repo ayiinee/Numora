@@ -7,11 +7,13 @@ import { useQuery } from '@tanstack/react-query';
 import { Badge, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { useStudentToken } from './student-session';
-import { learningApi, request } from './api';
+import { learningApi } from './api';
+import { activityChapterImage, chapterImages } from './chapter-art';
+import { studentMaterialsQuery } from './materials-query';
 import { DataState } from './ui';
 import { HomeActivity } from './dashboard-presentation';
 import { StudentSectionHeader } from './student-section-header';
-import type { StudentMaterialsDto, MaterialChapterDto } from './generated-types';
+import type { MaterialChapterDto } from './generated-types';
 
 export function MaterialsHeader() {
   return <StudentSectionHeader title="Latihan Soal" />;
@@ -29,10 +31,7 @@ function MaterialsContent() {
   const token = useStudentToken();
   const router = useRouter();
   const params = useSearchParams();
-  const query = useQuery({
-    queryKey: ['student-materials'],
-    queryFn: () => request<StudentMaterialsDto>(token, '/students/me/materials'),
-  });
+  const query = useQuery(studentMaterialsQuery(token));
   const dashboard = useQuery({
     queryKey: ['student-dashboard'],
     queryFn: () => learningApi.dashboard(token),
@@ -95,7 +94,11 @@ function MaterialsContent() {
             />
           ) : activity ? (
             <Card className="materials-recent-card">
-              <HomeActivity item={activity} resume={dashboard.data.activeDrill} />
+              <HomeActivity
+                item={activity}
+                chapterImage={activityChapterImage(query.data?.chapters, activity.chapterId)}
+                resume={dashboard.data.activeDrill}
+              />
               {!dashboard.data.activeDrill && recentChapter?.continueSubchapterId && (
                 <Link
                   className="materials-recent-card__continue"
@@ -160,13 +163,6 @@ const categoryNames: Record<NonNullable<MaterialChapterDto['category']>, string>
   geometry: 'Geometri',
   numbers: 'Bilangan',
   statistics: 'Statistika',
-};
-
-const chapterImages: Record<NonNullable<MaterialChapterDto['category']>, string> = {
-  algebra: '/illustrations/chapters/algebra.webp',
-  geometry: '/illustrations/chapters/geometry.webp',
-  numbers: '/illustrations/chapters/numbers.webp',
-  statistics: '/illustrations/chapters/statistics.webp',
 };
 
 function MaterialChapterLink({ chapter }: { chapter: MaterialChapterDto }) {

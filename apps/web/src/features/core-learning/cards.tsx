@@ -62,12 +62,22 @@ export function ProgressSummary({ progress }: { progress: StudentProgress }) {
   );
 }
 
-export function ActivityRow({ item }: { item: AssessmentRecord }) {
+export function ActivityRow({
+  item,
+  chapterImage,
+}: {
+  item: AssessmentRecord;
+  chapterImage?: string | undefined;
+}) {
   const drill = item.activity === 'drill';
   const content = (
     <>
       <span className={`icon-tile ${drill ? 'accent-0' : 'accent-1'}`}>
-        <Icon name={drill ? 'target' : 'clipboard'} />
+        {chapterImage ? (
+          <img src={chapterImage} width={32} height={32} alt="" />
+        ) : (
+          <Icon name={drill ? 'target' : 'clipboard'} />
+        )}
       </span>
       <div className="row-copy">
         <span className="eyebrow">

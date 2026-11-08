@@ -1588,7 +1588,7 @@ a.settings-row:hover {
   }
   .app-topbar.numora-top-bar--context,
   .app-topbar.numora-top-bar--identity {
-    background: var(--header-gradient);
+    background: var(--student-header-background, var(--header-gradient));
     color: var(--color-text-inverse);
   }
   .app-topbar.numora-top-bar--context .numora-brand,
@@ -4498,7 +4498,6 @@ a.settings-row:hover {
   gap: 10px;
   min-height: 64px;
   padding: 10px 16px;
-  background: linear-gradient(110deg, var(--color-primary), var(--color-primary-strong));
   color: white;
 }
 .pvp-header h1 {
@@ -5758,7 +5757,6 @@ a.settings-row:hover {
   min-height: 80px;
   padding: 16px 24px;
   color: var(--color-text-inverse);
-  background: var(--header-gradient);
 }
 .student-account-header > div {
   flex: 1;
@@ -7787,6 +7785,8 @@ a.settings-row:hover {
 .materials-recent-card {
   --card-padding: 14px;
   --card-radius: 20px;
+  --card-background: linear-gradient(120deg, var(--numora-purple-100), var(--numora-purple-50));
+  --card-border: 1px solid var(--numora-purple-200);
 }
 .materials-recent-card .sh-activity {
   display: grid;
@@ -7804,7 +7804,7 @@ a.settings-row:hover {
   display: grid;
   place-items: center;
   border-radius: 12px;
-  background: var(--numora-peach-100);
+  background: var(--color-surface-raised);
   overflow: hidden;
 }
 .materials-recent-card .sh-activity__icon img {
@@ -7833,6 +7833,7 @@ a.settings-row:hover {
   grid-column: 2;
   grid-row: 2;
   display: flex;
+  align-items: center;
   flex-wrap: wrap;
   gap: 6px;
   color: var(--color-text-muted);
@@ -7844,6 +7845,18 @@ a.settings-row:hover {
   background: var(--color-selected);
   color: var(--color-primary);
   padding: 2px 6px;
+}
+.materials-recent-card .sh-activity__xp {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+  background: var(--numora-gold-100);
+  color: var(--color-text);
+  font-weight: 700;
+}
+.materials-recent-card .sh-activity__xp img {
+  width: 16px;
+  height: auto;
 }
 .materials-recent-card .sh-activity time {
   grid-column: 3;
@@ -7871,6 +7884,14 @@ a.settings-row:hover {
 .materials-recent-card .home-resume {
   margin: 8px 0 0;
   padding-top: 8px;
+  border-top: 1px solid var(--numora-purple-200);
+}
+.materials-recent-card .home-resume a {
+  background: var(--color-primary);
+  color: var(--color-text-inverse);
+}
+.materials-recent-card .home-resume a:hover {
+  background: var(--color-primary-strong);
 }
 .student-identity__bell {
   position: relative;
@@ -7892,7 +7913,6 @@ a.settings-row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: var(--header-gradient);
   color: white;
   padding: 14px 16px;
   min-height: 66px;
@@ -7911,14 +7931,18 @@ a.settings-row:hover {
   color: white;
   text-align: center;
 }
-.materials-header,
-.pvp-ranking-shell .pvp-header {
-  background-color: var(--numora-purple-700);
-  background-image:
+.app-shell--student {
+  --student-header-background:
     linear-gradient(rgb(131 36 255 / 32%), rgb(131 36 255 / 32%)),
-    url('/illustrations/student-home/header-pattern.png');
-  background-position: center;
-  background-size: cover;
+    var(--numora-purple-700) url('/illustrations/student-home/header-pattern.png') center / cover;
+}
+.materials-header,
+.adventure-summary,
+.pvp-header,
+.student-account-header,
+.notification-header,
+.student-home-shell .sh-identity {
+  background: var(--student-header-background);
 }
 .materials-header h1 {
   margin: 0;

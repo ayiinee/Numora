@@ -597,43 +597,13 @@
   margin-bottom: var(--space-5);
 }
 .student-home-shell .sh-identity {
-  position: relative;
-  isolation: isolate;
   grid-template-columns: minmax(0, 1fr);
   overflow: hidden;
   gap: 7px;
   padding: 11px 16px;
   border-radius: 22px;
-  background: var(--numora-purple-700);
   color: var(--color-text-inverse);
   box-shadow: var(--shadow-sm);
-}
-.student-home-shell .sh-identity::before {
-  content: '';
-  position: absolute;
-  z-index: 1;
-  inset: 0;
-  background: rgb(106 30 205 / 18%);
-  pointer-events: none;
-}
-.student-home-shell .sh-identity__pattern {
-  position: absolute;
-  z-index: 0;
-  top: 0;
-  right: 0;
-  width: 55%;
-  height: 100%;
-  max-width: none;
-  object-fit: cover;
-  object-position: center;
-  opacity: 0.24;
-  pointer-events: none;
-}
-.student-home-shell .sh-identity__top,
-.student-home-shell .sh-progress,
-.student-home-shell .sh-identity__announcement {
-  position: relative;
-  z-index: 2;
 }
 .student-home-shell .sh-identity__top {
   gap: 8px;
@@ -896,6 +866,9 @@
   height: 100%;
   object-fit: contain;
 }
+.student-home-shell .sh-activity__icon--chapter {
+  background: var(--numora-purple-50);
+}
 .student-home-shell .sh-activity__body > strong {
   font-size: 15px;
 }
@@ -1042,9 +1015,6 @@
   .student-home-shell .app-mobile-header .sh-identity {
     border-radius: 0 0 18px 18px;
   }
-  .student-home-shell .app-mobile-header .sh-identity__pattern {
-    width: 100%;
-  }
   .student-home-shell .sh-desktop-identity {
     display: none;
   }
@@ -1064,7 +1034,7 @@
     --student-hero-body-size: clamp(10px, 2.7vw, 11px);
     --student-hero-badge-size: 9px;
     --student-hero-badge-top: 8px;
-    min-height: 150px;
+    min-height: var(--student-hero-compact-height);
   }
   .student-home-shell .sh-hero .student-illustrated-hero__badges {
     gap: 2px;

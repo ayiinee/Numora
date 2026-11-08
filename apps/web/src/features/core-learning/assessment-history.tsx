@@ -9,6 +9,8 @@ import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import { ActivityRow, ProgressSummary } from './cards';
 import { useAssessmentHistory } from './assessment-queries';
+import { activityChapterImage } from './chapter-art';
+import { studentMaterialsQuery } from './materials-query';
 
 export function AssessmentScreen() {
   return (
@@ -29,6 +31,10 @@ function AssessmentContent({ token }: { token: string }) {
   });
   const query = useAssessmentHistory(token, true, levelId);
   const records = query.data?.pages.flatMap((page) => page.records) ?? [];
+  const materials = useQuery({
+    ...studentMaterialsQuery(token),
+    enabled: records.some((item) => item.chapterId),
+  });
   return (
     <div className="assessment-history-layout">
       <aside className="assessment-history-progress">
@@ -54,7 +60,11 @@ function AssessmentContent({ token }: { token: string }) {
         ) : records.length ? (
           <div className="activity-list">
             {records.map((item) => (
-              <ActivityRow key={item.attemptId} item={item} />
+              <ActivityRow
+                key={item.attemptId}
+                item={item}
+                chapterImage={activityChapterImage(materials.data?.chapters, item.chapterId)}
+              />
             ))}
           </div>
         ) : (

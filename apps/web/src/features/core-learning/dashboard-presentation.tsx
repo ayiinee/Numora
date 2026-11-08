@@ -29,14 +29,6 @@ export function StudentHomeIdentityHeader({
   const announcement = tryout?.state === 'open' || tryout?.state === 'inProgress';
   return (
     <div className="sh-identity">
-      <img
-        className="sh-identity__pattern"
-        src="/illustrations/student-home/header-pattern.png"
-        width="1080"
-        height="2160"
-        alt=""
-        aria-hidden="true"
-      />
       <div className="sh-identity__top">
         <Link
           href="/student/profile"
@@ -326,24 +318,30 @@ export function HomeResume({ attempt }: { attempt: DashboardDrillDto }) {
 
 export function HomeActivity({
   item,
+  chapterImage,
   resume,
 }: {
   item: AssessmentRecord;
+  chapterImage?: string | undefined;
   resume?: DashboardDrillDto | null | undefined;
 }) {
   const ready = item.resultState === 'ready' && item.activity !== 'pretest';
   const body = (
     <>
-      <span className={`sh-activity__icon sh-activity__icon--${item.activity}`}>
-        {item.activity === 'pretest' ? (
-          <Icon name="target" width={25} height={25} />
-        ) : (
+      <span
+        className={`sh-activity__icon sh-activity__icon--${item.activity}${chapterImage ? ' sh-activity__icon--chapter' : ''}`}
+      >
+        {chapterImage ? (
+          <img src={chapterImage} width={36} height={36} alt="" />
+        ) : item.activity === 'tryout' ? (
           <img
-            src={`/illustrations/student-home/reference-${item.activity}-activity.png`}
+            src="/illustrations/student-home/reference-tryout-activity.png"
             width="65"
             height="62"
             alt=""
           />
+        ) : (
+          <Icon name="target" width={25} height={25} />
         )}
       </span>
       <span className="sh-activity__body">

@@ -387,6 +387,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
               attemptId: 'completed-fixture',
               activity: 'drill',
               title: 'Faktorisasi Aljabar Kuadrat',
+              chapterId,
               subchapterTitle: 'Subbab 2.1',
               submittedAt: '2026-10-03T02:30:00Z',
               resultState: 'ready',
@@ -463,8 +464,10 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByText('1.890 XP')).toBeVisible();
     await expect(page.getByText('Bu Ratna, M.Pd.')).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
+    const pattern = /header-pattern\.png/;
+    await expect(page.locator('.sh-identity:visible')).toHaveCSS('background-image', pattern);
     const imageSlots = [
-      '.sh-identity__pattern',
+      '.sh-activity__icon img[src="/illustrations/chapters/algebra.webp"]',
       '.sh-identity__bell img',
       '.sh-identity__announcement img',
       '.sh-shortcut__icon img',
@@ -723,6 +726,42 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     }
     await page.locator('.sh-identity__bell:visible').click();
     await expect(page).toHaveURL('/student/notifications');
+    await expect(page.locator('.notification-header')).toHaveCSS('background-image', pattern);
+    if (width === 390) {
+      await page.goto('/student');
+      const homeHero = page.locator('.sh-carousel__slide--drill .sh-hero');
+      const homeHeight = await homeHero.evaluate(
+        (element) => (element as HTMLElement).offsetHeight,
+      );
+
+      await page.goto('/student/learn');
+      const recent = page.locator('.materials-recent-card');
+      await expect(recent.locator('.sh-activity__icon img')).toHaveAttribute(
+        'src',
+        '/illustrations/chapters/algebra.webp',
+      );
+      await expect(recent).toHaveCSS('background-image', /linear-gradient/);
+      await expect(recent.getByRole('link', { name: 'Lanjutkan latihan' })).toBeVisible();
+      await recent.screenshot({ path: testInfo.outputPath('latihan-aktivitas-390.png') });
+
+      await page.goto('/student/pvp');
+      const pvpHero = page.locator('.student-illustrated-hero--pvp');
+      expect(await pvpHero.evaluate((element) => (element as HTMLElement).offsetHeight)).toBe(
+        homeHeight,
+      );
+      await pvpHero.screenshot({ path: testInfo.outputPath('pvp-hero-390.png') });
+
+      await page.goto('/student/profile');
+      const profileHeader = page.locator('main .materials-header');
+      await expect(profileHeader.getByRole('heading', { name: 'Profil' })).toHaveCSS(
+        'text-align',
+        'center',
+      );
+      await expect(profileHeader).toHaveCSS('background-image', pattern);
+      await expect(profileHeader.getByRole('link')).toHaveCount(0);
+      await expect(page.locator('#pengaturan-akun')).toBeAttached();
+      await profileHeader.screenshot({ path: testInfo.outputPath('profil-header-390.png') });
+    }
     expect(mutations).toEqual([]);
   });
 }

@@ -6,6 +6,8 @@ import { EmptyState, Icon } from '@tka/ui';
 import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
 import { learningApi } from './api';
+import { activityChapterImage } from './chapter-art';
+import { studentMaterialsQuery } from './materials-query';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
@@ -51,6 +53,10 @@ function DashboardReady({
   const avatar =
     state.status === 'ready' ? state.session.user?.user_metadata?.avatar_url : undefined;
   const avatarUrl = typeof avatar === 'string' ? avatar : undefined;
+  const materials = useQuery({
+    ...studentMaterialsQuery(token),
+    enabled: data.activities.some((item) => item.chapterId),
+  });
   const tryout = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
@@ -94,7 +100,11 @@ function DashboardReady({
             {data.activities.length ? (
               <div className="sh-activities__list">
                 {data.activities.map((item) => (
-                  <HomeActivity key={item.attemptId} item={item} />
+                  <HomeActivity
+                    key={item.attemptId}
+                    item={item}
+                    chapterImage={activityChapterImage(materials.data?.chapters, item.chapterId)}
+                  />
                 ))}
               </div>
             ) : (

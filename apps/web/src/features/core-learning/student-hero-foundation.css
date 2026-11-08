@@ -11,6 +11,7 @@
 
 @media (max-width: 699px) {
   .student-illustrated-hero {
+    --student-hero-compact-height: 150px;
     --student-hero-title-size: clamp(16px, 4.5vw, 19px);
     --student-hero-body-size: 10px;
     --student-hero-copy-gap: 3px;
