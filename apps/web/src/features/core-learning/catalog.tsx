@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useMutation } from '@tanstack/react-query';
+import { skipToken, useQuery, useMutation } from '@tanstack/react-query';
 import { Card, EmptyState, Icon, ProgressBar } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { learningApi, request } from './api';
@@ -93,6 +93,11 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
     queryKey: ['subchapter', subchapterId],
     queryFn: () => learningApi.subchapter(token, subchapterId),
   });
+  const chapterId = query.data?.subchapter.chapterId;
+  const chapterQuery = useQuery({
+    queryKey: ['chapter', chapterId],
+    queryFn: chapterId ? () => learningApi.chapter(token, chapterId) : skipToken,
+  });
   const start = useMutation({
     mutationFn: (levelId: string) => learningApi.start(token, levelId),
     onSuccess: (attempt) => router.push(`/student/drill/${attempt.id}`),
@@ -102,6 +107,12 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   const { levels, subchapter } = query.data;
+  const chapter = chapterQuery.data?.chapter;
+  const chapterLabel = chapter
+    ? `Bab ${chapter.order} · ${chapter.title}`
+    : chapterQuery.isPending
+      ? 'Memuat bab…'
+      : 'Bab tidak tersedia';
   const completed = levels.filter((level) => level.status === 'completed').length;
   return (
     <div className="learning-adventure">
@@ -124,6 +135,7 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
         <LevelPath
           key={query.data.subchapter.id}
           data={query.data}
+          chapterLabel={chapterLabel}
           pending={start.isPending}
           requestedLevelId={start.variables}
           startError={start.error?.message}

@@ -6,20 +6,20 @@ import { useEffect, useRef, useState } from 'react';
 import type { Level, SubchapterDetail } from './types';
 import './level-path.css';
 
-// Trail centers in forest-trail.webp, measured from the bottom toward the top.
+// Trail centers in owl-trail.webp, measured from the bottom toward the top.
 const stations = [
   [69, 89],
-  [36, 77],
-  [56, 57],
-  [24, 37],
-  [72, 13],
+  [31, 71],
+  [58, 54],
+  [26, 36],
+  [70, 14],
 ] as const;
 
 const levelStatus = {
-  locked: { label: 'Terkunci', icon: 'lock' },
-  open: { label: 'Terbuka', icon: 'play' },
-  inProgress: { label: 'Sedang dikerjakan', icon: 'play' },
-  completed: { label: 'Selesai', icon: 'check' },
+  locked: 'Terkunci',
+  open: 'Terbuka',
+  inProgress: 'Sedang dikerjakan',
+  completed: 'Selesai',
 } as const;
 
 const levelAction = {
@@ -31,16 +31,16 @@ const levelAction = {
 function revealMarker(marker: HTMLElement, dock: HTMLDivElement | null) {
   const rect = marker.getBoundingClientRect();
   const visibleBottom = dock?.getBoundingClientRect().top || window.innerHeight;
-  if (rect.bottom > visibleBottom - 28 || rect.top < 32) {
+  if (rect.bottom > visibleBottom - 32 || rect.top < 32) {
     marker.scrollIntoView?.({ block: 'center', behavior: 'instant' });
   }
 }
 
-function LevelStars({ stars }: { stars: number }) {
+function LevelStars({ stars, size = 15 }: { stars: number; size?: number }) {
   return (
     <span className="level-path__stars" aria-hidden="true">
       {[1, 2, 3].map((star) => (
-        <Icon key={star} name="star" width={15} height={15} data-earned={star <= stars} />
+        <Icon key={star} name="star" width={size} height={size} data-earned={star <= stars} />
       ))}
     </span>
   );
@@ -48,12 +48,14 @@ function LevelStars({ stars }: { stars: number }) {
 
 export function LevelPath({
   data,
+  chapterLabel,
   pending,
   requestedLevelId,
   startError,
   onStart,
 }: {
   data: SubchapterDetail;
+  chapterLabel: string;
   pending: boolean;
   requestedLevelId: string | undefined;
   startError: string | undefined;
@@ -94,15 +96,29 @@ export function LevelPath({
     setDialogOpen(true);
   };
 
-  const statusLabel = levelStatus[selected.status].label;
+  const statusLabel = levelStatus[selected.status];
+  const selectedLevel = `Level ${selected.order}`;
+  const latestStars = selected.latestStars;
   const detail = (
     <div className="level-path__details">
+      <div className="level-path__context">
+        <p>{data.subchapter.title}</p>
+        <p>{chapterLabel}</p>
+        {selected.title !== selectedLevel && <p>{selected.title}</p>}
+      </div>
       <p className="level-path__status">{statusLabel}</p>
       {selected.status === 'locked' ? (
         <p>Nilai minimal 80 pada level sebelumnya.</p>
       ) : (
         <>
-          <p>10 soal · Waktu berjalan tanpa batas</p>
+          <div className="level-path__rating">
+            <LevelStars stars={latestStars ?? 0} size={38} />
+            <p>
+              {latestStars == null
+                ? 'Bintang belum tercatat'
+                : `Bintang terakhir: ${latestStars} / 3`}
+            </p>
+          </div>
           <dl className="level-path__scores">
             <div>
               <dt>Nilai terakhir</dt>
@@ -113,12 +129,7 @@ export function LevelPath({
               <dd>{selected.bestScore ?? '—'}</dd>
             </div>
           </dl>
-          {selected.latestStars != null && (
-            <p className="level-path__rating">
-              <LevelStars stars={selected.latestStars} />
-              Bintang terakhir: {selected.latestStars} / 3
-            </p>
-          )}
+          <p className="level-path__meta">10 soal · Waktu berjalan tanpa batas</p>
           <Link
             className="level-path__history"
             href={`/student/assessment?levelId=${encodeURIComponent(selected.id)}`}
@@ -147,7 +158,7 @@ export function LevelPath({
         className="level-path"
         aria-label="Peta level latihan"
         role="list"
-        style={{ aspectRatio: `2 / ${3 * sectionCount}` }}
+        style={{ aspectRatio: `941 / ${1672 * sectionCount}` }}
       >
         {[...levels].reverse().map((level, position) => {
           const index = levels.length - position - 1;
@@ -163,12 +174,22 @@ export function LevelPath({
           const [x, y] = stations[station]!;
           const active = level.id === current?.id;
           const isSelected = level.id === selected.id;
-          const { label, icon } = levelStatus[level.status];
-          const number = index + 1;
-          const description = `Level ${number}, ${level.title}, ${label}`;
+          const levelName = `Level ${level.order}`;
+          const stars = level.status === 'locked' ? null : level.latestStars;
+          const description = [
+            levelName,
+            level.title === levelName ? null : level.title,
+            levelStatus[level.status],
+            stars == null ? null : `${stars} dari 3 bintang terakhir`,
+          ]
+            .filter(Boolean)
+            .join(', ');
           const medal = (
             <span className="level-path__medal" aria-hidden="true">
-              <Icon name={icon} width={24} height={24} />
+              <span>{level.order}</span>
+              {level.status === 'locked' && (
+                <Icon className="level-path__lock" name="lock" width={14} height={14} />
+              )}
             </span>
           );
           return (
@@ -186,9 +207,9 @@ export function LevelPath({
                   Kamu di sini
                 </span>
               )}
-              {!active && level.latestStars != null && level.status !== 'locked' && (
+              {stars != null && (
                 <span className="level-path__map-stars">
-                  <LevelStars stars={level.latestStars} />
+                  <LevelStars stars={stars} />
                 </span>
               )}
               {level.status === 'locked' ? (
@@ -216,9 +237,6 @@ export function LevelPath({
                   {medal}
                 </button>
               )}
-              <span className="level-path__number" aria-hidden="true">
-                Level {number}
-              </span>
             </li>
           );
         })}
@@ -240,7 +258,7 @@ export function LevelPath({
         <Dialog
           open
           className="level-path-dialog"
-          title={selected.title}
+          title={selectedLevel}
           pending={pending}
           onClose={() => setDialogOpen(false)}
         >

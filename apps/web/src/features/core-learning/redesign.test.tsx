@@ -51,6 +51,7 @@ vi.mock('./api', async (original) => ({
     assessmentHistory: vi.fn(),
     currentTryout: vi.fn(),
     startTryout: vi.fn(),
+    chapter: vi.fn(),
     subchapter: vi.fn(),
     start: vi.fn(),
   },
@@ -984,6 +985,10 @@ describe('subchapter level details', () => {
   const nativeClose = Object.getOwnPropertyDescriptor(prototype, 'close');
 
   beforeEach(() => {
+    vi.mocked(learningApi.chapter).mockResolvedValue({
+      chapter: { id: 'chapter-test', title: 'Aljabar fiktif', order: 2 },
+      subchapters: [],
+    });
     Object.defineProperties(prototype, {
       showModal: {
         configurable: true,
@@ -1028,6 +1033,8 @@ describe('subchapter level details', () => {
           status: 'inProgress',
           latestScore: 0,
           bestScore: 0,
+          latestStars: 2,
+          bestStars: 3,
         },
         {
           id: 'locked-test',
@@ -1058,12 +1065,18 @@ describe('subchapter level details', () => {
     expect(within(locked!).getByText(/Level 3, Level terkunci, Terkunci/)).toBeTruthy();
     const activeMedal = within(active!).getByRole('button');
     expect(activeMedal.getAttribute('aria-current')).toBe('step');
+    expect(activeMedal.getAttribute('aria-label')).toContain('2 dari 3 bintang terakhir');
+    expect(within(active!).getByText('2', { selector: '.level-path__medal span' })).toBeTruthy();
     const completedMedal = within(first!).getByRole('button', { name: /^Level 1,/ });
     fireEvent.click(completedMedal);
     expect(completedMedal.getAttribute('aria-pressed')).toBe('true');
     expect(activeMedal.getAttribute('aria-current')).toBe('step');
     expect(learningApi.start).not.toHaveBeenCalled();
-    const detail = within(screen.getByRole('dialog', { name: 'Level selesai' }));
+    const detail = within(screen.getByRole('dialog', { name: 'Level 1' }));
+    expect(detail.getByText('Level selesai')).toBeTruthy();
+    expect(detail.getByText('Subbab fiktif')).toBeTruthy();
+    expect(await detail.findByText('Bab 2 · Aljabar fiktif')).toBeTruthy();
+    expect(learningApi.chapter).toHaveBeenCalledWith('test-token', 'chapter-test');
     expect(detail.getByText('Bintang terakhir: 0 / 3')).toBeTruthy();
     expect(detail.getByText('0')).toBeTruthy();
     expect(detail.getByText('100')).toBeTruthy();
@@ -1075,7 +1088,7 @@ describe('subchapter level details', () => {
     expect(document.activeElement).toBe(completedMedal);
     fireEvent.click(activeMedal);
     fireEvent.click(
-      within(screen.getByRole('dialog', { name: 'Level terbuka' })).getByRole('button', {
+      within(screen.getByRole('dialog', { name: 'Level 2' })).getByRole('button', {
         name: 'Lanjutkan latihan',
       }),
     );
@@ -1094,8 +1107,8 @@ describe('subchapter level details', () => {
   });
 
   it.each([
-    { status: 'completed', level: 'Judul 2', label: 'Selesai', action: 'Latihan lagi' },
-    { status: 'locked', level: 'Judul 1', label: 'Terkunci', action: null },
+    { status: 'completed', level: 'Level 2', label: 'Selesai', action: 'Latihan lagi' },
+    { status: 'locked', level: 'Level 1', label: 'Terkunci', action: null },
   ] as const)(
     'uses the appropriate fallback when all levels are $status',
     async ({ status, level, label, action }) => {
@@ -1152,7 +1165,8 @@ describe('subchapter level details', () => {
       });
     renderStudent(<SubchapterScreen />);
     fireEvent.click(await screen.findByRole('button', { name: /^Level 1, Latihan tunggal,/ }));
-    const detail = within(screen.getByRole('dialog', { name: 'Latihan tunggal' }));
+    const detail = within(screen.getByRole('dialog', { name: 'Level 1' }));
+    expect(detail.getByText('Bintang belum tercatat')).toBeTruthy();
     const startButton = detail.getByRole('button', { name: 'Mulai latihan' });
     fireEvent.click(startButton);
     fireEvent.click(startButton);

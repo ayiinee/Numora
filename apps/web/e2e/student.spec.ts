@@ -1981,7 +1981,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             status: i < 2 ? 'completed' : i === 2 ? 'inProgress' : 'locked',
             latestScore: i === 0 ? 0 : i === 1 ? 100 : null,
             bestScore: i < 2 ? 100 : null,
-            latestStars: i === 0 ? 0 : i === 1 ? 3 : null,
+            latestStars: i === 0 ? 0 : i === 1 ? 3 : i === 2 ? 2 : null,
           })),
         },
       }),
@@ -2110,6 +2110,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     }
     await expect(currentMedal).toHaveAttribute('aria-current', 'step');
     await expect(currentMedal).toHaveAttribute('aria-pressed', 'true');
+    await expect(currentMedal).toHaveText('3');
+    await expect(currentMedal).toHaveAttribute('aria-label', /2 dari 3 bintang terakhir/);
     expect((await firstMedal.boundingBox())!.y).toBeGreaterThan(
       (await currentMedal.boundingBox())!.y,
     );
@@ -2128,7 +2130,10 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     if (width < 960) await expect.poll(() => isAboveDock(firstMedal)).toBe(true);
     await page.keyboard.press('Enter');
     const detail = page.getByRole('dialog');
-    await expect(detail.getByRole('heading', { name: 'Pengenalan Suku & Faktor' })).toBeVisible();
+    await expect(detail.getByRole('heading', { name: 'Level 1' })).toBeVisible();
+    await expect(detail.getByText('Pengenalan Suku & Faktor')).toBeVisible();
+    await expect(detail.getByText('Subbab 2.1: Faktorisasi & Bentuk Kuadrat')).toBeVisible();
+    await expect(detail.getByText('Bab 1 · Aljabar fixture')).toBeVisible();
     const dialogBox = (await detail.boundingBox())!;
     const viewport = page.viewportSize()!;
     expect(Math.abs(dialogBox.x + dialogBox.width / 2 - viewport.width / 2)).toBeLessThan(12);
@@ -2153,7 +2158,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         (await page.locator('.student-bottom-nav').boundingBox())!.y,
       );
       await dockButton.click();
-      await expect(detail.getByRole('heading', { name: 'Pengenalan Suku & Faktor' })).toBeVisible();
+      await expect(detail.getByRole('heading', { name: 'Level 1' })).toBeVisible();
       await detail.getByRole('button', { name: 'Tutup dialog' }).click();
       await expect(dockButton).toBeFocused();
     }

@@ -30,7 +30,7 @@
   padding: 0;
   list-style: none;
   border-radius: var(--radius-xl);
-  background: #417027 url('/illustrations/level-path/forest-trail.webp') repeat-y top center / 100%
+  background: #8db828 url('/illustrations/level-path/owl-trail.webp') repeat-y top center / 100%
     auto;
   box-shadow: var(--shadow-sm);
 }
@@ -81,6 +81,11 @@
   position: relative;
   isolation: isolate;
   color: white;
+  font-size: clamp(24px, 6vw, 34px);
+  font-weight: 800;
+  line-height: 1;
+  padding-bottom: 4px;
+  text-shadow: 0 2px 3px rgb(26 8 43 / 65%);
 }
 
 .level-path__medal::before {
@@ -93,14 +98,24 @@
 }
 
 .level-path__step--completed .level-path__medal::before {
-  filter: hue-rotate(166deg) drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
+  filter: hue-rotate(205deg) brightness(1.2) drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
 }
 
 .level-path__step--locked .level-path__medal::before {
   filter: grayscale(1) brightness(1.65) drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
 }
 
-.level-path__number,
+.level-path__lock {
+  position: absolute;
+  right: -2px;
+  bottom: 0;
+  box-sizing: content-box;
+  padding: 3px;
+  border: 1px solid white;
+  border-radius: var(--radius-full);
+  background: #424052;
+}
+
 .level-path__here,
 .level-path__map-stars {
   position: absolute;
@@ -110,32 +125,19 @@
   pointer-events: none;
 }
 
-.level-path__number,
 .level-path__here {
   padding: 2px 8px;
   font-size: 11px;
   font-weight: 800;
   line-height: 1.4;
-}
-
-.level-path__number {
-  top: calc(100% + 5px);
-  background: #fff6da;
-  color: #53350f;
-}
-
-.level-path__here,
-.level-path__map-stars {
   bottom: calc(100% + 7px);
-}
-
-.level-path__here {
   background: var(--color-primary-strong);
   color: white;
 }
 
 .level-path__map-stars {
   display: flex;
+  top: calc(100% + 6px);
   padding: 3px 6px;
   background: #fff6da;
 }
@@ -168,8 +170,25 @@
 }
 
 .level-path__status {
+  justify-self: center;
   color: var(--color-primary-strong);
   font-weight: 800;
+}
+
+.level-path__context,
+.level-path__meta {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.level-path__context {
+  display: grid;
+  gap: 4px;
+}
+
+.level-path__context p:first-child {
+  color: var(--color-text);
+  font-weight: var(--font-bold);
 }
 
 .level-path__scores {
@@ -180,9 +199,10 @@
 }
 
 .level-path__scores div {
-  padding: 8px;
+  padding: 10px 6px;
   border-radius: var(--radius-md);
   background: var(--color-primary-light);
+  text-align: center;
 }
 
 .level-path__scores dt {
@@ -192,14 +212,18 @@
 .level-path__scores dd {
   margin: 0;
   color: var(--color-text);
-  font-size: var(--text-lg);
+  font-size: clamp(24px, 6vw, 30px);
+  line-height: 1.2;
   font-weight: 800;
 }
 
 .level-path__rating {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.level-path__rating .level-path__stars {
   gap: 8px;
 }
 
@@ -214,8 +238,20 @@
   text-underline-offset: 3px;
 }
 
-.level-path-dialog .numora-dialog__header button {
-  flex-shrink: 0;
+.level-path-dialog .numora-dialog__header {
+  display: grid;
+  grid-template-columns: var(--touch-target-min) minmax(0, 1fr) var(--touch-target-min);
+  gap: 4px;
+}
+
+.level-path-dialog .numora-dialog__header h2 {
+  grid-column: 2;
+  text-align: center;
+  font-size: var(--text-2xl);
+}
+
+.level-path-dialog .numora-dialog__content {
+  margin-top: 8px;
 }
 
 .adventure-mobile-action {
