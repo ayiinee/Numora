@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** sidebar siswa menempatkan Profil sebagai menu terakhir di atas identitas akun dan memakai ikon jam untuk Tryout. Kartu motivasi dihapus. Navigasi bawah ponsel mengikuti urutan Belajar, Latihan, Tryout, PvP, dan Profil.
+
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Content](ADMIN_CONTENT_PARITY_2026-11-02.md) memperbarui limited structures, detail laporan, JSON generator lama dan frame akses sesuai fondasi modern. Struktur tetap baca saja, tanpa data individual atau aksi Operations; layar bank/impor/Pretest/Generator/IRT existing tetap digunakan bersama. Review/merge/deploy terpisah dari hasil lokal.
 
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Operasional](ADMIN_OPERATIONS_PARITY_2026-11-02.md) melepas CSS workspace legacy dari Sekolah & credential serta Pengguna & kelas agar memakai fondasi Super Admin, termasuk loading dan akses ditolak. Pengembangan berlanjut sambil menunggu review independen #117/#118; approval, merge dan deploy tetap terpisah.
@@ -32,7 +34,7 @@
 
 **ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.
 
-**ENGINEERING DECISION — owner UI request, 7 October 2026:** the shared outer background token remains `#F3ECCB`; Content/Operations retain their owner-requested scoped grey AdminLTE canvas. Cards, headers, hero panels, and state surfaces retain their semantic colors.
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026.** Warna latar dasar bersama memakai token `--numora-ivory` (`#FEFDF9`). Warna latar khusus AdminLTE mengikuti panduan modul Admin.
 
 **ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.
 **ENGINEERING UPDATE — 7 October 2026, Operations redesign:** Admin Operasional now follows the Admin Content AdminLTE palette and shell, with compact school/credential panels and responsive user/class filters and details. Shared styling is opt-in for Content/Operations; Super keeps its previous theme. [Operations redesign and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md#redesign-adminlte).

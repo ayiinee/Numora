@@ -706,12 +706,18 @@ describe('responsive learning composition', () => {
       'page',
     );
     expect(within(nav).getAllByRole('link')).toHaveLength(9);
+    expect(within(nav).getAllByRole('link').at(-1)).toBe(
+      within(nav).getByRole('link', { name: 'Profil' }),
+    );
     expect(within(nav).getByRole('link', { name: 'Feedback dari Guru' }).getAttribute('href')).toBe(
       '/student/feedback',
     );
+    const bottomNav = screen.getByRole('navigation', { name: 'Navigasi utama' });
     expect(
-      within(screen.getByRole('navigation', { name: 'Navigasi utama' })).getAllByRole('link'),
-    ).toHaveLength(5);
+      within(bottomNav)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Belajar', 'Latihan', 'Tryout', 'PvP', 'Profil']);
     view.rerender(<AppShell focus>Soal</AppShell>);
     expect(screen.queryByRole('navigation')).toBeNull();
   });
