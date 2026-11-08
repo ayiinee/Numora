@@ -1,0 +1,75 @@
+{
+  "schemaVersion": 1,
+  "id": "ADM-001",
+  "role": "admin",
+  "title": "Admin mengunggah Excel bergambar hingga media dapat dibaca siswa",
+  "priority": 1,
+  "sources": [
+    { "id": "UPLOAD", "path": "docs/content/UPLOAD_FIRST_WORKFLOW.md" },
+    { "id": "PACKAGE", "path": "docs/content/CONTENT_PACKAGE_PIPELINE.md" }
+  ],
+  "cases": [
+    {
+      "id": "TC-001",
+      "title": "Upload dan pemetaan dapat dilanjutkan setelah halaman dimuat ulang",
+      "source": "UPLOAD",
+      "checks": ["upload-client", "upload-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-002",
+      "title": "Kegagalan media dan retry menjaga receipt dan draft tetap konsisten",
+      "source": "UPLOAD",
+      "checks": ["upload-client", "upload-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-003",
+      "title": "Paket valid diterbitkan dan media mengikuti hak akses serta fase assessment",
+      "source": "PACKAGE",
+      "checks": ["upload-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-004",
+      "title": "Origin staging dapat menulis dan membaca media R2 sesuai izin",
+      "source": "UPLOAD",
+      "checks": ["r2-staging"],
+      "applicability": "required"
+    }
+  ],
+  "checks": [
+    {
+      "id": "upload-client",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/admin/content-excel-api.test.ts",
+        "apps/web/src/features/admin/content-excel-preview.test.tsx"
+      ],
+      "minimumTests": 6
+    },
+    {
+      "id": "upload-db",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/content/content-preview.integration.spec.ts",
+        "apps/api/src/modules/content/media-uploads.integration.spec.ts",
+        "apps/api/src/modules/content/media-uploads.spec.ts",
+        "apps/api/src/modules/content/r2-media.storage.spec.ts"
+      ],
+      "minimumTests": 37
+    },
+    {
+      "id": "r2-staging",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": ["qa/scenarios/admin/ADM-001/MANUAL_CHECKLIST.md"],
+      "minimumTests": 1
+    }
+  ]
+}
