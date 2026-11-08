@@ -43,7 +43,8 @@ export function groupDrillCandidates(candidates: DrillCandidate[]) {
   const families = new Map<string, DrillCandidate[]>();
   for (const candidate of candidates) {
     const media = candidate.version.media;
-    if (media !== null && (!Array.isArray(media) || media.length !== 0)) continue;
+    // Some imported text-only versions store an empty JSON object instead of an empty array.
+    if (media !== null && (typeof media !== 'object' || Object.keys(media).length > 0)) continue;
     try {
       decodePvpSingleChoice(candidate.version);
     } catch (error) {

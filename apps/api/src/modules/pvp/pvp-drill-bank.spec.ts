@@ -89,9 +89,19 @@ describe('PvP random Drill sampling', () => {
     missingExplanation.version.explanation = { text: '' };
     const good = candidate(6);
     good.version.media = [];
+    const importedWithoutMedia = candidate(7);
+    importedWithoutMedia.version.media = {};
     expect(
-      groupDrillCandidates([badKey, pgk, image, invalidMedia, missingExplanation, good]),
-    ).toEqual([[good]]);
+      groupDrillCandidates([
+        badKey,
+        pgk,
+        image,
+        invalidMedia,
+        missingExplanation,
+        good,
+        importedWithoutMedia,
+      ]),
+    ).toEqual([[good], [importedWithoutMedia]]);
   });
 
   it.each([10, 24])('samples ten unique families from %i with controlled randomness', (count) => {
