@@ -1,4 +1,15 @@
-# Current source — PRD v0.6 Final
+# Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
+
+**ENGINEERING DECISION — pemilik, 8 November 2026:** [amendemen v2](../AI_IRT_V2_CONTEXT.md) menggantikan target lama yang bertentangan. Pemetaan berikut membedakan keputusan target dari implementasi pada commit acuan; tabel historis di bawah tidak membatalkannya.
+
+| Perubahan target yang disetujui | Area implementasi terkait | Gate yang belum selesai |
+|---|---|---|
+| Drill A/B reguler sejak awal, original+varian aktif, assignment tetap | `learning/drill.policy.ts`, assessment packages, experiment/assignment, exposure | Forward migration untuk index/guard lama; randomisasi, pin retry dan QA |
+| Concurrent IRT Level dan adjustment hanya DRIFT; PASS freeze item | IRT snapshot/compute/adoption, generator config/version | Scientific engine, policy threshold/anchor, review Curriculum dan bounded adjuster |
+| Tryout multi-arm, satu attempt/siswa/batch | Tryout batch/package relation, allocation dan lifecycle | Multi-package contract, assignment/uniqueness dan frozen package list |
+| Nilai+pembahasan tanpa ranking; fallback per arm maksimal 72 jam | Participant result, mapping, finalization/readers dan UI | Respondent producer v3, mapping theta, detail policy fallback dan release per arm |
+| IRT Indikator dan Bab terpisah | Measurement contexts, linked evidence dan ability snapshots | Model/linking/coverage/precision tervalidasi; bukan rata-rata theta |
+| Histori tetap, review manusia awal, XP activity tetap | Version pins, approvals, XP ledger dan audit | Penerimaan integrasi; kompensasi insiden perlu keputusan eksplisit |
 
 **ENGINEERING DECISION — instruksi pemilik, 30 Oktober 2026:** Analytics menjadi dashboard dan menu pertama/tujuan `/admin` untuk Super Admin aktif dengan capability Analytics. Operations tetap ke sekolah dan Content/Data/Moderation tetap ke konten; assignment kosong tidak memperoleh modul. Tujuan Super Admin pada keputusan 27 Oktober di bawah menjadi konteks historis. Tidak ada Ringkasan baru, perubahan capability server, rumus, migrasi, atau data historis. [Pemetaan agregat dan penerimaan UI-04](../design/ADMIN_ANALYTICS_UX_2026-10-30.md).
 

@@ -1,5 +1,7 @@
 # Variant and IRT persistence
 
+**ENGINEERING DECISION — owner-approved target, 8 November 2026:** read the [v2 context and reconciliation](../AI_IRT_V2_CONTEXT.md) first. Day-one regular A/B replaces the separate original pilot and reward-free experiments; two active Drill arms replace the one-pool target. Tryout becomes multi-package with per-arm fallback within 72 hours and no score ranking. Existing schema/guard descriptions below are an implementation baseline, not evidence that v2 is implemented. Existing migrations must remain immutable; change guards through reviewed forward migrations, not bypasses.
+
 **ENGINEERING UPDATE — JOB-10 foundation:** a main-owned immutable dispatch table now authorizes one execution per manual retry generation. `compute_executions.dispatch_id` is nullable for preserved PR #51 history, and canonical batches have a unique source artifact. New `irt_input_dispatches_v3` exposes only dispatch ID/request/generation to compute. [Admin/Redis handoff and runbook](../development/IRT_V3_RUNBOOK.md) implements CALIBRATE_TRYOUT snapshots and atomic evidence/parameter adoption, default off. No respondent score, activation or publication is enabled. Existing migrations are unchanged; 0018 appends schema/guards and preserves legacy v1/v2 and unmanaged PR #51 helper behavior.
 
 **ENGINEERING DECISION — 3 October 2026:** implement the database plan requested by
@@ -22,10 +24,12 @@ guessing; PGK stores ordinal categories/GPCM steps separately from weighted prod
 
 `questions.id` identifies a family. Lineage pins the original version. Content/rubrics and
 package/attempt snapshots are preserved after use. REGULAR attempts retain existing behavior.
-ORIGINAL_PILOT/VARIANT_AB reuse canonical attempts with separate assignments and no product
-grade, progress, stars or XP. Pilot precedes A/B; A/B requires valid baseline/references and
-approved policies. Main executes cohorts/arms; compute proposes requirements and scientific
-inclusion within operational eligibility. Replacement candidates require new trials/evidence.
+The existing ORIGINAL_PILOT/VARIANT_AB foundation uses separate assignments without product
+grade, progress, stars or XP and requires an original baseline before A/B. These are legacy
+implementation constraints, superseded as target policy by v2 regular, rewarded A/B without
+a separate original pilot. Main still owns operational assignment; compute owns scientific
+selection within eligibility. Concurrent original/anchor quality and comparison gates remain
+required. Replacement candidates require new versions, content review and fresh evidence.
 
 Exposure records all server-issued item/explanation payloads across modules, conservatively,
 without claiming the student read them. Reservation prioritizes learning: access remains
@@ -45,25 +49,31 @@ Generation artifacts use `payload.candidateIds` to identify the sealed candidate
 that main may import. Import checks the actual candidate content, pinned rubric, lineage
 and digest. Candidate creation requires a live execution lease; no candidate may be
 appended after an execution has completed and been accepted.
-Imported variants cannot enter regular Drill delivery until main records a READY
-distribution decision backed by passing Compare evidence in that level's context.
+Existing guards prevent imported variants entering regular Drill until a READY distribution
+decision backed by passing Compare evidence in that level's context. V2 instead permits
+content-approved provisional distribution before empirical PASS; implementing that transition
+requires new policy/state/guard handling. Do not weaken current guards as a documentation fix.
 
 ## Tryout
 
-**PRD RULE — TryOut v1.1:** publication is due within 72 hours of batch close; published
-scores are immutable. A batch uses one package and one mode/contributing item set.
-Compute returns theta/uncertainty/mapped score; main owns rank, percentile, fallback and XP.
-Precision/ties follow an approved policy.
+**ENGINEERING DECISION — v2 target approved 8 November 2026:** publication remains due
+within 72 hours of batch close; published scores are immutable. A batch may contain an
+original and several variant packages. Each student receives one package/batch; fallback
+is per package/arm. Main owns validation and publication of score/explanation, without
+Tryout score rank or percentile; XP/activity leaderboards remain. The current one-package,
+one-mode/contributing-set finalization structure needs a forward implementation change.
 
-**PROPOSED:** FALLBACK/UNSCORABLE follow the PDF; existing release behavior is retained until
-failure/release policy approval. Invalid items do not contribute. Corrections are versioned
-derived results. Late IRT cannot replace published results. No cross-batch equating, global
-Drill theta profile, second generation wave or Tryout A/B is activated.
+Fallback direction is approved: 100 × awarded product points / maximum product points,
+using approved PG/PGK rubrics and PG=2, MCMA=3, Category=3 weights. Exact invalid-item,
+zero-denominator, precision and release contracts remain OPEN, as does theta-to-score mapping.
+Late IRT cannot replace published results. Cross-batch equating, Indicator/Chapter models
+and Tryout multi-arm distribution are not activated by this documentation update.
 
 ## OPEN and rollout
 
-Rubrics, quality thresholds/tolerances, cohort/reference design, adjustment bounds, package
-evaluation, mappings/ties, cutoff/correction/fallback and retention remain OPEN. Configurations
+Rubric details, quality thresholds/tolerances, cohort/reference design, adjustment bounds,
+package evaluation, theta mappings, cutoff/correction, fallback implementation details and
+retention remain OPEN. Fallback scope/formula are approved as described above. Configurations
 start DRAFT. PDF examples are not production defaults. Preserve historical migrations/fork
 hashes. Rehearse on isolated local databases; a designated operator applies reviewed shared
 migrations. Implementation tests do not use cloud credentials.

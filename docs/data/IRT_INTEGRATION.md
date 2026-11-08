@@ -1,5 +1,7 @@
 # IRT Integration
 
+**ENGINEERING DECISION — owner-approved target, 8 November 2026:** [variant/IRT v2](../AI_IRT_V2_CONTEXT.md) supersedes conflicting design policy below: separate Level/Indicator/Chapter models, day-one rewarded Drill A/B without an original-only pilot, and multi-arm Tryout without score ranking. Per-arm rubric fallback is due within 72 hours; theta mapping and statistical thresholds remain OPEN. This amendment does not change executable v1/v2/v3 contracts. In particular, the v3 participant-result producer/mapping is still a delivery gap; legacy respondent support is not proof of an approved production handoff.
+
 **ENGINEERING UPDATE — 3 October 2026:** the additive separated-service persistence
 and contract v3 are documented in [Variant and IRT persistence](VARIANT_IRT_DATABASE.md).
 The existing v1/v2 API release behavior below remains the transition path.

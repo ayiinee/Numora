@@ -22,7 +22,7 @@ Before implementing a feature, read:
 
 ## Source-of-truth precedence
 
-1. Latest approved PRD — product behavior and acceptance criteria. The project owner supplied PRD v0.6 Final on 4 October 2026 as the latest source (docs/product/sources/PRD_Numora_v0.6.docx.md). Earlier rules below remain historical context; consult PRODUCT_CONTEXT.md and OPEN_DECISIONS.md for supersession and unresolved dependencies.
+1. Latest approved PRD plus explicit owner-approved amendments — product behavior and acceptance criteria. PRD v0.6 Final (docs/product/sources/PRD_Numora_v0.6.docx.md) remains the baseline. On 8 November 2026 the owner approved the [variant/IRT v2 amendment](docs/AI_IRT_V2_CONTEXT.md), including all eight reconciliation decisions and the clarified retry example. Read it before variant/IRT, Drill distribution or Tryout result work. It supersedes conflicting pilot-before-A/B, reward-free trial, one-package Tryout, whole-batch fallback and Tryout ranking policies as the target. Do not treat these changes as already implemented or invent values for remaining OPEN items. Consult PRODUCT_CONTEXT.md and OPEN_DECISIONS.md for other supersession and dependencies.
 2. Approved ADR — technical decision only.
 3. Approved module specification.
 4. Machine-readable contract.
@@ -58,6 +58,8 @@ Do not present a proposal as a PRD rule.
 - Sensitive state-changing operations must be idempotent or protected by equivalent database constraints/transactions.
 
 ## Product rules from approved PRD v0.6
+
+**ENGINEERING DECISION — owner-approved amendment, 8 November 2026:** the [v2 context](docs/AI_IRT_V2_CONTEXT.md) overrides conflicting Drill/variant/IRT/Tryout statements below. Target: regular day-one A/B with rewards, one original plus one variant package per level, immutable running sessions with new retries on the latest active package in the same arm, multi-package Tryout with per-arm fallback within 72 hours, no Tryout score ranking, and unchanged historical results/XP/unlocks. Thresholds, linking and theta-to-score mapping remain OPEN. Pretest placement and XP policy pins are not changed by this documentation update.
 
 The full source is `docs/product/sources/PRD_Numora_v0.6.docx.md`. Reyhan confirmed on 5 October 2026 that Tryout XP uses equivalent-correct ×10; AC-15's ×100 is a typo. `docs/data/PRD_V06_DATA_ALIGNMENT.md` records the implementation and rollout boundaries. This supersedes conflicting older feature-PRD and OPEN register entries.
 

@@ -3,6 +3,8 @@
 - **Status:** Accepted for implementation at Shafwan's request on 3 October 2026; SoftEng review remains part of delivery.
 - **Label:** ENGINEERING DECISION. This does not approve academic/product OPEN policies.
 
+**Amendment — owner decision, 8 November 2026:** [v2 product/architecture context](../AI_IRT_V2_CONTEXT.md) supersedes conflicting pilot, distribution and Tryout policies from the original design source. This ADR's separate-service ownership, single migration stream, immutable versions/artifacts and permission boundaries remain in force. New A/B, multi-arm and three-context behavior needs reviewed forward contracts/migrations; no existing migration or scientific threshold is amended by this note.
+
 ## Decision
 
 Numora owns the only Drizzle migration stream, including `public` and `irt_compute`.

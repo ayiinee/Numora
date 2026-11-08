@@ -1,5 +1,7 @@
 # Admin IRT operations, publication readers and aggregate analytics
 
+**ENGINEERING DECISION — owner-approved target, 8 November 2026:** [v2 context](../AI_IRT_V2_CONTEXT.md) defines Level/Indicator/Chapter analysis, multi-arm Tryout, per-arm fallback within 72 hours and no student Tryout score ranking. API readers and diagnostics below describe existing code, not acceptance of those new flows. Unavailable scientific metrics must remain unavailable rather than inferred from counts. Contract/schema changes for new participant results, contexts and release remain future work; activity XP leaderboards and historical pins remain intact.
+
 **PRD RULE:** v0.6 requires weekly Tryout result/explanation publication together within 72 hours, immutable historical results and server authority. Admin cannot edit scientific/product formulas.
 
 **ENGINEERING DECISION:** the user-approved M0-M6 plan uses existing v3 orchestration and existing durable finalization models. `/admin/irt` and `/admin/analytics` use independent loaders with identity-keyed cleanup, explicit errors, retries, empty/denied states and server-selected approvals. No browser business-data query bypasses NestJS.
