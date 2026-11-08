@@ -18,6 +18,16 @@
 
 **ENGINEERING DECISION — perbaikan tampilan siswa, 8 November 2026:** sidebar siswa dapat digulir sendiri saat tinggi jendela terbatas. Header Belajar membungkus nama dan judul pengumuman. Pada mobile, XP berada di kiri notifikasi dan pola mengikuti lebar header. Carousel Belajar memakai kembali tinggi dasar 160 px dan 156 px di bawah 360 px. Banner Belajar, PvP, dan arena peringkat dapat bertambah tinggi sesuai isi agar judul dan tombol tetap terlihat.
 
+**ENGINEERING DECISION — koreksi pemilik, 4 November 2026:** hero PvP kembali memakai gambar lama dengan pengurangan skala kecil dan area teks mobile 48%, karena ilustrasi foreground sebelumnya terlalu kecil. Penyederhanaan tiga hero leaderboard tetap berlaku. [Catatan koreksi dan bukti](STUDENT_HERO_REFINEMENT_2026-11-04.md).
+
+**ENGINEERING DECISION — instruksi pemilik, 4 November 2026:** [perbaikan hero berdasarkan audit](STUDENT_HERO_REFINEMENT_2026-11-04.md) menerapkan ilustrasi foreground transparan yang lebih sederhana, ruang teks mobile terpisah, deskripsi 12px, tab berwarna sesuai arena dan baris peringkat netral. Tinggi hero/judul tetap mengikuti fondasi Home. [Bukti empat hero pada mobile/tablet/desktop](screenshots/pvp-hero-refinement-2026-11-04/README.md).
+
+**ENGINEERING DECISION — instruksi pemilik, 31 Oktober 2026:** hero PvP dan tiga arena kini memakai empat gambar dari pemilik di `student-heroes/`, menggantikan artwork generasi sebelumnya. Ukuran serta font berbagi fondasi dengan Home/Belajar. [Audit kepadatan terbaru](STUDENT_HERO_DENSITY_AUDIT_2026-10-31.md) membedakan keselarasan ukuran dari risiko crop/kepadatan visual; rekomendasinya **PROPOSED**, belum diterapkan. [Galeri bukti](screenshots/pvp-hero-density-2026-10-31/README.md).
+
+**ENGINEERING DECISION — koreksi pemilik, 31 Oktober 2026:** [Audit mobile PvP dan Leaderboard](STUDENT_PVP_MOBILE_AUDIT_2026-10-31.md) mengganti artwork hero dengan gaya yang merujuk langsung ke kedua aset Home. Audit merapikan urutan aksi, tab/input pada 320px, kode room, tipografi/filter dan podium XP desimal. Aturan server tetap dipertahankan.
+
+**ENGINEERING DECISION — instruksi pemilik, 31 Oktober 2026:** [Hero PvP dan Leaderboard siswa](STUDENT_PVP_LEADERBOARD_HERO_2026-10-31.md) mengikuti gaya hero carousel Home/Belajar dengan ilustrasi latar, badge dan sudut asimetris. Perubahan presentasi memakai komponen bersama tanpa mengubah aturan duel atau peringkat.
+
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Content](ADMIN_CONTENT_PARITY_2026-11-02.md) memperbarui limited structures, detail laporan, JSON generator lama dan frame akses sesuai fondasi modern. Struktur tetap baca saja, tanpa data individual atau aksi Operations; layar bank/impor/Pretest/Generator/IRT existing tetap digunakan bersama. Review/merge/deploy terpisah dari hasil lokal.
 
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Operasional](ADMIN_OPERATIONS_PARITY_2026-11-02.md) melepas CSS workspace legacy dari Sekolah & credential serta Pengguna & kelas agar memakai fondasi Super Admin, termasuk loading dan akses ditolak. Pengembangan berlanjut sambil menunggu review independen #117/#118; approval, merge dan deploy tetap terpisah.
