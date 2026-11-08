@@ -1,18 +1,18 @@
 'use client';
 import { QuestionChoices } from '@/features/core-learning/question-choices';
 import { useAuth } from '@/features/onboarding/auth';
-import { ApiProblem,apiRequest } from '@/lib/api';
-import { Button,Card } from '@tka/ui';
-import { useEffect,useRef,useState } from 'react';
-import { AdminFrame,AdminMessage } from './admin-presentation';
-import { useAdminAccessError,withAdminWorkspace } from './admin-workspace';
+import { ApiProblem, apiRequest } from '@/lib/api';
+import { Button, Card } from '@tka/ui';
+import { useEffect, useRef, useState } from 'react';
+import { AdminFrame, AdminMessage } from './admin-presentation';
+import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 import { ContentRichText } from './content-rich-text';
 import type {
-GeneratorCatalogDto,
-GeneratorDraftDto,
-GeneratorPreviewDto,
-GeneratorRequestDto,
-GeneratorRequestsDto,
+  GeneratorCatalogDto,
+  GeneratorDraftDto,
+  GeneratorPreviewDto,
+  GeneratorRequestDto,
+  GeneratorRequestsDto,
 } from './generated-types';
 const root = 'admin/content/generator';
 export const ContentGeneratorScreen = withAdminWorkspace(
@@ -246,7 +246,19 @@ function GeneratorWorkspace() {
             <Card>
               <h2>Preview kandidat</h2>
               <p>Tanpa penilaian. Kandidat belum READY dan belum disetujui untuk distribusi.</p>
-              <div>{rich(preview.stem.text)}</div>
+              <div>{rich(preview.stem.text.replace(/\[\[asset:[^\]]+\]\]/g, ''))}</div>
+              {preview.media
+                ?.filter((m) => m.placement === 'STEM')
+                .map((m) => (
+                  <img
+                    key={m.assetId}
+                    src={m.url}
+                    alt={m.altText}
+                    width={m.width}
+                    height={m.height}
+                    style={{ maxWidth: '100%', height: 'auto' }}
+                  />
+                ))}
               <QuestionChoices
                 kind={preview.type}
                 name="generator-preview"
@@ -267,7 +279,19 @@ function GeneratorWorkspace() {
                 renderContent={rich}
               />
               <h3>Pembahasan</h3>
-              {rich(preview.explanation.text)}
+              {rich(preview.explanation.text.replace(/\[\[asset:[^\]]+\]\]/g, ''))}
+              {preview.media
+                ?.filter((m) => m.placement === 'EXPLANATION')
+                .map((m) => (
+                  <img
+                    key={m.assetId}
+                    src={m.url}
+                    alt={m.altText}
+                    width={m.width}
+                    height={m.height}
+                    style={{ maxWidth: '100%', height: 'auto' }}
+                  />
+                ))}
               <Button
                 disabled={busy}
                 onClick={() =>

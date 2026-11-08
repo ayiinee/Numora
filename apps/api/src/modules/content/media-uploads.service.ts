@@ -1,4 +1,4 @@
-import { randomUUID } from 'node:crypto';
+import { createHash, randomUUID } from 'node:crypto';
 import { Injectable, Inject, HttpException, NotFoundException } from '@nestjs/common';
 import { MediaUploadsRepository, type MediaUpload } from './media-uploads.repository';
 import { R2MediaStorage } from './r2-media.storage';
@@ -29,6 +29,45 @@ export class MediaUploadsService {
     @Inject(MediaUploadsRepository) private readonly repository: MediaUploadsRepository,
     @Inject(R2MediaStorage) private readonly storage: R2MediaStorage,
   ) {}
+
+  async storeGeneratorImage(
+    actorId: string,
+    externalId: string,
+    assetId: string,
+    sha256: string,
+    bytes: Buffer,
+  ) {
+    const previous = await this.repository.verified(actorId, externalId, assetId, sha256);
+    if (previous) return receipt(previous);
+    // A new reservation after expiry retains the old failed upload as evidence.
+    const scope = createHash('sha256')
+      .update(externalId + ':' + assetId)
+      .digest('hex')
+      .slice(0, 24);
+    const key = `g-${sha256}-${scope}-${Math.floor(Date.now() / 60000)}`;
+    const upload = await this.reserve(actorId, key, {
+      externalId,
+      assetId,
+      sha256,
+      contentVersion: 1,
+      contentType: 'image/png',
+      byteLength: bytes.length,
+    });
+    if (upload.status === 'VERIFIED') return upload;
+    try {
+      const response = await fetch(upload.uploadUrl!, {
+        method: 'PUT',
+        headers: upload.headers!,
+        body: new Uint8Array(bytes),
+        redirect: 'error',
+        signal: AbortSignal.timeout(15000),
+      });
+      if (!response.ok) throw new Error('upload failed');
+    } catch {
+      throw new HttpException({ code: 'GENERATOR_MEDIA_UPLOAD_FAILED' }, 503);
+    }
+    return this.complete(actorId, upload.uploadId);
+  }
 
   async reserve(
     actorId: string,

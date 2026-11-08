@@ -43,6 +43,45 @@ export class GeneratorPreviewDto {
   @ApiProperty({ type: [PreviewCategoryDto] }) categories!: PreviewCategoryDto[];
   @ApiProperty(answerSchema) answerKey!: CandidatePayload['answerKey'];
   @ApiProperty({ type: RichContentDto }) explanation!: RichContentDto;
+  @ApiProperty({
+    type: 'array',
+    items: {
+      type: 'object',
+      required: [
+        'assetId',
+        'url',
+        'altText',
+        'width',
+        'height',
+        'placement',
+        'sha256',
+        'byteLength',
+        'contentType',
+      ],
+      properties: {
+        assetId: { type: 'string' },
+        url: { type: 'string' },
+        altText: { type: 'string' },
+        width: { type: 'integer' },
+        height: { type: 'integer' },
+        placement: { enum: ['STEM', 'EXPLANATION'] },
+        sha256: { type: 'string' },
+        byteLength: { type: 'integer' },
+        contentType: { type: 'string', enum: ['image/png'] },
+      },
+    },
+  })
+  media!: {
+    assetId: string;
+    url: string;
+    altText: string;
+    width: number;
+    height: number;
+    placement: 'STEM' | 'EXPLANATION';
+    sha256: string;
+    byteLength: number;
+    contentType: 'image/png';
+  }[];
 }
 export class GeneratorDraftDto {
   @ApiProperty({ format: 'uuid' }) id!: string;

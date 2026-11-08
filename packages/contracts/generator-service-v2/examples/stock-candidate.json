@@ -1,0 +1,60 @@
+{
+  "questionType": "SINGLE_CHOICE",
+  "stem": {
+    "text": "Empat rancangan memiliki sambungan yang sesuai. Rancangan manakah yang kekurangan bidang sehingga tidak membentuk bangun tertutup?\n\n[[asset:diagram-1]]",
+    "assetKeys": [
+      "diagram-1"
+    ]
+  },
+  "optionsOrStatements": {
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "Kubus: enam persegi kongruen."
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "Prisma segitiga: dua segitiga kongruen dan tiga persegi panjang sesuai sisi alas."
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "Limas segi empat: satu persegi dan tiga segitiga sisi tegak."
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "Kerucut: satu lingkaran dan satu juring dengan busur sepanjang keliling alas."
+        }
+      }
+    ],
+    "categories": []
+  },
+  "answerKey": {
+    "optionId": "C"
+  },
+  "explanation": {
+    "text": "Limas segi empat memerlukan empat segitiga sisi tegak; C hanya tiga, sehingga satu sisi terbuka. Komponen A,B,D lengkap dengan sambungan yang disyaratkan."
+  },
+  "media": [
+    {
+      "assetId": "diagram-1",
+      "sha256": "5abf4054a22e11e7f34c23259b4400472f96e139e6fe2cab5da69f06c22fc57e",
+      "byteLength": 46396,
+      "width": 960,
+      "height": 640,
+      "contentType": "image/png",
+      "placement": "STEM",
+      "altText": "Empat panel A sampai D: A: kubus; B: prisma segitiga; C: persegi dan tiga segitiga; D: kerucut, busur = keliling alas. Gambar skematis.",
+      "provenanceDigest": "396116e9bacf83036d489f584f3ff7afa5c733d4db24d6fbf2aef76083011523"
+    }
+  ],
+  "difficulty": "MEDIUM",
+  "rubricVersionId": "00000000-0000-0000-0000-000000000003",
+  "contentFingerprint": "d3c59efee807b1723a72ae129a93bd0b49e6633d50160db098cd84697357e530"
+}

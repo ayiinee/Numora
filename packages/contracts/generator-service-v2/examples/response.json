@@ -1,0 +1,13 @@
+{
+  "serviceContract": "generator-service-v2",
+  "requestId": "00000000-0000-4000-8000-000000000001",
+  "executionId": "00000000-0000-4000-8000-000000000002",
+  "dispatchGeneration": 1,
+  "status": "SUCCEEDED",
+  "failureCode": null,
+  "artifactId": "00000000-0000-4000-8000-000000000003",
+  "artifactDigest": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+  "candidateIds": [
+    "00000000-0000-4000-8000-000000000004"
+  ]
+}

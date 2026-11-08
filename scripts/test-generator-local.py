@@ -21,7 +21,7 @@ def port():
         s.bind(('127.0.0.1', 0))
         return s.getsockname()[1]
 def run(args, env=None, cwd=ROOT):
-    result=subprocess.run(args,cwd=cwd,env=env,timeout=None if os.environ.get('GENERATOR_DEMO')=='true' else 600)
+    result=subprocess.run(args,cwd=cwd,env=env,timeout=None if os.environ.get('GENERATOR_DEMO')=='true' else 3600 if os.environ.get('GENERATOR_V2_TEST')=='true' else 600)
     if result.returncode: raise RuntimeError('Local generator verification failed')
 def main():
     suffix='.exe' if os.name=='nt' else ''
@@ -39,11 +39,16 @@ def main():
             url=f'postgresql://fixture@127.0.0.1:{pgport}/{database}'
             env={**os.environ,'NODE_ENV':'test','ALLOW_SYNTHETIC_CONTENT':'false','TEST_COMPUTE_OWNER_URL':url,'NUMORA_REPO_PATH':str(ROOT)}
             run(['node',str(SERVICE/'tests/service/migrate_local.mjs')],env,SERVICE)
-            spec=importlib.util.spec_from_file_location('generator_fixture',ROOT/'scripts/generator-local-fixture.py')
+            v2=os.environ.get('GENERATOR_V2_TEST')=='true'
+            spec=importlib.util.spec_from_file_location('generator_fixture',ROOT/('scripts/generator-v2-local-fixture.py' if v2 else 'scripts/generator-local-fixture.py'))
             module=importlib.util.module_from_spec(spec);spec.loader.exec_module(module)
             fixtures=module.Fixtures(url)
             qids=['pg-6-1-1','mcma-16-1-7','kategori-16-1-10']
-            if os.environ.get('GENERATOR_DEMO')=='true' or os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
+            if v2:
+                selected=os.environ.get('GENERATOR_V2_IDS')
+                items=fixtures.all(selected.split(',') if selected else None)
+                print(f'TEST ONLY: {len(items)} v2 sources/registrations; shared DB untouched',flush=True)
+            elif os.environ.get('GENERATOR_DEMO')=='true' or os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
                 items=[]
                 for usage,count in [('DRILL',10),('PRETEST',20),('TRYOUT',30)]:
                     scope=None
@@ -57,7 +62,7 @@ def main():
                 result=subprocess.run(['node','--env-file='+str(ROOT/'.env'),'apps/api/scripts/read-generator-qa-profile.mjs'],cwd=ROOT,env=env,capture_output=True,text=True,check=True)
                 data['realQa']=json.loads(result.stdout)
             file=target/'fixture.json';file.write_text(json.dumps(data,default=str))
-            serviceenv={**env,'NUMORA_GENERATOR_ENABLED':'true','NUMORA_GENERATOR_TOKEN':fixtures.settings.token,'COMPUTE_DATABASE_URL':fixtures.compute_url,'COMPUTE_SERVICE_PRINCIPAL_ID':str(fixtures.principal)}
+            serviceenv={**env,'NUMORA_GENERATOR_ENABLED':'true','NUMORA_GENERATOR_V2_ENABLED':'true' if v2 else 'false','NUMORA_GENERATOR_TOKEN':fixtures.settings.token,'COMPUTE_DATABASE_URL':fixtures.compute_url,'COMPUTE_SERVICE_PRINCIPAL_ID':str(fixtures.principal)}
             log=(target/'service.log').open('w',encoding='utf8')
             service=subprocess.Popen([sys.executable,'-B','-m','numora_service','--port',str(serviceport)],cwd=SERVICE,env=serviceenv,stdout=log,stderr=log,creationflags=subprocess.CREATE_NO_WINDOW if os.name=='nt' else 0)
             import httpx
@@ -69,7 +74,14 @@ def main():
                 time.sleep(.1)
             else:raise RuntimeError('Local service startup timed out')
             env={**serviceenv,'DATABASE_URL':fixtures.main_url+'?sslmode=disable','TEST_COMPUTE_OWNER_URL':url,'GENERATOR_FIXTURE_FILE':str(file),'NUMORA_GENERATOR_URL':f'http://127.0.0.1:{serviceport}'}
-            if os.environ.get('GENERATOR_DEMO')=='true':
+            if v2:
+                try:
+                    run(['node','apps/api/scripts/test-generator-v2.mjs'],env)
+                except Exception:
+                    log.flush()
+                    print((target/'service.log').read_text(encoding='utf8')[-12000:])
+                    raise
+            elif os.environ.get('GENERATOR_DEMO')=='true':
                 run(['node','apps/api/scripts/serve-generator-local.mjs'],env)
             elif os.environ.get('GENERATOR_PACKAGE_TEST')=='true':
                 run(['node','apps/api/scripts/test-generator-packages.mjs'],env)

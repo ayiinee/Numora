@@ -141,6 +141,8 @@ Ini adalah kontrak konseptual, bukan perintah mengganti enum database sekarang. 
 
 ## Audit implementasi pada commit acuan
 
+**Pembaruan implementasi lokal, 9 November 2026:** PR #125 menambahkan audit mapping read-only; PR #126 menambahkan schema/guard arm, assignment dan delivery melalui migrasi 0051. Tahap 5 menambahkan `generator-service-v2`, stok/media dan DRAFT melalui migrasi 0052; [handoff dan bukti uji](GENERATOR_SERVICE_V2_HANDOFF.md) menjadi acuan operasional terbarunya. Routing siswa belum dialihkan, fitur v2 nonaktif secara default, dan database bersama belum dimigrasikan. Tabel berikut adalah snapshot sebelum tahap 3–5: gap schema/generator tersebut sudah ditangani secara lokal, sedangkan scientific IRT, approval akademik, aktivasi distribusi dan deployment tetap bukan hasil tahap ini.
+
 | Area | Yang tersedia | Gap terhadap v2 |
 |---|---|---|
 | Drill utama | Attempt/policy pins, scoring/reward dan exposure foundation; `selectDrillPackage()` memilih paket pertama. | Random A/B persisten dan dua paket aktif belum diterapkan. Index satu paket reguler published per level dan guard baseline-before-A/B perlu migrasi forward. |
