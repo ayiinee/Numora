@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import {
   assessmentPackages,
   closeDatabaseConnection,
@@ -12,14 +12,43 @@ import {
   classLeaderboardEntries,
   users,
 } from '@tka/database';
-import { and, eq, inArray } from 'drizzle-orm';
+import { and, eq, inArray, sql } from 'drizzle-orm';
 import { projectClassLeaderboard } from './class-leaderboard.js';
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
 integration('PvP projection, best record and archive', () => {
-  afterAll(async () => closeDatabaseConnection());
-  it('projects best valid points independently by difficulty, excludes forfeit/cancel and reconciles before archive', async () => {
+  const role = `leaderboard_main_${randomUUID().replaceAll('-', '')}`;
+  let roleCreated = false;
+
+  beforeAll(async () => {
     process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
     const { db } = getDatabase();
+    const password = randomUUID();
+    await db.execute(sql.raw(`CREATE ROLE ${role} LOGIN PASSWORD '${password}'`));
+    roleCreated = true;
+    await db.execute(sql.raw(`GRANT numora_main_runtime TO ${role}`));
+    await closeDatabaseConnection();
+    const runtime = new URL(process.env.TEST_DATABASE_URL!);
+    runtime.username = role;
+    runtime.password = password;
+    process.env.DATABASE_URL = runtime.toString();
+  });
+
+  afterAll(async () => {
+    await closeDatabaseConnection();
+    process.env.DATABASE_URL = process.env.TEST_DATABASE_URL;
+    if (roleCreated) {
+      try {
+        await getDatabase().db.execute(sql.raw(`DROP ROLE ${role}`));
+      } finally {
+        await closeDatabaseConnection();
+      }
+    }
+  });
+
+  it('projects best valid points independently by difficulty, excludes forfeit/cancel and reconciles before archive', async () => {
+    const { db } = getDatabase();
+    const [runtime] = await db.execute<{ current_role: string }>(sql`SELECT current_role`);
+    expect(runtime?.current_role).toBe(role);
     const key = randomUUID();
     const students = await db
       .insert(users)
