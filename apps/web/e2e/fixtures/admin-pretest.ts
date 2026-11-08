@@ -59,7 +59,7 @@ export async function setupPretest(
     questionVersionIds: questions.slice(0, i === 0 ? 2 : 20).map((q) => q.id),
     reviewBlockers: i === 0 ? ['ASSESSMENT_PACKAGE_INCOMPLETE'] : [],
     publicationBlockers: [
-      'PRETEST_STUDENT_CONSUMER_REQUIRED',
+      'SHARED_PACKAGE_PUBLISHER_REQUIRED',
       ...(i !== 1 ? ['APPROVED_PRETEST_BLUEPRINT_REQUIRED'] : []),
     ],
   }));
