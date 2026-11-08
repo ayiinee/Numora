@@ -351,6 +351,13 @@
       "when": 1793291287346,
       "tag": "0049_pvp_transient_queue_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 50,
+      "version": "7",
+      "when": 1794110131994,
+      "tag": "0050_leaderboard_projection_delete_grants",
+      "breakpoints": true
     }
   ]
 }
