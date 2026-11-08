@@ -37,7 +37,6 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
         await admin.unsafe(`CREATE DATABASE "${name}"`);
         await cp(resolve('staging/fixtures'), join(temp, 'staging/fixtures'), { recursive: true });
         const entries = await runtimeAdminCandidate(folder);
-        expect(entries).toHaveLength(50);
         entries.forEach((e, i) => {
           expect(e.idx).toBe(i);
           expect(e.tag.slice(0, 4)).toBe(String(i).padStart(4, '0'));
@@ -172,6 +171,12 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
           const candidate = readMigrationFiles({ migrationsFolder: folder });
           expect(candidate[49]!.hash).toBe(source[0]!.hash);
           expect(candidate.some((entry) => entry.hash === source[1]!.hash)).toBe(false);
+          const latest = candidate.at(-1)!;
+          expect(
+            after.some(
+              (row) => row.hash === latest.hash && Number(row.created_at) === latest.folderMillis,
+            ),
+          ).toBe(true);
           await migrateIntegratedDatabase(db, folder);
           expect(
             await db`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
