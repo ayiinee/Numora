@@ -708,7 +708,7 @@ export const tryoutBatches = pgTable(
     createdAt: createdAt(),
   },
   (t) => [
-    uniqueIndex('tryout_batches_package_uq').on(t.packageId),
+    index('tryout_batches_package_idx').on(t.packageId),
     check(
       'tryout_batches_status_ck',
       sql`${t.status} in ('PLANNED','OPEN','CLOSED','PROCESSING','PUBLISHED')`,
