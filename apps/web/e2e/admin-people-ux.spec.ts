@@ -29,6 +29,11 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
             .locator('.people-search input')
             .evaluate((element) => Number.parseFloat(getComputedStyle(element).paddingLeft)),
         ).toBeGreaterThanOrEqual(38);
+        if (width >= 1024) {
+          const topbar = await page.locator('.app-topbar').boundingBox();
+          const brand = await page.locator('.admin-sidebar-heading').boundingBox();
+          expect(Math.abs(topbar!.height - brand!.height)).toBeLessThanOrEqual(1);
+        }
         await page.screenshot({
           path: test.info().outputPath(`${view}-list-${width}.png`),
           fullPage: true,

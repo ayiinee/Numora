@@ -55,6 +55,31 @@ beforeEach(() => {
 });
 afterEach(cleanup);
 
+it.each(['OPERATIONS', 'CONTENT_DATA_MODERATION'] as const)(
+  'keeps the %s loading and revoked-access frame readable without mounting private data',
+  async (role) => {
+    auth.state = { status: 'loading' };
+    const operations = () => (
+      <AdminWorkspace permission={role === 'OPERATIONS' ? 'operations' : 'content'}>
+        <Workspace />
+      </AdminWorkspace>
+    );
+    const result = render(operations());
+    expect(result.container.querySelector('.admin-management-shell')).toBeTruthy();
+    expect(screen.getByText('Memeriksa akses Admin…')).toBeTruthy();
+    expect(load).not.toHaveBeenCalled();
+
+    ready(role);
+    result.rerender(operations());
+    await screen.findByText('PRIVATE PREVIEW');
+    fireEvent.click(screen.getByText('Revoke'));
+    expect(screen.queryByText('PRIVATE PREVIEW')).toBeNull();
+    expect(screen.getByRole('alert').textContent).toContain('Akses dicabut.');
+    expect(screen.getByRole('heading', { name: 'Akses Admin' }).className).not.toContain('sr-only');
+    expect(result.container.querySelector('.admin-management-shell')).toBeTruthy();
+  },
+);
+
 it.each([null, 'OPERATIONS'] as const)('blocks assignment %s before mounting content', (role) => {
   ready(role);
   render(view());

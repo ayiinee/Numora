@@ -5,6 +5,22 @@ import { AdminLoginScreen } from './login';
 import { AppShell } from '@/components/shell';
 import { AdminFrame } from './admin-presentation';
 import { AdminAnalyticsScreen } from './analytics';
+import { activeAdminHref } from './navigation';
+
+it('keeps report detail under its authorized Content menu without adding a missing capability', () => {
+  const items = [
+    {
+      href: '/admin/content',
+      label: 'Konten & assessment',
+      description: '',
+      icon: 'book' as const,
+    },
+  ];
+  for (const kind of ['QUESTION', 'VIDEO']) {
+    expect(activeAdminHref(`/admin/reports/${kind}/report-id`, items)).toBe('/admin/content');
+    expect(activeAdminHref(`/admin/reports/${kind}/report-id`, [])).toBeUndefined();
+  }
+});
 
 const mocks = vi.hoisted(() => ({
   state: { status: 'signed_out' } as Record<string, unknown>,

@@ -122,9 +122,10 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
 }
 
 export function activeAdminHref(pathname: string, items: AdminNavigationItem[]) {
+  const route = /^\/admin\/reports\/(QUESTION|VIDEO)\/[^/]+\/?$/.test(pathname)
+    ? '/admin/content'
+    : pathname;
   return items
-    .filter(
-      ({ href }) => pathname === href || (href !== '/admin' && pathname.startsWith(`${href}/`)),
-    )
+    .filter(({ href }) => route === href || (href !== '/admin' && route.startsWith(`${href}/`)))
     .sort((a, b) => b.href.length - a.href.length)[0]?.href;
 }

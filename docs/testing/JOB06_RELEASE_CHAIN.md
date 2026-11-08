@@ -1,5 +1,7 @@
 # JOB-06 — pengujian rantai pada satu release SHA
 
+**ENGINEERING IMPLEMENTATION — 4 November 2026:** [Smoke tiga subrole Admin](ADMIN_ROLE_PARITY_CONNECTED_2026-11-04.md) menambah Operations/Content pada fixture lokal dan satu kasus serial yang memeriksa landing, struktur terbatas serta penolakan HTTP. Seluruh required checks lama dan guard satu clean SHA tetap dipertahankan. Hasil historis di bawah bukan bukti otomatis untuk SHA baru.
+
 **ENGINEERING DECISION — 3 Oktober 2026, instruksi Aini:** pengujian browser terhubung dan perbaikan defect yang terbukti dilakukan dalam PR baru. Farel tetap DRI regression frontend; Salim tetap pemberi acceptance independen. Keputusan akademik/product OPEN tidak ditutup oleh pengujian ini.
 
 ## Status dan bukti

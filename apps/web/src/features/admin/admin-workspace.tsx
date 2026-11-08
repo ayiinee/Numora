@@ -59,6 +59,7 @@ export function AdminWorkspace({
         title="Akses Admin"
         description="Periksa akses akun untuk melanjutkan."
         icon="lock"
+        management={permission === 'operations' || permission === 'content'}
       >
         {state.status === 'loading' ? (
           <AdminLoading message="Memeriksa akses Admin…" />

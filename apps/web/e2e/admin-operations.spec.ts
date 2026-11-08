@@ -361,9 +361,9 @@ test('Content only loads limited structure with counts and no individual records
 }) => {
   const requests = await fixture(page, 'CONTENT_DATA_MODERATION');
   await page.goto('/admin/structures');
-  await expect(page.getByRole('heading', { name: 'Sekolah dan kelas — baca saja' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Sekolah & kelas', exact: true })).toBeVisible();
   await expect(page.getByRole('note')).toContainText('Akses baca saja');
-  await expect(page.getByText(/Credential: 2 tersedia/)).toBeVisible();
+  await expect(page.getByText('2 tersedia', { exact: true })).toBeVisible();
   await expect(
     page.getByRole('button', { name: /buat|edit|generate|regenerate|ban/i }),
   ).toHaveCount(0);
