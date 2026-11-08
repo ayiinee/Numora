@@ -1,5 +1,7 @@
 # IRT Integration
 
+**Beta clarification — 8 November 2026:** [operational policy decisions](../AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional) approve reference-package prediction as the score-mapping method (numeric/estimation validation remains OPEN), simultaneous batch publication, first-valid rules, 3 Drill / 5 Tryout anchors, and acceptance of prior cross-feature exposure for beta Drill. Keep exposure provenance and do not count retries as new independent evidence; the Tryout policy is not relaxed. These are target contracts, not a new executable calibration/result producer.
+
 **ENGINEERING DECISION — owner-approved target, 8 November 2026:** [variant/IRT v2](../AI_IRT_V2_CONTEXT.md) supersedes conflicting design policy below: separate Level/Indicator/Chapter models, day-one rewarded Drill A/B without an original-only pilot, and multi-arm Tryout without score ranking. Per-arm rubric fallback is due within 72 hours; theta mapping and statistical thresholds remain OPEN. This amendment does not change executable v1/v2/v3 contracts. In particular, the v3 participant-result producer/mapping is still a delivery gap; legacy respondent support is not proof of an approved production handoff.
 
 **ENGINEERING UPDATE — 3 October 2026:** the additive separated-service persistence

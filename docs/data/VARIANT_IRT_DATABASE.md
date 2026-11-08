@@ -36,6 +36,14 @@ without claiming the student read them. Reservation prioritizes learning: access
 allowed; prior conflicting exposure invalidates eligibility with an audit trail. Checks use
 timestamps before trial delivery, not indiscriminately all later exposure.
 
+**Owner beta amendment — 8 November 2026:** the exclusion rule above describes the old
+foundation. Beta Drill must accept prior family exposure from other features such as
+Pretest/PvP without automatic scientific exclusion; record provenance and do not label
+such evidence fresh. Retry Drill still is not new primary evidence. Tryout exposure
+eligibility is not relaxed. Existing guards/contracts need forward changes, not bypasses.
+Drill composition is 3 common anchors + 7 focal items; Tryout is 5 + 25. Statistical
+adequacy/linking still must pass. See the [operational policies](../AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional).
+
 ## Frozen inputs and handoff
 
 Contract version 3 is additive to v1/v2. Requests pin context, snapshot or wave/package,
@@ -65,14 +73,18 @@ one-mode/contributing-set finalization structure needs a forward implementation 
 
 Fallback direction is approved: 100 × awarded product points / maximum product points,
 using approved PG/PGK rubrics and PG=2, MCMA=3, Category=3 weights. Exact invalid-item,
-zero-denominator, precision and release contracts remain OPEN, as does theta-to-score mapping.
+zero-denominator, precision and release contract details still need specification; maximum
+valid points of zero must yield UNSCORABLE rather than score zero. The IRT mapping method
+is now reference-package predicted points normalized to 0–100; estimator/prior, reference
+choice and numeric mapping validation remain pending. Beta publication is simultaneous
+per batch within 72 hours, with IRT/fallback mode chosen per package/arm.
 Late IRT cannot replace published results. Cross-batch equating, Indicator/Chapter models
 and Tryout multi-arm distribution are not activated by this documentation update.
 
 ## OPEN and rollout
 
 Rubric details, quality thresholds/tolerances, cohort/reference design, adjustment bounds,
-package evaluation, theta mappings, cutoff/correction, fallback implementation details and
+package evaluation, reference-score mapping details, cutoff/correction, fallback implementation details and
 retention remain OPEN. Fallback scope/formula are approved as described above. Configurations
 start DRAFT. PDF examples are not production defaults. Preserve historical migrations/fork
 hashes. Rehearse on isolated local databases; a designated operator applies reviewed shared

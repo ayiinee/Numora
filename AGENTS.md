@@ -31,6 +31,8 @@ Before implementing a feature, read:
 
 Never invent an answer for an OPEN item. Implement extensibility around it or use explicitly labeled demo/test fixtures.
 
+**Owner beta clarification — 8 November 2026:** read the [twelve operational policies](docs/AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional) as well as the initial eight decisions. Beta Drill accepts prior cross-feature family exposure (including Pretest/PvP) without automatic exclusion; record it and do not treat retries as new independent evidence. Package composition is 3 common anchors + 7 focal Drill items, and 5 anchors + 25 focal Tryout items; counts do not guarantee valid linking. Reference-package prediction is the approved IRT score-mapping method, with numeric/estimation details still pending. Cases of an unavailable variant arm and experiment re-enrollment (operational decision 7) remain OPEN. No runtime or XP pin changes are implied by these documentation decisions.
+
 For visual decisions, use the latest approved UI/UX handoff for screen-specific layout and interaction, then the team-supplied UI design-system baseline for shared tokens, components, responsive behavior, and accessibility. The handoff is not available yet. Neither visual source changes product rules from the approved PRD. Keep provisional design values easy to replace when UI/UX finalizes them.
 
 ## Requirement labels

@@ -1,5 +1,7 @@
 # JOB-11 Drill / JOB-05 — kebijakan v0.6
 
+**ENGINEERING DECISION — pemilik, 8 November 2026:** [konteks v2 dan kebijakan operasional](../AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional) menggantikan target paket tunggal di bawah dengan A/B reguler yang tetap memberi reward. Drill memakai 3 common anchor + 7 focal per paket. Arah rubrik per keputusan mengikuti Tryout untuk review Curriculum; mastery/bintang dihitung sebelum rounding tampilan, dengan batas bintang 0; >0–50; >50–<100; 100. XP tetap mengikuti policy attempt yang dipin dan tidak dihitung ulang. Ini keputusan target, bukan bukti grading PGK/assignment baru sudah diimplementasikan.
+
 **PRD RULE:** PRD v0.6 §8–10 menetapkan 10 soal, mastery 80%, satu paket per level untuk MVP, retry tanpa batas, kondisi skor/bintang dari attempt terbaru, serta unlock permanen. Bintang: 0 → 0; 10–50 → 1; 51–99 → 2; 100 → 3. XP dasar = benar / total × 100 (benar × 10 untuk 10 soal); bonus = max(0, (900 − durasi detik) / 900 × 50); total dibatasi 150. Formula berlaku juga pada attempt gagal; tidak ada tambahan syarat mastery untuk bonus.
 
 **ENGINEERING DECISION — Aini, 5 Oktober 2026:** bulatkan XP akhir sekali ke integer terdekat; gunakan durasi timestamp PostgreSQL (termasuk pecahan detik). Pembahasan attempt baru tidak memiliki expiry. Konfirmasi setiap keluar sebelum submit menjelaskan jawaban terkonfirmasi dapat dilanjutkan dan timer tetap berjalan; perubahan belum tersimpan dapat hilang.
