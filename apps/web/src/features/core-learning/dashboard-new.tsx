@@ -6,14 +6,13 @@ import { EmptyState, Icon } from '@tka/ui';
 import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
 import { learningApi } from './api';
-import { activityChapterImage } from './chapter-art';
-import { studentMaterialsQuery } from './materials-query';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
 import { FeedbackOverview } from './feedback-overview';
 import { HomeClassPodium } from './home-class-podium';
-import { HomeActivity, HomeFeatures, StudentHomeIdentityHeader } from './dashboard-presentation';
+import { HomeFeatures, StudentHomeIdentityHeader } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
 import './student-home.css';
 
@@ -53,10 +52,7 @@ function DashboardReady({
   const avatar =
     state.status === 'ready' ? state.session.user?.user_metadata?.avatar_url : undefined;
   const avatarUrl = typeof avatar === 'string' ? avatar : undefined;
-  const materials = useQuery({
-    ...studentMaterialsQuery(token),
-    enabled: data.activities.some((item) => item.chapterId),
-  });
+  const recent = data.activities[0];
   const tryout = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
@@ -92,21 +88,13 @@ function DashboardReady({
           )}
           <section className="sh-section sh-activities" aria-labelledby="sh-activities-title">
             <div className="sh-section__heading">
-              <h2 id="sh-activities-title">Aktivitas</h2>
+              <h2 id="sh-activities-title">Aktivitas Terakhir</h2>
               <Link href="/student/assessment">
-                Riwayat <Icon name="chevron" width={16} height={16} />
+                Lihat Semua <Icon name="chevron" width={16} height={16} />
               </Link>
             </div>
-            {data.activities.length ? (
-              <div className="sh-activities__list">
-                {data.activities.map((item) => (
-                  <HomeActivity
-                    key={item.attemptId}
-                    item={item}
-                    chapterImage={activityChapterImage(materials.data?.chapters, item.chapterId)}
-                  />
-                ))}
-              </div>
+            {recent ? (
+              <RecentActivity item={recent} activeDrill={data.activeDrill} />
             ) : (
               <div className="sh-activities__empty">
                 <EmptyState

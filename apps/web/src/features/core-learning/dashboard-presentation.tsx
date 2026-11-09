@@ -3,8 +3,7 @@
 import Link from 'next/link';
 import { useNotificationSummary } from './notification-queries';
 import { Avatar, Icon, ProgressBar, Skeleton } from '@tka/ui';
-import type { StudentDashboardDto, CurrentTryoutDto, DashboardDrillDto } from './generated-types';
-import type { AssessmentRecord } from './types';
+import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
 import { StudentIllustratedHero } from './student-illustrated-hero';
 
 const tryoutLabels: Record<CurrentTryoutDto['state'], string> = {
@@ -301,102 +300,5 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
         ))}
       </div>
     </section>
-  );
-}
-
-export function HomeResume({ attempt }: { attempt: DashboardDrillDto }) {
-  return (
-    <div className="home-resume">
-      <span>Lanjut: {attempt.title}</span>
-      <Link href={`/student/drill/${attempt.attemptId}`}>
-        <Icon name="rocket" width={15} height={15} />
-        Lanjutkan latihan
-      </Link>
-    </div>
-  );
-}
-
-export function HomeActivity({
-  item,
-  chapterImage,
-  resume,
-}: {
-  item: AssessmentRecord;
-  chapterImage?: string | undefined;
-  resume?: DashboardDrillDto | null | undefined;
-}) {
-  const ready = item.resultState === 'ready' && item.activity !== 'pretest';
-  const body = (
-    <>
-      <span
-        className={`sh-activity__icon sh-activity__icon--${item.activity}${chapterImage ? ' sh-activity__icon--chapter' : ''}`}
-      >
-        {chapterImage ? (
-          <img src={chapterImage} width={36} height={36} alt="" />
-        ) : item.activity === 'tryout' ? (
-          <img
-            src="/illustrations/student-home/reference-tryout-activity.png"
-            width="65"
-            height="62"
-            alt=""
-          />
-        ) : (
-          <Icon name="target" width={25} height={25} />
-        )}
-      </span>
-      <span className="sh-activity__body">
-        <strong>{item.title}</strong>
-        <span className="sh-activity__detail">
-          {item.activity.toUpperCase()}
-          {item.subchapterTitle ? ` · ${item.subchapterTitle}` : ''}
-          {item.score !== null && item.resultState === 'ready' ? ` · Nilai ${item.score}%` : ''}
-        </span>
-      </span>
-      <span className="sh-activity__status">
-        {item.resultState === 'waitingIrt' && (
-          <span className="sh-activity__pending">Menunggu hasil</span>
-        )}
-        {item.xpState === 'ready' && item.xp != null && (
-          <span className="sh-activity__xp">
-            <img
-              src="/illustrations/student-home/reference-xp-star.png"
-              width="28"
-              height="26"
-              alt=""
-            />
-            {item.xp} XP
-          </span>
-        )}
-        {item.starsState === 'ready' && item.stars != null && <span>{item.stars}/3 bintang</span>}
-        {item.xpState === 'legacy' && <span>XP tidak tercatat pada hasil versi lama</span>}
-        {item.starsState === 'legacy' && <span>Bintang tidak tercatat pada hasil versi lama</span>}
-        {item.xpState === 'pending' && <span>XP belum tersedia</span>}
-        {item.starsState === 'pending' && <span>Bintang belum tersedia</span>}
-        {item.isDemo && <span className="sh-activity__demo">Demo</span>}
-      </span>
-      <time dateTime={item.submittedAt}>
-        {new Intl.DateTimeFormat('id-ID', {
-          timeZone: 'Asia/Jakarta',
-          day: 'numeric',
-          month: 'short',
-        }).format(new Date(item.submittedAt))}
-      </time>
-      {ready && <Icon name="chevron" width={17} height={17} />}
-    </>
-  );
-  return (
-    <div className="sh-activity-entry">
-      {ready ? (
-        <Link
-          className="sh-activity"
-          href={`/student/${item.activity === 'tryout' ? 'tryout' : 'drill'}/${item.attemptId}/result`}
-        >
-          {body}
-        </Link>
-      ) : (
-        <div className="sh-activity">{body}</div>
-      )}
-      {resume && <HomeResume attempt={resume} />}
-    </div>
   );
 }

@@ -8,10 +8,10 @@ import { Badge, Card, EmptyState, Icon, Input } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { useStudentToken } from './student-session';
 import { learningApi } from './api';
-import { activityChapterImage, chapterImages } from './chapter-art';
+import { chapterImages } from './chapter-art';
 import { studentMaterialsQuery } from './materials-query';
 import { DataState } from './ui';
-import { HomeActivity } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import { StudentSectionHeader } from './student-section-header';
 import type { MaterialChapterDto } from './generated-types';
 
@@ -66,9 +66,6 @@ function MaterialsContent() {
         chapter.subchapters.some((sub) => sub.title.toLocaleLowerCase('id').includes(needle)),
     ) ?? [];
   const activity = dashboard.data?.activities[0];
-  const recentChapter = query.data?.chapters.find(
-    (chapter) => chapter.id === query.data.recentChapterId,
-  );
 
   return (
     <StudentLayout
@@ -93,21 +90,7 @@ function MaterialsContent() {
               retry={() => void dashboard.refetch()}
             />
           ) : activity ? (
-            <Card className="materials-recent-card">
-              <HomeActivity
-                item={activity}
-                chapterImage={activityChapterImage(query.data?.chapters, activity.chapterId)}
-                resume={dashboard.data.activeDrill}
-              />
-              {!dashboard.data.activeDrill && recentChapter?.continueSubchapterId && (
-                <Link
-                  className="materials-recent-card__continue"
-                  href={`/student/learn/${recentChapter.id}/${recentChapter.continueSubchapterId}`}
-                >
-                  Lanjut Drill <Icon name="arrow" width={16} height={16} />
-                </Link>
-              )}
-            </Card>
+            <RecentActivity item={activity} activeDrill={dashboard.data.activeDrill} />
           ) : (
             <Card padding="sm">
               <EmptyState

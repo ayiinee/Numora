@@ -11,7 +11,8 @@ import { DataState, StudentGate } from './ui';
 import { LevelPath } from './level-path';
 import { useStudentToken } from './student-session';
 import { ChapterPretest } from './pretest-screens';
-import { MaterialsHeader, MaterialSubchapterList } from './materials';
+import { MaterialSubchapterList } from './materials';
+import { StudentSectionHeader } from './student-section-header';
 import type { StudentMaterialsDto } from './generated-types';
 
 export { MaterialsScreen as CatalogScreen } from './materials';
@@ -23,16 +24,20 @@ export function ChapterScreen() {
     queryFn: () => request<StudentMaterialsDto>(token, '/students/me/materials'),
   });
   const chapter = query.data?.chapters.find((item) => item.id === chapterId);
+  const header = (
+    <StudentSectionHeader
+      title="Latihan Soal"
+      back={{ href: '/student/learn', label: 'Semua bab' }}
+    />
+  );
   return (
     <StudentLayout
       title="Latihan Soal"
       className="materials-shell materials-detail-shell"
-      mobileHeader={<MaterialsHeader />}
+      mobileHeader={header}
     >
       <div className="materials-page materials-detail">
-        <Link className="materials-detail__back" href="/student/learn">
-          <Icon name="back" width={18} /> Semua bab
-        </Link>
+        <header className="materials-detail__desktop-header">{header}</header>
         {query.isPending || query.isError ? (
           <DataState
             pending={query.isPending}
@@ -43,7 +48,7 @@ export function ChapterScreen() {
           <>
             <div className="materials-detail__heading">
               <small>BAB {chapter.order}</small>
-              <h1>{chapter.title}</h1>
+              <h2>{chapter.title}</h2>
               <p>
                 {chapter.completedLevels} dari {chapter.totalLevels} level selesai
               </p>

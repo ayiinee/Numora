@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — revisi aktivitas siswa, 9 November 2026.** Beranda dan Latihan memakai kartu yang sama untuk aktivitas terbaru. Kartu menampilkan ilustrasi, tanggal, nilai dan bintang yang tersedia, serta tindakan sesuai aktivitas. Lihat Semua membuka riwayat lengkap. Tombol Semua bab berada di dalam header detail bab.
+
 **ENGINEERING DECISION — revisi detail subbab, 9 November 2026.** Header progres subbab mengikuti pola ungu portal Siswa dan memuat tombol kembali. Peta tampil tanpa bingkai. Dialog menampilkan jumlah soal sebelum bintang, dengan kartu nilai terbaik bernuansa emas untuk membedakannya dari nilai terakhir.
 
 **ENGINEERING DECISION — instruksi pemilik, 9 November 2026.** Detail subbab memakai ilustrasi jalur burung hantu dari pemilik, dengan Level 1 di bawah. Angka berada di dalam medali, dan bintang yang tercatat tampil di bawahnya. Judul dan progres subbab menjadi header halaman. Medali yang dapat diakses membuka dialog tengah dengan nomor level, konteks bab dan subbab, serta bintang dan nilai yang ditonjolkan. Bar bawah ponsel menampilkan judul level dengan status di bawahnya. Status, nilai, bintang terakhir, riwayat, dan tindakan Drill memakai data server.

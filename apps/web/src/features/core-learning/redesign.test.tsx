@@ -15,7 +15,8 @@ import { learningApi, request } from './api';
 import { FeedbackOverview } from './feedback-overview';
 import { LeaderboardsScreen } from './leaderboards';
 import { HomeClassPodium } from './home-class-podium';
-import { HomeActivity, HomeTryoutHero } from './dashboard-presentation';
+import { HomeTryoutHero } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
@@ -522,7 +523,7 @@ describe('responsive learning composition', () => {
     const tryoutSlide = within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!);
     await tryoutSlide.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: 'Shortcut Belajar' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Aktivitas' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Aktivitas Terakhir' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Feedback' })).toBeTruthy();
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
       state: 'open',
@@ -558,11 +559,14 @@ describe('responsive learning composition', () => {
       resultState: 'waitingIrt' as const,
       score: null,
     };
-    const view = render(<HomeActivity item={record} />);
+    const view = render(<RecentActivity item={record} />);
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
-    view.rerender(<HomeActivity item={{ ...record, resultState: 'ready', score: 0 }} />);
-    expect(screen.getByText(/Nilai 0%/)).toBeTruthy();
+    view.rerender(<RecentActivity item={{ ...record, resultState: 'ready', score: 0 }} />);
+    expect(screen.getByText('0%')).toBeTruthy();
+    expect(
+      screen.getByRole('progressbar', { name: 'Nilai aktivitas' }).getAttribute('aria-valuenow'),
+    ).toBe('0');
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       '/student/tryout/home-attempt/result',
     );

@@ -388,13 +388,16 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
               activity: 'drill',
               title: 'Faktorisasi Aljabar Kuadrat',
               chapterId,
+              subchapterId,
+              levelId,
               subchapterTitle: 'Subbab 2.1',
               submittedAt: '2026-10-03T02:30:00Z',
               resultState: 'ready',
               score: 85,
               isDemo: false,
               xpState: 'pending',
-              starsState: 'pending',
+              starsState: 'ready',
+              stars: 1,
             },
           ],
           features: {
@@ -467,7 +470,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     const pattern = /header-pattern\.png/;
     await expect(page.locator('.sh-identity:visible')).toHaveCSS('background-image', pattern);
     const imageSlots = [
-      '.sh-activity__icon img[src="/illustrations/chapters/algebra.webp"]',
+      '.recent-activity__art img[src="/illustrations/student-heroes/drill-owl.webp"]',
       '.sh-identity__bell img',
       '.sh-identity__announcement img',
       '.sh-shortcut__icon img',
@@ -517,8 +520,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         '.sh-class',
         '.sh-feedback',
         '.student-bottom-nav',
-        '.sh-activity-entry',
-        '.sh-activity',
+        '.recent-activity__card',
       ];
       return {
         width: innerWidth,
@@ -729,20 +731,38 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.locator('.notification-header')).toHaveCSS('background-image', pattern);
     if (width === 390) {
       await page.goto('/student');
+      const homeRecent = page.locator('.recent-activity__card');
+      await expect(homeRecent.getByText('85%')).toBeVisible();
+      await expect(homeRecent.getByText('1/3 bintang')).toBeVisible();
+      await expect(homeRecent.getByRole('link', { name: 'Lanjutkan', exact: true })).toHaveAttribute(
+        'href',
+        `/student/drill/${attemptId}`,
+      );
+      await homeRecent.screenshot({ path: testInfo.outputPath('beranda-aktivitas-390.png') });
       const homeHero = page.locator('.sh-carousel__slide--drill .sh-hero');
       const homeHeight = await homeHero.evaluate(
         (element) => (element as HTMLElement).offsetHeight,
       );
 
       await page.goto('/student/learn');
-      const recent = page.locator('.materials-recent-card');
-      await expect(recent.locator('.sh-activity__icon img')).toHaveAttribute(
+      const recent = page.locator('.recent-activity__card');
+      await expect(recent.locator('.recent-activity__art img')).toHaveAttribute(
         'src',
-        '/illustrations/chapters/algebra.webp',
+        '/illustrations/student-heroes/drill-owl.webp',
       );
       await expect(recent).toHaveCSS('background-image', /linear-gradient/);
-      await expect(recent.getByRole('link', { name: 'Lanjutkan latihan' })).toBeVisible();
+      await expect(recent.getByRole('link', { name: 'Lanjutkan', exact: true })).toHaveAttribute(
+        'href',
+        `/student/drill/${attemptId}`,
+      );
+      await expect(recent.getByText('85%')).toBeVisible();
+      await expect(recent.getByText('1/3 bintang')).toBeVisible();
       await recent.screenshot({ path: testInfo.outputPath('latihan-aktivitas-390.png') });
+
+      await page.goto(`/student/learn/${chapterId}`);
+      await expect(
+        page.locator('.app-mobile-header').getByRole('link', { name: 'Semua bab' }),
+      ).toHaveAttribute('href', '/student/learn');
 
       await page.goto('/student/pvp');
       const pvpHero = page.locator('.student-illustrated-hero--pvp');
@@ -761,6 +781,12 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await expect(profileHeader.getByRole('link')).toHaveCount(0);
       await expect(page.locator('#pengaturan-akun')).toBeAttached();
       await profileHeader.screenshot({ path: testInfo.outputPath('profil-header-390.png') });
+    }
+    if (width === 1440) {
+      await page.goto(`/student/learn/${chapterId}`);
+      await expect(
+        page.locator('.materials-detail__desktop-header').getByRole('link', { name: 'Semua bab' }),
+      ).toBeVisible();
     }
     expect(mutations).toEqual([]);
   });

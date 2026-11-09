@@ -4,7 +4,7 @@ import { afterEach, expect, it } from 'vitest';
 import { AssessmentExplanation, QuestionReviewDetail } from './assessment-review';
 import { RewardSummary } from './reward-summary';
 import { TryoutReleasedResult } from './tryout-presentation';
-import { HomeActivity } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import type { ReviewedQuestionDto } from './generated-types';
 
 afterEach(cleanup);
@@ -136,7 +136,7 @@ it('uses Info nilai and an explanation link rather than exposing review on the r
 });
 it('shows zero XP/stars and waiting TryOut XP on the dashboard', () => {
   render(
-    <HomeActivity
+    <RecentActivity
       item={{
         attemptId: 'a',
         activity: 'tryout',
