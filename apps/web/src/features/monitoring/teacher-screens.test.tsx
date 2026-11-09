@@ -133,7 +133,7 @@ it('retains rejected input, then opens the created class invitation without chan
   fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
   await waitFor(() => expect(auth.push).toHaveBeenCalledWith('/teacher/classes/class-test/invite'));
   expect(createTeacherClass).toHaveBeenLastCalledWith('test-teacher', 'IX A');
-  expect(screen.queryByRole('dialog')).toBeNull();
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   await waitFor(() => expect(getTeacherClasses).toHaveBeenCalledTimes(2));
 });
 it('keeps a pending create disabled and prevents another submit', async () => {
