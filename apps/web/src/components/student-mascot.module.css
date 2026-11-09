@@ -1,0 +1,11 @@
+.mascot {
+  display: block;
+  width: clamp(5rem, 20vw, 7rem);
+  max-width: 100%;
+  height: auto;
+  margin-inline: auto;
+}
+
+.compact {
+  width: 3.5rem;
+}
