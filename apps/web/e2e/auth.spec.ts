@@ -79,6 +79,7 @@ async function setup(page: Page, signedIn = false) {
         });
       return route.fulfill({ json: value });
     }
+    if (url.pathname === '/auth/v1/user') return route.fulfill({ json: value.user });
     await route.fulfill({ json: {} });
   });
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
@@ -368,6 +369,29 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     expect(errors).toEqual([]);
   });
 }
+test('Student password login retries, provisions the profile and resumes a class invitation', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  const { state, errors } = await setup(page);
+  state.failPassword = true;
+  await page.goto('/student/join?code=Ab_cd-234');
+  await page.getByLabel('Email Siswa').fill('kirino@example.test');
+  await page.getByLabel(/^Password/).fill('TEST ONLY incorrect password');
+  const submit = page.getByRole('button', { name: 'Masuk sebagai Siswa' });
+  await submit.click();
+  await expect(page.getByText(/Periksa email dan password/)).toBeVisible();
+  expect(state.posts).toEqual([]);
+
+  state.failPassword = false;
+  await page.getByLabel(/^Password/).fill('TEST ONLY correct password');
+  await submit.click();
+  await expect(page).toHaveURL(/\/student\/join\?code=Ab_cd-234$/);
+  expect(state.posts).toEqual([{ role: 'STUDENT' }]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  expect(errors).toEqual([]);
+});
+
 test('Google login launches the existing PKCE authorize URL and origin callback', async ({
   page,
 }) => {

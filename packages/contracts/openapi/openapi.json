@@ -62,7 +62,7 @@
             "description": ""
           },
           "404": {
-            "description": "Google account has no internal profile yet."
+            "description": "Authenticated account has no internal profile yet."
           }
         },
         "security": [
