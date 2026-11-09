@@ -146,8 +146,14 @@
   height: auto;
 }
 
-.heroLayers {
+.heroLayers,
+.heroMotionControl {
   display: none;
+}
+
+.heroMotionControl {
+  position: absolute;
+  inset: auto 0 0 auto;
 }
 
 .heroLayers,
@@ -1014,37 +1020,46 @@
 @media (prefers-reduced-motion: no-preference) {
   .heroArt[data-hero-ready='true'] .heroStill {
     visibility: hidden;
-    animation: hero-restore-still 0s var(--hero-motion-duration) forwards;
   }
 
-  .heroArt[data-hero-ready='true'] .heroLayers {
+  .heroArt[data-hero-ready='true'] .heroLayers,
+  .heroArt[data-hero-ready='true'] .heroMotionControl {
     display: block;
-    animation: hero-hide-layers 0s var(--hero-motion-duration) forwards;
+  }
+
+  .heroLayers > .heroLayer {
+    animation-duration: var(--hero-motion-duration);
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+
+  .heroArt[data-hero-paused='true'] .heroLayers > .heroLayer {
+    animation-play-state: paused;
   }
 
   .heroOwl {
     transform-origin: 60% 50%;
-    animation: hero-float var(--hero-motion-duration) ease-in-out;
+    animation-name: hero-float;
   }
 
   .heroBook {
     transform-origin: 29% 82%;
-    animation: hero-book var(--hero-motion-duration) ease-in-out;
+    animation-name: hero-book;
   }
 
   .heroPencil {
     transform-origin: 18% 67%;
-    animation: hero-pencil var(--hero-motion-duration) ease-in-out;
+    animation-name: hero-pencil;
   }
 
   .heroRuler {
     transform-origin: 15% 47%;
-    animation: hero-ruler var(--hero-motion-duration) ease-in-out;
+    animation-name: hero-ruler;
   }
 
   .heroStar {
     transform-origin: 26% 24%;
-    animation: hero-star var(--hero-motion-duration) ease-in-out;
+    animation-name: hero-star;
   }
 
   @keyframes hero-float {
@@ -1085,18 +1100,6 @@
     51% {
       opacity: 1;
       transform: translateY(-1.2%) scale(1.1);
-    }
-  }
-
-  @keyframes hero-restore-still {
-    to {
-      visibility: visible;
-    }
-  }
-
-  @keyframes hero-hide-layers {
-    to {
-      visibility: hidden;
     }
   }
 }
