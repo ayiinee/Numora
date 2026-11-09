@@ -85,7 +85,7 @@ it('provides a login destination after a create request reports an expired sessi
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX A' } });
   fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
   expect((await screen.findByRole('link', { name: 'Masuk kembali' })).getAttribute('href')).toBe(
-    '/',
+    '/login',
   );
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('IX A');
 });
