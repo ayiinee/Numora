@@ -286,7 +286,7 @@ export function AppShell({
                     try {
                       setLogoutError('');
                       await logout();
-                      router.replace(area === 'admin' ? '/admin/login' : '/login');
+                      router.replace(area === 'admin' ? '/admin-numora' : '/login');
                     } catch {
                       setLogoutError('Belum dapat keluar. Coba lagi.');
                       setLoggingOut(false);

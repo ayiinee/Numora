@@ -126,7 +126,7 @@ describe('Admin portal navigation', () => {
     render(<AppShell area="admin">Konten</AppShell>);
     fireEvent.click(screen.getByRole('button', { name: /^Keluar$/ }));
     await waitFor(() => expect(mocks.logout).toHaveBeenCalledOnce());
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin-numora'));
   });
   it.each([
     ['SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ADMIN_ACCOUNTS_MANAGE'], true, true],
@@ -223,7 +223,7 @@ describe('Admin portal navigation', () => {
   );
   it('sends signed-out users to internal login and Teachers to their own area', async () => {
     const view = render(<AdminEntryScreen />);
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/login'));
+    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin-numora'));
     mocks.state = {
       status: 'ready',
       profile: {

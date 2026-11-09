@@ -8,6 +8,7 @@ import { TeacherVerificationFrame } from '@/features/monitoring/teacher-presenta
 import { destination, useAuth } from './auth';
 import { postLoginDestination } from './class-invitation';
 import { AuthFrame, AuthStatus, GoogleIdentity } from './auth-presentation';
+import { LoginLayout } from './login-layout';
 import { signInStudent } from './student-password';
 import { getSupabase } from '@/lib/supabase';
 import { ApiProblem, getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
@@ -106,7 +107,13 @@ function Avatar({ name, photo }: { name: string; photo: unknown }) {
   );
 }
 
-export function LoginScreen({ publicLanding }: { publicLanding?: React.ReactNode }) {
+export function LoginScreen({
+  publicLanding,
+  embedded = false,
+}: {
+  publicLanding?: React.ReactNode;
+  embedded?: boolean;
+}) {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const [email, setEmail] = useState('');
@@ -161,111 +168,106 @@ export function LoginScreen({ publicLanding }: { publicLanding?: React.ReactNode
   )
     return publicLanding;
 
-  return (
-    <AuthFrame>
-      <section className="auth-card" aria-labelledby="login-title">
-        <span className="auth-card-icon">
-          <Icon name="graduation" />
-        </span>
-        <span className="auth-eyebrow">Selamat datang</span>
-        <h2 id="login-title">Mulai bersama NUMORA</h2>
-        <p className="auth-card-description">
-          Masuk dengan akun Siswa yang sudah disiapkan atau lanjutkan dengan Google.
-        </p>
-        {state.status === 'loading' ||
-        state.status === 'ready' ||
-        state.status === 'registration' ? (
-          <AuthStatus
-            title="Memeriksa sesi…"
-            message="Sebentar, kami sedang memeriksa akunmu."
-            loading
-          />
-        ) : state.status === 'disabled' ? (
-          <>
+  const card = (
+    <section
+      className={embedded ? 'auth-inline' : 'login-card'}
+      aria-labelledby={embedded ? undefined : 'login-title'}
+      aria-label={embedded ? 'Masuk akun Numora' : undefined}
+    >
+      {!embedded && (
+        <>
+          <h1 id="login-title">Masuk ke Numora</h1>
+          <p className="login-description">Masuk sebagai Siswa atau Guru untuk melanjutkan.</p>
+        </>
+      )}
+      {state.status === 'loading' || state.status === 'ready' || state.status === 'registration' ? (
+        <AuthStatus
+          title="Memeriksa sesi…"
+          message="Sebentar, kami sedang memeriksa akunmu."
+          loading
+        />
+      ) : state.status === 'disabled' ? (
+        <>
+          <p className="form-error" role="alert">
+            Akun ini tidak aktif.
+          </p>
+          <LogoutButton />
+        </>
+      ) : (
+        <>
+          {state.status === 'error' && (
             <p className="form-error" role="alert">
-              Akun ini tidak aktif.
+              {state.message}
             </p>
-            <LogoutButton />
-          </>
-        ) : (
-          <>
-            {state.status === 'error' && (
-              <p className="form-error" role="alert">
-                {state.message}
-              </p>
-            )}
-            {state.status === 'signed_out' && state.message && (
-              <p className="form-error" role="alert">
-                {state.message}
-              </p>
-            )}
-            {error && (
-              <p className="form-error" role="alert">
-                {error}
-              </p>
-            )}
-            {state.status === 'signed_out' && (
-              <form
-                className="auth-student-login-form"
-                aria-label="Login Siswa"
-                aria-busy={busy === 'student'}
-                onSubmit={(event) => void loginStudent(event)}
-              >
-                <Input
-                  label="Email Siswa"
-                  type="email"
-                  autoComplete="username"
-                  value={email}
-                  onChange={(event) => setEmail(event.target.value)}
-                  required
-                  disabled={busy !== null}
-                />
-                <Input
-                  label="Password"
-                  type="password"
-                  autoComplete="current-password"
-                  value={password}
-                  onChange={(event) => setPassword(event.target.value)}
-                  required
-                  disabled={busy !== null}
-                />
-                <Button
-                  fullWidth
-                  type="submit"
-                  loading={busy === 'student'}
-                  disabled={busy !== null}
-                >
-                  {busy === 'student' ? 'Sedang masuk…' : 'Masuk sebagai Siswa'}
-                </Button>
-              </form>
-            )}
-            <Button
-              fullWidth
-              variant="secondary"
-              loading={busy === 'google'}
-              disabled={busy !== null || state.status === 'error'}
-              onClick={login}
+          )}
+          {state.status === 'signed_out' && state.message && (
+            <p className="form-error" role="alert">
+              {state.message}
+            </p>
+          )}
+          {error && (
+            <p className="form-error" role="alert">
+              {error}
+            </p>
+          )}
+          {state.status === 'signed_out' && (
+            <form
+              className="auth-student-login-form"
+              aria-label="Login Siswa"
+              aria-busy={busy === 'student'}
+              onSubmit={(event) => void loginStudent(event)}
             >
-              {busy === 'google' ? 'Menghubungkan ke Google…' : 'Lanjutkan dengan Google'}
-            </Button>
-            {state.status === 'error' && (
-              <Button variant="secondary" fullWidth onClick={() => void refresh()}>
-                Periksa lagi
+              <Input
+                label="Email Siswa"
+                type="email"
+                autoComplete="username"
+                value={email}
+                onChange={(event) => setEmail(event.target.value)}
+                required
+                disabled={busy !== null}
+              />
+              <Input
+                label="Password"
+                type="password"
+                autoComplete="current-password"
+                value={password}
+                onChange={(event) => setPassword(event.target.value)}
+                required
+                disabled={busy !== null}
+              />
+              <Button fullWidth type="submit" loading={busy === 'student'} disabled={busy !== null}>
+                {busy === 'student' ? 'Sedang masuk…' : 'Masuk dengan email'}
               </Button>
-            )}
-          </>
-        )}
-        <div className="auth-entry">
-          <Link className="auth-entry-admin" href="/admin/login">
-            Masuk Admin
-          </Link>
-        </div>
-        <p className="auth-account-note">
-          <Icon name="lock" width="16" height="16" /> Role dipilih sekali setelah login pertama.
-        </p>
-      </section>
-    </AuthFrame>
+            </form>
+          )}
+          {state.status === 'signed_out' && (
+            <div className="auth-login-divider">
+              <span>atau lanjutkan dengan</span>
+            </div>
+          )}
+          <Button
+            fullWidth
+            variant="secondary"
+            loading={busy === 'google'}
+            disabled={busy !== null || state.status === 'error'}
+            onClick={login}
+          >
+            <img src="/icons/google.png" alt="" width="20" height="20" />
+            {busy === 'google' ? 'Menghubungkan ke Google…' : 'Lanjutkan dengan Google'}
+          </Button>
+          {state.status === 'error' && (
+            <Button variant="secondary" fullWidth onClick={() => void refresh()}>
+              Periksa lagi
+            </Button>
+          )}
+        </>
+      )}
+      {!embedded && state.status === 'signed_out' && (
+        <p className="login-help">Siswa dan Guru bisa masuk atau membuat akun lewat Google.</p>
+      )}
+    </section>
   );
+  return embedded ? card : <LoginLayout>{card}</LoginLayout>;
 }
 
 export function CallbackScreen() {

@@ -11,23 +11,21 @@ vi.mock('./auth', () => ({
 }));
 afterEach(cleanup);
 
-it('offers Student, Google and Admin login without internal QA links or preset credentials', () => {
+it('offers Student and Google login without Admin or internal QA links or preset credentials', () => {
   render(<LoginScreen />);
-  expect(screen.getByRole('button', { name: 'Masuk sebagai Siswa' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Masuk dengan email' })).toBeTruthy();
   expect((screen.getByLabelText(/Email Siswa/) as HTMLInputElement).value).toBe('');
   expect((screen.getByLabelText(/Password/) as HTMLInputElement).value).toBe('');
   expect(screen.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Masuk Admin' }).getAttribute('href')).toBe(
-    '/admin/login',
-  );
+  expect(screen.queryByRole('link', { name: 'Masuk Admin' })).toBeNull();
   expect(document.querySelector('a[href="/qa/login"], a[href^="/demo"]')).toBeNull();
   expect(screen.queryByText(/demo|QA Development/i)).toBeNull();
 });
 
 it('keeps Admin credentials empty', () => {
   render(<AdminLoginScreen />);
-  expect((screen.getByLabelText('Email Admin') as HTMLInputElement).value).toBe('');
-  expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe('');
+  expect((screen.getByRole('textbox', { name: 'Email Admin' }) as HTMLInputElement).value).toBe('');
+  expect((screen.getByLabelText(/^Password/) as HTMLInputElement).value).toBe('');
 });
 
 it('shows readiness without promising release while content or scoring is pending', () => {

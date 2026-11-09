@@ -378,7 +378,7 @@ it('keeps list failures retryable and closes data after a mutation access denial
   await screen.findByText('Akses ditolak.');
   expect(screen.queryByRole('button', { name: 'Edit sekolah' })).toBeNull();
   expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe(
-    '/admin/login',
+    '/admin-numora',
   );
 });
 it('ignores a late detail response after returning to the school list', async () => {

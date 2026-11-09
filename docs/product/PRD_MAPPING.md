@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Login Admin dipindahkan ke `/admin-numora`, dengan pengalihan dari `/admin/login`. Tautan Admin dihapus dari modal landing dan halaman masuk Siswa/Guru. Identitas dan izin Admin diperiksa melalui alur autentikasi serta otorisasi existing.
+
 **ENGINEERING DECISION — pemilik, 9 November 2026.** Pretest original 20 soal mendukung PG, beberapa jawaban, dan kategori dengan nilai sebagian. Total poin sebelum pembulatan menentukan level awal; jumlah soal benar seluruhnya tetap terpisah. Implementasi mencakup pin aturan nilai, rubrik, penerbitan versi baru, akses gambar siswa, dan perlindungan hasil lama. [Aturan dan verifikasi](../development/PRETEST_ORIGINAL_RELEASE_2026-11-09.md).
 
 **ENGINEERING DECISION — 9 November 2026:** login Siswa dengan email/password memakai Supabase Auth. NestJS memakai UUID Auth untuk membuka profil Siswa existing atau membuat satu profil Siswa pada login pertama dari akun yang ditandai pengelola. Pemetaan login Google dan verifikasi Guru tetap berlaku.

@@ -351,7 +351,7 @@ describe('Admin operations UI', () => {
     await screen.findByText('Akses operasional ditolak.');
     expect(screen.queryByRole('heading', { name: 'Daftar pengguna' })).toBeNull();
     expect(screen.getByRole('link', { name: 'Ke halaman masuk' }).getAttribute('href')).toBe(
-      '/admin/login',
+      '/admin-numora',
     );
   });
 

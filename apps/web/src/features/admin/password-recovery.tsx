@@ -50,7 +50,7 @@ export function AdminPasswordRecoveryScreen() {
             </Button>
           </form>
           {message && <p role="status">{message}</p>}
-          <Link href="/admin/login">Kembali ke login</Link>
+          <Link href="/admin-numora">Kembali ke login</Link>
         </section>
       </div>
     </main>

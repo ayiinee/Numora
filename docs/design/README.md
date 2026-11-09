@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING IMPLEMENTATION — 10 November 2026.** Halaman `/login` dan `/admin-numora` memakai `LoginLayout` bersama dengan CSS module pada fitur onboarding. Mulai 960 px, panel ilustrasi Numora berada di kiri dan formulir di kanan. Panel memakai gradasi pearl/mint, peach, dan lavender dengan garis lingkaran dekoratif. Badge di dekat logo menonjolkan TKA Matematika SMP/MTs dengan ikon topi wisuda, sedangkan Admin memakai badge Ruang Admin dengan ikon gembok. Di bawahnya, formulir menjadi satu kolom dengan logo dan tautan beranda. Komponen Input dan Button, label akun, autofill, serta status autentikasi dipakai bersama dengan alur existing.
+
 **ENGINEERING DECISION — header desktop Siswa, 9 November 2026.** Bar desktop memakai motif ungu yang sama dengan header ponsel. Halaman dengan header khusus menampilkan satu header yang sama pada kedua ukuran, termasuk tombol kembali jika tersedia. Halaman lain memakai judul halaman pada bar bermotif.
 
 **ENGINEERING DECISION — tampilan Drill dijeda, 9 November 2026.** Kartu jeda menampilkan maskot, nama level, dan durasi tersimpan dalam panel yang terpisah dari tombol lanjut. Kartu memakai lebar terbatas pada desktop dan mengikuti ruang konten ponsel. Tautan kembali membuka daftar materi.
