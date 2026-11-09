@@ -1,5 +1,5 @@
 {
-  "status": "INCOMPLETE_INFRASTRUCTURE_BLOCKED",
+  "status": "RECOVERY_ACCEPTED_FOLLOWUPS_RUNNING",
   "date": "2026-11-09",
   "purpose": "RESEARCH_ONLY",
   "productionApproved": false,
@@ -13,19 +13,19 @@
     "sharedAnchorVersions": 5
   },
   "numericalRecovery": {
-    "replications": 8,
-    "difficultyBias": -0.009887742770055028,
-    "difficultyRMSE": 0.08865969999956083,
-    "logDiscriminationRMSE": 0.09726447547734235,
-    "stepRMSE": 0.08903053266099557,
-    "thetaRMSE": 0.3804371713937267,
-    "difficultyStep95Coverage": 0.9655172413793104,
-    "thetaConditional95Coverage": 0.946125,
+    "replications": 30,
+    "difficultyBias": 0.0030550149494736447,
+    "difficultyRMSE": 0.09575381807892869,
+    "logDiscriminationRMSE": 0.10069496732319423,
+    "stepRMSE": 0.08390168360096768,
+    "thetaRMSE": 0.37941976819548373,
+    "difficultyStep95Coverage": 0.9471264367816092,
+    "thetaConditional95Coverage": 0.9452333333333334,
     "thetaRecoveryScope": "ALL_IDENTIFIED_SIMULATED_ATTEMPTS_RESEARCH_ONLY",
     "gateDistribution": {
       "participant:NOT_COMPARABLE": 6000,
-      "anchor:HELD": 12,
-      "anchor:PASSED": 28,
+      "anchor:HELD": 30,
+      "anchor:PASSED": 120,
       "participant:INSUFFICIENT": 2000,
       "MODEL_FIT_FAILED": 1
     },
@@ -38,13 +38,35 @@
       63.59399999998277,
       61.671999999991385,
       58.687999999994645,
-      58.84399999998277
+      58.84399999998277,
+      73.71899999998277,
+      43.296000000002095,
+      42.60899999999674,
+      44.437000000005355,
+      59.312999999994645,
+      40.421000000002095,
+      37.90600000001723,
+      41.655999999988126,
+      60.73399999999674,
+      53.969000000011874,
+      42.890999999974156,
+      42.687999999994645,
+      39.671999999991385,
+      40.703999999997905,
+      42.125,
+      34.703000000008615,
+      50.187999999994645,
+      38.76500000001397,
+      47.921999999991385,
+      46.59299999999348,
+      40.10999999998603,
+      43.21799999999348
     ],
-    "accepted": false
+    "accepted": true
   },
   "experimentModes": {
     "CONTRACT_PRODUCER": 4,
-    "NUMERICAL_RECOVERY_ONLY": 4
+    "NUMERICAL_RECOVERY_ONLY": 26
   },
   "replications": [
     {
@@ -110,6 +132,182 @@
       "mode": "NUMERICAL_RECOVERY_ONLY",
       "seconds": 58.84399999998277,
       "converged": true
+    },
+    {
+      "file": "replication-09.json",
+      "sha256": "204b908f66263dcd543509dd6e9500eec62ba759fc55dea03a115b6373be7322",
+      "seed": 20261117,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 73.71899999998277,
+      "converged": true
+    },
+    {
+      "file": "replication-10.json",
+      "sha256": "2a75a6241bfbfc3b8c365c9b7f6b76f71be744de9fcaa4af8e1a7cd336c431b8",
+      "seed": 20261118,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 43.296000000002095,
+      "converged": true
+    },
+    {
+      "file": "replication-11.json",
+      "sha256": "af8e6209608b9a17e1db61ff30c83bc780d7897716da734d050c23a06f7fe4fa",
+      "seed": 20261119,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 42.60899999999674,
+      "converged": true
+    },
+    {
+      "file": "replication-12.json",
+      "sha256": "ac5af760cc2806711370ba68870e89c34acdb32815b24009a8a516e2a4c2d628",
+      "seed": 20261120,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 44.437000000005355,
+      "converged": true
+    },
+    {
+      "file": "replication-13.json",
+      "sha256": "122cc337f4eb5589296fc3b199ad6d396cb4a3a359d25b290170ada4debb91e1",
+      "seed": 20261121,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 59.312999999994645,
+      "converged": true
+    },
+    {
+      "file": "replication-14.json",
+      "sha256": "32b018b3bac96aeac605750b952d0d50992ae8ea6899d0fde152ecf0dab3760e",
+      "seed": 20261122,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 40.421000000002095,
+      "converged": true
+    },
+    {
+      "file": "replication-15.json",
+      "sha256": "814e25bf8fcd127efedc0681ae623cb4c5b94fcdd50046a31aee262f841b9402",
+      "seed": 20261123,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 37.90600000001723,
+      "converged": true
+    },
+    {
+      "file": "replication-16.json",
+      "sha256": "c9c1c70b98981ff62e0fc921273d4298b330f3d93fa85e17a85f02d2da48f00d",
+      "seed": 20261124,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 41.655999999988126,
+      "converged": true
+    },
+    {
+      "file": "replication-17.json",
+      "sha256": "bd84dc295dc8ab280b10e4a300f4c3b1d0b152224268d14a3515ed5f917c8e95",
+      "seed": 20261125,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 60.73399999999674,
+      "converged": true
+    },
+    {
+      "file": "replication-18.json",
+      "sha256": "f63755bb69be56cc4eba74f4a57e83fba171e17793e0826e7598d64b6d95bd5a",
+      "seed": 20261126,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 53.969000000011874,
+      "converged": true
+    },
+    {
+      "file": "replication-19.json",
+      "sha256": "a175adc2927c14579f164ebee7d831c96ce8749a20604224c522f4ada3453269",
+      "seed": 20261127,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 42.890999999974156,
+      "converged": true
+    },
+    {
+      "file": "replication-20.json",
+      "sha256": "a4d86cee8d1ec4096aca3f2c0b9cb83a7341138b49e7cfbd2ecb59e2aaf6c59a",
+      "seed": 20261128,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 42.687999999994645,
+      "converged": true
+    },
+    {
+      "file": "replication-21.json",
+      "sha256": "bb1922c8780caaa60a318b23897f59ea9bc6a3f2b2a439f9f6f587b74485aa6a",
+      "seed": 20261129,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 39.671999999991385,
+      "converged": true
+    },
+    {
+      "file": "replication-22.json",
+      "sha256": "488f7147d7a5bc3b1a3db1104025ee00928f27c6d44496f32a8d2d7c2f5c8e3a",
+      "seed": 20261130,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 40.703999999997905,
+      "converged": true
+    },
+    {
+      "file": "replication-23.json",
+      "sha256": "e70b9079a46e8090694974a671185deadb20fb981fd541b19e1dcd5f82f2cf93",
+      "seed": 20261131,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 42.125,
+      "converged": true
+    },
+    {
+      "file": "replication-24.json",
+      "sha256": "848354f2f88bd230a85aba2404677f3f9dbaca4a067f5d089190cfb42afa92a9",
+      "seed": 20261132,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 34.703000000008615,
+      "converged": true
+    },
+    {
+      "file": "replication-25.json",
+      "sha256": "a4726edfcefaa811808dddbddbedddf515a728b2a880a557a6edf64240c1c2b9",
+      "seed": 20261133,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 50.187999999994645,
+      "converged": true
+    },
+    {
+      "file": "replication-26.json",
+      "sha256": "e1b880c9f7df0b44d2bd4383499dce7afc3ed1d99c2f6bb936413d49d2fb0134",
+      "seed": 20261134,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 38.76500000001397,
+      "converged": true
+    },
+    {
+      "file": "replication-27.json",
+      "sha256": "b6c99b114b8cbe6e50ec68cf07136614959a6b08b248216cd3ef41789c9bc0c8",
+      "seed": 20261135,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 47.921999999991385,
+      "converged": true
+    },
+    {
+      "file": "replication-28.json",
+      "sha256": "be95f02754fde87bbdff9c7ddb45ac796b32eedcc601d2e0d9f5833171f81549",
+      "seed": 20261136,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 46.59299999999348,
+      "converged": true
+    },
+    {
+      "file": "replication-29.json",
+      "sha256": "7ee2bdfbc680da78505d42dfda01585023da742550c8de35f5c02cdb76c89034",
+      "seed": 20261137,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 40.10999999998603,
+      "converged": true
+    },
+    {
+      "file": "replication-30.json",
+      "sha256": "edfd7847378e3436cee26dc7bd2001842f296453a46c28e95b10a9dff0f1c99c",
+      "seed": 20261138,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 43.21799999999348,
+      "converged": true
     }
   ],
   "evidence": {
@@ -130,19 +328,19 @@
     "roracle": "Previously passed probtrace 1e-8 and independent adaptive integration 1e-4, including unordered GPCM steps.",
     "runnerFaults": "Previously passed timeout and stale-authorization real-container removal.",
     "finalPinnedFullRun": {
-      "tests": 14,
-      "passed": 14,
+      "tests": 15,
+      "passed": 15,
       "failed": 0,
-      "seconds": 165.179,
+      "seconds": 161.198,
       "acknowledgementUnder10Seconds": true,
-      "note": "After owner-authorized Docker/WSL restart; scientific image and gates unchanged."
+      "includes": "Final per-arm anchor coverage, cleanup failure handling, identity SELECT denial, tampered artifact and immutable artifact guards."
     },
     "serviceRegression": {
-      "tests": 80,
-      "passed": 52,
-      "skipped": 28,
-      "seconds": 80.838,
-      "includes": "All 1094 numerical generators and all VERIFIED conceptual stock entries; PostgreSQL/R-only tests explicitly skipped without their dedicated environment."
+      "tests": 86,
+      "passed": 57,
+      "skipped": 29,
+      "seconds": 34.03,
+      "includes": "All 1094 numerical generators and all VERIFIED conceptual stock entries; dedicated PostgreSQL/R runs reported separately."
     },
     "mainContracts": {
       "jsonSchemasCompiled": 17,
@@ -160,7 +358,6 @@
     }
   },
   "remaining": [
-    "Complete 30 replications on same image; no threshold changes.",
     "Run pure 2PL, pure GPCM and three-arm engine scenarios.",
     "Complete anchor-DIF, local-dependence, singular-information and nonconvergence stress scenarios."
   ],
@@ -170,5 +367,24 @@
     "Five anchors and sensitivity checks do not establish absence of DIF or construct equivalence.",
     "Recovery-only experiments do not validate transport, contract artifacts or participant publication.",
     "Conditional EAP posterior SD excludes calibration-parameter uncertainty."
-  ]
+  ],
+  "diagnosticGateEvidence": {
+    "scope": "All 30 replications; item-arm fit checks, item-version precision checks; not participant result artifacts.",
+    "counts": {
+      "SX2_HOLM:PASS": 1798,
+      "ADJUSTED_Q3:PASS": 1800,
+      "SX2_HOLM:HELD": 2,
+      "ITEM_PRECISION:PASS": 1650
+    },
+    "replicationsAllFiveAnchorReleaseChecksPass": 10,
+    "replicationsAtLeastOneAnchorReleaseHeld": 20,
+    "participantGateScope": "Only four complete producer reports (8000 respondents). Other 26 are numerical recovery, not publication or artifact acceptance."
+  },
+  "researchPolicyRisk": {
+    "code": "HIGH_ANCHOR_SENSITIVITY_HOLD_RATE",
+    "heldReplications": 20,
+    "totalReplications": 30,
+    "simulatedDIF": false,
+    "action": "Academic review before production; no post-hoc threshold change. A sensitivity hold is NOT_COMPARABLE, not automatic DRIFT."
+  }
 }

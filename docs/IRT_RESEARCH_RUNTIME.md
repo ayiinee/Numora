@@ -5,6 +5,9 @@ Research-only, synthetic local execution. This is not production approval,
 canonical student-result adoption, publication, product fallback, comparison
 PASS/DRIFT, or evidence that one-dimensional Tryout measurement is appropriate.
 
+Paths under `research/` and `numora_service/` refer to Numora-ai-service; paths
+under `packages/` and `scripts/` for the main worker refer to Numora.
+
 ## Scientific pins
 
 `policy-v1.json` pins the research profile. `r-sources.lock.json` and `.tsv`
@@ -111,26 +114,39 @@ and leave-one-anchor-out sensitivity do not prove absence of DIF or construct
 equivalence. Research fixture approvals never authorize shared content.
 
 
-## Evidence and incomplete acceptance (9 November 2026)
+## Measured research evidence (9 November 2026)
 
-See `research/irt/acceptance-report-v1.json` in AI for aggregate measurements,
-per-replication report digests and exact remaining checks. The implementation is
-**not acceptance-complete**: eight of thirty replications finished before a
-Docker/WSL outage; it resumed after the owner-authorized restart. No threshold was relaxed. Four reports exercised the full
-producer and four are numerical-recovery-only experiments. `--recovery-only`
-runs the same model and synthetic design without expensive wire validation;
-it never produces a contract artifact or authorizes participant publication.
-Recovery EAP includes all identifiable simulated attempts, avoiding selection
-only on gate-passing participants. Gate counts from full producer runs and raw
-anchor diagnostics have different denominators and must not be conflated.
+See `research/irt/acceptance-report-v1.json` in AI and the identical
+`docs/IRT_RESEARCH_ACCEPTANCE_V1.json` in main for metrics, report digests and
+remaining checks. All 30 replications on the same R image converged and passed
+the declared numerical recovery targets: difficulty bias 0.0031, difficulty RMSE
+0.0958, log-discrimination RMSE 0.1007, step RMSE 0.0839, theta RMSE 0.3794.
+Difficulty/step 95% coverage was 0.9471; conditional theta coverage was 0.9452.
 
-The full earlier HTTP/daemon/R/artifact integration passed 12 tests for 2,000
-synthetic respondents. The final pinned full run passed 14/14 tests in 165.179 seconds after Docker
-recovery, including the ACK timing check (<10 s). The additional infrastructure
-run passed 14 checks with its R case explicitly skipped, including database
-rejection of tampered and edited sealed artifacts. The earlier upgrade run
-preserved historical attempt/score/XP rows exactly. Missing scientific stress cases and final timing evidence are listed
-in the report rather than counted as passes.
+Four reports exercised the complete producer; 26 are numerical-recovery-only
+experiments. `--recovery-only` runs the same model and synthetic design without
+wire validation and never produces a contract artifact. Recovery EAP includes
+all identifiable simulated attempts. Participant gate counts therefore apply
+only to the four producer reports (8,000 participants). Separate item-arm fit,
+item-version precision and anchor diagnostics cover all thirty replications.
+
+The research sensitivity gate held at least one anchor in 20/30 no-DIF synthetic
+replications. All 1,650 item-version precision checks and all 1,800 adjusted-Q3
+checks passed; 2/1,800 S-X2 Holm checks held. Recovery acceptance does not establish
+production policy suitability. The anchor hold rate requires academic review;
+thresholds were not changed, and held linking is not automatic DRIFT.
+
+The final pinned HTTP/daemon/R/artifact run passed 15/15 tests in 161.198 seconds,
+including ACK <10 seconds, per-arm anchor support, identity-read denial and
+artifact tampering/immutability. Upgrade testing preserved exact historical
+attempt/score/XP rows. Python service regression passed 57 tests with 29 explicit
+environment-dependent skips; dedicated real-R and database tests are reported
+separately. Additional model/stress/partial-arm followups are still running;
+the report records them as pending until actual evidence is available.
+
+The initial Docker/WSL outage was recovered with explicit owner permission;
+unrelated Tulungrejo app/database containers returned healthy. The same image,
+model, data seeds and thresholds were retained after recovery.
 
 ### Tested runtime binding
 
@@ -163,3 +179,16 @@ Resume the benchmark using its existing output directory and exact image digest;
 completed replications are checked against the image pin. Run
 `tools/check_irt_stress.py` after recovery for pending failure-injection cases;
 its one-cycle policy is a deliberate test mutation, never an approved profile.
+
+
+## Sanitized contract examples
+
+The existing payload contract remains authoritative: in AI, use
+`contracts/irt-calibration-v1/examples/tryout-input.json`, `tryout-result.json`,
+`tryout-insufficient.json`, `tryout-unscorable.json`, `tryout-timeout.json` and
+`tryout-not-comparable.json`. Main mirrors the directory under
+`packages/contracts/irt-calibration-v1`. These are synthetic contract examples,
+not registered policy approvals or computed student results. Transport uses
+`irt-calibration-service-v1/examples/accepted.json` and the shared digest vector.
+Do not send a payload directly in the notification endpoint: freeze/authorize
+through main and send only notification v3 IDs/digest/generation.
