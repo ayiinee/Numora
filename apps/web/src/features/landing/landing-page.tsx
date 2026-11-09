@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Brand, Icon, type IconName } from '@tka/ui';
 import { ClosingScene } from './closing-scene';
+import { HeroIllustration } from './hero-illustration';
 import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
 import styles from './landing.module.css';
 
@@ -90,17 +91,7 @@ export function LandingPage() {
       <main id="konten-utama" tabIndex={-1}>
         <div className={styles.firstFold}>
           <section className={styles.hero} aria-labelledby="landing-title">
-            <div className={styles.heroArt}>
-              <Image
-                className={styles.heroOwl}
-                src={`${illustrations}/drill-owl.svg`}
-                alt=""
-                width={420}
-                height={320}
-                unoptimized
-                preload
-              />
-            </div>
+            <HeroIllustration />
             <div className={styles.heroCopy}>
               <h1 id="landing-title">Latihan TKA Matematika untuk siswa SMP/MTs</h1>
               <div id="aksi-hero" className={styles.heroActions}>

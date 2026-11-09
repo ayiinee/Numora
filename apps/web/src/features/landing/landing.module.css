@@ -132,6 +132,8 @@
 }
 
 .heroArt {
+  --hero-motion-duration: 4.4s;
+  position: relative;
   display: grid;
   place-items: center;
   align-self: end;
@@ -139,9 +141,107 @@
   aspect-ratio: 1;
 }
 
-.heroOwl {
+.heroStill {
   width: 100%;
   height: auto;
+}
+
+.heroLayers {
+  display: none;
+}
+
+.heroLayers,
+.heroLayer {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  pointer-events: none;
+}
+
+/* Contours follow the transparent gaps in the approved square artwork. */
+.heroOwlMask {
+  clip-path: polygon(
+    26.63% 35.73%,
+    46.09% 12.44%,
+    88.2% 18.02%,
+    90.59% 26.4%,
+    92.58% 58.69%,
+    88.84% 74%,
+    85.81% 78.31%,
+    79.51% 82.14%,
+    73.68% 83.65%,
+    60.13% 80.54%,
+    43.06% 66.67%,
+    31.02% 51.44%,
+    26.48% 40.35%
+  );
+}
+
+.heroBookMask {
+  clip-path: polygon(
+    6.86% 77.91%,
+    10.21% 74.56%,
+    13.56% 73.05%,
+    17.07% 72.17%,
+    34.45% 67.7%,
+    38.6% 67.3%,
+    43.7% 69.54%,
+    51.36% 83.17%,
+    51.67% 86.68%,
+    34.93% 91.79%,
+    14.83% 96.33%,
+    12.84% 94.82%,
+    6.94% 80.94%
+  );
+}
+
+.heroPencilMask {
+  clip-path: polygon(
+    11.64% 67.54%,
+    13.88% 64.35%,
+    22.41% 53.83%,
+    29.82% 51.04%,
+    30.06% 52.95%,
+    28.71% 58.85%,
+    20.26% 69.38%,
+    16.99% 72.25%,
+    14.59% 72.41%,
+    11.56% 70.02%
+  );
+}
+
+.heroRulerMask {
+  clip-path: polygon(
+    4.15% 54.31%,
+    12.28% 34.93%,
+    14.59% 34.69%,
+    26.24% 46.17%,
+    26.32% 49.44%,
+    24.72% 50.64%,
+    5.9% 58.05%,
+    3.83% 57.26%
+  );
+}
+
+.heroStarMask {
+  clip-path: polygon(
+    13.88% 12.2%,
+    18.18% 8.29%,
+    22.41% 8.21%,
+    23.21% 13.88%,
+    28.47% 14.27%,
+    35.57% 21.05%,
+    35.73% 24.4%,
+    29.9% 33.17%,
+    17.86% 32.14%,
+    17.46% 19.78%,
+    13.56% 16.11%
+  );
+}
+
+.heroSparkMask {
+  clip-path: polygon(28.55% 63.96%, 31.58% 60.29%, 34.85% 63.96%, 31.58% 67.22%);
 }
 
 .heroCopy {
@@ -912,16 +1012,91 @@
 }
 
 @media (prefers-reduced-motion: no-preference) {
-  .heroOwl {
-    animation: arrive 460ms ease-out both;
+  .heroArt[data-hero-ready='true'] .heroStill {
+    visibility: hidden;
+    animation: hero-restore-still 0s var(--hero-motion-duration) forwards;
   }
 
-  @keyframes arrive {
-    from {
-      transform: translateY(8px);
+  .heroArt[data-hero-ready='true'] .heroLayers {
+    display: block;
+    animation: hero-hide-layers 0s var(--hero-motion-duration) forwards;
+  }
+
+  .heroOwl {
+    transform-origin: 60% 50%;
+    animation: hero-float var(--hero-motion-duration) ease-in-out;
+  }
+
+  .heroBook {
+    transform-origin: 29% 82%;
+    animation: hero-book var(--hero-motion-duration) ease-in-out;
+  }
+
+  .heroPencil {
+    transform-origin: 18% 67%;
+    animation: hero-pencil var(--hero-motion-duration) ease-in-out;
+  }
+
+  .heroRuler {
+    transform-origin: 15% 47%;
+    animation: hero-ruler var(--hero-motion-duration) ease-in-out;
+  }
+
+  .heroStar {
+    transform-origin: 26% 24%;
+    animation: hero-star var(--hero-motion-duration) ease-in-out;
+  }
+
+  @keyframes hero-float {
+    38% {
+      transform: translateY(-3%) rotate(-1.5deg);
     }
+    70% {
+      transform: translateY(-0.7%) rotate(0.6deg);
+    }
+  }
+
+  @keyframes hero-book {
+    58% {
+      transform: translateY(1.2%) rotate(1.2deg);
+    }
+  }
+
+  @keyframes hero-pencil {
+    32% {
+      transform: translate(1%, -2.6%) rotate(-5deg);
+    }
+    66% {
+      transform: translate(0%, -1.2%) rotate(2deg);
+    }
+  }
+
+  @keyframes hero-ruler {
+    48% {
+      transform: translate(-1.1%, -1.8%) rotate(-4deg);
+    }
+  }
+
+  @keyframes hero-star {
+    26% {
+      opacity: 0.72;
+      transform: scale(0.96);
+    }
+    51% {
+      opacity: 1;
+      transform: translateY(-1.2%) scale(1.1);
+    }
+  }
+
+  @keyframes hero-restore-still {
     to {
-      transform: translateY(0);
+      visibility: visible;
+    }
+  }
+
+  @keyframes hero-hide-layers {
+    to {
+      visibility: hidden;
     }
   }
 }
