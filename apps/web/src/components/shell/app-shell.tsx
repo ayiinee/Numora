@@ -9,18 +9,24 @@ import { activeAdminHref, adminNavigation } from '@/features/admin/navigation';
 import { AdminAccount, AdminNavigation } from './admin-navigation';
 
 type Area = 'student' | 'teacher' | 'admin';
+type NavigationItem = { href: string; label: string; icon: IconName; sidebarIcon?: IconName };
 const ADMIN_SIDEBAR_STORAGE_KEY = 'numora:admin-sidebar-collapsed';
-const navigation: Record<Area, { href: string; label: string; icon: IconName }[]> = {
+const studentPrimaryNavigation: NavigationItem[] = [
+  { href: '/student', label: 'Belajar', icon: 'graduation' },
+  { href: '/student/learn', label: 'Latihan', icon: 'book' },
+  { href: '/student/tryout', label: 'Tryout', icon: 'clipboard', sidebarIcon: 'clock' },
+  { href: '/student/pvp', label: 'PvP', icon: 'gamepad' },
+];
+const studentProfile: NavigationItem = { href: '/student/profile', label: 'Profil', icon: 'user' };
+const studentBottomNavigation = [...studentPrimaryNavigation, studentProfile];
+const navigation: Record<Area, NavigationItem[]> = {
   student: [
-    { href: '/student', label: 'Belajar', icon: 'graduation' },
-    { href: '/student/learn', label: 'Latihan', icon: 'book' },
-    { href: '/student/tryout', label: 'Tryout', icon: 'clipboard' },
-    { href: '/student/pvp', label: 'PvP', icon: 'gamepad' },
-    { href: '/student/profile', label: 'Profil', icon: 'user' },
+    ...studentPrimaryNavigation,
     { href: '/student/assessment', label: 'Progres', icon: 'chart' },
     { href: '/student/leaderboards', label: 'Peringkat', icon: 'chart' },
     { href: '/student/notifications', label: 'Notifikasi', icon: 'bell' },
     { href: '/student/feedback', label: 'Feedback dari Guru', icon: 'chat' },
+    studentProfile,
   ],
   teacher: [
     { href: '/teacher', label: 'Kelas saya', icon: 'users' },
@@ -39,6 +45,7 @@ export function AppShell({
   actions,
   headerVariant,
   mobileHeader,
+  showTopbarProfile = true,
   className = '',
 }: {
   area?: Area;
@@ -50,6 +57,7 @@ export function AppShell({
   actions?: ReactNode;
   headerVariant?: TopBarProps['variant'];
   mobileHeader?: ReactNode;
+  showTopbarProfile?: boolean;
   className?: string;
 }) {
   const pathname = usePathname();
@@ -63,6 +71,7 @@ export function AppShell({
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
+  const isStudent = area === 'student';
   const isAdmin = area === 'admin';
   const adminItems = adminNavigation(profile);
   const adminActive = activeAdminHref(pathname, adminItems);
@@ -105,22 +114,17 @@ export function AppShell({
         : pathname === href ||
           pathname.startsWith(`${href}/`) ||
           (href === '/student/learn' && pathname.startsWith('/student/drill/'));
-  const links = (mobile = false) =>
-    (area === 'admin'
-      ? adminItems
-      : mobile && area === 'student'
-        ? navigation.student.slice(0, 5)
-        : navigation[area]
-    ).map((item) => (
+  const links = (sidebar = false) =>
+    navigation[area].map((item) => (
       <Link
         key={item.href}
         href={item.href}
         aria-current={active(item.href) ? 'page' : undefined}
         onClick={() => setMenuOpen(false)}
       >
-        <Icon name={item.icon} />
+        <Icon name={(sidebar && item.sidebarIcon) || item.icon} />
         <span>{item.label}</span>
-        {!mobile && active(item.href) && <span className="nav-active-dot" />}
+        {active(item.href) && <span className="nav-active-dot" />}
       </Link>
     ));
   return (
@@ -169,19 +173,8 @@ export function AppShell({
           ) : (
             <>
               <p className="nav-caption">{areaName}</p>
-              <nav aria-label={`Navigasi ${areaName}`}>{links()}</nav>
+              <nav aria-label={`Navigasi ${areaName}`}>{links(true)}</nav>
             </>
-          )}
-          {area === 'student' && (
-            <div className="sidebar-note">
-              <Icon name="spark" />
-              <strong>
-                Langkah kecil,
-                <br />
-                kemajuan berarti.
-              </strong>
-              <p>Temukan ritme belajarmu bersama NUMORA.</p>
-            </div>
           )}
           {isAdmin ? (
             <AdminAccount profile={profile} />
@@ -242,27 +235,48 @@ export function AppShell({
               <Link className="mobile-brand" href={`/${area}`}>
                 <Brand />
               </Link>
-              <span className="desktop-context">
-                {areaName}
-                <span>/</span>
-                {title ||
-                  (area === 'admin' ? adminItems : navigation[area]).find((item) =>
-                    active(item.href),
-                  )?.label ||
-                  'Beranda'}
-              </span>
+              {isStudent ? (
+                !mobileHeader && (
+                  <div className="student-desktop-heading">
+                    {backHref && (
+                      <Link href={backHref} className="materials-header__back" aria-label="Kembali">
+                        <Icon name="back" />
+                      </Link>
+                    )}
+                    <div>
+                      <h1>
+                        {title ||
+                          navigation.student.find((item) => active(item.href))?.label ||
+                          'Belajar'}
+                      </h1>
+                      {subtitle && <p>{subtitle}</p>}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <span className="desktop-context">
+                  {areaName}
+                  <span>/</span>
+                  {title ||
+                    (isAdmin ? adminItems : navigation[area]).find((item) => active(item.href))
+                      ?.label ||
+                    'Beranda'}
+                </span>
+              )}
             </>
           }
           right={
             <div className="topbar-actions">
               {actions}
               {area !== 'admin' ? (
-                <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
-                  <span className="account-avatar">
-                    {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
-                  </span>
-                  <span className="account-name">{profile?.displayName || 'Profil'}</span>
-                </Link>
+                showTopbarProfile && (
+                  <Link href={`/${area}/profile`} className="account-link" aria-label="Buka profil">
+                    <span className="account-avatar">
+                      {profile?.displayName.slice(0, 1).toUpperCase() || 'N'}
+                    </span>
+                    <span className="account-name">{profile?.displayName || 'Profil'}</span>
+                  </Link>
+                )
               ) : (
                 <button
                   className="text-button"
@@ -360,7 +374,7 @@ export function AppShell({
         <BottomNav
           className="student-bottom-nav"
           pathname={pathname}
-          items={navigation.student.slice(0, 5).map((item) => ({
+          items={studentBottomNavigation.map((item) => ({
             ...item,
             icon: <Icon name={item.icon} />,
             active: active(item.href),

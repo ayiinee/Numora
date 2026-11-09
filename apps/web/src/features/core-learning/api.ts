@@ -12,6 +12,8 @@ import type {
 } from './types';
 import type {
   StudentDashboardDto,
+  DrillClockDto,
+  UpdateDrillClockDto,
   SavedAnswerDto,
   MediaLinksDto,
   StudentQuestionReportDto,
@@ -78,6 +80,12 @@ import type { AssessmentAnswer } from './assessment-answers';
 const id = encodeURIComponent;
 
 export const learningApi = {
+  updateDrillClock: (token: string, attemptId: string, input: UpdateDrillClockDto) =>
+    request<DrillClockDto>(token, `/assessment-attempts/${id(attemptId)}/drill-clock`, {
+      method: 'PATCH',
+      body: JSON.stringify(input),
+      keepalive: input.action === 'pause',
+    }),
   pretestChapter: (token: string, chapterId: string) =>
     request<PretestChapterDto>(token, `/pretest/chapters/${id(chapterId)}`),
   startPretest: (token: string, chapterId: string) =>

@@ -2,7 +2,8 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Avatar, Badge, Brand, Button, Icon } from '@tka/ui';
+import { Badge, Brand, Button, Icon } from '@tka/ui';
+import { OwnAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import { useAuth } from '@/features/onboarding/auth';
 import { useTeacherSignOut } from '@/features/onboarding/teacher-session';
 import { TeacherHeader } from './teacher-header';

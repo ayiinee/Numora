@@ -1,6 +1,7 @@
 'use client';
 
-import { Avatar, Badge, Button, Card, Icon } from '@tka/ui';
+import { Badge, Button, Card, Icon } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import type { FeedbackDto } from '@/lib/generated-api-types';
 
 export function FeedbackCard({
@@ -19,7 +20,7 @@ export function FeedbackCard({
   return (
     <Card className="student-feedback-card" aria-labelledby={`feedback-${item.id}`}>
       <div className="student-feedback-card__header">
-        <Avatar name={item.teacherName} />
+        <Avatar userId={item.teacherId} name={item.teacherName} />
         <div>
           <h2 id={`feedback-${item.id}`}>{item.teacherName}</h2>
           <p>Feedback dari Guru</p>

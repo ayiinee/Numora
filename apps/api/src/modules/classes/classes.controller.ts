@@ -157,4 +157,13 @@ export class ClassesController {
   ) {
     return this.classes.students(authorization, classId);
   }
+
+  @Get(':classId/banned-students')
+  @ApiOkResponse({ type: ClassStudentsResponseDto })
+  bannedStudents(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('classId', ParseUUIDPipe) classId: string,
+  ) {
+    return this.classes.bannedStudents(authorization, classId);
+  }
 }

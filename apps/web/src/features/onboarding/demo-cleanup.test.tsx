@@ -11,15 +11,16 @@ vi.mock('./auth', () => ({
 }));
 afterEach(cleanup);
 
-it('offers Google and Admin login without internal QA destinations or credentials', () => {
+it('offers Student, Google and Admin login without internal QA links or preset credentials', () => {
   render(<LoginScreen />);
+  expect(screen.getByRole('button', { name: 'Masuk sebagai Siswa' })).toBeTruthy();
+  expect((screen.getByLabelText(/Email Siswa/) as HTMLInputElement).value).toBe('');
+  expect((screen.getByLabelText(/Password/) as HTMLInputElement).value).toBe('');
   expect(screen.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeTruthy();
   expect(screen.getByRole('link', { name: 'Masuk Admin' }).getAttribute('href')).toBe(
     '/admin/login',
   );
-  expect(
-    document.querySelector('a[href="/qa/login"], a[href^="/demo"], input[type="password"]'),
-  ).toBeNull();
+  expect(document.querySelector('a[href="/qa/login"], a[href^="/demo"]')).toBeNull();
   expect(screen.queryByText(/demo|QA Development/i)).toBeNull();
 });
 
