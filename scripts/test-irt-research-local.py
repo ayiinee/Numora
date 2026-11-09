@@ -38,7 +38,7 @@ try {await migrateIntegratedDatabase(db,process.argv[2]);} finally {await db.end
             if os.environ.get('IRT_RESEARCH_UPGRADE_TEST')=='true':
                 prefix=target/'migrations';shutil.copytree(canonical,prefix)
                 journal=prefix/'meta/_journal.json';value=json.loads(journal.read_text())
-                value['entries']=[entry for entry in value['entries'] if entry['idx']<53]
+                value['entries']=[entry for entry in value['entries'] if entry['idx']<54]
                 journal.write_text(json.dumps(value))
                 subprocess.run(['node','--input-type=module','-e',migrate,url,str(prefix)],cwd=ROOT,check=True,timeout=180)
                 with psycopg.connect(url) as db:
