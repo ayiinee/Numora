@@ -191,7 +191,7 @@ model, data seeds and thresholds were retained after recovery.
 
 ### Tested runtime binding
 
-`research/irt-runtime-profile-v1.json` pins the immutable Linux amd64 R image,
+`research/irt-runtime-profile-v2.json` pins the immutable Linux amd64 R image,
 scientific Python source hashes (SHA256 after LF normalization), tested Python
 version/platform and installed dependency versions. The Python research lock is
 `research/irt-python-research.lock`; it is independent of the existing generator
@@ -247,3 +247,62 @@ S-X2 Holm correction is applied within each arm; release-test Holm correction
 covers the five anchors. The fixed policy/source hashes preserve that scope.
 Any academic change to scope, model or threshold requires a new policy version
 with a stated reason, not retrospective tuning of this benchmark.
+
+
+## Tryout participant outcomes and failure evidence ? 9 November 2026
+
+**ENGINEERING IMPLEMENTATION ? research only.** The service-AI follow-up is
+independent of admin package configuration. It consumes the existing frozen
+`irt-calibration-v1` input; no admin lifecycle, student routing, canonical
+results, publication, fallback scores or historical XP changes are introduced.
+
+The positive multi-arm regression uses fixed synthetic seed `20261119`, 1,000
+participants per arm, the unchanged research-v1 policy and pinned mirt image.
+This seed is a known positive case from the original benchmark, deliberately
+selected to verify the success path; it is not a gate acceptance-rate estimate.
+The HTTP/inbox/daemon/R/artifact test now requires 2,000 `SCORED` outcomes,
+exact respondent?attempt?package?batch matching, finite posterior uncertainty,
+reference-score checks, and replay to the same immutable artifact. Six outputs
+are compared to a finer 1,201-point posterior grid; existing R-oracle tests
+separately compare against independent numerical integration.
+
+AI's `research/irt/anchor-gate-audit-v1.json` rechecks all 30 baseline report
+hashes, image pins, seeds, synthetic truth and the unchanged policy hash. Twenty
+replications are held (66.7%; Wilson 95% interval 48.8?80.8%). There are 17 anchor
+step-difference holds and 18 log-slope holds, with no Holm-significance hold.
+Multiple reasons may occur in one replication. The existing gate remains
+conservative: nonsignificance does not prove equivalence. An unexplained,
+missing, non-finite or wrong-identity anchor cannot pass the gate. Diagnostics
+now identify which condition held each anchor; they do not declare PASS/DRIFT.
+
+`tools/evaluate_irt_anchor_sensitivity.py` adds paired no-DIF/+1.3 difficulty-DIF
+experiments at 500 and 2,000 respondents per arm, with immutable source/input
+checkpoints. This small experiment illustrates sample-size and eligibility
+effects, not a reliable detection-rate estimate or a new academic policy.
+Threshold changes, released-effect uncertainty/equivalence analysis and safe
+per-arm refitting require separate versioned research evidence. A joint fit
+with unstable linking is never silently used to score the original arm.
+
+Scientific failure tests distinguish nonconvergence, singular covariance,
+unavailable fit diagnostics, local dependence and unstable linking, keeping
+scores null when held. The transport fault matrix uses deterministic engine
+doubles and is labeled as such; it supplements real-R tests rather than
+claiming recovery evidence. Singular, asymmetric, indefinite and non-finite
+covariance are rejected before delta-method parameter conversion.
+
+Technical engine exceptions remain `FAILED + INTERNAL_ERROR` under the
+unchanged contract, with no automatic retry. Diagnostics retain only an
+allowlisted engine stage and scientific failure code, excluding raw R messages
+and calls. Missing sample/failed scientific gates remain scientific outcomes;
+timeout/dependency failures preserve their existing retry semantics. Revocation,
+cancellation and stale execution still fence artifact acceptance.
+
+Runtime profile v2 (`irt-research-windows-producer-linux-r-v2`) pins the new
+Python sources, including gate/failure helpers; profile v1 and its prior
+benchmark remain historical evidence. The R image and research-v1 thresholds
+are unchanged. Linux Python validation remains outside this follow-up.
+
+The original acceptance-v1 JSON predates the corrected CI and this outcome
+work. Its numerical recovery evidence remains valid, but its old CI blocker
+and aggregate acceptance status must not be used as a current readiness claim.
+Use the supplementary outcome report delivered with this follow-up.
