@@ -1,5 +1,6 @@
 """Snapshot-only disposable acceptance. No dispatch, worker, R, or shared database."""
 import importlib.util
+import argparse
 import json
 import os
 from pathlib import Path
@@ -22,9 +23,14 @@ spec.loader.exec_module(harness)
 
 
 def main():
+    parser = argparse.ArgumentParser(description=__doc__)
+    parser.add_argument('--output', type=Path, help='Optional synthetic snapshots/evidence; use an ignored or temporary directory')
+    args = parser.parse_args()
     profile = json.loads((AI / 'research/irt/policy-v1.json').read_text())
     with harness.local_database() as url:
         with psycopg.connect(url, row_factory=dict_row) as db:
+            historical_xp = db.execute('SELECT to_jsonb(x) AS row FROM xp_ledger x ORDER BY id').fetchall()
+            results_before = db.execute('SELECT count(*) AS count FROM tryout_attempt_results').fetchone()
             actor = db.execute("INSERT INTO users(auth_user_id,role,admin_role,display_name,email) VALUES(%s,'ADMIN','CONTENT_DATA_MODERATION','SYNTHETIC','delivery@example.test') RETURNING id", (uuid4(),)).fetchone()['id']
             for arms in [2, 3]:
                 package = db.execute("INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(%s,1,'SYNTHETIC','TRYOUT') RETURNING id", (uuid4().hex,)).fetchone()['id']
@@ -41,13 +47,16 @@ def main():
                     resources[key] = {'kind': kind, 'ref': ref, 'definition': definition}
                     value['policies'][key] = ref
                 db.commit()
-                bundle = {'value': value, 'resources': resources, 'runtime': {'purpose': 'RESEARCH_ONLY', 'image': 'sha256:' + 'a' * 64}}
+                bundle = {'value': value, 'resources': resources, 'runtime': json.loads((AI / 'research/irt-runtime-windows-v4.json').read_text())}
                 subprocess.run(['node', 'scripts/test-irt-delivery-cases.mjs'], cwd=ROOT, input=json.dumps(bundle), text=True,
-                               env={**os.environ, 'IRT_RESEARCH_LOCAL_URL': url, 'NUMORA_IRT_RESEARCH_ENABLED': 'true'}, check=True, timeout=90)
+                               env={**os.environ, 'IRT_RESEARCH_LOCAL_URL': url, 'NUMORA_IRT_RESEARCH_ENABLED': 'true',
+                                    'IRT_DELIVERY_EVIDENCE_DIR': str(args.output.resolve()) if args.output else ''}, check=True, timeout=90)
         with psycopg.connect(url) as db:
             assert db.execute('SELECT count(*) FROM irt_calibration_dispatches_v1').fetchone()[0] == 0
             assert db.execute('SELECT count(*) FROM irt_compute.calibration_jobs_v1').fetchone()[0] == 0
-            assert db.execute('SELECT count(*) FROM xp_ledger').fetchone()[0] == 0
+        with psycopg.connect(url, row_factory=dict_row) as db:
+            assert db.execute('SELECT to_jsonb(x) AS row FROM xp_ledger x ORDER BY id').fetchall() == historical_xp
+            assert db.execute('SELECT count(*) AS count FROM tryout_attempt_results').fetchone() == results_before
             print(json.dumps({'dispatches': 0, 'jobs': 0, 'xpWrites': 0, 'R': 'NOT_RUN'}))
 
 

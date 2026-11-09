@@ -1,10 +1,13 @@
 import assert from 'node:assert/strict';
-import { readFileSync } from 'node:fs';
+import { readFileSync, mkdirSync, writeFileSync } from 'node:fs';
+import { join } from 'node:path';
+import { spawnSync } from 'node:child_process';
 import postgres from '../packages/database/node_modules/postgres/src/index.js';
 import {
   freezeCalibrationResearch,
   inspectCalibrationDelivery,
 } from '../packages/irt-orchestration/src/calibration-research.mjs';
+import { validateInput } from '../packages/contracts/irt-calibration-v1/validate.mjs';
 
 const { value, resources, runtime } = JSON.parse(readFileSync(0, 'utf8'));
 const url = new URL(process.env.IRT_RESEARCH_LOCAL_URL);
@@ -44,6 +47,19 @@ try {
     (SELECT count(*) FROM analytics_outbox)::int AS outbox`,
     before,
   );
+  const cli = spawnSync(process.execPath, ['scripts/inspect-irt-delivery.mjs'], {
+    input: JSON.stringify({ value, resources, runtime }),
+    encoding: 'utf8',
+    env: {
+      ...process.env,
+      IRT_RESEARCH_MAIN_DATABASE_URL: url.toString(),
+      IRT_PSEUDONYM_SECRET: options.secret,
+      IRT_PSEUDONYM_KEY_VERSION: options.keyVersion,
+    },
+  });
+  assert.equal(cli.status, 0, cli.stderr);
+  assert.equal(JSON.parse(cli.stdout).sourceComplete, true);
+  cases++;
   cases++;
   await rejects((v) => {
     v.respondents.pop();
@@ -66,6 +82,18 @@ try {
   await rejects((v) => {
     v.responses.pop();
   }, 'IRT_COVERAGE_INVALID');
+  await rejects((v) => {
+    v.items[0].contentDigest = 'f'.repeat(64);
+  }, 'IRT_CANONICAL_ITEM_MISMATCH');
+  await rejects((v) => {
+    v.policies.model.version++;
+  }, 'IRT_POLICY_RESOURCE_MISMATCH');
+  await assert.rejects(
+    db`INSERT INTO assessment_attempts(student_id,package_id,assessment_type,tryout_batch_id)
+    SELECT student_id,${value.packages[1].packageId},'TRYOUT',tryout_batch_id FROM assessment_attempts WHERE id=${value.respondents[0].attemptId}`,
+    (error) => error.code === '23505',
+  );
+  cases++;
   const bad = structuredClone(resources);
   bad.model.definition = { changed: true };
   assert.deepEqual((await inspect(value, bad)).blockers, ['IRT_POLICY_NOT_APPROVED']);
@@ -80,6 +108,27 @@ try {
   const [snapshot] =
     await db`SELECT body,input_digest FROM irt_calibration_requests_v1 WHERE id=${saved.requestId}`;
   assert.match(snapshot.input_digest, /^[0-9a-f]{64}$/);
+  const payload = { ...snapshot.body, inputDigest: snapshot.input_digest };
+  validateInput(payload);
+  if (process.env.IRT_DELIVERY_EVIDENCE_DIR) {
+    const directory = process.env.IRT_DELIVERY_EVIDENCE_DIR;
+    mkdirSync(directory, { recursive: true });
+    writeFileSync(
+      join(directory, `canonical-${value.packages.length}-arm.snapshot.json`),
+      JSON.stringify(
+        {
+          purpose: 'SYNTHETIC_ONLY',
+          productionApproved: false,
+          approvalBinding: 'DISPOSABLE_DATABASE_ONLY',
+          value: payload,
+          resources,
+          runtime,
+        },
+        null,
+        2,
+      ) + '\n',
+    );
+  }
   const omitted = snapshot.body.responses.find((r) => r.attemptItemId === first.attemptItemId);
   assert.equal(omitted.scoreCategory, 0);
   assert.equal(omitted.awardedPoints, '0.00');
