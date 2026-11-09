@@ -1184,7 +1184,7 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   }) => {
     await fixtures(page);
     await page.goto('/student');
-    await page.getByRole('link', { name: 'Buka profil', exact: true }).click();
+    await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
     await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
