@@ -134,7 +134,12 @@ export function AssessmentSession({
     retry: false,
   });
   const renderContent = (text: string) => (
-    <ContentRichText text={text} media={media.data ?? []} retry={() => void media.refetch()} />
+    <ContentRichText
+      text={text}
+      media={media.data ?? []}
+      retry={() => void media.refetch()}
+      renderBareMath
+    />
   );
   async function choose(questionId: string, answer: AssessmentAnswer) {
     if (

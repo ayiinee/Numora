@@ -25,6 +25,7 @@ const question: ReviewedQuestionDto = {
   maximumPoints: 3,
   correctEquivalent: null,
   explanation: 'TEST ONLY pembahasan',
+  richExplanation: { text: 'Hasilnya \\sqrt{4}.' },
   optionReview: [
     { optionId: 'A', selected: true, isKey: true },
     { optionId: 'B', selected: false, isKey: true },
@@ -43,8 +44,9 @@ it('renders a dedicated read-only question layout with explanation underneath an
   expect(screen.getByText('Sebagian benar')).toBeTruthy();
   expect(view.container.querySelector('.practice-question .practice-choices')).toBeTruthy();
   expect(
-    view.container.querySelector('.practice-question .drill-review__explanation'),
-  ).toBeTruthy();
+    view.container.querySelector('.practice-question .drill-review__explanation math msqrt')
+      ?.textContent,
+  ).toBe('4');
   expect(screen.getAllByRole('checkbox').every((input) => input.matches(':disabled'))).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
   expect(screen.getByRole('heading', { name: 'Soal kedua' })).toBeTruthy();
