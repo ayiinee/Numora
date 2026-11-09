@@ -50,8 +50,8 @@ const footerGroups = [
     ['Pembahasan', '#pembahasan'],
     ['Materi dan level', '#materi'],
   ],
-  ['Sekolah', ['Untuk sekolah', '#untuk-sekolah'], ['Masuk sebagai guru', '/']],
-  ['Akun', ['Mulai belajar', '/'], ['Belajar lewat browser', '#akses-web']],
+  ['Sekolah', ['Untuk sekolah', '#untuk-sekolah'], ['Masuk sebagai guru', '/login']],
+  ['Akun', ['Mulai belajar', '/login'], ['Belajar lewat browser', '#akses-web']],
   [
     'Media Sosial',
     ['Instagram', 'https://www.instagram.com/hellonumora/'],
@@ -74,7 +74,7 @@ export function LandingPage() {
             <div className={styles.heroCopy}>
               <h1 id="landing-title">Latihan TKA Matematika untuk siswa SMP/MTs</h1>
               <div id="aksi-hero" className={styles.heroActions}>
-                <Link className={styles.primary} href="/">
+                <Link className={styles.primary} href="/login">
                   Mulai belajar
                 </Link>
                 <AccountDialog />
@@ -104,7 +104,7 @@ export function LandingPage() {
             </h2>
             <p>Buka Numora di ponsel atau laptop dan lanjutkan latihan dari akunmu.</p>
             <div className={styles.promoActions}>
-              <Link className={styles.primary} href="/">
+              <Link className={styles.primary} href="/login">
                 Mulai belajar
               </Link>
               <a className={styles.secondary} href="#cara-belajar">
@@ -126,7 +126,7 @@ export function LandingPage() {
               kelas dan memantau perkembangan siswanya.
             </p>
             <div className={styles.promoActions}>
-              <Link className={styles.primary} href="/">
+              <Link className={styles.primary} href="/login">
                 Masuk sebagai guru
               </Link>
             </div>
@@ -153,7 +153,7 @@ export function LandingPage() {
 
         <section className={styles.closing} aria-labelledby="closing-title">
           <h2 id="closing-title">Siap latihan bersama Numora?</h2>
-          <Link className={styles.primary} id="aksi-penutup" href="/">
+          <Link className={styles.primary} id="aksi-penutup" href="/login">
             Mulai belajar
           </Link>
           <ClosingScene />

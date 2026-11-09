@@ -159,7 +159,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             </p>
           )}
           {errorStatus === 401 && (
-            <Link className="button-link" href="/">
+            <Link className="button-link" href="/login">
               Masuk kembali
             </Link>
           )}

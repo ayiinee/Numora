@@ -322,6 +322,17 @@
   font-size: 0.75rem;
 }
 
+@media (max-width: 480px) {
+  .header[data-scrolled='true'] .headerBrand :global(.numora-brand) {
+    font-size: clamp(18.4px, 3.8vw, 28px);
+  }
+
+  .headerAction {
+    padding-block: 4px;
+    line-height: 1.05;
+  }
+}
+
 .accountDialog .primary {
   width: 100%;
   margin-top: 14px;

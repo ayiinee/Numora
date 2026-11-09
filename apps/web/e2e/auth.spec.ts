@@ -402,6 +402,8 @@ test('Google login launches the existing PKCE authorize URL and origin callback'
     return route.fulfill({ contentType: 'text/html', body: '<p>Fixture Google consent</p>' });
   });
   await page.goto('/');
+  await page.getByRole('link', { name: 'Mulai belajar', exact: true }).first().click();
+  await expect(page).toHaveURL(/\/login$/);
   await page.getByRole('button', { name: 'Lanjutkan dengan Google' }).click();
   await expect(page.getByText('Fixture Google consent')).toBeVisible();
   expect(authorize?.searchParams.get('provider')).toBe('google');
@@ -561,7 +563,7 @@ for (const width of [390, 1280]) {
     const { state, errors } = await setup(page);
     state.role = 'ADMIN';
     state.failPassword = true;
-    await page.goto('/');
+    await page.goto('/login');
     await page.getByRole('link', { name: 'Masuk Admin', exact: true }).click();
     await expect(page).toHaveURL(/\/admin\/login$/);
     await expect(page.getByRole('heading', { name: 'Masuk Admin' })).toBeVisible();

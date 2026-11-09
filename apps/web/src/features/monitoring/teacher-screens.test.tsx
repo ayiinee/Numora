@@ -203,7 +203,7 @@ it('keeps the account available after logout failure and retries the existing lo
   await screen.findByRole('alert');
   expect(auth.replace).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
-  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/login'));
   expect(auth.logout).toHaveBeenCalledTimes(2);
 });
 

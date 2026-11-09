@@ -97,14 +97,25 @@ export function LandingHeader() {
       setShowAction(heroPassed && closingAhead);
       if (heroPassed && menu.current) menu.current.open = false;
     };
+    let frame = 0;
+    const updateOnScroll = () => {
+      if (frame) return;
+      frame = requestAnimationFrame(() => {
+        frame = 0;
+        update();
+      });
+    };
     const observer = new IntersectionObserver(update, { rootMargin: '-70px 0px 0px 0px' });
     observer.observe(hero);
     observer.observe(closing);
     window.addEventListener('resize', update);
+    window.addEventListener('scroll', updateOnScroll, { passive: true });
     update();
     return () => {
       observer.disconnect();
       window.removeEventListener('resize', update);
+      window.removeEventListener('scroll', updateOnScroll);
+      cancelAnimationFrame(frame);
     };
   }, []);
 
@@ -115,7 +126,7 @@ export function LandingHeader() {
           <Brand />
         </a>
         {showAction ? (
-          <Link className={`${styles.primary} ${styles.headerAction}`} href="/">
+          <Link className={`${styles.primary} ${styles.headerAction}`} href="/login">
             Mulai belajar
           </Link>
         ) : (
@@ -362,10 +373,10 @@ export function AccountDialog() {
         open={open}
         onClose={() => setOpen(false)}
         title="Masuk ke Numora"
-        description="Gunakan akun Google untuk melanjutkan sebagai siswa atau guru."
+        description="Lanjutkan dengan Google atau gunakan akun Siswa yang sudah disiapkan."
         className={styles.accountDialog ?? ''}
       >
-        <Link className={styles.primary} href="/">
+        <Link className={styles.primary} href="/login">
           Buka halaman masuk
         </Link>
       </Dialog>
