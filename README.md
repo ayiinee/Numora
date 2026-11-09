@@ -2,6 +2,8 @@
 
 Monorepo bootstrap for Numora, the independent and school-affiliated TKA Mathematics SMP learning platform. Current product source of truth: owner-approved PRD v0.6 Final (4 October 2026), with the confirmed Tryout XP ×10 correction. See `docs/development/SPRINT_2_GOAL.md` for the first Student vertical slice and prototype trial scope.
 
+**Generator/assessment v2 (9 November 2026):** [handoff tahap 3–5](docs/GENERATOR_SERVICE_V2_HANDOFF.md) mencakup audit canonical read-only, migrasi arm/delivery, serta generator numerik/stok/media sampai VARIANT DRAFT. Fitur baru nonaktif secara default; routing siswa dan database bersama belum diubah.
+
 ## Architecture baseline
 
 - `apps/web` — Next.js, mobile-first role-based web UI.

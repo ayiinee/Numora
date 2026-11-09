@@ -1,0 +1,60 @@
+{
+  "questionType": "SINGLE_CHOICE",
+  "stem": {
+    "text": "Sebuah jaring-jaring tabung terdiri dari dua lingkaran dan satu persegi panjang.\nJika panjang jari-jari alas tabung tersebut adalah 49 cm dan tingginya 70 cm, maka luas seluruh permukaan tabung yang dibentuk dari jaring-jaring tersebut adalah... (Gunakan $π=\\frac{22}{7}$)\n\n[[asset:diagram-1]]",
+    "assetKeys": [
+      "diagram-1"
+    ]
+  },
+  "optionsOrStatements": {
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "21.560 cm²"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "29.106 cm²"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "30.184 cm²"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "36.652 cm²"
+        }
+      }
+    ],
+    "categories": []
+  },
+  "answerKey": {
+    "optionId": "D"
+  },
+  "explanation": {
+    "text": "Hasil = 36.652. Luas dua alas=15.092, selimut=21.560. Total36.652cm2; opsi D.\n\nJawaban: D. 36.652 cm²"
+  },
+  "media": [
+    {
+      "assetId": "diagram-1",
+      "sha256": "e29ee9667a72a2272e7d6fd5ab33d45b9b2928be6eaf2ecf6d318054872fdf2c",
+      "byteLength": 45795,
+      "width": 960,
+      "height": 640,
+      "contentType": "image/png",
+      "placement": "STEM",
+      "altText": "Jaring-jaring tabung: dua lingkaran berjari-jari 49 cm dan persegi panjang dengan tinggi 70 cm. Gambar skematis.",
+      "provenanceDigest": "bf389e5a71f9bf1b1a1bc5784dd2dd4e139f56eb4eb932dad47a7abee348910d"
+    }
+  ],
+  "difficulty": "MEDIUM",
+  "rubricVersionId": "00000000-0000-0000-0000-000000000003",
+  "contentFingerprint": "ee779e50becfd60b9bd67d40c9900099670d734da47c1ca4d01de56f40895c48"
+}

@@ -1,0 +1,485 @@
+{
+  "kind": "LOCAL_ORIGINAL_REPAIR_PROPOSAL",
+  "readOnly": true,
+  "appliedToDatabase": false,
+  "curriculumApprovalAdded": false,
+  "items": [
+    {
+      "questionExternalId": "kategori-16-1-9",
+      "parentQuestionVersionId": "3b3ff6fa-b028-5458-bc56-b998f6713455",
+      "expectedSourceFingerprint": "f239650bb8e186dc740c3d708dac6e3201b16ce0983a71f4679455c018927aed",
+      "originalHash": "59f1c9c6873c4838",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EXACT",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Bangun ruang yang memiliki jaring-jaring terdiri dari 1 buah persegi dan 4 buah segitiga sama kaki adalah limas segi empat.\nMari kita periksa setiap pernyataan:\nPernyataan A: Bangun ruang tersebut adalah limas segi empat.\n Ini sesuai dengan ciri jaring-jaring yang diberikan (1 persegi sebagai alas dan 4 segitiga sebagai sisi tegak).\n Jawaban: Benar\nPernyataan B: Bangun ruang tersebut memiliki 5 buah titik sudut.\n Limas segi empat memiliki 4 titik sudut pada alas (persegi) dan 1 titik puncak di atas. Total titik sudutnya adalah 4 + 1 = 5.\n Jawaban: Benar\nPernyataan C: Bangun ruang tersebut memiliki 6 buah sisi.\n Limas segi empat memiliki 1 sisi alas (persegi) dan 4 sisi tegak (segitiga). Total sisinya adalah 1 + 4 = 5 sisi, bukan 6.\n Jawaban: Salah"
+      },
+      "canonicalExplanation": {
+        "text": "Bangun ruang yang memiliki jaring-jaring terdiri dari 1 buah persegi dan 4 buah segitiga sama kaki adalah limas segi empat.\nMari kita periksa setiap pernyataan:\nPernyataan A: Bangun ruang tersebut adalah limas segi empat.\n Ini sesuai dengan ciri jaring-jaring yang diberikan (1 persegi sebagai alas dan 4 segitiga sebagai sisi tegak).\n Jawaban: Benar\nPernyataan B: Bangun ruang tersebut memiliki 5 buah titik sudut.\n Limas segi empat memiliki 4 titik sudut pada alas (persegi) dan 1 titik puncak di atas. Total titik sudutnya adalah 4 + 1 = 5.\n Jawaban: Benar\nPernyataan C: Bangun ruang tersebut memiliki 6 buah sisi.\n Limas segi empat memiliki 1 sisi alas (persegi) dan 4 sisi tegak (segitiga). Total sisinya adalah 1 + 4 = 5 sisi, bukan 6.\n Jawaban: Salah"
+      }
+    },
+    {
+      "questionExternalId": "kategori-16-2-9",
+      "parentQuestionVersionId": "f8fc6f70-5bee-5a68-8316-ba69db4df453",
+      "expectedSourceFingerprint": "94c3ad22568af3ae52b4aa384f6cb17a2f89ccbfcc4da5bb93b77a5f73ae2284",
+      "originalHash": "80ab3859a5bc0ba2",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EXACT",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Bangun ruang yang dimaksud adalah limas segi empat.\nPernyataan A: Benar. Sesuai ciri jaring-jaringnya.\nPernyataan B: Salah. Limas segi empat memiliki 5 titik sudut (4 di alas + 1 puncak).\nPernyataan C: Benar. Limas segi empat memiliki 5 sisi (1 alas + 4 sisi tegak)."
+      },
+      "canonicalExplanation": {
+        "text": "Bangun ruang yang dimaksud adalah limas segi empat.\nPernyataan A: Benar. Sesuai ciri jaring-jaringnya.\nPernyataan B: Salah. Limas segi empat memiliki 5 titik sudut (4 di alas + 1 puncak).\nPernyataan C: Benar. Limas segi empat memiliki 5 sisi (1 alas + 4 sisi tegak)."
+      }
+    },
+    {
+      "questionExternalId": "kategori-17-3-10",
+      "parentQuestionVersionId": "8eee1bc8-cdbc-5a6b-9c62-7c575e8a86bf",
+      "expectedSourceFingerprint": "7c8972ce951ccc2cf9e906f08591b5aaf187bec4d82cabb0644b1ae8467157a7",
+      "originalHash": "7b4657602b32a576",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EQUIVALENT_EXPONENT_PARENTHESES",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Pernyataan A: Benar. Translasi dan rotasi mempertahankan bentuk dan ukuran (kongruen).\nPernyataan B: Salah. Dilatasi dengan faktor skala k mengubah luas menjadi k^(2) kali lipat. Jika skala 3, luas menjadi 3^(2)=9 kali lipat.\nPernyataan C: Benar. Refleksi y=x : A(x,y)→A'(y,x)."
+      },
+      "canonicalExplanation": {
+        "text": "Pernyataan A: Benar. Translasi dan rotasi mempertahankan bentuk dan ukuran (kongruen).\nPernyataan B: Salah. Dilatasi dengan faktor skala k mengubah luas menjadi (k)^(2) kali lipat. Jika skala 3, luas menjadi (3)^(2)=9 kali lipat.\nPernyataan C: Benar. Refleksi y=x : A(x,y)→A'(y,x)."
+      }
+    },
+    {
+      "questionExternalId": "mcma-16-1-6",
+      "parentQuestionVersionId": "fe04a357-5043-5d6b-8eba-134fcf71c9e8",
+      "expectedSourceFingerprint": "6c7f37bbb683ace04706b487de4920a520f6a952f5679291a610fed70a9ec705",
+      "originalHash": "0405232cce724b89",
+      "originalVersion": 1,
+      "patch": {
+        "explanation": {
+          "text": "Jaring-jaring prisma segitiga tersusun dari:\n2 buah segitiga kongruen sebagai alas dan tutup.\n3 buah persegi panjang sebagai sisi-sisi tegak/selimut prisma.\nMaka:\nPernyataan 1: Benar.\nPernyataan 2: Benar.\nPernyataan 3: Salah, karena persegi panjangnya ada 3, bukan 4.\nPernyataan 4: Benar, karena 2 segitiga dan 3 persegi panjang berjumlah 5 bangun datar penyusun."
+        }
+      },
+      "comparison": "ADD_MISSING_STATEMENT_4",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Jaring-jaring prisma segitiga tersusun dari:\n2 buah segitiga kongruen sebagai alas dan tutup.\n3 buah persegi panjang sebagai sisi-sisi tegak/selimut prisma.\nMaka:\nPernyataan 1: Benar.\nPernyataan 2: Benar.\nPernyataan 3: Salah, karena persegi panjangnya ada 3, bukan 4.\nPernyataan 4: Benar, karena 2 segitiga dan 3 persegi panjang berjumlah 5 bangun datar penyusun."
+      },
+      "canonicalExplanation": {
+        "text": "Jaring-jaring prisma segitiga tersusun dari:\n2 buah segitiga kongruen sebagai alas dan tutup.\n3 buah persegi panjang sebagai sisi-sisi tegak/selimut prisma.\nMaka:\nPernyataan 1: Benar.\nPernyataan 2: Benar.\nPernyataan 3: Salah, karena persegi panjangnya ada 3, bukan 4."
+      }
+    },
+    {
+      "questionExternalId": "mcma-16-4-6",
+      "parentQuestionVersionId": "658f253c-94d8-52a3-81f4-328e7558501f",
+      "expectedSourceFingerprint": "ae248922a36f97a1442c934ae773362388b00e216571db97debd1f332a13798c",
+      "originalHash": "8c416bce8a4b0d01",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "mcma-16-4-6",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/mcma-16-4-6/v2/drill-original-c948bf0bfd6f8b71-diagram-1-7a42fbbb6523aa571ae1322910f9619b700f61fccc3deb88663bbaefee1666b5.png",
+            "contentType": "image/png",
+            "byteLength": 50686,
+            "sha256": "7a42fbbb6523aa571ae1322910f9619b700f61fccc3deb88663bbaefee1666b5",
+            "placement": "STEM",
+            "altText": "Di kiri terdapat empat bidang segitiga yang tersambung sebagai jaring-jaring. Di kanan bangun terlipat dengan empat titik yang ditandai; garis putus-putus menunjukkan rusuk di belakang."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nSebuah limas segitiga dibuka menjadi jaring-jaring. Pilihlah semua pernyataan yang benar mengenai jaring-jaring dan bangun ruang tersebut!",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "mcma-16-4-7",
+      "parentQuestionVersionId": "bf8d5b2a-e54d-5682-8235-bcd1e9232409",
+      "expectedSourceFingerprint": "a06eb15e51bbffad86c72b00e39076eb017cd14975e9d09f4409a9027a37a37a",
+      "originalHash": "99e5617dc99a0a3f",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "mcma-16-4-7",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/mcma-16-4-7/v2/drill-original-c948bf0bfd6f8b71-diagram-1-0c427786593415baa8ba5d510c42db9a4670b4779aa7f850bae39f017c38fe49.png",
+            "contentType": "image/png",
+            "byteLength": 37462,
+            "sha256": "0c427786593415baa8ba5d510c42db9a4670b4779aa7f850bae39f017c38fe49",
+            "placement": "STEM",
+            "altText": "Jaring-jaring dengan dua lingkaran kongruen dan satu persegi panjang. r menandai radius lingkaran, p panjang persegi panjang, h lebarnya."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nSebuah tabung tertutup dibuka menjadi jaring-jaring yang terdiri dari dua lingkaran dan satu persegi panjang. Manakah pernyataan yang benar? Pilih tiga jawaban.",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-1-1",
+      "parentQuestionVersionId": "2caff94d-eeb8-566c-81f6-50649926e7bb",
+      "expectedSourceFingerprint": "a9dae28f8704d0c2e3e1572bc68d5cf6626c2181a6027cb21b701ffa0fb66200",
+      "originalHash": "6ab224000a25cdc8",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EXACT",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Jaring-jaring bangun ruang yang memiliki komponen:\n2 buah lingkaran kongruen, dan\n1 buah persegi panjang\nadalah jaring-jaring tabung.\nAlasannya:\n2 lingkaran kongruen tersebut merupakan alas dan tutup tabung.\nPersegi panjang tersebut merupakan selimut tabung. Jika tabung dibuka, selimutnya berbentuk persegi panjang yang panjangnya sama dengan keliling lingkaran alas dan lebarnya sama dengan tinggi tabung.\nCiri-ciri ini tidak dimiliki oleh:\nKerucut, karena hanya memiliki 1 lingkaran dan 1 selimut berbentuk juring lingkaran.\nLimas segi empat, karena tersusun dari bangun segi empat dan segitiga.\nPrisma segitiga, karena tersusun dari segitiga dan persegi panjang, tanpa lingkaran."
+      },
+      "canonicalExplanation": {
+        "text": "Jaring-jaring bangun ruang yang memiliki komponen:\n2 buah lingkaran kongruen, dan\n1 buah persegi panjang\nadalah jaring-jaring tabung.\nAlasannya:\n2 lingkaran kongruen tersebut merupakan alas dan tutup tabung.\nPersegi panjang tersebut merupakan selimut tabung. Jika tabung dibuka, selimutnya berbentuk persegi panjang yang panjangnya sama dengan keliling lingkaran alas dan lebarnya sama dengan tinggi tabung.\nCiri-ciri ini tidak dimiliki oleh:\nKerucut, karena hanya memiliki 1 lingkaran dan 1 selimut berbentuk juring lingkaran.\nLimas segi empat, karena tersusun dari bangun segi empat dan segitiga.\nPrisma segitiga, karena tersusun dari segitiga dan persegi panjang, tanpa lingkaran."
+      }
+    },
+    {
+      "questionExternalId": "pg-16-1-2",
+      "parentQuestionVersionId": "8ef96065-cc49-52a5-b00a-8c91ca77f58f",
+      "expectedSourceFingerprint": "11ec910e473e908002223984d13b31e1d178a52b74e0cd9bc794b94b183ec616",
+      "originalHash": "d8ae06a2381f3a67",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EXACT",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Jaring-jaring limas segi empat terdiri dari:\n1 buah persegi sebagai alas, dan\n4 buah segitiga sebagai sisi tegak.\nKarena bangun tersebut memiliki 1 persegi dan 4 segitiga sama kaki, maka bangun ruang yang dimaksud adalah limas segi empat."
+      },
+      "canonicalExplanation": {
+        "text": "Jaring-jaring limas segi empat terdiri dari:\n1 buah persegi sebagai alas, dan\n4 buah segitiga sebagai sisi tegak.\nKarena bangun tersebut memiliki 1 persegi dan 4 segitiga sama kaki, maka bangun ruang yang dimaksud adalah limas segi empat."
+      }
+    },
+    {
+      "questionExternalId": "pg-16-3-2",
+      "parentQuestionVersionId": "f8ef0b7c-1ec8-59a1-9c2c-cf61f309d330",
+      "expectedSourceFingerprint": "d0e0efbd28a8fe08ceaea02c84f25956050111a25f50619c25b7c62361db5bf2",
+      "originalHash": "6252d480a4f1df3e",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EXACT",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Tabung tanpa tutup hanya memiliki 1 sisi alas (lingkaran) dan 1 sisi selimut (persegi panjang). Jika tabung utuh, komponennya adalah 2 lingkaran dan 1 persegi panjang."
+      },
+      "canonicalExplanation": {
+        "text": "Tabung tanpa tutup hanya memiliki 1 sisi alas (lingkaran) dan 1 sisi selimut (persegi panjang). Jika tabung utuh, komponennya adalah 2 lingkaran dan 1 persegi panjang."
+      }
+    },
+    {
+      "questionExternalId": "pg-16-4-1",
+      "parentQuestionVersionId": "01634159-efab-5934-9909-f32dd1e06812",
+      "expectedSourceFingerprint": "85c240c7eb27ab7bfb4433ad5639cafdf20df590050b18b7fe3d8a8500efa072",
+      "originalHash": "90495de8de744208",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-4-1",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-4-1/v2/drill-original-c948bf0bfd6f8b71-diagram-1-4fcf42b0127bbc9dbd2274accd96b0fa6dd7a5298bac4fd328b0f9fd2ed918af.png",
+            "contentType": "image/png",
+            "byteLength": 44966,
+            "sha256": "4fcf42b0127bbc9dbd2274accd96b0fa6dd7a5298bac4fd328b0f9fd2ed918af",
+            "placement": "STEM",
+            "altText": "Jaring-jaring tabung: dua lingkaran berjari-jari 7 cm dan persegi panjang dengan tinggi 10 cm. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nSebuah jaring-jaring tabung terdiri dari dua lingkaran dan satu persegi panjang.\nJika panjang jari-jari alas tabung tersebut adalah 7 cm dan tingginya 10 cm, maka luas seluruh permukaan tabung yang dibentuk dari jaring-jaring tersebut adalah... (Gunakan $π=\\frac{22}{7}$)",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-4-2",
+      "parentQuestionVersionId": "bdc534b9-ca4e-5adf-82d4-6daa75a55cfe",
+      "expectedSourceFingerprint": "b8852457f643cdb7e59e401fa43be4d2a3456f6254155d1333286f719b31acd3",
+      "originalHash": "e4d8bfa6636c3126",
+      "originalVersion": 1,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-4-2",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-4-2/v1/drill-original-c948bf0bfd6f8b71-diagram-1-4a1dd7406845d4174bf64a17f53bb3130bb9911c61e3ae0257ca36f177501001.png",
+            "contentType": "image/png",
+            "byteLength": 114363,
+            "sha256": "4a1dd7406845d4174bf64a17f53bb3130bb9911c61e3ae0257ca36f177501001",
+            "placement": "STEM",
+            "altText": "Panel A: persegi dengan empat segitiga. B: tiga persegi panjang dan dua segitiga. C: persegi dengan lima segitiga. D: lingkaran dan juring."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nPerhatikan empat gambar jaring-jaring bangun ruang di bawah ini!\n![Source image rId8](media/image10.png)\nBerdasarkan analisis Anda, jaring-jaring manakah yang TIDAK DAPAT dilipat menjadi sebuah bangun ruang yang utuh dan tertutup?",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-4-3",
+      "parentQuestionVersionId": "ae14cda2-d53b-57c7-b145-604d53d6460c",
+      "expectedSourceFingerprint": "b180bd93be5e1e83dfd816b89cdc252dd4319af2509cce44c9008791cb61842c",
+      "originalHash": "13ec263f6911a64f",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-4-3",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-4-3/v2/drill-original-c948bf0bfd6f8b71-diagram-1-cbc221a83bb910d1c05cf1679bb0bcfe9dddcdeeb88c3c966afd3112c5f3bf0a.png",
+            "contentType": "image/png",
+            "byteLength": 63955,
+            "sha256": "cbc221a83bb910d1c05cf1679bb0bcfe9dddcdeeb88c3c966afd3112c5f3bf0a",
+            "placement": "STEM",
+            "altText": "Jaring-jaring kerucut terdiri dari juring dengan jari-jari s = 20 cm dan lingkaran dengan r = 14 cm. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nSebuah jaring-jaring kerucut terdiri dari sebuah lingkaran dan sebuah juring lingkaran. Jika jari-jari alas kerucut adalah 14 cm dan panjang garis pelukisnya (s) adalah 20 cm, maka panjang busur pada juring lingkaran tersebut adalah… (Gunakan $π=\\frac{22}{7}$)",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-4-4",
+      "parentQuestionVersionId": "ece39325-88e4-5ec8-8b98-25363848625f",
+      "expectedSourceFingerprint": "55ec9812dd26cac9f5a0d8c407c70f33188680a9d69574faa066ffcb7d8522f7",
+      "originalHash": "c2678c68eb814d7a",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-4-4",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-4-4/v2/drill-original-c948bf0bfd6f8b71-diagram-1-ac9441ae678c3f2bf8cd625c6617f0edbdf8baf79047812301fc9afd97247cb3.png",
+            "contentType": "image/png",
+            "byteLength": 35670,
+            "sha256": "ac9441ae678c3f2bf8cd625c6617f0edbdf8baf79047812301fc9afd97247cb3",
+            "placement": "STEM",
+            "altText": "Jaring-jaring limas segi empat: alas persegi bersisi 12 cm dan empat segitiga dengan tinggi masing-masing 10 cm. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nSebuah jaring-jaring limas segi empat beraturan memiliki alas persegi bersisi 12 cm dan empat sisi tegak segitiga yang masing-masing memiliki tinggi 10 cm. Luas permukaan bangun ruang yang terbentuk adalah...",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-5-1",
+      "parentQuestionVersionId": "fdd0785a-ab1d-58b4-b735-c28d97ef6da0",
+      "expectedSourceFingerprint": "974f221e02c2eead4d17437e01f0b164d76ef8a594ba10991294d288f007f520",
+      "originalHash": "b96132e16389dc9f",
+      "originalVersion": 2,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-5-1",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-5-1/v2/drill-original-c948bf0bfd6f8b71-diagram-1-58ccf233f09d91db4eb5609984771bebfed752413b39d4dd6b6286efaeef4f37.png",
+            "contentType": "image/png",
+            "byteLength": 58132,
+            "sha256": "58ccf233f09d91db4eb5609984771bebfed752413b39d4dd6b6286efaeef4f37",
+            "placement": "STEM",
+            "altText": "Empat panel A sampai D: A: tabung, r = 7 cm; panjang selimut = 44 cm; B: prisma segitiga; C: tabung, r = 7 cm; panjang selimut = 20 cm; D: kerucut, r = 7 cm; busur juring = 44 cm. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nEmpat rancangan jaring-jaring berikut memiliki sambungan yang sesuai. A: tabung berjari-jari 7 cm dengan panjang selimut 44 cm. B: prisma segitiga dengan dua alas kongruen dan tiga persegi panjang sesuai sisi alas. C: tabung berjari-jari 7 cm dengan panjang selimut 20 cm. D: kerucut berjari-jari alas 7 cm dengan panjang busur juring 44 cm. Gunakan pi=22/7. Rancangan manakah yang tidak dapat menutup bangun dengan sempurna?",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-5-3",
+      "parentQuestionVersionId": "85cd6a1a-549c-593d-8ea3-ff918835da85",
+      "expectedSourceFingerprint": "bbc5747947bc68932a9dac11415619825a00b8d2290cafee5ae6dcd4dd401e6f",
+      "originalHash": "2c1385d7f9ecbfa5",
+      "originalVersion": 1,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-5-3",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-5-3/v1/drill-original-c948bf0bfd6f8b71-diagram-1-31554b9dca1618dac5fc3e19b5d0e44d38e78b8c9c49b0be1930ada9377981c8.png",
+            "contentType": "image/png",
+            "byteLength": 156101,
+            "sha256": "31554b9dca1618dac5fc3e19b5d0e44d38e78b8c9c49b0be1930ada9377981c8",
+            "placement": "STEM",
+            "altText": "Jaring-jaring kerucut berupa juring dengan dua sisi s = 12 cm dan sudut pusat 150 derajat, serta sebuah lingkaran tanpa ukuran. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nPerhatikan gambar jaring-jaring kerucut di bawah ini!\n![Source image rId14](media/image7.png)\nSeorang siswa menyimpulkan bahwa jari-jari lingkaran alas kerucut tersebut adalah 5 cm. Evaluasi kebenaran dari kesimpulan siswa tersebut berdasarkan data pada gambar!",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-16-5-5",
+      "parentQuestionVersionId": "da0d7486-c768-5363-8238-839cf839b90c",
+      "expectedSourceFingerprint": "508d4b9210f80ecd1258e0d6c22e9a6f3b1f270f3ee9ff6b880233ea8803fb82",
+      "originalHash": "ab2a92aedb0e6035",
+      "originalVersion": 1,
+      "patch": {
+        "media": [
+          {
+            "externalId": "pg-16-5-5",
+            "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+            "bucket": "numora-bucket",
+            "objectKey": "question-media/pg-16-5-5/v1/drill-original-c948bf0bfd6f8b71-diagram-1-b5e03e6c14461245979eac53055f95350a3be9f14b671c3df522921fa80fbd57.png",
+            "contentType": "image/png",
+            "byteLength": 83701,
+            "sha256": "b5e03e6c14461245979eac53055f95350a3be9f14b671c3df522921fa80fbd57",
+            "placement": "STEM",
+            "altText": "Jaring-jaring limas segi empat: sisi alas persegi 10 cm, tinggi segitiga sisi tegak 13 cm. Gambar skematis."
+          }
+        ],
+        "stem": {
+          "text": "[[asset:drill-original-c948bf0bfd6f8b71-diagram-1]]\n\nPerhatikan gambar jaring-jaring limas segi empat beraturan di bawah ini!\n![Source image rId15](media/image3.jpg)\nBerdasarkan gambar tersebut, evaluasilah pernyataan-pernyataan berikut!\n(1) Luas alas limas adalah $100c{m}^{2}$.\n(2) Luas satu sisi tegak adalah $65c{m}^{2}$.\n(3) Tinggi limas (jarak titik puncak ke alas) adalah $13cm$.\n(4) Luas total jaring-jaring adalah $360c{m}^{2}$.\nPernyataan yang BENAR adalah...",
+          "assetKeys": [
+            "drill-original-c948bf0bfd6f8b71-diagram-1"
+          ]
+        }
+      },
+      "comparison": "EXACT",
+      "localSimulation": true
+    },
+    {
+      "questionExternalId": "pg-17-3-2",
+      "parentQuestionVersionId": "5ba1c5f4-731f-5d64-9a1b-f373582e2511",
+      "expectedSourceFingerprint": "55f2b39ea3886c8a4cf0f498a8c8d7d537a828a22e6707e647cedf06d5de40f7",
+      "originalHash": "e54bd61921168ab6",
+      "originalVersion": 1,
+      "patch": {},
+      "comparison": "EQUIVALENT_CANONICAL_ALREADY_CORRECTED",
+      "localSimulation": true,
+      "localExplanation": {
+        "text": "Refleksi sumbu X: B(x,y)→B'(x,-y)\nRefleksi sumbu Y: B'(x,-y)→B''(-x,-y)\nHasil akhir (-x,-y) sama dengan rotasi 180^(∘) terhadap titik pusat (0,0)."
+      },
+      "canonicalExplanation": {
+        "text": "Refleksi sumbu X: B(x,y) menjadi B′(x,-y).\nRefleksi sumbu Y: B′(x,-y) menjadi B″(-x,-y).\nHasil akhir (-x,-y) sama dengan rotasi 180° terhadap titik pusat (0,0)."
+      }
+    }
+  ],
+  "storageVerification": {
+    "assets": 9,
+    "verified": 9,
+    "rows": [
+      {
+        "externalId": "mcma-16-4-6",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "7a42fbbb6523aa571ae1322910f9619b700f61fccc3deb88663bbaefee1666b5",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "mcma-16-4-7",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "0c427786593415baa8ba5d510c42db9a4670b4779aa7f850bae39f017c38fe49",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-4-1",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "4fcf42b0127bbc9dbd2274accd96b0fa6dd7a5298bac4fd328b0f9fd2ed918af",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-4-2",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "4a1dd7406845d4174bf64a17f53bb3130bb9911c61e3ae0257ca36f177501001",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-4-3",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "cbc221a83bb910d1c05cf1679bb0bcfe9dddcdeeb88c3c966afd3112c5f3bf0a",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-4-4",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "ac9441ae678c3f2bf8cd625c6617f0edbdf8baf79047812301fc9afd97247cb3",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-5-1",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "58ccf233f09d91db4eb5609984771bebfed752413b39d4dd6b6286efaeef4f37",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-5-3",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "31554b9dca1618dac5fc3e19b5d0e44d38e78b8c9c49b0be1930ada9377981c8",
+        "verified": true,
+        "code": "VERIFIED"
+      },
+      {
+        "externalId": "pg-16-5-5",
+        "assetId": "drill-original-c948bf0bfd6f8b71-diagram-1",
+        "sha256": "b5e03e6c14461245979eac53055f95350a3be9f14b671c3df522921fa80fbd57",
+        "verified": true,
+        "code": "VERIFIED"
+      }
+    ]
+  },
+  "summary": {
+    "explanationsRecovered": 8,
+    "imageLinksPrepared": 9,
+    "localSimulationsPassed": 17,
+    "explanationUpdatesNeeded": 1
+  }
+}
