@@ -14,7 +14,9 @@
 | Audit                            | All          | Operations entities | Content/moderation/IRT entities       |
 | Student ban/unban                | Denied       | Denied              | Denied                                |
 
-**ENGINEERING DECISION:** unassigned Admin fails closed for privileged endpoints. Student/Teacher use Google; Admin uses internal Supabase Auth invitation/password, without public signup. All DTOs are generated from OpenAPI; least-data responses are enforced server-side. Assignment/status changes take effect even with an existing Auth token. Auth access and academic/result release are separate gates.
+**ENGINEERING DECISION:** unassigned Admin fails closed for privileged endpoints. Google remains available for Student/Teacher. Students can also use email/password with a provisioned account. Admin uses internal Supabase Auth invitation/password, without public signup. All DTOs are generated from OpenAPI; least-data responses are enforced server-side. Assignment/status changes take effect even with an existing Auth token. Auth access and academic/result release are separate gates.
+
+For a confirmed Supabase Auth account without a Numora profile, set `app_metadata.numora_role` to `STUDENT` using the Supabase Admin API or trusted provisioning tools. Set `email_confirm` when creating the account only after the address has been verified by the operator. On first password login, NestJS checks the trusted marker, confirmed email, and password authentication method before creating the Student profile. Use the same Supabase project as the Numora API and web app. Existing profiles use their Auth UUID and retain their role and history. See the [Supabase Admin update API](https://supabase.com/docs/reference/javascript/auth-admin-updateuserbyid).
 
 Class/Teacher checks still enforce resource relationships. Five memberships and nullable active Teacher are current product rules; main PR #77 supplies the membership/ownership domain implementation; Admin reader integration and its acceptance remain required. See [acceptance ledger](../development/ADMIN_FULL_STACK_STATUS.md).
 

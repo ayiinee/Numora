@@ -6549,6 +6549,11 @@ a.settings-row:hover {
   gap: 20px;
   min-width: 0;
 }
+.auth-student-login-form {
+  display: grid;
+  gap: 12px;
+  min-width: 0;
+}
 .auth-google-identity {
   display: flex;
   align-items: center;
