@@ -1,5 +1,10 @@
 import { presentFixtureText } from '@tka/database';
-import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
+import {
+  PRETEST_PARTIAL_POLICY,
+  PRETEST_PARTIAL_CONFIGURATION,
+  validatePretestPartialRubric,
+  TRYOUT_PARTIAL_POLICY,
+} from '@tka/assessment-engine';
 import {
   BadRequestException,
   ConflictException,
@@ -14,6 +19,7 @@ import {
   auditLogs,
   assessmentBlueprintVersions,
   scoringPolicyVersions,
+  scoringRubricVersions,
   chapters,
   competencies,
   contentImportIdentities,
@@ -297,7 +303,12 @@ export class ContentPackagesService {
         contentStatus: r.version.contentStatus,
         reviewedAt: r.version.reviewedAt?.toISOString() ?? null,
         reviewedByUserId: r.version.reviewedByUserId,
-        question: structuralErrors(q, false, p.assessmentType === 'TRYOUT').length
+        question: structuralErrors(
+          q,
+          false,
+          p.assessmentType === 'TRYOUT',
+          p.assessmentType === 'PRETEST',
+        ).length
           ? null
           : (q as unknown as ExcelQuestionDto),
       };
@@ -369,7 +380,7 @@ export class ContentPackagesService {
                 : r.chapter?.status === 'READY')) &&
             ((!r.version.levelId &&
               r.question.curriculumLevelNumber == null &&
-              p.assessmentType === 'TRYOUT') ||
+              ['TRYOUT', 'PRETEST'].includes(p.assessmentType)) ||
               questionLevels.some(
                 (l) =>
                   l.id === r.version.levelId &&
@@ -419,10 +430,10 @@ export class ContentPackagesService {
     const compatible = rows.every((r) => {
       try {
         if (p.assessmentType === 'DRILL') decodeSingleChoiceVersion(r.version);
-        else if (p.assessmentType === 'TRYOUT') {
+        else if (['TRYOUT', 'PRETEST'].includes(p.assessmentType)) {
           const content = decodeAssessmentContent(r.version);
           if (content.type !== 'SINGLE_CHOICE' && !r.version.scoringRubricVersionId) return false;
-        } else if (decodeAssessmentContent(r.version).type !== 'SINGLE_CHOICE') return false;
+        }
         if (Array.isArray(r.version.media) && r.version.media.length) this.storage.settings(true);
         return true;
       } catch {
@@ -525,11 +536,16 @@ export class ContentPackagesService {
       actor,
       'content_package_curriculum_approved',
       'assessment_package',
-      (tx) => this.approveWithin(tx, id, body),
+      (tx) => this.approveWithin(tx, id, body, actor),
       { reference: body.reference.trim(), confirmed: body.confirmed },
     );
   }
-  private async approveWithin(tx: AdminTransaction, id: string, body: ApproveContentPackageDto) {
+  private async approveWithin(
+    tx: AdminTransaction,
+    id: string,
+    body: ApproveContentPackageDto,
+    actor: string,
+  ) {
     const p = await packageContext(tx, id, true);
     assertDraftRevision(p, body.expectedRevision);
     const detail = await this.detailWithin(tx, id);
@@ -544,6 +560,7 @@ export class ContentPackagesService {
     const manifestDigest = this.manifest(p, detail.items);
     const definition = {
       assessmentType: p.assessmentType,
+      ...(p.assessmentType === 'PRETEST' ? { questionCount: 20 } : {}),
       chapterId: p.chapterId,
       levelId: p.levelId,
       distribution: detail.distribution,
@@ -570,6 +587,13 @@ export class ContentPackagesService {
               definition,
               digest: blueprintDigest,
               status: 'SEALED',
+              ...(p.assessmentType === 'PRETEST'
+                ? {
+                    approvedByUserId: actor,
+                    approvedAt: new Date(),
+                    approvalReference: body.reference.trim(),
+                  }
+                : {}),
             })
             .returning({ id: assessmentBlueprintVersions.id });
     await tx
@@ -634,11 +658,16 @@ export class ContentPackagesService {
               current.items.filter((i) => !i.reviewedAt).map((i) => i.questionVersionId),
             ),
           );
-        await this.approveWithin(tx, id, {
-          expectedRevision: body.expectedRevision,
-          confirmed: true,
-          reference: `Konfirmasi Publish Admin — ${p.name}`,
-        });
+        await this.approveWithin(
+          tx,
+          id,
+          {
+            expectedRevision: body.expectedRevision,
+            confirmed: true,
+            reference: `Konfirmasi Publish Admin — ${p.name}`,
+          },
+          actor,
+        );
         await tx.insert(auditLogs).values({
           actorUserId: actor,
           action: 'content_package_review_and_approval_confirmed',
@@ -664,7 +693,7 @@ export class ContentPackagesService {
             ? detail.items.some((i) => i.question?.type !== 'SINGLE_CHOICE')
               ? TRYOUT_PARTIAL_POLICY
               : 'TRYOUT_PRD_V06'
-            : 'PRETEST_PRD_V06';
+            : PRETEST_PARTIAL_POLICY;
       if (p.assessmentType === 'PRETEST')
         await tx
           .insert(scoringPolicyVersions)
@@ -672,13 +701,7 @@ export class ContentPackagesService {
             policyCode,
             version: 1,
             status: 'PUBLISHED',
-            configuration: {
-              prdVersion: '0.6',
-              questionType: 'SINGLE_CHOICE',
-              questionCount: 20,
-              initialLevel: { level2MinimumCorrect: 8, level3MinimumCorrect: 19 },
-              xp: 0,
-            },
+            configuration: PRETEST_PARTIAL_CONFIGURATION,
           })
           .onConflictDoNothing();
       const [policy] = await tx
@@ -697,6 +720,38 @@ export class ContentPackagesService {
           code: 'SCORING_POLICY_NOT_READY',
           detail: 'Kebijakan scoring PRD belum tersedia.',
         });
+      if (p.assessmentType === 'PRETEST') {
+        for (const item of detail.items) {
+          if (!item.question || item.question.type === 'SINGLE_CHOICE') continue;
+          const [version] = await tx
+            .select()
+            .from(questionVersions)
+            .where(eq(questionVersions.id, item.questionVersionId));
+          const [rubric] = version?.scoringRubricVersionId
+            ? await tx
+                .select()
+                .from(scoringRubricVersions)
+                .where(eq(scoringRubricVersions.id, version.scoringRubricVersionId))
+            : [];
+          try {
+            validatePretestPartialRubric(decodeAssessmentContent(version!), rubric);
+            await tx
+              .update(packageItems)
+              .set({
+                rubricVersionId: rubric!.id,
+                maximumScoreCategory: rubric!.maximumScoreCategory,
+              })
+              .where(
+                and(
+                  eq(packageItems.packageId, id),
+                  eq(packageItems.questionVersionId, item.questionVersionId),
+                ),
+              );
+          } catch {
+            throw new ConflictException({ code: 'PRETEST_RUBRIC_NOT_READY' });
+          }
+        }
+      }
       const now = await databaseTime(tx);
       let releaseAt = now;
       let closeAt: Date | null = null;
@@ -753,7 +808,7 @@ export class ContentPackagesService {
         .update(assessmentPackages)
         .set({
           status: 'PUBLISHED',
-          ...(p.assessmentType === 'TRYOUT'
+          ...(['TRYOUT', 'PRETEST'].includes(p.assessmentType)
             ? {
                 frozenAt: now,
                 curriculumApproval: sql`jsonb_set(jsonb_set(${assessmentPackages.curriculumApproval}, '{compositionDigest}', ${assessmentPackages.curriculumApproval}->'manifestDigest'), '{manifestDigest}', to_jsonb(irt_compute.payload_digest(jsonb_build_object('packageId', ${id}::uuid, 'blueprintVersionId', ${assessmentPackages.blueprintVersionId}, 'scoringPolicyVersionId', ${policy.id}::uuid, 'items', (select jsonb_agg(to_jsonb(i) order by i.display_order,i.id) from public.package_items i where i.package_id=${id}::uuid)))))`,
