@@ -2,7 +2,6 @@
 
 import Image from 'next/image';
 import { useState } from 'react';
-import { Button, Icon } from '@tka/ui';
 import styles from './landing.module.css';
 
 const artwork = {
@@ -23,13 +22,11 @@ const layers = [
 
 export function HeroIllustration() {
   const [ready, setReady] = useState(false);
-  const [paused, setPaused] = useState(false);
-  const motionLabel = paused ? 'Lanjutkan animasi hero' : 'Jeda animasi hero';
 
   return (
-    <div className={styles.heroArt} data-hero-ready={ready} data-hero-paused={paused}>
+    <div className={styles.heroArt} aria-hidden="true" data-hero-ready={ready}>
       <Image {...artwork} className={styles.heroStill} onLoad={() => setReady(true)} preload />
-      <div className={styles.heroLayers} aria-hidden="true">
+      <div className={styles.heroLayers}>
         {layers.map(({ name, motion, masks }) => (
           <div key={name} className={`${styles.heroLayer} ${motion}`} data-hero-layer={name}>
             {masks.map((mask) => (
@@ -42,22 +39,6 @@ export function HeroIllustration() {
             ))}
           </div>
         ))}
-      </div>
-      <div className={styles.heroMotionControl}>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={motionLabel}
-          title={motionLabel}
-          style={{ width: 44, padding: 0 }}
-          onClick={() => setPaused((current) => !current)}
-        >
-          {paused ? (
-            <Icon name="play" width={16} height={16} />
-          ) : (
-            <span className={styles.pauseMark} aria-hidden="true" />
-          )}
-        </Button>
       </div>
     </div>
   );

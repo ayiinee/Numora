@@ -146,14 +146,8 @@
   height: auto;
 }
 
-.heroLayers,
-.heroMotionControl {
+.heroLayers {
   display: none;
-}
-
-.heroMotionControl {
-  position: absolute;
-  inset: auto 0 0 auto;
 }
 
 .heroLayers,
@@ -1022,8 +1016,7 @@
     visibility: hidden;
   }
 
-  .heroArt[data-hero-ready='true'] .heroLayers,
-  .heroArt[data-hero-ready='true'] .heroMotionControl {
+  .heroArt[data-hero-ready='true'] .heroLayers {
     display: block;
   }
 
@@ -1031,10 +1024,6 @@
     animation-duration: var(--hero-motion-duration);
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
-  }
-
-  .heroArt[data-hero-paused='true'] .heroLayers > .heroLayer {
-    animation-play-state: paused;
   }
 
   .heroOwl {
