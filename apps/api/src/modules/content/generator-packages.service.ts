@@ -16,6 +16,7 @@ import {
   requireGeneratorMain,
   retryGeneration,
   saveGenerationDraftWithin,
+  type DraftMaterialization,
 } from '@tka/irt-orchestration';
 import type { TransactionSql } from 'postgres';
 import { GeneratorService, validateGeneratorCandidate } from './generator.service';
@@ -324,8 +325,20 @@ export class GeneratorPackagesService {
       levelNumber: scope?.level_number,
     } as ContentPackageDto;
     const items = canonical.items.map((item) => {
+      // Artifact media was validated against the accepted compute output above.
+      // Structural text checks run on its text projection; actual storage receipts
+      // are mandatory before any canonical DRAFT is inserted.
+      const checked = validateGeneratorCandidate(item.content).media.length
+        ? {
+            ...item.question,
+            stem: { text: item.question.stem.text.replace(/\[\[asset:[^\]]+\]\]\s*/g, '') },
+            explanation: {
+              text: item.question.explanation.text.replace(/\[\[asset:[^\]]+\]\]\s*/g, ''),
+            },
+          }
+        : item.question;
       const blockers = [
-        ...structuralErrors(item.question, false, row.assessment_type === 'TRYOUT'),
+        ...structuralErrors(checked, false, row.assessment_type === 'TRYOUT'),
         ...placementErrors(item.question as ImportQuestion, target),
       ];
       return {
@@ -353,8 +366,16 @@ export class GeneratorPackagesService {
     );
   }
   import(actor: string, id: string, file: object) {
-    return this.execute(() =>
-      getDatabase().client.begin(async (tx) => {
+    return this.execute(async () => {
+      const client = getDatabase().client;
+      const preliminary = await client.begin((tx) => this.validateWithin(tx, id, file));
+      if (!preliminary.report.canImportDraft)
+        throw new ConflictException({ code: 'GENERATOR_IMPORT_VALIDATION_REQUIRED' });
+      const materializations = new Map<string, DraftMaterialization | undefined>();
+      const group = await this.row(client as unknown as TransactionSql, id);
+      for (const requestId of group.request_ids)
+        materializations.set(requestId, await this.generator.materialize(actor, requestId));
+      return client.begin(async (tx) => {
         const row = await this.row(tx, id, true);
         const preview = await this.validateWithin(tx, id, file);
         if (!preview.report.canImportDraft)
@@ -363,7 +384,15 @@ export class GeneratorPackagesService {
         const versionIds = [];
         for (const requestId of row.request_ids)
           versionIds.push(
-            (await saveGenerationDraftWithin(tx, actor, requestId, validateGeneratorCandidate)).id,
+            (
+              await saveGenerationDraftWithin(
+                tx,
+                actor,
+                requestId,
+                validateGeneratorCandidate,
+                materializations.get(requestId),
+              )
+            ).id,
           );
         const [canonical] = await tx<
           { id: string }[]
@@ -374,7 +403,7 @@ export class GeneratorPackagesService {
         await tx`UPDATE generator_packages SET canonical_package_id=${canonical!.id} WHERE id=${id}`;
         await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id) VALUES(${actor},'GENERATOR_PACKAGE_IMPORTED','assessment_package',${canonical!.id})`;
         return { id: canonical!.id };
-      }),
-    );
+      });
+    });
   }
 }

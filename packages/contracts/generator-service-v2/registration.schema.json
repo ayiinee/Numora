@@ -1,0 +1,107 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:generator-service-v2:registration",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "serviceContract",
+    "items"
+  ],
+  "properties": {
+    "serviceContract": {
+      "const": "generator-service-v2"
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "maxItems": 1180,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "questionExternalId",
+          "mode",
+          "parentQuestionVersionId",
+          "familyId",
+          "rubricVersionId",
+          "contextId",
+          "mediaProfile"
+        ],
+        "properties": {
+          "questionExternalId": {
+            "type": "string",
+            "minLength": 1
+          },
+          "mode": {
+            "enum": [
+              "NUMERIC",
+              "CONCEPTUAL_STOCK"
+            ]
+          },
+          "parentQuestionVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "familyId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "rubricVersionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "configVersion": {
+            "type": "integer",
+            "minimum": 1
+          },
+          "stockSetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "mediaProfile": {
+            "type": [
+              "object",
+              "null"
+            ]
+          }
+        },
+        "oneOf": [
+          {
+            "properties": {
+              "mode": {
+                "const": "NUMERIC"
+              }
+            },
+            "required": [
+              "configVersion"
+            ],
+            "not": {
+              "required": [
+                "stockSetId"
+              ]
+            }
+          },
+          {
+            "properties": {
+              "mode": {
+                "const": "CONCEPTUAL_STOCK"
+              }
+            },
+            "required": [
+              "stockSetId"
+            ],
+            "not": {
+              "required": [
+                "configVersion"
+              ]
+            }
+          }
+        ]
+      }
+    }
+  }
+}

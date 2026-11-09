@@ -1,6 +1,7 @@
 'use client';
 
 import { useAuth } from '@/features/onboarding/auth';
+import { apiRequest } from '@/lib/api';
 import { Button } from '@tka/ui';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
@@ -16,7 +17,12 @@ import {
   generatorError,
   generatorTypeLabels,
 } from './generator-package-form';
-import type { GeneratorPackageDto, GeneratorPackageFileDto } from './generated-types';
+import type {
+  GeneratorPackageDto,
+  GeneratorPackageFileDto,
+  GeneratorPreviewDto,
+  ExcelParseDto,
+} from './generated-types';
 import {
   getGeneratorPackage,
   getGeneratorPackageFile,
@@ -41,23 +47,94 @@ export function useGeneratorToken() {
     : null;
 }
 export function GeneratorFilePreview({ file }: { file: GeneratorPackageFileDto }) {
+  const token = useGeneratorToken();
+  const [previews, setPreviews] = useState<Record<string, GeneratorPreviewDto>>({});
+  const [mediaError, setMediaError] = useState('');
+  useEffect(() => {
+    let active = true;
+    if (token)
+      void Promise.all(
+        file.items
+          .filter(
+            (item) =>
+              item.question.stem.text.includes('[[asset:') ||
+              item.question.explanation.text.includes('[[asset:'),
+          )
+          .map(
+            async (item) =>
+              [
+                item.requestId,
+                await apiRequest<GeneratorPreviewDto>(
+                  `admin/content/generator/requests/${item.requestId}/preview`,
+                  token,
+                ),
+              ] as const,
+          ),
+      )
+        .then((items) => {
+          if (active) {
+            setPreviews(Object.fromEntries(items));
+            setMediaError('');
+          }
+        })
+        .catch(() => {
+          if (active)
+            setMediaError(
+              'Gambar kandidat belum dapat dimuat. Muat ulang preview untuk mencoba lagi.',
+            );
+        });
+    return () => {
+      active = false;
+    };
+  }, [file, token]);
+  const questions = file.items.map((item) => ({
+    ...item.question,
+    metadata: {
+      ...item.question.metadata,
+      assetManifest: (previews[item.requestId]?.media ?? []).map((m, index) => ({
+        externalId: item.question.externalId,
+        assetId: m.assetId,
+        textMarker: `[[asset:${m.assetId}]]`,
+        placement: m.placement,
+        itemId: null,
+        assetOrder: index + 1,
+        altText: m.altText,
+        objectKey: null,
+        sha256: m.sha256,
+        contentType: m.contentType,
+        byteLength: m.byteLength,
+        bucket: '',
+      })),
+    },
+  }));
+  const media: ExcelParseDto['media'] = file.items.flatMap((item) =>
+    (previews[item.requestId]?.media ?? []).map((m) => ({
+      externalId: item.question.externalId,
+      assetId: m.assetId,
+      url: m.url,
+      base64: '',
+    })),
+  );
   return (
-    <ContentExcelPreview
-      excel={{
-        envelope: { questions: file.items.map((item) => item.question) },
-        media: [],
-        issues: [],
-      }}
-      selected={new Set(file.items.map((item) => item.question.externalId))}
-      report={null}
-      disabled
-      hideIndicator={file.assessmentType === 'TRYOUT'}
-      sourceFormat="JSON"
-      select={() => {}}
-      edit={() => {}}
-      retry={() => {}}
-      editingChanged={() => {}}
-    />
+    <>
+      {mediaError && <p role="alert">{mediaError}</p>}
+      <ContentExcelPreview
+        excel={{
+          envelope: { questions },
+          media,
+          issues: [],
+        }}
+        selected={new Set(file.items.map((item) => item.question.externalId))}
+        report={null}
+        disabled
+        hideIndicator={file.assessmentType === 'TRYOUT'}
+        sourceFormat="JSON"
+        select={() => {}}
+        edit={() => {}}
+        retry={() => {}}
+        editingChanged={() => {}}
+      />
+    </>
   );
 }
 export const GeneratorPackageScreen = withAdminWorkspace(
@@ -81,6 +158,7 @@ function GeneratorPackageScreenProtected() {
     >
       <div className="admin-generator-workspace">
         <div className="generator-taskbar">
+          <Link href="/admin/content/generator/individual">Generator per soal</Link>
           {activeId ? (
             <Button variant="ghost" onClick={() => url.update({ package: null })}>
               Kembali ke riwayat

@@ -1,0 +1,45 @@
+{
+  "questionType": "SINGLE_CHOICE",
+  "stem": {
+    "text": "Untuk persiapan acara bazaar seni di sekolah, kelompok OSIS membuat kue dadar gulung. Untuk membuat 24 buah kue dadar gulung, dibutuhkan 6000 gram tepung terigu dan 3000 gram gula pasir. Jika kelompok tersebut mendapat pesanan tambahan sehingga total kue yang harus dibuat menjadi 60 buah kue, selisih massa tepung terigu dan gula pasir yang dibutuhkan untuk seluruh kue tersebut adalah ...."
+  },
+  "optionsOrStatements": {
+    "options": [
+      {
+        "id": "A",
+        "content": {
+          "text": "6000 gram"
+        }
+      },
+      {
+        "id": "B",
+        "content": {
+          "text": "7000 gram"
+        }
+      },
+      {
+        "id": "C",
+        "content": {
+          "text": "7500 gram"
+        }
+      },
+      {
+        "id": "D",
+        "content": {
+          "text": "9000 gram"
+        }
+      }
+    ],
+    "categories": []
+  },
+  "answerKey": {
+    "optionId": "C"
+  },
+  "explanation": {
+    "text": "Selisih = (60/24)*(6.000-3.000) = 7.500 gram.\n\nJawaban: C. 7500 gram"
+  },
+  "media": [],
+  "difficulty": "MEDIUM",
+  "rubricVersionId": "00000000-0000-0000-0000-000000000003",
+  "contentFingerprint": "12e6b8697ebb12053592794dbbaf1fd094abe6be2d2732663a2ce61d6a3abc0b"
+}
