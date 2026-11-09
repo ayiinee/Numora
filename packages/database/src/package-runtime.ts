@@ -55,7 +55,8 @@ export function packageRuntimeEligibility() {
     and length(trim(${p.curriculumApproval}->>'approvedAt')) > 0
     and exists (select 1 from public.assessment_blueprint_versions b
       where b.id = ${p.blueprintVersionId} and b.status = 'SEALED'))`;
-  return allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved;
+  // V2 routing is deliberately not activated by the schema migration.
+  return sql`(${p.distributionArmId} is null and ${allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved})`;
 }
 
 /** Reviewed Admin Excel Tryout: statistical generator quality is a separate pipeline. */
@@ -68,4 +69,26 @@ export function tryoutDistributionEligibility() {
  and not exists(select 1 from public.package_items i join public.question_versions v on v.id=i.question_version_id where i.package_id=${p.id} and (v.content_status<>'READY' or v.reviewed_at is null or not exists(select 1 from public.content_import_versions imported where imported.question_version_id=v.id)))
  and not exists(select 1 from public.package_items i join public.item_distribution_decisions d on d.question_version_id=i.question_version_id where i.package_id=${p.id} and d.state in ('HOLD','RETIRED') and not exists(select 1 from public.item_distribution_decisions newer where newer.question_version_id=d.question_version_id and newer.context_id=d.context_id and newer.purpose=d.purpose and (newer.created_at,newer.id)>(d.created_at,d.id)))
  ))`;
+}
+
+/** Original Pretest needs academic review, not a generated-variant calibration result. */
+export function pretestDistributionEligibility() {
+  const p = assessmentPackages;
+  return sql`(public.package_can_distribute(${p.id}) or (
+    ${p.assessmentType}='PRETEST' and ${p.purpose}='REGULAR' and ${p.status}='PUBLISHED'
+    and ${packageRuntimeEligibility()}
+    and (select count(*) from public.package_items i where i.package_id=${p.id})=20
+    and not exists(select 1 from public.package_items i
+      join public.question_versions v on v.id=i.question_version_id
+      join public.question_variants a on a.id=v.variant_id
+      join public.questions q on q.id=a.question_id
+      where i.package_id=${p.id} and (a.kind<>'ORIGINAL' or q.usage_type<>'PRETEST'
+        or q.status<>'READY' or v.content_status<>'READY' or v.reviewed_at is null))
+    and not exists(select 1 from public.package_items i
+      join public.item_distribution_decisions d on d.question_version_id=i.question_version_id
+      where i.package_id=${p.id} and d.state in ('HOLD','RETIRED')
+      and not exists(select 1 from public.item_distribution_decisions newer
+        where newer.question_version_id=d.question_version_id and newer.context_id=d.context_id
+          and newer.purpose=d.purpose and (newer.created_at,newer.id)>(d.created_at,d.id)))
+  ))`;
 }

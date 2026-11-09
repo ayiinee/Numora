@@ -365,6 +365,27 @@
       "when": 1794164122231,
       "tag": "0051_drill_active_clock",
       "breakpoints": true
+    },
+    {
+      "idx": 52,
+      "version": "7",
+      "when": 1794164122232,
+      "tag": "0052_assessment_arms_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 53,
+      "version": "7",
+      "when": 1794164122233,
+      "tag": "0053_generator_stock_media_v2",
+      "breakpoints": true
+    },
+    {
+      "idx": 54,
+      "version": "7",
+      "when": 1794222000000,
+      "tag": "0054_irt_calibration_research",
+      "breakpoints": true
     }
   ]
 }

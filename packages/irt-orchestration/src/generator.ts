@@ -53,17 +53,23 @@ async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
     WHERE (${approvalId ?? null}::uuid IS NULL OR a.id=${approvalId ?? null}::uuid)
     AND a.revoked_at IS NULL AND g.status='SEALED' AND a.approved_digest=g.digest
     AND g.digest=irt_compute.payload_digest(g.parameters)
-    AND g.parameters->>'serviceContract'='generator-service-v1'
+    AND (g.parameters->>'serviceContract'='generator-service-v1' OR
+      (${process.env.NUMORA_GENERATOR_V2_ENABLED === 'true'} AND g.parameters->>'serviceContract'='generator-service-v2'))
     AND g.parameters->>'familyId'=v.question_id::text AND v.kind='ORIGINAL'
     AND g.parameters->>'rubricVersionId'=rubric.id::text AND rubric.status='SEALED'
     AND rubric.question_type=q.question_type::text
     AND g.parameters->>'contextId'=c.id::text
     AND a.scope->>'ecosystem'=c.ecosystem AND a.scope->>'contextId'=c.id::text
     AND q.content_status<>'ARCHIVED' AND q.validation_state NOT IN ('QUARANTINED','ARCHIVED')
+    AND (g.parameters->>'serviceContract'<>'generator-service-v2' OR
+      (q.content_status='READY' AND q.validation_state='CONTENT_VALID'
+       AND EXISTS(SELECT 1 FROM questions family WHERE family.id=v.question_id AND family.usage_type::text=c.ecosystem)
+       AND ((c.ecosystem='DRILL' AND c.level_id=q.level_id) OR (c.ecosystem='TRYOUT' AND c.tryout_batch_id IS NOT NULL))))
     ORDER BY label,g.id,a.id FOR SHARE OF a,q,rubric`;
   return rows.filter((m) => {
     try {
-      if (m.media?.length || !m.explanation?.text?.trim()) return false;
+      const v2 = m.parameters.serviceContract === 'generator-service-v2';
+      if ((!v2 && m.media?.length) || !m.explanation?.text?.trim()) return false;
       const collection = Array.isArray(m.options_or_statements)
         ? { options: m.options_or_statements, categories: [] }
         : m.options_or_statements;
@@ -74,7 +80,14 @@ async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
             .filter((o) => 'optionIds' in m.answer_key && m.answer_key.optionIds.includes(o.id))
             .map((o) => o.id),
         };
-      const text = (t: { text: string }) => ({ text: t.text.replaceAll('\r\n', '\n') });
+      const text = (t: { text: string }) => ({
+        text: v2
+          ? t.text
+              .replaceAll('\r\n', '\n')
+              .replace(/\[\[asset:[^\]]+\]\]\s*/g, '')
+              .replace(/!\[Source image rId\d+\]\(media\/image\d+\.(?:png|jpg)\)\s*/g, '')
+          : t.text.replaceAll('\r\n', '\n'),
+      });
       const source = {
         questionType: m.question_type,
         stem: text(m.stem),
@@ -84,7 +97,22 @@ async function mappings(tx: Sql | TransactionSql, approvalId?: string) {
         },
         answerKey: answer,
       };
-      return fingerprint(source as unknown as Json) === m.parameters.sourceFingerprint;
+      const mediaValue = m.media as unknown;
+      const media = Array.isArray(mediaValue)
+        ? mediaValue
+        : mediaValue &&
+            typeof mediaValue === 'object' &&
+            'assets' in mediaValue &&
+            Array.isArray(mediaValue.assets)
+          ? mediaValue.assets
+          : [];
+      return (
+        fingerprint(
+          (v2
+            ? { ...source, sourceStem: m.stem, explanation: m.explanation, media }
+            : source) as unknown as Json,
+        ) === m.parameters.sourceFingerprint
+      );
     } catch {
       return false;
     }
@@ -108,7 +136,9 @@ export async function generatorCatalog(
           !available ||
           available.some(
             (a) =>
-              a.mode === 'generator' &&
+              (a.mode === 'generator' ||
+                (m.parameters.serviceContract === 'generator-service-v2' &&
+                  a.mode === m.parameters.mode)) &&
               a.questionExternalId === m.label &&
               a.originalHash === m.parameters.originalHash &&
               a.originalVersion === m.parameters.originalVersion,
@@ -158,9 +188,10 @@ export async function prepareGenerationWithin(
   const previous = await duplicate(tx, op, fp);
   if (previous) return previous;
   const m = await mapping(tx, mappingId);
+  const stock = m.parameters.mode === 'CONCEPTUAL_STOCK';
   const constraints = JSON.stringify({
-    serviceContract: 'generator-service-v1',
-    seed: randomInt(1, 1000000001),
+    serviceContract: m.parameters.serviceContract,
+    ...(!stock ? { seed: randomInt(1, 1000000001) } : {}),
   });
   const [wave] = await tx<
     { id: string }[]
@@ -170,6 +201,13 @@ export async function prepareGenerationWithin(
     { id: string }[]
   >`INSERT INTO generation_wave_items(wave_id,original_question_version_id,context_id,generator_config_id,configuration_approval_id,target_count,max_regenerate_attempts,constraints)
       VALUES(${wave!.id},${m.original_id},${m.context_id},${m.config_id},${m.id},1,0,${constraints}::text::jsonb) RETURNING id`;
+  if (stock) {
+    const [reservation] = await tx<
+      { id: string }[]
+    >`select (public.reserve_generator_stock(${String(m.parameters.stockSetId)}::uuid,${item!.id}::uuid)).*`;
+    if (!reservation) fail('GENERATOR_STOCK_RESERVATION_FAILED');
+    await tx`update generation_wave_items set constraints=jsonb_build_object('serviceContract','generator-service-v2','stockReservationId',${reservation.id}::text) where id=${item!.id}`;
+  }
   const request = await createAnalysisRequest(tx, {
     idempotencyKey: op,
     requestType: 'GENERATE_VARIANTS',
@@ -262,11 +300,28 @@ export interface CandidatePayload {
     | { optionIds: string[] }
     | { categoryByStatementId: Record<string, string> };
   explanation: { text: string };
-  media: [];
+  media: GeneratorMediaReference[];
   difficulty: 'EASY' | 'MEDIUM' | 'HARD' | null;
   rubricVersionId: string;
   contentFingerprint: string;
 }
+export type GeneratorMediaReference = {
+  assetId: string;
+  sha256: string;
+  byteLength: number;
+  width: number;
+  height: number;
+  contentType: 'image/png';
+  placement: 'STEM' | 'EXPLANATION';
+  altText: string;
+  provenanceDigest: string;
+};
+export type DraftMaterialization = {
+  candidateId: string;
+  sourceFingerprint: string;
+  receiptIds: string[];
+  payload: Omit<CandidatePayload, 'media'> & { media: Record<string, Json>[] };
+};
 export function verifyFingerprint(payload: CandidatePayload) {
   if (contentFingerprint(payload as unknown as Record<string, Json>) !== payload.contentFingerprint)
     fail('GENERATOR_CONTENT_FINGERPRINT_INVALID');
@@ -295,13 +350,15 @@ export async function acceptedCandidate(
       original_question_version_id: string;
       generator_config_id: string;
       context_id: string;
-      constraints: { seed: number };
+      constraints: { seed?: number; stockReservationId?: string; serviceContract: string };
       target_count: number;
     }[]
   >`
     SELECT * FROM generation_wave_items WHERE id=${r.wave_item_id}`;
   if (!w) fail('GENERATOR_ARTIFACT_INVALID');
   const m = await mapping(tx, w.configuration_approval_id);
+  const v2 = m.parameters.serviceContract === 'generator-service-v2';
+  const stock = v2 && m.parameters.mode === 'CONCEPTUAL_STOCK';
   if (
     w.original_question_version_id !== m.original_id ||
     w.context_id !== m.context_id ||
@@ -355,13 +412,20 @@ export async function acceptedCandidate(
     (c.sealed_at IS NOT NULL AND c.validation_status='CONTENT_VALID' AND c.payload_digest=irt_compute.payload_digest(c.payload)
       AND c.parent_original_question_version_id=${m.original_id} AND run.original_question_version_id=${m.original_id}
       AND run.config_id=${m.config_id} AND run.wave_item_id=${r.wave_item_id} AND run.status='SUCCEEDED'
-      AND run.random_seed=${String(w.constraints.seed)} AND c.random_seed=run.random_seed
-      AND c.parameter_values=run.parameter_values AND c.parameter_values->>'seed'=${String(w.constraints.seed)}
+      AND c.parameter_values=run.parameter_values
+      AND CASE WHEN ${stock} THEN (run.random_seed IS NULL AND c.random_seed IS NULL
+        AND run.generation_mode='CONCEPTUAL_STOCK' AND run.stock_reservation_id::text=${w.constraints.stockReservationId ?? null}
+        AND c.parameter_values->>'stockReservationId'=${w.constraints.stockReservationId ?? null}
+        AND c.parameter_values->>'stockSetId'=${stock ? String(m.parameters.stockSetId) : null}
+        AND c.parameter_values->>'stockSetDigest'=${stock ? String(m.parameters.stockSetDigest) : null}
+        AND NOT (c.parameter_values ? 'seed') AND NOT (c.parameter_values ? 'configVersion'))
+       ELSE (run.random_seed=${String(w.constraints.seed)} AND c.random_seed=run.random_seed
+        AND c.parameter_values->>'seed'=${String(w.constraints.seed)}
+        AND c.parameter_values->>'configHash'=${String(m.parameters.configHash)}
+        AND c.parameter_values->>'configVersion'=${String(m.parameters.configVersion)}) END
       AND c.parameter_values->>'questionExternalId'=${m.label}
       AND c.parameter_values->>'originalHash'=${String(m.parameters.originalHash)}
-      AND c.parameter_values->>'originalVersion'=${String(m.parameters.originalVersion)}
-      AND c.parameter_values->>'configHash'=${String(m.parameters.configHash)}
-      AND c.parameter_values->>'configVersion'=${String(m.parameters.configVersion)}) AS valid
+      AND c.parameter_values->>'originalVersion'=${String(m.parameters.originalVersion)}) AS valid
     FROM irt_compute.generation_candidates c JOIN irt_compute.generation_runs run ON run.id=c.generation_run_id
     WHERE run.execution_id=${e.id}`;
   const c = candidates[0];
@@ -369,6 +433,78 @@ export async function acceptedCandidate(
     fail('GENERATOR_CANDIDATE_INVALID');
   const payload = validate(c.payload);
   verifyFingerprint(payload);
+  if (v2) {
+    const [provenanceRow] = await tx<
+      { parameter_values: Record<string, Json> }[]
+    >`select parameter_values from irt_compute.generation_candidates where id=${c.id}`;
+    const provenance = provenanceRow?.parameter_values;
+    if (
+      provenance?.serviceContract !== 'generator-service-v2' ||
+      provenance.mode !== m.parameters.mode ||
+      fingerprint(provenance.mediaProfile ?? null) !==
+        fingerprint(m.parameters.mediaProfile ?? null)
+    )
+      fail('GENERATOR_PIN_MISMATCH');
+    if (stock) {
+      const [reservation] = await tx<
+        { stock_variant_id: string; cycle: number; reused: boolean }[]
+      >`select s.stock_variant_id,s.cycle,s.reused from generator_stock_reservations s join generator_stock_sets inventory on inventory.id=s.stock_set_id where s.id=${w.constraints.stockReservationId!} and s.wave_item_id=${r.wave_item_id} and inventory.id=${String(m.parameters.stockSetId)} and inventory.digest=${String(m.parameters.stockSetDigest)} and inventory.original_question_version_id=${m.original_id}`;
+      if (
+        !reservation ||
+        provenance.stockVariantId !== reservation.stock_variant_id ||
+        provenance.cycle !== reservation.cycle ||
+        provenance.reused !== reservation.reused
+      )
+        fail('GENERATOR_STOCK_PIN_MISMATCH');
+    }
+    const artifacts = await tx<
+      {
+        sha256: string;
+        png_bytes: Buffer;
+        byte_length: number;
+        width: number;
+        height: number;
+        provenance: Json;
+      }[]
+    >`select * from irt_compute.generator_media_artifacts where execution_id=${e.id}`;
+    if (artifacts.length !== payload.media.length) fail('GENERATOR_MEDIA_ARTIFACT_INVALID');
+    for (const media of payload.media) {
+      const a = artifacts.find((a) => a.sha256 === media.sha256);
+      if (
+        !a ||
+        createHash('sha256').update(a.png_bytes).digest('hex') !== media.sha256 ||
+        a.byte_length !== media.byteLength ||
+        a.width !== media.width ||
+        a.height !== media.height ||
+        a.png_bytes.length < 24 ||
+        a.png_bytes.readUInt32BE(16) !== media.width ||
+        a.png_bytes.readUInt32BE(20) !== media.height ||
+        fingerprint(a.provenance) !== media.provenanceDigest
+      )
+        fail('GENERATOR_MEDIA_ARTIFACT_INVALID');
+      const imageProvenance = a.provenance as Record<string, Json>;
+      const profile = m.parameters.mediaProfile as {
+        renderer: Json;
+        templateDefinitions: Json[];
+      } | null;
+      const renderer = imageProvenance.renderer as Record<string, Json>;
+      if (!profile || !renderer || typeof renderer !== 'object' || Array.isArray(renderer))
+        fail('GENERATOR_MEDIA_PROFILE_INVALID');
+      const stableRenderer = { ...renderer };
+      delete stableRenderer.platform;
+      if (
+        fingerprint(stableRenderer) !== fingerprint(profile.renderer) ||
+        !profile.templateDefinitions.includes(imageProvenance.definition_sha256 ?? null) ||
+        imageProvenance.question_id !== m.label ||
+        imageProvenance.png_sha256 !== media.sha256 ||
+        imageProvenance.byte_length !== media.byteLength ||
+        imageProvenance.width !== media.width ||
+        imageProvenance.height !== media.height ||
+        imageProvenance.alt_text !== media.altText
+      )
+        fail('GENERATOR_MEDIA_PROFILE_INVALID');
+    }
+  }
   const [source] = await tx<
     { question_type: string; difficulty: string | null }[]
   >`SELECT question_type,difficulty FROM question_versions WHERE id=${m.original_id}`;
@@ -380,25 +516,54 @@ export async function acceptedCandidate(
     fail('GENERATOR_RUBRIC_MISMATCH');
   if (accept && !r.accepted_execution_id)
     await tx`UPDATE analysis_requests SET accepted_execution_id=${e.id},status='COMPLETED' WHERE id=${id}`;
-  return { ...c, payload, familyId: m.family_id, originalId: m.original_id };
+  return {
+    ...c,
+    payload,
+    familyId: m.family_id,
+    originalId: m.original_id,
+    serviceContract: m.parameters.serviceContract,
+    executionId: e.id,
+  };
 }
 export async function saveGenerationDraft(
   client: Sql,
   actor: string,
   id: string,
   validate: (payload: unknown) => CandidatePayload,
+  materialization?: DraftMaterialization,
 ) {
   requireGeneratorEnabled();
   await requireGeneratorMain(client);
-  return client.begin((tx) => saveGenerationDraftWithin(tx, actor, id, validate));
+  return client.begin((tx) => saveGenerationDraftWithin(tx, actor, id, validate, materialization));
 }
 export async function saveGenerationDraftWithin(
   tx: TransactionSql,
   actor: string,
   id: string,
   validate: (payload: unknown) => CandidatePayload,
+  materialization?: DraftMaterialization,
 ) {
   const c = await acceptedCandidate(tx, id, validate);
+  let p: CandidatePayload | DraftMaterialization['payload'] = c.payload;
+  if (c.payload.media.length) {
+    const [stored] = await tx<
+      { canonical_payload: DraftMaterialization['payload'] }[]
+    >`select canonical_payload from generator_candidate_materializations where candidate_id=${c.id}`;
+    if (stored) p = stored.canonical_payload;
+    else {
+      if (
+        !materialization ||
+        materialization.candidateId !== c.id ||
+        materialization.sourceFingerprint !== c.payload.contentFingerprint ||
+        contentFingerprint(materialization.payload as unknown as Record<string, Json>) !==
+          materialization.payload.contentFingerprint
+      )
+        fail('GENERATOR_MEDIA_MATERIALIZATION_REQUIRED');
+      p = materialization.payload;
+      await tx`insert into generator_candidate_materializations(candidate_id,source_fingerprint,canonical_payload,receipt_ids,actor_user_id)
+        values(${c.id},${materialization.sourceFingerprint},${JSON.stringify(p)}::jsonb,${materialization.receiptIds}::uuid[],${actor})`;
+    }
+  } else if (materialization) fail('GENERATOR_UNEXPECTED_MATERIALIZATION');
   await tx`SELECT id FROM questions WHERE id=${c.familyId} FOR UPDATE`;
   const [previous] = await tx<
     { question_version_id: string }[]
@@ -407,9 +572,9 @@ export async function saveGenerationDraftWithin(
   const [existing] = await tx<
     { id: string; parent_original_question_version_id: string; equal: boolean }[]
   >`SELECT q.id,q.parent_original_question_version_id,
-      jsonb_build_object('questionType',q.question_type,'stem',q.stem,'optionsOrStatements',q.options_or_statements,'answerKey',q.answer_key,'explanation',q.explanation,'media',q.media,'difficulty',q.difficulty,'rubricVersionId',q.scoring_rubric_version_id,'contentFingerprint',q.content_fingerprint)=${JSON.stringify(c.payload)}::text::jsonb AS equal
+      jsonb_build_object('questionType',q.question_type,'stem',q.stem,'optionsOrStatements',q.options_or_statements,'answerKey',q.answer_key,'explanation',q.explanation,'media',q.media,'difficulty',q.difficulty,'rubricVersionId',q.scoring_rubric_version_id,'contentFingerprint',q.content_fingerprint)=${JSON.stringify(p)}::text::jsonb AS equal
       FROM question_versions q JOIN question_variants v ON v.id=q.variant_id
-      WHERE v.question_id=${c.familyId} AND q.content_fingerprint=${c.payload.contentFingerprint} ORDER BY q.created_at,q.id LIMIT 1`;
+      WHERE v.question_id=${c.familyId} AND q.content_fingerprint=${p.contentFingerprint} ORDER BY q.created_at,q.id LIMIT 1`;
   if (
     existing &&
     (!existing.equal || existing.parent_original_question_version_id !== c.originalId)
@@ -421,12 +586,11 @@ export async function saveGenerationDraftWithin(
       { id: string }[]
     >`INSERT INTO question_variants(question_id,original_variant_id,variant_code,kind,origin)
         SELECT ${c.familyId},variant_id,${'G-' + c.id},'VARIANT','GENERATOR' FROM question_versions WHERE id=${c.originalId} RETURNING id`;
-    const p = c.payload;
     const [q] = await tx<
       { id: string }[]
     >`INSERT INTO question_versions(variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,media,difficulty,scoring_rubric_version_id,content_fingerprint,parent_original_question_version_id,level_id,content_status)
         SELECT ${v!.id},1,${p.questionType},${JSON.stringify(p.stem)}::text::jsonb,${JSON.stringify(p.optionsOrStatements)}::text::jsonb,
-        ${JSON.stringify(p.answerKey)}::text::jsonb,${JSON.stringify(p.explanation)}::text::jsonb,'[]'::jsonb,${p.difficulty},${p.rubricVersionId},${p.contentFingerprint},${c.originalId},level_id,'DRAFT'
+        ${JSON.stringify(p.answerKey)}::text::jsonb,${JSON.stringify(p.explanation)}::text::jsonb,${JSON.stringify(p.media)}::jsonb,${p.difficulty},${p.rubricVersionId},${p.contentFingerprint},${c.originalId},level_id,'DRAFT'
         FROM question_versions WHERE id=${c.originalId} RETURNING id`;
     versionId = q!.id;
   }

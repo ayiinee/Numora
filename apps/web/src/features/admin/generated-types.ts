@@ -299,7 +299,7 @@ export type GeneratorRequestDto = { "id": string; "label": string; "status": str
 
 export type GeneratorRequestsDto = { "items": (GeneratorRequestDto)[]; };
 
-export type GeneratorPreviewDto = { "id": string; "scoringStatus": "NOT_SCORED"; "score": number | null; "type": "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "stem": RichContentDto; "options": (PreviewOptionDto)[]; "categories": (PreviewCategoryDto)[]; "answerKey": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "explanation": RichContentDto; };
+export type GeneratorPreviewDto = { "id": string; "scoringStatus": "NOT_SCORED"; "score": number | null; "type": "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "stem": RichContentDto; "options": (PreviewOptionDto)[]; "categories": (PreviewCategoryDto)[]; "answerKey": { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "explanation": RichContentDto; "media": ({ "assetId": string; "url": string; "altText": string; "width": number; "height": number; "placement": "STEM" | "EXPLANATION"; "sha256": string; "byteLength": number; "contentType": "image/png"; })[]; };
 
 export type GeneratorDraftDto = { "id": string; };
 

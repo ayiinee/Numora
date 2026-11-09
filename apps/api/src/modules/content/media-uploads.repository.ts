@@ -7,6 +7,21 @@ export type NewMediaUpload = typeof contentMediaUploads.$inferInsert;
 
 @Injectable()
 export class MediaUploadsRepository {
+  async verified(actorId: string, externalId: string, assetId: string, sha256: string) {
+    const [row] = await getDatabase()
+      .db.select()
+      .from(contentMediaUploads)
+      .where(
+        and(
+          eq(contentMediaUploads.actorUserId, actorId),
+          eq(contentMediaUploads.externalId, externalId),
+          eq(contentMediaUploads.assetId, assetId),
+          eq(contentMediaUploads.sha256, sha256),
+          eq(contentMediaUploads.status, 'VERIFIED'),
+        ),
+      );
+    return row;
+  }
   async reserve(input: NewMediaUpload): Promise<MediaUpload> {
     return getDatabase().db.transaction(async (tx) => {
       const [created] = await tx

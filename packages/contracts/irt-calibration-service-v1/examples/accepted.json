@@ -1,0 +1,11 @@
+{
+  "serviceContract": "irt-calibration-service-v1",
+  "requestId": "10000000-0000-4000-8000-000000000001",
+  "inputDigest": "aaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaaa",
+  "dispatchGeneration": 1,
+  "executionId": null,
+  "status": "ACCEPTED",
+  "failureCode": null,
+  "artifactId": null,
+  "artifactDigest": null
+}

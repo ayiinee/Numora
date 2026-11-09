@@ -12164,6 +12164,58 @@
           },
           "explanation": {
             "$ref": "#/components/schemas/RichContentDto"
+          },
+          "media": {
+            "type": "array",
+            "items": {
+              "type": "object",
+              "required": [
+                "assetId",
+                "url",
+                "altText",
+                "width",
+                "height",
+                "placement",
+                "sha256",
+                "byteLength",
+                "contentType"
+              ],
+              "properties": {
+                "assetId": {
+                  "type": "string"
+                },
+                "url": {
+                  "type": "string"
+                },
+                "altText": {
+                  "type": "string"
+                },
+                "width": {
+                  "type": "integer"
+                },
+                "height": {
+                  "type": "integer"
+                },
+                "placement": {
+                  "enum": [
+                    "STEM",
+                    "EXPLANATION"
+                  ]
+                },
+                "sha256": {
+                  "type": "string"
+                },
+                "byteLength": {
+                  "type": "integer"
+                },
+                "contentType": {
+                  "type": "string",
+                  "enum": [
+                    "image/png"
+                  ]
+                }
+              }
+            }
           }
         },
         "required": [
@@ -12175,7 +12227,8 @@
           "options",
           "categories",
           "answerKey",
-          "explanation"
+          "explanation",
+          "media"
         ]
       },
       "GeneratorDraftDto": {

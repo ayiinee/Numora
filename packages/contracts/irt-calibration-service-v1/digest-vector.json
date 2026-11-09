@@ -1,0 +1,16 @@
+{
+  "recipe": "PG_JSONB_IRT_RESEARCH_V1",
+  "value": {
+    "recipe": "PG_JSONB_IRT_RESEARCH_V1",
+    "body": {
+      "n": 7,
+      "note": "caf\u00e9"
+    },
+    "resources": {},
+    "runtime": {
+      "purpose": "RESEARCH_ONLY"
+    }
+  },
+  "postgresJsonbText": "{\"body\": {\"n\": 7, \"note\": \"caf\u00e9\"}, \"recipe\": \"PG_JSONB_IRT_RESEARCH_V1\", \"runtime\": {\"purpose\": \"RESEARCH_ONLY\"}, \"resources\": {}}",
+  "sha256": "d745afd42c0f72fa55c9ee1e8a3a6ddb9493ed3166624f0e97dda02dea64d376"
+}

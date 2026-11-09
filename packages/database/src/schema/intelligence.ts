@@ -34,6 +34,7 @@ import {
   trialPhases,
 } from './measurement.js';
 import { computeExecutions, computeOutputs } from './measurement-compute.js';
+import { generatorStockReservations } from './generator-stock-media.js';
 
 export const dataJobStatus = pgEnum('data_job_status', [
   'PENDING',
@@ -96,7 +97,11 @@ export const generationRuns = irtCompute
         onDelete: 'restrict',
       }),
       generatorVersion: text('generator_version').notNull(),
-      randomSeed: text('random_seed').notNull(),
+      randomSeed: text('random_seed'),
+      generationMode: text('generation_mode').notNull().default('NUMERIC'),
+      stockReservationId: uuid('stock_reservation_id').references(
+        (): AnyPgColumn => generatorStockReservations.id,
+      ),
       parameterValues: jsonb('parameter_values').notNull(),
       startedAt: timestamp('started_at', { withTimezone: true }).notNull().defaultNow(),
       finishedAt: timestamp('finished_at', { withTimezone: true }),
@@ -104,6 +109,14 @@ export const generationRuns = irtCompute
     },
     (table) => [
       index('generation_runs_original_idx').on(table.originalQuestionVersionId),
+      check(
+        'generation_runs_generation_mode_check',
+        sql`${table.generationMode} in ('NUMERIC','CONCEPTUAL_STOCK')`,
+      ),
+      check(
+        'generation_runs_mode_pins_ck',
+        sql`(${table.generationMode}='NUMERIC' and ${table.randomSeed} is not null and ${table.stockReservationId} is null) or (${table.generationMode}='CONCEPTUAL_STOCK' and ${table.randomSeed} is null and ${table.stockReservationId} is not null)`,
+      ),
       check(
         'generation_runs_finished_ck',
         sql`${table.finishedAt} is null or ${table.finishedAt} >= ${table.startedAt}`,
@@ -146,7 +159,7 @@ export const generationCandidates = irtCompute
       index('generation_candidates_run_idx').on(table.generationRunId),
       check(
         'generation_candidates_payload_ck',
-        sql`${table.candidateQuestionVersionId} is not null or (${table.payload} is not null and ${table.payloadDigest} is not null and ${table.randomSeed} is not null and ${table.parameterValues} is not null and ${table.parentOriginalQuestionVersionId} is not null)`,
+        sql`${table.candidateQuestionVersionId} is not null or (${table.payload} is not null and ${table.payloadDigest} is not null and ${table.parameterValues} is not null and ${table.parentOriginalQuestionVersionId} is not null and (${table.randomSeed} is not null or ${table.parameterValues}->>'stockReservationId' is not null))`,
       ),
     ],
   )
@@ -246,8 +259,10 @@ export const irtBatches = pgTable(
       onDelete: 'restrict',
     }),
   },
-  (table) => [index('irt_batches_package_idx').on(table.packageId),
-    uniqueIndex('irt_batches_source_output_uq').on(table.sourceOutputId)],
+  (table) => [
+    index('irt_batches_package_idx').on(table.packageId),
+    uniqueIndex('irt_batches_source_output_uq').on(table.sourceOutputId),
+  ],
 ).enableRLS();
 
 export const irtItemResults = pgTable(

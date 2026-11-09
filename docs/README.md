@@ -9,6 +9,7 @@ Mulai dari [Product Context](product/PRODUCT_CONTEXT.md), [Open Decisions](produ
 ## Product
 
 - `AI_IRT_V2_CONTEXT.md` — amendemen pemilik untuk varian/IRT v2, keputusan, OPEN dan audit implementasi kedua service.
+- [Runtime IRT riset lokal](IRT_RESEARCH_RUNTIME.md) ? pipeline snapshot/transport/kalibrasi; [bukti dan acceptance yang belum tuntas](IRT_RESEARCH_ACCEPTANCE_V1.json). Nonaktif secara default dan belum disetujui untuk produksi.
 - `product/PRODUCT_CONTEXT.md` — baseline PRD v0.6 dan amendemen pemilik terbaru.
 - `product/PRD_MAPPING.md` — mapping from PRD sections/requirements to technical modules.
 - `product/OPEN_DECISIONS.md` — unresolved PRD items, engineering recommendations, and blockers.
