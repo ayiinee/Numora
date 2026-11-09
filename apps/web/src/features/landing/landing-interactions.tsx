@@ -1,7 +1,14 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import {
+  useEffect,
+  useRef,
+  useState,
+  type CSSProperties,
+  type PointerEvent,
+  type ReactNode,
+} from 'react';
 import { Brand, Button, Dialog, Icon } from '@tka/ui';
 import styles from './landing.module.css';
 
@@ -21,6 +28,59 @@ const categories: readonly [
   ['Persiapan TKA', 'target', '#persiapan-tka', '#cf4055'],
 ];
 const categoryPixelsPerMs = 24 / 1000;
+// Keep the reveal consumed across client-side navigation until the document reloads.
+let schoolMotionStarted = false;
+
+export function SchoolAnimation({ children }: { children: ReactNode }) {
+  const artwork = useRef<HTMLDivElement>(null);
+  const [motion, setMotion] = useState<'waiting' | 'playing' | 'complete'>(() =>
+    schoolMotionStarted ? 'complete' : 'waiting',
+  );
+
+  useEffect(() => {
+    const element = artwork.current;
+    if (!element) return;
+    if (schoolMotionStarted || typeof IntersectionObserver === 'undefined') {
+      setMotion('complete');
+      return;
+    }
+
+    const preference = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const threshold = 0.2;
+    const observer = new IntersectionObserver(
+      ([entry]) => {
+        if (!entry || entry.intersectionRatio < threshold) return;
+        observer.disconnect();
+        schoolMotionStarted = true;
+        setMotion(preference.matches ? 'complete' : 'playing');
+      },
+      { threshold, rootMargin: '-70px 0px 0px' },
+    );
+    const finishIfReduced = () => {
+      if (preference.matches) {
+        setMotion((previous) => (previous === 'playing' ? 'complete' : previous));
+      }
+    };
+
+    observer.observe(element);
+    preference.addEventListener('change', finishIfReduced);
+    return () => {
+      observer.disconnect();
+      preference.removeEventListener('change', finishIfReduced);
+    };
+  }, []);
+
+  return (
+    <div
+      ref={artwork}
+      className={styles.schoolArt}
+      data-school-motion={motion}
+      onAnimationEnd={() => setMotion('complete')}
+    >
+      {children}
+    </div>
+  );
+}
 
 export function LandingHeader() {
   const [showAction, setShowAction] = useState(false);

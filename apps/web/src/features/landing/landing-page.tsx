@@ -1,15 +1,20 @@
-import Image from 'next/image';
 import Link from 'next/link';
-import { Brand, Icon, type IconName } from '@tka/ui';
+import { Brand, Icon } from '@tka/ui';
+import { AssessmentIllustration } from './assessment-illustration';
 import { ClosingScene } from './closing-scene';
 import { ExplanationIllustration } from './explanation-illustration';
 import { HeroIllustration } from './hero-illustration';
-import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
+import {
+  AccountDialog,
+  CategoryRail,
+  LandingHeader,
+  SchoolAnimation,
+} from './landing-interactions';
 import { PracticeIllustration } from './practice-illustration';
 import { LevelsIllustration, ProgressIllustration } from './progress-level-illustrations';
+import { BrowserIllustration, SchoolIllustration } from './promotion-illustrations';
 import styles from './landing.module.css';
 
-const illustrations = '/illustrations/student-home';
 const benefits = [
   {
     id: 'cara-belajar',
@@ -47,33 +52,12 @@ const footerGroups = [
   ],
   ['Sekolah', ['Untuk sekolah', '#untuk-sekolah'], ['Masuk sebagai guru', '/']],
   ['Akun', ['Mulai belajar', '/'], ['Belajar lewat browser', '#akses-web']],
-  ['Admin', ['Masuk Admin', '/admin/login']],
+  [
+    'Media Sosial',
+    ['Instagram', 'https://www.instagram.com/hellonumora/'],
+    ['TikTok', 'https://www.tiktok.com/@hellonumora'],
+  ],
 ] as const;
-
-function LearningArt({
-  icon,
-  decoration,
-  tone,
-}: {
-  icon: IconName;
-  decoration: IconName;
-  tone: string;
-}) {
-  return (
-    <div className={styles.learningArt} data-tone={tone} aria-hidden="true">
-      <div className={styles.artOrbit} />
-      <div className={styles.artPaper}>
-        <Icon name={icon} />
-        <span />
-        <span />
-      </div>
-      <div className={styles.artTile}>
-        <Icon name={decoration} />
-      </div>
-      <Icon name="spark" className={styles.artSpark} />
-    </div>
-  );
-}
 
 export function LandingPage() {
   return (
@@ -113,50 +97,40 @@ export function LandingPage() {
         </div>
 
         <section className={styles.browserBand} id="akses-web" aria-labelledby="browser-title">
-          <h2 id="browser-title">Belajar lewat browser</h2>
-          <p>Buka Numora di ponsel atau laptop dan lanjutkan latihan dari akunmu.</p>
-          <div className={styles.browserActions}>
-            <Link className={styles.primary} href="/">
-              Mulai belajar
-            </Link>
-            <a className={styles.secondary} href="#cara-belajar">
-              Lihat cara belajar
-            </a>
-          </div>
-          <div className={styles.browserArt} aria-hidden="true">
-            <div className={styles.deviceBar}>
-              <span />
-              <span />
-              <span />
-            </div>
-            <div className={styles.deviceContent}>
-              <Image
-                src={`${illustrations}/drill-owl.svg`}
-                alt=""
-                width={420}
-                height={320}
-                unoptimized
-                loading="lazy"
-              />
-              <div className={styles.deviceSheet}>
-                <Icon name="calculator" />
-                <span>3x + 6 = 18</span>
-                <span>Berapa nilai x?</span>
-              </div>
+          <div className={styles.promoCopy}>
+            <h2 id="browser-title">
+              Belajar lewat
+              <br /> browser
+            </h2>
+            <p>Buka Numora di ponsel atau laptop dan lanjutkan latihan dari akunmu.</p>
+            <div className={styles.promoActions}>
+              <Link className={styles.primary} href="/">
+                Mulai belajar
+              </Link>
+              <a className={styles.secondary} href="#cara-belajar">
+                Lihat cara belajar
+              </a>
             </div>
           </div>
+          <BrowserIllustration />
         </section>
 
         <section className={styles.schoolBand} id="untuk-sekolah" aria-labelledby="school-title">
-          <LearningArt icon="school" decoration="users" tone="school" />
-          <h2 id="school-title">Belajar bersama sekolah</h2>
-          <p>
-            Siswa bisa bergabung dengan kelas lewat undangan. Guru terverifikasi dapat membuat kelas
-            dan memantau perkembangan siswanya.
-          </p>
-          <Link className={styles.primary} href="/">
-            Masuk sebagai guru
-          </Link>
+          <SchoolAnimation>
+            <SchoolIllustration />
+          </SchoolAnimation>
+          <div className={styles.promoCopy}>
+            <h2 id="school-title">Belajar bersama sekolah</h2>
+            <p>
+              Siswa bisa bergabung dengan kelas lewat undangan. Guru terverifikasi dapat membuat
+              kelas dan memantau perkembangan siswanya.
+            </p>
+            <div className={styles.promoActions}>
+              <Link className={styles.primary} href="/">
+                Masuk sebagai guru
+              </Link>
+            </div>
+          </div>
         </section>
 
         <section
@@ -174,7 +148,7 @@ export function LandingPage() {
               Lihat latihan <Icon name="arrow" width={18} height={18} />
             </a>
           </div>
-          <LearningArt icon="target" decoration="graduation" tone="peach" />
+          <AssessmentIllustration />
         </section>
 
         <section className={styles.closing} aria-labelledby="closing-title">
