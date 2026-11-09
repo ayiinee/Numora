@@ -12,8 +12,10 @@ import {
   assessmentAttempts,
   allowSyntheticContent,
   scoringPolicyVersions,
+  scoringRubricVersions,
   assessmentPackages,
   packageRuntimeEligibility,
+  pretestDistributionEligibility,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -30,6 +32,9 @@ import {
 import {
   AssessmentFinalizationError,
   databaseTime,
+  validatePretestPartialRubric,
+  isPretestPartialPolicy,
+  pretestPartialResult,
   decodeAssessmentContent,
   normalizeAssessmentAnswer,
   presentAssessmentQuestion,
@@ -71,7 +76,7 @@ export class PretestService {
           eq(assessmentPackages.assessmentType, 'PRETEST'),
           eq(assessmentPackages.purpose, 'REGULAR'),
           eq(assessmentPackages.status, 'PUBLISHED'),
-          sql`public.package_can_distribute(${assessmentPackages.id})`,
+          pretestDistributionEligibility(),
           packageRuntimeEligibility(),
         ),
       )
@@ -96,6 +101,7 @@ export class PretestService {
       policy?.status === 'PUBLISHED' &&
       policy.version === 1 &&
       (policy.policyCode === 'PRETEST_PRD_V06' ||
+        isPretestPartialPolicy(policy) ||
         (synthetic &&
           allowSyntheticContent() &&
           (policy.policyCode === 'NUMORA-ASSESSMENT-MOCK-V1-PRETEST' ||
@@ -103,6 +109,14 @@ export class PretestService {
               configuration?.testOnly === true &&
               configuration?.questionCount === 20))))
     );
+  }
+  private async partialPolicy(id: string | null) {
+    if (!id) return false;
+    const [policy] = await getDatabase()
+      .db.select()
+      .from(scoringPolicyVersions)
+      .where(eq(scoringPolicyVersions.id, id));
+    return !!policy && isPretestPartialPolicy(policy);
   }
   private async state(studentId: string, chapterId: string) {
     const chapter = await this.readyChapter(chapterId);
@@ -304,26 +318,51 @@ export class PretestService {
           ),
         );
       const rows = await tx
-        .select({ item: packageItems, version: questionVersions, questionStatus: questions.status })
+        .select({
+          item: packageItems,
+          version: questionVersions,
+          questionStatus: questions.status,
+          rubric: scoringRubricVersions,
+        })
         .from(packageItems)
         .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
         .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
         .innerJoin(questions, eq(questions.id, questionVariants.questionId))
+        .leftJoin(
+          scoringRubricVersions,
+          eq(scoringRubricVersions.id, questionVersions.scoringRubricVersionId),
+        )
         .where(eq(packageItems.packageId, selected.id))
         .orderBy(asc(packageItems.displayOrder));
+      const partial = await this.partialPolicy(selected.scoringPolicyVersionId);
       if (
         rows.length !== 20 ||
         rows.some(
           (row) =>
-            row.version.questionType !== 'SINGLE_CHOICE' ||
+            (!partial && row.version.questionType !== 'SINGLE_CHOICE') ||
             row.version.contentStatus !== 'READY' ||
             row.questionStatus !== 'READY',
         )
       )
         throw new ServiceUnavailableException(
-          problem('PRETEST_CONTENT_PENDING', 'Pretest memerlukan tepat 20 soal PG siap.'),
+          problem(
+            'PRETEST_CONTENT_PENDING',
+            'Pretest memerlukan tepat 20 soal siap dengan penilaian yang disahkan.',
+          ),
         );
-      rows.forEach((row) => decodeAssessmentContent(row.version));
+      rows.forEach((row) => {
+        const content = decodeAssessmentContent(row.version);
+        if (
+          partial &&
+          (Number(row.item.maxPoints) !== 1 ||
+            (content.type !== 'SINGLE_CHOICE' && row.item.rubricVersionId !== row.rubric?.id))
+        )
+          throw new ServiceUnavailableException(
+            problem('PRETEST_SCORING_PENDING', 'Penilaian Pretest belum siap.'),
+          );
+        if (partial && content.type !== 'SINGLE_CHOICE')
+          validatePretestPartialRubric(content, row.rubric ?? undefined);
+      });
       const [attempt] = await tx
         .insert(assessmentAttempts)
         .values({
@@ -342,6 +381,8 @@ export class PretestService {
           questionVersionId: item.questionVersionId,
           displayOrder: item.displayOrder,
           maxPoints: item.maxPoints,
+          rubricVersionId: item.rubricVersionId,
+          maximumScoreCategory: item.maximumScoreCategory,
         })),
       );
       await tx.insert(analyticsOutbox).values({
@@ -482,10 +523,18 @@ export class PretestService {
       const revision = expectedRevision + 1;
       await tx
         .insert(attemptAnswers)
-        .values({ attemptItemId: questionId, answer: answer ?? { optionId: null }, revision })
+        .values({
+          attemptItemId: questionId,
+          answer: answer === null ? sql`'null'::jsonb` : answer,
+          revision,
+        })
         .onConflictDoUpdate({
           target: attemptAnswers.attemptItemId,
-          set: { answer: answer ?? { optionId: null }, revision, savedAt: await databaseTime(tx) },
+          set: {
+            answer: answer === null ? sql`'null'::jsonb` : answer,
+            revision,
+            savedAt: await databaseTime(tx),
+          },
         });
       return {
         questionInstanceId: questionId,
@@ -509,22 +558,43 @@ export class PretestService {
       if (attempt!.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Pretest tidak aktif.'));
       const rows = await tx
-        .select({ item: attemptItems, version: questionVersions, answer: attemptAnswers.answer })
+        .select({
+          item: attemptItems,
+          version: questionVersions,
+          answer: attemptAnswers.answer,
+          rubric: scoringRubricVersions,
+        })
         .from(attemptItems)
         .innerJoin(questionVersions, eq(questionVersions.id, attemptItems.questionVersionId))
         .leftJoin(attemptAnswers, eq(attemptAnswers.attemptItemId, attemptItems.id))
+        .leftJoin(scoringRubricVersions, eq(scoringRubricVersions.id, attemptItems.rubricVersionId))
         .where(eq(attemptItems.attemptId, attemptId));
+      const partial = await this.partialPolicy(attempt!.scoringPolicyVersionId);
       if (
         !(await this.supportedPolicy(attempt!.scoringPolicyVersionId, owned.isDemo)) ||
         rows.length !== 20 ||
-        rows.some((row) => row.version.questionType !== 'SINGLE_CHOICE')
+        (!partial && rows.some((row) => row.version.questionType !== 'SINGLE_CHOICE'))
       )
         throw new ServiceUnavailableException(
           problem('PRETEST_SCORING_PENDING', 'Konten dan penilaian Pretest resmi belum disahkan.'),
         );
+      if (partial)
+        for (const row of rows) {
+          const content = decodeAssessmentContent(row.version);
+          if (content.type !== 'SINGLE_CHOICE')
+            validatePretestPartialRubric(content, row.rubric ?? undefined);
+        }
+      const partialResult = partial
+        ? pretestPartialResult(
+            rows.map((row) => ({
+              content: decodeAssessmentContent(row.version),
+              answer: row.answer ?? null,
+            })),
+          )
+        : null;
       let correctCount = 0;
       const now = await databaseTime(tx);
-      for (const row of rows) {
+      for (const [index, row] of rows.entries()) {
         const content = decodeAssessmentContent(row.version);
         const answer = normalizeAssessmentAnswer(content, row.answer ?? null);
         const correct =
@@ -532,21 +602,31 @@ export class PretestService {
           'optionId' in answer &&
           'optionId' in content.answerKey &&
           answer.optionId === content.answerKey.optionId;
-        if (correct) correctCount++;
+        const fraction = partialResult ? partialResult.fractions[index]! : correct ? 1 : 0;
+        const grading = {
+          scoreCategory: Math.round(
+            fraction * (content.type === 'SINGLE_CHOICE' ? 1 : content.options.length),
+          ),
+          fullyCorrect: fraction === 1,
+          responseState: answer === null ? ('OMITTED' as const) : ('RESPONDED' as const),
+        };
+        const awardedPoints = String(Number((fraction * Number(row.item.maxPoints)).toFixed(2)));
+        if (fraction === 1) correctCount++;
         await tx
           .insert(attemptAnswers)
           .values({
             attemptItemId: row.item.id,
-            answer: answer ?? { optionId: null },
-            awardedPoints: correct ? row.item.maxPoints : '0',
+            answer: answer === null ? sql`'null'::jsonb` : answer,
+            awardedPoints,
+            ...grading,
             gradedAt: now,
           })
           .onConflictDoUpdate({
             target: attemptAnswers.attemptItemId,
-            set: { awardedPoints: correct ? row.item.maxPoints : '0', gradedAt: now },
+            set: { awardedPoints, ...grading, gradedAt: now },
           });
       }
-      const initialLevel = pretestInitialLevel(correctCount);
+      const initialLevel = partialResult?.initialLevel ?? pretestInitialLevel(correctCount);
       const unlocked = await this.unlock(
         tx,
         studentId,
@@ -565,8 +645,8 @@ export class PretestService {
         .set({
           status: 'GRADED',
           finishedAt: now,
-          rawPoints: String(correctCount),
-          score0To100: String(correctCount * 5),
+          rawPoints: String(partialResult?.equivalentCorrect ?? correctCount),
+          score0To100: String(partialResult?.score ?? correctCount * 5),
           pretestResult,
         })
         .where(eq(assessmentAttempts.id, attemptId));

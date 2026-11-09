@@ -10,3 +10,4 @@ export * from './approved-policy.js';
 export * from './rich-question.js';
 export * from './assessment-deadline.js';
 export * from './tryout-partial.js';
+export * from './pretest-partial.js';

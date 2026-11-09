@@ -18,3 +18,4 @@ export * from './notifications.js';
 export * from './generator-packages.js';
 export * from './assessment-arms.js';
 export * from './generator-stock-media.js';
+export * from './calibration-research.js';

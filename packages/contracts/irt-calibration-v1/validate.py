@@ -222,6 +222,7 @@ def validate_result(output, value, expected_dispatch):
     exact_coverage(outcome['respondents'], people, 'attemptId')
     unique(outcome['respondents'], 'respondentId')
     counts = {identifier: 0 for identifier in items}
+    response_by_item = {(r['attemptId'],r['questionVersionId']):r for r in value['responses']}
     for row in value['responses']:
         if row['includedInCalibration']:
             counts[row['questionVersionId']] += 1
@@ -263,8 +264,7 @@ def validate_result(output, value, expected_dispatch):
                    and package_results[pk(row)]['measurementState'] == 'CALIBRATED', 'IRT_RESULT_STATE_INVALID')
             delivered = packages[pk(row)]['questionVersionIds']
             ensure(all(k in delivered and results[k]['measurementState'] == 'CALIBRATED'
-                       and any(a['attemptId'] == row['attemptId'] and a['questionVersionId'] == k
-                               and a['responseState'] in ('RESPONDED', 'OMITTED') for a in value['responses'])
+                       and response_by_item.get((row['attemptId'],k),{}).get('responseState') in ('RESPONDED','OMITTED')
                        for k in row['usedQuestionVersionIds'])
                    and all(results[k]['measurementState'] == 'CALIBRATED' for k in value['referenceQuestionVersionIds']),
                    'IRT_INVALID_REFERENCE')
@@ -272,9 +272,7 @@ def validate_result(output, value, expected_dispatch):
             ensure(all(row[k] is None for k in ('theta', 'standardError', 'score', 'scoreMapping', 'referencePackage'))
                    and len(row['usedQuestionVersionIds']) == 0 and len(row['reasonCodes']) > 0, 'IRT_RESULT_STATE_INVALID')
             if row['status'] == 'UNSCORABLE':
-                ensure(all(items[k]['contentState'] == 'INVALID' or any(a['attemptId'] == row['attemptId']
-                           and a['questionVersionId'] == k and a['responseState'] in ('INVALID', 'NOT_PRESENTED')
-                           for a in value['responses']) for k in packages[pk(row)]['questionVersionIds']),
+                ensure(all(items[k]['contentState'] == 'INVALID' or response_by_item.get((row['attemptId'],k),{}).get('responseState') in ('INVALID','NOT_PRESENTED') for k in packages[pk(row)]['questionVersionIds']),
                        'IRT_RESULT_STATE_INVALID')
     for pair in value['comparisons']:
         row, source = comparisons[pair['comparisonId']], items[pair['originalQuestionVersionId']]
