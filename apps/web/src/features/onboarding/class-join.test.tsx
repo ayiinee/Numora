@@ -139,9 +139,9 @@ describe('class join link destination', () => {
     expect(mocks.replace).not.toHaveBeenCalled();
   });
 
-  it('explains the one-class conflict returned by the server', async () => {
+  it('explains the five-class limit returned by the server', async () => {
     mocks.joinClass.mockRejectedValue(
-      await problem(409, 'ALREADY_IN_CLASS', 'Siswa sudah menjadi anggota Class lain.'),
+      await problem(409, 'CLASS_LIMIT_REACHED', 'Batas kelas tercapai.'),
     );
     mount('ABC123');
 
@@ -149,7 +149,7 @@ describe('class join link destination', () => {
 
     expect(await screen.findByRole('alert')).toHaveProperty(
       'textContent',
-      'Siswa sudah menjadi anggota Class lain. Satu Siswa hanya boleh aktif pada satu kelas. Keluar atau pindah kelas tidak dapat dilakukan sendiri.',
+      'Batas kelas tercapai. Kamu dapat mengikuti maksimal lima kelas aktif. Keluar dari kelas melalui Profil.',
     );
   });
 

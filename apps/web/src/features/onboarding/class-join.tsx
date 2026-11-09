@@ -9,13 +9,14 @@ import { StudentLayout } from '@/components/shell';
 import { StudentGate } from '@/features/core-learning/ui';
 import { ApiProblem, joinClass } from '@/lib/api';
 import { useAuth } from './auth';
+import { CLASS_JOIN_CODE, clearClassInvitation } from './class-invitation';
 
-const JOIN_CODE = /^(?:[A-Za-z0-9]{6}|[A-Za-z0-9_\x2D]{8,32})$/;
+const JOIN_CODE = CLASS_JOIN_CODE;
 
 const FAILURE_HINT: Record<string, string> = {
   CLASS_NOT_FOUND: 'Kode bisa salah, kelas sudah diarsipkan, atau sekolah tidak aktif.',
-  ALREADY_IN_CLASS:
-    'Satu Siswa hanya boleh aktif pada satu kelas. Keluar atau pindah kelas tidak dapat dilakukan sendiri.',
+  CLASS_LIMIT_REACHED:
+    'Kamu dapat mengikuti maksimal lima kelas aktif. Keluar dari kelas melalui Profil.',
   CODE_ATTEMPT_LIMIT: 'Tunggu beberapa saat sebelum mencoba kode lagi.',
   CODE_LIMITER_UNAVAILABLE: 'Pemeriksaan kode sementara tidak tersedia. Coba lagi nanti.',
   NETWORK_ERROR: 'Periksa koneksi lalu coba lagi.',
@@ -58,6 +59,7 @@ function JoinContent({ token, rawCode }: { token: string; rawCode: string | unde
     setFailure(null);
     try {
       await joinClass(token, code);
+      clearClassInvitation();
       await cache.invalidateQueries();
       await refresh();
       // The refresh cycles the Student gate, so the class name is confirmed from the dashboard.
@@ -132,6 +134,17 @@ function JoinContent({ token, rawCode }: { token: string; rawCode: string | unde
       <Button onClick={() => void join()} disabled={busy}>
         {busy ? 'Menghubungkan…' : 'Gabung kelas'}
       </Button>
+      <Link
+        className="button-link"
+        href="/student/profile"
+        aria-disabled={busy}
+        onClick={(event) => {
+          if (busy) event.preventDefault();
+          else clearClassInvitation();
+        }}
+      >
+        Batal dan buka profil
+      </Link>
     </section>
   );
 }

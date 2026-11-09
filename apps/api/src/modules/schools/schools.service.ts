@@ -5,7 +5,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, desc, eq, gt, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
+import { and, asc, desc, eq, gt, ilike, inArray, isNull, or, sql } from 'drizzle-orm';
 import {
   auditLogs,
   getDatabase,
@@ -60,6 +60,22 @@ export class SchoolsService {
       .from(schools)
       .where(eq(schools.status, 'ACTIVE'))
       .orderBy(schools.name);
+    return { items };
+  }
+
+  async memberships(authorization?: string) {
+    const teacherId = await this.role(authorization, 'TEACHER');
+    const items = await getDatabase()
+      .db.select({ id: schools.id, name: schools.name })
+      .from(teacherSchoolMemberships)
+      .innerJoin(schools, eq(schools.id, teacherSchoolMemberships.schoolId))
+      .where(
+        and(
+          eq(teacherSchoolMemberships.teacherUserId, teacherId),
+          isNull(teacherSchoolMemberships.endedAt),
+        ),
+      )
+      .orderBy(asc(schools.name), asc(schools.id));
     return { items };
   }
 

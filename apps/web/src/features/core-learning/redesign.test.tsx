@@ -740,6 +740,9 @@ describe('responsive learning composition', () => {
         joined: true,
       });
       renderStudent(<ProfileScreen />);
+      await waitFor(() =>
+        expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).disabled).toBe(false),
+      );
       fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: ` ${joinCode} ` } });
       fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
       await waitFor(() => expect(joinClass).toHaveBeenCalledWith('test-token', joinCode));

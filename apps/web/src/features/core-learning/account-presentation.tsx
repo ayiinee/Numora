@@ -41,6 +41,7 @@ export function ProfileIdentity({
   progressState?: ReactNode;
 }) {
   const school = profile.studentAffiliation === 'SCHOOL';
+  const classCount = data?.classes?.length ?? (data?.class ? 1 : 0);
   return (
     <Card className="student-profile-identity" aria-labelledby="profile-name">
       <div className="student-profile-identity__badges">
@@ -71,9 +72,19 @@ export function ProfileIdentity({
         </div>
         <div>
           <h2 id="profile-name">{profile.displayName}</h2>
-          <p>{school ? (data?.class?.schoolName ?? 'Siswa sekolah') : 'User Mandiri'}</p>
+          <p>
+            {school
+              ? classCount > 1
+                ? 'Siswa sekolah'
+                : (data?.class?.schoolName ?? 'Siswa sekolah')
+              : 'User Mandiri'}
+          </p>
           <small>
-            {school ? (data?.class?.name ?? 'Terhubung dengan kelas') : 'Belajar sesuai ritmemu'}
+            {school
+              ? classCount > 1
+                ? `${classCount} kelas aktif`
+                : (data?.class?.name ?? 'Terhubung dengan kelas')
+              : 'Belajar sesuai ritmemu'}
           </small>
         </div>
       </div>

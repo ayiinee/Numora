@@ -56,7 +56,7 @@ it('withholds a pending IRT score, preserves zero and follows the server history
   );
 });
 
-it('generates and copies QR from the exact class code and exposes the generated PNG download', async () => {
+it('generates the join URL QR, copies link or manual code, and exposes the PNG download', async () => {
   const image = 'data:image/png;base64,aGVsbG8=';
   vi.mocked(QRCode.toDataURL).mockImplementation(async () => image);
   const copy = vi.fn().mockResolvedValue(undefined);
@@ -64,12 +64,15 @@ it('generates and copies QR from the exact class code and exposes the generated 
   render(<TeacherInviteContent name="IX A" code="Ab_cd-234" />);
   await screen.findByRole('img', { name: 'QR kode kelas IX A' });
   expect(QRCode.toDataURL).toHaveBeenCalledWith(
-    'Ab_cd-234',
+    `${window.location.origin}/student/join?code=Ab_cd-234`,
     expect.objectContaining({ margin: 4 }),
   );
   fireEvent.click(screen.getByRole('button', { name: 'Salin kode' }));
   await screen.findByText('Kode kelas disalin.');
   expect(copy).toHaveBeenCalledWith('Ab_cd-234');
+  fireEvent.click(screen.getByRole('button', { name: 'Salin tautan' }));
+  await screen.findByText('Tautan undangan disalin.');
+  expect(copy).toHaveBeenLastCalledWith(`${window.location.origin}/student/join?code=Ab_cd-234`);
   expect(screen.getByRole('link', { name: 'Unduh PNG QR' }).getAttribute('href')).toBe(image);
 });
 

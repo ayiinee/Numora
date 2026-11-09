@@ -158,6 +158,7 @@ export class FeedbackService {
         classId: f.classIdAtSend,
         studentId: f.studentId,
         teacherName,
+        teacherId: f.teacherId,
         body: f.body,
         sentAt: f.sentAt.toISOString(),
         readAt: f.readAt?.toISOString() ?? null,
