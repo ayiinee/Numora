@@ -1,0 +1,330 @@
+.learning-adventure {
+  display: grid;
+  gap: 16px;
+  width: min(100%, 520px);
+  margin-inline: auto;
+}
+
+.adventure-summary {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 16px;
+  color: white;
+  border-radius: var(--radius-lg);
+}
+
+.adventure-summary .eyebrow,
+.adventure-summary h1 {
+  color: inherit;
+}
+
+.adventure-summary__back {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 14%);
+  color: inherit;
+}
+
+.adventure-summary__back:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+
+.adventure-summary h1 {
+  margin: 2px 0 8px;
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  line-height: 1.4;
+}
+
+.adventure-summary p {
+  margin-top: 4px;
+  font-size: var(--text-xs);
+}
+
+.level-path {
+  --medal-width: clamp(56px, 15vw, 80px);
+  position: relative;
+  width: 100%;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+  background: #8db828 url('/illustrations/level-path/owl-trail.webp') repeat-y top center / 100%
+    auto;
+}
+
+.level-path__step {
+  position: absolute;
+  display: grid;
+  place-items: center;
+  width: var(--medal-width);
+  aspect-ratio: 1.2;
+  transform: translate(-50%, -50%);
+}
+
+.level-path__node,
+.level-path__medal {
+  display: grid;
+  place-items: center;
+  width: 100%;
+  height: 100%;
+  border-radius: var(--radius-lg);
+}
+
+.level-path__node {
+  min-width: 44px;
+  min-height: 44px;
+  padding: 0;
+  border: 0;
+  background: transparent;
+  cursor: pointer;
+}
+
+.level-path__node[aria-pressed='true'] {
+  box-shadow:
+    0 0 0 2px white,
+    0 0 0 5px var(--color-primary-strong);
+}
+
+.level-path__node:focus-visible {
+  outline: 3px solid var(--color-text);
+  outline-offset: 6px;
+}
+
+.level-path__node:hover .level-path__medal {
+  translate: 0 -2px;
+}
+
+.level-path__medal {
+  position: relative;
+  isolation: isolate;
+  color: white;
+  font-size: clamp(24px, 6vw, 34px);
+  font-weight: 800;
+  line-height: 1;
+  padding-bottom: 4px;
+  text-shadow: 0 2px 3px rgb(26 8 43 / 65%);
+}
+
+.level-path__medal::before {
+  position: absolute;
+  z-index: -1;
+  inset: 0;
+  background: url('/illustrations/level-path/medal.webp') center / contain no-repeat;
+  filter: drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
+  content: '';
+}
+
+.level-path__step--completed .level-path__medal::before {
+  filter: hue-rotate(205deg) brightness(1.2) drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
+}
+
+.level-path__step--locked .level-path__medal::before {
+  filter: grayscale(1) brightness(1.65) drop-shadow(0 4px 2px rgb(71 38 10 / 32%));
+}
+
+.level-path__lock {
+  position: absolute;
+  right: -2px;
+  bottom: 0;
+  box-sizing: content-box;
+  padding: 3px;
+  border: 1px solid white;
+  border-radius: var(--radius-full);
+  background: #424052;
+}
+
+.level-path__here,
+.level-path__map-stars {
+  position: absolute;
+  z-index: 1;
+  border-radius: var(--radius-full);
+  white-space: nowrap;
+  pointer-events: none;
+}
+
+.level-path__here {
+  padding: 2px 8px;
+  font-size: 11px;
+  font-weight: 800;
+  line-height: 1.4;
+  bottom: calc(100% + 7px);
+  background: var(--color-primary-strong);
+  color: white;
+}
+
+.level-path__map-stars {
+  display: flex;
+  top: calc(100% + 6px);
+  padding: 3px 6px;
+  background: #fff6da;
+}
+
+.level-path__stars {
+  display: inline-flex;
+  gap: 2px;
+  color: #6c6459;
+}
+
+.level-path__stars [data-earned='true'] {
+  fill: #ffca46;
+  stroke: #764200;
+}
+
+.level-path__sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip-path: inset(50%);
+  white-space: nowrap;
+}
+
+.level-path__details {
+  display: grid;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+}
+
+.level-path__context,
+.level-path__meta {
+  text-align: center;
+  overflow-wrap: anywhere;
+}
+
+.level-path__context {
+  display: grid;
+  gap: 4px;
+}
+
+.level-path__context p:first-child {
+  color: var(--color-text);
+  font-weight: var(--font-bold);
+}
+
+.level-path__scores {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 8px;
+  margin: 0;
+}
+
+.level-path__scores div {
+  padding: 10px 6px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  text-align: center;
+}
+
+.level-path__scores dt {
+  font-size: var(--text-xs);
+}
+
+.level-path__scores .level-path__best {
+  background: var(--color-reward-light);
+}
+
+.level-path__best dt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
+}
+
+.level-path__scores dd {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(24px, 6vw, 30px);
+  line-height: 1.2;
+  font-weight: 800;
+}
+
+.level-path__rating {
+  display: grid;
+  justify-items: center;
+  gap: 4px;
+}
+
+.level-path__rating .level-path__stars {
+  gap: 8px;
+}
+
+.level-path__history {
+  display: inline-flex;
+  align-items: center;
+  justify-self: start;
+  min-height: 44px;
+  color: var(--color-primary-strong);
+  font-weight: 700;
+  text-decoration: underline;
+  text-underline-offset: 3px;
+}
+
+.level-path-dialog .numora-dialog__header {
+  display: grid;
+  grid-template-columns: var(--touch-target-min) minmax(0, 1fr) var(--touch-target-min);
+  gap: 4px;
+}
+
+.level-path-dialog .numora-dialog__header h2 {
+  grid-column: 2;
+  text-align: center;
+  font-size: var(--text-2xl);
+}
+
+.level-path-dialog .numora-dialog__content {
+  margin-top: 8px;
+}
+
+.adventure-mobile-action {
+  display: none;
+}
+
+@media (max-width: 959px) {
+  .adventure-mobile-action {
+    position: fixed;
+    z-index: 19;
+    inset-inline: 0;
+    bottom: calc(var(--bottom-nav-height) + env(safe-area-inset-bottom, 0px));
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    gap: 12px;
+    padding: 8px 16px;
+    border-top: 1px solid var(--color-border);
+    background: var(--color-surface);
+  }
+
+  .adventure-mobile-action > div {
+    display: grid;
+    min-width: 0;
+  }
+
+  .adventure-mobile-action small {
+    color: var(--color-text-muted);
+    font-size: var(--text-xs);
+  }
+
+  .adventure-mobile-action strong {
+    overflow: hidden;
+    color: var(--color-text);
+    font-size: var(--text-sm);
+    text-overflow: ellipsis;
+    white-space: nowrap;
+  }
+
+  .adventure-mobile-action button {
+    flex-shrink: 0;
+    min-height: 44px;
+  }
+
+  .level-path {
+    margin-bottom: 64px;
+  }
+}
