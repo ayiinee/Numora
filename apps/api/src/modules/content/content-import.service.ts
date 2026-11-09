@@ -1,4 +1,8 @@
-import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
+import {
+  PRETEST_PARTIAL_POLICY,
+  pretestPartialRubricDefinition,
+  TRYOUT_PARTIAL_POLICY,
+} from '@tka/assessment-engine';
 import { randomUUID } from 'node:crypto';
 import {
   Inject,
@@ -136,7 +140,13 @@ export class ContentImportService {
     const duplicate = new Set<string>();
     for (const input of body.questions) {
       const tryout = (target?.assessmentType ?? usage) === 'TRYOUT';
-      const errors = structuralErrors(input, false, tryout);
+      const pretest = (target?.assessmentType ?? usage) === 'PRETEST';
+      const errors = structuralErrors(
+        input,
+        false,
+        tryout,
+        (target?.assessmentType ?? usage) === 'PRETEST',
+      );
       const q = input as ImportQuestion;
       const externalId = typeof q.externalId === 'string' ? q.externalId : '';
       if (duplicate.has(externalId)) errors.push('DUPLICATE_EXTERNAL_ID');
@@ -226,7 +236,7 @@ export class ContentImportService {
         (q.subchapterCode && !sub) ||
         (q.metadata.sourceLevelNumber != null && !level) ||
         (q.competencyCode && !competency) ||
-        (!tryout && (!sub || !level || !competency))
+        (!tryout && (!sub || (!pretest && !level) || !competency))
       )
         errors.push('MASTER_SCOPE_NOT_FOUND');
       if (q.levelCode != null) errors.push('UNSUPPORTED_LEVEL_CODE');
@@ -604,20 +614,27 @@ export class ContentImportService {
         typeof r.q.metadata.scoringRubricVersionId === 'string'
           ? r.q.metadata.scoringRubricVersionId
           : undefined;
-      if (target?.assessmentType === 'TRYOUT' && r.q.type !== 'SINGLE_CHOICE' && !rubricId) {
+      if (
+        ['TRYOUT', 'PRETEST'].includes(target?.assessmentType ?? '') &&
+        r.q.type !== 'SINGLE_CHOICE' &&
+        !rubricId
+      ) {
         const count = r.q.options.length;
-        const code = `${TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
-        const definition = {
-          policyCode: TRYOUT_PARTIAL_POLICY,
-          version: 1,
-          questionType: r.q.type,
-          decisionCount: count,
-          categories: Array.from({ length: count + 1 }, (_, i) => i),
-          fullyCorrectCategory: count,
-          points: 'round(correctDecisions / decisionCount * maxPoints, 2)',
-          unanswered: 0,
-          approvedDecision: 'PROJECT_OWNER_2026_10_07',
-        };
+        const pretest = target?.assessmentType === 'PRETEST';
+        const code = `${pretest ? PRETEST_PARTIAL_POLICY : TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
+        const definition = pretest
+          ? pretestPartialRubricDefinition(r.q.type, count)
+          : {
+              policyCode: TRYOUT_PARTIAL_POLICY,
+              version: 1,
+              questionType: r.q.type,
+              decisionCount: count,
+              categories: Array.from({ length: count + 1 }, (_, i) => i),
+              fullyCorrectCategory: count,
+              points: 'round(correctDecisions / decisionCount * maxPoints, 2)',
+              unanswered: 0,
+              approvedDecision: 'PROJECT_OWNER_2026_10_07',
+            };
         await tx
           .insert(scoringRubricVersions)
           .values({

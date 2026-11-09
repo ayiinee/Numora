@@ -213,7 +213,7 @@ describe('Student account and feedback', () => {
   it('does not request feedback while signed out', async () => {
     auth.state = { status: 'signed_out' };
     mount(<FeedbackScreen />);
-    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/login'));
     expect(request).not.toHaveBeenCalled();
   });
   it('keeps zero score, pending IRT and optional Join Class on the profile', async () => {
@@ -248,7 +248,7 @@ describe('Student account and feedback', () => {
     await screen.findByText('Belum dapat keluar. Coba lagi.');
     expect(auth.replace).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Keluar Akun Google' }));
-    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/login'));
   });
   it('shows all memberships, joins another class, and confirms leave without changing historical data', async () => {
     const baseline = await vi.mocked(learningApi.dashboard)('token-a');

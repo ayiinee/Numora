@@ -146,7 +146,7 @@ export function AdminLoginScreen() {
             <Link href="/admin/recovery">Lupa password Admin</Link>
           </p>
           <p className="auth-account-note">
-            <Link href="/">Masuk sebagai Siswa atau Guru</Link>
+            <Link href="/login">Masuk sebagai Siswa atau Guru</Link>
           </p>
         </section>
       </div>

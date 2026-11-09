@@ -19,6 +19,11 @@ Object.assign(tryoutSchema.properties.metadata.properties.sourceLevelNumber, {
   type: ['integer', 'null'],
 });
 const validateTryout = ajv.compile({ ...tryoutSchema, $id: 'urn:numora:tryout-import:1' });
+const pretestSchema = structuredClone(contentImportSchema);
+Object.assign(pretestSchema.properties.metadata.properties.sourceLevelNumber, {
+  type: ['integer', 'null'],
+});
+const validatePretest = ajv.compile({ ...pretestSchema, $id: 'urn:numora:pretest-import:1' });
 // Intake changes only academic nullability; final imports still use the original schema.
 const intakeSchema = structuredClone(contentImportSchema);
 for (const field of ['chapterCode', 'subchapterCode', 'competencyCode'] as const)
@@ -130,8 +135,17 @@ export function snapshot(q: ImportQuestion): PreviewSnapshot {
     assets: (q.metadata.assetManifest ?? []).map(cleanAsset),
   };
 }
-export function structuralErrors(input: unknown, intake = false, tryout = false): string[] {
-  if (!(intake ? validateIntake : tryout ? validateTryout : validate)(input))
+export function structuralErrors(
+  input: unknown,
+  intake = false,
+  tryout = false,
+  pretest = false,
+): string[] {
+  if (
+    !(intake ? validateIntake : tryout ? validateTryout : pretest ? validatePretest : validate)(
+      input,
+    )
+  )
     return ['INVALID_SCHEMA'];
   const q = input as ImportQuestion;
   const errors: string[] = [];

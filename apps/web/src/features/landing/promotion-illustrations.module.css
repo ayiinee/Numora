@@ -1,0 +1,184 @@
+.webFloat {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .webFloat {
+    animation: web-drift 7.2s ease-in-out var(--offset, 0s) infinite;
+  }
+  @keyframes web-drift {
+    0%,
+    100% {
+      transform: translate(0, 0) rotate(0deg);
+    }
+    30% {
+      transform: translate(var(--dx, 5px), calc(var(--dy, 13px) * -1)) rotate(var(--tilt, 5deg));
+    }
+    69% {
+      transform: translate(calc(var(--dx, 5px) * -1), var(--dy, 13px))
+        rotate(calc(var(--tilt, 5deg) * -0.55));
+    }
+  }
+}
+@media (max-width: 660px) {
+  .webDeviceLeft,
+  .webDeviceRight,
+  .webFraction {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+  .webDeviceLeft {
+    transform: translate(185px, -64px) scale(0.72);
+  }
+  .webDeviceRight {
+    transform: translate(-177px, -23px) scale(0.66);
+  }
+  .webFraction {
+    transform: translate(102px, -16px) scale(0.85);
+  }
+}
+
+.schoolCrest,
+.schoolOwl,
+.schoolSparks,
+.schoolComet {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+
+.schoolCrest {
+  --school-start: rotate(-13deg) scale(0.97);
+  transform: translate(-127px, 37px) rotate(25deg) scale(0.35);
+}
+
+.schoolOwl {
+  --school-start: translate(-100px, 69px) rotate(-28deg) scale(0.24);
+  transform: rotate(-12deg);
+}
+
+.schoolComet {
+  --school-start: translate(-43px, 10px) rotate(14deg) scale(0.28);
+  transform-origin: 83% 36%;
+}
+
+.schoolSparks {
+  --school-start: translate(-63px, 46px) scale(0.7);
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  [data-school-motion='waiting'] :is(.schoolCrest, .schoolOwl, .schoolComet, .schoolSparks) {
+    transform: var(--school-start);
+  }
+
+  [data-school-motion='waiting'] :is(.schoolOwl, .schoolComet, .schoolSparks) {
+    opacity: 0;
+  }
+
+  [data-school-motion='playing'] :is(.schoolCrest, .schoolOwl, .schoolComet, .schoolSparks) {
+    animation-duration: 2.8s;
+    animation-timing-function: ease-in-out;
+    animation-fill-mode: both;
+  }
+
+  [data-school-motion='playing'] .schoolCrest {
+    animation-name: school-badge-flight;
+  }
+
+  [data-school-motion='playing'] .schoolOwl {
+    animation-name: school-owl-flight;
+  }
+
+  [data-school-motion='playing'] .schoolComet {
+    animation-name: school-comet-flight;
+  }
+
+  [data-school-motion='playing'] .schoolSparks {
+    animation-name: school-spark-flight;
+  }
+
+  [data-school-motion='complete'] .schoolOwl {
+    animation: school-owl-hover 4.4s ease-in-out infinite;
+  }
+
+  [data-school-motion='complete'] .schoolSparks {
+    animation: school-spark-shimmer 4.4s ease-in-out infinite;
+  }
+
+  @keyframes school-badge-flight {
+    0% {
+      transform: var(--school-start);
+    }
+    31% {
+      transform: translate(9px, -15px) rotate(-5deg) scale(1.03);
+    }
+    54% {
+      transform: translate(-49px, 18px) rotate(10deg) scale(0.76);
+    }
+  }
+
+  @keyframes school-owl-flight {
+    0%,
+    35% {
+      opacity: 0;
+      transform: var(--school-start);
+    }
+    54% {
+      opacity: 0;
+      transform: translate(-125px, 56px) rotate(-28deg) scale(0.25);
+    }
+    72% {
+      opacity: 1;
+      transform: translate(-33px, 14px) rotate(-19deg) scale(0.82);
+    }
+    91% {
+      opacity: 1;
+      transform: translate(9px, -9px) rotate(-12deg) scale(1.035);
+    }
+  }
+
+  @keyframes school-comet-flight {
+    0%,
+    42% {
+      opacity: 0;
+      transform: var(--school-start);
+    }
+    63% {
+      opacity: 0.55;
+      transform: translate(-23px, 14px) rotate(9deg) scale(0.6);
+    }
+  }
+
+  @keyframes school-spark-flight {
+    0%,
+    44% {
+      opacity: 0;
+      transform: var(--school-start);
+    }
+    72% {
+      opacity: 0.82;
+      transform: translate(-12px, 16px) scale(0.91);
+    }
+  }
+
+  @keyframes school-owl-hover {
+    0%,
+    100% {
+      translate: 0 0;
+    }
+    48% {
+      translate: 0 -9px;
+    }
+  }
+
+  @keyframes school-spark-shimmer {
+    0%,
+    100% {
+      opacity: 1;
+      scale: 1;
+    }
+    62% {
+      opacity: 0.7;
+      scale: 0.92;
+    }
+  }
+}

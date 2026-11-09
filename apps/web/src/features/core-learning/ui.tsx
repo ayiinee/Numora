@@ -98,7 +98,7 @@ export function DataState({
     >
       <p>{message}</p>
       {status === 401 ? (
-        <Link className="button-link" href="/">
+        <Link className="button-link" href="/login">
           Masuk kembali
         </Link>
       ) : (

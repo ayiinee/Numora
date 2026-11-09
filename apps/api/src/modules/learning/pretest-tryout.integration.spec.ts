@@ -1,10 +1,17 @@
 import { seedLifecycleDemo } from '@tka/database/testing';
-import { randomUUID } from 'node:crypto';
+import { randomUUID, createHash } from 'node:crypto';
 import { afterAll, beforeAll, describe, expect, it } from 'vitest';
 import { Test } from '@nestjs/testing';
 import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { and, eq, sql } from 'drizzle-orm';
 import {
+  assessmentBlueprintVersions,
+  packageItems,
+  questionVersions,
+  questionVariants,
+  questions,
+  scoringPolicyVersions,
+  scoringRubricVersions,
   assessmentAttempts,
   assessmentPackages,
   attemptAnswers,
@@ -19,7 +26,12 @@ import {
   pretestChapterStates,
   tryoutBatchCloseAt,
 } from '@tka/database';
-import { finalizeTryout } from '@tka/assessment-engine';
+import {
+  PRETEST_PARTIAL_POLICY,
+  PRETEST_PARTIAL_CONFIGURATION,
+  pretestPartialRubricDefinition,
+  finalizeTryout,
+} from '@tka/assessment-engine';
 import { recoverOverdueTryouts } from '../../../../worker/src/tryout-recovery';
 import { configureApplication } from '../../bootstrap';
 import { IdentityService } from '../identity/identity.service';
@@ -560,4 +572,160 @@ integration('Pretest and continued Tryout lifecycle (isolated TEST/DEMO)', () =>
     });
     expect(main).toHaveLength(1);
   });
+
+  it('serves approved original mixed Pretest and grades partial answers without calibration or XP', async () => {
+    const mixed = await seedLifecycleDemo(randomUUID());
+    const db = getDatabase().db;
+    const rows = await db
+      .select({ item: packageItems, version: questionVersions, variant: questionVariants })
+      .from(packageItems)
+      .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+      .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
+      .where(eq(packageItems.packageId, mixed.pretestPackageId))
+      .orderBy(packageItems.displayOrder);
+    const reviewer = rows[0]!.version.reviewedByUserId!;
+    await db
+      .insert(scoringPolicyVersions)
+      .values({
+        policyCode: PRETEST_PARTIAL_POLICY,
+        version: 1,
+        status: 'PUBLISHED',
+        configuration: PRETEST_PARTIAL_CONFIGURATION,
+      })
+      .onConflictDoNothing();
+    const [policy] = await db
+      .select()
+      .from(scoringPolicyVersions)
+      .where(eq(scoringPolicyVersions.policyCode, PRETEST_PARTIAL_POLICY));
+    for (const [index, row] of rows.entries()) {
+      await db
+        .update(questions)
+        .set({ usageType: 'PRETEST' })
+        .where(eq(questions.id, row.variant.questionId));
+      if (index < 2) {
+        const type =
+          index === 0 ? ('MULTIPLE_CHOICE_MULTIPLE_ANSWER' as const) : ('CATEGORY' as const);
+        const definition = pretestPartialRubricDefinition(type, 4);
+        const [rubric] = await db
+          .insert(scoringRubricVersions)
+          .values({
+            code: `TEST-PRETEST-${randomUUID()}`,
+            version: 1,
+            questionType: type,
+            maximumScoreCategory: 4,
+            definition,
+            digest: createHash('sha256').update(JSON.stringify(definition)).digest('hex'),
+            status: 'SEALED',
+            approvedByUserId: reviewer,
+            approvedAt: new Date(),
+          })
+          .returning();
+        await db
+          .update(questionVersions)
+          .set({
+            questionType: type,
+            scoringRubricVersionId: rubric!.id,
+            optionsOrStatements: {
+              options: row.version.optionsOrStatements,
+              categories:
+                index === 1
+                  ? [
+                      { id: 'Y', label: 'Benar' },
+                      { id: 'N', label: 'Salah' },
+                    ]
+                  : [],
+            },
+            answerKey:
+              index === 0
+                ? { optionIds: ['A', 'C'] }
+                : { categoryByStatementId: { A: 'Y', B: 'N', C: 'Y', D: 'N' } },
+          })
+          .where(eq(questionVersions.id, row.version.id));
+        await db
+          .update(packageItems)
+          .set({ maxPoints: '1', rubricVersionId: rubric!.id, maximumScoreCategory: 4 })
+          .where(eq(packageItems.id, row.item.id));
+      } else
+        await db
+          .update(packageItems)
+          .set({ maxPoints: '1' })
+          .where(eq(packageItems.id, row.item.id));
+    }
+    const [blueprint] = await db
+      .insert(assessmentBlueprintVersions)
+      .values({
+        code: `TEST-PRETEST-${randomUUID()}`,
+        version: 1,
+        status: 'SEALED',
+        approvedByUserId: reviewer,
+        approvedAt: new Date(),
+        approvalReference: 'TEST ONLY owner partial policy',
+        definition: { assessmentType: 'PRETEST', chapterId: mixed.chapterId, questionCount: 20 },
+        digest: 'test-only',
+      })
+      .returning();
+    await db
+      .update(assessmentPackages)
+      .set({ isDemo: false, blueprintVersionId: blueprint!.id, scoringPolicyVersionId: policy!.id })
+      .where(eq(assessmentPackages.id, mixed.pretestPackageId));
+    await db
+      .update(assessmentPackages)
+      .set({
+        frozenAt: new Date(),
+        curriculumApproval: sql`jsonb_build_object('reference','TEST ONLY approved original','approvedAt',now()::text,'manifestDigest',irt_compute.payload_digest(jsonb_build_object('packageId',${mixed.pretestPackageId}::uuid,'blueprintVersionId',${blueprint!.id}::uuid,'scoringPolicyVersionId',${policy!.id}::uuid,'items',(select jsonb_agg(to_jsonb(i) order by i.display_order,i.id) from public.package_items i where i.package_id=${mixed.pretestPackageId}::uuid))))`,
+      })
+      .where(eq(assessmentPackages.id, mixed.pretestPackageId));
+    const state = await http(`pretest/chapters/${mixed.chapterId}`);
+    expect(state.body).toMatchObject({ canStart: true, isDemo: false });
+    const started = await http('pretest/attempts', 'POST', { chapterId: mixed.chapterId });
+    expect(started.status).toBe(201);
+    expect(started.body.questions).toHaveLength(20);
+    expect(JSON.stringify(started.body)).not.toMatch(/answerKey|explanation/);
+    const mcma = started.body.questions[0],
+      category = started.body.questions[1];
+    expect(
+      (await http(`pretest/attempts/${started.body.id}`, 'GET', undefined, 'other')).status,
+    ).toBe(404);
+    expect(
+      (
+        await http(
+          `pretest/attempts/${started.body.id}/answers/${mcma.questionInstanceId}`,
+          'PATCH',
+          { answer: { optionIds: ['A'] }, expectedRevision: 0 },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await http(
+          `pretest/attempts/${started.body.id}/answers/${category.questionInstanceId}`,
+          'PATCH',
+          { answer: { categoryByStatementId: { A: 'Y' } }, expectedRevision: 0 },
+        )
+      ).status,
+    ).toBe(200);
+    expect(
+      (
+        await http(
+          `pretest/attempts/${started.body.id}/answers/${mcma.questionInstanceId}`,
+          'PATCH',
+          { answer: null, expectedRevision: 1 },
+        )
+      ).status,
+    ).toBe(200);
+    expect((await http(`pretest/attempts/${started.body.id}`)).body.questions[0].answer).toBeNull();
+    await http(`pretest/attempts/${started.body.id}/answers/${mcma.questionInstanceId}`, 'PATCH', {
+      answer: { optionIds: ['A'] },
+      expectedRevision: 2,
+    });
+    const result = await http(`pretest/attempts/${started.body.id}/submit`, 'POST');
+    expect(result.status).toBe(201);
+    expect(result.body).toMatchObject({ score: 5, correctCount: 0, initialLevel: 1 });
+    expect((await http(`pretest/attempts/${started.body.id}/submit`, 'POST')).body).toEqual(
+      result.body,
+    );
+    expect(
+      await db.select().from(xpLedger).where(eq(xpLedger.attemptId, started.body.id)),
+    ).toHaveLength(0);
+  }, 60000);
 });

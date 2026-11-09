@@ -4,6 +4,20 @@ import { describe, it, expect } from 'vitest';
 import { contentImportSchema, type ImportQuestion } from '@tka/database';
 import { digest, snapshot, structuralErrors, normalizeAnswer } from './content-import.validation';
 describe('question import contract semantics', () => {
+  it('allows Pretest without a Drill level while retaining required academic mapping', async () => {
+    const q = JSON.parse(
+      await readFile(
+        resolve('../../docs/data/samples/2026-10-03/questions/CURR-IND20-L01-Q07.draft.json'),
+        'utf8',
+      ),
+    ) as ImportQuestion;
+    const pretest = { ...q, metadata: { ...q.metadata, sourceLevelNumber: null } };
+    expect(structuralErrors(pretest, false, false, true)).toEqual([]);
+    expect(structuralErrors(pretest)).toContain('INVALID_SCHEMA');
+    expect(structuralErrors({ ...pretest, chapterCode: null }, false, false, true)).toContain(
+      'INVALID_SCHEMA',
+    );
+  });
   it('runtime schema equals its machine-readable source', async () => {
     expect(contentImportSchema).toEqual(
       JSON.parse(
