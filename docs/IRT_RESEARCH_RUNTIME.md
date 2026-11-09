@@ -163,13 +163,27 @@ An empty anchor category produced scientific SUCCEEDED + INSUFFICIENT without
 invoking R or renumbering categories. Prior exposure/crossover/retry contract
 rules and legitimate wrong/omitted answers retain their existing semantics.
 
-Local research acceptance is complete. Main PR #132 remains draft because the
-base PR #130 already has generator-page horizontal overflow in browser tests.
-This branch changes no UI files. Its inherited legacy snapshot expectation was
-fixed without dropping historical assertions; remote CI rerun is pending. The
-local Node runtime was 24.15.0 versus the repository's >=24.22.1 requirement;
-official CI remains the authority for that pinned build environment. No full
-repository-green or production-readiness claim is made.
+Local research acceptance is complete. The initial handoff's inherited CI
+blockers were reconciled on 9 November 2026: final Admin landing assertions,
+nullable historical clock/delivery defaults, generator toolbar wrapping, and
+forward migration ordering. Preserve canonical main's Drill clock 0051, followed
+by assessment arms 0052, generator stock/media 0053 and research calibration 0054.
+Required CI checks passed on the repaired #125/#126/#127/#130 stack and on
+#132 at `a1fb519`; the PR checks tab is authoritative for subsequent commits.
+PR #132 remains draft for review, not because those inherited failures persist.
+No PR was merged automatically and no shared database was migrated.
+
+The supplemental Windows full-suite run passed all non-API packages and 337 API
+tests, skipped one API case, and timed out one notification broadcast test at its
+unchanged five-second limit against 338 accumulated synthetic Students. Its full
+nine-test suite passed against a freshly migrated isolated database with four
+fixture Students. This is not a claim that the full Windows run was green.
+Official CI passed with the pinned Node 24.22.1 runtime; local Node was 24.15.0.
+The reconciled research upgrade harness also passed 14 active transport/guard
+tests, with one pinned-R-image case skipped in this reconciliation run, while
+preserving historical attempts, scores and nonempty XP. Scientific model/image
+pins and the earlier research benchmark are unchanged; CI success is not
+production approval.
 
 The initial Docker/WSL outage was recovered with explicit owner permission;
 unrelated Tulungrejo app/database containers returned healthy. The same image,
