@@ -23,7 +23,7 @@ $env:POSTGRES_BIN='C:\Program Files\PostgreSQL\16\bin'
 python -B scripts/test-assessment-arms-local.py
 ```
 
-Harness membuat cluster loopback sementara, memasang migrasi sampai 0050, menambah histori TEST ONLY, meng-upgrade dengan migrator canonical, menjalankan 12 tes guard (termasuk role main/compute, assignment bersamaan, fallback, pergantian revisi dan Tryout tiga arm), lalu menguji instalasi baru dan menghentikan cluster. Tidak membaca `.env`. Fixture tidak memberikan approval pada bank development.
+Harness membuat cluster loopback sementara, memasang migrasi sampai 0051 (termasuk clock Drill canonical), menambah histori TEST ONLY, meng-upgrade dengan migrator canonical, menjalankan 12 tes guard (termasuk role main/compute, assignment bersamaan, fallback, pergantian revisi dan Tryout tiga arm), lalu menguji instalasi baru dan menghentikan cluster. Tidak membaca `.env`. Fixture tidak memberikan approval pada bank development.
 
 ## Penerapan dan pemulihan
 
