@@ -384,3 +384,40 @@ An intermediate run invalidated by live source changes is explicitly recorded
 and superseded; it is not reported as passing. No production policy, Linux
 producer capacity, canonical publication or admin package workflow is approved
 by these results.
+
+
+## Linux producer and handoff ? 10 November 2026
+
+The explicit Linux producer profile is `research/irt-runtime-linux-v1.json`;
+`research/irt-linux-image-v1.json` pins its tested image ID, profile digest,
+Dockerfile and hash-locked Linux wheel dependencies. Windows defaults to the
+separate `research/irt-runtime-windows-v4.json`. Profiles v1?v3 remain historical
+sources of earlier evidence and are not silently rewritten. The R image and
+research-v1 statistical policy remain unchanged.
+
+`Dockerfile.irt-producer` pins CPython 3.11.3 amd64 and Docker CLI base digests.
+The image deliberately excludes credentials and original question bank files.
+The Linux profile is mounted read-only after image sealing, avoiding a circular
+image/profile digest. A new build does not automatically update an approved
+profile. `NUMORA_IRT_RUNTIME_PROFILE=linux-v1` and
+`NUMORA_IRT_PRODUCER_IMAGE=<exact digest>` must match the frozen request.
+
+Linux private work directories remain 0700; the R container runs under the
+producer UID/GID. Named volumes share only the execution subdirectory with R,
+which remains no-network/read-only/no-DB-credentials. The trusted supervisor
+uses the host Docker socket; the HTTP API does not need that privilege. This
+is a trusted-host research topology, not a general untrusted multi-tenant
+sandbox or a deployment authorization.
+
+Use `docs/IRT_AI_HANDOFF.md` as the current integration entry point and
+`tools/verify_irt_linux.py` for disposable Linux HTTP/inbox/daemon/R/artifact
+verification. `tools/check_irt_handoff.py` checks exact document/contract parity
+and profile/source pins. The main copy is `docs/IRT_AI_HANDOFF.md`; all database
+schema and canonical lifecycle ownership remains with main.
+
+The earlier Docker interruption is not a passing capacity measurement. Docker
+was recovered without changing global CPU/RAM settings; the test host remains
+one CPU and about 1.8 GiB RAM. Local observations do not certify a two-CPU VPS,
+peak memory bounds, or production SLO. New Linux evidence is recorded separately
+in `research/irt/linux-acceptance-v1.json`, mirrored as main
+`docs/IRT_LINUX_ACCEPTANCE_V1.json`.
