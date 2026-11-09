@@ -121,7 +121,7 @@ export function FeedbackWorkspace({
             </p>
           )}
           {error instanceof ApiProblem && error.status === 401 && (
-            <Link className="button-link" href="/">
+            <Link className="button-link" href="/login">
               Masuk kembali
             </Link>
           )}

@@ -590,7 +590,7 @@ test('Teacher denied class and expired session never expose student scores', asy
   state.denied = 401;
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Sesi berakhir' })).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Masuk kembali' })).toHaveAttribute('href', '/');
+  await expect(page.getByRole('link', { name: 'Masuk kembali' })).toHaveAttribute('href', '/login');
   await capture(page, 'progress-session-expired', 390);
   expect(errors).toEqual([]);
 });
@@ -613,7 +613,7 @@ test('Teacher verification handles empty schools, expired token session and disa
   await page.getByRole('combobox', { name: 'Sekolah', exact: true }).selectOption(schoolId);
   await page.getByLabel('Token verifikasi').fill('Ab2345Cd');
   await page.getByRole('button', { name: 'Verifikasi dan lanjutkan' }).click();
-  await expect(page.getByRole('link', { name: 'Masuk kembali' })).toHaveAttribute('href', '/');
+  await expect(page.getByRole('link', { name: 'Masuk kembali' })).toHaveAttribute('href', '/login');
   await capture(page, 'verification-session-expired', 390);
   await page.route('http://localhost:3301/api/v1/identity/me', (route) =>
     route.fulfill({
@@ -677,9 +677,9 @@ test('Teacher long identity, reduced motion and narrow content keep navigation a
   await expect(page.getByRole('button', { name: 'Keluar dari akun' })).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar dari akun' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await page.goto('/teacher');
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await expect(page.locator('.teacher-bottom-nav')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

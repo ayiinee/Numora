@@ -197,7 +197,7 @@ function FeedbackInbox({ token }: { token: string }) {
             (query.data &&
               query.error instanceof LearningApiError &&
               query.error.status === 401)) && (
-            <Link className="button-link" href="/">
+            <Link className="button-link" href="/login">
               Sesi berakhir. Masuk kembali
             </Link>
           )}

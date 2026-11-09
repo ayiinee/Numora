@@ -22,7 +22,7 @@ export function StudentAccess({ children }: { children: ReactNode }) {
   useEffect(() => {
     if (state.status === 'signed_out' || state.status === 'registration') {
       rememberClassInvitation();
-      router.replace(state.status === 'signed_out' ? '/' : '/onboarding');
+      router.replace(state.status === 'signed_out' ? '/login' : '/onboarding');
     }
     if (state.status === 'ready' && state.profile.role !== 'STUDENT')
       router.replace(postLoginDestination(state.profile));

@@ -124,7 +124,7 @@ function JoinContent({ token, rawCode }: { token: string; rawCode: string | unde
           {failure.status === 401 && (
             <>
               {' '}
-              <Link className="button-link" href="/">
+              <Link className="button-link" href="/login">
                 Masuk kembali
               </Link>
             </>

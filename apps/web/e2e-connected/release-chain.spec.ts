@@ -630,7 +630,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     contexts.push(anonymousContext);
     const anonymous = await anonymousContext.newPage();
     await anonymous.goto('http://localhost:3400/teacher');
-    await expect(anonymous).toHaveURL('http://localhost:3400/');
+    await expect(anonymous).toHaveURL('http://localhost:3400/login');
+    await expect(anonymous.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
     await anonymous.close();
     const student = await login(browser, 'otherStudent');
     await student.goto('/admin/schools');
@@ -654,9 +655,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher/profile');
     await teacher.getByRole('button', { name: 'Keluar dari akun', exact: true }).click();
-    await expect(teacher).toHaveURL('http://localhost:3400/');
+    await expect(teacher).toHaveURL('http://localhost:3400/login');
     await teacher.goto('/teacher');
-    await expect(teacher).toHaveURL('http://localhost:3400/');
+    await expect(teacher).toHaveURL('http://localhost:3400/login');
     const signedInAgain = await login(browser, 'teacher');
     await signedInAgain.goto('/teacher');
     await expect(signedInAgain.getByRole('link', { name: /JOB06 IX Test/ })).toBeVisible();
@@ -732,7 +733,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       localStorage.setItem('sb-localhost-auth-token', JSON.stringify(session));
     });
     await invalid.reload();
-    await expect(invalid).toHaveURL('http://localhost:3400/');
+    await expect(invalid).toHaveURL('http://localhost:3400/login');
     expect(
       await invalid.evaluate(() => localStorage.getItem('sb-localhost-auth-token')),
     ).toBeNull();
