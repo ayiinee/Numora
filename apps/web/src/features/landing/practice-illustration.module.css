@@ -1,5 +1,4 @@
 .illustration {
-  position: relative;
   aspect-ratio: 1;
 }
 
@@ -9,29 +8,13 @@
   height: 100%;
 }
 
-.motionControl {
-  position: absolute;
-  inset: auto 0 0 auto;
-  display: none;
-}
-
-.motionControl > button {
-  width: 44px;
-  padding: 0;
-}
-
 @media (prefers-reduced-motion: no-preference) {
-  .illustration:not([data-visibility='waiting']) .motionControl {
-    display: block;
-  }
-
   .illustration:not([data-visibility='waiting']) [data-layer] {
     animation-duration: 6s;
     animation-iteration-count: infinite;
     animation-timing-function: ease-in-out;
   }
 
-  .illustration[data-paused='true'] [data-layer],
   .illustration[data-visibility='hidden'] [data-layer] {
     animation-play-state: paused;
   }

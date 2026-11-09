@@ -1,7 +1,6 @@
 'use client';
 
 import { useEffect, useId, useRef, useState } from 'react';
-import { Button, Icon } from '@tka/ui';
 import landingStyles from './landing.module.css';
 import styles from './practice-illustration.module.css';
 
@@ -10,8 +9,6 @@ export function PracticeIllustration() {
   const postId = useId();
   const postHref = '#' + postId;
   const [visibility, setVisibility] = useState<'waiting' | 'visible' | 'hidden'>('waiting');
-  const [paused, setPaused] = useState(false);
-  const motionLabel = paused ? 'Lanjutkan animasi latihan' : 'Jeda animasi latihan';
 
   useEffect(() => {
     const element = root.current;
@@ -38,7 +35,6 @@ export function PracticeIllustration() {
       className={`${landingStyles.practiceArt} ${styles.illustration}`}
       ref={root}
       data-visibility={visibility}
-      data-paused={paused}
     >
       <svg
         className={styles.scene}
@@ -303,21 +299,6 @@ export function PracticeIllustration() {
           </g>
         </g>
       </svg>
-      <div className={styles.motionControl}>
-        <Button
-          variant="ghost"
-          size="sm"
-          aria-label={motionLabel}
-          title={motionLabel}
-          onClick={() => setPaused((current) => !current)}
-        >
-          {paused ? (
-            <Icon name="play" width={16} height={16} />
-          ) : (
-            <span className={landingStyles.pauseMark} aria-hidden="true" />
-          )}
-        </Button>
-      </div>
     </div>
   );
 }
