@@ -1,5 +1,9 @@
 # JOB-11 — XP TryOut ×10
 
+**Klarifikasi operasional, 8 November 2026:** rubrik Tryout `TRYOUT_PGK_PARTIAL_V1` sudah disetujui pada 7 Oktober dan tersedia di kode, sebagaimana [keputusan upload/publish](../content/UPLOAD_FIRST_WORKFLOW.md). Narasi PGK belum tersedia dan ceil universal di bawah merupakan snapshot lama; gunakan policy XP yang dipin, termasuk jalur PGK yang mempertahankan pecahan dari poin tersimpan. [Kebijakan beta terbaru](../AI_IRT_V2_CONTEXT.md#klarifikasi-dua-belas-kebijakan-operasional) menetapkan hasil serentak per batch, mode IRT/fallback per arm, prinsip presisi/invalid-item, serta metode nilai prediksi paket acuan. Tidak ada perubahan XP atau histori melalui pembaruan dokumentasi ini.
+
+**ENGINEERING DECISION — pemilik, 8 November 2026:** [amendemen v2](../AI_IRT_V2_CONTEXT.md) mengubah fallback **nilai hasil** menjadi per paket/arm, maksimal 72 jam, dengan poin/max ×100 dan detail policy masih OPEN. Ini menggantikan narasi fallback nilai seluruh batch di bawah. Bukan perubahan fallback/formula/pembulatan **XP**: gunakan policy yang dipin pada attempt dan pertahankan ledger historis. Tanpa ranking nilai Tryout, XP Tryout tetap masuk leaderboard aktivitas.
+
 **PRD RULE:** PRD v0.6 §12 menetapkan XP dari skor benar ekuivalen, tanpa bonus waktu, langsung saat attempt selesai dan tanpa menunggu IRT. XP bukan nilai simulasi.
 
 **ENGINEERING DECISION — keputusan produk Aini, 5 Oktober 2026:** gunakan multiplier **×10**. Keputusan ini menyelesaikan konflik §12 dengan AC-15 ×100; teks sumber asli dipertahankan sebagai bukti historis. Contoh: 24,5 benar ekuivalen menghasilkan 245 XP; 30 benar menghasilkan 300 XP. Ini koreksi formula, bukan perubahan skor IRT atau rubrik PGK.

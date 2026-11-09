@@ -1,5 +1,7 @@
 # Pretest and Tryout lifecycle — 6 October 2026
 
+**ENGINEERING DECISION — pemilik, 8 November 2026:** target [varian/IRT v2](../AI_IRT_V2_CONTEXT.md) mengubah Tryout menjadi multi-paket dengan satu paket/attempt per siswa per batch, assignment persisten, tanpa ranking nilai, serta fallback per arm maksimal 72 jam. Aturan satu attempt per paket saja tidak cukup untuk target baru. Implementasi lifecycle di bawah belum diubah; aturan Pretest placement, XP, waktu pengerjaan dan histori tetap mengikuti policy yang berlaku.
+
 **PRD RULE:** v0.6 §7.1 defines 20 Pretest items/chapter, one completion, no XP and placement 0–7/8–18/19–20 correct → Levels 1/2/3. Blueprint distribution remains Curriculum-owned. Supplied Drill v1.3 retains this context and specifies information, attempt, result, skipped and completed UI states.
 
 **ENGINEERING DECISION — explicit owner approval in this conversation:** all Students are eligible. Skip opens Level 1, does not consume completion, and preserves an active attempt and answers. Existing Drill progress is never reduced or marked completed by placement. One active Pretest/account/chapter; server save/resume without expiry; answer versions reject stale-tab writes; manual submit waits for acknowledged saves. Saved means server-acknowledged. Login expiry does not cancel the attempt.

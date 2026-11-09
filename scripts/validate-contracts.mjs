@@ -1,5 +1,5 @@
 import { readFile, readdir } from 'node:fs/promises';
-import { extname, join } from 'node:path';
+import { join } from 'node:path';
 import { pathToFileURL } from 'node:url';
 import Ajv2020 from 'ajv/dist/2020.js';
 import addFormats from 'ajv-formats';
@@ -10,6 +10,7 @@ const roots = [
   'packages/contracts/websocket',
   'packages/contracts/compute',
   'packages/contracts/generator-service-v1',
+  'packages/contracts/irt-calibration-v1',
 ];
 
 export async function loadContractValidators(directories = roots) {
@@ -18,8 +19,7 @@ export async function loadContractValidators(directories = roots) {
   const files = [];
   for (const root of directories) {
     for (const name of (await readdir(root)).sort()) {
-      if (extname(name) !== '.json') continue;
-      if (root.endsWith('generator-service-v1') && !name.endsWith('.schema.json')) continue;
+      if (!name.endsWith('.schema.json')) continue;
       const file = join(root, name);
       ajv.addSchema(JSON.parse(await readFile(file, 'utf8')), file);
       files.push(file);

@@ -1,0 +1,401 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:irt-calibration-v1:result",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "requestId",
+    "snapshotId",
+    "inputDigest",
+    "calibrationId",
+    "executionId",
+    "dispatchGeneration",
+    "context",
+    "completedAt",
+    "executionStatus",
+    "failure",
+    "outcome"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "irt-calibration-v1"
+    },
+    "requestId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "snapshotId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "inputDigest": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/digest"
+    },
+    "calibrationId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "executionId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "dispatchGeneration": {
+      "type": "integer",
+      "minimum": 1,
+      "maximum": 9007199254740991
+    },
+    "context": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/context"
+    },
+    "completedAt": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+    },
+    "executionStatus": {
+      "enum": ["SUCCEEDED", "FAILED"]
+    },
+    "failure": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["code", "retryable"],
+          "properties": {
+            "code": {
+              "enum": [
+                "TIMEOUT",
+                "DEPENDENCY_UNAVAILABLE",
+                "INVALID_INPUT",
+                "INPUT_DIGEST_MISMATCH",
+                "POLICY_UNAVAILABLE",
+                "UNSUPPORTED_CONTRACT",
+                "INTERNAL_ERROR"
+              ]
+            },
+            "retryable": {
+              "type": "boolean"
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "outcome": {
+      "anyOf": [
+        {
+          "type": "object",
+          "additionalProperties": false,
+          "required": ["measurementState", "items", "packages", "respondents", "comparisons"],
+          "properties": {
+            "measurementState": {
+              "enum": ["CALIBRATED", "PARTIAL", "INSUFFICIENT", "NOT_COMPARABLE", "ANOMALY"]
+            },
+            "items": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "questionVersionId",
+                  "rubricVersionId",
+                  "modelFamily",
+                  "eligibleRespondentCount",
+                  "measurementState",
+                  "parameters",
+                  "quality",
+                  "reasonCodes"
+                ],
+                "properties": {
+                  "questionVersionId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "rubricVersionId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "modelFamily": {
+                    "enum": ["2PL", "GPCM"]
+                  },
+                  "eligibleRespondentCount": {
+                    "type": "integer",
+                    "minimum": 0,
+                    "maximum": 9007199254740991
+                  },
+                  "measurementState": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/measurementState"
+                  },
+                  "parameters": {
+                    "anyOf": [
+                      {
+                        "type": "object",
+                        "additionalProperties": false,
+                        "required": [
+                          "discriminationA",
+                          "discriminationStandardError",
+                          "difficultyB",
+                          "difficultyStandardError",
+                          "steps"
+                        ],
+                        "properties": {
+                          "discriminationA": {
+                            "type": "number",
+                            "exclusiveMinimum": 0
+                          },
+                          "discriminationStandardError": {
+                            "type": "number",
+                            "minimum": 0
+                          },
+                          "difficultyB": {
+                            "anyOf": [
+                              {
+                                "type": "number"
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "difficultyStandardError": {
+                            "anyOf": [
+                              {
+                                "type": "number",
+                                "minimum": 0
+                              },
+                              {
+                                "type": "null"
+                              }
+                            ]
+                          },
+                          "steps": {
+                            "type": "array",
+                            "minItems": 0,
+                            "items": {
+                              "type": "object",
+                              "additionalProperties": false,
+                              "required": ["step", "value", "standardError"],
+                              "properties": {
+                                "step": {
+                                  "type": "integer",
+                                  "minimum": 1,
+                                  "maximum": 9007199254740991
+                                },
+                                "value": {
+                                  "type": "number"
+                                },
+                                "standardError": {
+                                  "type": "number",
+                                  "minimum": 0
+                                }
+                              }
+                            }
+                          }
+                        }
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "quality": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/quality"
+                  },
+                  "reasonCodes": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/reasons"
+                  }
+                }
+              }
+            },
+            "packages": {
+              "type": "array",
+              "minItems": 1,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "packageId",
+                  "packageVersion",
+                  "measurementState",
+                  "quality",
+                  "reasonCodes"
+                ],
+                "properties": {
+                  "packageId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "packageVersion": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "measurementState": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/measurementState"
+                  },
+                  "quality": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/quality"
+                  },
+                  "reasonCodes": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/reasons"
+                  }
+                }
+              }
+            },
+            "respondents": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": [
+                  "respondentId",
+                  "attemptId",
+                  "packageId",
+                  "packageVersion",
+                  "batchId",
+                  "status",
+                  "theta",
+                  "standardError",
+                  "score",
+                  "scoreMapping",
+                  "referencePackage",
+                  "usedQuestionVersionIds",
+                  "reasonCodes"
+                ],
+                "properties": {
+                  "respondentId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "attemptId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "packageId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "packageVersion": {
+                    "type": "integer",
+                    "minimum": 1,
+                    "maximum": 9007199254740991
+                  },
+                  "batchId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "status": {
+                    "enum": ["SCORED", "INSUFFICIENT", "NOT_COMPARABLE", "UNSCORABLE"]
+                  },
+                  "theta": {
+                    "anyOf": [
+                      {
+                        "type": "number"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "standardError": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "score": {
+                    "anyOf": [
+                      {
+                        "type": "number",
+                        "minimum": 0,
+                        "maximum": 100
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "scoreMapping": {
+                    "anyOf": [
+                      {
+                        "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "referencePackage": {
+                    "anyOf": [
+                      {
+                        "$ref": "urn:numora:irt-calibration-v1:common#/$defs/packageRef"
+                      },
+                      {
+                        "type": "null"
+                      }
+                    ]
+                  },
+                  "usedQuestionVersionIds": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                    },
+                    "uniqueItems": true
+                  },
+                  "reasonCodes": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/reasons"
+                  }
+                }
+              }
+            },
+            "comparisons": {
+              "type": "array",
+              "minItems": 0,
+              "items": {
+                "type": "object",
+                "additionalProperties": false,
+                "required": ["comparisonId", "decision", "reasonCodes", "metrics"],
+                "properties": {
+                  "comparisonId": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+                  },
+                  "decision": {
+                    "enum": ["PASS", "DRIFT", "INSUFFICIENT", "NOT_COMPARABLE", "ANOMALY"]
+                  },
+                  "reasonCodes": {
+                    "$ref": "urn:numora:irt-calibration-v1:common#/$defs/reasons"
+                  },
+                  "metrics": {
+                    "type": "array",
+                    "minItems": 0,
+                    "items": {
+                      "type": "object",
+                      "additionalProperties": false,
+                      "required": ["name", "estimate", "standardError", "interval"],
+                      "properties": {
+                        "name": {
+                          "enum": ["DELTA_B", "DELTA_LOG_A", "NORMALIZED_CURVE_GAP"]
+                        },
+                        "estimate": {
+                          "type": "number"
+                        },
+                        "standardError": {
+                          "type": "number",
+                          "minimum": 0
+                        },
+                        "interval": {
+                          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/interval"
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        },
+        {
+          "type": "null"
+        }
+      ]
+    }
+  }
+}

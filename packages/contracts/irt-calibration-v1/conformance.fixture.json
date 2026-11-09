@@ -1,0 +1,4908 @@
+{
+  "notice": "TEST ONLY. Synthetic identities, policies, gates and estimates. No empirical sufficiency or production approvals.",
+  "cases": [
+    {
+      "name": "drill input valid",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "tryout input valid",
+      "input": "examples/tryout-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "beta drill prior PRETEST accepted",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["PRETEST"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "BETA_PRIOR_EXPOSURE_ALLOWED"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "beta drill prior PVP accepted",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["PVP"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "BETA_PRIOR_EXPOSURE_ALLOWED"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "beta drill prior TRYOUT accepted",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["TRYOUT"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "BETA_PRIOR_EXPOSURE_ALLOWED"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "tryout prior exposure excluded",
+      "input": "examples/tryout-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["PRETEST"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["PRIOR_EXPOSURE"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "retry retained but excluded",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "firstValidAttempt"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["respondents", 0, "attemptIndex"],
+          "value": 2,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "eligibilityReasons"],
+          "value": ["RETRY"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "original delivery fallback retains assigned variant",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "assignedArmId"],
+          "value": "10000000-0000-4000-8000-000000000015",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["respondents", 0, "deliveryMode"],
+          "value": "ORIGINAL_FALLBACK",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "unknown exposure preserved",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "UNKNOWN",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["UNKNOWN_EXPOSURE"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "omitted answer is zero",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "responseState"],
+          "value": "OMITTED",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "scoreCategory"],
+          "value": 0,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "awardedPoints"],
+          "value": "0.00",
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "technical missing is not scored zero",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "responseState"],
+          "value": "INVALID",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "scoreCategory"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "awardedPoints"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["TECHNICAL_INVALID"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "no respondents input remains representable",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents"],
+          "value": [],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "mapping not approved input remains representable",
+      "input": "examples/tryout-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["policies", "scoreMapping"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["referencePackage"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["referenceQuestionVersionIds"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "unsupported version",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["contractVersion"],
+          "value": "v999",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "no pii property",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["email"],
+          "value": "student@example.invalid",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "nil respondent",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "respondentId"],
+          "value": "00000000-0000-0000-0000-000000000000",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "boolean category",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "scoreCategory"],
+          "value": true,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "unsafe attempt index",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "attemptIndex"],
+          "value": 9007199254740992,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "wrong context scope",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["context", "scope"],
+          "value": "TRYOUT_BATCH",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_CONTEXT_MISMATCH"
+    },
+    {
+      "name": "wrong scale",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["context", "scaleId"],
+          "value": "L:unrelated",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_CONTEXT_MISMATCH"
+    },
+    {
+      "name": "wrong batch",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "batchId"],
+          "value": "10000000-0000-4000-8000-000000000005",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "wrong package version",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "packageVersion"],
+          "value": 9,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "unassigned arm",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "assignedArmId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "unrecorded crossover",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "assignedArmId"],
+          "value": "10000000-0000-4000-8000-000000000015",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ASSIGNMENT_INVALID"
+    },
+    {
+      "name": "late response",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "submittedAt"],
+          "value": "2026-11-08T00:30:00Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_WINDOW_INVALID"
+    },
+    {
+      "name": "grade outside snapshot",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "gradedAt"],
+          "value": "2026-11-08T02:00:00Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_WINDOW_INVALID"
+    },
+    {
+      "name": "points exceed maximum",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "awardedPoints"],
+          "value": "4.00",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "ordinal exceeds maximum",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "scoreCategory"],
+          "value": 5,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "points ordinal mismatch",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "awardedPoints"],
+          "value": "0.00",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "omitted nonzero",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "responseState"],
+          "value": "OMITTED",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "invalid row cannot retain score",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "responseState"],
+          "value": "INVALID",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "wrong row attempt",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "attemptId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_COVERAGE_INVALID"
+    },
+    {
+      "name": "wrong row person",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "respondentId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "wrong row rubric",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "rubricVersionId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "retry included",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "firstValidAttempt"],
+          "value": false,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "reason contradicts included",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "RETRY"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "unknown exposure must be marked",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "UNKNOWN",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "fresh with prior sources",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["PVP"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "duplicate item",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["items", 1],
+          "value": {
+            "questionVersionId": "10000000-0000-4000-8000-000000000064",
+            "familyId": "10000000-0000-4000-8000-0000000003e8",
+            "originalQuestionVersionId": "10000000-0000-4000-8000-000000000064",
+            "rubricVersionId": "10000000-0000-4000-8000-0000000013ec",
+            "contentDigest": "0000000000000000000000000000000000000000000000000000000000000064",
+            "questionType": "CATEGORY",
+            "modelFamily": "GPCM",
+            "maximumScoreCategory": 4,
+            "maxPoints": "3.00",
+            "contentState": "CONTENT_VALID"
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_DUPLICATE_ID"
+    },
+    {
+      "name": "duplicate respondent",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 1],
+          "value": {
+            "respondentId": "10000000-0000-4000-8000-00000000001e",
+            "attemptId": "10000000-0000-4000-8000-000000000028",
+            "packageId": "10000000-0000-4000-8000-00000000000a",
+            "packageVersion": 1,
+            "batchId": null,
+            "assignedArmId": "10000000-0000-4000-8000-000000000014",
+            "deliveredArmId": "10000000-0000-4000-8000-000000000014",
+            "deliveryMode": "ASSIGNED",
+            "attemptIndex": 1,
+            "firstValidAttempt": true,
+            "submittedAt": "2026-11-07T12:00:00Z",
+            "gradedAt": "2026-11-08T00:00:00Z"
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_DUPLICATE_ID"
+    },
+    {
+      "name": "duplicate response id",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 1, "attemptItemId"],
+          "value": "10000000-0000-4000-8000-000000002710",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_DUPLICATE_ID"
+    },
+    {
+      "name": "wrong source family",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["items", 10, "familyId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_LINEAGE_INVALID"
+    },
+    {
+      "name": "PG cannot GPCM",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["items", 1, "modelFamily"],
+          "value": "GPCM",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCORE_INVALID"
+    },
+    {
+      "name": "comparison needs approval",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["policies", "comparison"],
+          "value": null,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_POLICY_MISMATCH"
+    },
+    {
+      "name": "wrong reference for drill",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["referencePackage"],
+          "value": {
+            "packageId": "10000000-0000-4000-8000-00000000000a",
+            "packageVersion": 1
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_POLICY_MISMATCH"
+    },
+    {
+      "name": "wrong anchor count",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["anchorQuestionVersionIds"],
+          "value": ["10000000-0000-4000-8000-000000000064", "10000000-0000-4000-8000-000000000065"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ANCHOR_INVALID"
+    },
+    {
+      "name": "response missing",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0],
+          "value": null,
+          "op": "remove"
+        }
+      ],
+      "expectedError": "IRT_COVERAGE_INVALID"
+    },
+    {
+      "name": "duplicate attempt item",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses"],
+          "value": {
+            "respondentId": "10000000-0000-4000-8000-00000000001e",
+            "attemptId": "10000000-0000-4000-8000-000000000028",
+            "attemptItemId": "10000000-0000-4000-8000-000000002710",
+            "questionVersionId": "10000000-0000-4000-8000-000000000064",
+            "rubricVersionId": "10000000-0000-4000-8000-0000000013ec",
+            "responseState": "RESPONDED",
+            "scoreCategory": 4,
+            "awardedPoints": "3.00",
+            "exposureState": "FRESH",
+            "priorExposureSources": [],
+            "includedInCalibration": true,
+            "eligibilityReasons": ["FIRST_VALID_ATTEMPT"]
+          },
+          "op": "append"
+        }
+      ],
+      "expectedError": "IRT_DUPLICATE_ID"
+    },
+    {
+      "name": "tryout deadline above 72h",
+      "input": "examples/tryout-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["window", "resultDueAt"],
+          "value": "2026-11-11T00:00:00Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_WINDOW_INVALID"
+    },
+    {
+      "name": "tryout does not inherit beta exposure exception",
+      "input": "examples/tryout-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["PVP"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "BETA_PRIOR_EXPOSURE_ALLOWED"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "prior Drill never made fresh",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["responses", 0, "exposureState"],
+          "value": "KNOWN_PRIOR",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "priorExposureSources"],
+          "value": ["DRILL"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["FIRST_VALID_ATTEMPT", "BETA_PRIOR_EXPOSURE_ALLOWED"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "crossover cannot enter primary calibration",
+      "input": "examples/drill-input.json",
+      "result": null,
+      "kind": "input",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["respondents", 0, "assignedArmId"],
+          "value": "10000000-0000-4000-8000-000000000015",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["respondents", 0, "deliveryMode"],
+          "value": "ORIGINAL_FALLBACK",
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 1, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 2, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 3, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 4, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 5, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 6, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 7, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 8, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "includedInCalibration"],
+          "value": false,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 9, "eligibilityReasons"],
+          "value": ["ARM_CROSSOVER"],
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["responses", 0, "includedInCalibration"],
+          "value": true,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "drill result valid",
+      "input": "examples/drill-input.json",
+      "result": "examples/drill-result.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "tryout result valid",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "drill insufficient valid",
+      "input": "examples/drill-input.json",
+      "result": "examples/drill-insufficient.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "tryout insufficient valid",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-insufficient.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "tryout mixed-result valid",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-mixed-result.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "tryout timeout valid",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-timeout.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "output wrong snapshot",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["snapshotId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_INPUT_MISMATCH"
+    },
+    {
+      "name": "output wrong input digest",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["inputDigest"],
+          "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_INPUT_MISMATCH"
+    },
+    {
+      "name": "output wrong context",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["context", "revision"],
+          "value": 2,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_INPUT_MISMATCH"
+    },
+    {
+      "name": "output unknown fields",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["rank"],
+          "value": 1,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "output old execution",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["executionId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "output old generation",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["dispatchGeneration"],
+          "value": 2,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "execution completed before snapshot",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["completedAt"],
+          "value": "2026-11-07T23:59:00Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_WINDOW_INVALID"
+    },
+    {
+      "name": "success without outcome",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome"],
+          "value": null,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "success with failure",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["failure"],
+          "value": {
+            "code": "TIMEOUT",
+            "retryable": true
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "output wrong total state",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "measurementState"],
+          "value": "INSUFFICIENT",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "missing participant",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_COVERAGE_INVALID"
+    },
+    {
+      "name": "result mismatched person",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "respondentId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "result mismatched attempt",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "attemptId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_COVERAGE_INVALID"
+    },
+    {
+      "name": "result mismatched package",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "packageVersion"],
+          "value": 99,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "result mismatched batch",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "batchId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "result mapping mismatch",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "scoreMapping", "digest"],
+          "value": "bbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbbb",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_POLICY_MISMATCH"
+    },
+    {
+      "name": "result reference mismatch",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "referencePackage", "packageVersion"],
+          "value": 99,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_POLICY_MISMATCH"
+    },
+    {
+      "name": "negative participant uncertainty",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "standardError"],
+          "value": -1,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "score outside bounds",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "score"],
+          "value": 101,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "IRT score lacks theta",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "theta"],
+          "value": null,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "missing used items",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "usedQuestionVersionIds"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "foreign used item",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "usedQuestionVersionIds"],
+          "value": ["10000000-0000-4000-8000-0000000003e7"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_INVALID_REFERENCE"
+    },
+    {
+      "name": "fabricated eligible count",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "eligibleRespondentCount"],
+          "value": 999,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_ELIGIBILITY_INVALID"
+    },
+    {
+      "name": "wrong output rubric",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "rubricVersionId"],
+          "value": "10000000-0000-4000-8000-0000000003e7",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_IDENTITY_MISMATCH"
+    },
+    {
+      "name": "negative discrimination",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 1, "parameters", "discriminationA"],
+          "value": -1,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "negative item uncertainty",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 1, "parameters", "difficultyStandardError"],
+          "value": -1,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "PG steps forbidden",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 1, "parameters", "steps"],
+          "value": [
+            {
+              "step": 1,
+              "value": 0,
+              "standardError": 0.1
+            }
+          ],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "GPCM missing step",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "parameters", "steps"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "GPCM cannot double difficulty",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "parameters", "difficultyB"],
+          "value": 0,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "gate failed cannot calibrated",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "quality", "gate"],
+          "value": "FAILED",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "package lacks gate evidence",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "packages", 0, "quality", "checks"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "missing comparison metric",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "comparisons", 0, "metrics"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "inverted uncertainty",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "comparisons", 0, "metrics", 0, "interval", "lower"],
+          "value": 1,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "dispatch expected generation differs",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "dispatch",
+          "path": ["dispatchGeneration"],
+          "value": 2,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "insufficient cannot fake estimate",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-insufficient.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "items", 0, "parameters"],
+          "value": {
+            "discriminationA": 1.1,
+            "discriminationStandardError": 0.1,
+            "difficultyB": null,
+            "difficultyStandardError": null,
+            "steps": [
+              {
+                "step": 1,
+                "value": -0.5,
+                "standardError": 0.1
+              },
+              {
+                "step": 2,
+                "value": 0.0,
+                "standardError": 0.1
+              },
+              {
+                "step": 3,
+                "value": 0.5,
+                "standardError": 0.1
+              },
+              {
+                "step": 4,
+                "value": 1.0,
+                "standardError": 0.1
+              }
+            ]
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_PARAMETERS_INVALID"
+    },
+    {
+      "name": "failed execution no outcome",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-timeout.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome"],
+          "value": {
+            "measurementState": "CALIBRATED",
+            "items": [
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000064",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000013ec",
+                "modelFamily": "GPCM",
+                "eligibleRespondentCount": 2,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": null,
+                  "difficultyStandardError": null,
+                  "steps": [
+                    {
+                      "step": 1,
+                      "value": -0.5,
+                      "standardError": 0.1
+                    },
+                    {
+                      "step": 2,
+                      "value": 0.0,
+                      "standardError": 0.1
+                    },
+                    {
+                      "step": 3,
+                      "value": 0.5,
+                      "standardError": 0.1
+                    },
+                    {
+                      "step": 4,
+                      "value": 1.0,
+                      "standardError": 0.1
+                    }
+                  ]
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000065",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000013ed",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 2,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000066",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000013ee",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 2,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000067",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000013ef",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 2,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000068",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000013f0",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 2,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000c8",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001450",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000c9",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001451",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000ca",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001452",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000cb",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001453",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000cc",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001454",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000cd",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001455",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000ce",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001456",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000cf",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001457",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d0",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001458",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d1",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001459",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d2",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145a",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d3",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145b",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d4",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145c",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d5",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145d",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d6",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145e",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d7",
+                "rubricVersionId": "10000000-0000-4000-8000-00000000145f",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d8",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001460",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000d9",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001461",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000da",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001462",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000db",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001463",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000dc",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001464",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000dd",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001465",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000de",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001466",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000df",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001467",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-0000000000e0",
+                "rubricVersionId": "10000000-0000-4000-8000-000000001468",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000012c",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b4",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000012d",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b5",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000012e",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b6",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000012f",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b7",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000130",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b8",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000131",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014b9",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000132",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014ba",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000133",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014bb",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000134",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014bc",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000135",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014bd",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000136",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014be",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000137",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014bf",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000138",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c0",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000139",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c1",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013a",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c2",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013b",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c3",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013c",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c4",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013d",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c5",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013e",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c6",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-00000000013f",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c7",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000140",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c8",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000141",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014c9",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000142",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014ca",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000143",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014cb",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "questionVersionId": "10000000-0000-4000-8000-000000000144",
+                "rubricVersionId": "10000000-0000-4000-8000-0000000014cc",
+                "modelFamily": "2PL",
+                "eligibleRespondentCount": 1,
+                "measurementState": "CALIBRATED",
+                "parameters": {
+                  "discriminationA": 1.1,
+                  "discriminationStandardError": 0.1,
+                  "difficultyB": 0.2,
+                  "difficultyStandardError": 0.1,
+                  "steps": []
+                },
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              }
+            ],
+            "packages": [
+              {
+                "packageId": "10000000-0000-4000-8000-00000000000a",
+                "packageVersion": 1,
+                "measurementState": "CALIBRATED",
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              },
+              {
+                "packageId": "10000000-0000-4000-8000-00000000000b",
+                "packageVersion": 2,
+                "measurementState": "CALIBRATED",
+                "quality": {
+                  "gate": "PASSED",
+                  "checks": [
+                    {
+                      "code": "SYNTHETIC_EXAMPLE_GATE",
+                      "status": "PASS",
+                      "statistic": 0.01,
+                      "standardError": 0.01
+                    }
+                  ]
+                },
+                "reasonCodes": []
+              }
+            ],
+            "respondents": [
+              {
+                "respondentId": "10000000-0000-4000-8000-00000000001e",
+                "attemptId": "10000000-0000-4000-8000-000000000028",
+                "packageId": "10000000-0000-4000-8000-00000000000a",
+                "packageVersion": 1,
+                "batchId": "10000000-0000-4000-8000-000000000005",
+                "status": "SCORED",
+                "theta": 0.4,
+                "standardError": 0.3,
+                "score": 61.25,
+                "scoreMapping": {
+                  "id": "10000000-0000-4000-8000-00000000025d",
+                  "version": 1,
+                  "digest": "000000000000000000000000000000000000000000000000000000000000025d",
+                  "approvalId": "10000000-0000-4000-8000-0000000002c1"
+                },
+                "referencePackage": {
+                  "packageId": "10000000-0000-4000-8000-00000000000a",
+                  "packageVersion": 1
+                },
+                "usedQuestionVersionIds": [
+                  "10000000-0000-4000-8000-000000000064",
+                  "10000000-0000-4000-8000-000000000065",
+                  "10000000-0000-4000-8000-000000000066",
+                  "10000000-0000-4000-8000-000000000067",
+                  "10000000-0000-4000-8000-000000000068",
+                  "10000000-0000-4000-8000-0000000000c8",
+                  "10000000-0000-4000-8000-0000000000c9",
+                  "10000000-0000-4000-8000-0000000000ca",
+                  "10000000-0000-4000-8000-0000000000cb",
+                  "10000000-0000-4000-8000-0000000000cc",
+                  "10000000-0000-4000-8000-0000000000cd",
+                  "10000000-0000-4000-8000-0000000000ce",
+                  "10000000-0000-4000-8000-0000000000cf",
+                  "10000000-0000-4000-8000-0000000000d0",
+                  "10000000-0000-4000-8000-0000000000d1",
+                  "10000000-0000-4000-8000-0000000000d2",
+                  "10000000-0000-4000-8000-0000000000d3",
+                  "10000000-0000-4000-8000-0000000000d4",
+                  "10000000-0000-4000-8000-0000000000d5",
+                  "10000000-0000-4000-8000-0000000000d6",
+                  "10000000-0000-4000-8000-0000000000d7",
+                  "10000000-0000-4000-8000-0000000000d8",
+                  "10000000-0000-4000-8000-0000000000d9",
+                  "10000000-0000-4000-8000-0000000000da",
+                  "10000000-0000-4000-8000-0000000000db",
+                  "10000000-0000-4000-8000-0000000000dc",
+                  "10000000-0000-4000-8000-0000000000dd",
+                  "10000000-0000-4000-8000-0000000000de",
+                  "10000000-0000-4000-8000-0000000000df",
+                  "10000000-0000-4000-8000-0000000000e0"
+                ],
+                "reasonCodes": []
+              },
+              {
+                "respondentId": "10000000-0000-4000-8000-00000000001f",
+                "attemptId": "10000000-0000-4000-8000-000000000029",
+                "packageId": "10000000-0000-4000-8000-00000000000b",
+                "packageVersion": 2,
+                "batchId": "10000000-0000-4000-8000-000000000005",
+                "status": "SCORED",
+                "theta": 0.4,
+                "standardError": 0.3,
+                "score": 61.25,
+                "scoreMapping": {
+                  "id": "10000000-0000-4000-8000-00000000025d",
+                  "version": 1,
+                  "digest": "000000000000000000000000000000000000000000000000000000000000025d",
+                  "approvalId": "10000000-0000-4000-8000-0000000002c1"
+                },
+                "referencePackage": {
+                  "packageId": "10000000-0000-4000-8000-00000000000a",
+                  "packageVersion": 1
+                },
+                "usedQuestionVersionIds": [
+                  "10000000-0000-4000-8000-000000000064",
+                  "10000000-0000-4000-8000-000000000065",
+                  "10000000-0000-4000-8000-000000000066",
+                  "10000000-0000-4000-8000-000000000067",
+                  "10000000-0000-4000-8000-000000000068",
+                  "10000000-0000-4000-8000-00000000012c",
+                  "10000000-0000-4000-8000-00000000012d",
+                  "10000000-0000-4000-8000-00000000012e",
+                  "10000000-0000-4000-8000-00000000012f",
+                  "10000000-0000-4000-8000-000000000130",
+                  "10000000-0000-4000-8000-000000000131",
+                  "10000000-0000-4000-8000-000000000132",
+                  "10000000-0000-4000-8000-000000000133",
+                  "10000000-0000-4000-8000-000000000134",
+                  "10000000-0000-4000-8000-000000000135",
+                  "10000000-0000-4000-8000-000000000136",
+                  "10000000-0000-4000-8000-000000000137",
+                  "10000000-0000-4000-8000-000000000138",
+                  "10000000-0000-4000-8000-000000000139",
+                  "10000000-0000-4000-8000-00000000013a",
+                  "10000000-0000-4000-8000-00000000013b",
+                  "10000000-0000-4000-8000-00000000013c",
+                  "10000000-0000-4000-8000-00000000013d",
+                  "10000000-0000-4000-8000-00000000013e",
+                  "10000000-0000-4000-8000-00000000013f",
+                  "10000000-0000-4000-8000-000000000140",
+                  "10000000-0000-4000-8000-000000000141",
+                  "10000000-0000-4000-8000-000000000142",
+                  "10000000-0000-4000-8000-000000000143",
+                  "10000000-0000-4000-8000-000000000144"
+                ],
+                "reasonCodes": []
+              }
+            ],
+            "comparisons": [
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000190",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000191",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000192",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000193",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000194",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000195",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000196",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000197",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000198",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-000000000199",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019a",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019b",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019c",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019d",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019e",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-00000000019f",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a0",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a1",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a2",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a3",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a4",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a5",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a6",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a7",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              },
+              {
+                "comparisonId": "10000000-0000-4000-8000-0000000001a8",
+                "decision": "PASS",
+                "reasonCodes": [],
+                "metrics": [
+                  {
+                    "name": "DELTA_B",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "DELTA_LOG_A",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  },
+                  {
+                    "name": "NORMALIZED_CURVE_GAP",
+                    "estimate": 0.01,
+                    "standardError": 0.01,
+                    "interval": {
+                      "method": "DELTA_METHOD",
+                      "level": 0.95,
+                      "lower": -0.01,
+                      "upper": 0.03
+                    }
+                  }
+                ]
+              }
+            ]
+          },
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "input rejection not auto retry",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-timeout.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["failure", "code"],
+          "value": "INVALID_INPUT",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "fatal failure representable",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-timeout.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["failure", "code"],
+          "value": "POLICY_UNAVAILABLE",
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["failure", "retryable"],
+          "value": false,
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "tryout not-comparable valid",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-not-comparable.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "drill anomaly valid",
+      "input": "examples/drill-input.json",
+      "result": "examples/drill-anomaly.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "unscorable is explicit no zero",
+      "input": "examples/tryout-invalid-content-input.json",
+      "result": "examples/tryout-unscorable.json",
+      "kind": "result",
+      "patches": [],
+      "expectedError": null
+    },
+    {
+      "name": "unscorable cannot fabricate zero",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-insufficient.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "status"],
+          "value": "UNSCORABLE",
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "reasonCodes"],
+          "value": ["NO_VALID_ITEMS"],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "integral float generation matches JSON integer semantics",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "dispatch",
+          "path": ["dispatchGeneration"],
+          "value": 1.0,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["dispatchGeneration"],
+          "value": 1.0,
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "fractional dispatch generation rejected",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "dispatch",
+          "path": ["dispatchGeneration"],
+          "value": 1.5,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "boolean dispatch generation rejected",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "dispatch",
+          "path": ["dispatchGeneration"],
+          "value": true,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "unsafe dispatch generation rejected",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "dispatch",
+          "path": ["dispatchGeneration"],
+          "value": 9007199254740992,
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_STALE_EXECUTION"
+    },
+    {
+      "name": "leap second not on wire",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["completedAt"],
+          "value": "2026-11-08T00:00:60Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "microsecond precision not on wire",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["completedAt"],
+          "value": "2026-11-08T00:00:00.123456Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "timezone offset not on wire",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["completedAt"],
+          "value": "2026-11-08T07:00:00+07:00",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "year zero not on wire",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["completedAt"],
+          "value": "0000-11-08T00:00:00Z",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "uppercase UUID not canonical",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["executionId"],
+          "value": "aaaaaaaa-AAAA-4aaa-8aaa-aaaaaaaaaaaa",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_SCHEMA_INVALID"
+    },
+    {
+      "name": "DRIFT has explicit material drift reason",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "comparisons", 0, "decision"],
+          "value": "DRIFT",
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "comparisons", 0, "reasonCodes"],
+          "value": ["MATERIAL_DRIFT"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "DRIFT without reason rejected",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "comparisons", 0, "decision"],
+          "value": "DRIFT",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_RESULT_STATE_INVALID"
+    },
+    {
+      "name": "participant inference insufficient despite calibrated package",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "theta"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "standardError"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "score"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "scoreMapping"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "referencePackage"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "status"],
+          "value": "INSUFFICIENT",
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "usedQuestionVersionIds"],
+          "value": [],
+          "op": "set"
+        },
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "reasonCodes"],
+          "value": ["RESPONDENT_PRECISION_INSUFFICIENT"],
+          "op": "set"
+        }
+      ],
+      "expectedError": null
+    },
+    {
+      "name": "IRT score cannot use unapproved mapping",
+      "input": "examples/tryout-input.json",
+      "result": "examples/tryout-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "input",
+          "path": ["policies", "scoreMapping"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["referencePackage"],
+          "value": null,
+          "op": "set"
+        },
+        {
+          "target": "input",
+          "path": ["referenceQuestionVersionIds"],
+          "value": [],
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_POLICY_MISMATCH"
+    }
+  ]
+}
