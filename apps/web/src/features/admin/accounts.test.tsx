@@ -1,5 +1,6 @@
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
+import { ApiProblem } from '@/lib/api';
 import { AdminAccountsScreen } from './accounts';
 import { AdminAuthConfirmScreen } from './auth-confirm';
 const mocks = vi.hoisted(() => ({
@@ -122,12 +123,55 @@ describe('Admin accounts and dedicated acceptance', () => {
       mocks.api.mock.invocationCallOrder[0]!,
     );
   });
-  it('shows an expired-link failure without a password form or acceptance', async () => {
-    window.history.replaceState(null, '', '/admin/auth/confirm?token_hash=EXPIRED&type=invite');
-    mocks.verify.mockResolvedValue({ error: new Error('expired'), data: {} });
+  it.each([
+    ['invite', 'expired'],
+    ['invite', 'already used'],
+    ['recovery', 'expired'],
+    ['recovery', 'already used'],
+  ])('blocks %s when the provider rejects the link as %s', async (type, reason) => {
+    window.history.replaceState(null, '', `/admin/auth/confirm?token_hash=REJECTED&type=${type}`);
+    mocks.verify.mockResolvedValue({ error: new Error(reason), data: { session: null } });
     render(<AdminAuthConfirmScreen />);
     await screen.findByText(/Tautan telah dipakai/);
+    expect(window.location.search).toBe('');
     expect(screen.queryByLabelText('Password baru')).toBeNull();
+    expect(mocks.identity).not.toHaveBeenCalled();
+    expect(mocks.update).not.toHaveBeenCalled();
     expect(mocks.api).not.toHaveBeenCalled();
+  });
+
+  it('recovers an active Admin password without accepting a new invitation', async () => {
+    window.history.replaceState(null, '', '/admin/auth/confirm?token_hash=RECOVERY&type=recovery');
+    mocks.verify.mockResolvedValue({
+      data: { session: { access_token: 'TEST ONLY' } },
+      error: null,
+    });
+    mocks.identity.mockResolvedValue({ role: 'ADMIN', status: 'ACTIVE', adminRole: 'OPERATIONS' });
+    mocks.update.mockResolvedValue({ error: null });
+    render(<AdminAuthConfirmScreen />);
+    await screen.findByRole('heading', { name: 'Pulihkan password Admin' });
+    for (const name of ['Password baru', 'Ulangi password']) {
+      fireEvent.change(screen.getByLabelText(name), { target: { value: 'TEST ONLY PASSWORD' } });
+    }
+    fireEvent.click(screen.getByRole('button', { name: 'Simpan password dan lanjutkan' }));
+    await screen.findByRole('link', { name: 'Buka portal Admin' });
+    expect(mocks.verify).toHaveBeenCalledWith({ token_hash: 'RECOVERY', type: 'recovery' });
+    expect(mocks.update).toHaveBeenCalledWith({ password: 'TEST ONLY PASSWORD' });
+    expect(mocks.api).not.toHaveBeenCalled();
+  });
+
+  it('denies recovery for a disabled Admin whose invitation is cancelled', async () => {
+    window.history.replaceState(null, '', '/admin/auth/confirm?token_hash=RECOVERY&type=recovery');
+    mocks.verify.mockResolvedValue({
+      data: { session: { access_token: 'TEST ONLY' } },
+      error: null,
+    });
+    mocks.identity.mockRejectedValue(new ApiProblem(403, 'ACCOUNT_DISABLED', 'Akun nonaktif'));
+    mocks.api.mockResolvedValue({ status: 'CANCELLED' });
+    render(<AdminAuthConfirmScreen />);
+    await screen.findByText('Akun nonaktif');
+    expect(screen.queryByLabelText('Password baru')).toBeNull();
+    expect(mocks.update).not.toHaveBeenCalled();
+    expect(mocks.api.mock.calls).toEqual([['admin/invitation/status', 'TEST ONLY']]);
   });
 });
