@@ -131,11 +131,11 @@
     "runnerFaults": "Previously passed timeout and stale-authorization real-container removal.",
     "finalPinnedFullRun": {
       "tests": 14,
-      "passed": 13,
-      "failed": 1,
-      "seconds": 281.82,
-      "failure": "Full R case returned FAILED while Docker/WSL unavailable; acceptance is not claimed.",
-      "acknowledgementUnder10Seconds": true
+      "passed": 14,
+      "failed": 0,
+      "seconds": 165.179,
+      "acknowledgementUnder10Seconds": true,
+      "note": "After owner-authorized Docker/WSL restart; scientific image and gates unchanged."
     },
     "serviceRegression": {
       "tests": 80,
@@ -149,16 +149,22 @@
       "scientificConformanceTestsPassed": 114,
       "adapterUnitTestsPassed": 3,
       "databaseAndOrchestrationBuilds": "PASS"
+    },
+    "artifactGuardRun": {
+      "tests": 15,
+      "passed": 14,
+      "skipped": 1,
+      "seconds": 16.055,
+      "skip": "R disabled in infrastructure-only run",
+      "covers": "Tampered artifact rejected before sealing; immutable artifact update rejected."
     }
   },
   "remaining": [
     "Complete 30 replications on same image; no threshold changes.",
-    "Rerun full integration with final producer-runtime binding after Docker recovery.",
     "Run pure 2PL, pure GPCM and three-arm engine scenarios.",
-    "Complete anchor-DIF, local-dependence, singular-information and nonconvergence stress scenarios.",
-    "Measure final-profile ACK <10 seconds under full synthetic input."
+    "Complete anchor-DIF, local-dependence, singular-information and nonconvergence stress scenarios."
   ],
-  "blocker": "Docker Desktop/WSL stopped responding during overlapping standalone research experiments on host limited to 1 CPU and 1.817 GiB. Restart pending owner decision because unrelated containers are running.",
+  "blocker": "Docker recovered after owner-authorized restart. Remaining benchmark and scientific designs are running sequentially.",
   "validityLimits": [
     "Synthetic well-conditioned design only; no empirical dimensionality approval.",
     "Five anchors and sensitivity checks do not establish absence of DIF or construct equivalence.",

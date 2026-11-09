@@ -116,7 +116,7 @@ equivalence. Research fixture approvals never authorize shared content.
 See `research/irt/acceptance-report-v1.json` in AI for aggregate measurements,
 per-replication report digests and exact remaining checks. The implementation is
 **not acceptance-complete**: eight of thirty replications finished before a
-Docker/WSL outage. No threshold was relaxed. Four reports exercised the full
+Docker/WSL outage; it resumed after the owner-authorized restart. No threshold was relaxed. Four reports exercised the full
 producer and four are numerical-recovery-only experiments. `--recovery-only`
 runs the same model and synthetic design without expensive wire validation;
 it never produces a contract artifact or authorizes participant publication.
@@ -125,11 +125,11 @@ only on gate-passing participants. Gate counts from full producer runs and raw
 anchor diagnostics have different denominators and must not be conflated.
 
 The full earlier HTTP/daemon/R/artifact integration passed 12 tests for 2,000
-synthetic respondents. The final pinned full run completed 14 tests: 13 passed, while the R case
-returned FAILED during the Docker outage. Its ACK timing check passed (<10 s).
-It still needs a successful full R rerun after recovery. The final infrastructure/upgrade run passed 13
-checks with the R case explicitly skipped; historical attempt/score/XP rows were
-unchanged. Missing scientific stress cases and final timing evidence are listed
+synthetic respondents. The final pinned full run passed 14/14 tests in 165.179 seconds after Docker
+recovery, including the ACK timing check (<10 s). The additional infrastructure
+run passed 14 checks with its R case explicitly skipped, including database
+rejection of tampered and edited sealed artifacts. The earlier upgrade run
+preserved historical attempt/score/XP rows exactly. Missing scientific stress cases and final timing evidence are listed
 in the report rather than counted as passes.
 
 ### Tested runtime binding
