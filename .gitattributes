@@ -6,6 +6,9 @@ packages/database/staging/**/*.sql text eol=lf
 packages/contracts/irt-calibration-v1/** text eol=lf
 docs/IRT_CALIBRATION_CONTRACT_V1.md text eol=lf
 docs/AI_IRT_V2_CONTEXT.md text eol=lf
+docs/TRYOUT_IRT_DELIVERY_CONTEXT.md text eol=lf
+docs/sources/admin-delivery-2026-11-10/README.md text eol=lf
+docs/sources/admin-delivery-2026-11-10/ADMIN_*.md -text
 
 # Preserve shared IRT transport and handoff byte parity across platforms.
 packages/contracts/irt-calibration-service-v1/** text eol=lf
