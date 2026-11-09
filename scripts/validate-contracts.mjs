@@ -11,6 +11,7 @@ const roots = [
   'packages/contracts/compute',
   'packages/contracts/generator-service-v1',
   'packages/contracts/irt-calibration-v1',
+  'packages/contracts/irt-calibration-service-v1',
 ];
 
 export async function loadContractValidators(directories = roots) {
