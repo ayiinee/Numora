@@ -25,7 +25,9 @@ const explanations: Record<string, string> = {
   RUBRIC_ID_INVALID: 'Referensi rubric tidak valid. Periksa versi rubric dari Curriculum.',
   NEEDS_REVIEW: 'Isi sumber berubah. Periksa versi yang akan disimpan sebelum melanjutkan.',
   PRETEST_STUDENT_CONSUMER_REQUIRED:
-    'Alur Pretest untuk siswa belum tersedia. Paket dapat disusun dan direview, tetapi belum dapat dipublikasikan.',
+    'Paket Authoring lama perlu dibuat sebagai versi baru melalui unggah dan review pada Paket Pretest.',
+  SHARED_PACKAGE_PUBLISHER_REQUIRED:
+    'Gunakan Paket Pretest untuk unggah dan review versi baru. Paket Authoring lama yang sudah direview tetap terkunci.',
   APPROVED_PRETEST_BLUEPRINT_REQUIRED:
     'Blueprint Pretest yang disahkan Curriculum belum terhubung.',
   PRETEST_REVIEW_REQUIRED: 'Paket Pretest belum direview.',

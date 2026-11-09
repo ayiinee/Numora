@@ -15,7 +15,8 @@ import { learningApi, request } from './api';
 import { FeedbackOverview } from './feedback-overview';
 import { LeaderboardsScreen } from './leaderboards';
 import { HomeClassPodium } from './home-class-podium';
-import { HomeActivity, HomeTryoutHero } from './dashboard-presentation';
+import { HomeTryoutHero } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
 import { getTeacherClasses, joinClass } from '@/lib/api';
 import { destination } from '@/features/onboarding/destination';
@@ -51,6 +52,7 @@ vi.mock('./api', async (original) => ({
     assessmentHistory: vi.fn(),
     currentTryout: vi.fn(),
     startTryout: vi.fn(),
+    chapter: vi.fn(),
     subchapter: vi.fn(),
     start: vi.fn(),
   },
@@ -521,7 +523,7 @@ describe('responsive learning composition', () => {
     const tryoutSlide = within(document.querySelector<HTMLElement>('.sh-carousel__slide--tryout')!);
     await tryoutSlide.findByText('Tryout offline', {}, { timeout: 5000 });
     expect(screen.getByRole('heading', { name: 'Shortcut Belajar' })).toBeTruthy();
-    expect(screen.getByRole('heading', { name: 'Aktivitas' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Aktivitas Terakhir' })).toBeTruthy();
     expect(screen.getByRole('heading', { name: 'Feedback' })).toBeTruthy();
     vi.mocked(learningApi.currentTryout).mockResolvedValue({
       state: 'open',
@@ -557,11 +559,14 @@ describe('responsive learning composition', () => {
       resultState: 'waitingIrt' as const,
       score: null,
     };
-    const view = render(<HomeActivity item={record} />);
+    const view = render(<RecentActivity item={record} />);
     expect(screen.queryByRole('link')).toBeNull();
     expect(screen.getByText('Menunggu hasil')).toBeTruthy();
-    view.rerender(<HomeActivity item={{ ...record, resultState: 'ready', score: 0 }} />);
-    expect(screen.getByText(/Nilai 0%/)).toBeTruthy();
+    view.rerender(<RecentActivity item={{ ...record, resultState: 'ready', score: 0 }} />);
+    expect(screen.getByText('0%')).toBeTruthy();
+    expect(
+      screen.getByRole('progressbar', { name: 'Nilai aktivitas' }).getAttribute('aria-valuenow'),
+    ).toBe('0');
     expect(screen.getByRole('link').getAttribute('href')).toBe(
       '/student/tryout/home-attempt/result',
     );
@@ -653,7 +658,7 @@ describe('responsive learning composition', () => {
     renderStudent(<LeaderboardsScreen />);
     await screen.findByText('Server student');
     expect(screen.getByText('#37')).toBeTruthy();
-    expect(screen.getByLabelText('Peringkat 2')).toBeTruthy();
+    expect(screen.getByRole('img', { name: 'Peringkat 2' })).toBeTruthy();
   });
   it('mounts Home with its query provider and truthful empty states, including a zero score', async () => {
     renderStudent(<NewStudentDashboard />);
@@ -706,12 +711,18 @@ describe('responsive learning composition', () => {
       'page',
     );
     expect(within(nav).getAllByRole('link')).toHaveLength(9);
+    expect(within(nav).getAllByRole('link').at(-1)).toBe(
+      within(nav).getByRole('link', { name: 'Profil' }),
+    );
     expect(within(nav).getByRole('link', { name: 'Feedback dari Guru' }).getAttribute('href')).toBe(
       '/student/feedback',
     );
+    const bottomNav = screen.getByRole('navigation', { name: 'Navigasi utama' });
     expect(
-      within(screen.getByRole('navigation', { name: 'Navigasi utama' })).getAllByRole('link'),
-    ).toHaveLength(5);
+      within(bottomNav)
+        .getAllByRole('link')
+        .map((link) => link.textContent),
+    ).toEqual(['Belajar', 'Latihan', 'Tryout', 'PvP', 'Profil']);
     view.rerender(<AppShell focus>Soal</AppShell>);
     expect(screen.queryByRole('navigation')).toBeNull();
   });
@@ -729,6 +740,9 @@ describe('responsive learning composition', () => {
         joined: true,
       });
       renderStudent(<ProfileScreen />);
+      await waitFor(() =>
+        expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).disabled).toBe(false),
+      );
       fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: ` ${joinCode} ` } });
       fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
       await waitFor(() => expect(joinClass).toHaveBeenCalledWith('test-token', joinCode));
@@ -970,22 +984,69 @@ describe('responsive learning composition', () => {
     ).toBe('0');
     expect(document.body.innerHTML).not.toContain('NaN');
   });
-  it('resumes only an accessible level through the API and keeps locked levels non-interactive', async () => {
+});
+
+describe('subchapter level details', () => {
+  const prototype = HTMLDialogElement.prototype;
+  const nativeShow = Object.getOwnPropertyDescriptor(prototype, 'showModal');
+  const nativeClose = Object.getOwnPropertyDescriptor(prototype, 'close');
+
+  beforeEach(() => {
+    vi.mocked(learningApi.chapter).mockResolvedValue({
+      chapter: { id: 'chapter-test', title: 'Aljabar fiktif', order: 2 },
+      subchapters: [],
+    });
+    Object.defineProperties(prototype, {
+      showModal: {
+        configurable: true,
+        value(this: HTMLDialogElement) {
+          this.open = true;
+        },
+      },
+      close: {
+        configurable: true,
+        value(this: HTMLDialogElement) {
+          this.open = false;
+        },
+      },
+    });
+  });
+
+  afterEach(() => {
+    cleanup();
+    if (nativeShow) Object.defineProperty(prototype, 'showModal', nativeShow);
+    else Reflect.deleteProperty(prototype, 'showModal');
+    if (nativeClose) Object.defineProperty(prototype, 'close', nativeClose);
+    else Reflect.deleteProperty(prototype, 'close');
+  });
+
+  it('selects accessible levels without starting and resumes through the server', async () => {
     vi.mocked(learningApi.subchapter).mockResolvedValue({
       subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 0 },
       levels: [
         {
+          id: 'done-test',
+          title: 'Level selesai',
+          order: 1,
+          status: 'completed',
+          latestScore: 0,
+          bestScore: 100,
+          latestStars: 0,
+        },
+        {
           id: 'open-test',
           title: 'Level terbuka',
-          order: 0,
+          order: 2,
           status: 'inProgress',
           latestScore: 0,
           bestScore: 0,
+          latestStars: 2,
+          bestStars: 3,
         },
         {
           id: 'locked-test',
           title: 'Level terkunci',
-          order: 1,
+          order: 3,
           status: 'locked',
           latestScore: null,
           bestScore: null,
@@ -1002,11 +1063,130 @@ describe('responsive learning composition', () => {
       questions: [],
     });
     renderStudent(<SubchapterScreen />);
-    const resume = (await screen.findAllByRole('button', { name: 'Lanjutkan latihan' }))[0]!;
-    expect(screen.queryByRole('button', { name: 'Mulai latihan' })).toBeNull();
-    expect(screen.getByText('Terkunci')).toBeTruthy();
-    fireEvent.click(resume);
+    const map = await screen.findByRole('list', { name: 'Peta level latihan' });
+    expect(screen.getByRole('heading', { level: 1, name: 'Subbab fiktif' })).toBeTruthy();
+    expect(learningApi.dashboard).not.toHaveBeenCalled();
+    expect(screen.queryByText('Standar ketuntasan:', { exact: true })).toBeNull();
+    const [locked, active, first] = within(map).getAllByRole('listitem');
+    expect(within(locked!).queryByRole('button')).toBeNull();
+    expect(within(locked!).getByText(/Level 3, Level terkunci, Terkunci/)).toBeTruthy();
+    const activeMedal = within(active!).getByRole('button');
+    expect(activeMedal.getAttribute('aria-current')).toBe('step');
+    expect(activeMedal.getAttribute('aria-label')).toContain('2 dari 3 bintang terakhir');
+    expect(within(active!).getByText('2', { selector: '.level-path__medal span' })).toBeTruthy();
+    const completedMedal = within(first!).getByRole('button', { name: /^Level 1,/ });
+    fireEvent.click(completedMedal);
+    expect(completedMedal.getAttribute('aria-pressed')).toBe('true');
+    expect(activeMedal.getAttribute('aria-current')).toBe('step');
+    expect(learningApi.start).not.toHaveBeenCalled();
+    const detail = within(screen.getByRole('dialog', { name: 'Level 1' }));
+    expect(detail.getByText('Level selesai')).toBeTruthy();
+    expect(detail.getByText('Subbab fiktif')).toBeTruthy();
+    expect(await detail.findByText('Bab 2 · Aljabar fiktif')).toBeTruthy();
+    expect(learningApi.chapter).toHaveBeenCalledWith('test-token', 'chapter-test');
+    expect(detail.getByRole('img', { name: 'Bintang terakhir: 0 / 3' })).toBeTruthy();
+    expect(detail.getByText('10 soal')).toBeTruthy();
+    expect(detail.queryByText('Selesai')).toBeNull();
+    expect(detail.getByText('0')).toBeTruthy();
+    expect(detail.getByText('100')).toBeTruthy();
+    expect(detail.getByRole('link', { name: 'Riwayat level' }).getAttribute('href')).toBe(
+      '/student/assessment?levelId=done-test',
+    );
+    expect(detail.getByRole('button', { name: 'Latihan lagi' })).toBeTruthy();
+    fireEvent.click(detail.getByRole('button', { name: 'Tutup dialog' }));
+    expect(document.activeElement).toBe(completedMedal);
+    fireEvent.click(activeMedal);
+    fireEvent.click(
+      within(screen.getByRole('dialog', { name: 'Level 2' })).getByRole('button', {
+        name: 'Lanjutkan latihan',
+      }),
+    );
     await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/drill/resume-test'));
     expect(learningApi.start).toHaveBeenCalledExactlyOnceWith('test-token', 'open-test');
+  });
+
+  it('keeps the empty subchapter state outside the map', async () => {
+    vi.mocked(learningApi.subchapter).mockResolvedValue({
+      subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab kosong', order: 1 },
+      levels: [],
+    });
+    renderStudent(<SubchapterScreen />);
+    expect(await screen.findByText('Level belum tersedia')).toBeTruthy();
+    expect(screen.queryByRole('list', { name: 'Peta level latihan' })).toBeNull();
+  });
+
+  it.each([
+    { status: 'completed', level: 'Level 2', label: 'Selesai', action: 'Latihan lagi' },
+    { status: 'locked', level: 'Level 1', label: 'Terkunci', action: null },
+  ] as const)(
+    'uses the appropriate fallback when all levels are $status',
+    async ({ status, level, label, action }) => {
+      vi.mocked(learningApi.subchapter).mockResolvedValue({
+        subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 1 },
+        levels: [2, 1].map((order) => ({
+          id: `level-${order}`,
+          title: `Judul ${order}`,
+          order,
+          status,
+          latestScore: null,
+          bestScore: null,
+        })),
+      });
+      renderStudent(<SubchapterScreen />);
+      fireEvent.click(await screen.findByRole('button', { name: 'Detail level' }));
+      const detail = within(screen.getByRole('dialog', { name: level }));
+      expect(detail.queryByText(label)).toBeNull();
+      if (action) expect(detail.getByRole('button', { name: action })).toBeTruthy();
+      else expect(detail.getAllByRole('button')).toHaveLength(1);
+    },
+  );
+
+  it('starts a single level, blocks duplicate requests, and allows retry after an error', async () => {
+    vi.mocked(learningApi.subchapter).mockResolvedValue({
+      subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 1 },
+      levels: [
+        {
+          id: 'only',
+          title: 'Latihan tunggal',
+          order: 1,
+          status: 'open',
+          latestScore: null,
+          bestScore: null,
+        },
+      ],
+    });
+    let rejectStart!: (error: Error) => void;
+    vi.mocked(learningApi.start)
+      .mockImplementationOnce(
+        () =>
+          new Promise((_, reject) => {
+            rejectStart = reject;
+          }),
+      )
+      .mockResolvedValueOnce({
+        id: 'new-attempt',
+        levelId: 'only',
+        levelTitle: 'Latihan tunggal',
+        status: 'inProgress',
+        startedAt: '2026-10-01T00:00:00Z',
+        isDemo: true,
+        questions: [],
+      });
+    renderStudent(<SubchapterScreen />);
+    fireEvent.click(await screen.findByRole('button', { name: /^Level 1, Latihan tunggal,/ }));
+    const detail = within(screen.getByRole('dialog', { name: 'Level 1' }));
+    expect(detail.getByRole('img', { name: 'Bintang belum tercatat' })).toBeTruthy();
+    const startButton = detail.getByRole('button', { name: 'Mulai latihan' });
+    fireEvent.click(startButton);
+    fireEvent.click(startButton);
+    expect(
+      (await detail.findByRole<HTMLButtonElement>('button', { name: 'Membuka latihan…' })).disabled,
+    ).toBe(true);
+    expect(learningApi.start).toHaveBeenCalledExactlyOnceWith('test-token', 'only');
+    await act(async () => rejectStart(new Error('Latihan belum bisa dibuka.')));
+    expect((await detail.findByRole('alert')).textContent).toBe('Latihan belum bisa dibuka.');
+    fireEvent.click(detail.getByRole('button', { name: 'Mulai latihan' }));
+    await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/drill/new-attempt'));
+    expect(learningApi.start).toHaveBeenNthCalledWith(2, 'test-token', 'only');
   });
 });

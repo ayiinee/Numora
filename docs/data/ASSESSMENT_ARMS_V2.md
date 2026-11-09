@@ -23,11 +23,11 @@ $env:POSTGRES_BIN='C:\Program Files\PostgreSQL\16\bin'
 python -B scripts/test-assessment-arms-local.py
 ```
 
-Harness membuat cluster loopback sementara, memasang migrasi sampai 0050, menambah histori TEST ONLY, meng-upgrade dengan migrator canonical, menjalankan 12 tes guard (termasuk role main/compute, assignment bersamaan, fallback, pergantian revisi dan Tryout tiga arm), lalu menguji instalasi baru dan menghentikan cluster. Tidak membaca `.env`. Fixture tidak memberikan approval pada bank development.
+Harness membuat cluster loopback sementara, memasang migrasi sampai 0051 (termasuk clock Drill canonical), menambah histori TEST ONLY, meng-upgrade dengan migrator canonical, menjalankan 12 tes guard (termasuk role main/compute, assignment bersamaan, fallback, pergantian revisi dan Tryout tiga arm), lalu menguji instalasi baru dan menghentikan cluster. Tidak membaca `.env`. Fixture tidak memberikan approval pada bank development.
 
 ## Penerapan dan pemulihan
 
-Migration forward `0051_assessment_arms_v2.sql` dimiliki repo utama, termasuk journal, fungsi dan grants. Pada pekerjaan ini hanya diterapkan di cluster disposable. Sebelum penerapan nyata, tim Software harus mereview DDL dan menjalankan upgrade-check terhadap salinan histori yang disanitasi. Tidak ada DROP/UPDATE atas histori attempt atau XP.
+Migration forward `0052_assessment_arms_v2.sql` dimiliki repo utama, termasuk journal, fungsi dan grants. Pada pekerjaan ini hanya diterapkan di cluster disposable. Sebelum penerapan nyata, tim Software harus mereview DDL dan menjalankan upgrade-check terhadap salinan histori yang disanitasi. Tidak ada DROP/UPDATE atas histori attempt atau XP.
 
 Rollback operasional: biarkan routing v2 tidak aktif; hentikan pembuatan arm/set baru. Jangan menghapus delivery/assignment atau menjalankan down migration yang membuang histori. Koreksi schema berikutnya harus berupa migration forward.
 

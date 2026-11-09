@@ -219,7 +219,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto('/student/profile');
     await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
     await expect(page.getByText('Hasil tersedia')).toBeVisible();
-    await expect(page.getByLabel('Kode kelas')).toHaveCount(0);
+    await expect(page.getByLabel('Kode kelas')).toBeEnabled();
     await capture(page, 'profile-school', width);
     const summary = page.locator('summary').filter({ hasText: 'Data Diri & Akun Siswa' });
     await summary.focus();

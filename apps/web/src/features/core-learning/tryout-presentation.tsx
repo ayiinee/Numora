@@ -1,5 +1,7 @@
 'use client';
 
+import { StudentMascot } from '@/components/student-mascot';
+
 import Link from 'next/link';
 import { Badge, Button, Card, Icon } from '@tka/ui';
 import type { Ref } from 'react';
@@ -283,9 +285,7 @@ export function TryoutWaiting({
 }) {
   return (
     <Card fullWidth className="tryout-waiting">
-      <span className="tryout-waiting__icon">
-        <Icon name={submitted ? 'check' : 'clock'} width={36} height={36} />
-      </span>
+      <StudentMascot pose="submitted" />
       <Badge variant="success">Jawaban tersimpan</Badge>
       <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil IRT'}</h2>
 

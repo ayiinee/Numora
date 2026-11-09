@@ -275,6 +275,7 @@ function ExplanationQuestion({
       text={text}
       media={media.data?.media ?? []}
       retry={() => void media.refetch()}
+      renderBareMath
     />
   );
   return (

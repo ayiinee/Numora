@@ -23,7 +23,7 @@ export class IdentityController {
   @ApiOkResponse({ type: IdentityProfileDto })
   @ApiUnauthorizedResponse()
   @ApiForbiddenResponse()
-  @ApiNotFoundResponse({ description: 'Google account has no internal profile yet.' })
+  @ApiNotFoundResponse({ description: 'Authenticated account has no internal profile yet.' })
   getProfile(@Headers('authorization') authorization?: string) {
     return this.identityService.getProfile(authorization);
   }

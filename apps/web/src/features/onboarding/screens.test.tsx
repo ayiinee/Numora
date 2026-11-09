@@ -2,7 +2,12 @@ import { StrictMode } from 'react';
 import { act, cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ApiProblem } from '@/lib/api';
-import { CallbackScreen, LoginScreen, OnboardingScreen, TeacherVerificationScreen } from './screens';
+import {
+  CallbackScreen,
+  LoginScreen,
+  OnboardingScreen,
+  TeacherVerificationScreen,
+} from './screens';
 
 const mocks = vi.hoisted(() => ({
   state: { status: 'signed_out' } as Record<string, unknown>,
@@ -12,6 +17,12 @@ const mocks = vi.hoisted(() => ({
   logout: vi.fn(),
   oauth: vi.fn(),
   exchange: vi.fn(),
+  passwordSignIn: vi.fn(),
+  setSession: vi.fn(),
+  revoke: vi.fn(),
+  dispose: vi.fn(),
+  apiRequest: vi.fn(),
+  registerIdentity: vi.fn(),
   schools: vi.fn(),
   verify: vi.fn(),
 }));
@@ -20,6 +31,8 @@ vi.mock('@/lib/api', async (original) => ({
   ...(await original<object>()),
   getSchools: mocks.schools,
   verifyTeacher: mocks.verify,
+  apiRequest: mocks.apiRequest,
+  registerIdentity: mocks.registerIdentity,
 }));
 vi.mock('./auth', async (original) => ({
   ...(await original<object>()),
@@ -32,7 +45,16 @@ vi.mock('./auth', async (original) => ({
 }));
 vi.mock('@/lib/supabase', () => ({
   getSupabase: () => ({
-    auth: { signInWithOAuth: mocks.oauth, exchangeCodeForSession: mocks.exchange },
+    auth: {
+      signInWithOAuth: mocks.oauth,
+      exchangeCodeForSession: mocks.exchange,
+      setSession: mocks.setSession,
+    },
+  }),
+  createStudentPasswordAuth: () => ({
+    signInWithPassword: mocks.passwordSignIn,
+    signOut: mocks.revoke,
+    dispose: mocks.dispose,
   }),
 }));
 beforeEach(() => {
@@ -49,6 +71,48 @@ function registration() {
     },
   };
 }
+
+const passwordSession = { access_token: 'fixture-access', refresh_token: 'fixture-refresh' };
+
+function submitStudentCredentials() {
+  fireEvent.change(screen.getByLabelText(/Email Siswa/), {
+    target: { value: 'student@example.test' },
+  });
+  fireEvent.change(screen.getByLabelText(/Password/), { target: { value: 'fixture password ' } });
+  fireEvent.submit(screen.getByRole('form', { name: 'Login Siswa' }));
+}
+
+it('provisions an Auth-only Student before persisting their first password session', async () => {
+  mocks.passwordSignIn.mockResolvedValue({ data: { session: passwordSession }, error: null });
+  mocks.apiRequest.mockRejectedValue(new ApiProblem(404, 'ACCOUNT_NOT_REGISTERED', 'Fixture'));
+  mocks.registerIdentity.mockResolvedValue({ role: 'STUDENT' });
+  mocks.setSession.mockResolvedValue({ data: { session: passwordSession }, error: null });
+  const { rerender } = render(<LoginScreen />);
+  submitStudentCredentials();
+  await waitFor(() => expect(mocks.setSession).toHaveBeenCalledWith(passwordSession));
+  expect(mocks.passwordSignIn).toHaveBeenCalledWith({
+    email: 'student@example.test',
+    password: 'fixture password ',
+  });
+  expect(mocks.registerIdentity).toHaveBeenCalledExactlyOnceWith('fixture-access', 'STUDENT');
+  expect(mocks.revoke).not.toHaveBeenCalled();
+  mocks.state = { status: 'ready', profile: { role: 'STUDENT' } };
+  rerender(<LoginScreen />);
+  expect(mocks.replace).toHaveBeenCalledWith('/student');
+});
+
+it('keeps Admin credentials out of the shared session when submitted as a Student', async () => {
+  mocks.passwordSignIn.mockResolvedValue({ data: { session: passwordSession }, error: null });
+  mocks.apiRequest.mockResolvedValue({ role: 'ADMIN' });
+  mocks.revoke.mockResolvedValue({ error: null });
+  render(<LoginScreen />);
+  submitStudentCredentials();
+  expect((await screen.findByRole('alert')).textContent).toContain('Gunakan akun Siswa');
+  expect(mocks.setSession).not.toHaveBeenCalled();
+  expect(mocks.registerIdentity).not.toHaveBeenCalled();
+  expect(mocks.revoke).toHaveBeenCalledWith({ scope: 'local' });
+});
+
 it('keeps Google OAuth provider and origin callback; recovers from a failed launch', async () => {
   mocks.oauth
     .mockResolvedValueOnce({ error: new Error('Koneksi belum tersedia.') })

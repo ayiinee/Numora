@@ -1,5 +1,47 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — header desktop Siswa, 9 November 2026.** Bar desktop memakai motif ungu yang sama dengan header ponsel. Halaman dengan header khusus menampilkan satu header yang sama pada kedua ukuran, termasuk tombol kembali jika tersedia. Halaman lain memakai judul halaman pada bar bermotif.
+
+**ENGINEERING DECISION — tampilan Drill dijeda, 9 November 2026.** Kartu jeda menampilkan maskot, nama level, dan durasi tersimpan dalam panel yang terpisah dari tombol lanjut. Kartu memakai lebar terbatas pada desktop dan mengikuti ruang konten ponsel. Tautan kembali membuka daftar materi.
+
+**ENGINEERING DECISION — tampilan sesi Latihan, 9 November 2026.** Teks soal berukuran 15 px pada lebar di bawah 700 px. Pilihan tunggal menonjolkan jawaban terpilih dengan kartu dan huruf pilihan berwarna serta teks tebal, tanpa indikator bulat di kanan.
+
+**ENGINEERING DECISION — maskot respons siswa, 9 November 2026.** Stiker burung hantu dari pemilik mendampingi kartu aktivitas kosong, ketersediaan dan riwayat Tryout, pengiriman jawaban, hasil Drill dan Pretest, serta lobi dan hasil PvP. Pencarian bab kosong dan koneksi PvP terputus memakai stiker respons. Setiap pose memakai satu aset WebP transparan dari gambar yang dipisahkan oleh pemilik. Ilustrasi bersifat dekoratif. Label status dan tindakan tetap tampil sebagai teks.
+
+**ENGINEERING DECISION — revisi aktivitas siswa, 9 November 2026.** Beranda dan Latihan memakai kartu yang sama untuk aktivitas terbaru. Kartu menampilkan ilustrasi, tanggal, nilai dan bintang yang tersedia, serta tindakan sesuai aktivitas. Lihat Semua membuka riwayat lengkap. Tombol Semua bab berada di dalam header detail bab.
+
+**ENGINEERING DECISION — revisi detail subbab, 9 November 2026.** Header progres subbab mengikuti pola ungu portal Siswa dan memuat tombol kembali. Peta tampil tanpa bingkai. Dialog menampilkan jumlah soal sebelum bintang, dengan kartu nilai terbaik bernuansa emas untuk membedakannya dari nilai terakhir.
+
+**ENGINEERING DECISION — instruksi pemilik, 9 November 2026.** Detail subbab memakai ilustrasi jalur burung hantu dari pemilik, dengan Level 1 di bawah. Angka berada di dalam medali, dan bintang yang tercatat tampil di bawahnya. Judul dan progres subbab menjadi header halaman. Medali yang dapat diakses membuka dialog tengah dengan nomor level, konteks bab dan subbab, serta bintang dan nilai yang ditonjolkan. Bar bawah ponsel menampilkan judul level dengan status di bawahnya. Status, nilai, bintang terakhir, riwayat, dan tindakan Drill memakai data server.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** ikon bab pada halaman Latihan memakai empat ilustrasi kiriman pemilik untuk kategori Bilangan, Aljabar, Geometri dan Pengukuran, serta Data dan Peluang. Aset WebP transparan di `apps/web/public/illustrations/chapters/` dipilih berdasarkan kategori API, termasuk pada bab selesai. Ukuran mengikuti slot kartu existing dan status selesai tetap terlihat melalui hitungan level.
+
+**ENGINEERING DECISION — penyesuaian pemilik, 8 November 2026:** ikon Shortcut Belajar berukuran 64 × 64 px, tersusun simetris dengan jarak label 8 px. Tinggi dasar hero ponsel menjadi 150 px dengan lebar responsif, mengikuti acuan 270 × 150 px dan dapat bertambah sesuai isi. Jarak header ke hero 20 px, hero ke titik indikator sekitar 14 px, titik indikator ke Shortcut Belajar 30 px, Shortcut ke Aktivitas 32 px, serta Aktivitas ke Kelas pada tata letak bertumpuk 24 px. Target sentuh indikator tetap 44 px.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** Shortcut Belajar memakai tiga ilustrasi kiriman pemilik untuk Latihan Soal, Tryout, dan PvP, dengan label di bawah gambar. Aset transparan dioptimalkan menjadi WebP 384 × 384 px.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** Beranda desktop mengikuti lebar dan padding area konten lobi PvP. Header identitas membentang di atas dua kolom. Carousel, shortcut, dan aktivitas berada di kolom utama, sedangkan Kelas dan Feedback berada di panel kanan 300 px dengan jarak 24 px dari kolom utama.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** header Leaderboard siswa memakai pola yang sama dengan header Materi dan hanya menampilkan tombol Kembali serta judul. Pada desktop, filter Periode berada di sebelah kanan tab jenis peringkat. Pada ponsel, filter berada di bawah tab.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** halaman Leaderboard siswa memakai podium 2–1–3 dan panel daftar yang menyatu untuk Global PvP, Kelas, dan Aktivitas Global. Podium berbentuk tiga balok dengan atap miring, alas sejajar, dan pita medali yang menggantung dari bibir atap masing-masing. Tinggi balok menurun dari peringkat 1 ke 3. Jika ada peringkat seri di tiga entri teratas, panel menampilkan semua peserta sebagai satu daftar. Skor PvP memakai PTS, sedangkan Kelas dan Aktivitas Global memakai XP.
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** carousel Beranda memakai tata letak hero PvP untuk slide Drill dan Tryout. Teks dan tombol berada di kolom kiri, ilustrasi transparan berada di kolom kanan, dan tinggi banner dapat mengikuti isi. [Aset hero siswa](../../apps/web/public/illustrations/student-heroes/README.md).
+
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026:** sidebar siswa menempatkan Profil sebagai menu terakhir di atas identitas akun dan memakai ikon jam untuk Tryout. Kartu motivasi dihapus. Navigasi bawah ponsel mengikuti urutan Belajar, Latihan, Tryout, PvP, dan Profil.
+
+**ENGINEERING DECISION — perbaikan tampilan siswa, 8 November 2026:** sidebar siswa dapat digulir sendiri saat tinggi jendela terbatas. Header Belajar membungkus nama dan judul pengumuman. Pada mobile, XP berada di kiri notifikasi dan pola mengikuti lebar header. Carousel Belajar memakai kembali tinggi dasar 160 px dan 156 px di bawah 360 px. Banner Belajar, PvP, dan arena peringkat dapat bertambah tinggi sesuai isi agar judul dan tombol tetap terlihat.
+
+**ENGINEERING DECISION — koreksi pemilik, 4 November 2026:** hero PvP kembali memakai gambar lama dengan pengurangan skala kecil dan area teks mobile 48%, karena ilustrasi foreground sebelumnya terlalu kecil. Penyederhanaan tiga hero leaderboard tetap berlaku. [Catatan koreksi dan bukti](STUDENT_HERO_REFINEMENT_2026-11-04.md).
+
+**ENGINEERING DECISION — instruksi pemilik, 4 November 2026:** [perbaikan hero berdasarkan audit](STUDENT_HERO_REFINEMENT_2026-11-04.md) menerapkan ilustrasi foreground transparan yang lebih sederhana, ruang teks mobile terpisah, deskripsi 12px, tab berwarna sesuai arena dan baris peringkat netral. Tinggi hero/judul tetap mengikuti fondasi Home. [Bukti empat hero pada mobile/tablet/desktop](screenshots/pvp-hero-refinement-2026-11-04/README.md).
+
+**ENGINEERING DECISION — instruksi pemilik, 31 Oktober 2026:** hero PvP dan tiga arena kini memakai empat gambar dari pemilik di `student-heroes/`, menggantikan artwork generasi sebelumnya. Ukuran serta font berbagi fondasi dengan Home/Belajar. [Audit kepadatan terbaru](STUDENT_HERO_DENSITY_AUDIT_2026-10-31.md) membedakan keselarasan ukuran dari risiko crop/kepadatan visual; rekomendasinya **PROPOSED**, belum diterapkan. [Galeri bukti](screenshots/pvp-hero-density-2026-10-31/README.md).
+
+**ENGINEERING DECISION — koreksi pemilik, 31 Oktober 2026:** [Audit mobile PvP dan Leaderboard](STUDENT_PVP_MOBILE_AUDIT_2026-10-31.md) mengganti artwork hero dengan gaya yang merujuk langsung ke kedua aset Home. Audit merapikan urutan aksi, tab/input pada 320px, kode room, tipografi/filter dan podium XP desimal. Aturan server tetap dipertahankan.
+
+**ENGINEERING DECISION — instruksi pemilik, 31 Oktober 2026:** [Hero PvP dan Leaderboard siswa](STUDENT_PVP_LEADERBOARD_HERO_2026-10-31.md) mengikuti gaya hero carousel Home/Belajar dengan ilustrasi latar, badge dan sudut asimetris. Perubahan presentasi memakai komponen bersama tanpa mengubah aturan duel atau peringkat.
+
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Content](ADMIN_CONTENT_PARITY_2026-11-02.md) memperbarui limited structures, detail laporan, JSON generator lama dan frame akses sesuai fondasi modern. Struktur tetap baca saja, tanpa data individual atau aksi Operations; layar bank/impor/Pretest/Generator/IRT existing tetap digunakan bersama. Review/merge/deploy terpisah dari hasil lokal.
 
 **ENGINEERING IMPLEMENTATION — 2 November 2026, branch lanjutan lokal:** [Penyelarasan Admin Operasional](ADMIN_OPERATIONS_PARITY_2026-11-02.md) melepas CSS workspace legacy dari Sekolah & credential serta Pengguna & kelas agar memakai fondasi Super Admin, termasuk loading dan akses ditolak. Pengembangan berlanjut sambil menunggu review independen #117/#118; approval, merge dan deploy tetap terpisah.
@@ -32,7 +74,7 @@
 
 **ENGINEERING DECISION — instruksi pemilik, 7 Oktober 2026:** daftar Admin memakai [pagination lima data dan pencarian horizontal](ADMIN_PAGINATION_2026-10-07.md), termasuk sekolah, token, konten/paket, preview Excel dan laporan impor.
 
-**ENGINEERING DECISION — owner UI request, 7 October 2026:** the shared outer background token remains `#F3ECCB`; Content/Operations retain their owner-requested scoped grey AdminLTE canvas. Cards, headers, hero panels, and state surfaces retain their semantic colors.
+**ENGINEERING DECISION — instruksi pemilik, 8 November 2026.** Warna latar dasar bersama memakai token `--numora-ivory` (`#FEFDF9`). Warna latar khusus AdminLTE mengikuti panduan modul Admin.
 
 **ENGINEERING DECISION — 7 October 2026:** the latest [Student Home HTML and Figma refinement](STUDENT_HOME_HTML_FIGMA_REFINEMENT_2026-10-07.md) applies to `/student`. It uses the owner-supplied HTML art and Figma header, shows real account XP and Drill progress, and omits gems and invented account levels.
 **ENGINEERING UPDATE — 7 October 2026, Operations redesign:** Admin Operasional now follows the Admin Content AdminLTE palette and shell, with compact school/credential panels and responsive user/class filters and details. Shared styling is opt-in for Content/Operations; Super keeps its previous theme. [Operations redesign and acceptance](ADMIN_OPERATIONS_UX_2026-10-07.md#redesign-adminlte).

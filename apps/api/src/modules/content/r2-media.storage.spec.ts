@@ -38,6 +38,25 @@ const row = (): MediaUpload => ({
 });
 describe('R2 media storage (SDK network mocked)', () => {
   afterEach(() => vi.restoreAllMocks());
+  it('stores profile photos outside content-admin paths with deterministic owner-scoped keys', async () => {
+    const send = vi.spyOn(S3Client.prototype, 'send').mockResolvedValue({} as never);
+    const id = randomUUID();
+    const storage = new R2MediaStorage(config());
+    const first = await storage.storeProfilePhoto(id, png, 'image/png');
+    expect(await storage.storeProfilePhoto(id, png, 'image/png')).toBe(first);
+    expect(first).toBe(
+      `profile-photos/${id}/${createHash('sha256').update(png).digest('hex')}.png`,
+    );
+    const put = send.mock.calls[0]![0] as PutObjectCommand;
+    expect(put.input).toMatchObject({
+      Bucket: 'numora-bucket',
+      Key: first,
+      Body: png,
+      ContentType: 'image/png',
+      ContentLength: png.length,
+      CacheControl: 'private, max-age=300',
+    });
+  });
   it('fails closed when disabled or misconfigured without contacting R2', () => {
     expect(() => new R2MediaStorage(new ConfigService({})).settings()).toThrow(
       'R2 media uploads are not configured',

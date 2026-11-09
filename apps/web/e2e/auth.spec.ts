@@ -79,6 +79,7 @@ async function setup(page: Page, signedIn = false) {
         });
       return route.fulfill({ json: value });
     }
+    if (url.pathname === '/auth/v1/user') return route.fulfill({ json: value.user });
     await route.fulfill({ json: {} });
   });
   await page.route('http://localhost:3301/api/v1/**', async (route) => {
@@ -189,6 +190,149 @@ async function capture(page: Page, name: string, width: number) {
     style: 'nextjs-portal { visibility:hidden !important; }',
   });
 }
+test('Completion: class invitation survives signed-out login and first registration without auto-joining', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  const joins: unknown[] = [];
+  await page.route('**/api/v1/classes/join', async (route) => {
+    joins.push(route.request().postDataJSON());
+    await route.fulfill({ json: { joined: true, class: { id: userId, name: 'IX Undangan' } } });
+  });
+  await page.goto('/student/join?code=Ab_cd-234&next=https://example.invalid');
+  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+  await page.evaluate(() =>
+    localStorage.setItem(
+      'sb-numora-e2e-auth-token-code-verifier',
+      JSON.stringify('fixture-verifier'),
+    ),
+  );
+  await page.goto('/auth/callback?code=fixture-invitation');
+  await expect(page.getByRole('heading', { name: 'Lengkapi profilmu' })).toBeVisible();
+  await page.getByRole('radio', { name: /Siswa/ }).check();
+  await page.getByRole('button', { name: 'Simpan dan lanjutkan' }).click();
+  await expect(page).toHaveURL(/\/student\/join\?code=Ab_cd-234$/);
+  await expect(page.getByText('Ab_cd-234', { exact: true })).toBeVisible();
+  expect(joins).toEqual([]);
+  expect(state.posts).toEqual([{ role: 'STUDENT' }]);
+  await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
+  await expect(page).toHaveURL(/\/student$/);
+  expect(joins).toEqual([{ joinCode: 'Ab_cd-234' }]);
+  expect(await page.evaluate(() => sessionStorage.getItem('numora:class-invitation'))).toBeNull();
+  expect(errors).toEqual([]);
+});
+
+test('Completion: Student manages multiple memberships and updates name and photo without losing XP', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page, true);
+  state.role = 'STUDENT';
+  let displayName = 'Kirino S.';
+  let photoKey: string | null = null;
+  let memberships = [1, 2].map((number) => ({
+    id: `00000000-0000-4000-8000-00000000000${number}`,
+    name: `IX ${number}`,
+    schoolName: `Sekolah ${number}`,
+  }));
+  const mutations: string[] = [];
+  await page.route('http://localhost:3301/api/v1/**', async (route) => {
+    const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
+    const method = route.request().method();
+    let data: unknown;
+    if (path === '/identity/me') {
+      if (method === 'PATCH') {
+        const body = route.request().postDataJSON();
+        expect(Object.keys(body)).toEqual(['displayName']);
+        displayName = body.displayName;
+      }
+      data = {
+        id: userId,
+        role: 'STUDENT',
+        status: 'ACTIVE',
+        displayName,
+        email: 'kirino@example.test',
+        teacherVerified: null,
+        studentAffiliation: memberships.length ? 'SCHOOL' : 'MANDIRI',
+        profilePhotoObjectKey: photoKey,
+      };
+    } else if (path === '/identity/me/photo') {
+      photoKey = method === 'DELETE' ? null : 'profile-photos/test-only.png';
+      mutations.push(method);
+      data = {};
+    } else if (path.startsWith('/identity/profile-photos/'))
+      data = {
+        url: photoKey ? 'https://photo.example.invalid/avatar.png' : null,
+        expiresAt: photoKey ? '2099-01-01T00:00:00Z' : null,
+      };
+    else if (path === '/students/me/dashboard')
+      data = {
+        displayName,
+        affiliation: memberships.length ? 'SCHOOL' : 'MANDIRI',
+        class: memberships[0] ?? null,
+        classes: memberships,
+        totalXp: 37.5,
+        completedLevels: 1,
+        availableLevels: 5,
+        latestDrillScore: 80,
+        bestDrillScore: 90,
+        activities: [],
+        activeDrill: null,
+        features: {
+          drill: true,
+          tryout: true,
+          pretest: false,
+          pvp: false,
+          classLeaderboard: false,
+          pendingPolicies: [],
+        },
+      };
+    else if (path.endsWith('/leave')) {
+      memberships = memberships.filter((value) => !path.includes(value.id));
+      mutations.push(path);
+      data = { left: true };
+    } else return route.fallback();
+    await route.fulfill({ json: data });
+  });
+  const png = Buffer.from(
+    'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6sAAAAASUVORK5CYII=',
+    'base64',
+  );
+  await page.route('https://photo.example.invalid/avatar.png', (route) =>
+    route.fulfill({ contentType: 'image/png', body: png }),
+  );
+  await page.goto('/student/profile');
+  await page.getByText('Sekolah & Kelas', { exact: true }).click();
+  await expect(page.getByRole('button', { name: 'Keluar dari IX 2', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Keluar dari IX 2', exact: true }).click();
+  expect(mutations).toEqual([]);
+  await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi keluar kelas' }).click();
+  await expect(page.getByText('1/5 kelas aktif', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Kode kelas')).toBeEnabled();
+  await page.getByLabel('Nama tampilan').fill('  Kirino Baru  ');
+  await page.getByRole('button', { name: 'Simpan nama' }).click();
+  await expect(page.getByRole('heading', { name: 'Kirino Baru', exact: true })).toBeVisible();
+  await page
+    .getByLabel('Foto profil', { exact: true })
+    .setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png });
+  await page.getByRole('button', { name: 'Unggah foto', exact: true }).click();
+  await expect(page.getByAltText('Kirino Baru', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Hapus foto', exact: true }).click();
+  await expect(page.getByAltText('Kirino Baru', { exact: true })).toHaveCount(0);
+  expect(mutations.filter((value) => ['POST', 'DELETE'].includes(value))).toEqual([
+    'POST',
+    'DELETE',
+  ]);
+  for (const width of [320, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({ path: test.info().outputPath(`account-${width}.png`), fullPage: true });
+  }
+  await page.goto('/student');
+  await expect(page.getByRole('link', { name: '37,5 XP, lihat progres' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
 for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
   test(`Auth visual states at ${width}px keep Google identity and keyboard role selection`, async ({
     page,
@@ -225,6 +369,29 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     expect(errors).toEqual([]);
   });
 }
+test('Student password login retries, provisions the profile and resumes a class invitation', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 320, height: 800 });
+  const { state, errors } = await setup(page);
+  state.failPassword = true;
+  await page.goto('/student/join?code=Ab_cd-234');
+  await page.getByLabel('Email Siswa').fill('kirino@example.test');
+  await page.getByLabel(/^Password/).fill('TEST ONLY incorrect password');
+  const submit = page.getByRole('button', { name: 'Masuk sebagai Siswa' });
+  await submit.click();
+  await expect(page.getByText(/Periksa email dan password/)).toBeVisible();
+  expect(state.posts).toEqual([]);
+
+  state.failPassword = false;
+  await page.getByLabel(/^Password/).fill('TEST ONLY correct password');
+  await submit.click();
+  await expect(page).toHaveURL(/\/student\/join\?code=Ab_cd-234$/);
+  expect(state.posts).toEqual([{ role: 'STUDENT' }]);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+  expect(errors).toEqual([]);
+});
+
 test('Google login launches the existing PKCE authorize URL and origin callback', async ({
   page,
 }) => {
@@ -438,7 +605,7 @@ for (const [role, verified, path] of [
   ['STUDENT', false, '/student'],
   ['TEACHER', false, '/teacher/verification-required'],
   ['TEACHER', true, '/teacher'],
-  ['ADMIN', false, '/admin'],
+  ['ADMIN', false, '/admin/schools'],
 ] as const) {
   test(`Existing ${role} ${verified ? 'verified' : 'default'} identity leaves login for ${path}`, async ({
     page,

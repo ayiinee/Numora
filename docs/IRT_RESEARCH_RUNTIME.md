@@ -56,7 +56,7 @@ only and remain ignored until a reviewed aggregate report is committed.
 
 ## Local transport
 
-Main owns migration `0053_irt_calibration_research.sql` and all DDL/grants/RLS.
+Main owns migration `0054_irt_calibration_research.sql` and all DDL/grants/RLS.
 The additive request/dispatch/inbox/artifact pipeline deliberately leaves legacy
 analysis requests, respondent-adoption guard and canonical results untouched.
 Frozen input writes are rejected outside database names `irt_research_test_%`.

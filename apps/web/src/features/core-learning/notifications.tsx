@@ -97,7 +97,7 @@ export function NotificationsScreen() {
     read.mutate(id);
   }
   const header = (
-    <header className="notification-header">
+    <div className="notification-header">
       <Link href="/student" className="notification-header__back">
         <Icon name="back" /> Keluar
       </Link>
@@ -109,7 +109,7 @@ export function NotificationsScreen() {
       >
         <Icon name="user" />
       </Link>
-    </header>
+    </div>
   );
   return (
     <AppShell

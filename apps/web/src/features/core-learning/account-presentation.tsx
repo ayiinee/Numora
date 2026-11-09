@@ -6,15 +6,7 @@ import { Avatar, Badge, Card, Icon, ListRow, ProgressBar, type IconName } from '
 import type { IdentityProfile } from '@/lib/api';
 import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
 
-export function AccountHeader({
-  title,
-  backHref,
-  settings = false,
-}: {
-  title: string;
-  backHref?: string;
-  settings?: boolean;
-}) {
+export function AccountHeader({ title, backHref }: { title: string; backHref?: string }) {
   return (
     <header className="student-account-header">
       {backHref && (
@@ -26,23 +18,13 @@ export function AccountHeader({
         <small>TKA SMP</small>
         <h1>{title}</h1>
       </div>
-      {settings ? (
-        <a
-          href="#pengaturan-akun"
-          className="student-account-header__action"
-          aria-label="Buka pengaturan akun"
-        >
-          <Icon name="settings" width={22} height={22} />
-        </a>
-      ) : (
-        <Link
-          href="/student/profile"
-          className="student-account-header__action"
-          aria-label="Buka profil"
-        >
-          <Icon name="user" width={22} height={22} />
-        </Link>
-      )}
+      <Link
+        href="/student/profile"
+        className="student-account-header__action"
+        aria-label="Buka profil"
+      >
+        <Icon name="user" width={22} height={22} />
+      </Link>
     </header>
   );
 }
@@ -59,6 +41,7 @@ export function ProfileIdentity({
   progressState?: ReactNode;
 }) {
   const school = profile.studentAffiliation === 'SCHOOL';
+  const classCount = data?.classes?.length ?? (data?.class ? 1 : 0);
   return (
     <Card className="student-profile-identity" aria-labelledby="profile-name">
       <div className="student-profile-identity__badges">
@@ -89,9 +72,19 @@ export function ProfileIdentity({
         </div>
         <div>
           <h2 id="profile-name">{profile.displayName}</h2>
-          <p>{school ? (data?.class?.schoolName ?? 'Siswa sekolah') : 'User Mandiri'}</p>
+          <p>
+            {school
+              ? classCount > 1
+                ? 'Siswa sekolah'
+                : (data?.class?.schoolName ?? 'Siswa sekolah')
+              : 'User Mandiri'}
+          </p>
           <small>
-            {school ? (data?.class?.name ?? 'Terhubung dengan kelas') : 'Belajar sesuai ritmemu'}
+            {school
+              ? classCount > 1
+                ? `${classCount} kelas aktif`
+                : (data?.class?.name ?? 'Terhubung dengan kelas')
+              : 'Belajar sesuai ritmemu'}
           </small>
         </div>
       </div>

@@ -31,12 +31,14 @@ import {
   AssessmentHistoryDto,
   ChapterDetailDto,
   DrillAttemptDto,
+  DrillClockDto,
   DrillResultDto,
   SaveDrillAnswerDto,
   SavedAnswerDto,
   StartDrillDto,
   StudentProgressDto,
   SubchapterDetailDto,
+  UpdateDrillClockDto,
 } from './learning.dto';
 
 @ApiTags('core-learning')
@@ -140,6 +142,16 @@ export class LearningController {
     @Param('attemptId', ParseUUIDPipe) attemptId: string,
   ) {
     return this.drillService.attempt(authorization, attemptId);
+  }
+
+  @Patch('assessment-attempts/:attemptId/drill-clock')
+  @ApiOkResponse({ type: DrillClockDto })
+  drillClock(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('attemptId', ParseUUIDPipe) attemptId: string,
+    @Body() input: UpdateDrillClockDto,
+  ) {
+    return this.drillService.updateClock(authorization, attemptId, input.sessionId, input.action);
   }
 
   @Patch('assessment-attempts/:attemptId/answers/:questionInstanceId')

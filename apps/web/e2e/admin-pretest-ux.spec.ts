@@ -2,10 +2,35 @@ import { expect, test } from '@playwright/test';
 import { setupPretest } from './fixtures/admin-pretest';
 import { id } from './fixtures/admin';
 
+test('Completion: Pretest opens the shared publisher and retains the legacy directory separately', async ({
+  page,
+}) => {
+  const { errors } = await setupPretest(page, 'CONTENT_DATA_MODERATION');
+  await page.route('**/api/v1/admin/content/packages?*', (route) =>
+    route.fulfill({ json: { items: [], total: 0 } }),
+  );
+  await page.goto('/admin/content/pretest');
+  await expect(page.getByRole('heading', { name: 'Paket Pretest', exact: true })).toBeVisible();
+  await expect(page.getByRole('combobox', { name: 'Tujuan unggah', exact: true })).toHaveValue(
+    'PRETEST',
+  );
+  await expect(page.getByRole('link', { name: 'Unggah paket Pretest baru' })).toHaveAttribute(
+    'href',
+    '/admin/content/imports',
+  );
+  await page.getByRole('button', { name: 'Buka Authoring lama', exact: true }).click();
+  await expect(page.getByText('Pretest Bilangan', { exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Kembali ke publikasi Pretest', exact: true }).click();
+  await expect(page.getByRole('combobox', { name: 'Tujuan unggah', exact: true })).toHaveValue(
+    'PRETEST',
+  );
+  expect(errors).toEqual([]);
+});
+
 for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
   test(`Pretest visual audit ${role}`, async ({ page }) => {
     const { errors } = await setupPretest(page, role);
-    await page.goto('/admin/content/pretest');
+    await page.goto('/admin/content/pretest?legacy=1');
     await expect(page.getByText('Pretest Bilangan', { exact: true })).toBeVisible();
     for (const width of [1440, 1024, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
@@ -80,7 +105,7 @@ test('create saves scoped selections in explicit order and preserves them across
   page,
 }) => {
   const { pretest } = await setupPretest(page);
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   await page.getByRole('button', { name: 'Buat draf Pretest', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByLabel('Kode keluarga', { exact: true }).fill('TEST-NEW');
@@ -193,7 +218,7 @@ test('editorial review keeps its reason on failure and publication blockers rema
   await dialog.getByRole('button', { name: 'Sahkan review editorial' }).click();
   await expect(dialog).toHaveCount(0);
   await expect(page.getByText('Review editorial tersimpan.')).toBeVisible();
-  await expect(page.getByText('PRETEST_STUDENT_CONSUMER_REQUIRED', { exact: true })).toBeVisible();
+  await expect(page.getByText('SHARED_PACKAGE_PUBLISHER_REQUIRED', { exact: true })).toBeVisible();
   await expect(page.getByRole('button', { name: /Publikasikan|Publish/i })).toHaveCount(0);
   await expect(page.getByRole('button', { name: 'Buat versi baru' })).toBeVisible();
 });
@@ -202,7 +227,7 @@ test('manual IDs validate duplicates, format, unapplied changes and the twenty i
   page,
 }) => {
   await setupPretest(page);
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   await page.getByRole('button', { name: 'Buat draf Pretest', exact: true }).click();
   const dialog = page.getByRole('dialog');
   await dialog.getByText('Masukkan ID versi secara manual', { exact: true }).click();
@@ -226,7 +251,7 @@ test('list pagination and detail deep links preserve Back, reload and the final 
   page,
 }) => {
   const { pretest } = await setupPretest(page);
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   await expect(page.locator('.pretest-table tbody tr')).toHaveCount(5);
   const pager = page.getByRole('navigation', { name: 'Halaman paket Pretest' });
   await pager.getByRole('button', { name: 'Berikutnya' }).click();
@@ -248,7 +273,7 @@ test('reference and list failures have independent retries and missing question 
 }) => {
   const { pretest } = await setupPretest(page);
   pretest.failPath = 'admin/content/pretest-packages/blueprints';
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText(
     'Blueprint belum bisa dimuat',
   );
@@ -313,7 +338,7 @@ for (const target of ['lookup', 'mutation'] as const)
 for (const role of ['OPERATIONS', null] as const)
   test(`pretest role boundary rejects ${role}`, async ({ page }) => {
     const { pretest } = await setupPretest(page, role);
-    await page.goto('/admin/content/pretest');
+    await page.goto('/admin/content/pretest?legacy=1');
     await expect(page.locator('[role="alert"]:not(#__next-route-announcer__)')).toContainText(
       'Akses memerlukan',
     );
@@ -326,7 +351,7 @@ test('keyboard modal focus, Escape and reduced-motion short viewport work at 125
   await setupPretest(page, 'CONTENT_DATA_MODERATION');
   await page.setViewportSize({ width: 320, height: 568 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   const trigger = page.getByRole('button', { name: 'Buat draf Pretest', exact: true });
   await trigger.click();
   const dialog = page.getByRole('dialog');
@@ -405,7 +430,7 @@ test('loading and empty directory states explain the next action', async ({ page
     await gate;
     await route.fallback();
   });
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   try {
     await expect(page.getByRole('status').filter({ hasText: 'Memuat paket' })).toBeVisible();
     await page.screenshot({

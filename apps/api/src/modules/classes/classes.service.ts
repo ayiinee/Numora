@@ -188,14 +188,12 @@ export class ClassesService {
         )
         .returning({ id: classMemberships.id });
       if (ended.length)
-        await tx
-          .insert(auditLogs)
-          .values({
-            actorUserId: profile.id,
-            action: 'student_left_class',
-            entityType: 'class',
-            entityId: classId,
-          });
+        await tx.insert(auditLogs).values({
+          actorUserId: profile.id,
+          action: 'student_left_class',
+          entityType: 'class',
+          entityId: classId,
+        });
       return { left: true };
     });
   }
@@ -238,15 +236,13 @@ export class ClassesService {
         .update(classes)
         .set({ teacherUserId: teacherId, updatedAt: new Date() })
         .where(eq(classes.id, target.id));
-      await tx
-        .insert(auditLogs)
-        .values({
-          actorUserId: teacherId,
-          action: 'class_taken_over',
-          entityType: 'class',
-          entityId: target.id,
-          metadata: { schoolId: target.schoolId },
-        });
+      await tx.insert(auditLogs).values({
+        actorUserId: teacherId,
+        action: 'class_taken_over',
+        entityType: 'class',
+        entityId: target.id,
+        metadata: { schoolId: target.schoolId },
+      });
       return { id: target.id, name: target.name, joinCode: target.joinCode };
     });
   }
@@ -326,17 +322,32 @@ export class ClassesService {
           })
           .where(eq(classStudentBans.id, existing!.id));
       }
-      await tx
-        .insert(auditLogs)
-        .values({
-          actorUserId: teacherId,
-          action: banned ? 'class_student_banned' : 'class_student_unbanned',
-          entityType: 'class',
-          entityId: classId,
-          metadata: { studentId },
-        });
+      await tx.insert(auditLogs).values({
+        actorUserId: teacherId,
+        action: banned ? 'class_student_banned' : 'class_student_unbanned',
+        entityType: 'class',
+        entityId: classId,
+        metadata: { studentId },
+      });
       return { banned };
     });
+  }
+
+  async bannedStudents(authorization: string | undefined, classId: string) {
+    const owned = await this.students(authorization, classId);
+    const items = await getDatabase()
+      .db.select({ id: users.id, displayName: users.displayName })
+      .from(classStudentBans)
+      .innerJoin(users, eq(users.id, classStudentBans.studentUserId))
+      .where(
+        and(
+          eq(classStudentBans.classId, classId),
+          isNull(classStudentBans.unbannedAt),
+          eq(users.role, 'STUDENT'),
+        ),
+      )
+      .orderBy(asc(users.displayName), asc(users.id));
+    return { class: owned.class, items };
   }
 
   async list(authorization?: string) {
