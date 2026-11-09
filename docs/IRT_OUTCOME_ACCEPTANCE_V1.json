@@ -1,0 +1,126 @@
+{
+  "status": "TRYOUT_LOCAL_OUTCOMES_VERIFIED_RESEARCH_ONLY",
+  "date": "2026-11-09",
+  "productionApproved": false,
+  "scope": [
+    "Participant output acceptance",
+    "Anchor gate evaluation without threshold change",
+    "Scientific and technical failure handling"
+  ],
+  "aiImplementationCommit": "6401708",
+  "runtimeProfile": "irt-research-windows-producer-linux-r-v3",
+  "runtimeProfileSha256": "2d29863268594e2df6958eb50b61e41c79015ccfce11c31352f68275f3eb7a49",
+  "image": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+  "policyVersion": "tryout-irt-research-v1",
+  "policySha256": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
+  "policyChanged": false,
+  "verification": {
+    "finalFrozenHttpRUpgradeFaultSuite": {
+      "tests": 17,
+      "passed": 17,
+      "seconds": 464.494,
+      "logSha256": "15bbd6710a2c5b65e3c125382626826fabcfbe25a5c2dce8bf06ff87e10d6d44"
+    },
+    "independentLatestFaultHarness": {
+      "tests": 2,
+      "passed": 2,
+      "seconds": 313.017,
+      "logSha256": "ee68ee2821da7f12b062fceaee366593967217bce5169840dd4dc91fe861c997"
+    },
+    "mathPolicyRoracleAndRunner": {
+      "tests": 31,
+      "passed": 31,
+      "seconds": 12.657,
+      "logSha256": "ff5a73e360f80272f79a526eb1e55d3b562660f5692500a37b95cc934d837975"
+    },
+    "apiGeneratorAndContractRegression": {
+      "tests": 16,
+      "passed": 16,
+      "seconds": 22.787,
+      "logSha256": "eb2c8f1a91866e4865a432a68e9a25b5dc5c29812ad1c1d04633ae3da1dabf04"
+    },
+    "deterministicOutcomeTests": {
+      "tests": 7,
+      "passed": 7,
+      "seconds": 181.455,
+      "logSha256": "99613898881c738ea6942751e6945bba1ad949a104c42ee869ccae80a0f3076b"
+    },
+    "latestFitCoverageAndRuntimeTests": {
+      "tests": 3,
+      "passed": 3,
+      "seconds": 31.524,
+      "logSha256": "575cbfe8c83ddd7e6fe65d11d8ea3e0664b88e3a66e23b6e6dd1abb565024f2a"
+    },
+    "latestCovarianceDiagnosticTest": {
+      "tests": 1,
+      "passed": 1,
+      "seconds": 31.392,
+      "logSha256": "0d8503593b746494d86541b0d25889d5337d095014e54e3f01f6c5f60c1817bb"
+    }
+  },
+  "healthyTransportCase": {
+    "seed": 20261119,
+    "perArm": 1000,
+    "arms": 2,
+    "scored": 2000,
+    "allIdentitiesVerified": true,
+    "replaySameArtifact": true,
+    "posteriorCrossCheckSamples": 6,
+    "posteriorFineGridPoints": 1201,
+    "thetaAndSdTolerance": 0.0001,
+    "roundedScoreTolerance": 0.011,
+    "selectionNote": "Known positive seed from the prior benchmark; not an estimate of gate acceptance rate."
+  },
+  "faultTransportCases": {
+    "engineDouble": true,
+    "scenarios": [
+      "NONCONVERGENCE",
+      "COVARIANCE",
+      "MISSING_FIT",
+      "MISSING_GROUP",
+      "DEPENDENCE",
+      "LINKING"
+    ],
+    "rawRStressEvidenceSeparate": true,
+    "scoresRemainNull": true,
+    "noComparisonPassOrDriftFabricated": true
+  },
+  "latestProducerReplay": {
+    "scope": "CURRENT_PRODUCER_REPLAY_OF_PINNED_REAL_R_OUTPUT",
+    "rawReportSha256": "af8e6209608b9a17e1db61ff30c83bc780d7897716da734d050c23a06f7fe4fa",
+    "image": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+    "runtimeVersion": "irt-research-windows-producer-linux-r-v3",
+    "measurementState": "CALIBRATED",
+    "scored": 2000,
+    "newRExecution": false
+  },
+  "anchorBaselineAudit": {
+    "report": "anchor-gate-audit-v1.json",
+    "replications": 30,
+    "held": 20,
+    "holdRate": 0.6666666666666666,
+    "wilson95": [
+      0.4878005164454384,
+      0.8076950191632386
+    ],
+    "stepDifferenceAnchorHolds": 17,
+    "logSlopeAnchorHolds": 18,
+    "holmAnchorHolds": 0
+  },
+  "pairedSensitivityReport": "anchor-sensitivity-paired-v1.json",
+  "historicalAttemptScoreAndXpPreserved": true,
+  "sharedDatabaseTouched": false,
+  "canonicalResultsPublished": false,
+  "validationCaveats": [
+    "An intermediate full run was invalidated by live source edits; POLICY_UNAVAILABLE and HTTP 409 correctly prevented acceptance. It is superseded by the final frozen-source run.",
+    "The paired sensitivity study predates final fit-coverage diagnostics; exact experimental producer source is reconstructible using sensitivity-producer-source-v1.patch.",
+    "Some checks ran concurrently on the constrained local host; elapsed times are not capacity or SLO evidence.",
+    "Unrelated main working-tree changes were preserved and excluded from this PR."
+  ],
+  "remainingOutsideThisFollowup": [
+    "Academic evaluation of high no-DIF hold rate, released-effect uncertainty and safe per-arm refitting; no production policy approval.",
+    "Validated Linux Python producer runtime and intended-hardware capacity tests.",
+    "Admin package lifecycle, canonical adoption, publication and product fallback."
+  ],
+  "ciNote": "The historical acceptance-v1 CI blocker is superseded by the prior repaired CI stack. This report does not claim a new remote CI result."
+}
