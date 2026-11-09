@@ -1,107 +1,232 @@
 import Image from 'next/image';
 import Link from 'next/link';
-import { Brand, Icon } from '@tka/ui';
+import { Brand, Icon, type IconName } from '@tka/ui';
+import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
 import styles from './landing.module.css';
+
+const illustrations = '/illustrations/student-home';
+const benefits = [
+  {
+    id: 'cara-belajar',
+    title: 'Latihan singkat dan bertahap',
+    text: 'Kerjakan sepuluh soal per level. Kalau sudah menguasai level ini, kamu bisa lanjut ke tantangan berikutnya.',
+    icon: 'clipboard',
+    decoration: 'check-circle',
+    tone: 'lavender',
+  },
+  {
+    id: 'pembahasan',
+    title: 'Belajar dari pembahasan',
+    text: 'Setelah latihan, lihat kembali jawabanmu dan pelajari langkah penyelesaiannya. Pakai pembahasan untuk memahami soal sebelum mencoba lagi.',
+    icon: 'chat',
+    decoration: 'book',
+    tone: 'peach',
+  },
+  {
+    id: 'progres',
+    title: 'Pantau progres dan bintang',
+    text: 'Lihat level yang sudah terbuka, bintang yang kamu raih, dan riwayat latihanmu. Pilih materi yang perlu kamu ulang dari hasil itu.',
+    icon: 'chart',
+    decoration: 'star',
+    tone: 'gold',
+  },
+  {
+    id: 'materi',
+    title: 'Pilih materi dan level',
+    text: 'Jelajahi bab dan subbab matematika, lalu lanjutkan dari level yang tersedia. Kamu bisa belajar mandiri atau bergabung dengan kelas dari guru.',
+    icon: 'book',
+    decoration: 'geometry',
+    tone: 'materials',
+  },
+] as const;
+
+const footerGroups = [
+  ['Tentang Numora', ['Beranda', '#beranda'], ['Persiapan TKA', '#persiapan-tka']],
+  [
+    'Belajar',
+    ['Cara belajar', '#cara-belajar'],
+    ['Pembahasan', '#pembahasan'],
+    ['Materi dan level', '#materi'],
+  ],
+  ['Sekolah', ['Untuk sekolah', '#untuk-sekolah'], ['Masuk sebagai guru', '/']],
+  ['Akun', ['Mulai belajar', '/'], ['Belajar lewat browser', '#akses-web']],
+  ['Admin', ['Masuk Admin', '/admin/login']],
+] as const;
+
+function LearningArt({
+  icon,
+  decoration,
+  tone,
+}: {
+  icon: IconName;
+  decoration: IconName;
+  tone: string;
+}) {
+  return (
+    <div className={styles.learningArt} data-tone={tone} aria-hidden="true">
+      <div className={styles.artOrbit} />
+      <div className={styles.artPaper}>
+        <Icon name={icon} />
+        <span />
+        <span />
+      </div>
+      <div className={styles.artTile}>
+        <Icon name={decoration} />
+      </div>
+      <Icon name="spark" className={styles.artSpark} />
+    </div>
+  );
+}
 
 export function LandingPage() {
   return (
-    <div className={styles.page}>
+    <div className={styles.page} id="beranda">
       <a className="skip-link" href="#konten-utama">
         Lewati ke konten
       </a>
-      <header className={`${styles.container} ${styles.header}`}>
-        <Brand />
-        <nav aria-label="Navigasi landing page">
-          <a href="#cara-belajar">Cara belajar</a>
-          <a href="#untuk-sekolah">Untuk sekolah</a>
-          <Link className={styles.headerLogin} href="/">
-            Masuk
-          </Link>
-        </nav>
-      </header>
+      <LandingHeader />
 
-      <main id="konten-utama" className={styles.container} tabIndex={-1}>
-        <section className={styles.hero} aria-labelledby="landing-title">
-          <div className={styles.intro}>
-            <p className={styles.kicker}>Persiapan TKA Matematika SMP/MTs</p>
-            <h1 id="landing-title">
-              Siap hadapi TKA, <span>satu soal demi satu.</span>
-            </h1>
-            <p className={styles.summary}>
-              Latih matematika sesuai topik dan levelmu. Pelajari pembahasannya, lalu lihat
-              perkembanganmu dari waktu ke waktu.
-            </p>
-            <div className={styles.actions}>
-              <Link className={styles.primary} href="/">
-                Mulai belajar <Icon name="arrow" width={18} height={18} />
-              </Link>
-              <a className={styles.secondary} href="#cara-belajar">
-                Lihat cara belajar
-              </a>
+      <main id="konten-utama" tabIndex={-1}>
+        <div className={styles.firstFold}>
+          <section className={styles.hero} aria-labelledby="landing-title">
+            <div className={styles.heroArt}>
+              <Image
+                className={styles.heroOwl}
+                src={`${illustrations}/drill-owl.svg`}
+                alt=""
+                width={420}
+                height={320}
+                unoptimized
+                preload
+              />
             </div>
-            <p className={styles.note}>Belajar mandiri atau bergabung dengan kelas dari gurumu.</p>
+            <div className={styles.heroCopy}>
+              <h1 id="landing-title">Latihan TKA Matematika untuk siswa SMP/MTs</h1>
+              <div id="aksi-hero" className={styles.heroActions}>
+                <Link className={styles.primary} href="/">
+                  Mulai belajar
+                </Link>
+                <AccountDialog />
+              </div>
+            </div>
+          </section>
+          <CategoryRail />
+        </div>
+
+        <div className={styles.benefits}>
+          {benefits.map(({ id, title, text, icon, decoration, tone }) => (
+            <section key={id} id={id} className={styles.benefit} aria-labelledby={`${id}-title`}>
+              <div className={styles.sectionCopy}>
+                <h2 id={`${id}-title`}>{title}</h2>
+                <p>{text}</p>
+              </div>
+              <LearningArt icon={icon} decoration={decoration} tone={tone} />
+            </section>
+          ))}
+        </div>
+
+        <section className={styles.browserBand} id="akses-web" aria-labelledby="browser-title">
+          <h2 id="browser-title">Belajar lewat browser</h2>
+          <p>Buka Numora di ponsel atau laptop dan lanjutkan latihan dari akunmu.</p>
+          <div className={styles.browserActions}>
+            <Link className={styles.primary} href="/">
+              Mulai belajar
+            </Link>
+            <a className={styles.secondary} href="#cara-belajar">
+              Lihat cara belajar
+            </a>
           </div>
-
-          <figure className={styles.board}>
-            <div className={styles.boardHeader}>
-              <span>Papan belajar</span>
-              <span>01 / Aljabar</span>
+          <div className={styles.browserArt} aria-hidden="true">
+            <div className={styles.deviceBar}>
+              <span />
+              <span />
+              <span />
             </div>
-            <Image
-              className={styles.owl}
-              src="/illustrations/student-home/drill-owl.svg"
-              alt=""
-              width={420}
-              height={320}
-              unoptimized
-              preload
-            />
-            <div className={styles.example}>
-              <span>Contoh latihan</span>
-              <strong>3x + 6 = 18</strong>
-              <p>Berapa nilai x?</p>
+            <div className={styles.deviceContent}>
+              <Image
+                src={`${illustrations}/drill-owl.svg`}
+                alt=""
+                width={420}
+                height={320}
+                unoptimized
+                loading="lazy"
+              />
+              <div className={styles.deviceSheet}>
+                <Icon name="calculator" />
+                <span>3x + 6 = 18</span>
+                <span>Berapa nilai x?</span>
+              </div>
             </div>
-            <figcaption>Mulai dengan satu soal.</figcaption>
-          </figure>
+          </div>
         </section>
 
-        <section id="cara-belajar" className={styles.guide} aria-labelledby="guide-title">
-          <p className={styles.kicker}>Cara belajar</p>
-          <h2 id="guide-title">Pilih materi. Latihan. Tinjau hasil.</h2>
-          <ol className={styles.steps}>
-            <li>
-              <Icon name="book" width={22} height={22} />
-              <h3>Pilih topik</h3>
-              <p>Mulai dari materi yang ingin kamu kuasai.</p>
-            </li>
-            <li>
-              <Icon name="target" width={22} height={22} />
-              <h3>Latihan bertahap</h3>
-              <p>Kerjakan soal pada levelmu dan pelajari pembahasannya.</p>
-            </li>
-            <li>
-              <Icon name="chart" width={22} height={22} />
-              <h3>Lihat perkembangan</h3>
-              <p>Gunakan hasil latihan untuk menentukan materi yang perlu diulang.</p>
-            </li>
-          </ol>
-        </section>
-
-        <section id="untuk-sekolah" className={styles.school} aria-labelledby="school-title">
-          <div>
-            <p className={styles.kicker}>Untuk sekolah</p>
-            <h2 id="school-title">Dampingi siswa di kelas.</h2>
-            <p>Guru terverifikasi dapat membuat kelas dan memantau perkembangan siswanya.</p>
-          </div>
+        <section className={styles.schoolBand} id="untuk-sekolah" aria-labelledby="school-title">
+          <LearningArt icon="school" decoration="users" tone="school" />
+          <h2 id="school-title">Belajar bersama sekolah</h2>
+          <p>
+            Siswa bisa bergabung dengan kelas lewat undangan. Guru terverifikasi dapat membuat kelas
+            dan memantau perkembangan siswanya.
+          </p>
           <Link className={styles.primary} href="/">
-            Masuk sebagai guru <Icon name="arrow" width={18} height={18} />
+            Masuk sebagai guru
           </Link>
+        </section>
+
+        <section
+          className={`${styles.benefit} ${styles.assessment}`}
+          id="persiapan-tka"
+          aria-labelledby="assessment-title"
+        >
+          <div className={styles.sectionCopy}>
+            <h2 id="assessment-title">Persiapan TKA Matematika</h2>
+            <p>
+              Biasakan diri mengerjakan soal matematika SMP/MTs, pahami pembahasannya, dan ulangi
+              materi yang masih terasa sulit.
+            </p>
+            <a className={styles.textLink} href="#cara-belajar">
+              Lihat latihan <Icon name="arrow" width={18} height={18} />
+            </a>
+          </div>
+          <LearningArt icon="target" decoration="graduation" tone="peach" />
+        </section>
+
+        <section className={styles.closing} aria-labelledby="closing-title">
+          <h2 id="closing-title">Siap latihan bersama Numora?</h2>
+          <Link className={styles.primary} id="aksi-penutup" href="/">
+            Mulai belajar
+          </Link>
+          <Image
+            src={`${illustrations}/tryout-owl.svg`}
+            alt=""
+            width={420}
+            height={320}
+            unoptimized
+            loading="lazy"
+          />
         </section>
       </main>
 
-      <footer className={`${styles.container} ${styles.footer}`}>
-        <Brand compact />
-        <Link href="/admin/login">Masuk Admin</Link>
+      <footer className={styles.footer}>
+        <div className={styles.footerInner}>
+          <nav className={styles.footerGroups} aria-label="Navigasi footer">
+            {footerGroups.map(([name, ...links]) => (
+              <div key={name}>
+                <h2>{name}</h2>
+                <ul>
+                  {links.map(([label, href]) => (
+                    <li key={href}>
+                      <Link href={href}>{label}</Link>
+                    </li>
+                  ))}
+                </ul>
+              </div>
+            ))}
+          </nav>
+          <div className={styles.footerBottom}>
+            <Brand compact />
+            <a href="#beranda">Kembali ke atas</a>
+          </div>
+        </div>
       </footer>
     </div>
   );
