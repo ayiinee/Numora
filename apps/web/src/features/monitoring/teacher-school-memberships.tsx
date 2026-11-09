@@ -48,13 +48,14 @@ export function TeacherSchoolMemberships({ token }: { token: string }) {
               <strong>{school.name}</strong>
               <Button
                 variant="danger-outline"
+                aria-label={`Keluar dari ${school.name}`}
                 disabled={busy}
                 onClick={() => {
                   setError('');
                   setLeaving(school);
                 }}
               >
-                Keluar dari {school.name}
+                Keluar sekolah
               </Button>
             </li>
           ))}

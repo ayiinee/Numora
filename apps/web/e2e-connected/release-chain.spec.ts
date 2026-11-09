@@ -289,13 +289,17 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await teacher.getByRole('textbox', { name: 'Token verifikasi', exact: true }).fill(token.token);
     await teacher.getByRole('button', { name: 'Verifikasi dan lanjutkan', exact: true }).click();
     await expect(teacher).toHaveURL(/\/teacher$/);
-    await teacher.getByText('Buat kelas baru', { exact: false }).click();
-    await teacher.getByLabel(/^Nama kelas/).fill('JOB06 IX Test');
-    const made = teacher.waitForResponse(
+    await teacher.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+    const createClass = teacher.getByRole('dialog', { name: 'Buat kelas', exact: true });
+    await createClass.getByLabel(/^Nama kelas/).fill('JOB06 IX Test');
+    const classCreation = teacher.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/classes'),
     );
-    await teacher.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-    cls = (await (await made).json()) as CreatedClassDto;
+    await createClass.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+    const classResponse = await classCreation;
+    expect(classResponse.status()).toBe(201);
+    cls = (await classResponse.json()) as CreatedClassDto;
+    await expect(teacher).toHaveURL(new RegExp(`/teacher/classes/${cls.id}/invite(?:\\?|$)`));
     await teacher.goto(`/teacher/classes/${cls.id}`);
     await expect(teacher.getByText('Belum ada siswa', { exact: true })).toBeVisible();
 

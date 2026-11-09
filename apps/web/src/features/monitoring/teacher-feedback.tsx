@@ -1,88 +1,28 @@
 'use client';
 
-import { useRef, useState, type FormEvent } from 'react';
+import { useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
-import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
+import { useInfiniteQuery, useQueryClient } from '@tanstack/react-query';
 import { Button, Card, EmptyState, Icon, SectionHeader, Textarea } from '@tka/ui';
 import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
-import { TeacherShell } from '@/components/shell';
-import { ApiProblem, getTeacherStudentProgress } from '@/lib/api';
+import { ApiProblem } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
-import { TeacherGate } from './teacher-gate';
-import { TeacherAnnouncement } from './teacher-ui';
 import { getTeacherFeedback, sendTeacherFeedback } from './teacher-feedback-api';
 import { jakartaTime, teacherAccessFailure, teacherKeys } from './teacher-query';
-export function TeacherFeedbackScreen({
-  classId,
-  studentId,
-}: {
-  classId: string;
-  studentId: string;
-}) {
-  return (
-    <TeacherGate>
-      {(token, name) => (
-        <Feedback token={token} teacherName={name} classId={classId} studentId={studentId} />
-      )}
-    </TeacherGate>
-  );
-}
-function Feedback({
-  token,
-  teacherName,
-  classId,
-  studentId,
-}: {
-  token: string;
-  teacherName: string;
-  classId: string;
-  studentId: string;
-}) {
-  const progress = useQuery({
-    queryKey: teacherKeys.progress(classId, studentId),
-    queryFn: () => getTeacherStudentProgress(token, classId, studentId),
-  });
-  return (
-    <TeacherShell
-      title="Feedback siswa"
-      description={progress.data?.class.name}
-      teacherName={teacherName}
-      backHref={`/teacher/classes/${classId}/students/${studentId}`}
-    >
-      <div className="teacher-page-stack">
-        <TeacherAnnouncement>
-          Feedback berupa catatan teks satu arah untuk siswa yang dipilih.
-        </TeacherAnnouncement>
-        {progress.isPending || progress.isError ? (
-          <DataState
-            pending={progress.isPending}
-            error={progress.error}
-            retry={() => void progress.refetch()}
-          />
-        ) : (
-          <FeedbackWorkspace
-            key={`${classId}/${studentId}`}
-            token={token}
-            classId={classId}
-            studentId={studentId}
-            studentName={progress.data.student.displayName}
-          />
-        )}
-      </div>
-    </TeacherShell>
-  );
-}
+import { useUnsavedWarning } from '@/features/core-learning/use-unsaved-warning';
 
 export function FeedbackWorkspace({
   token,
   classId,
   studentId,
   studentName,
+  onAccessFailure,
 }: {
   token: string;
   classId: string;
   studentId: string;
   studentName: string;
+  onAccessFailure?: (error: ApiProblem) => void;
 }) {
   const cache = useQueryClient();
   const [body, setBody] = useState('');
@@ -98,6 +38,13 @@ export function FeedbackWorkspace({
     getNextPageParam: (last) => last.nextOffset ?? undefined,
   });
   const accessFailure = teacherAccessFailure(error, history.error);
+  useEffect(() => {
+    if (accessFailure) onAccessFailure?.(accessFailure);
+  }, [accessFailure, onAccessFailure]);
+  useUnsavedWarning(Boolean(body.trim()) && !accessFailure, false, undefined, {
+    message: 'Catatan belum dikirim. Keluar dari siswa ini dan hapus draft?',
+    ignoreSearchChanges: true,
+  });
   const entries = [
     ...new Map(
       (history.data?.pages.flatMap((page) => page.items) ?? []).map((item) => [item.id, item]),
@@ -121,7 +68,7 @@ export function FeedbackWorkspace({
       });
       request.current = null;
       setBody('');
-      setSuccess(`Feedback berhasil dikirim kepada ${studentName}.`);
+      setSuccess('Catatan terkirim.');
       void cache.invalidateQueries({ queryKey: teacherKeys.feedback(classId, studentId) });
     } catch (err) {
       setError(err);
@@ -145,19 +92,17 @@ export function FeedbackWorkspace({
   return (
     <div className="teacher-feedback-layout">
       <Card className="teacher-feedback-composer">
-        <SectionHeader title="Tulis feedback" />
+        <SectionHeader title="Tulis catatan" />
         <div className="teacher-feedback-recipient">
           <Avatar userId={studentId} name={studentName} />
           <div>
             <strong>{studentName}</strong>
-            <Link href={`/teacher/classes/${classId}/students/${studentId}`}>
-              Lihat progres siswa <Icon name="arrow" width={16} height={16} />
-            </Link>
+            <small>Catatan satu arah</small>
           </div>
         </div>
         <form onSubmit={(event) => void send(event)}>
           <Textarea
-            label="Pesan feedback"
+            label="Catatan untuk siswa"
             placeholder="Tulis arahan atau apresiasi untuk siswa…"
             value={body}
             onChange={(event) => {
@@ -188,13 +133,12 @@ export function FeedbackWorkspace({
           )}
           <Button type="submit" fullWidth loading={busy} disabled={busy || !body.trim()}>
             <Icon name="chat" />
-            {busy ? 'Mengirim…' : 'Kirim feedback'}
+            {busy ? 'Mengirim…' : 'Kirim catatan'}
           </Button>
         </form>
-        <p className="teacher-help-text">Pesan dikirim hanya kepada siswa yang dipilih.</p>
       </Card>
       <section className="teacher-feedback-history">
-        <SectionHeader title="Riwayat feedback" subtitle={`Untuk ${studentName}`} />
+        <SectionHeader title="Catatan sebelumnya" subtitle={`Untuk ${studentName}`} />
         <Card>
           <p className="teacher-help-text">
             {entries.length} catatan dimuat
@@ -222,8 +166,8 @@ export function FeedbackWorkspace({
               <Card>
                 <EmptyState
                   icon={<Icon name="chat" />}
-                  title="Belum ada feedback"
-                  description="Kirim catatan pertama untuk mendampingi siswa ini."
+                  title="Belum ada catatan"
+                  description="Catatan yang Anda kirim akan tampil di sini."
                 />
               </Card>
             )}
