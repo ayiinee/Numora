@@ -25,6 +25,8 @@ import {
   scoringRubricVersions,
 } from './measurement-foundation.js';
 import { trialAssignments, trialPhases } from './measurement.js';
+import { tryoutBatches } from './measurement.js';
+import { assessmentArms } from './assessment-arms.js';
 import type { PackageSource } from '../content-import-contract.js';
 
 export const assessmentType = pgEnum('assessment_type', ['PRETEST', 'DRILL', 'TRYOUT', 'PVP']);
@@ -81,6 +83,7 @@ export const assessmentPackages = pgTable(
     chapterId: uuid('chapter_id').references(() => chapters.id, { onDelete: 'restrict' }),
     levelId: uuid('level_id').references(() => levels.id, { onDelete: 'restrict' }),
     variantIndex: integer('variant_index'),
+    distributionArmId: uuid('distribution_arm_id').references((): AnyPgColumn => assessmentArms.id),
     durationSeconds: integer('duration_seconds'),
     isDemo: boolean('is_demo').notNull().default(false),
     curriculumApproval: jsonb('curriculum_approval').$type<{
@@ -104,12 +107,14 @@ export const assessmentPackages = pgTable(
     uniqueIndex('assessment_packages_id_level_uq').on(table.id, table.levelId),
     uniqueIndex('assessment_packages_published_tryout_release_uq')
       .on(table.releaseAt)
-      .where(sql`${table.assessmentType} = 'TRYOUT' and ${table.status} = 'PUBLISHED'`),
+      .where(
+        sql`${table.assessmentType} = 'TRYOUT' and ${table.status} = 'PUBLISHED' and ${table.distributionArmId} is null`,
+      ),
     index('assessment_packages_type_status_idx').on(table.assessmentType, table.status),
     uniqueIndex('assessment_packages_drill_mvp_level_uq')
       .on(table.levelId)
       .where(
-        sql`${table.assessmentType} = 'DRILL' and ${table.purpose} = 'REGULAR' and ${table.status} = 'PUBLISHED' and not ${table.isDemo}`,
+        sql`${table.assessmentType} = 'DRILL' and ${table.purpose} = 'REGULAR' and ${table.status} = 'PUBLISHED' and not ${table.isDemo} and ${table.distributionArmId} is null`,
       ),
     check('assessment_packages_version_ck', sql`${table.packageVersion} > 0`),
     check('assessment_packages_content_revision_ck', sql`${table.contentRevision} >= 0`),
@@ -195,6 +200,7 @@ export const assessmentAttempts = pgTable(
       (): AnyPgColumn => trialAssignments.id,
       { onDelete: 'restrict' },
     ),
+    tryoutBatchId: uuid('tryout_batch_id').references((): AnyPgColumn => tryoutBatches.id),
     chapterIdAtStart: uuid('chapter_id_at_start').references(() => chapters.id, {
       onDelete: 'restrict',
     }),
@@ -240,7 +246,10 @@ export const assessmentAttempts = pgTable(
       ),
     uniqueIndex('assessment_attempts_tryout_once_uq')
       .on(table.studentId, table.packageId)
-      .where(sql`${table.assessmentType} = 'TRYOUT'`),
+      .where(sql`${table.assessmentType} = 'TRYOUT' and ${table.tryoutBatchId} is null`),
+    uniqueIndex('assessment_attempts_tryout_batch_once_uq')
+      .on(table.studentId, table.tryoutBatchId)
+      .where(sql`${table.assessmentType} = 'TRYOUT' and ${table.tryoutBatchId} is not null`),
     uniqueIndex('assessment_attempts_drill_active_uq')
       .on(table.studentId, table.levelIdAtStart)
       .where(

@@ -55,7 +55,8 @@ export function packageRuntimeEligibility() {
     and length(trim(${p.curriculumApproval}->>'approvedAt')) > 0
     and exists (select 1 from public.assessment_blueprint_versions b
       where b.id = ${p.blueprintVersionId} and b.status = 'SEALED'))`;
-  return allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved;
+  // V2 routing is deliberately not activated by the schema migration.
+  return sql`(${p.distributionArmId} is null and ${allowSyntheticContent() ? sql`(${p.isDemo} or ${approved})` : approved})`;
 }
 
 /** Reviewed Admin Excel Tryout: statistical generator quality is a separate pipeline. */

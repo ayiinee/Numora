@@ -607,7 +607,7 @@ for (const [role, verified, path] of [
   ['STUDENT', false, '/student'],
   ['TEACHER', false, '/teacher/verification-required'],
   ['TEACHER', true, '/teacher'],
-  ['ADMIN', false, '/admin'],
+  ['ADMIN', false, '/admin/schools'],
 ] as const) {
   test(`Existing ${role} ${verified ? 'verified' : 'default'} identity leaves login for ${path}`, async ({
     page,
