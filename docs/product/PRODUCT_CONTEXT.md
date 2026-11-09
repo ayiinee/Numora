@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 Final
 
+**ENGINEERING DECISION — klarifikasi pemilik, 9 November 2026.** Timer Drill menghitung durasi aktif sejak Mulai latihan, dijeda saat siswa keluar, dan dilanjutkan dari durasi tersimpan saat siswa memilih Lanjutkan latihan. Durasi aktif menjadi input bonus XP. [Kebijakan timer Drill](../development/DRILL_V06_REWARDS.md).
+
 **ENGINEERING DECISION — instruksi pemilik, 30 Oktober 2026:** Analytics menjadi dashboard dan menu pertama/tujuan `/admin` untuk Super Admin aktif dengan capability Analytics. Operations tetap ke sekolah dan Content/Data/Moderation tetap ke konten; assignment kosong tidak memperoleh modul. Ini menggantikan tujuan awal Super Admin pada keputusan 27 Oktober di bawah, tanpa mengembalikan Ringkasan atau memperluas izin API. Dashboard hanya memakai agregat existing, tanpa tren, periode, atau aturan akademik baru. [Implementasi dan verifikasi UI-04](../design/ADMIN_ANALYTICS_UX_2026-10-30.md).
 
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.

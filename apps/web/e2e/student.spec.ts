@@ -1534,6 +1534,80 @@ test('signed-out login offers Google authentication without removed demo destina
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
 });
 
+test('Drill timer waits for explicit resume and pauses on confirmed exit', async ({ page }) => {
+  await fixtures(page);
+  const sessionId = '77000000-0000-4777-8777-000000000001';
+  let running = false;
+  let resumeCount = 0;
+  let pauseCount = 0;
+  let elapsedMs = 42_000;
+  const clock = () => ({
+    elapsedMs,
+    remainingMs: running ? 30_000 : 0,
+    sessionId: running ? sessionId : null,
+  });
+  const attempt = () => ({
+    id: attemptId,
+    levelId,
+    levelTitle: 'Drill timer fixture',
+    startedAt: '2026-10-01T00:00:00Z',
+    status: 'inProgress',
+    isDemo: true,
+    clock: clock(),
+    questions: running
+      ? [
+          {
+            questionInstanceId: questionId,
+            stem: 'Berapa hasil 2 + 2?',
+            options: [
+              { id: 'A', text: '4' },
+              { id: 'B', text: '5' },
+            ],
+            selectedOptionId: 'A',
+          },
+        ]
+      : [],
+  });
+  await page.route(`**/api/v1/assessment-attempts/${attemptId}`, (route) =>
+    route.fulfill({ json: attempt() }),
+  );
+  await page.route('**/api/v1/assessments/drill/attempts', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ levelId });
+    resumeCount++;
+    running = true;
+    return route.fulfill({ json: attempt() });
+  });
+  await page.route(`**/api/v1/assessment-attempts/${attemptId}/drill-clock`, (route) => {
+    const command = route.request().postDataJSON();
+    expect(command.sessionId).toBe(sessionId);
+    if (command.action === 'pause') {
+      running = false;
+      elapsedMs = 45_000;
+      pauseCount++;
+    }
+    return route.fulfill({ json: clock() });
+  });
+
+  const url = `/student/drill/${attemptId}`;
+  await page.goto(url);
+  await expect(page.getByRole('heading', { name: 'Latihan dijeda' })).toBeVisible();
+  await expect(page.getByLabel('Waktu tersimpan')).toContainText('0:42');
+  expect(resumeCount).toBe(0);
+  await page.getByRole('button', { name: 'Lanjutkan latihan' }).click();
+  await expect(page.getByLabel('Waktu berjalan')).toBeVisible();
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('Timer akan dijeda');
+    await dialog.accept();
+  });
+  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await expect(page).toHaveURL('/student/learn');
+  await expect.poll(() => pauseCount).toBe(1);
+  await page.goto(url);
+  await expect(page.getByLabel('Waktu tersimpan')).toContainText('0:45');
+  expect(resumeCount).toBe(1);
+});
+
 test('Drill result retry uses its server level and navigates to a new server attempt', async ({
   page,
 }) => {
@@ -2177,7 +2251,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     const viewport = page.viewportSize()!;
     expect(Math.abs(dialogBox.x + dialogBox.width / 2 - viewport.width / 2)).toBeLessThan(12);
     expect(Math.abs(dialogBox.y + dialogBox.height / 2 - viewport.height / 2)).toBeLessThan(3);
-    await expect(detail.getByText('Bintang terakhir: 0 / 3')).toBeVisible();
+    await expect(detail.getByRole('img', { name: 'Bintang terakhir: 0 / 3' })).toBeVisible();
+    await expect(detail.getByText('10 soal')).toBeVisible();
+    await expect(detail.getByText('Selesai', { exact: true })).toHaveCount(0);
     await expect(detail.getByRole('button', { name: 'Latihan lagi' })).toBeVisible();
     await expect(page).toHaveURL(new RegExp(`/student/learn/${chapterId}/${subchapterId}$`));
     await page.screenshot({

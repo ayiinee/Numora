@@ -3710,7 +3710,7 @@ a.settings-row:hover {
   width: min(100%, 520px);
   margin-inline: auto;
 }
-.learning-map-shell:has(.adventure-summary) .page-heading h1 {
+.learning-map-shell:has(.adventure-summary) .page-heading {
   display: none;
 }
 

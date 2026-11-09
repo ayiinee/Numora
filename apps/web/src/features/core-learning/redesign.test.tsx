@@ -1077,7 +1077,9 @@ describe('subchapter level details', () => {
     expect(detail.getByText('Subbab fiktif')).toBeTruthy();
     expect(await detail.findByText('Bab 2 · Aljabar fiktif')).toBeTruthy();
     expect(learningApi.chapter).toHaveBeenCalledWith('test-token', 'chapter-test');
-    expect(detail.getByText('Bintang terakhir: 0 / 3')).toBeTruthy();
+    expect(detail.getByRole('img', { name: 'Bintang terakhir: 0 / 3' })).toBeTruthy();
+    expect(detail.getByText('10 soal')).toBeTruthy();
+    expect(detail.queryByText('Selesai')).toBeNull();
     expect(detail.getByText('0')).toBeTruthy();
     expect(detail.getByText('100')).toBeTruthy();
     expect(detail.getByRole('link', { name: 'Riwayat level' }).getAttribute('href')).toBe(
@@ -1126,7 +1128,7 @@ describe('subchapter level details', () => {
       renderStudent(<SubchapterScreen />);
       fireEvent.click(await screen.findByRole('button', { name: 'Detail level' }));
       const detail = within(screen.getByRole('dialog', { name: level }));
-      expect(detail.getByText(label)).toBeTruthy();
+      expect(detail.queryByText(label)).toBeNull();
       if (action) expect(detail.getByRole('button', { name: action })).toBeTruthy();
       else expect(detail.getAllByRole('button')).toHaveLength(1);
     },
@@ -1166,7 +1168,7 @@ describe('subchapter level details', () => {
     renderStudent(<SubchapterScreen />);
     fireEvent.click(await screen.findByRole('button', { name: /^Level 1, Latihan tunggal,/ }));
     const detail = within(screen.getByRole('dialog', { name: 'Level 1' }));
-    expect(detail.getByText('Bintang belum tercatat')).toBeTruthy();
+    expect(detail.getByRole('img', { name: 'Bintang belum tercatat' })).toBeTruthy();
     const startButton = detail.getByRole('button', { name: 'Mulai latihan' });
     fireEvent.click(startButton);
     fireEvent.click(startButton);

@@ -3,7 +3,7 @@
 import { useRef } from 'react';
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { skipToken, useQuery, useMutation } from '@tanstack/react-query';
+import { skipToken, useQuery, useMutation, useQueryClient } from '@tanstack/react-query';
 import { Card, EmptyState, Icon, ProgressBar } from '@tka/ui';
 import { StudentLayout } from '@/components/shell';
 import { learningApi, request } from './api';
@@ -75,19 +75,28 @@ export function SubchapterScreen() {
   return (
     <StudentGate>
       {(token) => (
-        <StudentLayout
-          title="Langkah belajarmu"
-          backHref={`/student/learn/${chapterId}`}
-          className="learning-map-shell"
-        >
-          <SubchapterContent token={token} subchapterId={subchapterId} />
+        <StudentLayout title="Langkah belajarmu" className="learning-map-shell">
+          <SubchapterContent
+            token={token}
+            subchapterId={subchapterId}
+            backHref={`/student/learn/${chapterId}`}
+          />
         </StudentLayout>
       )}
     </StudentGate>
   );
 }
-function SubchapterContent({ token, subchapterId }: { token: string; subchapterId: string }) {
+function SubchapterContent({
+  token,
+  subchapterId,
+  backHref,
+}: {
+  token: string;
+  subchapterId: string;
+  backHref: string;
+}) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const starting = useRef(false);
   const query = useQuery({
     queryKey: ['subchapter', subchapterId],
@@ -100,11 +109,23 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
   });
   const start = useMutation({
     mutationFn: (levelId: string) => learningApi.start(token, levelId),
-    onSuccess: (attempt) => router.push(`/student/drill/${attempt.id}`),
+    onSuccess: (attempt) => {
+      queryClient.setQueryData(['attempt', attempt.id], attempt);
+      router.push(`/student/drill/${attempt.id}`);
+    },
   });
   if (query.isPending || query.isError)
     return (
-      <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
+      <div className="learning-adventure">
+        <Link href={backHref} className="back-link">
+          <Icon name="back" /> Kembali
+        </Link>
+        <DataState
+          pending={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+        />
+      </div>
     );
   const { levels, subchapter } = query.data;
   const chapter = chapterQuery.data?.chapter;
@@ -117,7 +138,10 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
   return (
     <div className="learning-adventure">
       <header className="adventure-summary">
-        <Card>
+        <Link href={backHref} className="adventure-summary__back" aria-label="Kembali">
+          <Icon name="back" />
+        </Link>
+        <div>
           <span className="eyebrow">Subbab</span>
           <h1>{subchapter.title}</h1>
           <ProgressBar
@@ -129,7 +153,7 @@ function SubchapterContent({ token, subchapterId }: { token: string; subchapterI
           <p>
             {completed} / {levels.length} level selesai
           </p>
-        </Card>
+        </div>
       </header>
       {levels.length ? (
         <LevelPath

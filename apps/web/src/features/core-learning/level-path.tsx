@@ -106,30 +106,34 @@ export function LevelPath({
         <p>{chapterLabel}</p>
         {selected.title !== selectedLevel && <p>{selected.title}</p>}
       </div>
-      <p className="level-path__status">{statusLabel}</p>
       {selected.status === 'locked' ? (
         <p>Nilai minimal 80 pada level sebelumnya.</p>
       ) : (
         <>
-          <div className="level-path__rating">
-            <LevelStars stars={latestStars ?? 0} size={38} />
-            <p>
-              {latestStars == null
+          <p className="level-path__meta">10 soal</p>
+          <div
+            className="level-path__rating"
+            role="img"
+            aria-label={
+              latestStars == null
                 ? 'Bintang belum tercatat'
-                : `Bintang terakhir: ${latestStars} / 3`}
-            </p>
+                : `Bintang terakhir: ${latestStars} / 3`
+            }
+          >
+            <LevelStars stars={latestStars ?? 0} size={38} />
           </div>
           <dl className="level-path__scores">
             <div>
               <dt>Nilai terakhir</dt>
               <dd>{selected.latestScore ?? '—'}</dd>
             </div>
-            <div>
-              <dt>Nilai terbaik</dt>
+            <div className="level-path__best">
+              <dt>
+                <Icon name="star" width={14} height={14} /> Nilai terbaik
+              </dt>
               <dd>{selected.bestScore ?? '—'}</dd>
             </div>
           </dl>
-          <p className="level-path__meta">10 soal · Waktu berjalan tanpa batas</p>
           <Link
             className="level-path__history"
             href={`/student/assessment?levelId=${encodeURIComponent(selected.id)}`}

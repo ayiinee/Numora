@@ -6,20 +6,45 @@
 }
 
 .adventure-summary {
-  --card-padding: 20px;
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px 16px;
+  color: white;
+  border-radius: var(--radius-lg);
+}
+
+.adventure-summary .eyebrow,
+.adventure-summary h1 {
+  color: inherit;
+}
+
+.adventure-summary__back {
+  display: grid;
+  place-items: center;
+  min-height: 44px;
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 14%);
+  color: inherit;
+}
+
+.adventure-summary__back:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
 }
 
 .adventure-summary h1 {
-  margin: 6px 0 12px;
-  font-size: var(--text-xl);
+  margin: 2px 0 8px;
+  font-size: var(--text-base);
   font-weight: var(--font-bold);
   line-height: 1.4;
 }
 
 .adventure-summary p {
-  margin-top: 8px;
-  color: var(--color-text-muted);
-  font-size: var(--text-sm);
+  margin-top: 4px;
+  font-size: var(--text-xs);
 }
 
 .level-path {
@@ -29,10 +54,8 @@
   margin: 0;
   padding: 0;
   list-style: none;
-  border-radius: var(--radius-xl);
   background: #8db828 url('/illustrations/level-path/owl-trail.webp') repeat-y top center / 100%
     auto;
-  box-shadow: var(--shadow-sm);
 }
 
 .level-path__step {
@@ -169,12 +192,6 @@
   font-size: var(--text-sm);
 }
 
-.level-path__status {
-  justify-self: center;
-  color: var(--color-primary-strong);
-  font-weight: 800;
-}
-
 .level-path__context,
 .level-path__meta {
   text-align: center;
@@ -207,6 +224,17 @@
 
 .level-path__scores dt {
   font-size: var(--text-xs);
+}
+
+.level-path__scores .level-path__best {
+  background: var(--color-reward-light);
+}
+
+.level-path__best dt {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  gap: 4px;
 }
 
 .level-path__scores dd {
@@ -259,10 +287,6 @@
 }
 
 @media (max-width: 959px) {
-  .adventure-summary {
-    --card-padding: 16px;
-  }
-
   .adventure-mobile-action {
     position: fixed;
     z-index: 19;
