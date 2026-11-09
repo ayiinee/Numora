@@ -1,4 +1,5 @@
 import { getDatabase } from './client.js';
+import type { AssessmentReader } from './pretest-visibility.js';
 import { tryoutDistributionEligibility, packageRuntimeEligibility } from './package-runtime.js';
 import {
   irtBatches,
@@ -108,8 +109,7 @@ export async function releasedTryoutPackageIds(
   return new Set((await releasedTryoutPackageTimes(packageIds, now)).keys());
 }
 
-export async function currentTryoutPackage() {
-  const { db } = getDatabase();
+export async function currentTryoutPackage(db: AssessmentReader = getDatabase().db) {
   const [clock] = await db.execute<{ now: string }>(sql`select clock_timestamp() as now`);
   const now = new Date(clock!.now);
   const [row] = await db

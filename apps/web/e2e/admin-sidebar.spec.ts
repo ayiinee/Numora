@@ -1,6 +1,167 @@
-import { expect, test } from '@playwright/test';
+import { expect, test, type Locator } from '@playwright/test';
 import AxeBuilder from '@axe-core/playwright';
 import { setup } from './fixtures/admin';
+import { setupAssessments } from './fixtures/admin-assessments';
+
+async function expandAll(navigation: Locator) {
+  for (const button of await navigation.locator('button[aria-expanded]').all()) {
+    if ((await button.getAttribute('aria-expanded')) === 'false') await button.click();
+  }
+}
+
+const primary = '.admin-navigation-group > a, .admin-navigation-branch > button';
+
+test('Admin dropdowns share state across desktop and mobile and preserve independent choices', async ({
+  page,
+}) => {
+  const { errors } = await setup(page);
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/admin/content?view=questions');
+  const nav = page.locator('#admin-sidebar nav');
+  const bank = nav.getByRole('button', { name: 'Bank konten', exact: true });
+  const review = nav.getByRole('button', { name: 'Review & laporan', exact: true });
+  await expect(bank).toHaveAttribute('aria-expanded', 'true');
+  await expect(review).toHaveAttribute('aria-expanded', 'false');
+  await review.focus();
+  await page.keyboard.press('Enter');
+  await expect(review).toHaveAttribute('aria-expanded', 'true');
+  await expect(bank).toHaveAttribute('aria-expanded', 'true');
+  await bank.focus();
+  await page.keyboard.press('Space');
+  await expect(bank).toHaveAttribute('aria-expanded', 'false');
+  await expect(nav.getByRole('link', { name: 'Soal', exact: true })).toHaveCount(0);
+  await expect(review).toHaveAttribute('aria-expanded', 'true');
+  await expect(page).toHaveURL(/view=questions$/);
+  await page.setViewportSize({ width: 390, height: 844 });
+  await page.getByRole('button', { name: 'Menu navigasi', exact: true }).click();
+  const mobile = page.locator('#mobile-menu');
+  await expect(mobile.getByRole('button', { name: 'Bank konten', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
+  await expect(
+    mobile.getByRole('button', { name: 'Review & laporan', exact: true }),
+  ).toHaveAttribute('aria-expanded', 'true');
+  await mobile.getByRole('button', { name: 'Paket asesmen', exact: true }).click();
+  await page.keyboard.press('Escape');
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await expect(nav.getByRole('button', { name: 'Paket asesmen', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  await page.reload();
+  await expect(bank).toHaveAttribute('aria-expanded', 'true');
+  await expect(review).toHaveAttribute('aria-expanded', 'true');
+  await expect(nav.getByRole('button', { name: 'Paket asesmen', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'true',
+  );
+  expect(errors).toEqual([]);
+});
+
+test('Admin submenu destinations and retained tabs follow query navigation, Back and reload', async ({
+  page,
+}) => {
+  const { errors } = await setupAssessments(page, 'SUPER_ADMIN');
+  // TEST ONLY empty IRT options; this test exercises navigation, not scientific publication.
+  await page.route('**/api/v1/admin/irt/options', (route) =>
+    route.fulfill({ json: { enabled: false, configurations: [] } }),
+  );
+  await page.setViewportSize({ width: 1440, height: 900 });
+  await page.goto('/admin/content');
+  const nav = page.locator('#admin-sidebar nav');
+  const destinations = [
+    ['Bank konten', 'Soal', '/admin/content?view=questions'],
+    ['Bank konten', 'Struktur materi', '/admin/content?view=curriculum'],
+    ['Bank konten', 'Video', '/admin/content?view=videos'],
+    ['Review & laporan', 'Status review', '/admin/content?view=verification'],
+    ['Review & laporan', 'Laporan masalah', '/admin/content?view=reports'],
+    ['Review & laporan', 'Riwayat aktivitas', '/admin/content?view=audit'],
+    ['Bank konten', 'Tambah konten', '/admin/content/imports'],
+    ['Paket asesmen', 'Pretest', '/admin/assessments/pretest'],
+    ['Paket asesmen', 'Drill', '/admin/assessments/drill'],
+    ['Paket asesmen', 'Tryout', '/admin/assessments/tryout'],
+    ['Pengguna & kelas', 'Pengguna', '/admin/operations?view=users'],
+    ['Pengguna & kelas', 'Kelas', '/admin/operations?view=classes'],
+    ['Hasil Tryout', 'Batch & rilis hasil', '/admin/irt?view=batches'],
+    ['Hasil Tryout', 'Proses IRT', '/admin/irt?view=requests'],
+    ['Akun Admin', 'Daftar Admin', '/admin/accounts?view=accounts'],
+    ['Akun Admin', 'Undangan', '/admin/accounts?view=invitations'],
+  ];
+  for (const [parent, label, route] of destinations) {
+    const button = nav.getByRole('button', { name: parent!, exact: true });
+    await expect(button).toBeAttached();
+    if ((await button.getAttribute('aria-expanded')) === 'false') await button.click();
+    await nav.getByRole('link', { name: label!, exact: true }).click();
+    await expect(page).toHaveURL(route!);
+    await expect(nav.locator('[aria-current="page"]')).toHaveText(label!);
+    await expect(button).toHaveAttribute('aria-expanded', 'true');
+  }
+  await expect(page.getByRole('tab', { name: 'Undangan', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await expect(page.getByRole('heading', { name: 'Daftar undangan', exact: true })).toBeVisible();
+  await page.getByRole('tab', { name: 'Akun Admin', exact: true }).click();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Daftar Admin');
+  await page.goBack();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Undangan');
+  await expect(page.getByRole('heading', { name: 'Daftar undangan', exact: true })).toBeVisible();
+  await page.reload();
+  await expect(page.getByRole('tab', { name: 'Undangan', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.goto('/admin/content?view=questions');
+  await page
+    .getByRole('navigation', { name: 'Pengelolaan Admin' })
+    .getByRole('button', { name: 'Video', exact: true })
+    .click();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Video');
+  await page.goBack();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Soal');
+  await expect(page.locator('#content-view-title')).toHaveText('Bank soal');
+  await page.goto('/admin/operations?view=users');
+  await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Kelas');
+  await page.goBack();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Pengguna');
+  await page.goto('/admin/irt?view=batches');
+  await page
+    .getByRole('navigation', { name: 'Bagian IRT' })
+    .getByRole('button', { name: 'Request analisis', exact: true })
+    .click();
+  await expect(nav.locator('[aria-current="page"]')).toHaveText('Proses IRT');
+  expect(errors).toEqual([]);
+});
+
+test('Admin dropdowns work with blocked storage and disappear when assignment is removed', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  await page.addInitScript(() => {
+    for (const method of ['getItem', 'setItem', 'removeItem']) {
+      Object.defineProperty(sessionStorage, method, {
+        value: () => {
+          throw new DOMException('Storage blocked', 'SecurityError');
+        },
+      });
+    }
+  });
+  await page.goto('/admin/content');
+  const nav = page.locator('#admin-sidebar nav');
+  const review = nav.getByRole('button', { name: 'Review & laporan', exact: true });
+  await review.click();
+  await expect(review).toHaveAttribute('aria-expanded', 'true');
+  await review.click();
+  await expect(review).toHaveAttribute('aria-expanded', 'false');
+  state.adminRole = null;
+  await page.reload();
+  await expect(nav.getByRole('link')).toHaveCount(0);
+  await expect(nav.getByRole('button')).toHaveCount(0);
+  await expect(page.getByRole('main')).toContainText('Content');
+  expect(errors).toEqual([]);
+});
 
 for (const [role, width, height, zoom] of [
   ['SUPER_ADMIN', 1280, 480, 1],
@@ -19,13 +180,14 @@ for (const [role, width, height, zoom] of [
     await page.goto('/admin/schools');
     const sidebar = page.locator('.app-sidebar');
     const navigation = sidebar.getByRole('navigation');
-    const links = navigation.getByRole('link');
+    const links = navigation.locator('a:visible, button:visible');
     await expect(
-      sidebar.getByRole('link', {
-        name: role === 'OPERATIONS' ? 'Pengguna & kelas' : 'Request IRT & publikasi',
+      sidebar.getByRole('button', {
+        name: role === 'OPERATIONS' ? 'Pengguna & kelas' : 'Hasil Tryout',
         exact: true,
       }),
     ).toBeAttached();
+    await expandAll(navigation);
     await page.evaluate(
       (value) => document.documentElement.style.setProperty('zoom', String(value)),
       zoom,
@@ -40,6 +202,7 @@ for (const [role, width, height, zoom] of [
     }
     expect(await page.evaluate(() => window.scrollY)).toBe(pageScroll);
     const last = links.last();
+    await last.scrollIntoViewIfNeeded();
     const insideSidebar = () =>
       last.evaluate((element) => {
         const item = element.getBoundingClientRect();
@@ -72,12 +235,15 @@ test('Admin mobile menu keeps its last link reachable and restores focus after E
   await page.setViewportSize({ width: 390, height: 360 });
   const { errors } = await setup(page);
   await page.goto('/admin/schools');
-  await expect(page.locator('.app-sidebar nav a[href="/admin/irt"]')).toBeAttached();
+  await expect(
+    page.locator('.app-sidebar nav button').filter({ hasText: 'Hasil Tryout' }),
+  ).toBeAttached();
   const toggle = page.getByRole('button', { name: 'Menu navigasi' });
   await toggle.click();
   const menu = page.locator('#mobile-menu');
   const dialog = page.getByRole('dialog', { name: 'Menu admin' });
   await expect(dialog).toBeVisible();
+  await expandAll(menu);
   const last = menu.getByRole('link').last();
   await last.focus();
   await expect(last).toBeFocused();
@@ -102,44 +268,38 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as c
     const expected =
       role === 'SUPER_ADMIN'
         ? [
-            'Analytics',
-            'Akun Admin',
-            'Sekolah & credential',
+            'Dashboard',
+            'Sekolah & verifikasi guru',
             'Pengguna & kelas',
-            'Konten & assessment',
-            'Pretest authoring',
-            'Generator paket',
-            'Impor soal',
-            'Request IRT & publikasi',
+            'Bank konten',
+            'Review & laporan',
+            'Paket asesmen',
+            'Hasil Tryout',
+            'Akun Admin',
           ]
         : role === 'OPERATIONS'
-          ? ['Sekolah & credential', 'Pengguna & kelas']
+          ? ['Dashboard', 'Sekolah & verifikasi guru', 'Pengguna & kelas']
           : [
-              'Konten & assessment',
-              'Impor soal',
-              'Pretest authoring',
-              'Generator paket',
-              'Request IRT & publikasi',
+              'Dashboard',
               'Sekolah & kelas (baca saja)',
+              'Bank konten',
+              'Review & laporan',
+              'Paket asesmen',
+              'Hasil Tryout',
             ];
-    await expect(sidebar.getByRole('navigation').getByRole('link')).toHaveText(expected);
+    await expect(sidebar.getByRole('navigation').locator(primary)).toHaveText(expected);
+    await expandAll(sidebar.getByRole('navigation'));
     for (const width of [1440, 1024]) {
       await page.setViewportSize({ width, height: 900 });
       const frame = await sidebar.boundingBox();
       expect(frame!.width).toBe(248);
-      for (const link of await sidebar.getByRole('navigation').getByRole('link').all()) {
+      for (const link of await sidebar
+        .getByRole('navigation')
+        .locator('a:visible, button:visible')
+        .all()) {
         await link.click({ trial: true });
         expect(await link.evaluate((node) => node.scrollWidth <= node.clientWidth)).toBe(true);
-        if (role === 'SUPER_ADMIN')
-          expect(
-            await link
-              .locator('span')
-              .evaluate(
-                (node) =>
-                  node.getBoundingClientRect().height <=
-                  parseFloat(getComputedStyle(node).lineHeight) + 1,
-              ),
-          ).toBe(true);
+        expect(await link.evaluate((node) => node.getBoundingClientRect().height >= 44)).toBe(true);
       }
       await page.screenshot({
         path: test.info().outputPath(`navigation-${role}-${width}.png`),
@@ -162,7 +322,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as c
     await toggle.click();
     const dialog = page.getByRole('dialog', { name: 'Menu admin' });
     await expect(dialog).toBeVisible();
-    await expect(dialog.getByRole('navigation').getByRole('link')).toHaveText(expected);
+    await expect(dialog.getByRole('navigation').locator(primary)).toHaveText(expected);
     expect(
       (
         await new AxeBuilder({ page })
@@ -239,17 +399,19 @@ test('Admin drawer works at narrow and landscape sizes and selects the most spec
   await page.goto('/admin/content/imports');
   const sidebar = page.locator('.app-sidebar');
   await expect(sidebar.locator('[aria-current="page"]')).toHaveCount(1);
-  await expect(sidebar.locator('[aria-current="page"]')).toHaveText('Impor soal');
+  await expect(sidebar.locator('[aria-current="page"]')).toHaveText('Tambah konten');
   await page.emulateMedia({ reducedMotion: 'reduce' });
   for (const [width, height] of [
     [320, 568],
     [844, 390],
+    [768, 700],
     [390, 240],
   ] as const) {
     await page.setViewportSize({ width, height });
     const toggle = page.getByRole('button', { name: 'Menu navigasi' });
     await toggle.click();
     const dialog = page.getByRole('dialog', { name: 'Menu admin' });
+    await expandAll(dialog.getByRole('navigation'));
     const last = dialog.getByRole('link').last();
     await last.focus();
     await last.click({ trial: true });
@@ -278,11 +440,8 @@ test('Admin drawer works at narrow and landscape sizes and selects the most spec
     document.documentElement.style.zoom = '1';
   });
   await page.getByRole('button', { name: 'Menu navigasi' }).click();
-  await page
-    .locator('#mobile-menu')
-    .getByRole('link', { name: 'Pengguna & kelas', exact: true })
-    .click();
-  await expect(page).toHaveURL(/\/admin\/operations$/);
+  await page.locator('#mobile-menu').getByRole('link', { name: 'Pengguna', exact: true }).click();
+  await expect(page).toHaveURL(/\/admin\/operations\?view=users$/);
   await expect(page.getByRole('dialog')).toHaveCount(0);
   expect(errors).toEqual([]);
 });

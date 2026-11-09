@@ -12,12 +12,16 @@ export function AdminFrame({
   description,
   icon,
   management = false,
+  minimalHeader = false,
+  fullWidth = false,
   children,
 }: {
   title: string;
   description: string;
   icon: IconName;
   management?: boolean;
+  minimalHeader?: boolean;
+  fullWidth?: boolean;
   children: ReactNode;
 }) {
   const { state } = useAuth();
@@ -29,13 +33,20 @@ export function AdminFrame({
     state.status === 'ready' &&
     state.profile.role === 'ADMIN' &&
     state.profile.adminRole === 'OPERATIONS';
-  const hidePageHeader = !management && (contentRole || operationsRole);
+  const hidePageHeader = minimalHeader || (!management && (contentRole || operationsRole));
   return (
     <AppShell
       area="admin"
-      className={`admin-redesign-shell${management ? ' admin-management-shell admin-assessment-shell' : hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}`}
+      className={`admin-redesign-shell${management ? ' admin-management-shell admin-assessment-shell' : hidePageHeader ? ' admin-workspace-shell' : ''}${contentRole ? ' admin-content-shell' : operationsRole ? ' admin-operations-shell' : ''}${fullWidth ? ' admin-full-width-shell' : ''}`}
     >
       <div className="admin-redesign-frame">
+        {management && !minimalHeader && (
+          <nav aria-label="Breadcrumb" className="admin-breadcrumb">
+            <Link href="/admin">Admin</Link>
+            <span aria-hidden="true"> / </span>
+            <span aria-current="page">{title}</span>
+          </nav>
+        )}
         {hidePageHeader ? (
           <h1 className="sr-only">{title}</h1>
         ) : management ? (

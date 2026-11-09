@@ -140,6 +140,8 @@ const groups = [
       'ApproveContentPackageDto',
       'PublishContentPackageDto',
       'ArchiveContentPackageDto',
+      'PrepareLegacyPretestDto',
+      'PackageAvailabilityDto',
       'PackageApprovalDto',
       'UpdateContentPackageDto',
       'ContentPackageDto',

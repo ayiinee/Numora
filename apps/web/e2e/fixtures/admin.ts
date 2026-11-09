@@ -192,6 +192,7 @@ export async function setup(page: Page) {
       return route.fulfill({ json: { items: state.classes, nextOffset: null } });
     if (path === `/admin/classes/${id(700)}`) return route.fulfill({ json: state.classes[0] });
     const data: Record<string, unknown> = {
+      '/admin/content/packages': { items: [], total: 0 },
       '/admin/content/curriculum': state.data.curriculum,
       '/admin/content/versions': state.data.versions,
       '/admin/content/videos': state.data.videos,

@@ -7,6 +7,7 @@ import { apiRequest } from '@/lib/api';
 import { AdminLoading, AdminMessage } from './admin-presentation';
 import { useAdminAccessError, withAdminWorkspace } from './admin-workspace';
 import { ADMIN_PAGE_SIZE } from './pagination';
+import { useAdminUrl } from './admin-url';
 import { AdminPagination } from './admin-pagination';
 import {
   AccountsTable,
@@ -61,7 +62,9 @@ function AccountsPanel({ token }: { token: string }) {
   const [inviteOffset, setInviteOffset] = useState(0);
   const [revision, setRevision] = useState(0);
   const [busy, setBusy] = useState(false);
-  const [tab, setTab] = useState('accounts');
+  const url = useAdminUrl();
+  const tab = url.params.get('view') === 'invitations' ? 'invitations' : 'accounts';
+  const setTab = (view: string) => url.update({ view });
   const [modal, setModal] = useState<Modal>(null);
   const operation = useRef<{ payload: string; key: string } | null>(null);
   const mutation = useRef(false);

@@ -29,6 +29,7 @@ vi.mock('./assessment-policy-selector', () => ({
 }));
 const context = vi.hoisted(() => ({ state: {} as Record<string, unknown> }));
 vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
   usePathname: () => '/admin/content',
   useRouter: () => ({ replace: vi.fn() }),
 }));
@@ -414,8 +415,8 @@ describe('Admin content UI', () => {
         ],
       },
     });
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    render(<AdminContentScreen initialView="drillPackages" />);
+    await screen.findByText('Paket Drill per level');
     fireEvent.click(await screen.findByText('Buat paket Drill'));
     fireEvent.change(await screen.findByLabelText('Kode keluarga'), {
       target: { value: 'DEMO-L1' },
@@ -463,8 +464,8 @@ describe('Admin content UI', () => {
     vi.mocked(updateDrillPackage).mockRejectedValueOnce(
       new ApiProblem(400, 'INVALID_PACKAGE', 'TEST package rejection'),
     );
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    render(<AdminContentScreen initialView="drillPackages" />);
+    await screen.findByText('Paket Drill per level');
     fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), { target: { value: 'Revisi draf' } });
     fireEvent.submit(screen.getByRole('button', { name: 'Simpan draf paket' }).closest('form')!);
@@ -481,8 +482,8 @@ describe('Admin content UI', () => {
     await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
   });
   it('requires confirmation before archiving a Drill package', async () => {
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    render(<AdminContentScreen initialView="drillPackages" />);
+    await screen.findByText('Paket Drill per level');
     fireEvent.click(await screen.findByRole('button', { name: 'Arsipkan paket' }));
     expect(archiveDrillPackage).not.toHaveBeenCalled();
     fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Batal' }));
@@ -548,10 +549,7 @@ describe('Admin content UI', () => {
     await screen.findByText('Perubahan tersimpan. Daftar diperbarui dengan data terbaru.');
   });
   it('preserves pinned versions outside the loaded page when editing a Tryout draft', async () => {
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Tambah soal PG' }));
-    await screen.findByLabelText('Kompetensi');
-    fireEvent.click(screen.getByRole('button', { name: 'Draf Tryout' }));
+    render(<AdminContentScreen initialView="packages" />);
     fireEvent.click(await screen.findByRole('button', { name: 'Edit draf' }));
     fireEvent.change(screen.getByLabelText('Nama paket'), {
       target: { value: 'TEST revised package' },
@@ -586,8 +584,8 @@ describe('Admin content UI', () => {
   });
   it('publishes a Drill draft through the existing Admin endpoint', async () => {
     vi.spyOn(window, 'confirm').mockReturnValue(true);
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'Paket Drill' }));
+    render(<AdminContentScreen initialView="drillPackages" />);
+    await screen.findByText('Paket Drill per level');
     fireEvent.change(await screen.findByLabelText('Referensi persetujuan Curriculum'), {
       target: { value: 'TEST_ONLY_APPROVAL' },
     });
@@ -604,8 +602,7 @@ describe('Admin content UI', () => {
     ).toBeTruthy();
   });
   it('shows IRT batch status separately from result release state', async () => {
-    render(<AdminContentScreen />);
-    fireEvent.click(await screen.findByRole('button', { name: 'IRT' }));
+    render(<AdminContentScreen initialView="irt" />);
     expect(await screen.findByText('TRYOUT · SUCCEEDED')).toBeTruthy();
     expect(screen.getByText(/Rilis belum tercatat/)).toBeTruthy();
   });

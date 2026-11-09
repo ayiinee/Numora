@@ -248,6 +248,72 @@ describe.skipIf(!testUrl)(
         200,
       );
     });
+    it('prepares real legacy intake idempotently, rejects stale revisions and preserves reviewed packages', async () => {
+      const [chapter] = await owner`SELECT id FROM chapters ORDER BY id LIMIT 1`;
+      const [legacy] =
+        await owner`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,chapter_id) VALUES(${'TEST-LEGACY-' + suffix},1,'TEST ONLY legacy draft','PRETEST',${chapter!.id}) RETURNING id`;
+      const source = {
+        sourceNamespace: 'TEST_LEGACY_' + suffix,
+        sourceName: 'TEST ONLY source',
+        sourceReference: 'TEST ONLY actual source intake',
+      };
+      const body = { expectedRevision: 0, source };
+      for (const role of ['operations', 'unassigned', 'student', 'teacher'])
+        expect(
+          (await request(`admin/content/packages/${legacy!.id}/intake`, 'POST', body, role)).status,
+        ).toBe(403);
+      expect(
+        (
+          await request(`admin/content/packages/${legacy!.id}/intake`, 'POST', {
+            ...body,
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(409);
+      const prepared = await ok<{ id: string }>(
+        `admin/content/packages/${legacy!.id}/intake`,
+        'POST',
+        body,
+      );
+      expect(prepared.id).toBe(legacy!.id);
+      expect(await ok(`admin/content/packages/${legacy!.id}/intake`, 'POST', body)).toEqual(
+        prepared,
+      );
+      const draft = await ok<ContentPackageDetailDto>(`admin/content/packages/${legacy!.id}`);
+      expect(draft).toMatchObject({
+        contentRevision: 1,
+        source,
+        items: [],
+        curriculumApproval: null,
+        frozenAt: null,
+      });
+      expect(
+        (
+          await request(`admin/content/packages/${legacy!.id}/publish`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(409);
+      // TEST ONLY historical review marker. It is preserved, never adopted as new approval.
+      const [reviewed] =
+        await owner`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,chapter_id,manifest_digest) VALUES(${'TEST-REVIEWED-' + suffix},1,'TEST ONLY reviewed legacy','PRETEST',${chapter!.id},${'a'.repeat(64)}) RETURNING *`;
+      const next = await ok<{ id: string }>(
+        `admin/content/packages/${reviewed!.id}/intake`,
+        'POST',
+        body,
+      );
+      expect(next.id).not.toBe(reviewed!.id);
+      expect(await ok(`admin/content/packages/${reviewed!.id}/intake`, 'POST', body)).toEqual(next);
+      expect(await ok<ContentPackageDetailDto>(`admin/content/packages/${next.id}`)).toMatchObject({
+        packageVersion: 2,
+        items: [],
+        source,
+        curriculumApproval: null,
+        frozenAt: null,
+      });
+      const [unchanged] = await owner`SELECT * FROM assessment_packages WHERE id=${reviewed!.id}`;
+      expect(unchanged).toEqual(reviewed);
+    });
     it('rejects incomplete, mixed and unknown review payloads before changing a version', async () => {
       const id = '00000000-0000-4000-8000-000000000001';
       for (const payload of [
@@ -261,6 +327,48 @@ describe.skipIf(!testUrl)(
         expect(response.status).toBe(400);
         expect((await response.json()).code).toBe('CONTENT_REVIEW_INVALID');
       }
+    });
+    it('searches package names and family codes across server pages with matching totals and filters', async () => {
+      const family = `SEARCH-${suffix}`;
+      for (let index = 0; index < 7; index++) {
+        await ok('admin/content/packages', 'POST', {
+          familyCode: `${family}-${index}`,
+          packageVersion: 1,
+          name: `TEST ONLY Search Sentinel ${index}`,
+          assessmentType: 'TRYOUT',
+          source: {
+            sourceNamespace: `${namespace}_search`,
+            sourceName: 'TEST ONLY Search Source',
+            sourceReference: 'TEST ONLY search fixture',
+          },
+        });
+      }
+      const query =
+        'usageType=TRYOUT&search=search%20sentinel&status=DRAFT&source=search%20source&limit=5';
+      const first = await ok<{ items: { id: string }[]; total: number }>(
+        `admin/content/packages?${query}`,
+      );
+      const second = await ok<{ items: { id: string }[]; total: number }>(
+        `admin/content/packages?${query}&offset=5`,
+      );
+      expect(first.total).toBe(7);
+      expect(second.total).toBe(7);
+      expect(first.items).toHaveLength(5);
+      expect(second.items).toHaveLength(2);
+      expect(new Set([...first.items, ...second.items].map((item) => item.id)).size).toBe(7);
+      expect(
+        (await ok<{ total: number }>(`admin/content/packages?search=${family.toLowerCase()}-6`))
+          .total,
+      ).toBe(1);
+      expect((await ok<{ total: number }>('admin/content/packages?search=%25')).total).toBe(0);
+      expect(
+        (
+          await ok<{ total: number }>(
+            `admin/content/packages?${query.replace('DRAFT', 'ARCHIVED')}`,
+          )
+        ).total,
+      ).toBe(0);
+      expect((await request(`admin/content/packages?search=${'x'.repeat(161)}`)).status).toBe(400);
     });
     it('validates ten samples without creating import records; media may be held', async () => {
       const r = await ok<ImportReportDto>('admin/content/import-validations', 'POST', body());
@@ -1098,7 +1206,7 @@ describe.skipIf(!testUrl)(
           packageVersion: 1,
           name: `TEST ONLY ${usage} publication`,
           assessmentType: usage,
-          isDemo: true,
+          isDemo: usage !== 'PRETEST',
           source,
           ...(usage === 'DRILL'
             ? { levelId: scope!.level_id }
@@ -1319,7 +1427,11 @@ describe.skipIf(!testUrl)(
         expect(pins!.status).toBe('PUBLISHED');
         const [runtimePin] =
           await owner`SELECT frozen_at is not null as frozen, curriculum_approval->>'manifestDigest'=manifest_digest as approved FROM assessment_packages WHERE id=${pack.id}`;
-        if (usage === 'TRYOUT') expect(runtimePin).toMatchObject({ frozen: true, approved: true });
+        if (usage === 'TRYOUT' || usage === 'PRETEST')
+          expect(runtimePin).toMatchObject({ frozen: true, approved: true });
+        const available = await ok<ContentPackageDetailDto>(`admin/content/packages/${pack.id}`);
+        if (usage === 'PRETEST') expect(available.availability?.state).toBe('AVAILABLE');
+        if (usage === 'TRYOUT') expect(available.availability?.state).toBe('SCHEDULED');
         expect(pins!.blueprint_version_id).toBeTruthy();
         expect(pins!.scoring_policy_version_id).toBeTruthy();
         expect(pins!.curriculum_approval.manifestDigest).toMatch(/^[a-f0-9]{64}$/);
@@ -1402,8 +1514,103 @@ describe.skipIf(!testUrl)(
       expect(
         (await media.links('Bearer student', instance, 'REVIEW')).media.map((a) => a.assetId),
       ).toEqual(['qa-stem', 'qa-explanation']);
-      const pretest = await new PretestService(identity).start('Bearer student', scope!.chapter_id);
+      const pretests = new PretestService(identity);
+      expect(await pretests.chapter('Bearer student', scope!.chapter_id)).toMatchObject({
+        state: 'available',
+        canStart: true,
+        isDemo: false,
+      });
+      const pretest = await pretests.start('Bearer student', scope!.chapter_id);
       expect(pretest.questions).toHaveLength(20);
+      expect((await pretests.start('Bearer student', scope!.chapter_id)).id).toBe(pretest.id);
+      await pretests.saveAnswer(
+        'Bearer student',
+        pretest.id,
+        pretest.questions[0]!.questionInstanceId,
+        { optionId: 'A' },
+        0,
+      );
+      expect((await pretests.attempt('Bearer student', pretest.id)).questions[0]).toMatchObject({
+        selectedOptionId: 'A',
+        revision: 1,
+      });
+      for (const question of pretest.questions.slice(1))
+        await pretests.saveAnswer(
+          'Bearer student',
+          pretest.id,
+          question.questionInstanceId,
+          { optionId: 'A' },
+          0,
+        );
+      const completed = await pretests.submit('Bearer student', pretest.id);
+      expect(completed.questionCount).toBe(20);
+      expect(await pretests.submit('Bearer student', pretest.id)).toEqual(completed);
+      expect(await pretests.chapter('Bearer student', scope!.chapter_id)).toMatchObject({
+        state: 'completed',
+        canStart: false,
+        canSkip: false,
+      });
+      await expect(pretests.start('Bearer student', scope!.chapter_id)).rejects.toMatchObject({
+        status: 409,
+      });
+      const [pretestEffects] =
+        await owner`SELECT (SELECT count(*)::int FROM xp_ledger WHERE attempt_id=${pretest.id}) AS xp, (SELECT count(*)::int FROM analytics_outbox WHERE entity_id=${pretest.id} AND event_name='pretest_completed') AS completions`;
+      expect(pretestEffects).toMatchObject({ xp: 0, completions: 1 });
+      const [officialPretest] =
+        await owner`SELECT is_demo,frozen_at,curriculum_approval->>'manifestDigest'=manifest_digest AS approved FROM assessment_packages WHERE id=${published.find((p) => p.usage === 'PRETEST')!.id}`;
+      expect(officialPretest).toMatchObject({ is_demo: false, approved: true });
+      expect(officialPretest!.frozen_at).toBeTruthy();
+      async function successor(originalId: string, packageVersion: number) {
+        const original = await ok<ContentPackageDetailDto>(`admin/content/packages/${originalId}`);
+        const next = await ok<{ id: string }>('admin/content/packages', 'POST', {
+          familyCode: original.familyCode,
+          packageVersion,
+          name: 'TEST ONLY reviewed successor',
+          assessmentType: original.assessmentType,
+          isDemo: original.isDemo,
+          source: original.source,
+          ...(original.assessmentType === 'PRETEST' ? { chapterId: original.chapterId } : {}),
+        });
+        await ok(`admin/content/packages/${next.id}`, 'PATCH', {
+          expectedRevision: 0,
+          name: 'TEST ONLY reviewed successor',
+          questionVersionIds: original.items.map((i) => i.questionVersionId),
+        });
+        await ok(`admin/content/packages/${next.id}/approval`, 'POST', {
+          expectedRevision: 1,
+          confirmed: true,
+          reference: 'TEST ONLY successor approval',
+        });
+        await ok(`admin/content/packages/${next.id}/publish`, 'POST', { expectedRevision: 1 });
+        return next.id;
+      }
+      const pretestId = published.find((p) => p.usage === 'PRETEST')!.id;
+      const nextPretest = await successor(pretestId, 2);
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${pretestId}`)).availability,
+      ).toMatchObject({
+        state: 'BLOCKED',
+        blockers: ['PRETEST_NOT_SELECTED_OR_POLICY_UNSUPPORTED'],
+      });
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${nextPretest}`)).availability
+          ?.state,
+      ).toBe('AVAILABLE');
+      expect(await pretests.result('Bearer student', pretest.id)).toEqual(completed);
+      const scheduledTryout = published.find((p) => p.usage === 'TRYOUT')!.id;
+      const firstTryout = await successor(scheduledTryout, 2);
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${firstTryout}`)).availability
+          ?.state,
+      ).toBe('AVAILABLE');
+      const latestTryout = await successor(scheduledTryout, 3);
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${firstTryout}`)).availability,
+      ).toMatchObject({ state: 'BLOCKED', blockers: ['TRYOUT_NOT_CURRENT_PACKAGE'] });
+      expect(
+        (await ok<ContentPackageDetailDto>(`admin/content/packages/${latestTryout}`)).availability
+          ?.state,
+      ).toBe('AVAILABLE');
       const [partialStudent] =
         await owner`SELECT id FROM users WHERE role='STUDENT' AND display_name='otherStudent' LIMIT 1`;
       const tryoutId = published.find((p) => p.usage === 'TRYOUT')!.id;
@@ -1534,6 +1741,47 @@ describe.skipIf(!testUrl)(
       );
     });
 
+    it('renames a draft without replacing durable package items or their points and rejects stale writes', async () => {
+      const [existing] =
+        await owner`SELECT id FROM assessment_packages p WHERE p.assessment_type='TRYOUT' AND p.status='PUBLISHED' AND EXISTS(SELECT 1 FROM package_items i WHERE i.package_id=p.id) LIMIT 1`;
+      const original = await ok<ContentPackageDetailDto>(`admin/content/packages/${existing!.id}`);
+      const draft = await ok<{ id: string }>('admin/content/packages', 'POST', {
+        assessmentType: 'TRYOUT',
+        familyCode: `RENAME-${suffix}`,
+        packageVersion: 1,
+        name: 'TEST ONLY before rename',
+        source: original.source,
+      });
+      const questionVersionIds = original.items.map((item) => item.questionVersionId);
+      await ok(`admin/content/packages/${draft.id}`, 'PATCH', {
+        expectedRevision: 0,
+        name: 'TEST ONLY before rename',
+        questionVersionIds,
+      });
+      await owner`UPDATE package_items SET max_points=2.75 WHERE package_id=${draft.id}`;
+      const before =
+        await owner`SELECT id,question_version_id,display_order,max_points FROM package_items WHERE package_id=${draft.id} ORDER BY display_order`;
+      await ok(`admin/content/packages/${draft.id}`, 'PATCH', {
+        expectedRevision: 1,
+        name: 'TEST ONLY after rename',
+        questionVersionIds,
+      });
+      const after =
+        await owner`SELECT id,question_version_id,display_order,max_points FROM package_items WHERE package_id=${draft.id} ORDER BY display_order`;
+      expect(after).toEqual(before);
+      expect((await ok<ContentPackageDetailDto>(`admin/content/packages/${draft.id}`)).name).toBe(
+        'TEST ONLY after rename',
+      );
+      expect(
+        (
+          await request(`admin/content/packages/${draft.id}`, 'PATCH', {
+            expectedRevision: 1,
+            name: 'TEST ONLY stale',
+            questionVersionIds,
+          })
+        ).status,
+      ).toBe(409);
+    });
     it('tracks upload-first intake, source recovery, draft edits, idempotency and one-confirmation publication', async () => {
       const ExcelJS = (await import('exceljs')).default;
       const first = samples[0]!;

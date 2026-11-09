@@ -1,11 +1,13 @@
 'use client';
 
-import { useEffect, useRef, useState, type ReactNode } from 'react';
+import { Suspense, useEffect, useRef, useState, type ReactNode } from 'react';
 import Link from 'next/link';
-import { usePathname, useRouter } from 'next/navigation';
+import { usePathname, useRouter, useSearchParams } from 'next/navigation';
 import { BottomNav, Brand, Dialog, Icon, TopBar, type IconName, type TopBarProps } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { activeAdminHref, adminNavigation } from '@/features/admin/navigation';
+import { adminBreadcrumbs } from '@/features/admin/breadcrumbs';
+import { useAdminNavigation } from '@/features/admin/use-admin-navigation';
 import { AdminAccount, AdminNavigation } from './admin-navigation';
 
 type Area = 'student' | 'teacher' | 'admin';
@@ -35,19 +37,7 @@ const navigation: Record<Area, NavigationItem[]> = {
   admin: [],
 };
 
-export function AppShell({
-  area = 'student',
-  title,
-  subtitle,
-  children,
-  backHref,
-  focus = false,
-  actions,
-  headerVariant,
-  mobileHeader,
-  showTopbarProfile = true,
-  className = '',
-}: {
+type AppShellProps = {
   area?: Area;
   title?: string;
   subtitle?: string | undefined;
@@ -59,7 +49,41 @@ export function AppShell({
   mobileHeader?: ReactNode;
   showTopbarProfile?: boolean;
   className?: string;
-}) {
+};
+
+export function AppShell(props: AppShellProps) {
+  return props.area === 'admin' ? (
+    <Suspense fallback={null}>
+      <AdminShell {...props} />
+    </Suspense>
+  ) : (
+    <Shell {...props} />
+  );
+}
+
+function AdminShell(props: AppShellProps) {
+  const search = useSearchParams().toString();
+  // Notify URL-backed panels after Next Link navigation as well as native history updates.
+  useEffect(() => {
+    window.dispatchEvent(new Event('numora-admin-url'));
+  }, [search]);
+  return <Shell {...props} adminSearch={search} />;
+}
+
+function Shell({
+  area = 'student',
+  title,
+  subtitle,
+  children,
+  backHref,
+  focus = false,
+  actions,
+  headerVariant,
+  mobileHeader,
+  className = '',
+  adminSearch = '',
+  showTopbarProfile = true,
+}: AppShellProps & { adminSearch?: string }) {
   const pathname = usePathname();
   const router = useRouter();
   const { state, logout } = useAuth();
@@ -74,7 +98,13 @@ export function AppShell({
   const isStudent = area === 'student';
   const isAdmin = area === 'admin';
   const adminItems = adminNavigation(profile);
-  const adminActive = activeAdminHref(pathname, adminItems);
+  const adminActive = activeAdminHref(pathname, adminItems, adminSearch);
+  const dropdowns = useAdminNavigation(
+    isAdmin ? profile : null,
+    adminItems,
+    adminActive,
+    `${pathname}?${adminSearch}`,
+  );
   const areaName =
     area === 'student' ? 'Ruang belajar' : area === 'teacher' ? 'Ruang guru' : 'Ruang admin';
   useEffect(() => {
@@ -168,6 +198,8 @@ export function AppShell({
             <AdminNavigation
               items={adminItems}
               activeHref={adminActive}
+              openIds={dropdowns.openIds}
+              onToggle={dropdowns.toggle}
               onNavigate={() => setMenuOpen(false)}
             />
           ) : (
@@ -235,7 +267,24 @@ export function AppShell({
               <Link className="mobile-brand" href={`/${area}`}>
                 <Brand />
               </Link>
-              {isStudent ? (
+              {isAdmin ? (
+                <nav aria-label="Breadcrumb" className="admin-navbar-breadcrumb">
+                  <ol>
+                    {adminBreadcrumbs(pathname, adminSearch, adminItems, title).map(
+                      (crumb, index) => (
+                        <li key={index}>
+                          {index > 0 && <span aria-hidden="true">/</span>}
+                          {crumb.href ? (
+                            <Link href={crumb.href}>{crumb.label}</Link>
+                          ) : (
+                            <span aria-current="page">{crumb.label}</span>
+                          )}
+                        </li>
+                      ),
+                    )}
+                  </ol>
+                </nav>
+              ) : isStudent ? (
                 !mobileHeader && (
                   <div className="student-desktop-heading">
                     {backHref && (
@@ -257,10 +306,7 @@ export function AppShell({
                 <span className="desktop-context">
                   {areaName}
                   <span>/</span>
-                  {title ||
-                    (isAdmin ? adminItems : navigation[area]).find((item) => active(item.href))
-                      ?.label ||
-                    'Beranda'}
+                  {title || navigation[area].find((item) => active(item.href))?.label || 'Beranda'}
                 </span>
               )}
             </>
@@ -286,6 +332,7 @@ export function AppShell({
                     try {
                       setLogoutError('');
                       await logout();
+                      dropdowns.clear();
                       router.replace(area === 'admin' ? '/admin/login' : '/');
                     } catch {
                       setLogoutError('Belum dapat keluar. Coba lagi.');
@@ -323,6 +370,8 @@ export function AppShell({
             <AdminNavigation
               items={adminItems}
               activeHref={adminActive}
+              openIds={dropdowns.openIds}
+              onToggle={dropdowns.toggle}
               onNavigate={() => setMenuOpen(false)}
               mobile
             />

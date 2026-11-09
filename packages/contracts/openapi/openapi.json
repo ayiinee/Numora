@@ -4801,10 +4801,63 @@
         ]
       }
     },
+    "/api/v1/admin/content/packages/{id}/intake": {
+      "post": {
+        "operationId": "ContentPackagesController_prepareLegacy",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareLegacyPretestDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
     "/api/v1/admin/content/packages": {
       "get": {
         "operationId": "ContentPackagesController_list",
         "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
           {
             "name": "usageType",
             "required": false,
@@ -12243,6 +12296,37 @@
           "id"
         ]
       },
+      "PackageAvailabilityDto": {
+        "type": "object",
+        "properties": {
+          "state": {
+            "type": "string",
+            "enum": [
+              "DRAFT",
+              "BLOCKED",
+              "SCHEDULED",
+              "AVAILABLE",
+              "CLOSED",
+              "ARCHIVED"
+            ]
+          },
+          "blockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "checkedAt": {
+            "type": "string",
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "state",
+          "blockers",
+          "checkedAt"
+        ]
+      },
       "PackageApprovalDto": {
         "type": "object",
         "properties": {
@@ -12648,6 +12732,44 @@
       "ContentPackageDetailDto": {
         "type": "object",
         "properties": {
+          "blueprintVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "frozenAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "releaseAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "closeAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "availability": {
+            "$ref": "#/components/schemas/PackageAvailabilityDto"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "IMPORT",
+              "LEGACY_MANUAL"
+            ]
+          },
+          "legacyPreparation": {
+            "type": "string",
+            "enum": [
+              "CONTINUE_IMPORT",
+              "NEW_VERSION"
+            ],
+            "nullable": true
+          },
           "curriculumApproval": {
             "nullable": true,
             "type": "object",
@@ -15011,9 +15133,62 @@
           "report"
         ]
       },
+      "PrepareLegacyPretestDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "source": {
+            "$ref": "#/components/schemas/PackageSourceDto"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "source"
+        ]
+      },
       "ContentPackageDto": {
         "type": "object",
         "properties": {
+          "blueprintVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "scoringPolicyVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "frozenAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "releaseAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "closeAt": {
+            "type": "string",
+            "nullable": true
+          },
+          "availability": {
+            "$ref": "#/components/schemas/PackageAvailabilityDto"
+          },
+          "origin": {
+            "type": "string",
+            "enum": [
+              "IMPORT",
+              "LEGACY_MANUAL"
+            ]
+          },
+          "legacyPreparation": {
+            "type": "string",
+            "enum": [
+              "CONTINUE_IMPORT",
+              "NEW_VERSION"
+            ],
+            "nullable": true
+          },
           "curriculumApproval": {
             "nullable": true,
             "type": "object",

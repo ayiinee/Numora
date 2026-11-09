@@ -33,15 +33,19 @@ export type PublishContentPackageDto = { "confirmed"?: true; "expectedRevision":
 
 export type ArchiveContentPackageDto = { "expectedRevision": number; };
 
+export type PrepareLegacyPretestDto = { "expectedRevision": number; "source": PackageSourceDto; };
+
+export type PackageAvailabilityDto = { "state": "DRAFT" | "BLOCKED" | "SCHEDULED" | "AVAILABLE" | "CLOSED" | "ARCHIVED"; "blockers": (string)[]; "checkedAt": string; };
+
 export type PackageApprovalDto = { "reference": string; "approvedAt": string; };
 
 export type UpdateContentPackageDto = { "expectedRevision": number; "name": string; "questionVersionIds": (string)[]; };
 
-export type ContentPackageDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
+export type ContentPackageDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
 
 export type ContentPackagesDto = { "items": (ContentPackageDto)[]; "total": number; };
 
-export type ContentPackageDetailDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
+export type ContentPackageDetailDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
 
 export type ContentPackageItemDto = { "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
 

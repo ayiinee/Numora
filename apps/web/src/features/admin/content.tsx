@@ -218,6 +218,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
     const url = new URL(window.location.href);
     url.searchParams.set('view', next);
     window.history.pushState(null, '', url);
+    window.dispatchEvent(new Event('numora-admin-url'));
     resetView(next);
   }
   function resetView(next: View) {
@@ -316,7 +317,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
     : false;
   return (
     <AdminFrame
-      title="Konten & assessment"
+      title="Bank konten"
       description="Kelola konten, tinjau laporan, dan pantau proses IRT."
       icon="book"
       management
@@ -331,7 +332,11 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
             onChange={(event) => navigate(contentView(event.target.value))}
           >
             {views
-              .filter((item) => item.id !== 'audit' || canReadAudit)
+              .filter(
+                (item) =>
+                  !['packages', 'drillPackages', 'directedPackages', 'irt'].includes(item.id) &&
+                  (item.id !== 'audit' || canReadAudit),
+              )
               .map((item) => (
                 <option key={item.id} value={item.id}>
                   {item.label}
@@ -342,8 +347,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
         <nav aria-label="Pengelolaan Admin" className="assessment-navigation">
           {[
             { label: 'Konten', ids: ['questions', 'curriculum', 'videos'] },
-            { label: 'Paket assessment', ids: ['directedPackages', 'drillPackages', 'packages'] },
-            { label: 'Peninjauan', ids: ['verification', 'reports', 'irt', 'audit'] },
+            { label: 'Peninjauan', ids: ['verification', 'reports', 'audit'] },
           ].map((group) => (
             <div className="assessment-nav-group" key={group.label}>
               <span>{group.label}</span>
