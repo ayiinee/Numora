@@ -147,7 +147,7 @@ it('exchanges the callback code only once under StrictMode and returns to the de
       <CallbackScreen />
     </StrictMode>,
   );
-  await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/'));
+  await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/login'));
   expect(mocks.exchange).toHaveBeenCalledExactlyOnceWith('fixture-code');
 });
 it('shows a cancelled callback without rendering provider error details or exchanging a code', async () => {
@@ -161,7 +161,7 @@ it('shows a cancelled callback without rendering provider error details or excha
   expect(screen.queryByText(/untrusted-secret/)).toBeNull();
   expect(mocks.exchange).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Coba lagi' }));
-  expect(mocks.replace).toHaveBeenCalledWith('/');
+  expect(mocks.replace).toHaveBeenCalledWith('/login');
 });
 it('retains role choice after registration failure and submits only the selected role', async () => {
   registration();
@@ -196,7 +196,7 @@ it('keeps the disabled-account exit retryable without presenting registration or
   fireEvent.click(screen.getByRole('button', { name: 'Keluar' }));
   await screen.findByText('Belum dapat keluar. Coba lagi.');
   await act(async () => fireEvent.click(screen.getByRole('button', { name: 'Keluar' })));
-  expect(mocks.replace).toHaveBeenCalledWith('/');
+  expect(mocks.replace).toHaveBeenCalledWith('/login');
 });
 
 function unverifiedTeacher() {

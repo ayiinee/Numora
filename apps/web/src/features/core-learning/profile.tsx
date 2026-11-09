@@ -71,7 +71,7 @@ function ProfileContent({ token }: { token: string }) {
     setError('');
     try {
       await logout();
-      router.replace('/');
+      router.replace('/login');
     } catch {
       setError('Belum dapat keluar. Coba lagi.');
       setBusy(false);

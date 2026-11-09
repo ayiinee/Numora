@@ -1245,7 +1245,7 @@ test('joined class affiliation persists after signing out and back in', async ({
   await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await page.evaluate(() => localStorage.removeItem('test-logged-out'));
   await page.reload();
   await expect(page).toHaveURL(/\/student$/);
@@ -1403,7 +1403,7 @@ test('class join link warns an already affiliated Student and stays server-autho
   ).toBeVisible();
 });
 
-test('class join link opened while signed out falls back to login and loses the code', async ({
+test('class join link opened while signed out opens login and saves the invitation', async ({
   page,
 }) => {
   await fixtures(page);
@@ -1414,7 +1414,10 @@ test('class join link opened while signed out falls back to login and loses the 
   });
 
   await page.goto('/student/join?code=FIX234');
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
+  expect(await page.evaluate(() => sessionStorage.getItem('numora:class-invitation'))).toBe(
+    'FIX234',
+  );
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
 });
 
@@ -1499,9 +1502,9 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   );
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar dari akun' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await page.goto('/teacher/profile');
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
 });
 
@@ -1565,7 +1568,7 @@ test('Teacher sees distinct latest and best Drill scores but no foreign Class pr
 test('signed-out login offers Google authentication without removed demo destinations', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/login');
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
 });

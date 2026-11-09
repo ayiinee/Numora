@@ -193,7 +193,7 @@ describe('class join link destination', () => {
     fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
 
     expect((await screen.findByRole('alert')).textContent).toBe('Sesi berakhir. Masuk kembali');
-    expect(screen.getByRole('link', { name: 'Masuk kembali' }).getAttribute('href')).toBe('/');
+    expect(screen.getByRole('link', { name: 'Masuk kembali' }).getAttribute('href')).toBe('/login');
   });
 
   it('keeps the retry on the same code after a failed join', async () => {

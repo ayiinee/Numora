@@ -85,7 +85,7 @@ it('provides a login destination after a create request reports an expired sessi
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX A' } });
   fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
   expect((await screen.findByRole('link', { name: 'Masuk kembali' })).getAttribute('href')).toBe(
-    '/',
+    '/login',
   );
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('IX A');
 });
@@ -203,7 +203,7 @@ it('keeps the account available after logout failure and retries the existing lo
   await screen.findByRole('alert');
   expect(auth.replace).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
-  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/login'));
   expect(auth.logout).toHaveBeenCalledTimes(2);
 });
 
