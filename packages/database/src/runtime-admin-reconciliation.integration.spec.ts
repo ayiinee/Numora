@@ -148,7 +148,9 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
               preserved.ledger,
             );
             expect(await db`SELECT * FROM assessment_attempts WHERE id=${preserved.id}`).toEqual(
-              preserved.attempt,
+              // Migration 0050 adds a nullable delivery pin to legacy attempts.
+              // Assert its exact default as well as every historical field.
+              preserved.attempt.map((attempt) => ({ ...attempt, tryout_batch_id: null })),
             );
             expect(
               await db`SELECT * FROM attempt_answers WHERE attempt_item_id=${preserved.itemId}`,
