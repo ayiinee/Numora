@@ -148,7 +148,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
               preserved.ledger,
             );
             expect(await db`SELECT * FROM assessment_attempts WHERE id=${preserved.id}`).toEqual(
-              preserved.attempt,
+              preserved.attempt.map((row) => ({ ...row, drill_timer: null })),
             );
             expect(
               await db`SELECT * FROM attempt_answers WHERE attempt_item_id=${preserved.itemId}`,

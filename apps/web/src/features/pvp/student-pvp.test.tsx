@@ -128,7 +128,7 @@ it('does not connect or expose create commands when server availability is false
   expect(screen.queryByRole('button', { name: 'Buat room' })).toBeNull();
 });
 
-it('shows the server temporary-content notice without claiming calibrated question difficulty', async () => {
+it('identifies the temporary question bank in each difficulty choice', async () => {
   const notice = 'Soal sementara; pilihan tingkat mengatur waktu 30, 45, dan 60 detik.';
   vi.mocked(request).mockImplementation(async (_token, path) =>
     path === '/pvp/availability'
@@ -142,8 +142,8 @@ it('shows the server temporary-content notice without claiming calibrated questi
       <PvpScreen />
     </StudentAccess>,
   );
-  await screen.findByText(notice);
-  expect(screen.getAllByText('Soal dari bank sementara')).toHaveLength(3);
+  expect(await screen.findAllByText('Soal dari bank sementara')).toHaveLength(3);
+  expect(screen.queryByText(notice)).toBeNull();
   expect(screen.queryByText('Duel matematika tingkat mudah')).toBeNull();
   expect(screen.getByText('30 dtk / soal')).toBeTruthy();
   await waitFor(() =>

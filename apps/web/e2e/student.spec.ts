@@ -387,13 +387,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
               attemptId: 'completed-fixture',
               activity: 'drill',
               title: 'Faktorisasi Aljabar Kuadrat',
+              chapterId,
+              subchapterId,
+              levelId,
               subchapterTitle: 'Subbab 2.1',
               submittedAt: '2026-10-03T02:30:00Z',
               resultState: 'ready',
               score: 85,
               isDemo: false,
               xpState: 'pending',
-              starsState: 'pending',
+              starsState: 'ready',
+              stars: 1,
             },
           ],
           features: {
@@ -463,8 +467,10 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByText('1.890 XP')).toBeVisible();
     await expect(page.getByText('Bu Ratna, M.Pd.')).toBeVisible();
     await page.evaluate(() => document.fonts.ready);
+    const pattern = /header-pattern\.png/;
+    await expect(page.locator('.sh-identity:visible')).toHaveCSS('background-image', pattern);
     const imageSlots = [
-      '.sh-identity__pattern',
+      '.recent-activity__art img[src="/illustrations/student-heroes/drill-owl.webp"]',
       '.sh-identity__bell img',
       '.sh-identity__announcement img',
       '.sh-shortcut__icon img',
@@ -488,17 +494,17 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         .toBe(true);
     }
     for (const [slide, asset] of [
-      ['drill', 'drill-owl-background.png'],
-      ['tryout', 'tryout-exam-background.png'],
+      ['drill', 'drill-owl.webp'],
+      ['tryout', 'tryout-exam.webp'],
     ]) {
       const background = await page
         .locator(`.sh-carousel__slide--${slide} .sh-hero`)
-        .evaluate((hero) => getComputedStyle(hero).backgroundImage);
+        .evaluate((hero) => getComputedStyle(hero, '::after').backgroundImage);
       expect(background).toContain(asset);
       expect(
         await page.evaluate(async (filename) => {
           const picture = new Image();
-          picture.src = `/illustrations/student-home/${filename}`;
+          picture.src = `/illustrations/student-heroes/${filename}`;
           await picture.decode();
           return picture.naturalWidth > 0 && picture.naturalHeight > 0;
         }, asset),
@@ -514,8 +520,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         '.sh-class',
         '.sh-feedback',
         '.student-bottom-nav',
-        '.sh-activity-entry',
-        '.sh-activity',
+        '.recent-activity__card',
       ];
       return {
         width: innerWidth,
@@ -538,6 +543,26 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       };
     });
     expect(bounds.overflow).toBe(false);
+    if (width >= 960) {
+      const desktop = await page.locator('.sh-layout').evaluate((layout) => {
+        const rect = (selector: string) => layout.querySelector(selector)!.getBoundingClientRect();
+        const identity = rect('.sh-desktop-identity');
+        const main = rect('.sh-main');
+        const aside = rect('.sh-aside');
+        return {
+          headerSpansColumns: identity.left === main.left && identity.right === aside.right,
+          columnsAlign: main.top === aside.top,
+          columnGap: aside.left - main.right,
+          asideWidth: aside.width,
+        };
+      });
+      expect(desktop).toEqual({
+        headerSpansColumns: true,
+        columnsAlign: true,
+        columnGap: 24,
+        asideWidth: 300,
+      });
+    }
     if (width < 700) {
       const cards = bounds.cards.filter((card) =>
         [
@@ -703,6 +728,73 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     }
     await page.locator('.sh-identity__bell:visible').click();
     await expect(page).toHaveURL('/student/notifications');
+    await expect(page.locator('.notification-header')).toHaveCSS('background-image', pattern);
+    if (width === 390) {
+      await page.goto('/student');
+      const homeRecent = page.locator('.recent-activity__card');
+      await expect(homeRecent.getByText('85%')).toBeVisible();
+      await expect(homeRecent.getByText('1/3 bintang')).toBeVisible();
+      await expect(
+        homeRecent.getByRole('link', { name: 'Lanjutkan', exact: true }),
+      ).toHaveAttribute('href', `/student/drill/${attemptId}`);
+      await homeRecent.screenshot({ path: testInfo.outputPath('beranda-aktivitas-390.png') });
+      const homeHero = page.locator('.sh-carousel__slide--drill .sh-hero');
+      const homeHeight = await homeHero.evaluate(
+        (element) => (element as HTMLElement).offsetHeight,
+      );
+
+      await page.goto('/student/learn');
+      const recent = page.locator('.recent-activity__card');
+      await expect(recent.locator('.recent-activity__art img')).toHaveAttribute(
+        'src',
+        '/illustrations/student-heroes/drill-owl.webp',
+      );
+      await expect(recent).toHaveCSS('background-image', /linear-gradient/);
+      await expect(recent.getByRole('link', { name: 'Lanjutkan', exact: true })).toHaveAttribute(
+        'href',
+        `/student/drill/${attemptId}`,
+      );
+      await expect(recent.getByText('85%')).toBeVisible();
+      await expect(recent.getByText('1/3 bintang')).toBeVisible();
+      await recent.screenshot({ path: testInfo.outputPath('latihan-aktivitas-390.png') });
+
+      await page.goto(`/student/learn/${chapterId}`);
+      await expect(
+        page.locator('.app-mobile-header').getByRole('link', { name: 'Semua bab' }),
+      ).toHaveAttribute('href', '/student/learn');
+
+      await page.goto('/student/pvp');
+      const pvpHero = page.locator('.student-illustrated-hero--pvp');
+      expect(await pvpHero.evaluate((element) => (element as HTMLElement).offsetHeight)).toBe(
+        homeHeight,
+      );
+      await pvpHero.screenshot({ path: testInfo.outputPath('pvp-hero-390.png') });
+
+      await page.goto('/student/profile');
+      const profileHeader = page.locator('main .materials-header');
+      await expect(profileHeader.getByRole('heading', { name: 'Profil' })).toHaveCSS(
+        'text-align',
+        'center',
+      );
+      await expect(profileHeader).toHaveCSS('background-image', pattern);
+      await expect(profileHeader.getByRole('link')).toHaveCount(0);
+      await expect(page.locator('#pengaturan-akun')).toBeAttached();
+      await profileHeader.screenshot({ path: testInfo.outputPath('profil-header-390.png') });
+    }
+    if (width === 1440) {
+      await page.goto(`/student/learn/${chapterId}`);
+      const header = page.locator('.app-mobile-header .materials-header');
+      await expect(header.getByRole('link', { name: 'Semua bab' })).toBeVisible();
+      await expect(header).toHaveCSS('background-image', pattern);
+      await expect(page.getByRole('heading', { name: 'Latihan Soal', exact: true })).toHaveCount(1);
+      await page.goto('/student/assessment');
+      const progressHeader = page.locator('.app-topbar');
+      await expect(
+        progressHeader.getByRole('heading', { name: 'Progres & riwayat' }),
+      ).toBeVisible();
+      await expect(progressHeader).toHaveCSS('background-image', pattern);
+      await expect(progressHeader.locator('.desktop-context')).toHaveCount(0);
+    }
     expect(mutations).toEqual([]);
   });
 }
@@ -746,10 +838,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440])
     );
     await page.locator(`a[href="/student/learn/${chapterId}"]`).click();
     await page.getByRole('link', { name: /Persamaan fixture/ }).click();
-    await page
-      .locator('.adventure-focus')
-      .getByRole('button', { name: 'Lanjutkan latihan' })
-      .click();
+    await page.getByRole('button', { name: /^Level 1,/ }).click();
+    await page.getByRole('dialog').getByRole('button', { name: 'Lanjutkan latihan' }).click();
     await page.getByRole('radio').first().check();
     await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
     await page.reload();
@@ -1094,7 +1184,7 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
   }) => {
     await fixtures(page);
     await page.goto('/student');
-    await page.getByRole('link', { name: 'Buka profil', exact: true }).click();
+    await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
     await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
@@ -1478,6 +1568,112 @@ test('signed-out login offers Google authentication without removed demo destina
   await page.goto('/');
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
+});
+
+test('Drill timer waits for explicit resume and pauses on confirmed exit', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 668 });
+  await fixtures(page);
+  const sessionId = '77000000-0000-4777-8777-000000000001';
+  let running = false;
+  let resumeCount = 0;
+  let pauseCount = 0;
+  let elapsedMs = 42_000;
+  const clock = () => ({
+    elapsedMs,
+    remainingMs: running ? 30_000 : 0,
+    sessionId: running ? sessionId : null,
+  });
+  const attempt = () => ({
+    id: attemptId,
+    levelId,
+    levelTitle: 'Drill timer fixture',
+    startedAt: '2026-10-01T00:00:00Z',
+    status: 'inProgress',
+    isDemo: true,
+    clock: clock(),
+    questions: running
+      ? [
+          {
+            questionInstanceId: questionId,
+            stem: 'Berapa hasil sqrt(16)?',
+            options: [
+              { id: 'A', text: '\\frac{8}{2}' },
+              { id: 'B', text: 'π' },
+            ],
+            selectedOptionId: 'A',
+          },
+        ]
+      : [],
+  });
+  await page.route(`**/api/v1/assessment-attempts/${attemptId}`, (route) =>
+    route.fulfill({ json: attempt() }),
+  );
+  await page.route('**/api/v1/assessments/drill/attempts', (route) => {
+    expect(route.request().postDataJSON()).toEqual({ levelId });
+    resumeCount++;
+    running = true;
+    return route.fulfill({ json: attempt() });
+  });
+  await page.route(`**/api/v1/assessment-attempts/${attemptId}/drill-clock`, (route) => {
+    const command = route.request().postDataJSON();
+    expect(command.sessionId).toBe(sessionId);
+    if (command.action === 'pause') {
+      running = false;
+      elapsedMs = 45_000;
+      pauseCount++;
+    }
+    return route.fulfill({ json: clock() });
+  });
+
+  const url = `/student/drill/${attemptId}`;
+  const duration = page.getByRole('group', { name: 'Waktu tersimpan' });
+  const resume = page.getByRole('button', { name: 'Lanjutkan latihan' });
+  async function expectPausedLayout(width: number) {
+    await expect(duration).toBeVisible();
+    await expect(resume).toBeVisible();
+    const timerBox = await duration.boundingBox();
+    const buttonBox = await resume.boundingBox();
+    expect(timerBox!.y + timerBox!.height).toBeLessThan(buttonBox!.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    );
+    await page.screenshot({
+      path: testInfo.outputPath(`drill-paused-${width}.png`),
+      style: 'nextjs-portal { display: none !important; }',
+    });
+  }
+
+  await page.goto(url);
+  await expect(page.getByRole('heading', { name: 'Latihan dijeda' })).toBeVisible();
+  await expect(duration).toContainText('0:42');
+  await expectPausedLayout(320);
+  expect(resumeCount).toBe(0);
+  await page.setViewportSize({ width: 634, height: 668 });
+  await resume.click();
+  await expect(page.getByLabel('Waktu berjalan')).toBeVisible();
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '15px');
+  await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
+  await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
+  await expect(page.locator('.practice-option__text math mfrac')).toHaveCount(1);
+  await expect(page.locator('.practice-option__text math mi')).toHaveText('π');
+  await expect(page.locator('.practice-option__indicator').first()).toBeHidden();
+  await expect(page.locator('.practice-option__text').first()).toHaveCSS('font-weight', '700');
+  await expect(page.getByRole('radio').first()).toBeChecked();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('Timer akan dijeda');
+    await dialog.accept();
+  });
+  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await expect(page).toHaveURL('/student/learn');
+  await expect.poll(() => pauseCount).toBe(1);
+  await page.goto(url);
+  await expect(duration).toContainText('0:45');
+  await expectPausedLayout(1280);
+  expect(resumeCount).toBe(1);
 });
 
 test('Drill result retry uses its server level and navigates to a new server attempt', async ({
@@ -1894,8 +2090,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await fixtures(page);
     const output = resolve(process.cwd(), '../../.tmp/redesign-phase3');
     await mkdir(output, { recursive: true });
-    await page.route('http://localhost:3301/api/v1/students/me/dashboard', (route) =>
-      route.fulfill({
+    await page.route('http://localhost:3301/api/v1/students/me/dashboard', async (route) => {
+      return route.fulfill({
         json: {
           displayName: 'Kirino S.',
           totalXp: 320,
@@ -1916,8 +2112,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             pendingPolicies: [],
           },
         },
-      }),
-    );
+      });
+    });
     await page.route('http://localhost:3301/api/v1/tryout/packages/current', (route) =>
       route.fulfill({
         json: {
@@ -1964,8 +2160,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             ][i],
             order: i + 1,
             status: i < 2 ? 'completed' : i === 2 ? 'inProgress' : 'locked',
-            latestScore: i < 2 ? 100 : null,
+            latestScore: i === 0 ? 0 : i === 1 ? 100 : null,
             bestScore: i < 2 ? 100 : null,
+            latestStars: i === 0 ? 0 : i === 1 ? 3 : i === 2 ? 2 : null,
           })),
         },
       }),
@@ -2042,9 +2239,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         overflow: document.documentElement.scrollWidth > innerWidth,
         width: innerWidth,
         cards: Array.from(
-          document.querySelectorAll(
-            '.practice-question,.adventure-summary,.adventure-focus,.drill-review',
-          ),
+          document.querySelectorAll('.practice-question,.adventure-summary,.drill-review'),
         ).map((el) => {
           const r = el.getBoundingClientRect();
           return {
@@ -2074,14 +2269,84 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.goto(`/student/learn/${chapterId}`);
     await expect(page.getByRole('link', { name: /Persamaan fixture/ })).toBeVisible();
     await capture('chapter');
+    if (width === 320) await page.setViewportSize({ width, height: 760 });
     await page.goto(`/student/learn/${chapterId}/${subchapterId}`);
+    const map = page.getByRole('list', { name: 'Peta level latihan' });
+    const currentMedal = map.getByRole('button', { name: /^Level 3,/ });
+    const firstMedal = map.getByRole('button', { name: /^Level 1,/ });
     await expect(
-      page.locator('.adventure-focus').getByRole('heading', { name: 'Bentuk Kuadrat Sempurna' }),
-    ).toBeVisible();
+      page.locator('header.adventure-summary').getByRole('heading', { level: 1 }),
+    ).toHaveText('Subbab 2.1: Faktorisasi & Bentuk Kuadrat');
+    await expect(page.locator('.learning-map-shell .app-mobile-header')).toHaveCount(0);
+    await expect(currentMedal).toBeInViewport();
+    const isAboveDock = async (medal: typeof currentMedal) => {
+      const marker = (await medal.boundingBox())!;
+      const dock = (await page.locator('.adventure-mobile-action').boundingBox())!;
+      return marker.y + marker.height <= dock.y;
+    };
+    if (width < 960) {
+      await expect.poll(() => isAboveDock(currentMedal)).toBe(true);
+    }
+    await expect(currentMedal).toHaveAttribute('aria-current', 'step');
+    await expect(currentMedal).toHaveAttribute('aria-pressed', 'true');
+    await expect(currentMedal).toHaveText('3');
+    await expect(currentMedal).toHaveAttribute('aria-label', /2 dari 3 bintang terakhir/);
+    expect((await firstMedal.boundingBox())!.y).toBeGreaterThan(
+      (await currentMedal.boundingBox())!.y,
+    );
+    const { width: medalWidth, height: medalHeight } = (await firstMedal.boundingBox())!;
+    expect(Math.min(medalWidth, medalHeight)).toBeGreaterThanOrEqual(44);
     expect(await page.locator('.level-path__step--locked button').count()).toBe(0);
     await expect(page.locator('.adventure-summary')).not.toContainText('80');
-    await expect(page.locator('.adventure-shortcuts')).toHaveCount(0);
-    await expect(page.locator('.adventure-focus')).toContainText('≥80');
+    await expect(page.getByText('Standar ketuntasan:', { exact: true })).toHaveCount(0);
+    const hideDevIndicator = 'nextjs-portal { visibility: hidden; }';
+    await page.screenshot({
+      path: resolve(output, `level-map-viewport-${width}.png`),
+      style: hideDevIndicator,
+    });
+    await firstMedal.focus();
+    await expect(firstMedal).toHaveCSS('outline-style', 'solid');
+    if (width < 960) await expect.poll(() => isAboveDock(firstMedal)).toBe(true);
+    await page.keyboard.press('Enter');
+    const detail = page.getByRole('dialog');
+    await expect(detail.getByRole('heading', { name: 'Level 1' })).toBeVisible();
+    await expect(detail.getByText('Pengenalan Suku & Faktor')).toBeVisible();
+    await expect(detail.getByText('Subbab 2.1: Faktorisasi & Bentuk Kuadrat')).toBeVisible();
+    await expect(detail.getByText('Bab 1 · Aljabar fixture')).toBeVisible();
+    const dialogBox = (await detail.boundingBox())!;
+    const viewport = page.viewportSize()!;
+    expect(Math.abs(dialogBox.x + dialogBox.width / 2 - viewport.width / 2)).toBeLessThan(12);
+    expect(Math.abs(dialogBox.y + dialogBox.height / 2 - viewport.height / 2)).toBeLessThan(3);
+    await expect(detail.getByRole('img', { name: 'Bintang terakhir: 0 / 3' })).toBeVisible();
+    await expect(detail.getByText('10 soal')).toBeVisible();
+    await expect(detail.getByText('Selesai', { exact: true })).toHaveCount(0);
+    await expect(detail.getByRole('button', { name: 'Latihan lagi' })).toBeVisible();
+    await expect(page).toHaveURL(new RegExp(`/student/learn/${chapterId}/${subchapterId}$`));
+    await page.screenshot({
+      path: resolve(output, `level-map-detail-${width}.png`),
+      style: hideDevIndicator,
+    });
+    await page.keyboard.press('Escape');
+    await expect(detail).toHaveCount(0);
+    await expect(firstMedal).toBeFocused();
+    if (width < 960) {
+      const dock = page.locator('.adventure-mobile-action');
+      await expect(dock.locator('strong')).toHaveText('Pengenalan Suku & Faktor');
+      await expect(dock.locator('small')).toHaveText('Selesai');
+      const dockButton = page.getByRole('button', { name: 'Detail level' });
+      const dockBox = (await dockButton.boundingBox())!;
+      expect(dockBox.y + dockBox.height).toBeLessThanOrEqual(
+        (await page.locator('.student-bottom-nav').boundingBox())!.y,
+      );
+      await dockButton.click();
+      await expect(detail.getByRole('heading', { name: 'Level 1' })).toBeVisible();
+      await detail.getByRole('button', { name: 'Tutup dialog' }).click();
+      await expect(dockButton).toBeFocused();
+    }
+    await currentMedal.click();
+    await expect(detail.getByRole('button', { name: 'Lanjutkan latihan' })).toBeVisible();
+    await page.keyboard.press('Escape');
+    if (width === 320) await page.setViewportSize({ width, height: 940 });
     await capture('level-map');
     await page.goto(`/student/drill/${attemptId}`);
     await page.getByRole('button', { name: 'Soal 3, terjawab', exact: true }).click();

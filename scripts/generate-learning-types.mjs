@@ -27,6 +27,8 @@ const names = [
   'PreviewMediaDto',
   'MediaLinksDto',
   'DrillQuestionDto',
+  'DrillClockDto',
+  'UpdateDrillClockDto',
   'DrillAttemptDto',
   'SavedAnswerDto',
   'ReviewedQuestionDto',

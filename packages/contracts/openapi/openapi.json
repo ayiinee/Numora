@@ -994,6 +994,51 @@
         ]
       }
     },
+    "/api/v1/assessment-attempts/{attemptId}/drill-clock": {
+      "patch": {
+        "operationId": "LearningController_drillClock",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDrillClockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillClockDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
     "/api/v1/assessment-attempts/{attemptId}/answers/{questionInstanceId}": {
       "patch": {
         "operationId": "LearningController_saveAnswer",
@@ -9438,6 +9483,29 @@
           "levelId"
         ]
       },
+      "DrillClockDto": {
+        "type": "object",
+        "properties": {
+          "elapsedMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remainingMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "elapsedMs",
+          "remainingMs",
+          "sessionId"
+        ]
+      },
       "OptionDto": {
         "type": "object",
         "properties": {
@@ -9607,6 +9675,9 @@
             "format": "date-time",
             "description": "Database time for count-up display; server timestamps own reward duration."
           },
+          "clock": {
+            "$ref": "#/components/schemas/DrillClockDto"
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -9625,6 +9696,26 @@
           "startedAt",
           "isDemo",
           "questions"
+        ]
+      },
+      "UpdateDrillClockDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "heartbeat",
+              "pause"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "action"
         ]
       },
       "SaveDrillAnswerDto": {

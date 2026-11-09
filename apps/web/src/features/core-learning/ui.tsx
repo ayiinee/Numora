@@ -42,12 +42,22 @@ export function PrimaryButton({ children, ...props }: React.ComponentProps<typeo
   return <Button {...props}>{children}</Button>;
 }
 
-export function Status({ children, title = 'Perhatian' }: { children: ReactNode; title?: string }) {
+export function Status({
+  children,
+  title = 'Perhatian',
+  illustration,
+}: {
+  children: ReactNode;
+  title?: string;
+  illustration?: ReactNode;
+}) {
   return (
     <Panel className="status-card">
-      <span className="icon-tile">
-        <Icon name="info" />
-      </span>
+      {illustration ?? (
+        <span className="icon-tile">
+          <Icon name="info" />
+        </span>
+      )}
       <h2>{title}</h2>
       <div className="status-copy">{children}</div>
     </Panel>

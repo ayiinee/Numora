@@ -391,9 +391,10 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
       'min-height',
       width < 960 ? '80px' : '64px',
     );
+    // Shared canvas follows the owner-approved token update of 8 November (docs/design/README.md).
     await expect(page.locator('.teacher-redesign-shell')).toHaveCSS(
       'background-color',
-      'rgb(243, 236, 203)',
+      'rgb(254, 253, 249)',
     );
     await expect(page.getByRole('link', { name: 'Pusat Notifikasi' })).toHaveCount(0);
     const primaryNav = page.locator(width < 960 ? '.teacher-bottom-nav' : '.teacher-sidebar__nav');

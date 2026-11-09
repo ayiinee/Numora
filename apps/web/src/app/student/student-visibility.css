@@ -1,0 +1,57 @@
+/* Student shell only: keep navigation and long content reachable. */
+.student-area .app-shell--student .app-sidebar {
+  overflow-y: auto;
+  overscroll-behavior-y: contain;
+  scrollbar-gutter: stable;
+  scroll-padding-block: var(--space-4);
+}
+
+.student-area .app-shell--student .app-sidebar > * {
+  flex-shrink: 0;
+}
+
+.student-area .app-shell--student .app-sidebar nav {
+  display: flex;
+  flex: 1 0 auto;
+  flex-direction: column;
+}
+
+.student-area .app-shell--student .app-sidebar nav a:last-child {
+  margin-top: auto;
+}
+
+@media (min-width: 960px) and (max-height: 760px) {
+  .student-area .app-shell--student .app-sidebar .app-brand {
+    margin-bottom: var(--space-5);
+  }
+
+  .student-area .app-shell--student .app-sidebar nav {
+    gap: var(--space-1);
+  }
+
+  .student-area .app-shell--student .app-sidebar nav a {
+    min-height: var(--touch-target-min);
+    padding-block: var(--space-2);
+  }
+}
+
+.student-area .app-content,
+.student-area .app-content > *,
+.student-area .app-content :is(.numora-card, .learning-panel) {
+  min-width: 0;
+}
+
+.student-area .app-content {
+  overflow-wrap: anywhere;
+}
+
+.student-area .numora-button {
+  max-width: 100%;
+  white-space: normal;
+  text-align: center;
+}
+
+.student-area .numora-button__text {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
