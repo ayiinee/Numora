@@ -335,7 +335,9 @@ for (const width of [320, 768, 1440]) {
       await expect(page.getByRole('button', { name: 'Menu navigasi' })).toBeFocused();
     }
     await page.goto('/admin/analytics');
-    await expect(page.getByRole('alert')).toContainText('Akses Dashboard Admin diperlukan.');
+    await expect(page.getByRole('main').getByRole('alert')).toContainText(
+      'Akses Dashboard Admin diperlukan.',
+    );
     expect(requests.some((path) => path === 'admin/analytics')).toBe(false);
     await page.goto('/admin/operations');
     await expect(page.getByRole('button', { name: 'Lihat detail', exact: true })).toBeVisible();
