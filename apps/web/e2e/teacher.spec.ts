@@ -292,7 +292,7 @@ test('Completion: Teacher confirms ban, unban, takeover and school departure thr
       mutations.push(path);
       data = { banned };
     } else if (path === '/classes/takeover') {
-      expect(route.request().postDataJSON()).toEqual({ joinCode: 'QA2345' });
+      expect(route.request().postDataJSON()).toEqual({ joinCode: 'Ab_cd-234' });
       mutations.push(path);
       data = state.classes[1];
     } else if (path === `/schools/${schoolId}/leave`) {
@@ -303,7 +303,7 @@ test('Completion: Teacher confirms ban, unban, takeover and school departure thr
     await route.fulfill({ json: data });
   });
   await page.goto(`/teacher/classes/${classId}`);
-  await page.getByText('Kelola akses siswa', { exact: true }).click();
+  await page.getByRole('button', { name: 'Kelola anggota', exact: true }).click();
   await page.getByLabel('Siswa aktif untuk diblokir').selectOption(studentId);
   await page.getByRole('button', { name: 'Blokir siswa', exact: true }).click();
   expect(mutations).toEqual([]);
@@ -314,6 +314,7 @@ test('Completion: Teacher confirms ban, unban, takeover and school departure thr
   await expect(
     page.getByText('Siswa diblokir dari kelas. Riwayat akun tetap tersimpan.', { exact: true }),
   ).toBeVisible();
+  await page.getByRole('tab', { name: 'Diblokir' }).click();
   await page.getByLabel('Siswa yang diblokir').selectOption(studentId);
   await page.getByRole('button', { name: 'Buka blokir', exact: true }).click();
   await page
@@ -323,7 +324,7 @@ test('Completion: Teacher confirms ban, unban, takeover and school departure thr
   await expect(page.getByText(/Blokir dibuka/)).toBeVisible();
   await page.goto('/teacher');
   await page.getByText('Ambil alih kelas tanpa guru', { exact: true }).click();
-  await page.getByLabel('Kode kelas yang diambil alih').fill('QA2345');
+  await page.getByLabel('Kode kelas yang diambil alih').fill('Ab_cd-234');
   await page.getByRole('button', { name: 'Ambil alih kelas', exact: true }).click();
   await expect(
     page.getByText('Kelas Kelas IX-A sekarang Anda dampingi.', { exact: true }),
@@ -342,7 +343,7 @@ async function capture(page: Page, name: string, width: number) {
     await document.fonts.ready;
     window.scrollTo(0, 0);
   });
-  const out = resolve('../../.tmp/teacher-redesign');
+  const out = resolve('../../.tmp/teacher-ui-alignment');
   await mkdir(out, { recursive: true });
   const geometry = await page.evaluate(() => ({
     width: innerWidth,
@@ -389,7 +390,7 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await expect(page.locator('.teacher-class-card')).toHaveCount(4);
     await expect(page.locator('.teacher-header')).toHaveCSS(
       'min-height',
-      width < 960 ? '80px' : '64px',
+      width < 960 ? '76px' : '100px',
     );
     // Shared canvas follows the owner-approved token update of 8 November (docs/design/README.md).
     await expect(page.locator('.teacher-redesign-shell')).toHaveCSS(
@@ -407,31 +408,23 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
       'href',
       '/teacher/profile',
     );
-    await expect(page.getByText('Siswa di kelas Anda').locator('..').locator('strong')).toHaveText(
-      '3',
-    );
-    const metrics = await page
-      .locator('.teacher-dashboard-metrics .teacher-metric')
-      .evaluateAll((cards) =>
-        cards.map((card) => {
-          const box = card.getBoundingClientRect();
-          return { top: box.top, width: box.width };
-        }),
-      );
-    expect(metrics).toHaveLength(2);
-    expect(metrics[1]!.width).toBeCloseTo(metrics[0]!.width, 0);
-    if (width >= 375) expect(metrics[1]!.top).toBeCloseTo(metrics[0]!.top, 0);
+    await expect(page.getByText('Siswa di kelas Anda')).toHaveCount(0);
+    await expect(
+      page.locator('.teacher-class-card').filter({ hasText: 'Kelas IX-B' }),
+    ).toContainText('3 siswa bergabung');
     await capture(page, 'classes', width);
-    const create = page.locator('.teacher-create-details summary');
+    const create = page.getByRole('button', { name: 'Buat kelas', exact: true });
     await create.focus();
     await page.keyboard.press('Enter');
     await expect(page.getByLabel('Nama kelas')).toBeVisible();
     await page.getByLabel('Nama kelas').fill(' IX-D ');
     await capture(page, 'create-class', width);
-    await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-    await expect(page.locator('.teacher-class-card')).toHaveCount(5);
+    await page.getByRole('dialog').getByRole('button', { name: 'Buat kelas', exact: true }).click();
+    await expect(page.getByRole('img', { name: 'QR kode kelas IX-D' })).toBeVisible();
     expect(state.creates).toEqual(['IX-D']);
-    await expect(page.locator('.teacher-created-code')).toContainText('Ab_cd-234');
+    await expect(page.locator('.teacher-code-panel')).toContainText('Ab_cd-234');
+    await page.goto('/teacher');
+    await expect(page.locator('.teacher-class-card')).toHaveCount(5);
     await page.getByRole('link', { name: /Kelas IX-B/ }).click();
     await expect(page.locator('.teacher-student-link')).toHaveCount(3);
     await capture(page, 'students', width);
@@ -441,14 +434,16 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await page.getByLabel('Urutkan').selectOption('desc');
     await expect(page.locator('.teacher-student-record').first()).toContainText('Nabila');
     await page.getByRole('link', { name: /Kirino S/ }).click();
-    await expect(page.getByRole('heading', { name: '0', exact: true })).toBeVisible();
+    await expect(page.locator('.teacher-latest-score__value')).toHaveText('0/100');
     await expect(
       page.locator('.teacher-level-card').first().getByText('90', { exact: true }),
     ).toBeVisible();
     await expect(page.getByText('Terkunci', { exact: true })).toBeVisible();
     await expect(page.locator('main input,main select,main textarea')).toHaveCount(0);
     await capture(page, 'progress', width);
+    await page.getByRole('tab', { name: 'Riwayat', exact: true }).click();
     await expect(page.getByText('Menunggu IRT', { exact: true })).toBeVisible();
+    await capture(page, 'history', width);
     await page.goto(`/teacher/classes/${classId}/invite`);
     await expect(page.getByRole('img', { name: 'QR kode kelas Kelas IX-B' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Unduh PNG QR' })).toHaveAttribute(
@@ -467,10 +462,12 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     await capture(page, 'class-redirect', width);
     await page.goto(`/teacher/feedback?classId=${classId}&studentId=${studentId}`);
     await expect(page.locator('.teacher-feedback-entry')).toHaveCount(20);
-    await page.getByLabel('Pesan feedback').fill('Terus berlatih di level yang sudah terbuka.');
+    await page
+      .getByLabel('Catatan untuk siswa')
+      .fill('Terus berlatih di level yang sudah terbuka.');
     await capture(page, 'feedback', width);
-    await page.getByRole('button', { name: 'Kirim feedback', exact: true }).click();
-    await expect(page.getByText('Feedback berhasil dikirim kepada Kirino S.')).toBeVisible();
+    await page.getByRole('button', { name: 'Kirim catatan', exact: true }).click();
+    await expect(page.getByText('Catatan terkirim.')).toBeVisible();
     expect(state.feedbackSends).toHaveLength(1);
     await expect(page.getByLabel('Status baca')).toHaveCount(0);
     await expect(page.getByLabel('Penerima feedback')).toHaveCount(0);
@@ -478,7 +475,7 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
     const removed = await page.goto('/teacher/notifications');
     expect(removed?.status()).toBe(404);
     await page.goto('/teacher/profile');
-    await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toBeVisible();
     await expect(
       page.locator(
         'main a[href="/teacher/monitoring"], main a[href="/teacher/feedback"], main a[href="/teacher/notifications"]',
@@ -539,27 +536,34 @@ test('Teacher create error, empty classes and students retain recovery and no fa
   state.classes = [];
   state.failCreate = true;
   await page.goto('/teacher');
-  await expect(page.getByRole('heading', { name: 'Kelas pertama dimulai di sini' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Belum ada kelas' })).toBeVisible();
   await capture(page, 'classes-empty', 390);
-  await page.locator('.teacher-create-details summary').click();
-  await page.getByLabel('Nama kelas').fill('IX Retry');
   await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-  await expect(page.locator('main').getByRole('alert')).toContainText('Kelas belum dapat dibuat.');
+  await page.getByLabel('Nama kelas').fill('IX Retry');
+  await page.getByRole('dialog').getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText(
+    'Kelas belum dapat dibuat.',
+  );
   await expect(page.getByLabel('Nama kelas')).toHaveValue('IX Retry');
   await capture(page, 'create-error', 390);
   state.failCreate = false;
-  await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await page.getByRole('dialog').getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await expect(page.getByRole('img', { name: 'QR kode kelas IX Retry' })).toBeVisible();
+  await page.goto('/teacher');
   await expect(page.locator('.teacher-class-card')).toHaveCount(1);
+  await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
   state.failCreate = true;
   state.createStatus = 503;
   state.createBeforeError = true;
   await page.getByLabel('Nama kelas').fill('IX Tersimpan');
-  await page.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-  await expect(page.locator('main').getByRole('alert')).toContainText(
+  await page.getByRole('dialog').getByRole('button', { name: 'Buat kelas', exact: true }).click();
+  await expect(page.getByRole('dialog').getByRole('alert')).toContainText(
     'Pengiriman tidak dapat dipastikan.',
   );
   await expect(page.getByLabel('Nama kelas')).toHaveValue('');
-  await expect(page.getByRole('button', { name: 'Buat kelas', exact: true })).toBeDisabled();
+  await expect(
+    page.getByRole('dialog').getByRole('button', { name: 'Buat kelas', exact: true }),
+  ).toBeDisabled();
   await expect(page.locator('.teacher-class-card')).toHaveCount(2);
   expect(state.creates).toEqual(['IX Retry', 'IX Retry', 'IX Tersimpan']);
   state.classes = [{ id: classId, name: 'Kelas IX-B', joinCode: 'QA2345' }];
@@ -569,7 +573,7 @@ test('Teacher create error, empty classes and students retain recovery and no fa
   await capture(page, 'students-empty', 390);
   state.emptyProgress = true;
   await page.goto(`/teacher/classes/${classId}/students/${studentId}`);
-  await expect(page.getByRole('heading', { name: 'Belum ada latihan' })).toBeVisible();
+  await expect(page.getByText('Belum ada latihan yang dikumpulkan.')).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Belum ada level', exact: true })).toBeVisible();
   await capture(page, 'progress-empty', 390);
   expect(errors).toEqual([]);
@@ -742,28 +746,28 @@ test('Teacher feedback retries delivery with the same UUID, paginates and isolat
   await expect(page.locator('.teacher-feedback-entry')).toHaveCount(21);
   await expect(page.getByLabel('Status baca')).toHaveCount(0);
   await expect(page.locator('.teacher-feedback-history')).not.toContainText('Dibaca ');
-  await page.getByLabel('Pesan feedback').fill('  Periksa langkah faktorisasi.  ');
-  await page.getByRole('button', { name: 'Kirim feedback', exact: true }).click();
+  await page.getByLabel('Catatan untuk siswa').fill('  Periksa langkah faktorisasi.  ');
+  await page.getByRole('button', { name: 'Kirim catatan', exact: true }).click();
   await expect(page.locator('main').getByRole('alert')).toContainText(
     'Pengiriman belum dapat dipastikan',
   );
-  await expect(page.getByLabel('Pesan feedback')).toHaveValue('  Periksa langkah faktorisasi.  ');
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveValue(
+    '  Periksa langkah faktorisasi.  ',
+  );
   state.failFeedback = false;
-  await page.getByRole('button', { name: 'Kirim feedback', exact: true }).click();
-  await expect(page.getByText('Feedback berhasil dikirim kepada Kirino S.')).toBeVisible();
+  await page.getByRole('button', { name: 'Kirim catatan', exact: true }).click();
+  await expect(page.getByText('Catatan terkirim.')).toBeVisible();
   expect(state.feedbackSends[0]).toEqual(state.feedbackSends[1]);
   expect(state.feedbackSends[0]?.body).toBe('Periksa langkah faktorisasi.');
   await page.goto(
     `/teacher/feedback?classId=${classId}&studentId=99999999-9999-4999-8999-999999999999`,
   );
-  await expect(
-    page.getByRole('heading', { name: 'Belum ada feedback', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Belum ada catatan', exact: true })).toBeVisible();
   await expect(page.locator('.teacher-feedback-entry')).toHaveCount(0);
   await expect(page.locator('.teacher-feedback-recipient')).toContainText('Nabila');
   await page.goto('/teacher/feedback');
   await expect(page).toHaveURL('/teacher');
-  await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
   expect(errors).toEqual([]);
 });
 
@@ -777,7 +781,7 @@ test('Legacy Teacher routes and contextual feedback preserve ownership and expir
   for (const path of ['/teacher/feedback', `/teacher/feedback?classId=${classId}`]) {
     await page.goto(path);
     await expect(page).toHaveURL('/teacher');
-    await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+    await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
   }
   for (const path of [
     `/teacher/feedback?classId=${classId}&studentId=${studentId}`,
@@ -788,18 +792,122 @@ test('Legacy Teacher routes and contextual feedback preserve ownership and expir
     state.denied = 403;
     await page.goto(path);
     await expect(page.getByRole('heading', { name: 'Akses ditolak', exact: true })).toBeVisible();
-    await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+    await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
     await expect(page.locator('.teacher-code-panel')).toHaveCount(0);
   }
   state.denied = 401;
   await page.goto(`/teacher/feedback?classId=${classId}&studentId=${studentId}`);
   await expect(page.getByRole('heading', { name: 'Sesi berakhir', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
   state.denied = 404;
   await page.goto(
     `/teacher/feedback?classId=${classId}&studentId=00000000-0000-4000-8000-000000000000`,
   );
   await expect(page.getByRole('heading', { name: 'Tidak ditemukan', exact: true })).toBeVisible();
-  await expect(page.getByLabel('Pesan feedback')).toHaveCount(0);
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('Teacher keeps filters, lazy tabs and an unsent note through contextual navigation', async ({
+  page,
+}) => {
+  await page.setViewportSize({ width: 390, height: 900 });
+  const { state, errors } = await setup(page);
+  state.verified = true;
+  let historyReads = 0;
+  let notesReads = 0;
+  page.on('request', (request) => {
+    if (request.method() !== 'GET') return;
+    const path = new URL(request.url()).pathname;
+    if (path.endsWith('/assessment-results')) historyReads++;
+    if (path.endsWith('/feedback')) notesReads++;
+  });
+  await page.goto('/teacher?q=IX-B');
+  await expect(page.locator('.teacher-class-card')).toHaveCount(1);
+  await page.getByRole('link', { name: 'Buka Kelas IX-B' }).click();
+  await page.getByLabel('Cari siswa').fill('Kirino');
+  await page.getByLabel('Urutkan').selectOption('desc');
+  await page.getByRole('link', { name: 'Lihat progres Kirino S.' }).click();
+  await expect(page.locator('.teacher-latest-score__value')).toHaveText('0/100');
+  expect(historyReads).toBe(0);
+  expect(notesReads).toBe(0);
+  await page.getByRole('tab', { name: 'Catatan', exact: true }).click();
+  await expect(page.getByLabel('Catatan untuk siswa')).toBeVisible();
+  await page.getByLabel('Catatan untuk siswa').fill('Periksa langkah kedua sebelum melanjutkan.');
+  expect(notesReads).toBe(1);
+  await page.getByRole('tab', { name: 'Riwayat', exact: true }).click();
+  await expect(page.getByText('Menunggu IRT', { exact: true })).toBeVisible();
+  expect(historyReads).toBe(1);
+  await page.getByRole('tab', { name: 'Catatan', exact: true }).click();
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveValue(
+    'Periksa langkah kedua sebelum melanjutkan.',
+  );
+  await capture(page, 'notes-draft', 390);
+  await page.goBack();
+  await expect(page.getByRole('tab', { name: 'Riwayat', exact: true })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.goForward();
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveValue(
+    'Periksa langkah kedua sebelum melanjutkan.',
+  );
+  page.once('dialog', async (dialog) => {
+    expect(dialog.message()).toContain('Catatan belum dikirim');
+    await dialog.dismiss();
+  });
+  await page.getByRole('link', { name: 'Kembali', exact: true }).click();
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveValue(
+    'Periksa langkah kedua sebelum melanjutkan.',
+  );
+  page.once('dialog', (dialog) => dialog.accept());
+  await page.getByRole('link', { name: 'Kembali', exact: true }).click();
+  await expect(page.getByLabel('Cari siswa')).toHaveValue('Kirino');
+  await expect(page.getByLabel('Urutkan')).toHaveValue('desc');
+  await page.getByRole('button', { name: 'Kelola anggota' }).click();
+  await capture(page, 'members', 390);
+  await page.keyboard.press('Escape');
+  await page.getByRole('link', { name: 'Kembali', exact: true }).click();
+  await expect(page.getByLabel('Cari kelas')).toHaveValue('IX-B');
+  expect(errors).toEqual([]);
+});
+
+test('Teacher closes the whole student workspace when notes authorization is revoked', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.verified = true;
+  await page.route('**/classes/*/students/*/feedback*', (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: 'application/problem+json',
+      json: { status: 403, code: 'FORBIDDEN', detail: 'Akses siswa berakhir.' },
+    }),
+  );
+  await page.goto('/teacher/classes/' + classId + '/students/' + studentId + '?tab=notes');
+  await expect(page.getByRole('heading', { name: 'Akses ditolak', exact: true })).toBeVisible();
+  await expect(page.locator('.teacher-student-identity')).toHaveCount(0);
+  await expect(page.getByLabel('Catatan untuk siswa')).toHaveCount(0);
+  expect(errors).toEqual([]);
+});
+
+test('Teacher closes the cached roster when member management authorization is revoked', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.verified = true;
+  await page.route('**/classes/*/banned-students', (route) =>
+    route.fulfill({
+      status: 403,
+      contentType: 'application/problem+json',
+      json: { status: 403, code: 'FORBIDDEN', detail: 'Kepemilikan kelas berakhir.' },
+    }),
+  );
+  await page.goto('/teacher/classes/' + classId);
+  await expect(page.locator('.teacher-student-record')).toHaveCount(3);
+  await page.getByRole('button', { name: 'Kelola anggota' }).click();
+  await expect(page.getByRole('heading', { name: 'Akses ditolak', exact: true })).toBeVisible();
+  await expect(page.locator('.teacher-student-record')).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Kelola anggota' })).toHaveCount(0);
   expect(errors).toEqual([]);
 });

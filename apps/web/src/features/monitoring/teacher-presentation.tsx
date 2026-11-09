@@ -7,38 +7,46 @@ import type { ClassSummaryDto, MonitoredLevelDto } from '@/lib/generated-api-typ
 // Presentation only: authorization, queries, scores and mutations remain in controllers.
 export function TeacherClassCard({
   value,
-  index,
   count,
+  href,
+  countError = false,
+  retryCount,
 }: {
   value: ClassSummaryDto;
   index: number;
   count?: number | undefined;
+  href?: string;
+  countError?: boolean;
+  retryCount?: (() => void) | undefined;
 }) {
   return (
-    <Link
-      className="teacher-class-link"
-      href={`/teacher/classes/${value.id}`}
-      aria-label={`Buka ${value.name}`}
-    >
-      <Card className="teacher-class-card">
-        <span className={`icon-tile accent-${index % 4}`}>
+    <Card className="teacher-class-card" padding="none">
+      <Link
+        className="teacher-class-link"
+        href={href ?? `/teacher/classes/${value.id}`}
+        aria-label={`Buka ${value.name}`}
+      >
+        <span className="icon-tile">
           <Icon name="users" />
         </span>
-        <h3>{value.name}</h3>
-        <p className="teacher-class-members">
-          <Icon name="graduation" width={16} height={16} />{' '}
-          {count === undefined ? 'Jumlah siswa belum tersedia' : `${count} siswa bergabung`}
-        </p>
-        {value.joinCode && (
-          <p className="teacher-class-code">
-            Kode kelas <strong>{value.joinCode}</strong>
-          </p>
-        )}
-        <span className="teacher-class-action">
-          Lihat siswa <Icon name="arrow" width={20} height={20} />
-        </span>
-      </Card>
-    </Link>
+        <div className="teacher-class-copy">
+          <h3>{value.name}</h3>
+          <span className="teacher-class-members">
+            {countError
+              ? 'Jumlah anggota belum termuat'
+              : count === undefined
+                ? 'Memuat anggota…'
+                : `${count} siswa bergabung`}
+          </span>
+        </div>
+        <Icon name="chevron" />
+      </Link>
+      {countError && retryCount && (
+        <button type="button" className="teacher-count-retry" onClick={retryCount}>
+          Muat ulang anggota {value.name}
+        </button>
+      )}
+    </Card>
   );
 }
 
@@ -61,7 +69,7 @@ export function TeacherStudentRow({
       </td>
       <td>
         <Link className="teacher-student-link" href={href} aria-label={`Lihat progres ${name}`}>
-          <span>Lihat progres dan nilai Drill</span>
+          <span>Lihat progres</span>
           <Icon name="chevron" width={20} height={20} />
         </Link>
       </td>
@@ -125,8 +133,8 @@ export function TeacherVerificationFrame({ children }: { children: ReactNode }) 
           <span className="teacher-verification-mark" aria-hidden="true">
             <Icon name="school" width={32} height={32} />
           </span>
-          <span className="teacher-kicker">Dampingi siswa bersama NUMORA</span>
-          <h2>Satu ruang untuk kelas dan perkembangan siswa.</h2>
+          <span className="teacher-kicker">NUMORA untuk guru</span>
+          <h2>Kelas dan progres siswa dalam satu tempat.</h2>
           <p>
             Setelah sekolah terverifikasi, buat kelas dan lihat hasil latihan siswa yang Anda
             dampingi.

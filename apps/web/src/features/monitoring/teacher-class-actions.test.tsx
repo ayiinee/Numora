@@ -63,8 +63,7 @@ it('requires confirmation and preserves the ban action after failure, then expos
     />,
   );
   cache.setQueryData(['student-progress', 'class', 'active'], { private: true });
-  expand('Kelola akses siswa');
-  await screen.findByRole('option', { name: 'Bima' });
+  fireEvent.click(screen.getByRole('button', { name: 'Kelola anggota' }));
   fireEvent.change(screen.getByLabelText('Siswa aktif untuk diblokir'), {
     target: { value: 'active' },
   });
@@ -76,6 +75,8 @@ it('requires confirmation and preserves the ban action after failure, then expos
   await screen.findByText('Siswa diblokir dari kelas. Riwayat akun tetap tersimpan.');
   expect(setClassStudentBan).toHaveBeenLastCalledWith('teacher', 'class', 'active', true);
   expect(cache.getQueryData(['student-progress', 'class', 'active'])).toBeUndefined();
+  fireEvent.click(screen.getByRole('tab', { name: 'Diblokir' }));
+  await screen.findByRole('option', { name: 'Bima' });
   fireEvent.change(screen.getByLabelText('Siswa yang diblokir'), { target: { value: 'banned' } });
   fireEvent.click(screen.getByRole('button', { name: 'Buka blokir' }));
   fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi perubahan akses' }));

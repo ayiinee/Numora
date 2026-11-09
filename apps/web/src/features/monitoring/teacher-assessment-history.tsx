@@ -1,8 +1,9 @@
 'use client';
 
+import { useEffect } from 'react';
 import { useInfiniteQuery } from '@tanstack/react-query';
 import { Badge, Button, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
-import { apiRequest } from '@/lib/api';
+import { apiRequest, type ApiProblem } from '@/lib/api';
 import type { AssessmentHistoryDto } from '@/features/core-learning/generated-types';
 import { DataState } from '@/features/core-learning/ui';
 import { jakartaTime, teacherAccessFailure, teacherKeys } from './teacher-query';
@@ -11,10 +12,12 @@ export function TeacherAssessmentHistory({
   token,
   classId,
   studentId,
+  onAccessFailure,
 }: {
   token: string;
   classId: string;
   studentId: string;
+  onAccessFailure?: (error: ApiProblem) => void;
 }) {
   const query = useInfiniteQuery({
     queryKey: teacherKeys.assessments(classId, studentId),
@@ -28,6 +31,9 @@ export function TeacherAssessmentHistory({
   });
   const records = query.data?.pages.flatMap((page) => page.records) ?? [];
   const accessFailure = teacherAccessFailure(query.error);
+  useEffect(() => {
+    if (accessFailure) onAccessFailure?.(accessFailure);
+  }, [accessFailure, onAccessFailure]);
   return (
     <section className="teacher-page-stack">
       <SectionHeader title="Riwayat asesmen" subtitle="Hasil sesuai akses dan waktu rilis sistem" />

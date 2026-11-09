@@ -21,7 +21,7 @@ export function TeacherHeader({
   // The verification gate renders this shell before the profile photo provider is available.
   const HeaderAvatar = verified ? OwnAvatar : Avatar;
   return (
-    <header className="teacher-header">
+    <header className={`teacher-header${showIdentity ? ' teacher-header--identity' : ''}`}>
       <div className="teacher-header__identity">
         {backHref && (
           <Link href={backHref} className="teacher-header__back" aria-label="Kembali">
@@ -30,7 +30,7 @@ export function TeacherHeader({
         )}
         {showIdentity && name && <HeaderAvatar name={name} />}
         <div>
-          <strong>{showIdentity ? name || 'Ruang guru' : title}</strong>
+          {showIdentity ? <strong>{name || 'Ruang guru'}</strong> : <h1>{title}</h1>}
           {showIdentity && (
             <span>
               {verified ? (
@@ -43,11 +43,6 @@ export function TeacherHeader({
             </span>
           )}
         </div>
-      </div>
-      <div className="teacher-header__context">
-        {backHref ? <Link href={backHref}>Kembali</Link> : <span>Ruang guru</span>}
-        <Icon name="chevron" width={16} height={16} />
-        <strong>{title}</strong>
       </div>
       <div className="teacher-header__actions">
         {actions}

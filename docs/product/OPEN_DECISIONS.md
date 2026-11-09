@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — Teacher presentation boundary, 9 November 2026:** [Teacher UI alignment](../design/TEACHER_UI_ALIGNMENT_2026-11-09.md) uses only existing server fields and operations. It resolves no academic OPEN item and introduces no class-wide mastery, trends, notification endpoint or ranking. Missing data stays distinct from zero.
+
 **ENGINEERING DECISION — 9 November 2026:** OPEN-14 mengizinkan password yang dikelola Supabase Auth untuk akun Siswa yang disiapkan pengelola. Keputusan ini tidak menambahkan penyimpanan password lokal atau registrasi email publik di Numora.
 
 **ENGINEERING IMPLEMENTATION — 8 November 2026:** [handoff kalibrasi dan hasil peserta v1](../IRT_CALIBRATION_CONTRACT_V1.md) menetapkan payload dan validasi input/output identik di kedua repo, termasuk identitas respondent–attempt–package–batch, status gagal/data kurang, serta contoh tersanitasi dan pengujian kompatibilitas. Bentuk kontrak bukan lagi OPEN; scientific producer, policy numerik/approval, adapter/adopter dan publikasi tetap delivery gap. Generator existing tidak berubah. Rubrik Tryout `TRYOUT_PGK_PARTIAL_V1` sudah disetujui 7 Oktober dan tersedia pada assessment engine; review rubrik Drill tetap terpisah. Catatan lama mengenai fallback seluruh batch, formula fallback sepenuhnya OPEN atau ceil XP universal tidak menggantikan konteks/pin terbaru. Tidak ada perubahan runtime atau XP historis pada pekerjaan kontrak ini.

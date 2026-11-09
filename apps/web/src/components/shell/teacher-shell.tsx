@@ -2,7 +2,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
-import { Badge, Brand, Button, Icon } from '@tka/ui';
+import { Brand, Button, Icon } from '@tka/ui';
 import { OwnAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import { useAuth } from '@/features/onboarding/auth';
 import { useTeacherSignOut } from '@/features/onboarding/teacher-session';
@@ -42,24 +42,14 @@ export function TeacherShell({
         <aside className="teacher-sidebar" aria-label="Ruang guru">
           <Link href="/teacher" className="teacher-sidebar__brand" aria-label="NUMORA beranda guru">
             <Brand />
-            <Badge variant="primary">Guru</Badge>
           </Link>
-          <div className="teacher-sidebar__identity">
-            <div className="teacher-sidebar__person">
+          <p className="teacher-sidebar__caption">Ruang guru</p>
+          <TeacherDesktopNavigation pathname={pathname} />
+          <div className="teacher-sidebar__account">
+            <div className="teacher-sidebar__account-person">
               <Avatar name={name} />
               <strong>{name}</strong>
             </div>
-            <Badge variant="success">
-              <Icon name="check" width={14} height={14} /> Guru terverifikasi
-            </Badge>
-          </div>
-          <p className="teacher-sidebar__caption">Menu pembelajaran</p>
-          <TeacherDesktopNavigation pathname={pathname} />
-          <div className="teacher-sidebar__account">
-            <p>
-              <Icon name="school" width={18} height={18} /> Ruang guru NUMORA
-            </p>
-            <small>Kelas dan perkembangan siswa Anda.</small>
             <Button
               variant="ghost"
               fullWidth
@@ -87,10 +77,7 @@ export function TeacherShell({
               {logoutError}
             </p>
           )}
-          <div className="page-heading">
-            <h1>{title}</h1>
-            {description && <p>{description}</p>}
-          </div>
+          {description && <p className="teacher-page-description">{description}</p>}
           {children}
         </main>
       </div>

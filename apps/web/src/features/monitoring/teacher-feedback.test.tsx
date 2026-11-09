@@ -38,37 +38,37 @@ it('preserves a message and its idempotency UUID after a lost acknowledgement, t
     .mockRejectedValueOnce(new Error('Koneksi terputus.'))
     .mockResolvedValueOnce({ id: 'feedback-id' });
   mount();
-  fireEvent.change(screen.getByLabelText(/Pesan feedback/), {
+  fireEvent.change(screen.getByLabelText(/Catatan untuk siswa/), {
     target: { value: '  Coba lagi\ndi level ini.  ' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Kirim feedback' }));
+  fireEvent.click(screen.getByRole('button', { name: 'Kirim catatan' }));
   await screen.findByRole('alert');
-  expect((screen.getByLabelText(/Pesan feedback/) as HTMLTextAreaElement).value).toBe(
+  expect((screen.getByLabelText(/Catatan untuk siswa/) as HTMLTextAreaElement).value).toBe(
     '  Coba lagi\ndi level ini.  ',
   );
   const request = vi.mocked(sendTeacherFeedback).mock.calls[0]![3];
   expect(request.clientRequestId).toMatch(/^[0-9a-f-]{36}$/);
   expect(request.body).toBe('Coba lagi\ndi level ini.');
-  fireEvent.click(screen.getByRole('button', { name: 'Kirim feedback' }));
-  await screen.findByText('Feedback berhasil dikirim kepada Ayu.');
+  fireEvent.click(screen.getByRole('button', { name: 'Kirim catatan' }));
+  await screen.findByText('Catatan terkirim.');
   expect(vi.mocked(sendTeacherFeedback).mock.calls[1]![3]).toEqual(request);
-  expect((screen.getByLabelText(/Pesan feedback/) as HTMLTextAreaElement).value).toBe('');
+  expect((screen.getByLabelText(/Catatan untuk siswa/) as HTMLTextAreaElement).value).toBe('');
 });
 
 it('rejects blank text and prevents a second submit while delivery is pending', async () => {
   vi.mocked(sendTeacherFeedback).mockImplementation(() => new Promise(() => {}));
   mount();
-  fireEvent.change(screen.getByLabelText(/Pesan feedback/), { target: { value: '   ' } });
+  fireEvent.change(screen.getByLabelText(/Catatan untuk siswa/), { target: { value: '   ' } });
   expect(
-    (screen.getByRole('button', { name: 'Kirim feedback' }) as HTMLButtonElement).disabled,
+    (screen.getByRole('button', { name: 'Kirim catatan' }) as HTMLButtonElement).disabled,
   ).toBe(true);
-  fireEvent.change(screen.getByLabelText(/Pesan feedback/), {
+  fireEvent.change(screen.getByLabelText(/Catatan untuk siswa/), {
     target: { value: 'Terus berlatih.' },
   });
-  fireEvent.click(screen.getByRole('button', { name: 'Kirim feedback' }));
-  fireEvent.submit(screen.getByLabelText(/Pesan feedback/).closest('form')!);
+  fireEvent.click(screen.getByRole('button', { name: 'Kirim catatan' }));
+  fireEvent.submit(screen.getByLabelText(/Catatan untuk siswa/).closest('form')!);
   await waitFor(() => expect(sendTeacherFeedback).toHaveBeenCalledOnce());
-  expect((screen.getByLabelText(/Pesan feedback/) as HTMLTextAreaElement).disabled).toBe(true);
+  expect((screen.getByLabelText(/Catatan untuk siswa/) as HTMLTextAreaElement).disabled).toBe(true);
 });
 
 it('paginates within the selected student and labels loaded counts rather than a fabricated total', async () => {
@@ -122,5 +122,5 @@ it('hides cached recipient history and composer after the session becomes unauth
   void client.invalidateQueries({ queryKey: ['teacher-feedback'] });
   await screen.findByRole('heading', { name: 'Sesi berakhir' });
   expect(screen.queryByText('Catatan privat')).toBeNull();
-  expect(screen.queryByLabelText(/Pesan feedback/)).toBeNull();
+  expect(screen.queryByLabelText(/Catatan untuk siswa/)).toBeNull();
 });

@@ -2,12 +2,21 @@
 
 import { useEffect } from 'react';
 
-export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false, onExit?: () => void) {
+export function useUnsavedWarning(
+  unsaved: boolean,
+  confirmDrillExit = false,
+  onExit?: () => void,
+  options?: { message?: string; ignoreSearchChanges?: boolean },
+) {
+  const customMessage = options?.message;
+  const ignoreSearchChanges = options?.ignoreSearchChanges ?? false;
   useEffect(() => {
     if (!unsaved && !confirmDrillExit) return;
-    const message = confirmDrillExit
-      ? `Keluar dari Drill? Jawaban yang sudah tersimpan dapat dilanjutkan. ${onExit ? 'Timer akan dijeda.' : 'Timer tetap berjalan.'}${unsaved ? ' Perubahan terakhir belum tersimpan dan dapat hilang.' : ''}`
-      : 'Jawaban terakhir belum tersimpan. Keluar dapat menghilangkan perubahan tersebut. Tetap keluar?';
+    const message =
+      customMessage ??
+      (confirmDrillExit
+        ? `Keluar dari Drill? Jawaban yang sudah tersimpan dapat dilanjutkan. ${onExit ? 'Timer akan dijeda.' : 'Timer tetap berjalan.'}${unsaved ? ' Perubahan terakhir belum tersimpan dan dapat hilang.' : ''}`
+        : 'Jawaban terakhir belum tersimpan. Keluar dapat menghilangkan perubahan tersebut. Tetap keluar?');
     let currentUrl = window.location.href;
     let currentState: unknown = window.history.state;
     function unload(event: BeforeUnloadEvent) {
@@ -36,7 +45,7 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false, on
       if (
         target.origin === window.location.origin &&
         target.pathname === window.location.pathname &&
-        target.search === window.location.search
+        (ignoreSearchChanges || target.search === window.location.search)
       )
         return;
       if (!window.confirm(message)) {
@@ -47,7 +56,11 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false, on
     function traverse(event: PopStateEvent) {
       const target = new URL(window.location.href);
       const previous = new URL(currentUrl);
-      if (target.pathname === previous.pathname && target.search === previous.search) return;
+      if (
+        target.pathname === previous.pathname &&
+        (ignoreSearchChanges || target.search === previous.search)
+      )
+        return;
       if (!window.confirm(message)) {
         event.stopImmediatePropagation();
         window.history.pushState(currentState, '', currentUrl);
@@ -65,5 +78,5 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false, on
       window.removeEventListener('popstate', traverse, true);
       document.removeEventListener('click', navigate, true);
     };
-  }, [unsaved, confirmDrillExit, onExit]);
+  }, [unsaved, confirmDrillExit, onExit, customMessage, ignoreSearchChanges]);
 }
