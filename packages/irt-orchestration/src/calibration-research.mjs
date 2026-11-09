@@ -30,7 +30,7 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
   // The batch roster, never a caller-selected subset, defines snapshot coverage.
   const attemptIds = input.respondents.map((p) => p.attemptId);
   const [context] =
-    await tx`SELECT c.ecosystem,c.tryout_batch_id,c.revision,b.starts_at,b.cutoff_at,b.result_due_at,clock_timestamp() AS captured_at
+    await tx`SELECT c.ecosystem,c.tryout_batch_id,c.revision,b.status AS batch_status,b.starts_at,b.cutoff_at,b.result_due_at,clock_timestamp() AS captured_at
       FROM measurement_contexts c JOIN tryout_batches b ON b.id=c.tryout_batch_id WHERE c.id=${input.context.contextId}`;
   if (
     !context ||
@@ -47,6 +47,7 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
     context.cutoff_at > context.captured_at
   )
     throw new Error('IRT_CANONICAL_WINDOW_MISMATCH');
+  if(context.batch_status!=='CLOSED')throw new Error('IRT_CANONICAL_BATCH_NOT_CLOSED');
   const roster = await tx`SELECT id,student_id,status FROM assessment_attempts
       WHERE tryout_batch_id=${input.context.batchId} AND assessment_type='TRYOUT' AND status<>'CANCELLED' ORDER BY id`;
   if (new Set(roster.map((r) => r.student_id)).size !== roster.length)
@@ -94,7 +95,7 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
       manifest.allocation_ecosystem !== 'TRYOUT' ||
       !manifest.digest_valid ||
       !manifest.frozen_at ||
-      !manifest.curriculum_approval ||
+      !manifest.curriculum_approval || manifest.frozen_at>context.starts_at ||
       manifest.kind !== p.armKind ||
       !isDeepStrictEqual(
         [...manifest.anchor_question_version_ids].sort(),
@@ -133,7 +134,7 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
       a.tryout_batch_id,a.started_at,
       i.id AS attempt_item_id,i.question_version_id,i.rubric_version_id,i.maximum_score_category,i.max_points,
       ans.score_category,ans.awarded_points,ans.response_state,ans.graded_at,
-      assignment.assigned_arm_id,revision.arm_id AS delivered_arm_id,pin.fallback_reason,pin.delivered_revision_id,
+      assignment.assigned_arm_id,assignment.first_valid_evidence,revision.arm_id AS delivered_arm_id,pin.fallback_reason,pin.delivered_revision_id,
       pin.delivery_mode,package.package_version,
       EXISTS(SELECT 1 FROM content_delivery_items di JOIN content_delivery_manifests dm ON dm.id=di.manifest_id
         WHERE di.attempt_item_id=i.id AND di.question_version_id=i.question_version_id AND dm.student_id=a.student_id
@@ -186,7 +187,7 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
     )
       throw new Error('IRT_TRYOUT_CROSSOVER_UNSUPPORTED');
     person.attemptIndex = 1;
-    person.firstValidAttempt = true;
+    person.firstValidAttempt = rows[0].first_valid_evidence;
   }
   for (const response of input.responses) {
     const source = sourceMap.get(response.attemptItemId);
@@ -209,8 +210,8 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
     response.responseState = source.response_state;
     response.priorExposureSources = [...new Set(source.prior_sources)].sort();
     response.exposureState = response.priorExposureSources.length ? 'KNOWN_PRIOR' : 'FRESH';
-    if (!source.was_presented) {
-      response.responseState = 'NOT_PRESENTED';
+    if (!source.was_presented||source.response_state==='INVALID') {
+      response.responseState = !source.was_presented?'NOT_PRESENTED':'INVALID';
       response.scoreCategory = null;
       response.awardedPoints = null;
     }
@@ -224,8 +225,12 @@ async function canonicalInput(tx, draft, { secret, keyVersion }) {
             ? 'PRIOR_EXPOSURE'
             : 'FIRST_VALID_ATTEMPT',
     ];
+    if(!person.firstValidAttempt){
+      response.eligibilityReasons=response.eligibilityReasons.filter(reason=>reason!=='FIRST_VALID_ATTEMPT');
+      response.eligibilityReasons.push('RETRY');
+    }
     response.includedInCalibration =
-      source.was_presented && !invalid && !response.priorExposureSources.length;
+      person.firstValidAttempt && source.was_presented && !invalid && !response.priorExposureSources.length;
   }
   validateInput(input);
   return input;
@@ -318,7 +323,7 @@ export async function inspectCalibrationDelivery(sql, draft, resources, runtime,
           responses: rows.length,
           includedResponses: rows.filter((r) => r.includedInCalibration).length,
           eligibleRespondents: eligible,
-          sampleCheck: eligible < minimum ? 'BELOW_POLICY_MINIMUM' : 'AT_OR_ABOVE_POLICY_MINIMUM',
+          sampleCheck: !Number.isInteger(minimum)||minimum<1?'NOT_EVALUATED':eligible < minimum ? 'BELOW_POLICY_MINIMUM' : 'AT_OR_ABOVE_POLICY_MINIMUM',
         };
       });
     } catch (error) {

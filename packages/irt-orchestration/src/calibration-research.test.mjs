@@ -33,7 +33,7 @@ test('preflight uses a read-only transaction and rejects a caller-selected subse
                 {
                   ecosystem: 'TRYOUT',
                   tryout_batch_id: 'batch',
-                  revision: 1,
+                  revision: 1, batch_status:'CLOSED',
                   starts_at: date,
                   cutoff_at: date,
                   result_due_at: date,
@@ -101,7 +101,7 @@ test('canonical adapter rejects an unregistered package before reading grades', 
                 {
                   ecosystem: 'TRYOUT',
                   tryout_batch_id: 'batch',
-                  revision: 1,
+                  revision: 1, batch_status:'CLOSED',
                   starts_at: date,
                   cutoff_at: date,
                   result_due_at: date,

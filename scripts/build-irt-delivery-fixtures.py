@@ -26,7 +26,7 @@ def build(ai, small=False):
     summaries = []
     for case in recipe['cases']:
         # Generate the registered design first; subset afterwards preserves its item parameters.
-        value, truth = generate(max(case['perArm']), case['seed'], 'MIXED', len(case['perArm']), include_mcma=True)
+        value, truth = generate(max(case['perArm']), case['seed'], 'MIXED', len(case['perArm']), include_mcma=recipe['includeMcma'])
         counts = [2] * len(case['perArm']) if small else case['perArm']
         selected = []
         for package, count in zip(value['packages'], counts):
