@@ -1457,8 +1457,8 @@ for (const width of [390, 1440]) {
     await page.goto('/teacher');
     await page.getByRole('link', { name: /IX fixture/ }).click();
     await page.getByRole('link', { name: /Siswa fixture/ }).click();
-    await expect(page.getByRole('heading', { name: 'Progres per level' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '0', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Progres per level' })).toBeVisible();
+    await expect(page.locator('.teacher-latest-score__value')).toHaveText('0/100');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -1491,7 +1491,7 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Buka profil' }).click();
   await expect(page).toHaveURL(/\/teacher\/profile$/);
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toBeVisible();
   await expect(page.getByText('Terverifikasi', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: /Kelas saya/ }).last()).toHaveAttribute(
     'href',
@@ -1502,14 +1502,14 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await expect(page).toHaveURL('http://localhost:3300/');
   await page.goto('/teacher/profile');
   await expect(page).toHaveURL('http://localhost:3300/');
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toHaveCount(0);
 });
 
 test('Student cannot open Teacher profile', async ({ page }) => {
   await fixtures(page);
   await page.goto('/teacher/profile');
   await expect(page).toHaveURL('http://localhost:3300/student');
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toHaveCount(0);
 });
 
 test('Teacher sees distinct latest and best Drill scores but no foreign Class progress', async ({
@@ -1542,10 +1542,12 @@ test('Teacher sees distinct latest and best Drill scores but no foreign Class pr
   await page.goto('/teacher');
   await page.getByRole('link', { name: /IX fixture/ }).click();
   await page.getByRole('link', { name: /Siswa fixture/ }).click();
-  await expect(page.getByRole('heading', { name: '60', exact: true })).toBeVisible();
-  const level = page.locator('.level-card');
-  await expect(level.getByText('60', { exact: true })).toBeVisible();
-  await expect(level.getByText('90', { exact: true })).toBeVisible();
+  await expect(page.locator('.teacher-latest-score__value')).toHaveText('60/100');
+  const level = page
+    .getByRole('region', { name: 'Progres per level' })
+    .locator('.teacher-level-card');
+  await expect(level.locator('dt')).toHaveText(['Terakhir', 'Terbaik']);
+  await expect(level.locator('dd')).toHaveText(['60', '90']);
 
   const foreignClassId = '77777777-7777-4777-8777-777777777777';
   await page.route(
