@@ -202,7 +202,7 @@ export function AssessmentSession({
       flags[item.questionInstanceId] ? [position + 1] : [],
     );
     return (
-      <div className="practice-session">
+      <div className="practice-session" data-session-kind={sessionKind}>
         <AssessmentHeader
           title={
             sessionKind === 'pretest'

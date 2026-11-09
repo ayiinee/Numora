@@ -57,16 +57,41 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
     );
   }
   if (query.data.clock?.sessionId === null) {
-    const { clock, levelId } = query.data;
+    const { clock, levelId, levelTitle } = query.data;
     return (
-      <Status title="Latihan dijeda">
-        <p>Jawaban tersimpan. Lanjutkan untuk meneruskan hitungan waktu.</p>
-        <DrillTimer startedAt={query.data.startedAt} clock={clock} />
-        <PrimaryButton disabled={resume.isPending} onClick={() => resume.mutate(levelId)}>
-          {resume.isPending ? 'Membuka latihan…' : 'Lanjutkan latihan'}
-        </PrimaryButton>
-        {resume.error && <p role="alert">{resume.error.message}</p>}
-      </Status>
+      <section className="drill-paused" aria-labelledby="drill-paused-title">
+        <Panel className="drill-paused__card">
+          <StudentMascot pose="practice" />
+          <div className="drill-paused__heading">
+            <h1 id="drill-paused-title">Latihan dijeda</h1>
+            <p>{levelTitle}</p>
+          </div>
+          <p className="drill-paused__description">
+            Jawabanmu tersimpan. Waktu latihan akan berjalan lagi saat kamu melanjutkan.
+          </p>
+          <div
+            className="drill-paused__duration"
+            role="group"
+            aria-labelledby="drill-paused-duration"
+          >
+            <span id="drill-paused-duration">
+              <Icon name="clock" width={18} height={18} /> Waktu tersimpan
+            </span>
+            <strong>{formatDrillElapsed(Math.floor(clock.elapsedMs / 1000))}</strong>
+          </div>
+          <div className="drill-paused__actions">
+            <PrimaryButton
+              fullWidth
+              disabled={resume.isPending}
+              onClick={() => resume.mutate(levelId)}
+            >
+              {resume.isPending ? 'Membuka latihan…' : 'Lanjutkan latihan'}
+            </PrimaryButton>
+            {resume.error && <p role="alert">{resume.error.message}</p>}
+            <Link href="/student/learn">Kembali ke materi</Link>
+          </div>
+        </Panel>
+      </section>
     );
   }
   return (
@@ -129,6 +154,10 @@ function DrillForm({
   );
 }
 
+function formatDrillElapsed(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
 export function DrillTimer({
   startedAt,
   serverTime,
@@ -175,8 +204,7 @@ export function DrillTimer({
   if (elapsed === null) return <span>Waktu: --:--</span>;
   return (
     <span aria-label={clock?.sessionId === null ? 'Waktu tersimpan' : 'Waktu berjalan'}>
-      <Icon name="clock" width={14} height={14} /> {Math.floor(elapsed / 60)}:
-      {String(elapsed % 60).padStart(2, '0')}
+      <Icon name="clock" width={14} height={14} /> {formatDrillElapsed(elapsed)}
     </span>
   );
 }

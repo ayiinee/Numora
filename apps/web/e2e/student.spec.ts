@@ -1566,7 +1566,10 @@ test('signed-out login offers Google authentication without removed demo destina
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
 });
 
-test('Drill timer waits for explicit resume and pauses on confirmed exit', async ({ page }) => {
+test('Drill timer waits for explicit resume and pauses on confirmed exit', async ({
+  page,
+}, testInfo) => {
+  await page.setViewportSize({ width: 320, height: 668 });
   await fixtures(page);
   const sessionId = '77000000-0000-4777-8777-000000000001';
   let running = false;
@@ -1590,10 +1593,10 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
       ? [
           {
             questionInstanceId: questionId,
-            stem: 'Berapa hasil 2 + 2?',
+            stem: 'Berapa hasil sqrt(16)?',
             options: [
-              { id: 'A', text: '4' },
-              { id: 'B', text: '5' },
+              { id: 'A', text: '\\frac{8}{2}' },
+              { id: 'B', text: 'π' },
             ],
             selectedOptionId: 'A',
           },
@@ -1621,13 +1624,41 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   });
 
   const url = `/student/drill/${attemptId}`;
+  const duration = page.getByRole('group', { name: 'Waktu tersimpan' });
+  const resume = page.getByRole('button', { name: 'Lanjutkan latihan' });
+  async function expectPausedLayout(width: number) {
+    await expect(duration).toBeVisible();
+    await expect(resume).toBeVisible();
+    const timerBox = await duration.boundingBox();
+    const buttonBox = await resume.boundingBox();
+    expect(timerBox!.y + timerBox!.height).toBeLessThan(buttonBox!.y);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(
+      width,
+    );
+    await page.screenshot({
+      path: testInfo.outputPath(`drill-paused-${width}.png`),
+      style: 'nextjs-portal { display: none !important; }',
+    });
+  }
+
   await page.goto(url);
   await expect(page.getByRole('heading', { name: 'Latihan dijeda' })).toBeVisible();
-  await expect(page.getByLabel('Waktu tersimpan')).toContainText('0:42');
+  await expect(duration).toContainText('0:42');
+  await expectPausedLayout(320);
   expect(resumeCount).toBe(0);
-  await page.getByRole('button', { name: 'Lanjutkan latihan' }).click();
+  await page.setViewportSize({ width: 634, height: 668 });
+  await resume.click();
   await expect(page.getByLabel('Waktu berjalan')).toBeVisible();
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '15px');
+  await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
+  await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
+  await expect(page.locator('.practice-option__text math mfrac')).toHaveCount(1);
+  await expect(page.locator('.practice-option__text math mi')).toHaveText('π');
+  await expect(page.locator('.practice-option__indicator').first()).toBeHidden();
+  await expect(page.locator('.practice-option__text').first()).toHaveCSS('font-weight', '700');
   await expect(page.getByRole('radio').first()).toBeChecked();
+  await page.setViewportSize({ width: 1280, height: 900 });
+  await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
   page.once('dialog', async (dialog) => {
     expect(dialog.message()).toContain('Timer akan dijeda');
     await dialog.accept();
@@ -1636,7 +1667,8 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   await expect(page).toHaveURL('/student/learn');
   await expect.poll(() => pauseCount).toBe(1);
   await page.goto(url);
-  await expect(page.getByLabel('Waktu tersimpan')).toContainText('0:45');
+  await expect(duration).toContainText('0:45');
+  await expectPausedLayout(1280);
   expect(resumeCount).toBe(1);
 });
 

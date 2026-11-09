@@ -2,6 +2,10 @@
 
 **ENGINEERING DECISION — header desktop Siswa, 9 November 2026.** Bar desktop memakai motif ungu yang sama dengan header ponsel. Halaman dengan header khusus menampilkan satu header yang sama pada kedua ukuran, termasuk tombol kembali jika tersedia. Halaman lain memakai judul halaman pada bar bermotif.
 
+**ENGINEERING DECISION — tampilan Drill dijeda, 9 November 2026.** Kartu jeda menampilkan maskot, nama level, dan durasi tersimpan dalam panel yang terpisah dari tombol lanjut. Kartu memakai lebar terbatas pada desktop dan mengikuti ruang konten ponsel. Tautan kembali membuka daftar materi.
+
+**ENGINEERING DECISION — tampilan sesi Latihan, 9 November 2026.** Teks soal berukuran 15 px pada lebar di bawah 700 px. Pilihan tunggal menonjolkan jawaban terpilih dengan kartu dan huruf pilihan berwarna serta teks tebal, tanpa indikator bulat di kanan.
+
 **ENGINEERING DECISION — maskot respons siswa, 9 November 2026.** Stiker burung hantu dari pemilik mendampingi kartu aktivitas kosong, ketersediaan dan riwayat Tryout, pengiriman jawaban, hasil Drill dan Pretest, serta lobi dan hasil PvP. Pencarian bab kosong dan koneksi PvP terputus memakai stiker respons. Setiap pose memakai satu aset WebP transparan dari gambar yang dipisahkan oleh pemilik. Ilustrasi bersifat dekoratif. Label status dan tindakan tetap tampil sebagai teks.
 
 **ENGINEERING DECISION — revisi aktivitas siswa, 9 November 2026.** Beranda dan Latihan memakai kartu yang sama untuk aktivitas terbaru. Kartu menampilkan ilustrasi, tanggal, nilai dan bintang yang tersedia, serta tindakan sesuai aktivitas. Lihat Semua membuka riwayat lengkap. Tombol Semua bab berada di dalam header detail bab.

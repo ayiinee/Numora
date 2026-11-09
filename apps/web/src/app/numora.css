@@ -2894,6 +2894,75 @@ a.settings-row:hover {
 .learning-practice-shell .app-content {
   padding-top: 0;
 }
+.drill-paused {
+  padding-block: clamp(2rem, 8vh, 5.5rem);
+}
+.drill-paused__card {
+  --card-padding: clamp(1.25rem, 5vw, 2rem);
+  display: grid;
+  gap: var(--space-4);
+  max-width: 30rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.drill-paused__heading h1 {
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.drill-paused__heading p {
+  margin-top: var(--space-1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.drill-paused__description {
+  color: var(--color-text-muted);
+}
+.drill-paused__duration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary-strong);
+  text-align: start;
+}
+.drill-paused__duration span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.drill-paused__duration svg {
+  flex: none;
+}
+.drill-paused__duration strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.drill-paused__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.drill-paused__actions a {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  justify-self: center;
+  padding-inline: var(--space-3);
+  color: var(--color-primary-strong);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.drill-paused__actions [role='alert'] {
+  color: var(--color-danger);
+  overflow-wrap: anywhere;
+}
 .practice-session {
   max-width: 980px;
   margin: auto;
@@ -3101,6 +3170,14 @@ a.settings-row:hover {
 .practice-option:has(input:checked) .practice-option__indicator {
   color: white;
   background: var(--color-primary);
+}
+.practice-session[data-session-kind='drill'] .practice-option__indicator {
+  display: none;
+}
+.practice-session[data-session-kind='drill']
+  .practice-option:has(input[type='radio']:checked)
+  .practice-option__text {
+  font-weight: 700;
 }
 .practice-choices:disabled .practice-option {
   cursor: default;
@@ -3320,6 +3397,10 @@ a.settings-row:hover {
   }
   .practice-question {
     border: 0 !important;
+  }
+  .practice-session[data-session-kind='drill'] .practice-stem {
+    font-size: 15px;
+    line-height: 1.55;
   }
   .practice-toolbar {
     margin-inline: -16px;
