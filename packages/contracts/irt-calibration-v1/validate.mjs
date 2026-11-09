@@ -408,6 +408,7 @@ export function validateResult(output, input, expectedDispatch) {
             ? 'NOT_COMPARABLE'
             : 'INSUFFICIENT';
   assert(o.measurementState === expected, 'IRT_RESULT_STATE_INVALID');
+  const responseByItem=new Map(input.responses.map(a=>[`${a.attemptId}:${a.questionVersionId}`,a]));
   for (const row of o.respondents) {
     const r = people.get(row.attemptId);
     assert(
@@ -438,12 +439,7 @@ export function validateResult(output, input, expectedDispatch) {
           (id) =>
             delivered.includes(id) &&
             results.get(id).measurementState === 'CALIBRATED' &&
-            input.responses.some(
-              (a) =>
-                a.attemptId === row.attemptId &&
-                a.questionVersionId === id &&
-                ['RESPONDED', 'OMITTED'].includes(a.responseState),
-            ),
+            ['RESPONDED','OMITTED'].includes(responseByItem.get(`${row.attemptId}:${id}`)?.responseState),
         ) &&
           input.referenceQuestionVersionIds.every(
             (id) => results.get(id).measurementState === 'CALIBRATED',
@@ -468,12 +464,7 @@ export function validateResult(output, input, expectedDispatch) {
             .questionVersionIds.every(
               (id) =>
                 items.get(id).contentState === 'INVALID' ||
-                input.responses.some(
-                  (a) =>
-                    a.attemptId === row.attemptId &&
-                    a.questionVersionId === id &&
-                    ['INVALID', 'NOT_PRESENTED'].includes(a.responseState),
-                ),
+                ['INVALID','NOT_PRESENTED'].includes(responseByItem.get(`${row.attemptId}:${id}`)?.responseState),
             ),
           'IRT_RESULT_STATE_INVALID',
         );
