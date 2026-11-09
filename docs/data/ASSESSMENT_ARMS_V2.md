@@ -27,7 +27,7 @@ Harness membuat cluster loopback sementara, memasang migrasi sampai 0050, menamb
 
 ## Penerapan dan pemulihan
 
-Migration forward `0051_assessment_arms_v2.sql` dimiliki repo utama, termasuk journal, fungsi dan grants. Pada pekerjaan ini hanya diterapkan di cluster disposable. Sebelum penerapan nyata, tim Software harus mereview DDL dan menjalankan upgrade-check terhadap salinan histori yang disanitasi. Tidak ada DROP/UPDATE atas histori attempt atau XP.
+Migration forward `0052_assessment_arms_v2.sql` dimiliki repo utama, termasuk journal, fungsi dan grants. Pada pekerjaan ini hanya diterapkan di cluster disposable. Sebelum penerapan nyata, tim Software harus mereview DDL dan menjalankan upgrade-check terhadap salinan histori yang disanitasi. Tidak ada DROP/UPDATE atas histori attempt atau XP.
 
 Rollback operasional: biarkan routing v2 tidak aktif; hentikan pembuatan arm/set baru. Jangan menghapus delivery/assignment atau menjalankan down migration yang membuang histori. Koreksi schema berikutnya harus berupa migration forward.
 
