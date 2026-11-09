@@ -1,0 +1,335 @@
+.page {
+  --landing-bg: var(--numora-ivory-50);
+  --landing-paper: var(--color-surface);
+  --landing-text: var(--color-text);
+  --landing-muted: var(--color-text-muted);
+  --landing-accent: var(--color-primary);
+  --landing-line: var(--color-border);
+  --landing-tint: var(--numora-purple-50);
+  --landing-grid: var(--numora-purple-200);
+  color: var(--landing-text);
+  background: var(--landing-bg);
+  min-height: 100dvh;
+}
+
+.container {
+  width: min(100% - 2rem, 73rem);
+  margin-inline: auto;
+}
+
+.header,
+.footer,
+.header nav,
+.actions,
+.boardHeader {
+  display: flex;
+  align-items: center;
+}
+
+.header,
+.footer {
+  justify-content: space-between;
+  gap: 1rem;
+  padding-block: 1rem;
+}
+
+.header {
+  border-bottom: 1px solid var(--landing-line);
+}
+
+.header nav {
+  gap: clamp(0.75rem, 3vw, 2rem);
+}
+
+.header a,
+.footer a,
+.secondary {
+  display: inline-flex;
+  align-items: center;
+  min-height: 44px;
+  color: var(--landing-muted);
+  font-size: 0.875rem;
+  font-weight: 700;
+}
+
+.header a:hover,
+.footer a:hover,
+.secondary:hover {
+  color: var(--landing-accent);
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+
+.header a.headerLogin {
+  padding-inline: 1rem;
+  border: 1px solid var(--landing-line);
+  border-radius: 0.75rem;
+  color: var(--landing-accent);
+}
+
+.hero {
+  display: grid;
+  grid-template-columns: 1fr 1fr;
+  align-items: center;
+  gap: clamp(1.75rem, 5vw, 4.75rem);
+  padding-block: clamp(2.5rem, 6vw, 5rem);
+}
+
+.kicker {
+  color: var(--landing-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  letter-spacing: 0.12em;
+  text-transform: uppercase;
+}
+
+.intro h1 {
+  margin-block: 0.75rem 1.25rem;
+  font-size: clamp(2.5rem, 5.25vw, 4.65rem);
+  font-weight: 850;
+  line-height: 1.06;
+  letter-spacing: -0.055em;
+  text-wrap: balance;
+}
+
+.intro h1 span {
+  color: var(--landing-accent);
+}
+
+.summary {
+  max-width: 42ch;
+  font-size: clamp(1rem, 1.6vw, 1.125rem);
+}
+
+.summary,
+.note,
+.steps p,
+.school p:not(.kicker) {
+  color: var(--landing-muted);
+}
+
+.actions {
+  flex-wrap: wrap;
+  gap: 0.5rem 1.25rem;
+  margin-block: 1.75rem 0.75rem;
+}
+
+.primary {
+  display: inline-flex;
+  width: fit-content;
+  align-items: center;
+  justify-content: center;
+  gap: 0.625rem;
+  min-height: 48px;
+  padding: 0.625rem 1.125rem;
+  border-radius: 0.75rem;
+  background: var(--color-primary);
+  color: var(--numora-pearl-50);
+  font-weight: 750;
+}
+
+.primary:hover {
+  background: var(--color-primary-hover);
+}
+
+.note {
+  font-size: 0.875rem;
+}
+
+.board {
+  position: relative;
+  isolation: isolate;
+  display: flex;
+  flex-direction: column;
+  justify-content: space-between;
+  min-height: clamp(19rem, 37vw, 29rem);
+  margin: 0;
+  padding: clamp(1rem, 2.6vw, 1.75rem);
+  overflow: hidden;
+  border: 1px solid var(--landing-line);
+  border-radius: 1.75rem;
+  background-color: var(--landing-tint);
+  background-image:
+    linear-gradient(to right, var(--landing-grid) 1px, transparent 1px),
+    linear-gradient(to bottom, var(--landing-grid) 1px, transparent 1px);
+  background-size: 2rem 2rem;
+}
+
+.boardHeader {
+  justify-content: space-between;
+  gap: 0.5rem;
+}
+
+.boardHeader span,
+.board figcaption {
+  padding: 0.25rem 0.6rem;
+  border-radius: 0.5rem;
+  background: var(--landing-paper);
+  color: var(--landing-muted);
+  font-size: 0.75rem;
+  font-weight: 750;
+}
+
+.board figcaption {
+  align-self: flex-end;
+}
+
+.owl {
+  position: absolute;
+  inset: auto -5% 5% auto;
+  z-index: -1;
+  width: 86%;
+  height: auto;
+}
+
+.example {
+  align-self: flex-start;
+  padding: clamp(0.625rem, 2vw, 1.125rem);
+  border: 1px solid var(--landing-line);
+  border-radius: 1rem;
+  background: var(--landing-paper);
+  box-shadow: 0 4px 0 var(--landing-grid);
+}
+
+.example span {
+  color: var(--landing-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+}
+
+.example strong {
+  display: block;
+  font-size: clamp(1.25rem, 2.5vw, 1.75rem);
+  line-height: 1.35;
+}
+
+.example p {
+  color: var(--landing-muted);
+  font-size: 0.875rem;
+}
+
+.guide {
+  padding-block: 1.75rem 3rem;
+  border-top: 1px solid var(--landing-line);
+}
+
+.guide h2,
+.school h2 {
+  margin-block: 0.35rem 0.75rem;
+  font-size: clamp(1.75rem, 3.3vw, 2.65rem);
+  letter-spacing: -0.04em;
+  text-wrap: balance;
+}
+
+.steps {
+  display: grid;
+  grid-template-columns: repeat(3, 1fr);
+  gap: 1.25rem;
+  margin-block: 1.5rem 0;
+  padding: 0;
+  list-style: none;
+  counter-reset: step;
+}
+
+.steps li {
+  position: relative;
+  counter-increment: step;
+  padding-block: 1rem 0;
+  border-top: 1px solid var(--landing-line);
+}
+
+.steps li::before {
+  position: absolute;
+  top: 1rem;
+  right: 0;
+  color: var(--landing-accent);
+  font-size: 0.75rem;
+  font-weight: 800;
+  content: counter(step, decimal-leading-zero);
+}
+
+.steps svg {
+  color: var(--landing-accent);
+}
+
+.steps h3 {
+  margin-block: 0.55rem 0.25rem;
+  font-size: 1.125rem;
+}
+
+.steps p {
+  max-width: 34ch;
+}
+
+.school {
+  display: grid;
+  grid-template-columns: 1fr auto;
+  align-items: center;
+  gap: 1rem;
+  padding: clamp(1.25rem, 4vw, 2.5rem);
+  border: 1px solid var(--landing-line);
+  border-radius: 1.5rem;
+  background: var(--landing-tint);
+}
+
+.footer {
+  margin-top: 2rem;
+  border-top: 1px solid var(--landing-line);
+}
+
+.page :focus-visible {
+  outline-color: var(--landing-accent);
+}
+
+@media (max-width: 52rem) {
+  .hero {
+    grid-template-columns: 1fr;
+  }
+
+  .intro h1 {
+    max-width: 15ch;
+  }
+
+  .board {
+    min-height: clamp(19rem, 61vw, 25rem);
+  }
+
+  .owl {
+    width: min(86%, 31rem);
+  }
+}
+
+@media (max-width: 37rem) {
+  .header {
+    flex-wrap: wrap;
+    gap: 0.25rem 1rem;
+    padding-block: 0.5rem;
+  }
+
+  .header nav {
+    flex-wrap: wrap;
+  }
+
+  .steps,
+  .school {
+    grid-template-columns: 1fr;
+  }
+}
+
+@media (prefers-color-scheme: dark) {
+  .page {
+    color-scheme: dark;
+    --landing-bg: #1b1425;
+    --landing-paper: #2a1f37;
+    --landing-text: var(--numora-ivory-50);
+    --landing-muted: #e2d4ec;
+    --landing-accent: var(--numora-purple-300);
+    --landing-line: #4f3c60;
+    --landing-tint: #30213f;
+    --landing-grid: #463257;
+  }
+
+  .page :global(.numora-brand) {
+    color: var(--landing-accent);
+  }
+}
