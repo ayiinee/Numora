@@ -49,7 +49,11 @@ export type MediaLinksDto = { "media": (PreviewMediaDto)[]; };
 
 export type DrillQuestionDto = { "type"?: "SINGLE_CHOICE" | "MULTIPLE_CHOICE_MULTIPLE_ANSWER" | "CATEGORY"; "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "categories"?: (OptionDto)[]; "richStem"?: RichContentDto; "richOptions"?: (PreviewOptionDto)[]; "questionInstanceId": string; "stem": string; "options": (OptionDto)[]; "selectedOptionId": string | null; };
 
-export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "serverTime"?: string; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
+export type DrillClockDto = { "elapsedMs": number; "remainingMs": number; "sessionId": string | null; };
+
+export type UpdateDrillClockDto = { "sessionId": string; "action": "heartbeat" | "pause"; };
+
+export type DrillAttemptDto = { "id": string; "levelId": string; "levelTitle": string; "status": "inProgress" | "completed"; "startedAt": string; "serverTime"?: string; "clock"?: DrillClockDto; "isDemo": boolean; "questions": (DrillQuestionDto)[]; };
 
 export type SavedAnswerDto = { "answer"?: { "optionId": string; } | { "optionIds": (string)[]; } | { "categoryByStatementId": Record<string, string>; } | null; "questionInstanceId": string; "selectedOptionId": string | null; };
 

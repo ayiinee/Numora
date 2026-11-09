@@ -11,12 +11,12 @@ import { joinClass } from '@/lib/api';
 import { DataState, StudentGate } from './ui';
 import { learningApi } from './api';
 import {
-  AccountHeader,
   ProfileIdentity,
   ProfileStats,
   ProfileTryout,
   ProfileSetting,
 } from './account-presentation';
+import { StudentSectionHeader } from './student-section-header';
 
 export function ProfileScreen() {
   return <StudentGate>{(token) => <ProfileContent token={token} />}</StudentGate>;
@@ -75,7 +75,9 @@ function ProfileContent({ token }: { token: string }) {
   const avatar = state.session.user?.user_metadata?.avatar_url;
   return (
     <AppShell className="student-profile-shell student-account-shell">
-      <AccountHeader title="Profil" settings />
+      <header>
+        <StudentSectionHeader title="Profil" />
+      </header>
       <div className="student-profile-layout">
         <section className="student-profile-overview" aria-label="Profil dan progres">
           <ProfileIdentity

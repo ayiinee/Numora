@@ -3,8 +3,8 @@
 import Link from 'next/link';
 import { useNotificationSummary } from './notification-queries';
 import { Avatar, Icon, ProgressBar, Skeleton } from '@tka/ui';
-import type { StudentDashboardDto, CurrentTryoutDto, DashboardDrillDto } from './generated-types';
-import type { AssessmentRecord } from './types';
+import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
+import { StudentIllustratedHero } from './student-illustrated-hero';
 
 const tryoutLabels: Record<CurrentTryoutDto['state'], string> = {
   unavailable: 'Belum tersedia',
@@ -28,14 +28,6 @@ export function StudentHomeIdentityHeader({
   const announcement = tryout?.state === 'open' || tryout?.state === 'inProgress';
   return (
     <div className="sh-identity">
-      <img
-        className="sh-identity__pattern"
-        src="/illustrations/student-home/header-pattern.png"
-        width="1080"
-        height="2160"
-        alt=""
-        aria-hidden="true"
-      />
       <div className="sh-identity__top">
         <Link
           href="/student/profile"
@@ -209,18 +201,13 @@ export function StudentIdentityHeader({
 
 export function HomeTryoutSkeleton() {
   return (
-    <div
-      className="sh-hero sh-hero--tryout student-home-hero"
-      role="status"
-      aria-label="Memuat Tryout"
-    >
-      <span className="sh-hero__eyebrow">TRYOUT</span>
-      <div className="sh-hero__copy">
+    <StudentIllustratedHero variant="tryout" className="sh-hero" badges={<span>TRYOUT</span>}>
+      <div className="sh-hero__loading" role="status" aria-label="Memuat Tryout">
         <Skeleton height={32} width="75%" />
         <Skeleton height={16} width="90%" />
-        <Skeleton height={44} width={140} />
+        <Skeleton height={44} width="min(100%, 140px)" />
       </div>
-    </div>
+    </StudentIllustratedHero>
   );
 }
 
@@ -249,67 +236,52 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
               ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
               : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
   return (
-    <div
-      className="sh-hero sh-hero--tryout student-home-hero"
-      aria-label={data.title ?? 'Tryout Matematika'}
+    <StudentIllustratedHero
+      variant="tryout"
+      className="sh-hero"
+      badges={
+        <>
+          <span>TRYOUT</span>
+          <span>
+            {tryoutLabels[data.state]}
+            {data.isDemo ? ' · Demo' : ''}
+          </span>
+          {(data.questionCount != null || data.durationSeconds != null) && (
+            <span>
+              {data.questionCount != null ? `${data.questionCount} soal` : ''}
+              {data.questionCount != null && data.durationSeconds != null ? ' · ' : ''}
+              {data.durationSeconds != null ? `${Math.ceil(data.durationSeconds / 60)} menit` : ''}
+            </span>
+          )}
+        </>
+      }
+      title={data.title ?? 'Tryout Matematika'}
+      description={description}
     >
-      <span className="sh-hero__eyebrow">TRYOUT</span>
-      <div className="sh-hero__copy">
-        <span className="sh-hero__state">
-          {tryoutLabels[data.state]}
-          {data.isDemo ? ' · Demo' : ''}
-        </span>
-        <h2>{data.title ?? 'Tryout Matematika'}</h2>
-        <p>{description}</p>
-        {(data.questionCount != null || data.durationSeconds != null) && (
-          <p className="sh-hero__meta">
-            {data.questionCount != null ? `${data.questionCount} soal` : ''}
-            {data.questionCount != null && data.durationSeconds != null ? ' · ' : ''}
-            {data.durationSeconds != null ? `${Math.ceil(data.durationSeconds / 60)} menit` : ''}
-          </p>
-        )}
-        <Link className="sh-hero__action" href={action.href}>
-          {action.label}
-          <Icon name="chevron" width={18} height={18} />
-        </Link>
-      </div>
-    </div>
+      <Link className="sh-hero__action" href={action.href}>
+        {action.label}
+        <Icon name="chevron" width={14} height={14} />
+      </Link>
+    </StudentIllustratedHero>
   );
 }
 
 export function HomeFeatures(_: { data: StudentDashboardDto }) {
-  const features: {
-    title: string;
-    image: string;
-    imageWidth: number;
-    imageHeight: number;
-    href: string;
-    tone: string;
-    subtitle?: string | undefined;
-  }[] = [
+  const features = [
     {
       title: 'Latihan Soal',
-      image: '/illustrations/student-home/reference-practice.png',
-      imageWidth: 76,
-      imageHeight: 78,
+      image: '/illustrations/student-home/shortcut-practice.webp',
       href: '/student/learn',
-      tone: 'violet',
     },
     {
       title: 'Tryout',
-      image: '/illustrations/student-home/reference-tryout.png',
-      imageWidth: 93,
-      imageHeight: 77,
+      image: '/illustrations/student-home/shortcut-tryout.webp',
       href: '/student/tryout',
-      tone: 'blue',
     },
     {
       title: 'PvP',
-      image: '/illustrations/student-home/reference-pvp.png',
-      imageWidth: 99,
-      imageHeight: 71,
+      image: '/illustrations/student-home/shortcut-pvp.webp',
       href: '/student/pvp',
-      tone: 'mint',
     },
   ];
   return (
@@ -319,110 +291,14 @@ export function HomeFeatures(_: { data: StudentDashboardDto }) {
       </div>
       <div className="sh-shortcuts__grid">
         {features.map((item) => (
-          <Link
-            key={item.title}
-            className={`sh-shortcut sh-shortcut--${item.tone}`}
-            href={item.href}
-          >
+          <Link key={item.href} className="sh-shortcut" href={item.href}>
             <span className="sh-shortcut__icon">
-              <img src={item.image} width={item.imageWidth} height={item.imageHeight} alt="" />
+              <img src={item.image} width={384} height={384} alt="" />
             </span>
             <strong>{item.title}</strong>
-            {item.subtitle && <small>{item.subtitle}</small>}
           </Link>
         ))}
       </div>
     </section>
-  );
-}
-
-export function HomeResume({ attempt }: { attempt: DashboardDrillDto }) {
-  return (
-    <div className="home-resume">
-      <span>Lanjut: {attempt.title}</span>
-      <Link href={`/student/drill/${attempt.attemptId}`}>
-        <Icon name="rocket" width={15} height={15} />
-        Lanjutkan latihan
-      </Link>
-    </div>
-  );
-}
-
-export function HomeActivity({
-  item,
-  resume,
-}: {
-  item: AssessmentRecord;
-  resume?: DashboardDrillDto | null | undefined;
-}) {
-  const ready = item.resultState === 'ready' && item.activity !== 'pretest';
-  const body = (
-    <>
-      <span className={`sh-activity__icon sh-activity__icon--${item.activity}`}>
-        {item.activity === 'pretest' ? (
-          <Icon name="target" width={25} height={25} />
-        ) : (
-          <img
-            src={`/illustrations/student-home/reference-${item.activity}-activity.png`}
-            width="65"
-            height="62"
-            alt=""
-          />
-        )}
-      </span>
-      <span className="sh-activity__body">
-        <strong>{item.title}</strong>
-        <span className="sh-activity__detail">
-          {item.activity.toUpperCase()}
-          {item.subchapterTitle ? ` · ${item.subchapterTitle}` : ''}
-          {item.score !== null && item.resultState === 'ready' ? ` · Nilai ${item.score}%` : ''}
-        </span>
-      </span>
-      <span className="sh-activity__status">
-        {item.resultState === 'waitingIrt' && (
-          <span className="sh-activity__pending">Menunggu hasil</span>
-        )}
-        {item.xpState === 'ready' && item.xp != null && (
-          <span className="sh-activity__xp">
-            <img
-              src="/illustrations/student-home/reference-xp-star.png"
-              width="28"
-              height="26"
-              alt=""
-            />
-            {item.xp} XP
-          </span>
-        )}
-        {item.starsState === 'ready' && item.stars != null && <span>{item.stars}/3 bintang</span>}
-        {item.xpState === 'legacy' && <span>XP tidak tercatat pada hasil versi lama</span>}
-        {item.starsState === 'legacy' && <span>Bintang tidak tercatat pada hasil versi lama</span>}
-        {item.xpState === 'pending' && <span>XP belum tersedia</span>}
-        {item.starsState === 'pending' && <span>Bintang belum tersedia</span>}
-        {item.isDemo && <span className="sh-activity__demo">Demo</span>}
-      </span>
-      <time dateTime={item.submittedAt}>
-        {new Intl.DateTimeFormat('id-ID', {
-          timeZone: 'Asia/Jakarta',
-          day: 'numeric',
-          month: 'short',
-        }).format(new Date(item.submittedAt))}
-      </time>
-      {ready && <Icon name="chevron" width={17} height={17} />}
-    </>
-  );
-  return (
-    <div className="sh-activity-entry">
-      {ready ? (
-        <Link
-          className="sh-activity"
-          href={`/student/${item.activity === 'tryout' ? 'tryout' : 'drill'}/${item.attemptId}/result`}
-        >
-          {body}
-        </Link>
-      ) : (
-        <div className="sh-activity">{body}</div>
-      )}
-      {resume && <HomeResume attempt={resume} />}
-    </div>
   );
 }

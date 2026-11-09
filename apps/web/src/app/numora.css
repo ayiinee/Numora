@@ -120,28 +120,6 @@ img {
   border-radius: 50%;
   background: var(--color-primary);
 }
-.sidebar-note {
-  margin: auto 8px 26px;
-  padding: 20px 16px;
-  background: var(--color-bg-light);
-  border-radius: 16px;
-  border: 1px solid var(--color-bg);
-}
-.sidebar-note svg {
-  color: var(--color-primary);
-  margin-bottom: 12px;
-}
-.sidebar-note strong {
-  font-size: 15px;
-  line-height: 1.5;
-  display: block;
-}
-.sidebar-note p {
-  margin-top: 8px;
-  color: var(--color-text-muted);
-  font-size: 12px;
-  line-height: 1.7;
-}
 .sidebar-account {
   display: flex;
   align-items: center;
@@ -1610,7 +1588,7 @@ a.settings-row:hover {
   }
   .app-topbar.numora-top-bar--context,
   .app-topbar.numora-top-bar--identity {
-    background: var(--header-gradient);
+    background: var(--student-header-background, var(--header-gradient));
     color: var(--color-text-inverse);
   }
   .app-topbar.numora-top-bar--context .numora-brand,
@@ -2440,37 +2418,6 @@ a.settings-row:hover {
   line-height: 1.4;
   margin-top: 0;
 }
-.home-resume {
-  margin-top: 4px;
-  padding-top: 4px;
-  border-top: 1px dashed var(--color-selected);
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  align-items: center;
-}
-.home-activity-entry .home-resume {
-  margin: 0 12px 4px 68px;
-  padding-top: 0;
-}
-.home-resume > span {
-  font-size: 10px;
-  color: var(--color-text-muted);
-  min-width: 0;
-}
-.home-resume a {
-  font-size: 10px;
-  font-weight: 800;
-  background: var(--numora-peach-200);
-  color: var(--numora-peach-900);
-  border-radius: 10px;
-  min-height: 44px;
-  padding: 6px 10px;
-  display: inline-flex;
-  gap: 4px;
-  align-items: center;
-  flex-shrink: 0;
-}
 .home-podium .home-card-heading {
   border-bottom: 1px solid var(--color-border-light);
   padding-bottom: 10px;
@@ -2784,8 +2731,7 @@ a.settings-row:hover {
 .student-home-hero__footer a:hover {
   background: var(--color-primary-light);
 }
-.student-home-hero__footer a:active,
-.home-resume a:active {
+.student-home-hero__footer a:active {
   box-shadow: inset 0 0 0 2px var(--color-primary);
 }
 .student-identity__person:hover strong,
@@ -2941,209 +2887,81 @@ a.settings-row:hover {
   padding: 20px;
   box-shadow: var(--shadow-sm);
 }
-.learning-adventure {
-  display: grid;
-  gap: 16px;
-}
-.adventure-summary {
-  --card-padding: 20px;
-}
-.adventure-summary h2 {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.4;
-  margin: 6px 0 12px;
-}
-.adventure-summary__labels {
-  display: flex;
-  justify-content: space-between;
-  gap: 12px;
-  font-size: 12px;
-  margin-bottom: 8px;
-}
-.adventure-summary__labels strong {
-  color: var(--color-success-text);
-}
-.adventure-layout {
-  display: grid;
-  grid-template-columns: minmax(0, 1fr) 300px;
-  gap: 32px;
-}
-.level-path {
-  list-style: none;
-  padding: 12px 0;
-  margin: 0;
-  max-width: 520px;
-  width: 100%;
-  justify-self: center;
-}
-.level-path__step {
-  position: relative;
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  min-height: 220px;
-  padding-bottom: 70px;
-}
-.level-path__step:nth-child(3n + 2) > .level-path__node,
-.level-path__step:nth-child(3n + 2) > .level-path__caption {
-  align-self: flex-start;
-  margin-left: 24px;
-}
-.level-path__step:nth-child(3n) > .level-path__node,
-.level-path__step:nth-child(3n) > .level-path__caption {
-  align-self: flex-end;
-  margin-right: 24px;
-}
-.level-path__node {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
-  gap: 4px;
-  width: 80px;
-  height: 80px;
-  border-radius: 24px;
-  color: var(--color-text-muted);
-  border: 8px solid var(--color-primary-light);
-  background: white;
-  box-shadow: 0 8px 0 var(--numora-purple-200);
-  z-index: 1;
-}
-.level-path__node span {
-  font-size: 10px;
-  font-weight: 800;
-}
-.level-path__step--completed .level-path__node {
-  border: 0;
-  border-radius: 50%;
-  background: var(--color-success);
-  color: white;
-  box-shadow: 0 8px 0 var(--color-success-text);
-}
-.level-path__step--current .level-path__node {
-  width: 104px;
-  height: 104px;
-  border-radius: 50%;
-  background: var(--color-primary);
-  border-color: var(--numora-purple-200);
-  box-shadow: 0 8px 0 var(--color-primary-strong);
-  color: white;
-}
-.level-path__caption {
-  background: white;
-  border-radius: 14px;
-  padding: 12px;
-  max-width: 260px;
-  text-align: center;
-  margin-top: 16px;
-  z-index: 1;
-  box-shadow: var(--shadow-sm);
-}
-.level-path__caption h3 {
-  font-size: 13px;
-  font-weight: 700;
-}
-.level-path__caption p,
-.level-path__caption small {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-.level-path__caption small {
-  color: var(--color-danger);
-}
-.level-path__step--current .level-path__caption {
-  display: none;
-}
-.path-scores {
-  display: flex;
-  gap: 24px;
-  justify-content: center;
-  margin: 10px 0;
-}
-.path-scores dt {
-  font-size: 11px;
-  color: var(--color-text-muted);
-}
-.path-scores dd {
-  font-weight: 800;
-}
-.level-path__connector {
-  position: absolute;
-  top: 80px;
-  bottom: -24px;
-  left: 50%;
-  width: 50%;
-  border-left: 6px dashed var(--numora-purple-200);
-  border-radius: 50%;
-  transform: translateX(-50%) rotate(-24deg);
-}
-.level-path__step:nth-child(2n) .level-path__connector {
-  transform: translateX(-50%) rotate(24deg);
-}
-.level-path__step--completed .level-path__connector {
-  border-color: var(--color-success);
-}
-.adventure-focus {
-  --card-padding: 16px;
-  width: 100%;
-  margin-top: 24px;
-  position: relative;
-  z-index: 1;
-}
-.adventure-focus h3 {
-  font-size: 20px;
-  font-weight: 800;
-  margin: 10px 0 4px;
-}
-.adventure-focus p {
-  font-size: 12px;
-  color: var(--color-text-muted);
-  margin-bottom: 20px;
-}
-.adventure-focus__badge {
-  position: absolute;
-  top: -30px;
-  right: 16px;
-  border-radius: 12px 12px 0 12px;
-  background: var(--color-primary);
-  color: white;
-  padding: 6px 12px;
-  font-size: 12px;
-  font-weight: 700;
-}
-.adventure-context {
-  align-self: start;
-  position: sticky;
-  top: 24px;
-}
-.adventure-context h3 {
-  font-size: 20px;
-  margin: 8px 0;
-}
-.adventure-context p {
-  font-size: 14px;
-  color: var(--color-text-muted);
-  margin-bottom: 20px;
-}
-.adventure-policy {
-  display: flex;
-  align-items: start;
-  gap: 12px;
-  --card-background: var(--color-secondary-light);
-  font-size: 13px;
-  line-height: 1.6;
-}
-.adventure-policy svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
 .learning-practice-shell .app-topbar,
 .learning-practice-shell .page-heading {
   display: none;
 }
 .learning-practice-shell .app-content {
   padding-top: 0;
+}
+.drill-paused {
+  padding-block: clamp(2rem, 8vh, 5.5rem);
+}
+.drill-paused__card {
+  --card-padding: clamp(1.25rem, 5vw, 2rem);
+  display: grid;
+  gap: var(--space-4);
+  max-width: 30rem;
+  margin-inline: auto;
+  text-align: center;
+}
+.drill-paused__heading h1 {
+  font-size: clamp(1.5rem, 4vw, 1.875rem);
+  font-weight: 800;
+  line-height: 1.2;
+}
+.drill-paused__heading p {
+  margin-top: var(--space-1);
+  font-weight: 600;
+  overflow-wrap: anywhere;
+}
+.drill-paused__description {
+  color: var(--color-text-muted);
+}
+.drill-paused__duration {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  justify-content: space-between;
+  gap: var(--space-2) var(--space-3);
+  padding: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary-strong);
+  text-align: start;
+}
+.drill-paused__duration span {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-2);
+  font-size: var(--text-sm);
+  font-weight: 600;
+}
+.drill-paused__duration svg {
+  flex: none;
+}
+.drill-paused__duration strong {
+  font-size: 1.25rem;
+  font-variant-numeric: tabular-nums;
+}
+.drill-paused__actions {
+  display: grid;
+  gap: var(--space-2);
+}
+.drill-paused__actions a {
+  display: grid;
+  min-height: 44px;
+  place-items: center;
+  justify-self: center;
+  padding-inline: var(--space-3);
+  color: var(--color-primary-strong);
+  font-weight: 600;
+  text-decoration: underline;
+  text-underline-offset: 0.2em;
+}
+.drill-paused__actions [role='alert'] {
+  color: var(--color-danger);
+  overflow-wrap: anywhere;
 }
 .practice-session {
   max-width: 980px;
@@ -3353,6 +3171,14 @@ a.settings-row:hover {
   color: white;
   background: var(--color-primary);
 }
+.practice-session[data-session-kind='drill'] .practice-option__indicator {
+  display: none;
+}
+.practice-session[data-session-kind='drill']
+  .practice-option:has(input[type='radio']:checked)
+  .practice-option__text {
+  font-weight: 700;
+}
 .practice-choices:disabled .practice-option {
   cursor: default;
 }
@@ -3524,12 +3350,6 @@ a.settings-row:hover {
   accent-color: var(--color-primary);
 }
 @media (max-width: 959px) {
-  .adventure-layout {
-    display: block;
-  }
-  .adventure-context {
-    display: none;
-  }
   .practice-layout {
     display: flex;
     flex-direction: column;
@@ -3575,14 +3395,12 @@ a.settings-row:hover {
     flex: 1 1 calc(100% - 64px);
     margin-left: 64px;
   }
-  .level-path {
-    padding-top: 12px;
-  }
-  .adventure-focus h3 {
-    font-size: 20px;
-  }
   .practice-question {
     border: 0 !important;
+  }
+  .practice-session[data-session-kind='drill'] .practice-stem {
+    font-size: 15px;
+    line-height: 1.55;
   }
   .practice-toolbar {
     margin-inline: -16px;
@@ -3883,15 +3701,6 @@ a.settings-row:hover {
   .drill-result__actions {
     margin-inline: -16px;
   }
-  .learning-map-shell .page-heading {
-    padding-top: 0;
-  }
-  .learning-map-shell .page-heading h1 {
-    font-size: 14px;
-  }
-  .learning-map-shell .page-heading p {
-    display: none;
-  }
 }
 
 .practice-submit-dialog {
@@ -3940,72 +3749,33 @@ a.settings-row:hover {
   box-shadow: inset 0 0 0 2px var(--color-primary);
 }
 .practice-actions button:focus-visible,
-.level-path button:focus-visible,
 .practice-profile:focus-visible,
 .practice-exit:focus-visible {
   outline: 3px solid var(--color-primary);
   outline-offset: 3px;
 }
 
-.level-path__connector {
-  top: 40px;
-  bottom: auto;
-  left: 0;
-  width: 100%;
-  height: 100%;
-  border: 0;
-  border-radius: 0;
-  transform: none;
-  color: var(--numora-purple-200);
+.learning-map-shell .page-heading {
+  width: min(100%, 520px);
+  margin-inline: auto;
 }
-.level-path__step:nth-child(2n) .level-path__connector {
-  transform: none;
+.learning-map-shell:has(.adventure-summary) .page-heading,
+.learning-map-shell:has(.adventure-summary) .app-topbar {
+  display: none;
 }
-.level-path__step--current .level-path__connector,
-.level-path__step--completed .level-path__connector {
-  color: var(--color-success);
-}
-.level-path__step {
-  padding-bottom: 48px;
-}
-.adventure-focus__badge {
-  position: static;
-  display: inline-block;
-  border-radius: 20px;
-  margin-bottom: 12px;
-}
-.path-scores {
-  gap: 16px;
-  margin: 8px 0;
-}
-.path-scores div {
-  display: flex;
-  align-items: center;
-  gap: 6px;
-}
-.level-path__caption {
-  margin-top: 12px;
-}
+
 @media (max-width: 959px) {
+  .learning-map-shell .app-topbar {
+    display: none;
+  }
   .learning-map-shell .app-content {
-    padding-top: 0;
+    padding-top: 12px;
   }
   .learning-map-shell .page-heading {
     margin-bottom: 8px;
   }
   .learning-map-shell .page-heading .back-link {
     margin: 0;
-  }
-  .learning-map-shell .page-heading h1 {
-    position: absolute;
-    width: 1px;
-    height: 1px;
-    padding: 0;
-    margin: -1px;
-    overflow: hidden;
-    clip: rect(0, 0, 0, 0);
-    white-space: nowrap;
-    border: 0;
   }
   .learning-map-shell .app-footer {
     display: none;
@@ -4098,9 +3868,6 @@ a.settings-row:hover {
   margin-bottom: 12px;
 }
 
-.adventure-mobile-action {
-  display: none;
-}
 .drill-result {
   padding-bottom: 92px;
 }
@@ -4113,45 +3880,6 @@ a.settings-row:hover {
   margin: 0;
   padding-bottom: max(12px, env(safe-area-inset-bottom));
 }
-@media (max-width: 959px) {
-  .adventure-mobile-action {
-    display: flex;
-    position: fixed;
-    bottom: calc(65px + env(safe-area-inset-bottom));
-    left: 0;
-    right: 0;
-    padding: 12px 16px;
-    align-items: center;
-    justify-content: space-between;
-    gap: 12px;
-    background: white;
-    z-index: 19;
-    box-shadow: var(--shadow-sm);
-  }
-  .adventure-mobile-action > div {
-    display: flex;
-    flex-direction: column;
-    gap: 4px;
-    flex: 1;
-    min-width: 0;
-  }
-  .adventure-mobile-action small {
-    font-size: 11px;
-    color: var(--color-text-muted);
-  }
-  .adventure-mobile-action strong {
-    font-size: 12px;
-    color: var(--color-primary);
-  }
-  .adventure-mobile-action button {
-    font-size: 12px;
-    flex-shrink: 0;
-  }
-  .learning-map-shell .app-content {
-    padding-bottom: 100px;
-  }
-}
-
 /* Phase 4: Tryout catalogue/detail and focused simulation/history views. */
 .tryout-shell--detail .app-topbar,
 .tryout-shell .page-heading {
@@ -4567,15 +4295,8 @@ a.settings-row:hover {
   margin: 24px auto;
   text-align: center;
 }
-.tryout-waiting__icon {
-  display: grid;
-  place-items: center;
-  margin: 0 auto 16px;
-  width: 72px;
-  height: 72px;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-radius: 50%;
+.tryout-waiting > img:first-child {
+  margin-bottom: 12px;
 }
 .tryout-waiting h2 {
   font-size: 22px;
@@ -4820,7 +4541,6 @@ a.settings-row:hover {
   gap: 10px;
   min-height: 64px;
   padding: 10px 16px;
-  background: linear-gradient(110deg, var(--color-primary), var(--color-primary-strong));
   color: white;
 }
 .pvp-header h1 {
@@ -4859,63 +4579,6 @@ a.settings-row:hover {
   border: 1px solid var(--pvp-glass-border);
   border-radius: var(--radius-full);
   padding: 4px 6px;
-}
-.pvp-hero {
-  position: relative;
-  overflow: hidden;
-  border-radius: 20px;
-  padding: 16px;
-  color: white;
-  background: linear-gradient(
-    115deg,
-    var(--color-primary-strong),
-    var(--color-primary) 65%,
-    var(--numora-purple-400)
-  );
-  box-shadow: var(--shadow-md);
-}
-.pvp-hero__badges {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10px;
-  margin-bottom: 14px;
-}
-.pvp-hero__badges span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--pvp-glass);
-  padding: 4px 8px;
-  border-radius: var(--radius-full);
-}
-.pvp-hero__badges span:first-child {
-  background: var(--color-accent);
-  color: var(--numora-peach-900);
-}
-.pvp-hero h1 {
-  max-width: 78%;
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.25;
-  margin-bottom: 6px;
-}
-.pvp-hero p {
-  max-width: 78%;
-  font-size: 12px;
-  line-height: 1.6;
-  color: white;
-}
-.pvp-hero__art {
-  position: absolute;
-  right: 16px;
-  bottom: 32px;
-  width: 60px;
-  height: 76px;
-  border-radius: 14px;
-  background: var(--pvp-glass);
-  display: grid;
-  place-items: center;
 }
 .pvp-lobby-layout,
 .pvp-lobby-main,
@@ -5603,15 +5266,8 @@ a.settings-row:hover {
     var(--numora-gold-100)
   );
 }
-.pvp-outcome-trophy {
-  display: grid;
-  place-items: center;
-  background: var(--color-reward);
-  color: var(--numora-gold-900);
-  border-radius: 16px;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px;
+.pvp-outcome-hero > img:first-child {
+  margin-bottom: 12px;
 }
 .pvp-outcome-state {
   display: inline-block;
@@ -5705,60 +5361,6 @@ a.settings-row:hover {
 .pvp-ranking-tabs button[aria-pressed='true'] {
   background: var(--color-success);
   color: white;
-}
-.pvp-ranking-hero {
-  padding: 16px;
-  border-radius: 20px;
-  color: white;
-  box-shadow: var(--shadow-md);
-  background: linear-gradient(120deg, var(--color-success), var(--pvp-green-deep));
-}
-.pvp-ranking-hero--medium {
-  background: linear-gradient(120deg, var(--color-primary-strong), var(--numora-purple-400));
-}
-.pvp-ranking-hero--hard {
-  background: linear-gradient(
-    120deg,
-    var(--color-danger),
-    var(--numora-peach-900) 60%,
-    var(--numora-purple-900)
-  );
-}
-.pvp-ranking-hero > div {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10px;
-}
-.pvp-ranking-hero > div span {
-  display: inline-flex;
-  align-items: center;
-  gap: 4px;
-  background: var(--pvp-glass);
-  padding: 4px 8px;
-  border-radius: var(--radius-full);
-}
-.pvp-ranking-hero h2 {
-  font-size: 20px;
-  font-weight: 800;
-  line-height: 1.35;
-  margin: 12px 0 4px;
-}
-.pvp-ranking-hero > p {
-  font-size: 12px;
-  line-height: 1.6;
-}
-.pvp-ranking-hero__rule {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  background: var(--pvp-glass);
-  padding: 10px;
-  border-radius: 14px;
-  margin-top: 14px;
-}
-.pvp-ranking-hero__rule svg {
-  flex-shrink: 0;
 }
 .pvp-ranking-layout {
   display: flex;
@@ -5909,10 +5511,7 @@ a.settings-row:hover {
   border-left: 6px solid var(--color-primary-strong);
   background: var(--color-selected);
 }
-.pvp-ranking-shell--hard .pvp-ranking-list li {
-  border-radius: 12px;
-  background: var(--color-secondary-light);
-}
+
 @media (min-width: 960px) {
   .pvp-lobby-layout {
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -5922,15 +5521,6 @@ a.settings-row:hover {
     position: sticky;
     top: 24px;
     align-self: start;
-  }
-  .pvp-hero {
-    padding: 24px;
-  }
-  .pvp-hero h1 {
-    font-size: 26px;
-  }
-  .pvp-hero p {
-    font-size: 14px;
   }
   .pvp-waiting-layout {
     grid-template-columns: minmax(0, 1fr) 300px;
@@ -6068,9 +5658,6 @@ a.settings-row:hover {
   .pvp-header__connection {
     display: none;
   }
-  .pvp-ranking-hero h2 {
-    font-size: 20px;
-  }
   .pvp-ranking-podium .leaderboard-podium__place:not(.leaderboard-podium__place--1) .numora-avatar {
     width: 56px !important;
     height: 56px !important;
@@ -6206,7 +5793,6 @@ a.settings-row:hover {
   min-height: 80px;
   padding: 16px 24px;
   color: var(--color-text-inverse);
-  background: var(--header-gradient);
 }
 .student-account-header > div {
   flex: 1;
@@ -7958,15 +7544,11 @@ a.settings-row:hover {
   justify-content: start;
   gap: 4px;
 }
-.materials-heading h1,
 .materials-section-title h2 {
   margin: 0;
   font-size: 20px;
   line-height: 1.35;
   font-weight: 800;
-}
-.materials-heading h1 {
-  letter-spacing: -0.03em;
 }
 .materials-heading p {
   max-width: 52ch;
@@ -8032,6 +7614,15 @@ a.settings-row:hover {
   background: var(--color-primary-light);
   color: var(--color-success);
 }
+.material-chapter .material-chapter__icon--illustrated {
+  background: transparent;
+}
+.material-chapter__icon--illustrated img {
+  display: block;
+  width: 100%;
+  height: 100%;
+  object-fit: contain;
+}
 .material-chapter__copy {
   display: contents;
 }
@@ -8088,16 +7679,7 @@ a.settings-row:hover {
   padding: 4px 14px 14px;
   background: var(--numora-soft-50);
 }
-.materials-detail__back {
-  display: inline-flex;
-  align-items: center;
-  gap: 6px;
-  width: fit-content;
-  min-height: 44px;
-  color: var(--color-primary);
-  font-weight: 700;
-}
-.materials-detail__heading h1 {
+.materials-detail__heading h2 {
   margin: 4px 0;
   font-size: 26px;
   line-height: 1.3;
@@ -8223,94 +7805,6 @@ a.settings-row:hover {
   text-align: center;
   padding: 8px;
 }
-.materials-recent-card {
-  --card-padding: 14px;
-  --card-radius: 20px;
-}
-.materials-recent-card .sh-activity {
-  display: grid;
-  grid-template-columns: 40px minmax(0, 1fr) auto;
-  align-items: center;
-  gap: 4px 10px;
-  min-width: 0;
-  color: var(--color-text);
-}
-.materials-recent-card .sh-activity__icon {
-  grid-column: 1;
-  grid-row: 1 / 3;
-  width: 40px;
-  height: 40px;
-  display: grid;
-  place-items: center;
-  border-radius: 12px;
-  background: var(--numora-peach-100);
-  overflow: hidden;
-}
-.materials-recent-card .sh-activity__icon img {
-  width: 36px;
-  height: 36px;
-  object-fit: contain;
-}
-.materials-recent-card .sh-activity__body {
-  grid-column: 2;
-  grid-row: 1;
-  display: grid;
-  min-width: 0;
-  gap: 3px;
-}
-.materials-recent-card .sh-activity__body strong {
-  font-size: 14px;
-  line-height: 1.3;
-  overflow-wrap: anywhere;
-}
-.materials-recent-card .sh-activity__detail,
-.materials-recent-card .sh-activity time {
-  color: var(--color-text-muted);
-  font-size: 11px;
-}
-.materials-recent-card .sh-activity__status {
-  grid-column: 2;
-  grid-row: 2;
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  color: var(--color-text-muted);
-  font-size: 11px;
-}
-.materials-recent-card .sh-activity__demo,
-.materials-recent-card .sh-activity__xp {
-  border-radius: 999px;
-  background: var(--color-selected);
-  color: var(--color-primary);
-  padding: 2px 6px;
-}
-.materials-recent-card .sh-activity time {
-  grid-column: 3;
-  grid-row: 1;
-  align-self: start;
-  white-space: nowrap;
-}
-.materials-recent-card .sh-activity > svg {
-  grid-column: 3;
-  grid-row: 2;
-  justify-self: end;
-  color: var(--color-text-muted);
-}
-.materials-recent-card__continue {
-  display: flex;
-  justify-content: flex-end;
-  align-items: center;
-  gap: 4px;
-  margin-top: 6px;
-  min-height: 44px;
-  color: var(--color-primary);
-  font-size: 12px;
-  font-weight: 700;
-}
-.materials-recent-card .home-resume {
-  margin: 8px 0 0;
-  padding-top: 8px;
-}
 .student-identity__bell {
   position: relative;
 }
@@ -8331,7 +7825,6 @@ a.settings-row:hover {
   align-items: center;
   justify-content: space-between;
   gap: 12px;
-  background: var(--header-gradient);
   color: white;
   padding: 14px 16px;
   min-height: 66px;
@@ -8349,17 +7842,85 @@ a.settings-row:hover {
   padding: 10px 16px;
   color: white;
   text-align: center;
-  background-color: var(--numora-purple-700);
-  background-image:
+}
+.app-shell--student {
+  --student-header-background:
     linear-gradient(rgb(131 36 255 / 32%), rgb(131 36 255 / 32%)),
-    url('/illustrations/student-home/header-pattern.png');
-  background-position: center;
-  background-size: cover;
+    var(--numora-purple-700) url('/illustrations/student-home/header-pattern.png') center / cover;
+}
+.materials-header,
+.adventure-summary,
+.pvp-header,
+.student-account-header,
+.notification-header,
+.student-home-shell .sh-identity {
+  background: var(--student-header-background);
 }
 .materials-header h1 {
   margin: 0;
   font-size: 19px;
   font-weight: 800;
+}
+.materials-header--with-back {
+  display: grid;
+  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  gap: 8px;
+}
+.materials-header__back {
+  display: grid;
+  place-items: center;
+  width: 44px;
+  min-height: 44px;
+  border: 1px solid rgb(255 255 255 / 34%);
+  border-radius: var(--radius-md);
+  background: rgb(255 255 255 / 14%);
+  color: inherit;
+}
+.materials-header__back:focus-visible {
+  outline: 2px solid white;
+  outline-offset: 2px;
+}
+.student-desktop-heading {
+  display: none;
+}
+@media (min-width: 960px) {
+  /* Beranda already places its identity header inside the desktop layout. */
+  .app-shell--student:not(.student-home-shell) .app-mobile-header {
+    display: block;
+  }
+  .app-shell--student .app-topbar--custom-mobile,
+  .app-shell--student .page-heading {
+    display: none;
+  }
+  .app-shell--student .app-topbar {
+    background: var(--student-header-background);
+    border-bottom: 0;
+    color: var(--color-text-inverse);
+  }
+  .app-shell--student .app-topbar :focus-visible,
+  .app-shell--student .notification-header a:focus-visible {
+    outline-color: var(--color-text-inverse);
+  }
+  .app-shell--student .app-mobile-header :is(.materials-header, .notification-header) {
+    min-height: 76px;
+    padding-inline: 36px;
+  }
+  .student-desktop-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    overflow-wrap: anywhere;
+  }
+  .student-desktop-heading .materials-header__back {
+    flex: none;
+  }
+  .student-desktop-heading h1 {
+    font-size: var(--text-xl);
+    font-weight: 800;
+  }
+  .student-desktop-heading p {
+    font-size: var(--text-sm);
+  }
 }
 .notification-header__back,
 .notification-header__profile {
@@ -8594,8 +8155,6 @@ a.settings-row:hover {
 }
 .material-chapter__toggle:focus-visible,
 .material-chapter a:focus-visible,
-.materials-recent-card a:focus-visible,
-.materials-detail__back:focus-visible,
 .notification-filter button:focus-visible,
 .notifications-page button:focus-visible,
 .notifications-page a:focus-visible,
@@ -8643,11 +8202,7 @@ a.settings-row:hover {
   .material-chapter__copy strong {
     font-size: 14px;
   }
-  .materials-recent-card {
-    --card-padding: 12px;
-    --card-radius: 16px;
-  }
-  .materials-detail__heading h1 {
+  .materials-detail__heading h2 {
     font-size: 21px;
   }
   .materials-detail__section-title {
@@ -8666,9 +8221,6 @@ a.settings-row:hover {
   }
 }
 @media (min-width: 960px) {
-  .materials-heading h1 {
-    font-size: 28px;
-  }
   .material-chapter__toggle {
     padding: 20px;
   }

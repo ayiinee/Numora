@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { Icon } from '@tka/ui';
 import type { CurrentTryoutDto, DashboardDrillDto } from './generated-types';
 import { HomeTryoutHero, HomeTryoutSkeleton } from './dashboard-presentation';
+import { StudentIllustratedHero } from './student-illustrated-hero';
 import { DataState } from './ui';
 
 const holdMs = 5_350;
@@ -22,27 +23,25 @@ const sequence = [
 
 function DrillHero({ activeDrill }: { activeDrill: DashboardDrillDto | null }) {
   return (
-    <div className="sh-hero sh-hero--drill student-home-hero">
-      <span className="sh-hero__eyebrow">DRILL</span>
-      <div className="sh-hero__copy">
-        <h2>
-          Latihan
-          <br /> matematika!
-        </h2>
-        <p>
-          {activeDrill
-            ? `Lanjutkan ${activeDrill.title} dari soal terakhir.`
-            : 'Pilih materi, mulai latihan.'}
-        </p>
-        <Link
-          className="sh-hero__action"
-          href={activeDrill ? `/student/drill/${activeDrill.attemptId}` : '/student/learn'}
-        >
-          {activeDrill ? 'Lanjutkan latihan' : 'Pilih materi'}
-          <Icon name="chevron" width={18} height={18} />
-        </Link>
-      </div>
-    </div>
+    <StudentIllustratedHero
+      variant="drill"
+      className="sh-hero"
+      badges={<span>DRILL</span>}
+      title="Latihan matematika!"
+      description={
+        activeDrill
+          ? `Lanjutkan ${activeDrill.title} dari soal terakhir.`
+          : 'Pilih materi, mulai latihan.'
+      }
+    >
+      <Link
+        className="sh-hero__action"
+        href={activeDrill ? `/student/drill/${activeDrill.attemptId}` : '/student/learn'}
+      >
+        {activeDrill ? 'Lanjutkan latihan' : 'Pilih materi'}
+        <Icon name="chevron" width={14} height={14} />
+      </Link>
+    </StudentIllustratedHero>
   );
 }
 
@@ -60,13 +59,14 @@ function TryoutHero({
   if (tryoutPending) return <HomeTryoutSkeleton />;
   if (tryoutError)
     return (
-      <div className="sh-hero sh-hero--tryout student-home-hero">
-        <span className="sh-hero__eyebrow">TRYOUT</span>
-        <div className="sh-hero__copy">
-          <h2>Tryout belum dapat dimuat</h2>
-          <DataState pending={false} error={tryoutError} retry={retryTryout} />
-        </div>
-      </div>
+      <StudentIllustratedHero
+        variant="tryout"
+        className="sh-hero"
+        badges={<span>TRYOUT</span>}
+        title="Tryout belum dapat dimuat"
+      >
+        <DataState pending={false} error={tryoutError} retry={retryTryout} />
+      </StudentIllustratedHero>
     );
   return tryout ? <HomeTryoutHero data={tryout} /> : null;
 }
@@ -127,7 +127,6 @@ export function StudentHomeCarousel({
         card.style.setProperty('--card-opacity', String(reducedMotion ? 1 : 1 - 0.06 * distance));
         card.style.setProperty('--card-y', `${reducedMotion ? 0 : 6 * distance}px`);
         card.style.setProperty('--card-angle', `${reducedMotion ? 0 : 3 * distance}deg`);
-        card.style.setProperty('--parallax-x', `${reducedMotion ? 0 : relative * 16}px`);
       }
     }
 

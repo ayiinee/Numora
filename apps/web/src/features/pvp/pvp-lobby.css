@@ -1,0 +1,99 @@
+/* Keep the primary create/join task ahead of social proof on small screens. */
+.pvp-lobby-shell .numora-tabs__list button {
+  min-width: 0;
+  padding: 8px 6px;
+  font-size: 13px;
+}
+
+.pvp-lobby-shell .numora-tabs__list {
+  display: grid;
+  grid-template-columns: repeat(2, minmax(0, 1fr));
+  gap: 4px;
+}
+
+.pvp-lobby-shell .pvp-difficulties legend {
+  font-size: 15px;
+}
+
+.pvp-lobby-shell .pvp-difficulty {
+  align-items: center;
+  min-height: 84px;
+  padding: 12px;
+  border: 1px solid transparent;
+  border-radius: var(--radius-lg);
+}
+
+.pvp-lobby-shell .pvp-difficulty.is-selected {
+  border-color: var(--color-primary);
+}
+
+.pvp-lobby-shell .pvp-difficulty strong {
+  font-size: 16px;
+}
+
+.pvp-lobby-shell .pvp-difficulty__body {
+  font-size: 13px;
+}
+
+.pvp-lobby-shell .pvp-difficulty__body > span:first-child {
+  gap: 6px;
+}
+
+.pvp-lobby-shell .pvp-difficulty__body small {
+  font-size: 12px;
+}
+
+.pvp-lobby-shell .pvp-leaderboard-link {
+  font-size: 14px;
+}
+
+.pvp-lobby-shell .pvp-rules li {
+  font-size: 13px;
+}
+
+.pvp-lobby-shell .pvp-rules details:not([open]) summary > svg:last-child {
+  transform: none;
+}
+
+@media (max-width: 699px) {
+  .pvp-match-shell .pvp-room-code__copy {
+    flex-direction: column;
+    align-items: stretch;
+  }
+
+  .pvp-match-shell .pvp-room-code__copy h2 {
+    white-space: nowrap;
+    font-size: 17px;
+    letter-spacing: 0.5px;
+    text-align: center;
+  }
+
+  .pvp-match-shell .pvp-room-guidance {
+    font-size: 13px;
+  }
+
+  .pvp-lobby-shell .pvp-join-card form {
+    display: grid;
+    grid-template-columns: minmax(0, 1fr);
+    gap: 12px;
+  }
+
+  .pvp-lobby-shell .pvp-join-card input {
+    font-size: 16px;
+  }
+}
+
+@media (max-width: 359px) {
+  .pvp-lobby-shell .numora-tabs__list button {
+    font-size: 12px;
+  }
+
+  .pvp-lobby-shell .pvp-difficulty__icon {
+    width: 32px;
+    height: 32px;
+  }
+
+  .pvp-lobby-shell .pvp-difficulty {
+    gap: 8px;
+  }
+}

@@ -1,6 +1,7 @@
 'use client';
 
 import { Button, Card, EmptyState, Icon, Tabs } from '@tka/ui';
+import { StudentMascot } from '@/components/student-mascot';
 import { useParams, useRouter } from 'next/navigation';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useRef, useState } from 'react';
@@ -121,7 +122,10 @@ function CurrentTryout({ token }: { token: string }) {
                           }}
                         />
                       ) : (
-                        <Status title="Paket belum tersedia">
+                        <Status
+                          title="Paket belum tersedia"
+                          illustration={<StudentMascot pose="calendar" />}
+                        >
                           <p>
                             Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia
                             akan muncul di sini.
@@ -163,7 +167,7 @@ function CurrentTryout({ token }: { token: string }) {
                         ) : (
                           <Card fullWidth>
                             <EmptyState
-                              icon={<Icon name="clock" />}
+                              icon={<StudentMascot pose="history" />}
                               title="Belum ada riwayat Tryout"
                               description={
                                 history.hasNextPage

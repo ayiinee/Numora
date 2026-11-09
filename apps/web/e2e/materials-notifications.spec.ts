@@ -393,19 +393,16 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         );
       }),
     ).toBe(true);
-    if (width <= 959) {
-      const header = page.locator('.materials-header');
-      const title = header.getByRole('heading', { name: 'Latihan Soal' });
-      await expect(title).toBeVisible();
-      await expect(header.getByRole('link')).toHaveCount(0);
-      await expect(header.locator('.notification-header__profile')).toHaveCount(0);
-      await expect(header).toHaveCSS('background-image', /header-pattern\.png/);
-      const headerBox = await header.boundingBox();
-      const titleBox = await title.boundingBox();
-      expect(
-        Math.abs(titleBox!.x + titleBox!.width / 2 - (headerBox!.x + headerBox!.width / 2)),
-      ).toBeLessThan(1);
-    }
+    const header = page.locator('.materials-header');
+    const title = header.getByRole('heading', { name: 'Latihan Soal' });
+    await expect(title).toBeVisible();
+    await expect(header.getByRole('link')).toHaveCount(0);
+    await expect(header).toHaveCSS('background-image', /header-pattern\.png/);
+    const headerBox = await header.boundingBox();
+    const titleBox = await title.boundingBox();
+    expect(
+      Math.abs(titleBox!.x + titleBox!.width / 2 - (headerBox!.x + headerBox!.width / 2)),
+    ).toBeLessThan(1);
     if (width < 700) {
       await expect(page.locator('.material-chapter__toggle').first()).toBeVisible();
       for (const selector of ['.materials-search input', '.material-chapter__toggle']) {
@@ -430,6 +427,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByRole('link', { name: /2.1 Faktorisasi Kuadrat/ })).toBeVisible();
     await capture('materials-detail');
     await page.goto('/student/notifications');
+    const notificationsHeader = page.locator('.notification-header');
+    await expect(notificationsHeader.getByRole('heading', { name: 'Notifikasi' })).toBeVisible();
+    await expect(notificationsHeader).toHaveCSS('background-image', /header-pattern\.png/);
     await expect(page.getByRole('heading', { name: 'Pusat Notifikasi' })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Semua (5)', exact: true })).toHaveAttribute(
       'aria-pressed',
