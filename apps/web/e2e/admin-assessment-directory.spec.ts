@@ -203,7 +203,11 @@ test('published packages expose archive only inside detail and Pretest has no fi
   await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
   await page.getByRole('checkbox', { name: /Saya memahami arsip/ }).check();
   await page.getByRole('button', { name: 'Arsipkan paket', exact: true }).click();
-  await page.getByRole('dialog').press('Escape');
+  const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
+  await expect(
+    publication.getByText('Paket diarsipkan. Histori pengerjaan tetap dipertahankan.'),
+  ).toBeVisible();
+  await publication.getByRole('button', { name: 'Tutup dialog' }).click();
   await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Paket diarsipkan' })).toBeVisible();
 });

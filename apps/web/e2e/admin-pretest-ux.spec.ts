@@ -22,7 +22,9 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
     await page.getByRole('button', { name: 'Simpan persetujuan' }).click();
     await page.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }).check();
     await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
-    await page.getByRole('dialog').press('Escape');
+    const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
+    await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
+    await publication.getByRole('button', { name: 'Tutup dialog' }).click();
     await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bisa dikerjakan' })).toBeVisible();
     expect(fixture.calls.filter((call) => call.path.endsWith('/publish'))).toHaveLength(1);
@@ -65,7 +67,7 @@ test('Package filters, pagination, Back and reload preserve the selected context
   await expect(page).toHaveURL(/offset=5/);
 });
 
-test('Package load failure can be retried and an empty filter explains the next action', async ({
+test('Package load failure can be retried and an empty search explains the next action', async ({
   page,
 }) => {
   const { fixture } = await setupAssessments(page);
@@ -78,28 +80,31 @@ test('Package load failure can be retried and an empty filter explains the next 
   await page.getByRole('button', { name: 'Coba lagi', exact: true }).click();
   await expect(page.getByRole('heading', { name: /Pretest TEST 1/ })).toBeVisible();
   await page.getByRole('link', { name: /Kembali ke daftar/ }).click();
-  await page.getByText('Filter', { exact: true }).click();
-  await page.getByRole('combobox', { name: 'Status paket', exact: true }).selectOption('ARCHIVED');
-  await page.getByRole('button', { name: 'Terapkan filter' }).click();
+  await page
+    .getByRole('searchbox', { name: 'Cari nama atau kode paket' })
+    .fill('Tidak ada paket TEST');
+  await page.getByRole('button', { name: 'Cari', exact: true }).click();
   await expect(
     page.getByText('Belum ada paket yang cocok. Ubah pencarian/filter atau tambah paket.'),
   ).toBeVisible();
 });
 
-test('Tryout scheduling is explicit before publication and records WIB', async ({ page }) => {
+test('Tryout package publication delegates scheduling to Batch Tryout', async ({ page }) => {
   const { fixture } = await setupAssessments(page);
   await page.goto(`/admin/assessments?type=TRYOUT&package=${id(9100)}`);
-  await page.getByRole('combobox', { name: 'Waktu rilis', exact: true }).selectOption('SCHEDULED');
+  await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
+  const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
+  await expect(publication.getByRole('link', { name: 'Batch Tryout' })).toHaveAttribute(
+    'href',
+    '/admin/tryout-batches',
+  );
+  const publish = publication.getByRole('button', { name: 'Publikasikan paket', exact: true });
+  await expect(publish).toBeDisabled();
   await page.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }).check();
-  await expect(page.getByRole('button', { name: 'Jadwalkan paket', exact: true })).toBeDisabled();
-  await page.getByLabel(/Tanggal dan jam rilis Tryout/).fill('2099-01-06T14:30');
-  await page.getByRole('button', { name: 'Jadwalkan paket', exact: true }).click();
-  await page.getByRole('dialog').press('Escape');
-  await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
-  await expect(page.getByText('Menunggu jadwal mulai', { exact: true })).toBeVisible();
+  await publish.click();
+  await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
   expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
     expectedRevision: 1,
-    releaseAt: '2099-01-06T14:30:00+07:00',
   });
 });
 

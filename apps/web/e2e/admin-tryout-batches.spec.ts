@@ -27,6 +27,8 @@ test('batch creation, school delegation and compact detail work across viewports
     }
     if (req.method() === 'POST' || req.method() === 'PATCH') {
       const b = req.postDataJSON() as SaveTryoutBatchDto;
+      expect(b.startsAt).toBe('2099-01-01T08:00:00+07:00');
+      expect(b.closesAt).toBe('2099-01-07T20:00:00+07:00');
       batch = {
         id: id(9400),
         title: b.title,
