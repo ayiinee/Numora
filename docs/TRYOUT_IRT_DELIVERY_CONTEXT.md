@@ -85,7 +85,7 @@ final; XP yang sudah diposting dan histori tidak dihitung ulang.
 | --- | --- |
 | Mesin AI | R 4.5.2 / mirt 1.48; mixed 2PL D=1 dan GPCM; multi-arm common anchor; covariance/SE, EAP dan mapping prediksi poin paket acuan. Tersedia sebagai runtime riset opt-in. |
 | Bukti sintetis existing | Recovery parameter 30 replikasi memenuhi target numerik; baseline lama tetap menahan linking 20/30 tanpa injeksi DIF. Penahanan ini tidak boleh disembunyikan atau threshold dilonggarkan. |
-| Bukti Linux existing | Dua arm/2.000 peserta menghasilkan 2.000 SCORED dalam 146,56 detik; tiga arm/4.998 peserta selesai 373,95 detik dengan NOT_COMPARABLE. Selesai komputasi tidak sama dengan linking lulus atau sertifikasi kapasitas VPS. |
+| Bukti Linux existing | Dua arm/2.000 peserta menghasilkan 2.000 SCORED dalam 146,56 detik; tiga arm/4.998 peserta selesai 373,95 detik dengan NOT_COMPARABLE. Selesai komputasi tidak sama dengan linking lulus atau sertifikasi kapasitas VPS. Fresh checkout profil juga memiliki blocker digest di bawah. |
 | Transport AI | Execute/status/capabilities v1, inbox PostgreSQL idempoten, daemon, lease/fencing dan artifact immutable tersedia. Capability masih RESEARCH_ONLY, comparison=false, publication=false. |
 | Main | Snapshot/digest/outbox dan verifikasi artifact tersedia pada jalur riset. Migrasi 0054 membatasi database disposable `irt_research_test_%`; belum merupakan jalur adopsi/rilis siswa produksi. |
 | Gap utama | Boundary penggunaan produksi dengan approval sah, adopter canonical multi-paket, coverage, mode per arm dan finalizer/rilis atomik perlu dituntaskan serta diuji. Guard legacy RESPONDENT_CONTRACT_NOT_APPROVED tetap berlaku pada adopter lama. |
@@ -97,6 +97,15 @@ anchor-v2 dan studi besar belum memenuhi acceptance konfirmasi. Gunakan baseline
 yang sudah dipin, pertahankan gate konservatif dan fallback main. Tidak menjanjikan
 semua batch, termasuk batch kecil, akan menghasilkan nilai IRT.
 
+**Blocker reproduksibilitas yang ditemukan pada pemeriksaan konteks:**
+`tools/check_irt_handoff.py` gagal dengan `Linux profile digest mismatch` pada
+worktree AI baru. Manifest image mem-pin profil Linux-v1 berakhiran CRLF
+(`552a427c…`), sedangkan blob Git/profil checkout LF menghasilkan `f9724f7e…`.
+Ini perbedaan byte nyata, bukan izin mengabaikan hash. Rekonsiliasi serialisasi
+profil, pin image dan acceptance pada tahap boundary runtime; pertahankan bukti
+lama dan jangan otomatis mengganti digest ketika service mulai. Kontrak dan
+salinan dokumen dapat diperiksa terpisah, tanpa mengklaim seluruh handoff lulus.
+
 ## Strategi 24 jam — urutan eksekusi yang diusulkan
 
 **PROPOSED — timebox kerja, bukan jaminan durasi atau approval produksi.**
@@ -107,7 +116,7 @@ kecil teruji; utama melalui PR, AI stabil langsung ke main sesuai workflow pemil
 | Waktu | Pekerjaan / penanggung jawab per fungsi | Bukti selesai |
 | --- | --- | --- |
 | 0–2 jam | Main + AI: bekukan handoff delivery dan fixture dua/tiga arm. Inventory pin paket/30 item, lima anchor global, rubrik, assignment/delivery, eligibility, approval dan policy nilai/fallback. | Satu manifest sintetis authoritative diterima validator; input tidak cocok ditolak. Daftar gap tim delivery eksplisit. |
-| 2–6 jam | AI: tuntaskan boundary runtime/konfigurasi yang dipin, auth/resources, worker, status, timeout dan runbook Linux. Bedakan profil riset dari profil penggunaan nyata; capability tidak mengiklankan fitur yang belum ada. | Execute → status → artifact dapat dipakai main. Pin/digest dapat diverifikasi; approval hilang menahan eksekusi/penerimaan. |
+| 2–6 jam | AI: benahi blocker digest fresh checkout, tuntaskan boundary runtime/konfigurasi yang dipin, auth/resources, worker, status, timeout dan runbook Linux. Bedakan profil riset dari profil penggunaan nyata; capability tidak mengiklankan fitur yang belum ada. | Execute → status → artifact dapat dipakai main. Pin/digest dapat diverifikasi pada fresh checkout; approval hilang menahan eksekusi/penerimaan. |
 | 6–12 jam | Main: adapter delivery frozen dan forward schema/adopter artifact v1 untuk beberapa paket. Pertahankan guard lama; buat jalur eksplisit sesuai kontrak dan scope yang sah. | Adopsi idempoten, tepat satu hasil/status tiap attempt snapshot, tidak menulis XP/histori atau menerbitkan hasil otomatis. |
 | 12–17 jam | Main: finalizer per arm IRT/fallback/UNSCORABLE, coverage lengkap, publikasi hasil+pembahasan serentak melalui reader existing. | Fixture normal, parsial dan gagal menghasilkan mode/alasan benar; replay dan late artifact tidak menimpa hasil final. |
 | 17–20 jam | Main + AI/QA: penerimaan terintegrasi dengan anggaran uji total tiga jam di bawah. | Laporan pass/fail, pin dan blocker; compute berhasil tidak dicatat sebagai publikasi berhasil. |

@@ -1,5 +1,13 @@
 # Handoff kontrak kalibrasi IRT dan hasil Tryout v1
 
+**Konteks integrasi terbaru — 10 November 2026:**
+[delivery Admin dan strategi 24 jam](TRYOUT_IRT_DELIVERY_CONTEXT.md) membekukan
+pembagian tanggung jawab dan keputusan fallback per arm. Mesin/transport riset
+Tryout sudah tersedia; tabel gap pada dokumen kontrak awal di bawah bersifat
+historis untuk producer/adapter riset. Approval produksi, adopter canonical,
+finalizer multi-paket dan publikasi tetap perlu bukti implementasi. Kontrak
+ilmiah v1 tidak berubah dan guard adopter legacy tidak dicabut oleh dokumentasi.
+
 **ENGINEERING IMPLEMENTATION — 8 November 2026.** Kontrak boundary kalibrasi dan hasil peserta telah ditulis untuk kedua repo berdasarkan [keputusan varian/IRT v2](AI_IRT_V2_CONTEXT.md). Paket berisi JSON Schema, generated TypeScript types, validator independen JavaScript/Python, contoh tersanitasi dan shared conformance vectors. Ini menyelesaikan bentuk pertukaran data dan pemeriksaan kompatibilitas; bukan implementasi scientific engine atau aktivasi hasil siswa.
 
 | Repo              | Lokasi paket kontrak                     |
