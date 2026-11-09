@@ -91,7 +91,7 @@ async function fixture(page: Page, role: 'ADMIN' | 'STUDENT' = 'ADMIN') {
             reviewBlockers: [],
             publicationBlockers: [
               'APPROVED_PRETEST_BLUEPRINT_REQUIRED',
-              'PRETEST_STUDENT_CONSUMER_REQUIRED',
+              'SHARED_PACKAGE_PUBLISHER_REQUIRED',
             ],
           };
           return path === `admin/content/pretest-packages/${userId}` ? pack : { items: [pack] };
@@ -155,14 +155,14 @@ test('Pretest editorial review preserves a concrete production blocker at mobile
   page,
 }) => {
   await fixture(page);
-  await page.goto('/admin/content/pretest');
+  await page.goto('/admin/content/pretest?legacy=1');
   await expect(page.getByText('TEST Pretest', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
   await page.getByRole('button', { name: 'Review paket', exact: true }).click();
   await page.getByLabel('Alasan review').fill('TEST editorial review');
   await page.getByRole('button', { name: 'Sahkan review editorial' }).click();
   await expect(page.getByRole('button', { name: 'Buat versi baru' })).toBeVisible();
-  await expect(page.getByText(/PRETEST_STUDENT_CONSUMER_REQUIRED/)).toBeVisible();
+  await expect(page.getByText(/SHARED_PACKAGE_PUBLISHER_REQUIRED/)).toBeVisible();
   await expect(page.getByRole('button', { name: /Publish|Publikasikan/i })).toHaveCount(0);
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
