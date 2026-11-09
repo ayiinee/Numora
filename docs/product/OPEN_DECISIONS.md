@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — Teacher presentation boundary, 9 November 2026:** [Teacher UI alignment](../design/TEACHER_UI_ALIGNMENT_2026-11-09.md) uses only existing server fields and operations. It resolves no academic OPEN item and introduces no class-wide mastery, trends, notification endpoint or ranking. Missing data stays distinct from zero.
+
 **ENGINEERING DECISION — pemilik, 9 November 2026.** Nilai sebagian Pretest original sudah disetujui: ketepatan per opsi/pernyataan, jawaban kosong 0, bobot 1 per soal, tanpa XP. Batas level memakai total sebelum pembulatan: kurang dari 8, 8 sampai kurang dari 19, dan mulai 19. Keputusan ini khusus Pretest; review rubrik Drill tetap terpisah. [Rincian dan bukti penerbitan](../development/PRETEST_ORIGINAL_RELEASE_2026-11-09.md).
 
 **ENGINEERING DECISION — 9 November 2026:** OPEN-14 mengizinkan password yang dikelola Supabase Auth untuk akun Siswa yang disiapkan pengelola. Keputusan ini tidak menambahkan penyimpanan password lokal atau registrasi email publik di Numora.

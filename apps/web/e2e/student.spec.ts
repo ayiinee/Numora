@@ -96,6 +96,8 @@ async function fixtures(
       };
     } else if (path === '/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture' }] };
+    else if (path === '/schools/mine' && role === 'TEACHER' && teacherVerified)
+      data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture' }] };
     else if (path === `/schools/${chapterId}/teacher-verifications`) {
       teacherVerified = true;
       data = { verified: true };
@@ -1245,7 +1247,7 @@ test('joined class affiliation persists after signing out and back in', async ({
   await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await page.evaluate(() => localStorage.removeItem('test-logged-out'));
   await page.reload();
   await expect(page).toHaveURL(/\/student$/);
@@ -1403,7 +1405,7 @@ test('class join link warns an already affiliated Student and stays server-autho
   ).toBeVisible();
 });
 
-test('class join link opened while signed out falls back to login and loses the code', async ({
+test('class join link opened while signed out opens login and saves the invitation', async ({
   page,
 }) => {
   await fixtures(page);
@@ -1414,7 +1416,10 @@ test('class join link opened while signed out falls back to login and loses the 
   });
 
   await page.goto('/student/join?code=FIX234');
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
+  expect(await page.evaluate(() => sessionStorage.getItem('numora:class-invitation'))).toBe(
+    'FIX234',
+  );
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
 });
 
@@ -1457,8 +1462,8 @@ for (const width of [390, 1440]) {
     await page.goto('/teacher');
     await page.getByRole('link', { name: /IX fixture/ }).click();
     await page.getByRole('link', { name: /Siswa fixture/ }).click();
-    await expect(page.getByRole('heading', { name: 'Progres per level' })).toBeVisible();
-    await expect(page.getByRole('heading', { name: '0', exact: true })).toBeVisible();
+    await expect(page.getByRole('region', { name: 'Progres per level' })).toBeVisible();
+    await expect(page.locator('.teacher-latest-score__value')).toHaveText('0/100');
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
@@ -1491,25 +1496,26 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await expect(page.getByRole('button', { name: 'Keluar', exact: true })).toHaveCount(0);
   await page.getByRole('link', { name: 'Buka profil' }).click();
   await expect(page).toHaveURL(/\/teacher\/profile$/);
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toBeVisible();
   await expect(page.getByText('Terverifikasi', { exact: true })).toBeVisible();
-  await expect(page.getByRole('link', { name: /Kelas saya/ }).last()).toHaveAttribute(
+  await expect(page.getByText('Sekolah fixture', { exact: true })).toBeVisible();
+  await expect(page.getByRole('link', { name: /^Buka daftar kelas/ })).toHaveAttribute(
     'href',
     '/teacher',
   );
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar dari akun' }).click();
-  await expect(page).toHaveURL('http://localhost:3300/');
+  await expect(page).toHaveURL('http://localhost:3300/login');
   await page.goto('/teacher/profile');
-  await expect(page).toHaveURL('http://localhost:3300/');
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+  await expect(page).toHaveURL('http://localhost:3300/login');
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toHaveCount(0);
 });
 
 test('Student cannot open Teacher profile', async ({ page }) => {
   await fixtures(page);
   await page.goto('/teacher/profile');
   await expect(page).toHaveURL('http://localhost:3300/student');
-  await expect(page.getByRole('heading', { name: 'Profil & akun' })).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toHaveCount(0);
 });
 
 test('Teacher sees distinct latest and best Drill scores but no foreign Class progress', async ({
@@ -1542,10 +1548,12 @@ test('Teacher sees distinct latest and best Drill scores but no foreign Class pr
   await page.goto('/teacher');
   await page.getByRole('link', { name: /IX fixture/ }).click();
   await page.getByRole('link', { name: /Siswa fixture/ }).click();
-  await expect(page.getByRole('heading', { name: '60', exact: true })).toBeVisible();
-  const level = page.locator('.level-card');
-  await expect(level.getByText('60', { exact: true })).toBeVisible();
-  await expect(level.getByText('90', { exact: true })).toBeVisible();
+  await expect(page.locator('.teacher-latest-score__value')).toHaveText('60/100');
+  const level = page
+    .getByRole('region', { name: 'Progres per level' })
+    .locator('.teacher-level-card');
+  await expect(level.locator('dt')).toHaveText(['Terakhir', 'Terbaik']);
+  await expect(level.locator('dd')).toHaveText(['60', '90']);
 
   const foreignClassId = '77777777-7777-4777-8777-777777777777';
   await page.route(
@@ -1565,7 +1573,7 @@ test('Teacher sees distinct latest and best Drill scores but no foreign Class pr
 test('signed-out login offers Google authentication without removed demo destinations', async ({
   page,
 }) => {
-  await page.goto('/');
+  await page.goto('/login');
   await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
   await expect(page.locator('a[href^="/demo/"]')).toHaveCount(0);
 });

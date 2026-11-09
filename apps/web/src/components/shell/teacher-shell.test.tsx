@@ -90,6 +90,6 @@ it('retries real logout after failure and only redirects after successful logout
   await screen.findByRole('alert');
   expect(fixture.replace).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keluar akun' }));
-  await waitFor(() => expect(fixture.replace).toHaveBeenCalledWith('/'));
+  await waitFor(() => expect(fixture.replace).toHaveBeenCalledWith('/login'));
   expect(fixture.logout).toHaveBeenCalledTimes(2);
 });

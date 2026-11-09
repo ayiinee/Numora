@@ -61,7 +61,7 @@ function LogoutButton({ fullWidth = false }: { fullWidth?: boolean }) {
           setError('');
           try {
             await logout();
-            router.replace('/');
+            router.replace('/login');
           } catch {
             setError('Belum dapat keluar. Coba lagi.');
             setBusy(false);
@@ -106,7 +106,7 @@ function Avatar({ name, photo }: { name: string; photo: unknown }) {
   );
 }
 
-export function LoginScreen() {
+export function LoginScreen({ publicLanding }: { publicLanding?: React.ReactNode }) {
   const router = useRouter();
   const { state, refresh } = useAuth();
   const [email, setEmail] = useState('');
@@ -152,6 +152,15 @@ export function LoginScreen() {
       setBusy(null);
     }
   }
+  if (
+    publicLanding &&
+    !state.session &&
+    (state.status === 'loading' ||
+      state.status === 'error' ||
+      (state.status === 'signed_out' && !state.message))
+  )
+    return publicLanding;
+
   return (
     <AuthFrame>
       <section className="auth-card" aria-labelledby="login-title">
@@ -276,7 +285,7 @@ export function CallbackScreen() {
       try {
         const { error: authError } = await getSupabase().auth.exchangeCodeForSession(code);
         if (authError) throw authError;
-        router.replace('/');
+        router.replace('/login');
       } catch {
         setError('Sesi login belum dapat dibuat. Coba masuk lagi.');
       }
@@ -290,7 +299,7 @@ export function CallbackScreen() {
           <AuthStatus
             title="Login belum berhasil"
             message={error}
-            retry={() => router.replace('/')}
+            retry={() => router.replace('/login')}
           />
         ) : (
           <AuthStatus
@@ -410,7 +419,7 @@ export function OnboardingScreen() {
   const { state, refresh } = useAuth();
   useEffect(() => {
     if (state.status === 'ready') router.replace(postLoginDestination(state.profile));
-    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'signed_out') router.replace('/login');
   }, [router, state]);
   return (
     <AuthFrame onboarding>
@@ -467,7 +476,7 @@ export function RoleHomeScreen({
   const router = useRouter();
   const { state, refresh } = useAuth();
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'signed_out') router.replace('/login');
     if (state.status === 'registration') router.replace('/onboarding');
     if (state.status === 'ready' && destination(state.profile) !== page)
       router.replace(destination(state.profile));
@@ -545,7 +554,7 @@ function TeacherVerificationContent() {
   const [revision, setRevision] = useState(0);
   const accessToken = state.status === 'ready' ? state.session.access_token : null;
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'signed_out') router.replace('/login');
     if (state.status === 'registration') router.replace('/onboarding');
     if (state.status === 'ready' && destination(state.profile) !== '/teacher/verification-required')
       router.replace(destination(state.profile));
@@ -662,7 +671,7 @@ function TeacherVerificationContent() {
               </Button>
             )}
             {sessionExpired && (
-              <Link className="button-link" href="/">
+              <Link className="button-link" href="/login">
                 Masuk kembali
               </Link>
             )}

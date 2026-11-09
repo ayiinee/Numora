@@ -119,8 +119,10 @@
   ],
   "remainingOutsideThisFollowup": [
     "Academic evaluation of high no-DIF hold rate, released-effect uncertainty and safe per-arm refitting; no production policy approval.",
-    "Validated Linux Python producer runtime and intended-hardware capacity tests.",
+    "Intended-hardware capacity certification; tested Linux producer portability is documented separately in linux-acceptance-v1.json.",
     "Admin package lifecycle, canonical adoption, publication and product fallback."
   ],
-  "ciNote": "The historical acceptance-v1 CI blocker is superseded by the prior repaired CI stack. This report does not claim a new remote CI result."
+  "ciNote": "The historical acceptance-v1 CI blocker is superseded by the prior repaired CI stack. This report does not claim a new remote CI result.",
+  "historicalRuntimeProfile": true,
+  "supplementaryLinuxEvidence": "linux-acceptance-v1.json"
 }

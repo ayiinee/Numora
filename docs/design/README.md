@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — owner-approved plan, 9 November 2026:** [Teacher UI alignment](TEACHER_UI_ALIGNMENT_2026-11-09.md) follows the current Student foundation with blue identity, class row cards, contextual Progres / Riwayat / Catatan tabs, create/invite flow and member-management dialog. This supersedes conflicting Teacher presentation from October; existing API/product rules remain authoritative.
+
 **ENGINEERING DECISION — header desktop Siswa, 9 November 2026.** Bar desktop memakai motif ungu yang sama dengan header ponsel. Halaman dengan header khusus menampilkan satu header yang sama pada kedua ukuran, termasuk tombol kembali jika tersedia. Halaman lain memakai judul halaman pada bar bermotif.
 
 **ENGINEERING DECISION — tampilan Drill dijeda, 9 November 2026.** Kartu jeda menampilkan maskot, nama level, dan durasi tersimpan dalam panel yang terpisah dari tombol lanjut. Kartu memakai lebar terbatas pada desktop dan mengikuti ruang konten ponsel. Tautan kembali membuka daftar materi.

@@ -12,12 +12,20 @@ import {
   getClassStudents,
   getTeacherStudentProgress,
   ApiProblem,
+  apiRequest,
 } from '@/lib/api';
+import { getTeacherFeedback } from './teacher-feedback-api';
 
-const auth = vi.hoisted(() => ({ logout: vi.fn(), replace: vi.fn(), refresh: vi.fn() }));
+const auth = vi.hoisted(() => ({
+  logout: vi.fn(),
+  replace: vi.fn(),
+  push: vi.fn(),
+  refresh: vi.fn(),
+}));
 vi.mock('next/navigation', () => ({
-  useRouter: () => ({ replace: auth.replace }),
+  useRouter: () => ({ replace: auth.replace, push: auth.push }),
   usePathname: () => '/teacher',
+  useSearchParams: () => new URLSearchParams(window.location.search),
 }));
 vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({
@@ -43,35 +51,97 @@ vi.mock('@/lib/api', async (original) => ({
   getTeacherClasses: vi.fn(),
   getClassStudents: vi.fn(),
   getTeacherStudentProgress: vi.fn(),
+  apiRequest: vi.fn(),
+}));
+vi.mock('./teacher-feedback-api', () => ({
+  getTeacherFeedback: vi.fn(),
+  sendTeacherFeedback: vi.fn(),
 }));
 beforeEach(() => {
   vi.resetAllMocks();
+  window.history.replaceState(null, '', '/teacher');
+  Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = true;
+    },
+  });
+  Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+    configurable: true,
+    value: function (this: HTMLDialogElement) {
+      this.open = false;
+    },
+  });
   vi.mocked(getTeacherClasses).mockResolvedValue({ items: [] });
+  vi.mocked(getClassStudents).mockImplementation(async (_token, id) => ({
+    class: { id, name: id },
+    items: [],
+  }));
+  vi.mocked(getTeacherFeedback).mockResolvedValue({ items: [], nextOffset: null });
+});
+
+it('loads history and notes only on visit and retains a draft across URL-backed tabs', async () => {
+  window.history.replaceState(
+    null,
+    '',
+    '/teacher/classes/class-test/students/student-test?q=ayu&sort=desc',
+  );
+  vi.mocked(getTeacherStudentProgress).mockResolvedValue({
+    class: { id: 'class-test', name: 'IX A' },
+    student: { id: 'student-test', displayName: 'Ayu' },
+    latestDrillScore: null,
+    levels: [],
+  });
+  vi.mocked(apiRequest).mockResolvedValue({ records: [], nextCursor: null });
+  render(<StudentProgressScreen classId="class-test" studentId="student-test" />);
+  await screen.findByText('Progres dan hasil latihan');
+  expect(getTeacherFeedback).not.toHaveBeenCalled();
+  expect(apiRequest).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('tab', { name: 'Riwayat' }));
+  await screen.findByText('Belum ada riwayat asesmen');
+  expect(apiRequest).toHaveBeenCalledOnce();
+  expect(getTeacherFeedback).not.toHaveBeenCalled();
+  fireEvent.click(screen.getByRole('tab', { name: 'Catatan' }));
+  await screen.findByText('Belum ada catatan');
+  fireEvent.change(screen.getByLabelText(/Catatan untuk siswa/), {
+    target: { value: 'Periksa langkah kedua.' },
+  });
+  fireEvent.click(screen.getByRole('tab', { name: 'Progres' }));
+  fireEvent.click(screen.getByRole('tab', { name: 'Catatan' }));
+  expect(screen.getByLabelText(/Catatan untuk siswa/)).toHaveProperty(
+    'value',
+    'Periksa langkah kedua.',
+  );
+  expect(window.location.search).toContain('tab=notes');
+  expect(window.location.search).toContain('sort=desc');
+  expect(screen.getByRole('link', { name: 'Kembali' }).getAttribute('href')).toBe(
+    '/teacher/classes/class-test?q=ayu&sort=desc',
+  );
 });
 afterEach(cleanup);
 
-it('retains input after explicit validation rejection and displays the exact server join code', async () => {
+it('retains rejected input, then opens the created class invitation without changing its identity', async () => {
   vi.mocked(createTeacherClass)
     .mockRejectedValueOnce(new ApiProblem(400, 'INVALID_CLASS', 'Kelas belum dapat dibuat.'))
     .mockResolvedValueOnce({ id: 'class-test', name: 'IX A', joinCode: 'Ab_Cd-234' });
   render(<TeacherDashboardScreen />);
-  fireEvent.click(screen.getByText('Buat kelas baru'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Buat kelas' }));
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: ' IX A ' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
   await screen.findByRole('alert');
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe(' IX A ');
-  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
-  await screen.findByText('Ab_Cd-234');
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
+  await waitFor(() => expect(auth.push).toHaveBeenCalledWith('/teacher/classes/class-test/invite'));
   expect(createTeacherClass).toHaveBeenLastCalledWith('test-teacher', 'IX A');
-  expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('');
+  await waitFor(() => expect(screen.queryByRole('dialog')).toBeNull());
   await waitFor(() => expect(getTeacherClasses).toHaveBeenCalledTimes(2));
 });
 it('keeps a pending create disabled and prevents another submit', async () => {
   vi.mocked(createTeacherClass).mockImplementation(() => new Promise(() => {}));
   render(<TeacherDashboardScreen />);
-  fireEvent.click(screen.getByText('Buat kelas baru'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Buat kelas' }));
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX A' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).disabled).toBe(true);
   fireEvent.click(screen.getByRole('button', { name: /Membuat/ }));
   expect(createTeacherClass).toHaveBeenCalledOnce();
@@ -81,11 +151,11 @@ it('provides a login destination after a create request reports an expired sessi
     new ApiProblem(401, 'SESSION_EXPIRED', 'Sesi berakhir.'),
   );
   render(<TeacherDashboardScreen />);
-  fireEvent.click(screen.getByText('Buat kelas baru'));
+  fireEvent.click(await screen.findByRole('button', { name: 'Buat kelas' }));
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX A' } });
-  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
   expect((await screen.findByRole('link', { name: 'Masuk kembali' })).getAttribute('href')).toBe(
-    '/',
+    '/login',
   );
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('IX A');
 });
@@ -99,14 +169,17 @@ it.each([
   vi.mocked(createTeacherClass).mockRejectedValue(failure);
   render(<TeacherDashboardScreen />);
   await screen.findByRole('heading', { name: 'Kelas saya' });
+  fireEvent.click(await screen.findByRole('button', { name: 'Buat kelas' }));
   fireEvent.change(screen.getByLabelText(/Nama kelas/), { target: { value: 'IX Terputus' } });
   const initialCalls = vi.mocked(getTeacherClasses).mock.calls.length;
-  fireEvent.click(screen.getByRole('button', { name: 'Buat kelas' }));
+  fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }));
 
   await screen.findByText(/Pengiriman tidak dapat dipastikan/);
   // The class may exist server-side, so the form must not offer the same name again.
   expect((screen.getByLabelText(/Nama kelas/) as HTMLInputElement).value).toBe('');
-  expect(screen.getByRole('button', { name: 'Buat kelas' })).toHaveProperty('disabled', true);
+  expect(
+    within(screen.getByRole('dialog')).getByRole('button', { name: 'Buat kelas' }),
+  ).toHaveProperty('disabled', true);
   expect(createTeacherClass).toHaveBeenCalledOnce();
   await waitFor(() =>
     expect(vi.mocked(getTeacherClasses).mock.calls.length).toBeGreaterThan(initialCalls),
@@ -183,7 +256,7 @@ it('preserves zero, distinct best/latest, null and authoritative access state as
   const { container } = render(
     <StudentProgressScreen classId="class-test" studentId="student-test" />,
   );
-  await screen.findByRole('heading', { name: '0' });
+  await screen.findByText('Dari latihan terakhir yang dikumpulkan.');
   const levels = container.querySelectorAll('.teacher-level-card');
   expect(within(levels[0] as HTMLElement).getByText('0')).toBeTruthy();
   expect(within(levels[0] as HTMLElement).getByText('90')).toBeTruthy();
@@ -203,11 +276,11 @@ it('keeps the account available after logout failure and retries the existing lo
   await screen.findByRole('alert');
   expect(auth.replace).not.toHaveBeenCalled();
   fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
-  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+  await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/login'));
   expect(auth.logout).toHaveBeenCalledTimes(2);
 });
 
-it('withholds total students when one class roster fails and recovers without a partial total', async () => {
+it('keeps independent class counts retryable without presenting memberships as unique students', async () => {
   vi.mocked(getTeacherClasses).mockResolvedValue({
     items: [
       { id: 'class-a', name: 'IX A' },
@@ -223,12 +296,12 @@ it('withholds total students when one class roster fails and recovers without a 
     };
   });
   render(<TeacherDashboardScreen />);
-  const label = await screen.findByText('Siswa di kelas Anda');
-  await screen.findByRole('button', { name: 'Muat ulang jumlah siswa' }, { timeout: 4000 });
-  expect(label.parentElement?.querySelector('strong')?.textContent).toBe('—');
+  await screen.findByRole('button', { name: 'Muat ulang anggota IX B' }, { timeout: 4000 });
+  expect(screen.queryByText('Siswa di kelas Anda')).toBeNull();
+  expect(screen.getByText('1 siswa bergabung')).toBeTruthy();
   failed = false;
-  fireEvent.click(screen.getByRole('button', { name: 'Muat ulang jumlah siswa' }));
-  await waitFor(() => expect(label.parentElement?.querySelector('strong')?.textContent).toBe('2'));
+  fireEvent.click(screen.getByRole('button', { name: 'Muat ulang anggota IX B' }));
+  await waitFor(() => expect(screen.getAllByText('1 siswa bergabung')).toHaveLength(2));
 });
 
 it('re-checks identity instead of offering a retry that can never succeed once access is revoked', async () => {

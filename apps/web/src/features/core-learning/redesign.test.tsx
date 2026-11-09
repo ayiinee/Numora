@@ -73,6 +73,7 @@ const profile = {
 };
 beforeEach(() => {
   vi.resetAllMocks();
+  vi.mocked(getTeacherClasses).mockResolvedValue({ items: [] });
   vi.spyOn(window, 'scrollTo').mockImplementation(() => {});
   context.pathname = '/student';
   context.levelFilter = '';
@@ -403,7 +404,7 @@ describe('assessment history states', () => {
   it('does not load personal history while signed out', async () => {
     context.state = { status: 'signed_out' };
     renderStudent(<AssessmentScreen />);
-    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/login'));
     expect(learningApi.assessmentHistory).not.toHaveBeenCalled();
   });
 });
@@ -729,7 +730,7 @@ describe('responsive learning composition', () => {
   it('does not fetch Student data while signed out', async () => {
     context.state = { status: 'signed_out' };
     renderStudent(<NewStudentDashboard />);
-    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/login'));
     expect(learningApi.dashboard).not.toHaveBeenCalled();
   });
   it.each(['TEST-CODE', 'QA2345'])(
@@ -935,20 +936,20 @@ describe('responsive learning composition', () => {
       profile: { ...profile, role: 'TEACHER', teacherVerified: true },
       session: { access_token: 'teacher-test' },
     };
+    vi.mocked(getTeacherClasses).mockResolvedValue({
+      items: [{ id: 'class-profile', name: 'IX A' }],
+    });
     render(<TeacherProfileScreen />);
-    expect(screen.getByRole('heading', { name: 'Profil & akun' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Profil' })).toBeTruthy();
     expect(screen.getAllByText('test@example.invalid')).toHaveLength(2);
     expect(screen.getByText('Terverifikasi')).toBeTruthy();
     expect(
-      screen
-        .getAllByRole('link', { name: /Kelas saya/ })
-        .at(-1)
-        ?.getAttribute('href'),
+      (await screen.findByRole('link', { name: /Buka daftar kelas/ })).getAttribute('href'),
     ).toBe('/teacher');
     expect(screen.queryByRole('button', { name: /^Keluar$/ })).toBeNull();
     fireEvent.click(screen.getByRole('button', { name: 'Keluar dari akun' }));
     await waitFor(() => expect(context.logout).toHaveBeenCalledOnce());
-    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/'));
+    await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/login'));
   });
   it('keeps Teacher Profile guarded and Admin logout in the shell', async () => {
     context.pathname = '/teacher/profile';

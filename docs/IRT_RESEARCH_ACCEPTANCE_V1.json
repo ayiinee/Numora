@@ -1,5 +1,5 @@
 {
-  "status": "LOCAL_RESEARCH_ACCEPTED_WITH_UPSTREAM_CI_BLOCKER",
+  "status": "NUMERICAL_BASELINE_ACCEPTED_RESEARCH_ONLY",
   "date": "2026-11-09",
   "purpose": "RESEARCH_ONLY",
   "productionApproved": false,
@@ -383,8 +383,12 @@
       "runner": "Vitest package test command"
     }
   },
-  "remaining": [],
-  "blocker": "Local research acceptance is complete. Main PR remains draft while inherited generator browser overflow in base PR #130 is unresolved; latest repository-wide CI must rerun after the legacy snapshot expectation fix.",
+  "remaining": [
+    "Academic review of anchor/linking uncertainty and high no-DIF hold rate; no production approval.",
+    "Canonical adoption/publication and admin package lifecycle remain outside the AI research machine.",
+    "Intended-hardware Linux capacity validation remains distinct from local host measurements."
+  ],
+  "blocker": null,
   "validityLimits": [
     "Synthetic well-conditioned design only; no empirical dimensionality approval.",
     "Five anchors and sensitivity checks do not establish absence of DIF or construct equivalence.",
@@ -648,22 +652,19 @@
   },
   "preProductionRequirements": [
     "Academic approval of empirical dimensionality, linking and policies; review high anchor sensitivity hold rate.",
-    "Validated Linux Python runtime profile and capacity/security review on intended hardware (test host has 1 CPU and about 1.817 GiB Docker RAM, not the requested 2-CPU test capacity).",
     "Canonical participant result/parameter adoption and publication remain separate future work.",
-    "Resolve upstream generator browser overflow and pass full repository CI; no automatic merge or deployment."
+    "Use Linux acceptance report for tested producer portability; actual VPS sizing, academic approval and deployment security still require separate review."
   ],
   "repositoryCI": {
-    "pr": "https://github.com/ayiinee/Numora/pull/132",
-    "draft": true,
-    "inheritedBasePr": "https://github.com/ayiinee/Numora/pull/130",
-    "observedFailures": [
-      "Historical snapshot omitted new nullable column (fixed; 9/9 local tests pass; remote rerun pending).",
-      "Generator directory horizontal overflow for two admin roles in browser-e2e shard 1.",
-      "quality aggregate follows failing tests/browser jobs."
-    ],
-    "uiFilesChangedByThisBranch": false,
-    "localNodeVersion": "24.15.0",
-    "repositoryExpectedNode": ">=24.22.1 <25",
-    "ciBuildContractAndValidate": "Previously successful; latest rerun not claimed."
+    "historicalEvidenceSuperseded": true,
+    "note": "Old overflow and migration CI blockers were repaired in the earlier stack. This numerical baseline does not certify current PR-head CI.",
+    "priorResearchPr": "https://github.com/ayiinee/Numora/pull/132",
+    "outcomeFollowupPr": "https://github.com/ayiinee/Numora/pull/134"
+  },
+  "historicalStatus": "LOCAL_RESEARCH_ACCEPTED_WITH_UPSTREAM_CI_BLOCKER",
+  "supplementaryEvidence": {
+    "outcomes": "outcome-acceptance-v1.json",
+    "linux": "linux-acceptance-v1.json",
+    "handoff": "../../docs/IRT_AI_HANDOFF.md"
   }
 }

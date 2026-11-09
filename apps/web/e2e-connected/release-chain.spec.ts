@@ -289,13 +289,17 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await teacher.getByRole('textbox', { name: 'Token verifikasi', exact: true }).fill(token.token);
     await teacher.getByRole('button', { name: 'Verifikasi dan lanjutkan', exact: true }).click();
     await expect(teacher).toHaveURL(/\/teacher$/);
-    await teacher.getByText('Buat kelas baru', { exact: false }).click();
-    await teacher.getByLabel(/^Nama kelas/).fill('JOB06 IX Test');
-    const made = teacher.waitForResponse(
+    await teacher.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+    const createClass = teacher.getByRole('dialog', { name: 'Buat kelas', exact: true });
+    await createClass.getByLabel(/^Nama kelas/).fill('JOB06 IX Test');
+    const classCreation = teacher.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/classes'),
     );
-    await teacher.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-    cls = (await (await made).json()) as CreatedClassDto;
+    await createClass.getByRole('button', { name: 'Buat kelas', exact: true }).click();
+    const classResponse = await classCreation;
+    expect(classResponse.status()).toBe(201);
+    cls = (await classResponse.json()) as CreatedClassDto;
+    await expect(teacher).toHaveURL(new RegExp(`/teacher/classes/${cls.id}/invite(?:\\?|$)`));
     await teacher.goto(`/teacher/classes/${cls.id}`);
     await expect(teacher.getByText('Belum ada siswa', { exact: true })).toBeVisible();
 
@@ -626,7 +630,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     contexts.push(anonymousContext);
     const anonymous = await anonymousContext.newPage();
     await anonymous.goto('http://localhost:3400/teacher');
-    await expect(anonymous).toHaveURL('http://localhost:3400/');
+    await expect(anonymous).toHaveURL('http://localhost:3400/login');
+    await expect(anonymous.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
     await anonymous.close();
     const student = await login(browser, 'otherStudent');
     await student.goto('/admin/schools');
@@ -650,9 +655,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const teacher = await login(browser, 'teacher');
     await teacher.goto('/teacher/profile');
     await teacher.getByRole('button', { name: 'Keluar dari akun', exact: true }).click();
-    await expect(teacher).toHaveURL('http://localhost:3400/');
+    await expect(teacher).toHaveURL('http://localhost:3400/login');
     await teacher.goto('/teacher');
-    await expect(teacher).toHaveURL('http://localhost:3400/');
+    await expect(teacher).toHaveURL('http://localhost:3400/login');
     const signedInAgain = await login(browser, 'teacher');
     await signedInAgain.goto('/teacher');
     await expect(signedInAgain.getByRole('link', { name: /JOB06 IX Test/ })).toBeVisible();
@@ -728,7 +733,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       localStorage.setItem('sb-localhost-auth-token', JSON.stringify(session));
     });
     await invalid.reload();
-    await expect(invalid).toHaveURL('http://localhost:3400/');
+    await expect(invalid).toHaveURL('http://localhost:3400/login');
     expect(
       await invalid.evaluate(() => localStorage.getItem('sb-localhost-auth-token')),
     ).toBeNull();

@@ -17,7 +17,7 @@ export function TeacherGate({
   const { state, refresh } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
+    if (state.status === 'signed_out') router.replace('/login');
     if (state.status === 'registration') router.replace('/onboarding');
     if (state.status === 'ready' && destination(state.profile) !== '/teacher')
       router.replace(destination(state.profile));

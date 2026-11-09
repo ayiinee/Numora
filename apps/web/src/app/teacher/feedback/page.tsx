@@ -1,5 +1,4 @@
 import { redirect } from 'next/navigation';
-import { TeacherFeedbackScreen } from '@/features/monitoring/teacher-feedback';
 
 export default async function Page({
   searchParams,
@@ -9,5 +8,7 @@ export default async function Page({
   const { classId, studentId } = await searchParams;
   if (typeof classId !== 'string' || !classId || typeof studentId !== 'string' || !studentId)
     redirect('/teacher');
-  return <TeacherFeedbackScreen classId={classId} studentId={studentId} />;
+  redirect(
+    `/teacher/classes/${encodeURIComponent(classId)}/students/${encodeURIComponent(studentId)}?tab=notes`,
+  );
 }

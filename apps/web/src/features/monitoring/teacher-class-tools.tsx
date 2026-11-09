@@ -1,6 +1,6 @@
 'use client';
 
-import { useEffect, useState } from 'react';
+import { Suspense, useEffect, useState } from 'react';
 import Image from 'next/image';
 import QRCode from 'qrcode';
 import { useQuery } from '@tanstack/react-query';
@@ -12,6 +12,7 @@ import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
 import { findTeacherClass, teacherKeys } from './teacher-query';
 import { classJoinPath } from '@/features/onboarding/class-invitation';
+import { teacherContextHref, useTeacherSearch } from './teacher-location';
 
 /**
  * Teachers keep a QR file per class, so a single fixed name would bury older
@@ -128,7 +129,7 @@ export function TeacherInviteContent({
           <Card>
             <SectionHeader title="Cara bergabung" />
             <ol className="teacher-invite-steps">
-              <li>Siswa membuka tautan atau memindai QR, lalu masuk dengan akun Google.</li>
+              <li>Siswa membuka tautan atau memindai QR, lalu masuk ke akun Numora.</li>
               <li>
                 Periksa kode kelas dan konfirmasi gabung. Kode juga dapat dimasukkan melalui Profil.
               </li>
@@ -156,9 +157,11 @@ export function TeacherInviteContent({
 
 export function TeacherClassToolsScreen({ classId }: { classId: string }) {
   return (
-    <TeacherGate>
-      {(token, name) => <ClassTools token={token} teacherName={name} classId={classId} />}
-    </TeacherGate>
+    <Suspense fallback={<DataState pending />}>
+      <TeacherGate>
+        {(token, name) => <ClassTools token={token} teacherName={name} classId={classId} />}
+      </TeacherGate>
+    </Suspense>
   );
 }
 function ClassTools({
@@ -170,6 +173,7 @@ function ClassTools({
   teacherName: string;
   classId: string;
 }) {
+  const { params } = useTeacherSearch();
   const classes = useQuery({
     queryKey: teacherKeys.classes(),
     queryFn: () => getTeacherClasses(token),
@@ -182,9 +186,8 @@ function ClassTools({
   return (
     <TeacherShell
       title="Undang siswa"
-      description={roster.data?.class.name}
       teacherName={teacherName}
-      backHref={`/teacher/classes/${classId}`}
+      backHref={teacherContextHref(`/teacher/classes/${classId}`, params)}
     >
       <div className="teacher-tools-page">
         {classes.isPending || classes.isError || roster.isPending || roster.isError ? (

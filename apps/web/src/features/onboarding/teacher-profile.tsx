@@ -2,7 +2,7 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Badge, Button, Card, EmptyState, Icon, ListRow, SectionHeader } from '@tka/ui';
+import { Badge, Button, Card, Icon, ListRow, SectionHeader } from '@tka/ui';
 import { OwnAvatar as Avatar } from './user-avatar';
 import { ProfileEditor } from './profile-editor';
 import { TeacherShell } from '@/components/shell';
@@ -11,7 +11,6 @@ import { useAuth } from './auth';
 import { useTeacherSignOut } from './teacher-session';
 import { getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
-import { TeacherAnnouncement } from '@/features/monitoring/teacher-ui';
 import { teacherKeys } from '@/features/monitoring/teacher-query';
 import { TeacherSchoolMemberships } from '@/features/monitoring/teacher-school-memberships';
 
@@ -33,7 +32,7 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
   if (state.status !== 'ready') return null;
 
   return (
-    <TeacherShell title="Profil & akun" teacherName={name}>
+    <TeacherShell title="Profil" teacherName={name}>
       <div className="teacher-profile-layout">
         <Card className="teacher-profile-identity teacher-identity-card">
           <Badge variant="success">
@@ -42,7 +41,7 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
           <Avatar name={name} size="lg" />
           <h2>{name}</h2>
           <p>{state.profile.email}</p>
-          <span className="teacher-identity-foot">Dampingi kelas dan perkembangan siswa.</span>
+          <span className="teacher-identity-foot">Akun guru NUMORA</span>
         </Card>
         <div className="teacher-page-stack">
           <ProfileEditor />
@@ -65,7 +64,7 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
           </Card>
           <Card className="teacher-account-card">
             <SectionHeader
-              title="Kelas yang Anda dampingi"
+              title="Kelas saya"
               subtitle={classes.isSuccess ? `${classes.data.items.length} kelas` : ''}
             />
             {classes.isPending || classes.isError ? (
@@ -74,44 +73,20 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
                 error={classes.error}
                 retry={() => void classes.refetch()}
               />
-            ) : classes.data.items.length ? (
-              classes.data.items.map((cls) => (
-                <div className="teacher-profile-class" key={cls.id}>
-                  <Link href={`/teacher/classes/${cls.id}`}>
-                    <Icon name="users" />
-                    <strong>{cls.name}</strong>
-                    <Icon name="chevron" />
-                  </Link>
-                  <div>
-                    <Link href={`/teacher/classes/${cls.id}/invite`}>Undang siswa</Link>
-                  </div>
-                </div>
-              ))
             ) : (
-              <EmptyState
-                icon={<Icon name="users" />}
-                title="Belum ada kelas"
-                description="Buat kelas pertama dari Kelas saya."
-              />
+              <Link className="teacher-account-link" href="/teacher">
+                <ListRow
+                  wrapText
+                  dividers={false}
+                  title={classes.data.items.length ? 'Buka daftar kelas' : 'Buat kelas pertama'}
+                  description="Lihat anggota dan progres siswa."
+                  leading={<Icon name="users" />}
+                  trailing={<Icon name="chevron" />}
+                />
+              </Link>
             )}
           </Card>
-          <Card className="teacher-account-card">
-            <SectionHeader title="Akses cepat" />
-            <Link className="teacher-account-link" href="/teacher">
-              <ListRow
-                wrapText
-                dividers={false}
-                title="Kelas saya"
-                description="Lihat kelas dan progres siswa."
-                leading={<Icon name="users" />}
-                trailing={<Icon name="chevron" />}
-              />
-            </Link>
-          </Card>
           <TeacherSchoolMemberships token={token} />
-          <TeacherAnnouncement>
-            Email mengikuti akun Google. Nama dan foto dapat diperbarui melalui Edit profil.
-          </TeacherAnnouncement>
           {error && (
             <p role="alert" className="form-error">
               {error}
