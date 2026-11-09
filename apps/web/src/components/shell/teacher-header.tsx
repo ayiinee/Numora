@@ -1,7 +1,7 @@
 import type { ReactNode } from 'react';
 import Link from 'next/link';
-import { Icon } from '@tka/ui';
-import { OwnAvatar as Avatar } from '@/features/onboarding/user-avatar';
+import { Avatar, Icon } from '@tka/ui';
+import { OwnAvatar } from '@/features/onboarding/user-avatar';
 
 export function TeacherHeader({
   title,
@@ -18,6 +18,8 @@ export function TeacherHeader({
   actions?: ReactNode;
   showIdentity?: boolean;
 }) {
+  // The verification gate renders this shell before the profile photo provider is available.
+  const HeaderAvatar = verified ? OwnAvatar : Avatar;
   return (
     <header className="teacher-header">
       <div className="teacher-header__identity">
@@ -26,7 +28,7 @@ export function TeacherHeader({
             <Icon name="back" />
           </Link>
         )}
-        {showIdentity && name && <Avatar name={name} />}
+        {showIdentity && name && <HeaderAvatar name={name} />}
         <div>
           <strong>{showIdentity ? name || 'Ruang guru' : title}</strong>
           {showIdentity && (

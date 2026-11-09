@@ -596,7 +596,8 @@ test('Teacher verification handles empty schools, expired token session and disa
   await page.setViewportSize({ width: 390, height: 900 });
   const { state, errors } = await setup(page);
   state.emptySchools = true;
-  await page.goto('/teacher/verification-required');
+  await page.goto('/teacher');
+  await expect(page).toHaveURL(/\/teacher\/verification-required$/);
   await expect(page.getByText('Belum ada sekolah aktif.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Verifikasi dan lanjutkan' })).toBeDisabled();
   await capture(page, 'verification-empty', 390);
