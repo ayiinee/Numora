@@ -1,0 +1,168 @@
+{
+  "status": "INCOMPLETE_INFRASTRUCTURE_BLOCKED",
+  "date": "2026-11-09",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "image": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+  "policySha256": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
+  "design": {
+    "model": "MIXED_2PL_GPCM",
+    "arms": 2,
+    "respondentsPerArm": 1000,
+    "itemsPerPackage": 30,
+    "sharedAnchorVersions": 5
+  },
+  "numericalRecovery": {
+    "replications": 8,
+    "difficultyBias": -0.009887742770055028,
+    "difficultyRMSE": 0.08865969999956083,
+    "logDiscriminationRMSE": 0.09726447547734235,
+    "stepRMSE": 0.08903053266099557,
+    "thetaRMSE": 0.3804371713937267,
+    "difficultyStep95Coverage": 0.9655172413793104,
+    "thetaConditional95Coverage": 0.946125,
+    "thetaRecoveryScope": "ALL_IDENTIFIED_SIMULATED_ATTEMPTS_RESEARCH_ONLY",
+    "gateDistribution": {
+      "participant:NOT_COMPARABLE": 6000,
+      "anchor:HELD": 12,
+      "anchor:PASSED": 28,
+      "participant:INSUFFICIENT": 2000,
+      "MODEL_FIT_FAILED": 1
+    },
+    "failureDistribution": {},
+    "elapsedSeconds": [
+      172.81200000000536,
+      181.93799999999464,
+      194.81299999999464,
+      211.35999999998603,
+      63.59399999998277,
+      61.671999999991385,
+      58.687999999994645,
+      58.84399999998277
+    ],
+    "accepted": false
+  },
+  "experimentModes": {
+    "CONTRACT_PRODUCER": 4,
+    "NUMERICAL_RECOVERY_ONLY": 4
+  },
+  "replications": [
+    {
+      "file": "replication-01.json",
+      "sha256": "025f94a8dab5d1572686ab44dafec1bb9583df8f71e0bc3e01c2a40289a27028",
+      "seed": 20261109,
+      "mode": "CONTRACT_PRODUCER",
+      "seconds": 172.81200000000536,
+      "converged": true
+    },
+    {
+      "file": "replication-02.json",
+      "sha256": "9f03e6b645cf70615baf2c06837d7dffddaa58ae72704375b3c34570218a2041",
+      "seed": 20261110,
+      "mode": "CONTRACT_PRODUCER",
+      "seconds": 181.93799999999464,
+      "converged": true
+    },
+    {
+      "file": "replication-03.json",
+      "sha256": "f71b3d4d6fb4c9b9499abfbfe23c55f0ff6b2dfed6bd4b390dfea99eca4981c7",
+      "seed": 20261111,
+      "mode": "CONTRACT_PRODUCER",
+      "seconds": 194.81299999999464,
+      "converged": true
+    },
+    {
+      "file": "replication-04.json",
+      "sha256": "3861f2375dcad90908b2fbdf2948978193727a7969bfcde69e87430feaccaa93",
+      "seed": 20261112,
+      "mode": "CONTRACT_PRODUCER",
+      "seconds": 211.35999999998603,
+      "converged": true
+    },
+    {
+      "file": "replication-05.json",
+      "sha256": "8ec9ad1475b5b59e2565c42e81b6eae1aa228ac73ce0a6afaf7cfbb004da5d8f",
+      "seed": 20261113,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 63.59399999998277,
+      "converged": true
+    },
+    {
+      "file": "replication-06.json",
+      "sha256": "98a5d8b5adab512e3119425273af9bd22d07f1f5a2c4a7438bc4a7735c82689c",
+      "seed": 20261114,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 61.671999999991385,
+      "converged": true
+    },
+    {
+      "file": "replication-07.json",
+      "sha256": "d7f768971c9c567adac3df209f31c5aeb75c6b20905717272f8c97230ed7d44b",
+      "seed": 20261115,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 58.687999999994645,
+      "converged": true
+    },
+    {
+      "file": "replication-08.json",
+      "sha256": "1eae26c9035d82512b6f4011a448aa9c996dafde5f98d2c670bdaf7d8906240e",
+      "seed": 20261116,
+      "mode": "NUMERICAL_RECOVERY_ONLY",
+      "seconds": 58.84399999998277,
+      "converged": true
+    }
+  ],
+  "evidence": {
+    "fullLocalHttpDaemonRArtifact": {
+      "tests": 12,
+      "passed": 12,
+      "seconds": 577.777,
+      "image": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+      "note": "Before final producer-runtime binding and additional fault tests; final pinned rerun blocked by Docker outage."
+    },
+    "forwardUpgradeWithHistory": {
+      "tests": 14,
+      "passed": 13,
+      "skipped": 1,
+      "seconds": 25.017,
+      "skip": "R test disabled for infrastructure-only run; exact historic attempt/score/XP preserved."
+    },
+    "roracle": "Previously passed probtrace 1e-8 and independent adaptive integration 1e-4, including unordered GPCM steps.",
+    "runnerFaults": "Previously passed timeout and stale-authorization real-container removal.",
+    "finalPinnedFullRun": {
+      "tests": 14,
+      "passed": 13,
+      "failed": 1,
+      "seconds": 281.82,
+      "failure": "Full R case returned FAILED while Docker/WSL unavailable; acceptance is not claimed.",
+      "acknowledgementUnder10Seconds": true
+    },
+    "serviceRegression": {
+      "tests": 80,
+      "passed": 52,
+      "skipped": 28,
+      "seconds": 80.838,
+      "includes": "All 1094 numerical generators and all VERIFIED conceptual stock entries; PostgreSQL/R-only tests explicitly skipped without their dedicated environment."
+    },
+    "mainContracts": {
+      "jsonSchemasCompiled": 17,
+      "scientificConformanceTestsPassed": 114,
+      "adapterUnitTestsPassed": 3,
+      "databaseAndOrchestrationBuilds": "PASS"
+    }
+  },
+  "remaining": [
+    "Complete 30 replications on same image; no threshold changes.",
+    "Rerun full integration with final producer-runtime binding after Docker recovery.",
+    "Run pure 2PL, pure GPCM and three-arm engine scenarios.",
+    "Complete anchor-DIF, local-dependence, singular-information and nonconvergence stress scenarios.",
+    "Measure final-profile ACK <10 seconds under full synthetic input."
+  ],
+  "blocker": "Docker Desktop/WSL stopped responding during overlapping standalone research experiments on host limited to 1 CPU and 1.817 GiB. Restart pending owner decision because unrelated containers are running.",
+  "validityLimits": [
+    "Synthetic well-conditioned design only; no empirical dimensionality approval.",
+    "Five anchors and sensitivity checks do not establish absence of DIF or construct equivalence.",
+    "Recovery-only experiments do not validate transport, contract artifacts or participant publication.",
+    "Conditional EAP posterior SD excludes calibration-parameter uncertainty."
+  ]
+}
