@@ -410,12 +410,23 @@
   color: var(--accent);
 }
 
-.categories svg {
-  box-sizing: content-box;
-  padding: 5px;
-  border-radius: 8px;
-  background: var(--lavender);
-  color: var(--accent);
+.categoryBadge {
+  display: grid;
+  flex: none;
+  width: 36px;
+  height: 27px;
+  place-items: center;
+  border-radius: 5px;
+  background: var(--badge-color);
+  pointer-events: none;
+}
+
+.categoryBadge::before {
+  width: 22px;
+  height: 22px;
+  background: var(--badge-ink, #fff);
+  mask: var(--badge-icon) center / contain no-repeat;
+  content: '';
 }
 
 .benefits {

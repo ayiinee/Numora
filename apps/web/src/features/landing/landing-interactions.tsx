@@ -1,19 +1,25 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState, type PointerEvent } from 'react';
-import { Brand, Button, Dialog, Icon, type IconName } from '@tka/ui';
+import { useEffect, useRef, useState, type CSSProperties, type PointerEvent } from 'react';
+import { Brand, Button, Dialog, Icon } from '@tka/ui';
 import styles from './landing.module.css';
 
-const categories = [
-  ['Latihan bertahap', 'clipboard', '#cara-belajar'],
-  ['Pembahasan', 'chat', '#pembahasan'],
-  ['Progres dan bintang', 'star', '#progres'],
-  ['Materi dan level', 'book', '#materi'],
-  ['Akses web', 'globe', '#akses-web'],
-  ['Untuk sekolah', 'school', '#untuk-sekolah'],
-  ['Persiapan TKA', 'target', '#persiapan-tka'],
-] as const satisfies readonly (readonly [string, IconName, string])[];
+const categories: readonly [
+  label: string,
+  icon: string,
+  href: string,
+  badgeColor: string,
+  iconColor?: string,
+][] = [
+  ['Latihan bertahap', 'steps', '#cara-belajar', 'var(--numora-purple-600)'],
+  ['Pembahasan', 'chat-centered-text', '#pembahasan', '#1878be'],
+  ['Progres dan bintang', 'star', '#progres', 'var(--numora-gold)', '#754400'],
+  ['Materi dan level', 'book-open', '#materi', '#b44c89'],
+  ['Akses web', 'browser', '#akses-web', '#007b92'],
+  ['Untuk sekolah', 'graduation-cap', '#untuk-sekolah', '#008260'],
+  ['Persiapan TKA', 'target', '#persiapan-tka', '#cf4055'],
+];
 const categoryPixelsPerMs = 24 / 1000;
 
 export function LandingHeader() {
@@ -237,10 +243,20 @@ export function CategoryRail() {
               className={styles.categories}
               aria-hidden={copy !== 'original' || undefined}
             >
-              {categories.map(([label, icon, href]) => (
+              {categories.map(([label, icon, href, badgeColor, iconColor]) => (
                 <li key={href}>
                   <a href={href} draggable={false} tabIndex={copy === 'original' ? 0 : -1}>
-                    <Icon name={icon} width={20} height={20} />
+                    <span
+                      aria-hidden="true"
+                      className={styles.categoryBadge}
+                      style={
+                        {
+                          '--badge-icon': `url("/icons/landing/phosphor/${icon}-fill.svg")`,
+                          '--badge-color': badgeColor,
+                          '--badge-ink': iconColor,
+                        } as CSSProperties
+                      }
+                    />
                     {label}
                   </a>
                 </li>
