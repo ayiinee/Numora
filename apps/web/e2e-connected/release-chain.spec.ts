@@ -670,7 +670,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
     await expect(admin).toHaveURL(/\/admin\/analytics$/);
-    await expect(admin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(admin.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
     await expect(admin.locator('[data-metric]')).toHaveCount(22);
     await expect(admin.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
     await admin.goto('/admin/schools');
@@ -1259,7 +1259,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const superAdmin = await login(browser, 'admin');
     await superAdmin.goto('/admin');
     await expect(superAdmin).toHaveURL(/\/admin\/analytics$/);
-    await expect(superAdmin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(superAdmin.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
     await expect(superAdmin.locator('[data-metric]')).toHaveCount(22);
     await call(request, 'admin', 'admin/accounts?limit=5&offset=0');
 
