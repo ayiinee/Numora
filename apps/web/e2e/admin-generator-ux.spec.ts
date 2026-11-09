@@ -16,9 +16,10 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
         fullPage: true,
         style: 'nextjs-portal{visibility:hidden!important}',
       });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        `Generator must fit the ${width}px viewport`,
+      ).toBe(true);
     }
     expect(
       (
@@ -39,9 +40,10 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
         fullPage: false,
         style: 'nextjs-portal{visibility:hidden!important}',
       });
-      expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
-        true,
-      );
+      expect(
+        await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth),
+        `Generator must fit the ${width}px viewport`,
+      ).toBe(true);
     }
     expect(
       (
