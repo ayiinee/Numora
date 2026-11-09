@@ -4,6 +4,7 @@ import { Brand, Icon, type IconName } from '@tka/ui';
 import { ClosingScene } from './closing-scene';
 import { HeroIllustration } from './hero-illustration';
 import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
+import { PracticeIllustration } from './practice-illustration';
 import styles from './landing.module.css';
 
 const illustrations = '/illustrations/student-home';
@@ -12,9 +13,6 @@ const benefits = [
     id: 'cara-belajar',
     title: 'Latihan singkat dan bertahap',
     text: 'Kerjakan sepuluh soal per level. Kalau sudah menguasai level ini, kamu bisa lanjut ke tantangan berikutnya.',
-    icon: 'clipboard',
-    decoration: 'check-circle',
-    tone: 'lavender',
   },
   {
     id: 'pembahasan',
@@ -106,13 +104,26 @@ export function LandingPage() {
         </div>
 
         <div className={styles.benefits}>
-          {benefits.map(({ id, title, text, icon, decoration, tone }) => (
-            <section key={id} id={id} className={styles.benefit} aria-labelledby={`${id}-title`}>
+          {benefits.map((benefit) => (
+            <section
+              key={benefit.id}
+              id={benefit.id}
+              className={styles.benefit}
+              aria-labelledby={`${benefit.id}-title`}
+            >
               <div className={styles.sectionCopy}>
-                <h2 id={`${id}-title`}>{title}</h2>
-                <p>{text}</p>
+                <h2 id={`${benefit.id}-title`}>{benefit.title}</h2>
+                <p>{benefit.text}</p>
               </div>
-              <LearningArt icon={icon} decoration={decoration} tone={tone} />
+              {benefit.id === 'cara-belajar' ? (
+                <PracticeIllustration />
+              ) : (
+                <LearningArt
+                  icon={benefit.icon}
+                  decoration={benefit.decoration}
+                  tone={benefit.tone}
+                />
+              )}
             </section>
           ))}
         </div>

@@ -1,0 +1,201 @@
+.illustration {
+  position: relative;
+  aspect-ratio: 1;
+}
+
+.scene {
+  display: block;
+  width: 100%;
+  height: 100%;
+}
+
+.motionControl {
+  position: absolute;
+  inset: auto 0 0 auto;
+  display: none;
+}
+
+.motionControl > button {
+  width: 44px;
+  padding: 0;
+}
+
+@media (prefers-reduced-motion: no-preference) {
+  .illustration:not([data-visibility='waiting']) .motionControl {
+    display: block;
+  }
+
+  .illustration:not([data-visibility='waiting']) [data-layer] {
+    animation-duration: 6s;
+    animation-iteration-count: infinite;
+    animation-timing-function: ease-in-out;
+  }
+
+  .illustration[data-paused='true'] [data-layer],
+  .illustration[data-visibility='hidden'] [data-layer] {
+    animation-play-state: paused;
+  }
+
+  .scene [data-layer] {
+    transform-box: fill-box;
+    transform-origin: center;
+  }
+
+  .scene [data-layer='owl'] {
+    animation-name: owl;
+  }
+
+  .scene [data-layer='wing'] {
+    animation-name: wing;
+    transform-origin: 82% 24%;
+  }
+
+  .scene [data-layer='student'] {
+    animation-name: student;
+    transform-origin: 50% 95%;
+  }
+
+  .scene [data-layer='arm'] {
+    animation-name: arm;
+    transform-origin: 10% 94%;
+  }
+
+  .scene [data-layer='correct'] {
+    animation-name: correct;
+  }
+
+  .scene [data-layer='meter'] {
+    animation-name: meter;
+    transform-origin: left;
+  }
+
+  .scene [data-layer='spark'] {
+    animation-name: spark;
+  }
+}
+
+@keyframes owl {
+  0%,
+  21%,
+  82%,
+  100% {
+    transform: translate(-92px, -72px) scale(0.22) rotate(-12deg);
+    opacity: 0;
+  }
+  24% {
+    opacity: 1;
+  }
+  36% {
+    transform: translate(4px, -21px) scale(1.06) rotate(9deg);
+    opacity: 1;
+  }
+  48% {
+    transform: translate(0, 0) scale(1) rotate(-4deg);
+    opacity: 1;
+  }
+  60% {
+    transform: translate(1px, -9px) scale(1) rotate(2deg);
+    opacity: 1;
+  }
+  72% {
+    transform: translate(0, -2px) scale(1) rotate(-3deg);
+    opacity: 1;
+  }
+  78% {
+    opacity: 1;
+  }
+}
+@keyframes wing {
+  0%,
+  22%,
+  42%,
+  59%,
+  76%,
+  100% {
+    transform: rotate(0deg);
+  }
+  32%,
+  53%,
+  68% {
+    transform: rotate(17deg);
+  }
+}
+@keyframes student {
+  0%,
+  31%,
+  57%,
+  83%,
+  100% {
+    transform: translateY(0) rotate(0deg);
+  }
+  38% {
+    transform: translateY(-11px) rotate(5deg);
+  }
+  46% {
+    transform: translateY(0) rotate(-3deg);
+  }
+  65% {
+    transform: translateY(-4px) rotate(2deg);
+  }
+}
+@keyframes arm {
+  0%,
+  29%,
+  76%,
+  100% {
+    transform: rotate(13deg);
+  }
+  42% {
+    transform: rotate(-8deg);
+  }
+  56% {
+    transform: rotate(-3deg);
+  }
+}
+@keyframes correct {
+  0%,
+  13%,
+  85%,
+  100% {
+    opacity: 0;
+    transform: scale(0.97);
+  }
+  19% {
+    opacity: 1;
+    transform: scale(1.05);
+  }
+  27%,
+  72% {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes meter {
+  0%,
+  14%,
+  85%,
+  100% {
+    transform: scaleX(0.48);
+  }
+  28%,
+  75% {
+    transform: scaleX(1);
+  }
+}
+@keyframes spark {
+  0%,
+  25%,
+  49%,
+  100% {
+    opacity: 0;
+    transform: translate(-8px, 9px) scale(0.7);
+  }
+  34% {
+    opacity: 1;
+    transform: translate(0, -3px) scale(1);
+  }
+  43% {
+    opacity: 0.85;
+    transform: translate(0, -9px) scale(0.92);
+  }
+}

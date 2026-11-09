@@ -453,7 +453,7 @@
   --art-offset: 218px;
 }
 
-.benefits .learningArt {
+.benefits :is(.learningArt, .practiceArt) {
   width: var(--art-size);
 }
 
@@ -946,6 +946,12 @@
     width: 530px;
     justify-self: end;
     margin-right: -116px;
+  }
+
+  .benefit .practiceArt {
+    width: 530px;
+    justify-self: end;
+    margin-right: max(-116px, calc((var(--content-width) - 100vw) / 2 + 16px));
   }
 
   .benefits .benefit:nth-child(even) .learningArt {
