@@ -2,15 +2,14 @@
   --header-height: 70px;
   --content-width: 988px;
   --paper: var(--color-surface);
-  --canvas: var(--numora-ivory-50);
-  --ink: var(--color-text-strong);
-  --muted: var(--color-text-muted);
+  --ink: #27272f;
+  --muted: #5c5d69;
   --accent: var(--color-primary);
-  --line: var(--color-border);
+  --line: #eceaf0;
   --lavender: var(--numora-purple-50);
-  --deep: var(--numora-purple-900);
   --button-height: 50px;
   --button-radius: 12px;
+  color-scheme: light;
   background: var(--paper);
   color: var(--ink);
   overflow-x: clip;
@@ -191,8 +190,8 @@
 }
 
 .primary {
-  border-bottom-color: var(--numora-purple-800);
-  background: var(--color-primary);
+  border-bottom-color: var(--color-primary-hover);
+  background: var(--accent);
   color: var(--color-text-inverse);
 }
 
@@ -202,7 +201,7 @@
 
 .secondary,
 .heroActions .secondary {
-  border-color: var(--line);
+  border-color: var(--numora-purple-200);
   background: var(--paper);
   color: var(--accent);
 }
@@ -376,22 +375,22 @@
 
 .learningArt[data-tone='peach'] {
   --art-wash: var(--numora-peach-50);
-  --art-bright: var(--numora-peach-300);
+  --art-bright: var(--numora-peach-200);
 }
 
 .learningArt[data-tone='gold'] {
-  --art-wash: var(--numora-ivory-100);
-  --art-bright: var(--numora-gold-300);
+  --art-wash: var(--numora-gold-50);
+  --art-bright: var(--numora-gold-200);
 }
 
 .learningArt[data-tone='materials'] {
-  --art-wash: var(--lavender);
-  --art-bright: var(--numora-purple-300);
+  --art-wash: var(--numora-soft-50);
+  --art-bright: var(--numora-soft-200);
 }
 
 .learningArt[data-tone='school'] {
-  --art-wash: var(--numora-purple-700);
-  --art-bright: var(--numora-purple-200);
+  --art-wash: var(--lavender);
+  --art-bright: var(--numora-purple-100);
 }
 
 .artOrbit {
@@ -446,7 +445,7 @@
   border: 2px solid var(--paper);
   border-radius: 26%;
   background: var(--art-bright);
-  color: var(--numora-purple-900);
+  color: var(--accent);
   transform: rotate(12deg);
 }
 
@@ -502,9 +501,15 @@
   text-align: center;
 }
 
+.browserBand,
+.schoolBand,
+.closing,
+.footer {
+  box-shadow: inset 0 1px var(--line);
+}
+
 .browserBand {
   min-height: 943px;
-  background: var(--lavender);
 }
 
 .browserActions {
@@ -519,10 +524,10 @@
   width: min(100%, 680px);
   margin-top: clamp(40px, 9vw, 100px);
   overflow: hidden;
-  border: 4px solid var(--numora-purple-200);
+  border: 4px solid var(--numora-purple-100);
   border-radius: var(--radius-xl);
   background: var(--paper);
-  box-shadow: 0 10px var(--numora-purple-200);
+  box-shadow: 0 10px var(--lavender);
 }
 
 .deviceBar {
@@ -573,17 +578,10 @@
 
 .schoolBand {
   min-height: 100svh;
-  background: var(--deep);
-  color: var(--color-text-inverse);
 }
 
 .schoolBand .learningArt {
   width: min(100%, 340px);
-}
-
-.page .schoolBand h2,
-.page .schoolBand p {
-  color: var(--color-text-inverse);
 }
 
 .schoolBand .primary,
@@ -614,7 +612,6 @@
 
 .closing {
   min-height: clamp(568px, calc(819px - 64.3vw), 613px);
-  background: var(--canvas);
 }
 
 .closing h2,
@@ -630,8 +627,6 @@
 
 .footer {
   padding: 64px 0 32px;
-  background: var(--deep);
-  color: var(--color-text-inverse);
 }
 
 .footerInner {
@@ -659,7 +654,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--numora-purple-100);
+  color: var(--muted);
   font-size: 0.875rem;
   font-weight: 650;
 }
@@ -672,16 +667,11 @@
   gap: 12px;
   margin-top: 40px;
   padding-top: 22px;
-  border-top: 1px solid var(--numora-purple-400);
+  border-top: 1px solid var(--line);
 }
 
 .footerBottom :global(.numora-brand) {
-  color: var(--color-text-inverse);
-}
-
-.page .footer :focus-visible,
-.page .schoolBand :focus-visible {
-  outline-color: var(--numora-purple-200);
+  color: var(--accent);
 }
 
 @media (max-width: 360px) {
@@ -877,19 +867,5 @@
   .page .primary,
   .page .secondary {
     transition: none;
-  }
-}
-
-@media (prefers-color-scheme: dark) {
-  .page {
-    color-scheme: dark;
-    --paper: #21182d;
-    --canvas: #191322;
-    --ink: var(--numora-ivory-50);
-    --muted: #e2d4ec;
-    --accent: var(--numora-purple-300);
-    --line: #554465;
-    --lavender: #332444;
-    --deep: #35204d;
   }
 }
