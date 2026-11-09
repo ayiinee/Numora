@@ -450,14 +450,14 @@
 }
 
 .benefits .benefit:last-child {
-  --art-offset: 218px;
+  --art-offset: 180px;
 }
 
-.benefits :is(.learningArt, .practiceArt, .explanationArt) {
+.benefits :is(.practiceArt, .featureArt) {
   width: var(--art-size);
 }
 
-.explanationArt {
+.featureArt {
   height: auto;
 }
 
@@ -508,16 +508,6 @@
 .learningArt[data-tone='peach'] {
   --art-wash: var(--numora-peach-50);
   --art-bright: var(--numora-peach-200);
-}
-
-.learningArt[data-tone='gold'] {
-  --art-wash: var(--numora-gold-50);
-  --art-bright: var(--numora-gold-200);
-}
-
-.learningArt[data-tone='materials'] {
-  --art-wash: var(--numora-soft-50);
-  --art-bright: var(--numora-soft-200);
 }
 
 .learningArt[data-tone='school'] {
@@ -605,21 +595,6 @@
   right: auto;
   left: 15%;
   transform: rotate(-13deg);
-}
-
-.learningArt[data-tone='gold'] .artPaper {
-  transform: rotate(5deg) translateX(-8%);
-}
-
-.learningArt[data-tone='materials'] .artOrbit {
-  width: 70%;
-  border-radius: 28%;
-  transform: rotate(-15deg);
-}
-
-.learningArt[data-tone='materials'] .artPaper {
-  aspect-ratio: 1;
-  transform: rotate(-8deg) translateY(-8%);
 }
 
 .browserBand,
@@ -946,40 +921,22 @@
     margin-inline: 0;
   }
 
-  .benefit :is(.learningArt, .explanationArt) {
-    width: 530px;
-    justify-self: end;
-    margin-right: -116px;
-  }
-
-  .benefit .practiceArt {
+  .benefit :is(.practiceArt, .featureArt) {
     width: 530px;
     justify-self: end;
     margin-right: max(-116px, calc((var(--content-width) - 100vw) / 2 + 16px));
   }
 
-  .benefits .benefit:nth-child(even) :is(.learningArt, .explanationArt) {
+  .benefits .benefit:nth-child(even) .featureArt {
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
     margin-right: 0;
-    margin-left: -116px;
-  }
-
-  .benefits .benefit:nth-child(even) .explanationArt {
     margin-left: max(-116px, calc((var(--content-width) - 100vw) / 2 + 16px));
   }
 
   .benefits .benefit:nth-child(even) .sectionCopy {
     grid-column: 2;
-  }
-
-  .benefits .benefit:last-child .sectionCopy {
-    margin-left: -30px;
-  }
-
-  .benefits .benefit:last-child .learningArt {
-    margin-left: -146px;
   }
 
   .page .browserBand h2,
@@ -1009,10 +966,6 @@
   .benefits .benefit:nth-child(n) {
     --art-size: 452px;
     --art-offset: 188px;
-  }
-
-  .benefits .benefit:last-child {
-    --art-offset: 224px;
   }
 
   .benefits .sectionCopy {

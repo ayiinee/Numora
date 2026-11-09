@@ -4,7 +4,7 @@ import styles from './explanation-illustration.module.css';
 export function ExplanationIllustration() {
   return (
     <svg
-      className={landingStyles.explanationArt + ' ' + styles.scene}
+      className={landingStyles.featureArt + ' ' + styles.scene}
       width="530"
       height="530"
       viewBox="0 0 530 530"

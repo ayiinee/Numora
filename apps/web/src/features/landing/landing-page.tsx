@@ -6,6 +6,7 @@ import { ExplanationIllustration } from './explanation-illustration';
 import { HeroIllustration } from './hero-illustration';
 import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
 import { PracticeIllustration } from './practice-illustration';
+import { LevelsIllustration, ProgressIllustration } from './progress-level-illustrations';
 import styles from './landing.module.css';
 
 const illustrations = '/illustrations/student-home';
@@ -26,13 +27,13 @@ const benefits = [
     id: 'progres',
     title: 'Pantau progres dan bintang',
     text: 'Lihat level yang sudah terbuka, bintang yang kamu raih, dan riwayat latihanmu. Pilih materi yang perlu kamu ulang dari hasil itu.',
-    artwork: <LearningArt icon="chart" decoration="star" tone="gold" />,
+    artwork: <ProgressIllustration />,
   },
   {
     id: 'materi',
     title: 'Pilih materi dan level',
     text: 'Jelajahi bab dan subbab matematika, lalu lanjutkan dari level yang tersedia. Kamu bisa belajar mandiri atau bergabung dengan kelas dari guru.',
-    artwork: <LearningArt icon="book" decoration="geometry" tone="materials" />,
+    artwork: <LevelsIllustration />,
   },
 ] as const;
 
