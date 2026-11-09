@@ -52,6 +52,7 @@ import { and, asc, desc, eq, inArray, isNotNull, isNull, lte, or, sql } from 'dr
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
+import { changeDrillClock, drillClock, elapsedDrillMs, startDrillClock } from './drill-timer';
 import {
   allowsChapter3Override,
   chapter3RuntimeEligibility,
@@ -121,7 +122,12 @@ export class DrillAssessmentService {
         if (!access) throw new ForbiddenException(problem('LEVEL_LOCKED', 'Level masih terkunci.'));
       }
       const [existing] = await tx
-        .select({ id: assessmentAttempts.id, isDemo: assessmentPackages.isDemo })
+        .select({
+          id: assessmentAttempts.id,
+          isDemo: assessmentPackages.isDemo,
+          startedAt: assessmentAttempts.startedAt,
+          drillTimer: assessmentAttempts.drillTimer,
+        })
         .from(assessmentAttempts)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
         .where(
@@ -133,6 +139,7 @@ export class DrillAssessmentService {
             eq(assessmentAttempts.status, 'IN_PROGRESS'),
           ),
         )
+        .for('update', { of: assessmentAttempts })
         .limit(1);
       if (existing) {
         if (existing.isDemo && !allowSyntheticContent())
@@ -142,6 +149,19 @@ export class DrillAssessmentService {
               'Paket latihan belum tersedia di lingkungan ini.',
             ),
           );
+        const now = (await databaseTime(tx)).getTime();
+        await tx
+          .update(assessmentAttempts)
+          .set({
+            drillTimer: startDrillClock(
+              existing.drillTimer ?? {
+                elapsedMs: Math.max(0, now - existing.startedAt.getTime()),
+                session: null,
+              },
+              now,
+            ),
+          })
+          .where(eq(assessmentAttempts.id, existing.id));
         return existing.id;
       }
 
@@ -299,6 +319,10 @@ export class DrillAssessmentService {
           classIdAtStart: membership?.classId ?? null,
           scoringPolicyVersionId: selected.scoringPolicyVersionId,
           drillPolicyVersion: DRILL_REWARD_POLICY_VERSION,
+          drillTimer: startDrillClock(
+            { elapsedMs: 0, session: null },
+            (await databaseTime(tx)).getTime(),
+          ),
         })
         .returning({ id: assessmentAttempts.id });
       if (!attempt) throw new Error('Attempt creation failed.');
@@ -377,6 +401,7 @@ export class DrillAssessmentService {
         levelTitle: sql<string>`coalesce(${levels.description}, 'Level ' || ${levels.levelNumber})`,
         status: assessmentAttempts.status,
         startedAt: assessmentAttempts.startedAt,
+        drillTimer: assessmentAttempts.drillTimer,
         isDemo: assessmentPackages.isDemo,
       })
       .from(assessmentAttempts)
@@ -394,7 +419,12 @@ export class DrillAssessmentService {
       throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
     if (attempt.status !== 'IN_PROGRESS' && attempt.status !== 'GRADED')
       throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
-    const rows = attempt.status === 'GRADED' ? [] : await this.questionRows(attemptId);
+    const now = await databaseTime(db);
+    const clock = attempt.drillTimer ? drillClock(attempt.drillTimer, now.getTime()) : undefined;
+    const rows =
+      attempt.status === 'GRADED' || clock?.sessionId === null
+        ? []
+        : await this.questionRows(attemptId);
     if (rows.length)
       await db.execute(sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`);
     return {
@@ -403,7 +433,8 @@ export class DrillAssessmentService {
       levelTitle: attempt.levelTitle,
       status: attempt.status === 'GRADED' ? ('completed' as const) : ('inProgress' as const),
       startedAt: attempt.startedAt.toISOString(),
-      serverTime: (await databaseTime(db)).toISOString(),
+      serverTime: now.toISOString(),
+      ...(clock ? { clock } : {}),
       isDemo: attempt.isDemo,
       questions: rows.map((row) => ({
         ...activeRuntimeQuestion(
@@ -424,6 +455,44 @@ export class DrillAssessmentService {
     return this.attemptForStudent(await this.student(authorization), attemptId);
   }
 
+  async updateClock(
+    authorization: string | undefined,
+    attemptId: string,
+    sessionId: string,
+    action: 'heartbeat' | 'pause',
+  ) {
+    const studentId = await this.student(authorization);
+    const { db } = getDatabase();
+    return db.transaction(async (tx) => {
+      const [attempt] = await tx
+        .select({ timer: assessmentAttempts.drillTimer, status: assessmentAttempts.status })
+        .from(assessmentAttempts)
+        .where(
+          and(
+            eq(assessmentAttempts.id, attemptId),
+            eq(assessmentAttempts.studentId, studentId),
+            eq(assessmentAttempts.assessmentType, 'DRILL'),
+            eq(assessmentAttempts.purpose, 'REGULAR'),
+          ),
+        )
+        .for('update')
+        .limit(1);
+      if (!attempt?.timer)
+        throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
+      const now = (await databaseTime(tx)).getTime();
+      const timer = attempt.timer;
+      if (attempt.status !== 'IN_PROGRESS' || timer.session?.id !== sessionId) {
+        return { elapsedMs: elapsedDrillMs(timer, now), sessionId: null, remainingMs: 0 };
+      }
+      const updated = changeDrillClock(timer, now, sessionId, action);
+      await tx
+        .update(assessmentAttempts)
+        .set({ drillTimer: updated })
+        .where(eq(assessmentAttempts.id, attemptId));
+      return drillClock(updated, now);
+    });
+  }
+
   async saveAnswer(
     authorization: string | undefined,
     attemptId: string,
@@ -439,6 +508,7 @@ export class DrillAssessmentService {
           assessmentType: assessmentAttempts.assessmentType,
           purpose: assessmentAttempts.purpose,
           status: assessmentAttempts.status,
+          drillTimer: assessmentAttempts.drillTimer,
         })
         .from(assessmentAttempts)
         .where(eq(assessmentAttempts.id, attemptId))
@@ -453,6 +523,9 @@ export class DrillAssessmentService {
         throw new NotFoundException(problem('ATTEMPT_NOT_FOUND', 'Drill tidak ditemukan.'));
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_COMPLETED', 'Drill sudah selesai.'));
+      const now = await databaseTime(tx);
+      if (attempt.drillTimer && !drillClock(attempt.drillTimer, now.getTime()).sessionId)
+        throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan untuk menjawab.'));
       const [item] = await tx
         .select({
           id: attemptItems.id,
@@ -487,7 +560,7 @@ export class DrillAssessmentService {
         questionInstanceId: item.id,
         answer,
         questionFormat: content.type,
-        now: await databaseTime(tx),
+        now,
       });
       return {
         questionInstanceId,
@@ -517,6 +590,13 @@ export class DrillAssessmentService {
       if (attempt.status === 'GRADED') return;
       if (attempt.status !== 'IN_PROGRESS')
         throw new ConflictException(problem('ATTEMPT_NOT_ACTIVE', 'Drill tidak aktif.'));
+      const submittedAt = attempt.drillTimer ? await databaseTime(tx) : null;
+      if (
+        attempt.drillTimer &&
+        submittedAt &&
+        !drillClock(attempt.drillTimer, submittedAt.getTime()).sessionId
+      )
+        throw new ConflictException(problem('DRILL_PAUSED', 'Lanjutkan latihan sebelum mengirim.'));
       if (!attempt.levelIdAtStart) throw new Error('Drill attempt level is missing.');
       const [pinnedPolicy] = await tx
         .select({
@@ -654,6 +734,9 @@ export class DrillAssessmentService {
               attempt.startedAt,
               now,
               ownerOverride,
+              attempt.drillTimer && submittedAt
+                ? elapsedDrillMs(attempt.drillTimer, submittedAt.getTime()) / 1000
+                : undefined,
             )
           : null;
       for (const item of graded) {
@@ -684,6 +767,14 @@ export class DrillAssessmentService {
         .update(assessmentAttempts)
         .set({
           status: 'GRADED',
+          ...(attempt.drillTimer && submittedAt
+            ? {
+                drillTimer: {
+                  elapsedMs: elapsedDrillMs(attempt.drillTimer, submittedAt.getTime()),
+                  session: null,
+                },
+              }
+            : {}),
           finishedAt: now,
           rawPoints: String(rawPoints),
 

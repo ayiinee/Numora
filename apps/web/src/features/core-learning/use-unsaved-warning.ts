@@ -2,11 +2,11 @@
 
 import { useEffect } from 'react';
 
-export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false) {
+export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false, onExit?: () => void) {
   useEffect(() => {
     if (!unsaved && !confirmDrillExit) return;
     const message = confirmDrillExit
-      ? `Keluar dari Drill? Jawaban yang sudah tersimpan dapat dilanjutkan. Timer tetap berjalan.${unsaved ? ' Perubahan terakhir belum tersimpan dan dapat hilang.' : ''}`
+      ? `Keluar dari Drill? Jawaban yang sudah tersimpan dapat dilanjutkan. ${onExit ? 'Timer akan dijeda.' : 'Timer tetap berjalan.'}${unsaved ? ' Perubahan terakhir belum tersimpan dan dapat hilang.' : ''}`
       : 'Jawaban terakhir belum tersimpan. Keluar dapat menghilangkan perubahan tersebut. Tetap keluar?';
     let currentUrl = window.location.href;
     let currentState: unknown = window.history.state;
@@ -42,7 +42,7 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false) {
       if (!window.confirm(message)) {
         event.preventDefault();
         event.stopPropagation();
-      }
+      } else onExit?.();
     }
     function traverse(event: PopStateEvent) {
       const target = new URL(window.location.href);
@@ -52,6 +52,7 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false) {
         event.stopImmediatePropagation();
         window.history.pushState(currentState, '', currentUrl);
       } else {
+        onExit?.();
         currentUrl = window.location.href;
         currentState = window.history.state;
       }
@@ -64,5 +65,5 @@ export function useUnsavedWarning(unsaved: boolean, confirmDrillExit = false) {
       window.removeEventListener('popstate', traverse, true);
       document.removeEventListener('click', navigate, true);
     };
-  }, [unsaved, confirmDrillExit]);
+  }, [unsaved, confirmDrillExit, onExit]);
 }

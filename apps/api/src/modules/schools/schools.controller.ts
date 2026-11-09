@@ -54,6 +54,12 @@ export class SchoolsController {
     return this.schools.listForTeacher(authorization);
   }
 
+  @Get('mine')
+  @ApiOkResponse({ type: SchoolListDto })
+  memberships(@Headers('authorization') authorization?: string) {
+    return this.schools.memberships(authorization);
+  }
+
   @Post(':schoolId/teacher-verifications')
   @CodeAttempt('teacher')
   @UseGuards(CodeAttemptGuard)

@@ -1,6 +1,6 @@
 'use client';
 
-import { type ReactNode, type AnchorHTMLAttributes } from 'react';
+import { useState, type ReactNode, type AnchorHTMLAttributes } from 'react';
 
 /* ============================================
  * BOTTOM NAVIGATION COMPONENT
@@ -157,6 +157,7 @@ const avatarSizes = {
  * User avatar with image or initials fallback
  */
 export function Avatar({ src, name, size = 'md', style }: AvatarProps) {
+  const [failedSrc, setFailedSrc] = useState<string>();
   const dimension = avatarSizes[size];
   const initials = name
     ? name
@@ -185,9 +186,10 @@ export function Avatar({ src, name, size = 'md', style }: AvatarProps) {
         ...style,
       }}
     >
-      {src ? (
+      {src && src !== failedSrc ? (
         <img
           src={src}
+          onError={() => setFailedSrc(src)}
           alt={name || 'Avatar'}
           style={{
             width: '100%',

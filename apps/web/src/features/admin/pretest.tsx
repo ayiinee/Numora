@@ -12,6 +12,7 @@ import { ADMIN_PAGE_SIZE, adminPage } from './pagination';
 import { ContentBlockers } from './content-blockers';
 import { PretestEditor } from './pretest-editor';
 import { PretestQuestions } from './pretest-questions';
+import { ContentPackageWorkspace } from './content-package-workspace';
 import type {
   PretestDto,
   PretestsDto,
@@ -24,19 +25,55 @@ export const pretestStateLabel = (state: PretestDto['state']) =>
 export const AdminPretestScreen = withAdminWorkspace(PretestScreen, 'content');
 function PretestScreen() {
   const { state } = useAuth();
+  const url = useAdminUrl();
+  const [legacy, setLegacy] = useState(false);
+  const [busy, setBusy] = useState(false);
+  useEffect(() => {
+    if (url.params.has('packageId') || url.params.get('legacy') === '1') setLegacy(true);
+  }, [url.search]);
   if (state.status !== 'ready') return null;
   return (
     <AdminFrame
-      title="Pretest Authoring"
-      description="Susun paket 20 soal per bab, lalu periksa review editorial dan kesiapan publikasinya."
+      title="Paket Pretest"
+      description="Kelola paket 20 soal per bab melalui pemeriksaan dan publisher konten bersama."
       icon="book"
       management
     >
-      <PretestPanel token={state.session.access_token} />
+      <div className="pretest-page-actions">
+        <Link href="/admin/content/imports">Unggah paket Pretest baru</Link>
+        <Button variant="secondary" disabled={busy} onClick={() => setLegacy((value) => !value)}>
+          {legacy ? 'Kembali ke publikasi Pretest' : 'Buka Authoring lama'}
+        </Button>
+      </div>
+      {legacy ? (
+        <>
+          <p>
+            Draf Authoring lama tetap tersimpan. Paket yang sudah direview terkunci; siapkan versi
+            baru melalui unggah dan review untuk publikasi. Sumber, tujuan soal, dan persetujuan
+            lama tidak diubah otomatis.
+          </p>
+          <PretestPanel token={state.session.access_token} busyChanged={setBusy} />
+        </>
+      ) : (
+        <ContentPackageWorkspace
+          token={state.session.access_token}
+          disabled={busy}
+          refreshKey={0}
+          onSelect={() => undefined}
+          busyChanged={setBusy}
+          initialUsage="PRETEST"
+        />
+      )}
     </AdminFrame>
   );
 }
-function PretestPanel({ token }: { token: string }) {
+function PretestPanel({
+  token,
+  busyChanged,
+}: {
+  token: string;
+  busyChanged: (busy: boolean) => void;
+}) {
   const onAccessError = useAdminAccessError();
   const url = useAdminUrl();
   const selectedId = url.params.get('packageId') ?? '';
@@ -48,6 +85,7 @@ function PretestPanel({ token }: { token: string }) {
   const [busy, setBusy] = useState(false),
     [generation, setGeneration] = useState(0),
     [hasNext, setHasNext] = useState(false);
+  useEffect(() => busyChanged(busy), [busy, busyChanged]);
   const [referenceError, setReferenceError] = useState(''),
     [referenceRetry, setReferenceRetry] = useState(0),
     [referenceLoading, setReferenceLoading] = useState(true);

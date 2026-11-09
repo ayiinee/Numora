@@ -148,7 +148,13 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
               preserved.ledger,
             );
             expect(await db`SELECT * FROM assessment_attempts WHERE id=${preserved.id}`).toEqual(
-              preserved.attempt,
+              // Forward migrations add nullable clock and delivery pins to legacy attempts.
+              // Preserve every historical field and assert both new defaults explicitly.
+              preserved.attempt.map((row) => ({
+                ...row,
+                drill_timer: null,
+                tryout_batch_id: null,
+              })),
             );
             expect(
               await db`SELECT * FROM attempt_answers WHERE attempt_item_id=${preserved.itemId}`,

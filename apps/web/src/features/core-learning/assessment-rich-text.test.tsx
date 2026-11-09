@@ -34,6 +34,36 @@ it('keeps unresolved asset markers as text in the math-only renderer', () => {
   expect(screen.queryByRole('button')).toBeNull();
 });
 
+it('renders nested bare LaTeX and full exponents while preserving the surrounding prose', () => {
+  const { container } = render(
+    <MathText
+      value={'Hitung \\frac{\\sqrt{9}}{2} dan \\sqrt[3]{8}^2, lalu bandingkan dengan x^-12.'}
+    />,
+  );
+  expect(container.querySelector('math mfrac msqrt')?.textContent).toBe('9');
+  expect(container.querySelector('math msup mroot')?.textContent).toBe('83');
+  const exponents = container.querySelectorAll('math msup > :nth-child(2)');
+  expect(exponents[0]?.textContent).toBe('2');
+  expect(exponents[1]?.textContent).toBe('−12');
+  expect(container.textContent).toContain(', lalu bandingkan dengan ');
+});
+
+it('renders literal pi as math and preserves the following prose', () => {
+  const { container } = render(<MathText value="π merupakan bilangan irasional." />);
+  expect(container.querySelector('math mi')?.textContent).toBe('π');
+  expect(container.querySelector('.katex')?.parentElement?.nextElementSibling?.textContent).toBe(
+    ' merupakan bilangan irasional.',
+  );
+});
+
+it('keeps incomplete commands and HTML as text and blocks trusted-only KaTeX commands', () => {
+  const { container } = render(
+    <MathText value={'\\sqrt{5 dan <img src="test"> $\\href{https://example.invalid}{Klik}$'} />,
+  );
+  expect(container.textContent).toContain('\\sqrt{5 dan <img src="test">');
+  expect(container.querySelector('msqrt, img, a')).toBeNull();
+});
+
 it.each(['$\\sqrt{5}$', '\\(\\sqrt{5}\\)', '$$\\sqrt{5}$$', '\\[\\sqrt{5}\\]'])(
   'renders existing delimited notation %s',
   (value) => {

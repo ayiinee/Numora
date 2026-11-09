@@ -60,7 +60,7 @@
   --numora-gold-900: #875f19;
 
   /* Background - Ivory */
-  --numora-ivory: #f6efcd;
+  --numora-ivory: #fefdf9;
   --numora-ivory-50: #fffdf5;
   --numora-ivory-100: #fbf8e8;
   --numora-ivory-200: #f7f1d1;
@@ -109,7 +109,7 @@
   );
   --color-feature-mint: #e1f2ed;
 
-  --color-bg: #f3eccb;
+  --color-bg: var(--numora-ivory);
   --color-bg-light: var(--numora-ivory-50);
 
   --color-surface: #ffffff;

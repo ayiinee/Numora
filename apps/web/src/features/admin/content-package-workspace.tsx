@@ -34,6 +34,7 @@ export function ContentPackageWorkspace({
   refreshKey,
   busyChanged,
   embedded = false,
+  initialUsage = 'DRILL',
 }: {
   token: string;
   disabled: boolean;
@@ -41,9 +42,10 @@ export function ContentPackageWorkspace({
   refreshKey: number;
   busyChanged?: (busy: boolean) => void;
   embedded?: boolean;
+  initialUsage?: Usage;
 }) {
   const reportAccessError = useAdminAccessError();
-  const [usage, setUsage] = useState<Usage>('DRILL');
+  const [usage, setUsage] = useState<Usage>(initialUsage);
   const [status, setStatus] = useState('DRAFT');
   const [chapter, setChapter] = useState('');
   const [source, setSource] = useState('');

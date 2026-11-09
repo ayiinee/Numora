@@ -1,6 +1,8 @@
 'use client';
 
 import Link from 'next/link';
+import { StudentMascot, type StudentMascotPose } from '@/components/student-mascot';
+import { StudentIllustratedHero } from '@/features/core-learning/student-illustrated-hero';
 import type { ReactNode } from 'react';
 import { Avatar, Button, Card, Icon, Input } from '@tka/ui';
 import { QuestionChoices } from '@/features/core-learning/question-choices';
@@ -16,10 +18,12 @@ export function PvpHeader({
   title,
   connected,
   onLeave,
+  showProfile = true,
 }: {
   title: string;
   connected?: boolean | undefined;
   onLeave?: (() => void) | undefined;
+  showProfile?: boolean;
 }) {
   return (
     <header className="pvp-header">
@@ -41,32 +45,41 @@ export function PvpHeader({
       {connected !== undefined && (
         <span className="pvp-header__connection">{connected ? 'Terhubung' : 'Offline'}</span>
       )}
-      <Link className="pvp-header__profile" href="/student/profile" aria-label="Buka profil">
-        <Icon name="user" width={18} height={18} />
-      </Link>
+      {showProfile && (
+        <Link className="pvp-header__profile" href="/student/profile" aria-label="Buka profil">
+          <Icon name="user" width={18} height={18} />
+        </Link>
+      )}
     </header>
   );
 }
 
 export function PvpHero() {
   return (
-    <section className="pvp-hero" aria-labelledby="pvp-hero-title">
-      <div className="pvp-hero__badges">
-        <span>
-          <Icon name="gamepad" width={14} height={14} />
-          LIVE PVP BATTLE
-        </span>
-        <span>
-          <Icon name="clock" width={14} height={14} />
-          10 Soal
-        </span>
-      </div>
-      <h1 id="pvp-hero-title">Tantang Teman &amp; Buktikan Kecepatanmu!</h1>
-      <p>Jawab cepat dan tepat. Skor kecepatan hingga +50 poin per soal!</p>
-      <span className="pvp-hero__art" aria-hidden="true">
-        <Icon name="gamepad" width={52} height={52} />
-      </span>
-    </section>
+    <StudentIllustratedHero
+      variant="pvp"
+      titleId="pvp-hero-title"
+      heading="h1"
+      badges={
+        <>
+          <span>
+            <Icon name="gamepad" width={14} height={14} />
+            DUEL 1 VS 1
+          </span>
+          <span>
+            <Icon name="clock" width={14} height={14} />
+            10 Soal
+          </span>
+        </>
+      }
+      title="Tantang teman!"
+      description={
+        <>
+          Jawab cepat dan tepat. Bonus hingga{' '}
+          <span className="whitespace-nowrap">+50 poin/soal.</span>
+        </>
+      }
+    />
   );
 }
 
@@ -85,10 +98,7 @@ export function DifficultyChoices({
 }) {
   return (
     <fieldset className="pvp-difficulties" disabled={disabled}>
-      <legend>
-        Pilih Tingkat Kesulitan <small>10 Soal • Poin PvP</small>
-      </legend>
-      {contentNotice && <p className="pvp-demo-notice">{contentNotice}</p>}
+      <legend>Pilih tingkat kesulitan</legend>
       {(['easy', 'medium', 'hard'] as const).map((difficulty) => (
         <label
           key={difficulty}
@@ -122,9 +132,6 @@ export function DifficultyChoices({
               {contentNotice
                 ? 'Soal dari bank sementara'
                 : `Duel matematika tingkat ${difficultyLabels[difficulty].toLowerCase()}`}
-            </span>
-            <span className="pvp-difficulty__points">
-              100 Poin Dasar <span>Bonus s.d +50 Poin</span>
             </span>
           </span>
           <span className="pvp-difficulty__selected" aria-hidden="true">
@@ -192,41 +199,41 @@ export function PvpRules() {
   return (
     <Card className="pvp-rules">
       <details open>
-      <summary>
-        <Icon name="info" />
-        Aturan Duel
-        <Icon name="chevron" width={18} height={18} />
-      </summary>
+        <summary>
+          <Icon name="info" />
+          Aturan Duel
+          <Icon name="chevron" width={18} height={18} />
+        </summary>
 
-      <ul>
-        <li>
-          <Icon name="check" />
-          <span>
-            <strong>Soal Sama:</strong> 10 soal identik untuk kedua pemain.
-          </span>
-        </li>
+        <ul>
+          <li>
+            <Icon name="check" />
+            <span>
+              <strong>Soal Sama:</strong> 10 soal identik untuk kedua pemain.
+            </span>
+          </li>
 
-        <li>
-          <Icon name="clock" />
-          <span>
-            <strong>Poin:</strong> Benar +100, bonus cepat hingga +50.
-          </span>
-        </li>
+          <li>
+            <Icon name="clock" />
+            <span>
+              <strong>Poin:</strong> Benar +100, bonus cepat hingga +50.
+            </span>
+          </li>
 
-        <li>
-          <Icon name="trophy" />
-          <span>
-            <strong>Peringkat:</strong> Skor terbaik masuk leaderboard PvP.
-          </span>
-        </li>
+          <li>
+            <Icon name="trophy" />
+            <span>
+              <strong>Peringkat:</strong> Skor terbaik masuk leaderboard PvP.
+            </span>
+          </li>
 
-        <li>
-          <Icon name="lock" />
-          <span>
-            <strong>Terkunci:</strong> Jawaban tidak bisa diubah setelah dikirim.
-          </span>
-        </li>
-      </ul>
+          <li>
+            <Icon name="lock" />
+            <span>
+              <strong>Terkunci:</strong> Jawaban tidak bisa diubah setelah dikirim.
+            </span>
+          </li>
+        </ul>
       </details>
     </Card>
   );
@@ -390,9 +397,7 @@ export function WaitingRoom({
           ))}
           {snapshot.players.length < 2 && (
             <article className="pvp-player-card pvp-player-card--vacant">
-              <span className="icon-tile">
-                <Icon name="users" />
-              </span>
+              <StudentMascot pose="opponent" compact />
               <h2>Mencari Lawan…</h2>
               <p>Bagikan kode atau link room.</p>
             </article>
@@ -572,6 +577,21 @@ export function BattleRoom({
   );
 }
 
+function outcomePose(status: PvpSnapshotDto['status'], result?: string | null): StudentMascotPose {
+  if (status === 'CANCELLED') return 'cancelled';
+  switch (result) {
+    case 'WIN':
+      return 'victory';
+    case 'DRAW':
+      return 'draw';
+    case 'LOSS':
+    case 'FORFEIT':
+      return 'retry';
+    default:
+      return 'submitted';
+  }
+}
+
 export function MatchOutcome({
   snapshot,
   selfId,
@@ -593,9 +613,7 @@ export function MatchOutcome({
   return (
     <div className="pvp-outcome-layout">
       <Card className="pvp-outcome-hero">
-        <span className="pvp-outcome-trophy">
-          <Icon name="trophy" width={40} height={40} />
-        </span>
+        <StudentMascot pose={outcomePose(snapshot.status, self?.result)} />
         <span className="pvp-outcome-state">
           {snapshot.status === 'CANCELLED' ? 'DIBATALKAN' : 'PVP • SELESAI'}
         </span>

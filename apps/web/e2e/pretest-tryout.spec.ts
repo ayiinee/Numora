@@ -60,7 +60,12 @@ async function fixture(page: Page, mixedTryout = false) {
           : index === 1
             ? 'CATEGORY'
             : 'SINGLE_CHOICE',
-      stem: index === 0 ? 'pilih bilangan genap' : index === 1 ? 'kategori bilangan' : '1 + 1?',
+      stem:
+        index === 0
+          ? 'Pilih bilangan genap yang tidak melebihi sqrt(16).'
+          : index === 1
+            ? 'kategori bilangan'
+            : '1 + 1?',
       options:
         index === 1
           ? [
@@ -68,7 +73,7 @@ async function fixture(page: Page, mixedTryout = false) {
               { id: 's2', text: 'Tiga' },
             ]
           : [
-              { id: 'A', text: '2' },
+              { id: 'A', text: index === 0 ? '\\frac{8}{4}' : '2' },
               { id: 'B', text: '4' },
             ],
       ...(index === 1
@@ -306,6 +311,9 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
   await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
   await page.getByRole('button', { name: 'Mulai TryOut', exact: true }).click();
   await expect(page.getByText('Soal 1 dari 30', { exact: true })).toBeVisible();
+  await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
+  await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
+  await expect(page.locator('.practice-option__text math mfrac')).toHaveCount(1);
   await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
   await page.getByRole('checkbox', { name: /^B\s*\./ }).check();
   await expect.poll(() => raw.get('0')).toEqual({ optionIds: ['A', 'B'] });

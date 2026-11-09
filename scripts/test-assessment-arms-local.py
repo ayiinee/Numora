@@ -34,7 +34,7 @@ def main():
             shutil.copytree(ROOT/'packages/database/drizzle', before)
             journal = before/'meta/_journal.json'
             data = json.loads(journal.read_text())
-            data['entries'] = [e for e in data['entries'] if e['idx'] < 51]
+            data['entries'] = [e for e in data['entries'] if e['idx'] < 52]
             journal.write_text(json.dumps(data))
             migrate = """import postgres from './packages/database/node_modules/postgres/src/index.js';
 import {migrateIntegratedDatabase} from './packages/database/dist/integrated-migrations.js';

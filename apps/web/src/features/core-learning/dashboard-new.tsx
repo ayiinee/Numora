@@ -3,15 +3,18 @@
 import Link from 'next/link';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { EmptyState, Icon } from '@tka/ui';
+import { StudentMascot } from '@/components/student-mascot';
 import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
+import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
 import { FeedbackOverview } from './feedback-overview';
 import { HomeClassPodium } from './home-class-podium';
-import { HomeActivity, HomeFeatures, StudentHomeIdentityHeader } from './dashboard-presentation';
+import { HomeFeatures, StudentHomeIdentityHeader } from './dashboard-presentation';
+import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
 import './student-home.css';
 
@@ -27,7 +30,7 @@ function DashboardContent({ token }: { token: string }) {
   const catalog = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
   if (dashboard.isPending || dashboard.isError)
     return (
-      <AppShell className="student-home-shell">
+      <AppShell className="student-home-shell" showTopbarProfile={false}>
         <DataState
           pending={dashboard.isPending}
           error={dashboard.error}
@@ -48,9 +51,9 @@ function DashboardReady({
   catalog: UseQueryResult<Catalog, Error>;
 }) {
   const { state } = useAuth();
-  const avatar =
-    state.status === 'ready' ? state.session.user?.user_metadata?.avatar_url : undefined;
-  const avatarUrl = typeof avatar === 'string' ? avatar : undefined;
+  const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
+  const avatarUrl = photo.data?.url ?? undefined;
+  const recent = data.activities[0];
   const tryout = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
@@ -59,10 +62,10 @@ function DashboardReady({
     <StudentHomeIdentityHeader data={data} avatarUrl={avatarUrl} tryout={tryout.data} />
   );
   return (
-    <AppShell className="student-home-shell" mobileHeader={header}>
+    <AppShell className="student-home-shell" mobileHeader={header} showTopbarProfile={false}>
       <div className="sh-layout">
+        <div className="sh-desktop-identity">{header}</div>
         <div className="sh-main">
-          <div className="sh-desktop-identity">{header}</div>
           <StudentHomeCarousel
             activeDrill={data.activeDrill}
             tryout={tryout.data}
@@ -86,22 +89,19 @@ function DashboardReady({
           )}
           <section className="sh-section sh-activities" aria-labelledby="sh-activities-title">
             <div className="sh-section__heading">
-              <h2 id="sh-activities-title">Aktivitas</h2>
+              <h2 id="sh-activities-title">Aktivitas Terakhir</h2>
               <Link href="/student/assessment">
-                Riwayat <Icon name="chevron" width={16} height={16} />
+                Lihat Semua <Icon name="chevron" width={16} height={16} />
               </Link>
             </div>
-            {data.activities.length ? (
-              <div className="sh-activities__list">
-                {data.activities.map((item) => (
-                  <HomeActivity key={item.attemptId} item={item} />
-                ))}
-              </div>
+            {recent ? (
+              <RecentActivity item={recent} activeDrill={data.activeDrill} />
             ) : (
               <div className="sh-activities__empty">
                 <EmptyState
                   compact
-                  icon={<Icon name="clock" />}
+                  style={{ gridTemplateColumns: '3.5rem minmax(0, 1fr)' }}
+                  icon={<StudentMascot pose="start" compact />}
                   title="Perjalananmu dimulai di sini"
                   description="Hasil latihan pertamamu akan tersimpan di bagian ini."
                 />

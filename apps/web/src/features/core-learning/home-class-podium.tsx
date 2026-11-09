@@ -2,7 +2,8 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, EmptyState, Icon, Skeleton } from '@tka/ui';
+import { EmptyState, Icon, Skeleton } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import type { LeaderboardDto, StudentDashboardDto } from './generated-types';
 import { request } from './api';
 import { DataState } from './ui';
@@ -72,7 +73,7 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
                       >
                         {entry.rank}
                       </span>
-                      <Avatar name={entry.displayName} size="sm" />
+                      <Avatar userId={entry.studentId} name={entry.displayName} size="sm" />
                       <strong>
                         {entry.displayName}
                         {entry.studentId === own?.studentId ? ' (Kamu)' : ''}
@@ -102,7 +103,11 @@ export function HomeClassPodium({ token, data }: { token: string; data: StudentD
             {showOwn && (
               <div className="sh-class__own">
                 <span>#{own.rank}</span>
-                <Avatar name={own.displayName || data.displayName} size="sm" />
+                <Avatar
+                  userId={own.studentId}
+                  name={own.displayName || data.displayName}
+                  size="sm"
+                />
                 <strong>{own.displayName || data.displayName} (Kamu)</strong>
                 <span>
                   {formatLeaderboardPoints(own.points, unit)} {unit === 'xp' ? 'XP' : 'PTS'}

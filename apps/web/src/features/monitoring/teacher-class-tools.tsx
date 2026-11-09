@@ -11,6 +11,7 @@ import { DataState } from '@/features/core-learning/ui';
 import { TeacherGate } from './teacher-gate';
 import { TeacherAnnouncement, TeacherUnavailable } from './teacher-ui';
 import { findTeacherClass, teacherKeys } from './teacher-query';
+import { classJoinPath } from '@/features/onboarding/class-invitation';
 
 /**
  * Teachers keep a QR file per class, so a single fixed name would bury older
@@ -36,16 +37,21 @@ export function TeacherInviteContent({
   pending?: boolean;
 }) {
   const [qr, setQr] = useState('');
+  const [inviteUrl, setInviteUrl] = useState('');
   const [qrError, setQrError] = useState('');
   const [copyStatus, setCopyStatus] = useState('');
   const [generation, setGeneration] = useState(0);
   useEffect(() => {
     let current = true;
     setQr('');
+    setInviteUrl('');
     setQrError('');
     setCopyStatus('');
-    if (code)
-      void QRCode.toDataURL(code, {
+    const path = code ? classJoinPath(code) : null;
+    if (path) {
+      const url = new URL(path, window.location.origin).href;
+      setInviteUrl(url);
+      void QRCode.toDataURL(url, {
         width: 320,
         margin: 4,
         errorCorrectionLevel: 'M',
@@ -57,14 +63,15 @@ export function TeacherInviteContent({
         .catch(() => {
           if (current) setQrError('Kode QR belum dapat dibuat.');
         });
+    }
     return () => {
       current = false;
     };
   }, [code, generation]);
-  async function copy() {
+  async function copy(text: string, kind: 'Kode kelas' | 'Tautan undangan') {
     try {
-      await navigator.clipboard.writeText(code!);
-      setCopyStatus('Kode kelas disalin.');
+      await navigator.clipboard.writeText(text);
+      setCopyStatus(`${kind} disalin.`);
     } catch {
       setCopyStatus('Belum dapat menyalin. Pilih dan salin kode kelas secara manual.');
     }
@@ -85,9 +92,17 @@ export function TeacherInviteContent({
           <Card className="teacher-code-panel">
             <span>Kode kelas</span>
             <strong>{code}</strong>
-            <Button variant="secondary" onClick={() => void copy()}>
+            <Button variant="secondary" onClick={() => void copy(code, 'Kode kelas')}>
               <Icon name="clipboard" /> Salin kode
             </Button>
+            {inviteUrl && (
+              <>
+                <p style={{ overflowWrap: 'anywhere' }}>{inviteUrl}</p>
+                <Button variant="secondary" onClick={() => void copy(inviteUrl, 'Tautan undangan')}>
+                  Salin tautan
+                </Button>
+              </>
+            )}
             <p role="status">{copyStatus}</p>
           </Card>
           <div className="teacher-qr-panel">
@@ -103,7 +118,7 @@ export function TeacherInviteContent({
             ) : (
               <p role="status">Menyiapkan kode QR…</p>
             )}
-            <p>QR berisi kode kelas di atas.</p>
+            <p>QR membuka halaman konfirmasi gabung kelas.</p>
             {qr && (
               <a className="button-link" href={qr} download={`${qrFileName(name)}.png`}>
                 <Icon name="arrow" /> Unduh PNG QR
@@ -113,13 +128,15 @@ export function TeacherInviteContent({
           <Card>
             <SectionHeader title="Cara bergabung" />
             <ol className="teacher-invite-steps">
-              <li>Siswa masuk ke NUMORA dengan akun Google.</li>
-              <li>Buka Profil, pilih Gabung kelas, lalu masukkan kode.</li>
+              <li>Siswa membuka tautan atau memindai QR, lalu masuk dengan akun Google.</li>
+              <li>
+                Periksa kode kelas dan konfirmasi gabung. Kode juga dapat dimasukkan melalui Profil.
+              </li>
               <li>Setelah bergabung, siswa tampil dalam daftar anggota kelas.</li>
             </ol>
             <TeacherAnnouncement>
-              Siswa dapat bergabung dalam maksimal lima kelas aktif. Gunakan kode kelas; QR ini
-              bukan tautan otomatis untuk bergabung.
+              Siswa dapat bergabung dalam maksimal lima kelas aktif. Membuka tautan atau QR tidak
+              langsung menambahkan keanggotaan.
             </TeacherAnnouncement>
           </Card>
         </>

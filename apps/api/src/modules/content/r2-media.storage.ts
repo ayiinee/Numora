@@ -140,6 +140,34 @@ export class R2MediaStorage {
     }
   }
 
+  async storeProfilePhoto(userId: string, bytes: Buffer, contentType: string) {
+    const { bucket } = this.settings();
+    const suffix = { 'image/png': 'png', 'image/jpeg': 'jpg', 'image/webp': 'webp' }[contentType];
+    const key = `profile-photos/${userId}/${createHash('sha256').update(bytes).digest('hex')}.${suffix}`;
+    const client = this.client(bucket);
+    try {
+      await client.send(
+        new PutObjectCommand({
+          Bucket: bucket,
+          Key: key,
+          Body: bytes,
+          ContentType: contentType,
+          ContentLength: bytes.length,
+          CacheControl: 'private, max-age=300',
+        }),
+        { abortSignal: AbortSignal.timeout(15_000) },
+      );
+      return key;
+    } catch {
+      throw new ServiceUnavailableException({
+        code: 'R2_UNAVAILABLE',
+        detail: 'Foto belum tersimpan. Coba lagi.',
+      });
+    } finally {
+      client.destroy();
+    }
+  }
+
   async readWorkbook(id: string, sha256: string) {
     const { bucket } = this.settings(true);
     const client = this.client(bucket, true);

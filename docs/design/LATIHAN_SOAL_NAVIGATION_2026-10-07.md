@@ -9,3 +9,5 @@ Recent activity precedes chapter discovery. The category cards/filter, generic P
 The existing materials and Pretest APIs remain authoritative. Pretest eligibility, Skip, resume, completion, and Drill unlock rules do not change. No PRD or OPEN academic decision is resolved by this presentation change.
 
 **ENGINEERING DECISION — owner refinement, 7 October 2026:** the Latihan Soal header reuses the Student Home geometric pattern, centers the title, and removes the profile icon. This applies to the chapter list and chapter detail header; the Student navigation still provides Profile access.
+
+**ENGINEERING DECISION — catatan UI pemilik, 9 November 2026.** Header ungu siswa memakai pola geometri bersama. Profil memakai judul tengah dan pengaturan tetap tersedia di badan halaman. Aktivitas di Belajar, Latihan dan Riwayat memakai ilustrasi bab dari daftar Latihan jika bab ditemukan. Kartu Aktivitas Terakhir di Latihan memakai gradasi lavender dan hero PvP memakai tinggi minimum mobile yang sama dengan hero Belajar.

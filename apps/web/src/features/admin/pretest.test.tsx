@@ -1,6 +1,10 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render as renderUI, screen, waitFor } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { AdminPretestScreen } from './pretest';
+import { ContentPackageWorkspace } from './content-package-workspace';
+vi.mock('./content-package-workspace', () => ({
+  ContentPackageWorkspace: vi.fn(() => <p>Shared publisher fixture</p>),
+}));
 import { ApiProblem } from '@/lib/api';
 const mock = vi.hoisted(() => ({
   api: vi.fn(),
@@ -26,7 +30,7 @@ const draft = {
   state: 'DRAFT',
   questionVersionIds: [],
   reviewBlockers: ['PRETEST_REQUIRES_20_ITEMS'],
-  publicationBlockers: ['PRETEST_STUDENT_CONSUMER_REQUIRED'],
+  publicationBlockers: ['SHARED_PACKAGE_PUBLISHER_REQUIRED'],
 };
 beforeEach(() => {
   vi.resetAllMocks();
@@ -68,6 +72,26 @@ beforeEach(() => {
   });
 });
 afterEach(cleanup);
+function render(node: React.ReactNode) {
+  const result = renderUI(node);
+  const legacy = screen.queryByRole('button', { name: 'Buka Authoring lama' });
+  if (legacy) fireEvent.click(legacy);
+  return result;
+}
+it('defaults to the shared Pretest publisher while retaining the isolated legacy drafts', async () => {
+  renderUI(<AdminPretestScreen />);
+  await screen.findByText('Shared publisher fixture');
+  expect(ContentPackageWorkspace).toHaveBeenLastCalledWith(
+    expect.objectContaining({ initialUsage: 'PRETEST' }),
+    undefined,
+  );
+  fireEvent.click(screen.getByRole('button', { name: 'Buka Authoring lama' }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Lihat detail' }));
+  await screen.findByRole('button', { name: 'Edit draf' });
+  fireEvent.click(screen.getByRole('button', { name: 'Kembali ke publikasi Pretest' }));
+  await screen.findByText('Shared publisher fixture');
+  expect(mock.api.mock.calls.some(([, , input]) => input?.method === 'POST')).toBe(false);
+});
 function submitNew() {
   fireEvent.click(screen.getByRole('button', { name: 'Buat draf Pretest' }));
   fireEvent.change(screen.getByLabelText('Kode keluarga'), { target: { value: 'TEAM' } });
