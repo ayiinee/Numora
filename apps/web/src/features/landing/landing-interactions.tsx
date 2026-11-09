@@ -1,7 +1,7 @@
 'use client';
 
 import Link from 'next/link';
-import { useEffect, useRef, useState } from 'react';
+import { useEffect, useRef, useState, type PointerEvent } from 'react';
 import { Brand, Button, Dialog, Icon, type IconName } from '@tka/ui';
 import styles from './landing.module.css';
 
@@ -14,6 +14,7 @@ const categories = [
   ['Untuk sekolah', 'school', '#untuk-sekolah'],
   ['Persiapan TKA', 'target', '#persiapan-tka'],
 ] as const satisfies readonly (readonly [string, IconName, string])[];
+const categoryPixelsPerMs = 24 / 1000;
 
 export function LandingHeader() {
   const [showAction, setShowAction] = useState(false);
@@ -94,68 +95,174 @@ export function LandingHeader() {
   );
 }
 
+function scrollWithinCycle(rail: HTMLDivElement, offset: number, width: number) {
+  // Identical lists on both sides let the visible position wrap in either direction.
+  if (width) rail.scrollLeft = width + (((offset % width) + width) % width);
+}
+
 export function CategoryRail() {
-  const rail = useRef<HTMLUListElement>(null);
-  const [edges, setEdges] = useState({ start: true, end: false });
+  const viewport = useRef<HTMLDivElement>(null);
+  const original = useRef<HTMLUListElement>(null);
+  const cycleWidth = useRef(0);
+  const hovered = useRef(false);
+  const drag = useRef<{ id: number; x: number; y: number; offset: number; moved: boolean } | null>(
+    null,
+  );
+  const suppressClick = useRef(false);
+  const [paused, setPaused] = useState(false);
+  const [reducedMotion, setReducedMotion] = useState(false);
 
   useEffect(() => {
-    const list = rail.current;
-    if (!list) return;
-    const update = () =>
-      setEdges({
-        start: list.scrollLeft <= 1,
-        end: list.scrollLeft + list.clientWidth >= list.scrollWidth - 1,
-      });
-    const observer = new ResizeObserver(update);
-    observer.observe(list);
-    list.addEventListener('scroll', update, { passive: true });
-    update();
+    const rail = viewport.current;
+    const list = original.current;
+    if (!rail || !list) return;
+    const measure = () => {
+      const width = list.getBoundingClientRect().width;
+      const previousWidth = cycleWidth.current;
+      cycleWidth.current = width;
+      if (width && width !== previousWidth)
+        rail.scrollLeft = previousWidth ? (rail.scrollLeft / previousWidth) * width : width;
+    };
+    const motion = window.matchMedia('(prefers-reduced-motion: reduce)');
+    const updateMotion = () => setReducedMotion(motion.matches);
+    const resize = new ResizeObserver(measure);
+    resize.observe(list);
+    measure();
+    updateMotion();
+    motion.addEventListener('change', updateMotion);
     return () => {
-      observer.disconnect();
-      list.removeEventListener('scroll', update);
+      resize.disconnect();
+      motion.removeEventListener('change', updateMotion);
     };
   }, []);
 
-  const scroll = (direction: number) => {
-    const list = rail.current;
-    if (!list) return;
-    list.scrollBy({
-      left: direction * list.clientWidth * 0.65,
-      behavior: window.matchMedia('(prefers-reduced-motion: reduce)').matches
-        ? 'instant'
-        : 'smooth',
+  useEffect(() => {
+    const rail = viewport.current;
+    if (
+      !rail ||
+      paused ||
+      reducedMotion ||
+      window.matchMedia('(prefers-reduced-motion: reduce)').matches
+    )
+      return;
+    let frame = 0;
+    let previous = 0;
+    let remainder = 0;
+    const tick = (time: number) => {
+      if (previous && !drag.current && !hovered.current && !rail.matches(':focus-within')) {
+        remainder += Math.min(time - previous, 50) * categoryPixelsPerMs;
+        const pixels = Math.floor(remainder);
+        if (pixels) {
+          scrollWithinCycle(rail, rail.scrollLeft + pixels, cycleWidth.current);
+          remainder -= pixels;
+        }
+      } else {
+        remainder = 0;
+      }
+      previous = time;
+      frame = requestAnimationFrame(tick);
+    };
+    const visibility = new IntersectionObserver(([entry]) => {
+      cancelAnimationFrame(frame);
+      previous = 0;
+      if (entry?.isIntersecting) frame = requestAnimationFrame(tick);
     });
+    visibility.observe(rail);
+    return () => {
+      visibility.disconnect();
+      cancelAnimationFrame(frame);
+    };
+  }, [paused, reducedMotion]);
+
+  const startDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (!event.isPrimary || event.button !== 0 || !cycleWidth.current) return;
+    event.preventDefault();
+    suppressClick.current = false;
+    drag.current = {
+      id: event.pointerId,
+      x: event.clientX,
+      y: event.clientY,
+      offset: event.currentTarget.scrollLeft,
+      moved: false,
+    };
+    if (event.target instanceof Element) event.target.setPointerCapture(event.pointerId);
+  };
+
+  const dragRail = (event: PointerEvent<HTMLDivElement>) => {
+    const gesture = drag.current;
+    if (!gesture || gesture.id !== event.pointerId) return;
+    const dx = event.clientX - gesture.x;
+    if (!gesture.moved && (Math.abs(dx) < 6 || Math.abs(dx) < Math.abs(event.clientY - gesture.y)))
+      return;
+    gesture.moved = true;
+    event.currentTarget.dataset.dragging = 'true';
+    scrollWithinCycle(event.currentTarget, gesture.offset - dx, cycleWidth.current);
+  };
+
+  const finishDrag = (event: PointerEvent<HTMLDivElement>) => {
+    if (drag.current?.id !== event.pointerId) return;
+    suppressClick.current = drag.current.moved;
+    drag.current = null;
+    delete event.currentTarget.dataset.dragging;
   };
 
   return (
     <nav className={styles.categoryBar} aria-label="Jelajahi Numora">
       <div className={styles.categoryInner}>
-        <Button
-          variant="ghost"
-          aria-label="Geser kategori ke kiri"
-          disabled={edges.start}
-          onClick={() => scroll(-1)}
+        <div
+          ref={viewport}
+          className={styles.categoryViewport}
+          onPointerEnter={(event) => {
+            hovered.current = event.pointerType !== 'touch';
+          }}
+          onPointerLeave={() => {
+            hovered.current = false;
+          }}
+          onPointerDown={startDrag}
+          onPointerMove={dragRail}
+          onPointerUp={finishDrag}
+          onPointerCancel={finishDrag}
+          onLostPointerCapture={finishDrag}
+          onClickCapture={(event) => {
+            if (suppressClick.current && event.detail > 0) {
+              event.preventDefault();
+              suppressClick.current = false;
+            }
+          }}
         >
-          <Icon name="back" width={18} height={18} />
-        </Button>
-        <ul ref={rail} className={styles.categories}>
-          {categories.map(([label, icon, href]) => (
-            <li key={href}>
-              <a href={href}>
-                <Icon name={icon} width={20} height={20} />
-                {label}
-              </a>
-            </li>
+          {['before', 'original', 'after'].map((copy) => (
+            <ul
+              key={copy}
+              ref={copy === 'original' ? original : undefined}
+              className={styles.categories}
+              aria-hidden={copy !== 'original' || undefined}
+            >
+              {categories.map(([label, icon, href]) => (
+                <li key={href}>
+                  <a href={href} draggable={false} tabIndex={copy === 'original' ? 0 : -1}>
+                    <Icon name={icon} width={20} height={20} />
+                    {label}
+                  </a>
+                </li>
+              ))}
+            </ul>
           ))}
-        </ul>
-        <Button
-          variant="ghost"
-          aria-label="Geser kategori ke kanan"
-          disabled={edges.end}
-          onClick={() => scroll(1)}
-        >
-          <Icon name="chevron" width={18} height={18} />
-        </Button>
+        </div>
+        {!reducedMotion && (
+          <Button
+            variant="ghost"
+            aria-label={paused ? 'Lanjutkan gerak kategori' : 'Jeda gerak kategori'}
+            className={styles.categoryPause}
+            style={{ width: 44 }}
+            onClick={() => setPaused((current) => !current)}
+          >
+            {paused ? (
+              <Icon name="play" width={16} height={16} />
+            ) : (
+              <span className={styles.pauseMark} aria-hidden="true" />
+            )}
+          </Button>
+        )}
       </div>
     </nav>
   );

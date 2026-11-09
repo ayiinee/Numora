@@ -243,31 +243,47 @@
 
 .categoryInner {
   display: grid;
-  grid-template-columns: 44px minmax(0, 1fr) 44px;
+  grid-template-columns: minmax(0, 1fr) auto;
   align-items: center;
   width: min(100%, 1090px);
   height: 76px;
   margin-inline: auto;
 }
 
-.categoryInner > button {
-  width: 44px !important;
+.categoryInner .categoryPause {
   padding: 0;
   color: var(--muted);
 }
 
-.categoryInner > button:disabled {
-  opacity: 0.38;
+.pauseMark {
+  display: block;
+  width: 9px;
+  height: 12px;
+  border-inline: 2px solid currentColor;
+}
+
+.categoryViewport {
+  display: flex;
+  overflow-x: auto;
+  scrollbar-width: none;
+  cursor: grab;
+  touch-action: pan-y pinch-zoom;
+  user-select: none;
+}
+
+.categoryViewport[data-dragging='true'],
+.categoryViewport[data-dragging='true'] a {
+  cursor: grabbing;
 }
 
 .categories {
   display: flex;
+  flex: none;
   align-items: center;
   gap: 12px;
-  padding: 4px;
+  min-width: 100%;
+  padding: 4px 12px 4px 0;
   margin: 0;
-  overflow-x: auto;
-  scrollbar-width: none;
   list-style: none;
 }
 
