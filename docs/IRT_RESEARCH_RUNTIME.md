@@ -1,5 +1,11 @@
 # Tryout IRT research runtime
 
+**Latest technical handoff, 10 November 2026:** see `docs/IRT_AI_HANDOFF.md` and
+the Linux acceptance report. Windows-v4/Linux-v1 are the active explicit
+profiles. Earlier v1?v3 runtime references below describe historical runs.
+Local Linux correctness is verified; production academic approval and VPS
+capacity certification remain separate.
+
 **ENGINEERING DECISION — owner-approved implementation scope, 9 November 2026.**
 Research-only, synthetic local execution. This is not production approval,
 canonical student-result adoption, publication, product fallback, comparison
@@ -384,3 +390,70 @@ An intermediate run invalidated by live source changes is explicitly recorded
 and superseded; it is not reported as passing. No production policy, Linux
 producer capacity, canonical publication or admin package workflow is approved
 by these results.
+
+
+## Linux producer and handoff ? 10 November 2026
+
+The explicit Linux producer profile is `research/irt-runtime-linux-v1.json`;
+`research/irt-linux-image-v1.json` pins its tested image ID, profile digest,
+Dockerfile and hash-locked Linux wheel dependencies. Windows defaults to the
+separate `research/irt-runtime-windows-v4.json`. Profiles v1?v3 remain historical
+sources of earlier evidence and are not silently rewritten. The R image and
+research-v1 statistical policy remain unchanged.
+
+`Dockerfile.irt-producer` pins CPython 3.11.3 amd64 and Docker CLI base digests.
+The image deliberately excludes credentials and original question bank files.
+The Linux profile is mounted read-only after image sealing, avoiding a circular
+image/profile digest. A new build does not automatically update an approved
+profile. `NUMORA_IRT_RUNTIME_PROFILE=linux-v1` and
+`NUMORA_IRT_PRODUCER_IMAGE=<exact digest>` must match the frozen request.
+
+Linux private work directories remain 0700; the R container runs under the
+producer UID/GID. Named volumes share only the execution subdirectory with R,
+which remains no-network/read-only/no-DB-credentials. The trusted supervisor
+uses the host Docker socket; the HTTP API does not need that privilege. This
+is a trusted-host research topology, not a general untrusted multi-tenant
+sandbox or a deployment authorization.
+
+Use `docs/IRT_AI_HANDOFF.md` as the current integration entry point and
+`tools/verify_irt_linux.py` for disposable Linux HTTP/inbox/daemon/R/artifact
+verification. `tools/check_irt_handoff.py` checks exact document/contract parity
+and profile/source pins. The main copy is `docs/IRT_AI_HANDOFF.md`; all database
+schema and canonical lifecycle ownership remains with main.
+
+The earlier Docker interruption is not a passing capacity measurement. Docker
+was recovered without changing global CPU/RAM settings; the test host remains
+one CPU and about 1.8 GiB RAM. Local observations do not certify a two-CPU VPS,
+peak memory bounds, or production SLO. New Linux evidence is recorded separately
+in `research/irt/linux-acceptance-v1.json`, mirrored as main
+`docs/IRT_LINUX_ACCEPTANCE_V1.json`.
+
+
+### Completed Linux observations
+
+The pinned Linux image passed 27 unit tests and real timeout/revocation runner
+checks. The separate Windows regression passed 25 tests. The Linux network
+flow uses restricted compute roles against disposable PostgreSQL and verifies
+that no canonical attempts or XP rows are created.
+
+| Input | Scientific/technical outcome | Notification-to-result time |
+| --- | --- | --- |
+| 4 respondents | SUCCEEDED / INSUFFICIENT | 2.33 s |
+| 2,000 respondents, two arms | 2,000 SCORED | 146.56 s |
+| 4,998 respondents, three arms | 4,998 NOT_COMPARABLE, no fabricated score | 373.95 s |
+| 5,001 respondents | FAILED / INVALID_INPUT, non-retryable | 184.72 s |
+
+All replays returned the same artifact. Timings exclude main snapshot creation
+and are single observations, not latency percentiles. The temporary test host
+had two CPUs/~3.8 GiB RAM and 2 GiB swap, with original WSL configuration
+restored afterward. The producer touched its original 512 MiB limit and was
+raised to 1 GiB during the run; this is exploratory sizing, not a fixed-resource
+benchmark. Sampled peaks: producer 545.3 MiB, R 530.4 MiB, API 66.38 MiB. Peaks
+may be missed by sampling. The harness now starts producer at 1 GiB; that new
+fixed-memory default is not represented as a separately benchmarked run.
+
+The initial one-CPU/~1.8 GiB host did score 2,000 respondents (155.13 s), but
+Docker/PostgreSQL was interrupted during near-limit snapshot preparation.
+That run is explicitly partial. No inference of production suitability on a
+2 CPU/2 GiB VPS follows. See the Linux JSON report for exact source/image
+pins, measured host, artifact digests, resource adjustment and limitations.
