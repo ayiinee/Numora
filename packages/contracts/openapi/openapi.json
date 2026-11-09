@@ -62,7 +62,7 @@
             "description": ""
           },
           "404": {
-            "description": "Google account has no internal profile yet."
+            "description": "Authenticated account has no internal profile yet."
           }
         },
         "security": [
@@ -106,6 +106,153 @@
           },
           "409": {
             "description": "Profile already exists or email is already in use."
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      },
+      "patch": {
+        "operationId": "ProfileController_rename",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateProfileDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityProfileDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/me/photo": {
+      "post": {
+        "operationId": "ProfileController_upload",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "multipart/form-data": {
+              "schema": {
+                "type": "object",
+                "required": [
+                  "file"
+                ],
+                "properties": {
+                  "file": {
+                    "type": "string",
+                    "format": "binary"
+                  }
+                }
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityProfileDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      },
+      "delete": {
+        "operationId": "ProfileController_remove",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IdentityProfileDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "identity"
+        ]
+      }
+    },
+    "/api/v1/identity/profile-photos/{userId}": {
+      "get": {
+        "operationId": "ProfileController_photo",
+        "parameters": [
+          {
+            "name": "userId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ProfilePhotoDto"
+                }
+              }
+            }
           }
         },
         "security": [
@@ -404,6 +551,41 @@
             "schema": {
               "type": "string",
               "format": "uuid"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ClassStudentsResponseDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "classes"
+        ]
+      }
+    },
+    "/api/v1/classes/{classId}/banned-students": {
+      "get": {
+        "operationId": "ClassesController_bannedStudents",
+        "parameters": [
+          {
+            "name": "classId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
             }
           }
         ],
@@ -797,6 +979,51 @@
               "application/json": {
                 "schema": {
                   "$ref": "#/components/schemas/DrillAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "core-learning"
+        ]
+      }
+    },
+    "/api/v1/assessment-attempts/{attemptId}/drill-clock": {
+      "patch": {
+        "operationId": "LearningController_drillClock",
+        "parameters": [
+          {
+            "name": "attemptId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateDrillClockDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/DrillClockDto"
                 }
               }
             }
@@ -5315,6 +5542,41 @@
         ]
       }
     },
+    "/api/v1/schools/mine": {
+      "get": {
+        "operationId": "SchoolsController_memberships",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/SchoolListDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "schools"
+        ]
+      }
+    },
     "/api/v1/schools/{schoolId}/teacher-verifications": {
       "post": {
         "operationId": "SchoolsController_verify",
@@ -8406,6 +8668,37 @@
           "role"
         ]
       },
+      "UpdateProfileDto": {
+        "type": "object",
+        "properties": {
+          "displayName": {
+            "type": "string",
+            "minLength": 1,
+            "maxLength": 120
+          }
+        },
+        "required": [
+          "displayName"
+        ]
+      },
+      "ProfilePhotoDto": {
+        "type": "object",
+        "properties": {
+          "url": {
+            "type": "string",
+            "nullable": true
+          },
+          "expiresAt": {
+            "type": "string",
+            "nullable": true,
+            "format": "date-time"
+          }
+        },
+        "required": [
+          "url",
+          "expiresAt"
+        ]
+      },
       "ClassSummaryDto": {
         "type": "object",
         "properties": {
@@ -9190,6 +9483,29 @@
           "levelId"
         ]
       },
+      "DrillClockDto": {
+        "type": "object",
+        "properties": {
+          "elapsedMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "remainingMs": {
+            "type": "integer",
+            "minimum": 0
+          },
+          "sessionId": {
+            "type": "string",
+            "format": "uuid",
+            "nullable": true
+          }
+        },
+        "required": [
+          "elapsedMs",
+          "remainingMs",
+          "sessionId"
+        ]
+      },
       "OptionDto": {
         "type": "object",
         "properties": {
@@ -9359,6 +9675,9 @@
             "format": "date-time",
             "description": "Database time for count-up display; server timestamps own reward duration."
           },
+          "clock": {
+            "$ref": "#/components/schemas/DrillClockDto"
+          },
           "isDemo": {
             "type": "boolean"
           },
@@ -9377,6 +9696,26 @@
           "startedAt",
           "isDemo",
           "questions"
+        ]
+      },
+      "UpdateDrillClockDto": {
+        "type": "object",
+        "properties": {
+          "sessionId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "action": {
+            "type": "string",
+            "enum": [
+              "heartbeat",
+              "pause"
+            ]
+          }
+        },
+        "required": [
+          "sessionId",
+          "action"
         ]
       },
       "SaveDrillAnswerDto": {
@@ -17724,6 +18063,10 @@
           },
           "teacherName": {
             "type": "string"
+          },
+          "teacherId": {
+            "type": "string",
+            "format": "uuid"
           },
           "body": {
             "type": "string"

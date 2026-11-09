@@ -1,0 +1,15 @@
+.profile-editor,
+.profile-editor form {
+  display: grid;
+  gap: var(--space-3);
+  min-width: 0;
+}
+
+.profile-editor input[type='file'] {
+  min-width: 0;
+  max-width: 100%;
+}
+
+.profile-editor p {
+  overflow-wrap: anywhere;
+}

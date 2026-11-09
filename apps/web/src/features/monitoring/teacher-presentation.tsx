@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import type { ReactNode } from 'react';
-import { Avatar, Badge, Brand, Card, Icon } from '@tka/ui';
+import { Badge, Brand, Card, Icon } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import type { ClassSummaryDto, MonitoredLevelDto } from '@/lib/generated-api-types';
 
 // Presentation only: authorization, queries, scores and mutations remain in controllers.
@@ -41,12 +42,20 @@ export function TeacherClassCard({
   );
 }
 
-export function TeacherStudentRow({ name, href }: { name: string; href: string }) {
+export function TeacherStudentRow({
+  name,
+  href,
+  studentId,
+}: {
+  name: string;
+  href: string;
+  studentId?: string;
+}) {
   return (
     <tr className="teacher-student-record">
       <td>
         <div className="teacher-roster-name">
-          <Avatar name={name} />
+          <Avatar userId={studentId} name={name} />
           <strong>{name}</strong>
         </div>
       </td>

@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { StudentMascot } from '@/components/student-mascot';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -9,8 +10,11 @@ import QRCode from 'qrcode';
 import { Avatar, Button, Card, Dialog, Icon, Tabs } from '@tka/ui';
 import { AppShell } from '@/components/shell';
 import { StudentSectionHeader } from '@/features/core-learning/student-section-header';
-import { LeaderboardPodium } from '@/features/core-learning/leaderboard-podium';
-import { learningApi } from '@/features/core-learning/api';
+import {
+  hasLeaderboardPodiumTie,
+  LeaderboardPodium,
+  LeaderboardRankingList,
+} from '@/features/core-learning/leaderboard-podium';
 import type { LeaderboardDto } from '@/features/core-learning/generated-types';
 import {
   BattleRoom,
@@ -26,6 +30,7 @@ import {
 import { useAuth } from '@/features/onboarding/auth';
 import { request } from '@/features/core-learning/api';
 import { useStudentToken } from '@/features/core-learning/student-session';
+import './pvp-lobby.css';
 import { DataState, LearningFrame, Status } from '@/features/core-learning/ui';
 import type {
   PvpAvailabilityDto,
@@ -39,10 +44,6 @@ export function PvpScreen() {
   const availability = useQuery({
     queryKey: ['pvp-availability'],
     queryFn: () => request<PvpAvailabilityDto>(token, '/pvp/availability'),
-  });
-  const dashboard = useQuery({
-    queryKey: ['student-dashboard'],
-    queryFn: () => learningApi.dashboard(token),
   });
   const socket = usePvpSocket(availability.data?.available === true);
   const [difficulty, setDifficulty] = useState<Difficulty>('easy');
@@ -65,6 +66,8 @@ export function PvpScreen() {
     queryFn: () => request<LeaderboardDto>(token, `/leaderboards/pvp?difficulty=${difficulty}`),
     enabled: availability.data?.available === true,
   });
+  const rankingEntries = ranking.data?.entries ?? [];
+  const tied = hasLeaderboardPodiumTie(rankingEntries);
   const disabled = socket.busy || socket.uncertain || !socket.connected;
   const selectedAvailable =
     availability.data?.difficulties?.find((item) => item.difficulty === difficulty)?.available !==
@@ -77,19 +80,6 @@ export function PvpScreen() {
     >
       <div className="pvp-lobby-layout">
         <div className="pvp-lobby-main">
-          <div className="pvp-lobby-meta" aria-label="Informasi duel">
-            <span>
-              <Icon name="users" width={14} height={14} />1 vs 1
-            </span>
-            <span>
-              <Icon name="school" width={14} height={14} />
-              {dashboard.data?.class?.schoolName ?? 'Mandiri & Sekolah'}
-            </span>
-            <span>
-              <Icon name="clock" width={14} height={14} />
-              10 Soal
-            </span>
-          </div>
           <PvpHero />
 
           {availability.data?.activeMatchId && (
@@ -102,14 +92,6 @@ export function PvpScreen() {
               </Link>
             </Status>
           )}
-          <Link
-            className="pvp-leaderboard-link"
-            href={`/student/leaderboards?difficulty=${difficulty}`}
-          >
-            <Icon name="trophy" />
-            LEADERBOARD PVP
-            <Icon name="chevron" />
-          </Link>
           {availability.isPending || availability.isError ? (
             <DataState
               pending={availability.isPending}
@@ -127,27 +109,6 @@ export function PvpScreen() {
             </Status>
           ) : (
             <>
-              <Card className="pvp-lobby-podium" aria-label="Podium Global PvP">
-                <h2 className="sr-only">Podium Global PvP</h2>
-                {ranking.isPending || ranking.isError ? (
-                  <DataState
-                    pending={ranking.isPending}
-                    error={ranking.error}
-                    retry={() => void ranking.refetch()}
-                  />
-                ) : ranking.data.policyPending ? (
-                  <p>Peringkat belum tersedia. Rekor menunggu aturan PvP.</p>
-                ) : ranking.data.entries.length ? (
-                  <LeaderboardPodium
-                    entries={ranking.data.entries}
-                    ownEntry={ranking.data.ownEntry}
-                    unit={ranking.data.unit}
-                    label="Podium Global PvP"
-                  />
-                ) : (
-                  <p>Belum ada rekor pada periode ini.</p>
-                )}
-              </Card>
               {!socket.connected && (
                 <Status title="Menghubungkan PvP">
                   <Button variant="secondary" onClick={socket.reconnect}>
@@ -213,6 +174,54 @@ export function PvpScreen() {
                 ]}
               />
             </>
+          )}
+          <Link
+            className="pvp-leaderboard-link"
+            href={`/student/leaderboards?difficulty=${difficulty}`}
+          >
+            <Icon name="trophy" />
+            Lihat leaderboard PvP
+            <Icon name="chevron" />
+          </Link>
+          {availability.data?.available === true && (
+            <Card className={`student-scoreboard student-scoreboard--${difficulty}`}>
+              <div className="student-scoreboard__stage">
+                <div className="pvp-ranking-section-heading">
+                  <h2>
+                    <Icon name="trophy" width={20} height={20} />
+                    Top 3 minggu ini
+                  </h2>
+                </div>
+                {ranking.isPending || ranking.isError ? (
+                  <DataState
+                    pending={ranking.isPending}
+                    error={ranking.error}
+                    retry={() => void ranking.refetch()}
+                  />
+                ) : ranking.data.policyPending ? (
+                  <p>Peringkat belum tersedia. Rekor menunggu aturan PvP.</p>
+                ) : !rankingEntries.length ? (
+                  <p>Belum ada rekor pada periode ini.</p>
+                ) : !tied ? (
+                  <LeaderboardPodium
+                    entries={rankingEntries}
+                    ownEntry={ranking.data.ownEntry}
+                    unit={ranking.data.unit}
+                    label="Podium Global PvP"
+                  />
+                ) : null}
+              </div>
+              {ranking.isSuccess && !ranking.data.policyPending && tied && (
+                <div className="pvp-ranking-list">
+                  <LeaderboardRankingList
+                    entries={rankingEntries.slice(0, 3)}
+                    ownEntry={ranking.data.ownEntry}
+                    unit={ranking.data.unit}
+                    label="Podium Global PvP"
+                  />
+                </div>
+              )}
+            </Card>
           )}
         </div>
         <aside className="pvp-lobby-context">
@@ -501,7 +510,7 @@ export function PvpMatchScreen() {
           <Status title="PvP belum tersedia">{availability.data.message}</Status>
         )}
         {active && !socket.connected && !closed && (
-          <Status title="Koneksi terputus">
+          <Status title="Koneksi terputus" illustration={<StudentMascot pose="offline" compact />}>
             Server memberi kesempatan reconnect selama 20 detik.
             <Button variant="secondary" onClick={socket.reconnect}>
               Sambungkan lagi

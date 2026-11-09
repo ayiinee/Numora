@@ -1,5 +1,7 @@
 'use client';
 
+import { StudentMascot } from '@/components/student-mascot';
+
 import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
@@ -241,6 +243,7 @@ export function PretestResultScreen() {
 export function PretestResult({ result }: { result: PretestResultDto }) {
   return (
     <Card fullWidth className="pretest-result">
+      <StudentMascot pose={result.initialLevel == null ? 'submitted' : 'placement'} />
       <h1>Hasil Pretest {result.chapterTitle}</h1>
       <p>
         Pretest selesai. Bab ini tidak dapat di-pretest ulang. Tidak ada XP atau kontribusi

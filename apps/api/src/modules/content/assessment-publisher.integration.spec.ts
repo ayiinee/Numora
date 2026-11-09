@@ -207,7 +207,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     ).toBe(200);
     const detail = await (await fixture.request(`admin/content/pretest-packages/${p.id}`)).json();
     expect(detail).toMatchObject({ state: 'REVIEWED', reviewBlockers: [] });
-    expect(detail.publicationBlockers).toContain('PRETEST_STUDENT_CONSUMER_REQUIRED');
+    expect(detail.publicationBlockers).toContain('SHARED_PACKAGE_PUBLISHER_REQUIRED');
     expect(
       (await fixture.request(`admin/content/pretest-packages/${p.id}/publish`, 'POST')).status,
     ).toBe(409);
@@ -223,6 +223,90 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     expect(
       (await fixture.request('admin/content/pretest-packages', 'GET', undefined, 'student')).status,
     ).toBe(403);
+  });
+  it('retains legacy reviewed Pretests when the shared publisher rejects incompatible provenance', async () => {
+    const previous = process.env.CONTENT_IMPORT_PREVIEW_ENABLED;
+    process.env.CONTENT_IMPORT_PREVIEW_ENABLED = 'true';
+    try {
+      const { db } = getDatabase();
+      const [sourceVersion] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, fixture.versionIds[0]!));
+      const [sourceVariant] = await db
+        .select()
+        .from(questionVariants)
+        .where(eq(questionVariants.id, sourceVersion!.variantId));
+      const [sourceQuestion] = await db
+        .select()
+        .from(questions)
+        .where(eq(questions.id, sourceVariant!.questionId));
+      const ids: string[] = [];
+      for (let index = 0; index < 20; index++) {
+        const [q] = await db
+          .insert(questions)
+          .values({ ...sourceQuestion!, id: randomUUID(), usageType: 'PRETEST' })
+          .returning();
+        const [v] = await db
+          .insert(questionVariants)
+          .values({ questionId: q!.id, variantCode: 'ORIGINAL', kind: 'ORIGINAL', origin: 'TEST' })
+          .returning();
+        const [version] = await db
+          .insert(questionVersions)
+          .values({ ...sourceVersion!, id: randomUUID(), variantId: v!.id })
+          .returning();
+        ids.push(version!.id);
+      }
+      const catalog = await (
+        await fixture.request(`subchapters/${fixture.subchapter}`, 'GET', undefined, 'student')
+      ).json();
+      const created = await fixture.request('admin/content/pretest-packages', 'POST', {
+        familyCode: `SHARED-PRE-${fixture.suffix}`,
+        packageVersion: 1,
+        name: 'TEST ONLY legacy Pretest',
+        chapterId: catalog.subchapter.chapterId,
+        questionVersionIds: ids,
+      });
+      expect(created.status).toBe(201);
+      const { id } = await created.json();
+      expect(
+        (
+          await fixture.request(`admin/content/pretest-packages/${id}/review`, 'POST', {
+            reason: 'TEST ONLY editorial review',
+          })
+        ).status,
+      ).toBe(200);
+      const detail = await (await fixture.request(`admin/content/packages/${id}`)).json();
+      expect(detail.id).toBe(id);
+      expect(
+        detail.items.map((item: { questionVersionId: string }) => item.questionVersionId),
+      ).toEqual(ids);
+      const published = await fixture.request(`admin/content/packages/${id}/publish`, 'POST', {
+        expectedRevision: detail.contentRevision,
+        confirmed: true,
+      });
+      expect(published.status).toBe(409);
+      expect(await published.json()).toMatchObject({ code: 'PACKAGE_NOT_READY' });
+      const [stored] = await db
+        .select()
+        .from(assessmentPackages)
+        .where(eq(assessmentPackages.id, id));
+      expect(stored).toMatchObject({
+        status: 'DRAFT',
+        assessmentType: 'PRETEST',
+        chapterId: catalog.subchapter.chapterId,
+      });
+      expect(stored!.manifestDigest).not.toBeNull();
+      const retained = await db
+        .select()
+        .from(packageItems)
+        .where(eq(packageItems.packageId, id))
+        .orderBy(packageItems.displayOrder);
+      expect(retained.map((item) => item.questionVersionId)).toEqual(ids);
+    } finally {
+      if (previous === undefined) delete process.env.CONTENT_IMPORT_PREVIEW_ENABLED;
+      else process.env.CONTENT_IMPORT_PREVIEW_ENABLED = previous;
+    }
   });
   it('publishes a thirty-item Tryout with the owner-approved schedule and finalizes batch-close races with exactly one XP entry', async () => {
     const ids = await bank(),

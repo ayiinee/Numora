@@ -1,10 +1,16 @@
 'use client';
 
-import { Avatar, Icon } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
+import Image from 'next/image';
 import type { LeaderboardDto } from './generated-types';
+import './leaderboard-podium.css';
 
 export const formatLeaderboardPoints = (points: number, unit: LeaderboardDto['unit']) =>
   points.toLocaleString('id-ID', { maximumFractionDigits: unit === 'xp' ? 6 : 2 });
+
+export function hasLeaderboardPodiumTie(entries: LeaderboardDto['entries']) {
+  return entries.slice(0, 3).some((entry, index) => entry.rank === entries[index + 1]?.rank);
+}
 
 /** Presentation only: positions, points and unit come from the server. */
 export function LeaderboardPodium({
@@ -12,88 +18,78 @@ export function LeaderboardPodium({
   ownEntry,
   unit,
   label = 'Podium teratas kelas',
-  pointsOnPedestal = false,
 }: Pick<LeaderboardDto, 'entries' | 'ownEntry' | 'unit'> & {
   label?: string;
-  pointsOnPedestal?: boolean;
 }) {
   const leaders = entries.slice(0, 3);
-  if (leaders.some((leader) => entries.filter((entry) => entry.rank === leader.rank).length > 1)) {
-    return (
-      <div className="pvp-ranking-list">
-        <ol aria-label={label}>
-          {leaders.map((entry) => (
-            <li
-              key={entry.studentId}
-              className={entry.studentId === ownEntry?.studentId ? 'is-self' : ''}
-            >
-              <span aria-label={`Peringkat ${entry.rank}`}>{entry.rank}</span>
-              <Avatar name={entry.displayName} />
-              <strong>{entry.displayName}</strong>
-              <span>
-                {formatLeaderboardPoints(entry.points, unit)} {unit === 'xp' ? 'XP' : 'PTS'}
-              </span>
-            </li>
-          ))}
-        </ol>
-      </div>
-    );
-  }
   return (
-    <ol className="leaderboard-podium" aria-label={label}>
-      {[1, 0, 2].map((position) => {
-        const entry = entries[position];
-        return (
-          <li
-            key={position}
-            className={`leaderboard-podium__place leaderboard-podium__place--${position + 1}`}
-          >
-            {entry ? (
-              <>
-                <div className="leaderboard-podium__portrait">
-                  <Avatar name={entry.displayName} size={position === 0 ? 'xl' : 'lg'} />
-                  <span className="leaderboard-podium__rank" aria-label={`Peringkat ${entry.rank}`}>
-                    {entry.rank}
-                  </span>
-                </div>
-                <strong>{entry.displayName}</strong>
-                {ownEntry?.studentId === entry.studentId && (
-                  <span className="leaderboard-podium__self">Kamu</span>
-                )}
-                {!pointsOnPedestal && (
-                  <span className="leaderboard-podium__points">
-                    {formatLeaderboardPoints(entry.points, unit)} {unit === 'xp' ? 'XP' : 'PTS'}
-                  </span>
-                )}
-                <div className="leaderboard-podium__pedestal">
-                  {pointsOnPedestal ? (
-                    <>
-                      <strong className="leaderboard-podium__record">
-                        {formatLeaderboardPoints(entry.points, unit)}
-                      </strong>
-                      <span>{unit === 'xp' ? 'XP' : 'PTS'}</span>
-                    </>
-                  ) : (
-                    <>
-                      <Icon
-                        name="trophy"
-                        width={position === 0 ? 26 : 20}
-                        height={position === 0 ? 26 : 20}
-                      />
-                      <span>Peringkat {entry.rank}</span>
-                    </>
-                  )}
-                </div>
-              </>
-            ) : (
-              <div className="leaderboard-podium__vacant">
-                <Icon name="users" />
-                <span>Belum ada peserta</span>
-              </div>
-            )}
-          </li>
-        );
-      })}
+    <ol className="student-scoreboard-podium" aria-label={label} role="list">
+      {leaders.map((entry) => (
+        <li
+          key={entry.studentId}
+          value={entry.rank}
+          className={`student-scoreboard-podium__place--${entry.rank}`}
+        >
+          <div className="student-scoreboard-podium__student">
+            <div className="student-scoreboard-podium__avatar" aria-hidden="true">
+              <Avatar
+                userId={entry.studentId}
+                name={entry.displayName}
+                size={entry.rank === 1 ? 'xl' : 'lg'}
+              />
+            </div>
+            <strong>{entry.displayName}</strong>
+            {ownEntry?.studentId === entry.studentId && <small>Kamu</small>}
+            <span className="student-scoreboard-podium__score">
+              {formatLeaderboardPoints(entry.points, unit)}{' '}
+              <small>{unit === 'xp' ? 'XP' : 'PTS'}</small>
+            </span>
+          </div>
+          <div className="student-scoreboard-podium__pedestal">
+            <Image
+              src={`/illustrations/student-leaderboard/medal-${entry.rank}.webp`}
+              width={272}
+              height={450}
+              alt={`Peringkat ${entry.rank}`}
+              unoptimized
+            />
+          </div>
+        </li>
+      ))}
+    </ol>
+  );
+}
+
+export function LeaderboardRankingList({
+  entries,
+  ownEntry,
+  unit,
+  label,
+}: Pick<LeaderboardDto, 'entries' | 'ownEntry' | 'unit'> & { label: string }) {
+  return (
+    <ol aria-label={label} role="list">
+      {entries.map((entry) => (
+        <li
+          key={entry.studentId}
+          value={entry.rank}
+          className={entry.studentId === ownEntry?.studentId ? 'is-self' : ''}
+        >
+          <span className="pvp-rank-number" aria-label={`Peringkat ${entry.rank}`}>
+            {entry.rank}
+          </span>
+          <span aria-hidden="true">
+            <Avatar userId={entry.studentId} name={entry.displayName} size="sm" />
+          </span>
+          <div>
+            <strong>{entry.displayName}</strong>
+            {entry.studentId === ownEntry?.studentId && <small>Kamu</small>}
+          </div>
+          <span className="pvp-rank-points">
+            <strong>{formatLeaderboardPoints(entry.points, unit)}</strong>
+            <small>{unit === 'xp' ? 'XP' : 'PTS'}</small>
+          </span>
+        </li>
+      ))}
     </ol>
   );
 }

@@ -223,6 +223,10 @@ export const assessmentAttempts = pgTable(
     score0To100: numeric('score_0_100', { precision: 5, scale: 2 }),
     stars: integer('stars'),
     drillPolicyVersion: integer('drill_policy_version'),
+    drillTimer: jsonb('drill_timer').$type<{
+      elapsedMs: number;
+      session: { id: string; startedAtMs: number; endsAtMs: number } | null;
+    }>(),
     tryoutXpPolicyVersion: integer('tryout_xp_policy_version'),
     pretestResult: jsonb('pretest_result').$type<{
       correctCount: number;

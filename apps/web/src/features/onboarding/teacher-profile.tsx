@@ -2,7 +2,9 @@
 
 import Link from 'next/link';
 import { useQuery } from '@tanstack/react-query';
-import { Avatar, Badge, Button, Card, EmptyState, Icon, ListRow, SectionHeader } from '@tka/ui';
+import { Badge, Button, Card, EmptyState, Icon, ListRow, SectionHeader } from '@tka/ui';
+import { OwnAvatar as Avatar } from './user-avatar';
+import { ProfileEditor } from './profile-editor';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from '@/features/monitoring/teacher-gate';
 import { useAuth } from './auth';
@@ -11,6 +13,7 @@ import { getTeacherClasses } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
 import { TeacherAnnouncement } from '@/features/monitoring/teacher-ui';
 import { teacherKeys } from '@/features/monitoring/teacher-query';
+import { TeacherSchoolMemberships } from '@/features/monitoring/teacher-school-memberships';
 
 export function TeacherProfileScreen() {
   return (
@@ -42,6 +45,7 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
           <span className="teacher-identity-foot">Dampingi kelas dan perkembangan siswa.</span>
         </Card>
         <div className="teacher-page-stack">
+          <ProfileEditor />
           <Card className="teacher-account-card">
             <SectionHeader title="Informasi akun" />
             <ListRow wrapText title={name} description="Nama" leading={<Icon name="user" />} />
@@ -104,8 +108,9 @@ function TeacherProfileContent({ name, token }: { name: string; token: string })
               />
             </Link>
           </Card>
+          <TeacherSchoolMemberships token={token} />
           <TeacherAnnouncement>
-            Informasi akun mengikuti akun yang Anda gunakan untuk masuk.
+            Email mengikuti akun Google. Nama dan foto dapat diperbarui melalui Edit profil.
           </TeacherAnnouncement>
           {error && (
             <p role="alert" className="form-error">

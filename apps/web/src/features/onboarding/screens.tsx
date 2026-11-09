@@ -6,7 +6,9 @@ import { useRouter } from 'next/navigation';
 import { Brand, Button, Icon, Input, Select } from '@tka/ui';
 import { TeacherVerificationFrame } from '@/features/monitoring/teacher-presentation';
 import { destination, useAuth } from './auth';
+import { postLoginDestination } from './class-invitation';
 import { AuthFrame, AuthStatus, GoogleIdentity } from './auth-presentation';
+import { signInStudent } from './student-password';
 import { getSupabase } from '@/lib/supabase';
 import { ApiProblem, getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
 import {
@@ -107,15 +109,19 @@ function Avatar({ name, photo }: { name: string; photo: unknown }) {
 export function LoginScreen() {
   const router = useRouter();
   const { state, refresh } = useAuth();
-  const [busy, setBusy] = useState(false);
+  const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
+  const [busy, setBusy] = useState<'google' | 'student' | null>(null);
+  const submitting = useRef(false);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (state.status === 'ready') router.replace(destination(state.profile));
+    if (state.status === 'ready') router.replace(postLoginDestination(state.profile));
     if (state.status === 'registration') router.replace('/onboarding');
   }, [router, state]);
   const login = async () => {
-    if (busy) return;
-    setBusy(true);
+    if (submitting.current) return;
+    submitting.current = true;
+    setBusy('google');
     setError('');
     try {
       const { error: authError } = await getSupabase().auth.signInWithOAuth({
@@ -125,9 +131,27 @@ export function LoginScreen() {
       if (authError) throw authError;
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Login belum berhasil. Coba lagi.');
-      setBusy(false);
+      submitting.current = false;
+      setBusy(null);
     }
   };
+
+  async function loginStudent(event: FormEvent<HTMLFormElement>) {
+    event.preventDefault();
+    if (submitting.current || state.status !== 'signed_out') return;
+    submitting.current = true;
+    setBusy('student');
+    setError('');
+    try {
+      await signInStudent(email, password);
+      setPassword('');
+    } catch (cause) {
+      setError(cause instanceof Error ? cause.message : 'Login belum berhasil. Coba lagi.');
+    } finally {
+      submitting.current = false;
+      setBusy(null);
+    }
+  }
   return (
     <AuthFrame>
       <section className="auth-card" aria-labelledby="login-title">
@@ -137,7 +161,7 @@ export function LoginScreen() {
         <span className="auth-eyebrow">Selamat datang</span>
         <h2 id="login-title">Mulai bersama NUMORA</h2>
         <p className="auth-card-description">
-          Gunakan akun Google untuk melanjutkan belajar atau mendampingi siswa.
+          Masuk dengan akun Siswa yang sudah disiapkan atau lanjutkan dengan Google.
         </p>
         {state.status === 'loading' ||
         state.status === 'ready' ||
@@ -171,8 +195,49 @@ export function LoginScreen() {
                 {error}
               </p>
             )}
-            <Button fullWidth loading={busy} disabled={state.status === 'error'} onClick={login}>
-              {busy ? 'Menghubungkan ke Google…' : 'Lanjutkan dengan Google'}
+            {state.status === 'signed_out' && (
+              <form
+                className="auth-student-login-form"
+                aria-label="Login Siswa"
+                aria-busy={busy === 'student'}
+                onSubmit={(event) => void loginStudent(event)}
+              >
+                <Input
+                  label="Email Siswa"
+                  type="email"
+                  autoComplete="username"
+                  value={email}
+                  onChange={(event) => setEmail(event.target.value)}
+                  required
+                  disabled={busy !== null}
+                />
+                <Input
+                  label="Password"
+                  type="password"
+                  autoComplete="current-password"
+                  value={password}
+                  onChange={(event) => setPassword(event.target.value)}
+                  required
+                  disabled={busy !== null}
+                />
+                <Button
+                  fullWidth
+                  type="submit"
+                  loading={busy === 'student'}
+                  disabled={busy !== null}
+                >
+                  {busy === 'student' ? 'Sedang masuk…' : 'Masuk sebagai Siswa'}
+                </Button>
+              </form>
+            )}
+            <Button
+              fullWidth
+              variant="secondary"
+              loading={busy === 'google'}
+              disabled={busy !== null || state.status === 'error'}
+              onClick={login}
+            >
+              {busy === 'google' ? 'Menghubungkan ke Google…' : 'Lanjutkan dengan Google'}
             </Button>
             {state.status === 'error' && (
               <Button variant="secondary" fullWidth onClick={() => void refresh()}>
@@ -344,7 +409,7 @@ export function OnboardingScreen() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   useEffect(() => {
-    if (state.status === 'ready') router.replace(destination(state.profile));
+    if (state.status === 'ready') router.replace(postLoginDestination(state.profile));
     if (state.status === 'signed_out') router.replace('/');
   }, [router, state]);
   return (
