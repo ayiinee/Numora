@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { useQuery, type UseQueryResult } from '@tanstack/react-query';
 import { EmptyState, Icon } from '@tka/ui';
+import { StudentMascot } from '@/components/student-mascot';
 import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
 import { learningApi } from './api';
@@ -99,7 +100,8 @@ function DashboardReady({
               <div className="sh-activities__empty">
                 <EmptyState
                   compact
-                  icon={<Icon name="clock" />}
+                  style={{ gridTemplateColumns: '3.5rem minmax(0, 1fr)' }}
+                  icon={<StudentMascot pose="start" compact />}
                   title="Perjalananmu dimulai di sini"
                   description="Hasil latihan pertamamu akan tersimpan di bagian ini."
                 />

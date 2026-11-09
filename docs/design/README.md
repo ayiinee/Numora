@@ -1,5 +1,7 @@
 # NUMORA UI guidance
 
+**ENGINEERING DECISION — maskot respons siswa, 9 November 2026.** Stiker burung hantu dari pemilik mendampingi kartu aktivitas kosong, ketersediaan dan riwayat Tryout, pengiriman jawaban, hasil Drill dan Pretest, serta lobi dan hasil PvP. Pencarian bab kosong dan koneksi PvP terputus memakai stiker respons. Setiap pose memakai satu aset WebP transparan dari gambar yang dipisahkan oleh pemilik. Ilustrasi bersifat dekoratif. Label status dan tindakan tetap tampil sebagai teks.
+
 **ENGINEERING DECISION — revisi aktivitas siswa, 9 November 2026.** Beranda dan Latihan memakai kartu yang sama untuk aktivitas terbaru. Kartu menampilkan ilustrasi, tanggal, nilai dan bintang yang tersedia, serta tindakan sesuai aktivitas. Lihat Semua membuka riwayat lengkap. Tombol Semua bab berada di dalam header detail bab.
 
 **ENGINEERING DECISION — revisi detail subbab, 9 November 2026.** Header progres subbab mengikuti pola ungu portal Siswa dan memuat tombol kembali. Peta tampil tanpa bingkai. Dialog menampilkan jumlah soal sebelum bintang, dengan kartu nilai terbaik bernuansa emas untuk membedakannya dari nilai terakhir.

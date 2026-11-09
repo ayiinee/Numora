@@ -1,5 +1,7 @@
 'use client';
 
+import { StudentMascot } from '@/components/student-mascot';
+
 import Link from 'next/link';
 import { Card, Icon, ProgressBar } from '@tka/ui';
 import { AssessmentHeader } from './assessment-presentation';
@@ -313,6 +315,7 @@ function StartDrill({
 export function ResultSummary({ result }: { result: DrillResult }) {
   return (
     <Panel className="drill-result-summary">
+      <StudentMascot pose={result.mastered ? 'mastered' : 'practice'} />
       <p className="result-mastery">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
       <div className="result-score">
         {result.score}

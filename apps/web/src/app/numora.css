@@ -4213,15 +4213,8 @@ a.settings-row:hover {
   margin: 24px auto;
   text-align: center;
 }
-.tryout-waiting__icon {
-  display: grid;
-  place-items: center;
-  margin: 0 auto 16px;
-  width: 72px;
-  height: 72px;
-  background: var(--color-primary-light);
-  color: var(--color-primary);
-  border-radius: 50%;
+.tryout-waiting > img:first-child {
+  margin-bottom: 12px;
 }
 .tryout-waiting h2 {
   font-size: 22px;
@@ -5191,15 +5184,8 @@ a.settings-row:hover {
     var(--numora-gold-100)
   );
 }
-.pvp-outcome-trophy {
-  display: grid;
-  place-items: center;
-  background: var(--color-reward);
-  color: var(--numora-gold-900);
-  border-radius: 16px;
-  width: 64px;
-  height: 64px;
-  margin: 0 auto 12px;
+.pvp-outcome-hero > img:first-child {
+  margin-bottom: 12px;
 }
 .pvp-outcome-state {
   display: inline-block;

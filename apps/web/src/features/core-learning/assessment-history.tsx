@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
-import { Button, Card, EmptyState, Icon, SectionHeader } from '@tka/ui';
+import { Button, Card, EmptyState, SectionHeader } from '@tka/ui';
+import { StudentMascot } from '@/components/student-mascot';
 import { StudentLayout } from '@/components/shell';
 import { learningApi } from './api';
 import { DataState, StudentGate } from './ui';
@@ -49,7 +50,10 @@ function AssessmentContent({ token }: { token: string }) {
         )}
       </aside>
       <section className="assessment-history-records">
-        <SectionHeader title={levelId ? 'Riwayat level' : 'Riwayat aktivitas'} subtitle="Hasil terbaru tampil paling atas." />
+        <SectionHeader
+          title={levelId ? 'Riwayat level' : 'Riwayat aktivitas'}
+          subtitle="Hasil terbaru tampil paling atas."
+        />
         {levelId && <Link href="/student/assessment">Lihat seluruh aktivitas</Link>}
         {query.isPending || (query.isError && !query.data) ? (
           <DataState
@@ -70,7 +74,7 @@ function AssessmentContent({ token }: { token: string }) {
         ) : (
           <Card>
             <EmptyState
-              icon={<Icon name="clock" />}
+              icon={<StudentMascot pose="start" />}
               title="Belum ada aktivitas"
               description="Selesaikan latihan pertamamu untuk melihat hasil di sini."
               action={

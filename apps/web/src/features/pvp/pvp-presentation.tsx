@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { StudentMascot, type StudentMascotPose } from '@/components/student-mascot';
 import { StudentIllustratedHero } from '@/features/core-learning/student-illustrated-hero';
 import type { ReactNode } from 'react';
 import { Avatar, Button, Card, Icon, Input } from '@tka/ui';
@@ -396,9 +397,7 @@ export function WaitingRoom({
           ))}
           {snapshot.players.length < 2 && (
             <article className="pvp-player-card pvp-player-card--vacant">
-              <span className="icon-tile">
-                <Icon name="users" />
-              </span>
+              <StudentMascot pose="opponent" compact />
               <h2>Mencari Lawan…</h2>
               <p>Bagikan kode atau link room.</p>
             </article>
@@ -578,6 +577,21 @@ export function BattleRoom({
   );
 }
 
+function outcomePose(status: PvpSnapshotDto['status'], result?: string | null): StudentMascotPose {
+  if (status === 'CANCELLED') return 'cancelled';
+  switch (result) {
+    case 'WIN':
+      return 'victory';
+    case 'DRAW':
+      return 'draw';
+    case 'LOSS':
+    case 'FORFEIT':
+      return 'retry';
+    default:
+      return 'submitted';
+  }
+}
+
 export function MatchOutcome({
   snapshot,
   selfId,
@@ -599,9 +613,7 @@ export function MatchOutcome({
   return (
     <div className="pvp-outcome-layout">
       <Card className="pvp-outcome-hero">
-        <span className="pvp-outcome-trophy">
-          <Icon name="trophy" width={40} height={40} />
-        </span>
+        <StudentMascot pose={outcomePose(snapshot.status, self?.result)} />
         <span className="pvp-outcome-state">
           {snapshot.status === 'CANCELLED' ? 'DIBATALKAN' : 'PVP • SELESAI'}
         </span>

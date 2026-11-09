@@ -1,6 +1,7 @@
 'use client';
 
 import Link from 'next/link';
+import { StudentMascot } from '@/components/student-mascot';
 import { useParams } from 'next/navigation';
 import { useEffect, useState } from 'react';
 import { useQuery } from '@tanstack/react-query';
@@ -509,7 +510,7 @@ export function PvpMatchScreen() {
           <Status title="PvP belum tersedia">{availability.data.message}</Status>
         )}
         {active && !socket.connected && !closed && (
-          <Status title="Koneksi terputus">
+          <Status title="Koneksi terputus" illustration={<StudentMascot pose="offline" compact />}>
             Server memberi kesempatan reconnect selama 20 detik.
             <Button variant="secondary" onClick={socket.reconnect}>
               Sambungkan lagi

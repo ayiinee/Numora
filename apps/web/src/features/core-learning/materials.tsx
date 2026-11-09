@@ -5,6 +5,7 @@ import Link from 'next/link';
 import { useRouter, useSearchParams } from 'next/navigation';
 import { useQuery } from '@tanstack/react-query';
 import { Badge, Card, EmptyState, Icon, Input } from '@tka/ui';
+import { StudentMascot } from '@/components/student-mascot';
 import { StudentLayout } from '@/components/shell';
 import { useStudentToken } from './student-session';
 import { learningApi } from './api';
@@ -95,7 +96,8 @@ function MaterialsContent() {
             <Card padding="sm">
               <EmptyState
                 compact
-                icon={<Icon name="clock" />}
+                style={{ gridTemplateColumns: '3.5rem minmax(0, 1fr)' }}
+                icon={<StudentMascot pose="start" compact />}
                 title="Belum ada aktivitas"
                 description="Pilih bab untuk memulai latihan pertamamu."
               />
@@ -121,7 +123,13 @@ function MaterialsContent() {
           ) : !visible.length ? (
             <Card>
               <EmptyState
-                icon={<Icon name="book" />}
+                icon={
+                  query.data.chapters.length ? (
+                    <StudentMascot pose="search" />
+                  ) : (
+                    <Icon name="book" />
+                  )
+                }
                 title={
                   query.data.chapters.length ? 'Bab tidak ditemukan' : 'Latihan sedang disiapkan'
                 }
