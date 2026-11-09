@@ -246,10 +246,10 @@ describe('internal Admin login', () => {
       .mockResolvedValueOnce({ error: new Error('PROVIDER PRIVATE ERROR') })
       .mockResolvedValueOnce({ error: null });
     render(<AdminLoginScreen />);
-    fireEvent.change(screen.getByLabelText('Email Admin'), {
+    fireEvent.change(screen.getByRole('textbox', { name: 'Email Admin' }), {
       target: { value: 'admin@example.invalid' },
     });
-    fireEvent.change(screen.getByLabelText('Password'), {
+    fireEvent.change(screen.getByLabelText(/^Password/), {
       target: { value: 'TEST ONLY PASSWORD' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Masuk ke portal Admin' }));
@@ -262,7 +262,7 @@ describe('internal Admin login', () => {
     expect(mocks.replace).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Masuk ke portal Admin' }));
     await waitFor(() =>
-      expect((screen.getByLabelText('Password') as HTMLInputElement).value).toBe(''),
+      expect((screen.getByLabelText(/^Password/) as HTMLInputElement).value).toBe(''),
     );
   });
   it('waits for identity and handles a non-Admin account without offering signup', async () => {
@@ -272,7 +272,7 @@ describe('internal Admin login', () => {
     };
     render(<AdminLoginScreen />);
     expect(screen.getByRole('alert').textContent).toContain('bukan akun Admin');
-    expect(screen.queryByLabelText('Password')).toBeNull();
+    expect(screen.queryByLabelText(/^Password/)).toBeNull();
     expect(screen.getByRole('link', { name: 'Kembali ke halaman akun' }).getAttribute('href')).toBe(
       '/student',
     );
