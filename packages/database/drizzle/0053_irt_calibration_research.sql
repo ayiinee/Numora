@@ -38,6 +38,8 @@ BEGIN
  -- Owner authorized only disposable local research in this delivery.
  IF current_database() NOT LIKE 'irt_research_test_%' THEN RAISE EXCEPTION 'Research requires disposable database' USING ERRCODE='23514'; END IF;
  IF NEW.body->>'requestId' IS DISTINCT FROM NEW.id::text OR NEW.body->>'snapshotId' IS DISTINCT FROM NEW.snapshot_id::text OR NEW.body#>>'{context,contextId}' IS DISTINCT FROM NEW.context_id::text THEN RAISE EXCEPTION 'Calibration identity mismatch' USING ERRCODE='23514'; END IF;
+ IF NOT EXISTS(SELECT 1 FROM public.measurement_contexts c WHERE c.id=NEW.context_id AND c.ecosystem='TRYOUT'
+   AND c.tryout_batch_id::text=NEW.body#>>'{context,batchId}' AND c.revision::text=NEW.body#>>'{context,revision}') THEN RAISE EXCEPTION 'Calibration context mismatch' USING ERRCODE='23514'; END IF;
  IF jsonb_typeof(NEW.resources) IS DISTINCT FROM 'object' OR NOT NEW.resources ?& ARRAY['model','quality','eligibility','scoring','scoreMapping']
   OR (SELECT count(*) FROM jsonb_object_keys(NEW.resources))<>5 THEN RAISE EXCEPTION 'Policy resources required' USING ERRCODE='23514'; END IF;
  IF EXISTS(SELECT 1 FROM jsonb_each(NEW.resources) x WHERE x.value->'ref' IS DISTINCT FROM NEW.body->'policies'->x.key

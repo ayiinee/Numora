@@ -18,8 +18,12 @@ export async function freezeCalibrationResearch(sql, draft, resources, runtime, 
   // Caller selects the frozen manifests; source attempt identity/grades are authoritative.
   const attemptIds=input.respondents.map(p=>p.attemptId);
   return sql.begin(async tx=>{
-    const [context]=await tx`SELECT ecosystem,tryout_batch_id,revision FROM measurement_contexts WHERE id=${input.context.contextId}`;
+    const [context]=await tx`SELECT c.ecosystem,c.tryout_batch_id,c.revision,b.starts_at,b.cutoff_at,b.result_due_at,clock_timestamp() AS captured_at
+      FROM measurement_contexts c JOIN tryout_batches b ON b.id=c.tryout_batch_id WHERE c.id=${input.context.contextId}`;
     if(!context||context.ecosystem!=='TRYOUT'||context.tryout_batch_id!==input.context.batchId||context.revision!==input.context.revision)throw new Error('IRT_CANONICAL_CONTEXT_MISMATCH');
+    if(Date.parse(input.window.startsAt)!==context.starts_at.getTime()||Date.parse(input.window.collectionCutoffAt)!==context.cutoff_at.getTime()||
+      Date.parse(input.window.resultDueAt)!==context.result_due_at.getTime()||Date.parse(input.window.gradingCutoffAt)>context.captured_at.getTime()||
+      context.cutoff_at>context.captured_at)throw new Error('IRT_CANONICAL_WINDOW_MISMATCH');
     const manifests=await tx`SELECT r.package_id,p.package_version,r.arm_id,arm.kind,r.anchor_question_version_ids,
       p.curriculum_approval,p.frozen_at,r.manifest_digest,
       r.manifest_digest=irt_compute.payload_digest(jsonb_build_object('packageId',p.id,'packageVersion',p.package_version,
