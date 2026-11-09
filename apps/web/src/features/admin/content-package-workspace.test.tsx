@@ -193,7 +193,7 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
       packageId={id}
     />,
   );
-  fireEvent.click(await screen.findByRole('button', { name: 'Tinjau', exact: true }));
+  fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
   fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
