@@ -1,3 +1,8 @@
+.student-area {
+  min-height: 100dvh;
+  background: var(--color-bg);
+}
+
 .student-pill {
   display: inline-flex;
   min-height: 28px;

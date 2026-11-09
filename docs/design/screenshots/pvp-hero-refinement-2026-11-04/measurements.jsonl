@@ -1,0 +1,16 @@
+{"name":"pvp-390","body":"12px","clip":{"height":160,"width":358,"x":16,"y":86},"fits":true,"gap":19,"height":160,"overflow":false,"viewport":390}
+{"name":"pvp-768","body":"12px","clip":{"height":180,"width":712,"x":24,"y":98},"fits":true,"gap":99,"height":180,"overflow":false,"viewport":768}
+{"name":"pvp-1280","body":"12px","clip":{"height":180,"width":644,"x":268,"y":108},"fits":true,"gap":41,"height":180,"overflow":false,"viewport":1280}
+{"name":"easy-1280","body":"12px","clip":{"height":180,"width":1008,"x":248,"y":279},"fits":true,"gap":453,"height":180,"overflow":false,"viewport":1280}
+{"name":"medium-1280","body":"12px","clip":{"height":180,"width":1008,"x":248,"y":279},"fits":true,"gap":447,"height":180,"overflow":false,"viewport":1280}
+{"name":"hard-1280","body":"12px","clip":{"height":180,"width":1008,"x":248,"y":279},"fits":true,"gap":485,"height":180,"overflow":false,"viewport":1280}
+{"name":"hard-768","body":"12px","clip":{"height":180,"width":728,"x":16,"y":279},"fits":true,"gap":208,"height":180,"overflow":false,"viewport":768}
+{"name":"medium-768","body":"12px","clip":{"height":180,"width":728,"x":16,"y":279},"fits":true,"gap":208,"height":180,"overflow":false,"viewport":768}
+{"name":"easy-768","body":"12px","clip":{"height":180,"width":728,"x":16,"y":279},"fits":true,"gap":208,"height":180,"overflow":false,"viewport":768}
+{"name":"easy-390","body":"12px","clip":{"height":160,"width":350,"x":16,"y":279},"fits":true,"gap":13,"height":160,"overflow":false,"viewport":390}
+{"name":"medium-390","body":"12px","clip":{"height":160,"width":350,"x":16,"y":279},"fits":true,"gap":13,"height":160,"overflow":false,"viewport":390}
+{"name":"hard-390","body":"12px","clip":{"height":160,"width":350,"x":16,"y":279},"fits":true,"gap":11,"height":160,"overflow":false,"viewport":390}
+{"name":"hard-320","body":"12px","clip":{"height":156,"width":280,"x":16,"y":279},"fits":true,"gap":19,"height":156,"overflow":false,"viewport":320}
+{"name":"medium-320","body":"12px","clip":{"height":156,"width":280,"x":16,"y":279},"fits":true,"gap":19,"height":156,"overflow":false,"viewport":320}
+{"name":"easy-320","body":"12px","clip":{"height":156,"width":280,"x":16,"y":279},"fits":true,"gap":19,"height":156,"overflow":false,"viewport":320}
+{"name":"pvp-320","body":"12px","clip":{"height":156,"width":280,"x":16,"y":86},"fits":true,"gap":13,"height":156,"overflow":false,"viewport":320}

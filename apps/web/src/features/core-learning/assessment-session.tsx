@@ -38,6 +38,7 @@ export function AssessmentSession({
   loadMedia,
   onSubmit,
   onSubmitted,
+  onExitConfirmed,
   deadlineAt,
   serverTime,
   onFinalizationCheck,
@@ -56,6 +57,7 @@ export function AssessmentSession({
   loadMedia?: (questionId: string, phase: 'WORK', assetIds: string[]) => Promise<PreviewMediaDto[]>;
   onSubmit: () => Promise<unknown>;
   onSubmitted: () => void;
+  onExitConfirmed?: (() => void) | undefined;
   deadlineAt?: string | null | undefined;
   serverTime?: string | undefined;
   onFinalizationCheck?: () => void;
@@ -109,6 +111,7 @@ export function AssessmentSession({
   useUnsavedWarning(
     !submit.isSuccess && unsaved !== null,
     sessionKind === 'drill' && !submit.isSuccess,
+    sessionKind === 'drill' && !submit.isSuccess ? onExitConfirmed : undefined,
   );
 
   if (!question)
@@ -131,7 +134,12 @@ export function AssessmentSession({
     retry: false,
   });
   const renderContent = (text: string) => (
-    <ContentRichText text={text} media={media.data ?? []} retry={() => void media.refetch()} />
+    <ContentRichText
+      text={text}
+      media={media.data ?? []}
+      retry={() => void media.refetch()}
+      renderBareMath
+    />
   );
   async function choose(questionId: string, answer: AssessmentAnswer) {
     if (
@@ -194,7 +202,7 @@ export function AssessmentSession({
       flags[item.questionInstanceId] ? [position + 1] : [],
     );
     return (
-      <div className="practice-session">
+      <div className="practice-session" data-session-kind={sessionKind}>
         <AssessmentHeader
           title={
             sessionKind === 'pretest'
