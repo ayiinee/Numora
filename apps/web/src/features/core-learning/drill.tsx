@@ -1,17 +1,20 @@
 'use client';
 
+import { StudentMascot } from '@/components/student-mascot';
+
 import Link from 'next/link';
 import { Card, Icon, ProgressBar } from '@tka/ui';
 import { AssessmentHeader } from './assessment-presentation';
 import { RewardSummary } from './reward-summary';
 import { useParams, useRouter } from 'next/navigation';
-import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { useEffect, useState, useRef } from 'react';
 import { learningApi } from './api';
 import type { DrillAttempt, DrillResult } from './types';
 import { AssessmentSession } from './assessment-session';
 import { DataState, LearningFrame, Panel, PrimaryButton, Status, StudentGate } from './ui';
 import { RecommendedVideos } from './support';
+import { useDrillClock } from './use-drill-clock';
 
 export function DrillScreen() {
   const { attemptId } = useParams<{ attemptId: string }>();
@@ -29,6 +32,14 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
     queryKey: ['attempt', attemptId],
     queryFn: () => learningApi.attempt(token, attemptId),
   });
+  const pauseClock = useDrillClock(token, attemptId, query.data?.clock);
+  const resume = useMutation({
+    mutationFn: (levelId: string) => learningApi.start(token, levelId),
+    onSuccess: (attempt) => {
+      queryClient.setQueryData(['attempt', attempt.id], attempt);
+      if (attempt.id !== attemptId) router.replace(`/student/drill/${attempt.id}`);
+    },
+  });
   if (query.isPending || query.isError)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
@@ -45,11 +56,50 @@ function DrillData({ token, attemptId }: { token: string; attemptId: string }) {
       </Status>
     );
   }
+  if (query.data.clock?.sessionId === null) {
+    const { clock, levelId, levelTitle } = query.data;
+    return (
+      <section className="drill-paused" aria-labelledby="drill-paused-title">
+        <Panel className="drill-paused__card">
+          <StudentMascot pose="practice" />
+          <div className="drill-paused__heading">
+            <h1 id="drill-paused-title">Latihan dijeda</h1>
+            <p>{levelTitle}</p>
+          </div>
+          <p className="drill-paused__description">
+            Jawabanmu tersimpan. Waktu latihan akan berjalan lagi saat kamu melanjutkan.
+          </p>
+          <div
+            className="drill-paused__duration"
+            role="group"
+            aria-labelledby="drill-paused-duration"
+          >
+            <span id="drill-paused-duration">
+              <Icon name="clock" width={18} height={18} /> Waktu tersimpan
+            </span>
+            <strong>{formatDrillElapsed(Math.floor(clock.elapsedMs / 1000))}</strong>
+          </div>
+          <div className="drill-paused__actions">
+            <PrimaryButton
+              fullWidth
+              disabled={resume.isPending}
+              onClick={() => resume.mutate(levelId)}
+            >
+              {resume.isPending ? 'Membuka latihan…' : 'Lanjutkan latihan'}
+            </PrimaryButton>
+            {resume.error && <p role="alert">{resume.error.message}</p>}
+            <Link href="/student/learn">Kembali ke materi</Link>
+          </div>
+        </Panel>
+      </section>
+    );
+  }
   return (
     <DrillForm
       key={query.data.id}
       attempt={query.data}
       token={token}
+      onExitConfirmed={pauseClock}
       onComplete={() => {
         void queryClient.invalidateQueries({ queryKey: ['student-progress'] });
         void queryClient.invalidateQueries({ queryKey: ['student-dashboard'] });
@@ -66,17 +116,26 @@ function DrillForm({
   attempt,
   token,
   onComplete,
+  onExitConfirmed,
 }: {
   attempt: DrillAttempt;
   token: string;
   onComplete: () => void;
+  onExitConfirmed?: (() => void) | undefined;
 }) {
   return (
     <AssessmentSession
       redesign
       title={attempt.levelTitle}
       questions={attempt.questions}
-      headerExtra={<DrillTimer startedAt={attempt.startedAt} serverTime={attempt.serverTime} />}
+      headerExtra={
+        <DrillTimer
+          startedAt={attempt.startedAt}
+          serverTime={attempt.serverTime}
+          clock={attempt.clock}
+        />
+      }
+      onExitConfirmed={onExitConfirmed}
       submitLabel="Kirim Drill"
       confirmMessage={(emptyCount) =>
         emptyCount === 0
@@ -95,15 +154,34 @@ function DrillForm({
   );
 }
 
+function formatDrillElapsed(seconds: number) {
+  return `${Math.floor(seconds / 60)}:${String(seconds % 60).padStart(2, '0')}`;
+}
+
 export function DrillTimer({
   startedAt,
   serverTime,
+  clock,
 }: {
   startedAt: string;
   serverTime?: string | undefined;
+  clock?: DrillAttempt['clock'];
 }) {
   const [elapsed, setElapsed] = useState<number | null>(null);
   useEffect(() => {
+    if (clock) {
+      const received = performance.now();
+      const tick = () =>
+        setElapsed(
+          Math.floor(
+            (clock.elapsedMs + Math.min(clock.remainingMs, performance.now() - received)) / 1000,
+          ),
+        );
+      tick();
+      if (!clock.sessionId) return;
+      const timer = window.setInterval(tick, 250);
+      return () => window.clearInterval(timer);
+    }
     if (!serverTime) {
       setElapsed(null);
       return;
@@ -122,12 +200,11 @@ export function DrillTimer({
     tick();
     const timer = window.setInterval(tick, 1000);
     return () => window.clearInterval(timer);
-  }, [startedAt, serverTime]);
+  }, [startedAt, serverTime, clock]);
   if (elapsed === null) return <span>Waktu: --:--</span>;
   return (
-    <span aria-label="Waktu berjalan">
-      <Icon name="clock" width={14} height={14} /> {Math.floor(elapsed / 60)}:
-      {String(elapsed % 60).padStart(2, '0')}
+    <span aria-label={clock?.sessionId === null ? 'Waktu tersimpan' : 'Waktu berjalan'}>
+      <Icon name="clock" width={14} height={14} /> {formatDrillElapsed(elapsed)}
     </span>
   );
 }
@@ -218,6 +295,7 @@ function StartDrill({
   retry?: boolean;
 }) {
   const router = useRouter();
+  const queryClient = useQueryClient();
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   const sending = useRef(false);
@@ -228,6 +306,7 @@ function StartDrill({
     setError('');
     try {
       const attempt = await learningApi.start(token, levelId);
+      queryClient.setQueryData(['attempt', attempt.id], attempt);
       router.push(`/student/drill/${attempt.id}`);
     } catch (cause) {
       setError(cause instanceof Error ? cause.message : 'Level berikutnya belum dapat dimulai.');
@@ -264,6 +343,7 @@ function StartDrill({
 export function ResultSummary({ result }: { result: DrillResult }) {
   return (
     <Panel className="drill-result-summary">
+      <StudentMascot pose={result.mastered ? 'mastered' : 'practice'} />
       <p className="result-mastery">{result.mastered ? 'Tuntas' : 'Belum tuntas'}</p>
       <div className="result-score">
         {result.score}

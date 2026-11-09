@@ -2,11 +2,14 @@
 
 This directory contains the shared engineering context for the TKA Mathematics SMP platform.
 
-Untuk Core Learning, [PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.docx.md) dan [PRD TryOut v1.1](product/sources/PRD_02_Core_Learning_TryOut.docx.md), diberikan pada 2 Oktober 2026, menjadi sumber terbaru. Lihat [rekonsiliasi perubahan](product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md). PRD v0.5 (28 September 2026) remains the cross-feature baseline, as confirmed by the Software Engineering coordinator on 28 September 2026. The PDF still carries its earlier “draft for review” label; the source PDF was supplied outside this repository and is not yet committed here. The summaries below do not replace the complete PRD. The supplied Sprint 2 Goal PDF is also external; its older 70% threshold has been superseded by the approved PRD's 80% rule.
+Mulai dari [Product Context](product/PRODUCT_CONTEXT.md), [Open Decisions](product/OPEN_DECISIONS.md), dan [PRD Mapping](product/PRD_MAPPING.md). PRD v0.6 adalah baseline; [konteks varian/IRT v2 yang disetujui pemilik pada 8 November 2026](AI_IRT_V2_CONTEXT.md) menggantikan aturan yang bertentangan untuk distribusi Drill, Tryout, IRT dan adjustment. Acuan ini memuat sumber DOCX utuh, keputusan, OPEN dan gap implementasi kedua repo. Persetujuan desain tidak berarti fitur sudah aktif.
+
+[PRD Drill v1.2](product/sources/PRD_01_Drill_Latihan_Soal.docx.md), [PRD TryOut v1.1](product/sources/PRD_02_Core_Learning_TryOut.docx.md), dan [rekonsiliasi 2 Oktober](product/CORE_LEARNING_PRD_UPDATE_2026-10-02.md) tetap tersedia sebagai sumber historis; bukan pengganti baseline/amendemen terbaru. Ambang 70% pada Sprint 2 lama sudah digantikan oleh aturan ketuntasan 80%.
 
 ## Product
 
-- `product/PRODUCT_CONTEXT.md` — aturan PRD fitur terbaru dan baseline lintas fitur v0.5.
+- `AI_IRT_V2_CONTEXT.md` — amendemen pemilik untuk varian/IRT v2, keputusan, OPEN dan audit implementasi kedua service.
+- `product/PRODUCT_CONTEXT.md` — baseline PRD v0.6 dan amendemen pemilik terbaru.
 - `product/PRD_MAPPING.md` — mapping from PRD sections/requirements to technical modules.
 - `product/OPEN_DECISIONS.md` — unresolved PRD items, engineering recommendations, and blockers.
 - `product/GLOSSARY.md` — canonical project vocabulary.

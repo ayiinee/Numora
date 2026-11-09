@@ -64,6 +64,13 @@ const profile = {
   displayName: 'Demo Student',
   email: authUser.email,
 };
+const session = (method: string) =>
+  `Bearer fixture.${Buffer.from(JSON.stringify({ amr: [{ method }] })).toString('base64url')}.signature`;
+const provisionedStudent = {
+  ...authUser,
+  email_confirmed_at: '2026-11-09T00:00:00Z',
+  app_metadata: { provider: 'email', numora_role: 'STUDENT' },
+};
 
 describe('IdentityService', () => {
   beforeEach(() => {
@@ -109,6 +116,29 @@ describe('IdentityService', () => {
     });
     await expect(
       new IdentityService().registerProfile('Bearer valid', { role: 'STUDENT' }),
+    ).rejects.toBeInstanceOf(ForbiddenException);
+  });
+
+  it('creates a Mandiri Student profile for a confirmed, provisioned password account', async () => {
+    mocks.getUser.mockResolvedValue({ data: { user: provisionedStudent }, error: null });
+    mocks.selectRows.push([profile], []);
+    await expect(
+      new IdentityService().registerProfile(session('password'), { role: 'STUDENT' }),
+    ).resolves.toMatchObject({ role: 'STUDENT', studentAffiliation: 'MANDIRI' });
+  });
+
+  it.each([
+    ['public email signup', 'password', { app_metadata: { provider: 'email' } }, 'STUDENT'],
+    ['unconfirmed email', 'password', { email_confirmed_at: undefined }, 'STUDENT'],
+    ['email OTP', 'otp', {}, 'STUDENT'],
+    ['Teacher role', 'password', {}, 'TEACHER'],
+  ] as const)('rejects password provisioning with %s', async (_case, method, overrides, role) => {
+    mocks.getUser.mockResolvedValue({
+      data: { user: { ...provisionedStudent, ...overrides } },
+      error: null,
+    });
+    await expect(
+      new IdentityService().registerProfile(session(method), { role }),
     ).rejects.toBeInstanceOf(ForbiddenException);
   });
 

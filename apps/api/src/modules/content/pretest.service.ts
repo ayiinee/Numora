@@ -102,7 +102,7 @@ export class PretestService {
           .where(eq(assessmentBlueprintVersions.id, p.blueprintVersionId))
       : [];
     const definition = blueprint?.definition as { chapterId?: string } | undefined;
-    const publicationBlockers = [...reviewBlockers, 'PRETEST_STUDENT_CONSUMER_REQUIRED'];
+    const publicationBlockers = [...reviewBlockers, 'SHARED_PACKAGE_PUBLISHER_REQUIRED'];
     if (!p.manifestDigest) publicationBlockers.push('PRETEST_REVIEW_REQUIRED');
     if (!blueprint || !this.supportedBlueprint(blueprint) || definition?.chapterId !== p.chapterId)
       publicationBlockers.push('APPROVED_PRETEST_BLUEPRINT_REQUIRED');
@@ -307,7 +307,8 @@ export class PretestService {
     const detail = await this.get(id);
     throw new ConflictException({
       code: 'PRETEST_PUBLICATION_BLOCKED',
-      detail: 'Consumer Student belum tersedia; blueprint final harus disahkan sebelum aktivasi.',
+      detail:
+        'Paket Authoring lama tidak dipublikasikan di sini. Siapkan versi baru melalui unggah dan review pada Paket Pretest; versi yang sudah direview tetap terkunci.',
       blockers: detail.publicationBlockers,
     });
   }

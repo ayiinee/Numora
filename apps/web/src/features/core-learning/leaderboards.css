@@ -1,4 +1,8 @@
 /* Compact PvP contents; keep controls at least 44px and other scopes unchanged. */
+.pvp-ranking-shell--compact .pvp-ranking-tabs button[aria-pressed='true'] {
+  background: var(--pvp-arena-accent);
+}
+
 .pvp-ranking-shell--compact .pvp-ranking-content,
 .pvp-ranking-shell--compact .pvp-ranking-layout,
 .pvp-ranking-shell--compact .pvp-ranking-main,
@@ -6,31 +10,8 @@
   gap: 12px;
 }
 
-.pvp-ranking-shell--compact .pvp-ranking-content > label {
-  font-size: 12px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-content > label select {
-  min-height: 44px;
-  font-size: 12px;
-}
-
 .pvp-ranking-shell--compact .pvp-ranking-tabs {
   padding: 4px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-hero {
-  padding: 12px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-hero h2 {
-  font-size: 18px;
-  margin-top: 8px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-hero__rule {
-  padding: 8px;
-  margin-top: 8px;
 }
 
 .pvp-ranking-shell--compact :is(.pvp-ranking-podium, .pvp-own-rank, .pvp-ranking-period) {
@@ -50,73 +31,8 @@
   height: 18px;
 }
 
-.pvp-ranking-shell--compact .leaderboard-podium {
-  max-width: 480px;
-  margin: 12px auto 0;
-}
-
-.pvp-ranking-shell--compact
-  .pvp-ranking-podium
-  .leaderboard-podium__place:not(.leaderboard-podium__place--1)
-  .numora-avatar {
-  width: 44px !important;
-  height: 44px !important;
-  font-size: 18px !important;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-podium .leaderboard-podium__place--1 .numora-avatar {
-  width: 56px !important;
-  height: 56px !important;
-  font-size: 22px !important;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__rank {
-  width: 22px;
-  height: 22px;
-  font-size: 10px;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__place > strong {
-  font-size: 12px;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__pedestal {
-  height: 48px;
-  padding: 6px 4px;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__place--1 .leaderboard-podium__pedestal {
-  height: 64px;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__record {
-  font-size: 16px;
-}
-
-.pvp-ranking-shell--compact .leaderboard-podium__vacant {
-  min-height: 100px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-list ol {
-  gap: 6px;
-  margin-top: 8px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-list li {
-  gap: 8px;
-  padding: 10px 12px;
-  font-size: 12px;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-list .numora-avatar {
-  width: 32px !important;
-  height: 32px !important;
-  font-size: 13px !important;
-}
-
-.pvp-ranking-shell--compact .pvp-ranking-list li > div:not(.numora-avatar),
 .pvp-ranking-shell--compact .pvp-own-rank__summary > div {
-  font-size: 12px;
+  font-size: 14px;
 }
 
 .pvp-ranking-shell--compact :is(.pvp-rank-points, .pvp-rank-number) {
@@ -130,7 +46,65 @@
 }
 
 .pvp-ranking-shell--compact .pvp-own-rank > p {
+  font-size: 13px;
+}
+
+.pvp-ranking-filters {
+  display: grid;
+  gap: inherit;
+}
+
+.pvp-ranking-filters > label {
+  display: grid;
+  gap: 6px;
+  min-width: 0;
+  font-size: 13px;
+  font-weight: var(--font-semibold);
+}
+
+.pvp-ranking-filters > label select {
+  display: block;
+  width: 100%;
+  min-width: 0;
+  min-height: 44px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+  color: var(--color-text);
+  font-size: 14px;
+}
+
+.pvp-ranking-shell .pvp-ranking-scope {
+  flex-wrap: wrap;
+  gap: 6px;
+}
+
+.pvp-ranking-shell .pvp-ranking-tabs button {
+  font-size: 14px;
+}
+
+.pvp-ranking-shell .pvp-ranking-section-heading {
+  flex-wrap: wrap;
+  align-items: center;
+}
+
+.pvp-ranking-shell .pvp-ranking-section-heading > span {
+  max-width: none;
   font-size: 12px;
+}
+
+.pvp-ranking-shell .pvp-ranking-period p {
+  font-size: 13px;
+  line-height: 1.6;
+}
+
+.pvp-ranking-shell .pvp-own-rank > h2 {
+  font-size: 14px;
+}
+
+.pvp-ranking-shell .pvp-rank-points small {
+  font-size: 11px;
 }
 
 .pvp-ranking-shell--compact .numora-empty-state {
@@ -140,7 +114,24 @@
   padding: 24px 12px !important;
 }
 
+.pvp-ranking-shell .pvp-ranking-context {
+  order: 0;
+}
+
 @media (min-width: 960px) {
+  .pvp-ranking-filters {
+    display: flex;
+    align-items: flex-end;
+  }
+
+  .pvp-ranking-filters > .pvp-ranking-scope {
+    margin-inline-end: auto;
+  }
+
+  .pvp-ranking-filters > label {
+    flex: 0 1 12rem;
+  }
+
   .pvp-ranking-shell--compact .pvp-ranking-layout {
     gap: 16px;
   }

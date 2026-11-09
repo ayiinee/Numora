@@ -3,6 +3,10 @@
 
 export type IdentityProfileDto = { "adminRole"?: "SUPER_ADMIN" | "OPERATIONS" | "CONTENT_DATA_MODERATION" | null; "capabilities"?: ("ADMIN_ACCOUNTS_MANAGE" | "OPERATIONS_MANAGE" | "OPERATIONS_LIMITED_READ" | "CONTENT_MANAGE" | "ANALYTICS_OPERATIONS" | "ANALYTICS_CONTENT" | "AUDIT_READ")[]; "id": string; "role": "STUDENT" | "TEACHER" | "ADMIN"; "profilePhotoObjectKey"?: string | null; "status": "ACTIVE" | "DISABLED"; "displayName": string; "email": string; "teacherVerified": boolean | null; "studentAffiliation": "MANDIRI" | "SCHOOL" | null; };
 
+export type UpdateProfileDto = { "displayName": string; };
+
+export type ProfilePhotoDto = { "url": string | null; "expiresAt": string | null; };
+
 export type RegisterProfileDto = { "role": "STUDENT" | "TEACHER"; };
 
 export type SchoolDto = { "id": string; "name": string; };
@@ -22,6 +26,12 @@ export type CreateClassDto = { "schoolId"?: string; "name": string; };
 export type JoinClassDto = { "joinCode": string; };
 
 export type JoinedClassDto = { "class": ClassSummaryDto; "joined": boolean; };
+
+export type LeftClassDto = { "left": boolean; };
+
+export type LeftSchoolDto = { "left": boolean; };
+
+export type ClassBanDto = { "banned": boolean; };
 
 export type StudentSummaryDto = { "id": string; "displayName": string; };
 
@@ -55,7 +65,7 @@ export type RevokedDto = { "revoked": boolean; };
 
 export type CreateFeedbackDto = { "clientRequestId": string; "body": string; };
 
-export type FeedbackDto = { "id": string; "classId": string; "studentId": string; "teacherName": string; "body": string; "sentAt": string; "readAt": string | null; };
+export type FeedbackDto = { "id": string; "classId": string; "studentId": string; "teacherName": string; "teacherId"?: string; "body": string; "sentAt": string; "readAt": string | null; };
 
 export type FeedbackListDto = { "items": (FeedbackDto)[]; "nextOffset": number | null; };
 

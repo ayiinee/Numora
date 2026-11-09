@@ -1,0 +1,234 @@
+[1] RANCANGAN PERUBAHAN
+[2] Arsitektur AI & IRTNumora
+[3] Integrasi skala Level–Indikator–Bab, distribusi A/B sejak awal, Tryout beta multi-paket, serta self-adjusting question generator.
+[4] DOKUMEN DESAIN BARU  •  DRAFT UNTUK REVISI PRD & DIVISI AI
+[5] Versi 2.0 (rancangan perubahan)   |   31 Oktober 2026
+[6] Basis: PRD Numora v0.6 (3 Okt 2026) dan Rancangan Divisi AI v1.2 (2 Okt 2026).
+[TABLE 7]
+INTI RANCANGAN / Curriculum menetapkan target kesulitan dan memvalidasi konten. Original serta varian aktif sejak distribusi pertama. IRT mengevaluasi mutu dan kesetaraan empiris; konfigurasi generator yang PASS dibekukan, sedangkan yang terbukti DRIFT disesuaikan secara terkontrol.
+[9] Keputusan utama
+[TABLE 10]
+Area | Rancangan yang disepakati
+Struktur konten | Bab → Indikator → Level → Soal.
+IRT bertingkat | Skala Level untuk item; Indikator untuk urutan kesulitan level; Bab untuk kemampuan dan tren siswa.
+Drill | Satu paket original dan satu paket varian aktif per level, distribusi acak A/B.
+Tryout beta | Dua batch mingguan; satu original dan beberapa varian berkonfigurasi berbeda per batch; tanpa ranking.
+Evidence | Hanya respons percobaan pertama yang eligible, dengan kontrol paparan lintas modul.
+Self-adjusting | PASS → freeze config; DRIFT → adjust/regenerate; versi lama dinonaktifkan, tidak dihapus.
+[12] Status: dokumen ini mencatat keputusan produk/arsitektur hasil diskusi serta syarat validasi statistik. Parameter numerik dan mekanisme linking yang belum disahkan ditandai secara eksplisit; tidak dianggap sudah final.
+[14] 1. Tujuan dan ruang lingkup
+[15] Dokumen ini merupakan usulan pengganti kebijakan Divisi AI v1.2 dan perubahan terkait pada PRD v0.6, bukan perubahan otomatis terhadap kedua file asal. Cakupannya adalah bank soal original/varian, distribusi, kalibrasi IRT, penilaian dan progres, dashboard analitik, pengendalian versi, serta operasi admin Tryout beta.
+[16] 1.1 Pembagian tanggung jawab
+[TABLE 17]
+Pihak | Tanggung jawab
+Curriculum / Research | Menetapkan blueprint Bab–Indikator–Level, target kesulitan, kompetensi, rubrik, kunci, pembahasan, dan validasi akademik original serta varian sebelum disajikan.
+Data / AI | Merancang generator, eksperimen, eligibility evidence, kalibrasi IRT, evaluasi psikometrik, quality gate, monitoring, dan aturan penyesuaian konfigurasi.
+Product / Admin | Menentukan paket/batch aktif, kebijakan nilai dan ketuntasan, penanganan insiden penilaian, serta keputusan penerimaan perubahan scope.
+Software / QA | Menerapkan randomisasi, versioning, pipeline, akses admin, audit log, konsistensi snapshot, dan pengujian end-to-end.
+[19] 1.2 Terminologi yang harus dibedakan
+[20] Scale ID adalah identitas konteks pengukuran; tiga tingkat skala tidak berarti parameter a, b, atau theta ketiganya saling dapat dibandingkan langsung.
+[21] Kesulitan Curriculum adalah target akademik pra-distribusi; difficulty IRT adalah estimasi empiris hasil respons siswa.
+[22] Item PASS adalah klaim kesetaraan satu varian pada eksperimen tertentu; konfigurasi generator layak reuse memerlukan bukti stabilitas dari beberapa keluaran/kasus.
+[23] Pilot original terpisah dihapus; pemeriksaan kualitas konten dan psikometrik tidak dihapus.
+[24] 2. Matriks perubahan terhadap dokumen lama
+[TABLE 25]
+Bidang | AI v1.2 / PRD v0.6 | Rancangan baru
+Hierarki | Bab–Subbab–Level; indikator ada pada blueprint Curriculum. | Bab–Indikator–Level–Soal sebagai hierarchy inti yang dipakai pipeline.
+IRT Drill | Satu skala lokal per Bab–Subbab–Level. | Tiga konteks: Level, Indikator, Bab; skala terpisah dengan kalibrasi dan QA masing-masing.
+Cold start | Pilot original → bekukan baseline/anchor → A/B varian. | Original dan varian yang valid konten langsung dipakai dalam A/B sejak awal; kalibrasi bersama.
+Drill varian | Satu paket/varian level pada MVP; multi-varian pasca-MVP. | Satu paket varian aktif per level, dapat diganti versi baru melalui self-adjusting.
+Tryout paket | Satu paket yang sama bagi seluruh peserta tiap batch. | Satu original + beberapa varian per batch, multi-arm; admin memilih paket aktif.
+Tryout hasil | IRT/fallback, ranking batch, nilai dan pembahasan. | Nilai dan pembahasan; tidak menampilkan ranking. Klaim skor antarpaket dibatasi.
+Generator | Auto-adjust untuk DRIFT bila gate layak. | PASS → konfigurasi item dibekukan; DRIFT saja → konfigurasi item diperbaiki. Evaluasi konfigurasi agregat untuk reuse.
+Kemampuan siswa | Theta internal Drill per level; tak ada theta bab. | IRT bab longitudinal untuk estimasi kemampuan dan tren per bab.
+[TABLE 27]
+PERUBAHAN SCOPE PRODUK / Distribusi Tryout multi-paket tanpa ranking dan penggunaan original–varian sejak awal mengubah aturan PRD v0.6. Dokumen PRD, layar hasil, dan acceptance criteria harus diperbarui bersamaan.
+[29] 3. Model pengukuran: tiga skala independen
+[TABLE 30]
+Model | Identitas skala | Tujuan dan keluaran
+IRT Level | L:{chapter_id}:{indicator_id}:{level_id} | Evaluasi original, anchor, varian dalam level; parameter item; PASS/DRIFT.
+IRT Indikator | I:{chapter_id}:{indicator_id} | Satu skala indikator dari respons terhubung lintas level; ringkasan kesulitan dan anomali urutan L1–L5.
+IRT Bab | C:{chapter_id} | Skala bab yang terhubung lintas indikator dan periode; theta bab, SE/interval, dan tren siswa.
+[32] Tiga model dapat memakai snapshot respons yang relevan dari ekosistem sama, tetapi diestimasi secara terpisah. Tidak ada averaging theta level → theta indikator → theta bab. Parameter item disimpan per item_version × model_context × calibration_version.
+[33] 3.1 Model dan scoring dasar
+[34] Pilihan ganda tunggal (PG): 2PL untuk difficulty b dan discrimination a.
+[35] PGK multi-select / kategori dengan skor parsial: GPCM, memeriksa discrimination, step parameters, dan expected normalized score curve; satu soal tetap satu unit psikometrik.
+[36] Rubrik dan komposisi kategori skor harus dibekukan per versi. Perubahan kunci, konten, rubrik, atau stimulus menghasilkan versi baru.
+[37] IRT adalah evaluator empiris. Label Level 1–5 dan target difficulty ditetapkan Curriculum; hasil IRT tidak otomatis menimpa struktur kurikulum.
+[38] 4. Kebijakan evidence, distribusi, dan sampling
+[39] 4.1 Eligible response: first attempt
+[40] Untuk Drill, unit utama adalah attempt pertama yang valid dari siswa pada level terkait; untuk Tryout, attempt pertama yang valid dari siswa pada batch terkait. Respons retry tidak dihitung sebagai responden independen atau evidence kalibrasi baru. Penyajian item yang pernah dilihat sebelumnya—termasuk dari Pretest, Drill, PvP, Tryout, atau pembahasan—diperiksa menggunakan exposure ledger.
+[41] Simpan response_item_version, family_id, package_version, assignment_arm, submitted_at, item_score, max_score, exposure_state, attempt_index, eligibility_reason, dan scoring_policy_version.
+[42] Jika peserta sudah melihat keluarga focal atau anchor sebelumnya, evidence harus ditandai dan dievaluasi sesuai kebijakan exclusion; bukan dianggap bersih hanya karena attempt Drill pertama.
+[43] Paket/versi tidak berubah setelah sesi dimulai; submit berulang harus idempotent. Snapshot historis tidak diubah oleh regenerate, nonaktif, atau recalibration.
+[44] 4.2 Sampling-Aware Quality Gate
+[TABLE 45]
+Pre-calibration | Post-calibration
+Cohort/window yang sebanding; reach rate per level; jumlah siswa dan eligible per item/arm; keseimbangan randomisasi; distribusi nilai; riwayat exposure; distribusi profil/kemampuan awal; graf respons lintas level. | Convergence, model fit, ketidakpastian parameter, informasi di theta sasaran, DIF/invariance anchor, local dependence, unidimensionalitas atau model multidimensi yang sesuai; stabilitas antarwaktu.
+[TABLE 47]
+INTERPRETASI 2% DAN 70% / Jika 2% siswa mencapai Level 5, risiko seleksi dan keterbatasan cakupan perlu ditandai. Jika 70% mencapainya, cakupan relatif lebih luas. Keduanya bukan threshold validitas otomatis: cek jumlah eligible, rentang kemampuan, linking, model fit, serta perubahan kemampuan selama belajar.
+[49] 4.3 Kualitas data dan status
+[50] Jumlah X respons merupakan checkpoint operasional, bukan bukti kecukupan IRT. Bila precision, coverage, anchor, atau identifikasi skala belum layak, sistem menahan keputusan dan meminta tambahan evidence atau peninjauan desain. Tidak ada parameter produksi yang dibuat-buat untuk menggantikan kalibrasi empiris.
+[51] 5. Drill & Practice: A/B dan siklus self-adjusting
+[52] 5.1 Distribusi dari hari pertama
+[53] Pada setiap Bab–Indikator–Level tersedia satu paket original aktif dan satu paket varian aktif. Siswa diacak ke arm A (original) atau B (varian); assignment tersimpan dan tidak berubah pada refresh/resume. Satu peserta tidak mengerjakan original dan varian dari keluarga sama dalam eksperimen yang sama.
+[54] Contoh paket 10 soal (jumlah anchor hanya ilustrasi, bukan kebijakan final):
+[TABLE 55]
+Posisi | Arm A: Original | Arm B: Variant
+1–7 | R1–R7 (anchor bersama) | R1–R7 (anchor bersama)
+8 | O1 | V1 (dari O1)
+9 | O2 | V2 (dari O2)
+10 | O3 | V3 (dari O3)
+[57] Anchor berasal dari keluarga berbeda dari item focal yang sedang dievaluasi dan menggunakan versi identik antararm. Distribusi 1:1 adalah sasaran awal; alokasi perlu dijaga agar jumlah eligible per arm dan per item memadai. Tidak ada fase pilot original tersendiri. Semua kandidat harus lolos Curriculum dan validasi statis sebelum distribusi.
+[58] 5.2 Kalibrasi, keputusan, dan tindakan
+[59] 1.  Setelah checkpoint X eligible per versi/arm terpenuhi, lakukan concurrent calibration pada level tersebut; periksa original quality, anchor quality, dan variant equivalence dari data episode yang sama.
+[60] 2.  Uji selisih/rasio a, selisih b, kurva respons, SE/interval, fit, serta kualitas opsi/partial scoring; quality gate disahkan Data/AI bersama Curriculum.
+[61] 3.  PASS → bekukan generator_config_version khusus item/family dan pertahankan varian aktif. DRIFT → adjust parameter yang diizinkan, gunakan seed/versi baru, validasi, lalu uji kembali pada eligible cohort baru.
+[62] 4.  INSUFFICIENT → tambah evidence; NOT_COMPARABLE → evaluasi skala/anchor; ANOMALY → quarantine dan review manual. Hanya DRIFT yang memicu auto-adjust.
+[63] 5.  Saat varian baru diaktifkan, versi lama menjadi INACTIVE; item, respons, nilai historis, dan decision log tetap tersimpan. Sesi aktif tetap memakai snapshot lama.
+[64] 5.3 Contoh keputusan per soal
+[TABLE 65]
+Keluarga | Hasil | Konsekuensi
+O1 / V1 | PASS; equivalence + uncertainty layak | Bekukan Config-O1-v3; V1 tetap aktif.
+O2 / V2 | DRIFT material dengan anchor stabil | Buat Config-O2-v4; regenerate V2.2, validasi konten, nonaktif V2 pada pergantian versi dan kumpulkan evidence baru.
+O3 / V3 | INSUFFICIENT | Tidak membekukan atau mengubah config; lanjutkan pengumpulan sesuai eligibility.
+[67] Parameter dan bukti versi sebelumnya tidak otomatis diwariskan oleh varian pengganti. Original/anchor yang tidak layak menahan keputusan kesetaraan; generator tidak diarahkan meniru kesalahan original.
+[68] 6. Generator: pembekuan konfigurasi dan reuse
+[69] Self-adjusting bersifat item-scoped. Konfigurasi kandidat yang memenuhi toleransi PASS dibekukan; perubahan parameter hanya diterapkan pada konfigurasi keluarga soal yang terbukti DRIFT. Semua adjustment dibatasi ruang generasi yang telah disahkan Curriculum.
+[TABLE 70]
+Status | Tindakan sistem
+CONTENT_VALID | Boleh menjadi kandidat distribusi sesuai aturan provisional dan kebijakan penilaian; belum memiliki klaim IRT.
+PASS | Bekukan versi konfigurasi, simpan bukti kalibrasi, pertahankan varian aktif.
+DRIFT | Buat config_version dan item_version baru; retest pada data eligible yang belum terpapar.
+INSUFFICIENT | Tidak ada perubahan config; tambah evidence.
+NOT_COMPARABLE / ANOMALY | Tahan otomatisasi; validasi anchor, model, scoring, atau konten.
+[72] 6.1 Stabilitas item tidak sama dengan stabilitas konfigurasi
+[73] PASS atas satu pasangan O–V membuktikan kesetaraan item pada konteks uji terkait. Untuk menggunakan konfigurasi guna menghasilkan varian secara luas, Numora perlu menguji konsistensinya pada beberapa original, seed, tipe item, dan tingkat kesulitan yang tercakup dalam ruang konfigurasi. Simpan status config seperti FROZEN_ITEM / VALIDATED_FOR_REUSE secara terpisah dari status item PASS.
+[TABLE 74]
+PRINSIP MASS GENERATION / Konfigurasi tervalidasi dapat dipakai menghasilkan banyak varian, tetapi setiap output baru tetap menjalani validasi konten, pemeriksaan deterministik, versioning, dan aturan readiness. Tidak ada asumsi semua output otomatis PASS secara psikometrik.
+[76] 7. Tryout beta: dua batch dan eksperimen konfigurasi
+[77] 7.1 Struktur produk
+[78] Tryout beta berlangsung dua batch berurutan, masing-masing satu minggu. Tersedia dua paket original: Paket Original 1 untuk Batch 1 dan Paket Original 2 untuk Batch 2. Setiap batch menampilkan satu paket original bersama beberapa paket varian yang berasal dari paket original tersebut dan menggunakan konfigurasi generator yang berbeda.
+[TABLE 79]
+Komponen | Batch 1 | Batch 2
+Durasi | 1 minggu | 1 minggu
+Original | Original Package 1 | Original Package 2
+Varian | Beberapa paket dari Original 1, konfigurasi berbeda | Beberapa paket dari Original 2, konfigurasi berbeda
+Anchor | Admin memilih target 4–5 butir bersama | Admin memilih target 4–5 butir bersama
+Distribusi | Multi-arm per paket, alokasi terkendali | Multi-arm per paket, alokasi terkendali
+Output | Nilai siswa; evaluasi item dan konfigurasi | Nilai siswa; evaluasi item dan konfigurasi
+[81] Mengikuti PRD v0.6, jumlah soal per Tryout adalah 30 kecuali Product menyetujui perubahan. Empat hingga lima anchor hanya merupakan target awal pilihan admin; sistem harus menguji kecukupan anchor, rentang kesulitan, dan kestabilannya sebelum kesetaraan paket diklaim.
+[82] 7.2 Hak admin dan lifecycle paket
+[83] Original package: CREATE, READ, DEACTIVATE. Penonaktifan melarang assignment baru, tetapi paket historis tidak dihapus.
+[84] Variant package: CREATE dari original yang ada; pilih dan simpan generator_config_version, source_package_version, seed/config snapshot, dan lineage seluruh item.
+[85] Batch management: memilih original dan varian yang ditampilkan, menentukan tanggal/window, anchor 4–5 kandidat, serta mengunci daftar versi sebelum batch aktif.
+[86] Siswa: mendapat satu paket dari pilihan batch melalui alokasi terkendali; hasil hanya nilai dan pembahasan, tanpa ranking/leaderboard Tryout.
+[87] 7.3 Evaluasi konfigurasi Tryout
+[88] 1.  Kalibrasi original, varian, dan common anchors dalam satu batch pada skala yang terhubung; gunakan 2PL/GPCM sesuai bentuk item, periksa semua gate.
+[89] 2.  Bandingkan pasangan original–varian per item dalam batch yang sama; hitung ringkasan per konfigurasi: proporsi item setara, sebaran selisih parameter, perilaku kurva, ketidakpastian, dan failure mode.
+[90] 3.  Catat konfigurasi yang paling konsisten dengan target dan original, tetapi jangan mengandalkan rata-rata selisih b yang bisa saling meniadakan antaritem.
+[91] 4.  Batch 2 menguji original/varian lain; bila konfigurasi yang sama digunakan, hasilnya dapat menjadi bukti tambahan untuk generalisasi konfigurasi, bukan bukti bahwa parameter a/b antarbatch bisa dibandingkan tanpa linking.
+[92] 7.4 Penilaian siswa tanpa ranking
+[93] Produk hanya menampilkan nilai akhir dan pembahasan. Score mode (IRT atau fallback rubrik), score_mapping_version, dan package_version harus dicatat. Tidak adanya ranking menghapus kebutuhan pemeringkatan gabungan, tetapi tidak otomatis menjadikan nilai dari paket berbeda sebanding. Antarmuka tidak boleh mengklaim equating antarpaket/antarbatch kecuali divalidasi.
+[94] Hasil dan pembahasan mengikuti ketentuan publikasi final PRD (target paling lambat 3×24 jam setelah batch ditutup, bila ketentuan tersebut tetap disahkan Product). Jika kalibrasi gagal, nilai fallback per aturan rubrik tetap dapat dipublikasikan dan diberi label; nilai final historis tidak berubah diam-diam.
+[95] 8. IRT Indikator: evaluasi kesulitan lintas level
+[96] 8.1 Tujuan dan data
+[97] IRT Indikator membangun satu model pengukuran untuk seluruh soal relevan dari Level 1–5 pada indikator yang sama. Keluaran utamanya adalah perbandingan tingkat kesulitan empiris antarlevel dan flag apabila urutan/komposisi kesulitan tidak sesuai blueprint Curriculum. Skala ini bukan rata-rata lima skala IRT Level.
+[98] 8.2 Mengelola selection bias
+[99] Karena siswa harus lulus untuk mencapai level selanjutnya, data level tinggi berasal dari peserta yang terseleksi. Selain itu kemampuan siswa dapat meningkat selama belajar. Sampling-aware calibration mempertimbangkan profil awal dan distribusi penyelesaian sebelum membuat klaim perbandingan level.
+[TABLE 100]
+Masalah | Kontrol analitik yang diusulkan
+Level 5 hanya dijangkau 2% populasi awal | Pantau cohort reach rate, jumlah eligible, distribusi profil awal, rentang kemampuan dan precision; tunda keputusan jika tidak informatif.
+Kelompok peserta Level 1 vs Level 5 berbeda | Sertakan indikator baseline yang relevan; pertimbangkan model seleksi/propensity atau model kalibrasi yang sesuai, bukan persentase benar mentah.
+Siswa belajar sepanjang Level 1–5 | Catat timestamp dan episode; evaluasi model dengan kemampuan berubah atau data penghubung pada window yang sebanding.
+Skala tiap level awalnya terpisah | Bangun keterhubungan item/respons lintas level yang teridentifikasi (common-person terkontrol, desain linking, atau bridge evidence bila diperlukan).
+[102] 8.3 Gate dan deteksi anomali
+[103] Setelah identifikasi dan fit layak, hitung ringkasan kesulitan item pada skala indikator per level (mis. median b, sebaran, dan rentang kurva/expected scores; ringkasan spesifik GPCM tidak disamakan dengan b tunggal 2PL). Bandingkan interval dan target Curriculum. Level 2 yang tampak lebih sulit dari Level 3 menjadi flag REVIEW, bukan otomatis kesalahan.
+[TABLE 104]
+BATAS KLAIM / Distribusi pengerjaan dan profil siswa mengurangi risiko interpretasi salah, tetapi tidak menggantikan kebutuhan linking antarlevel. Jika model atau data tidak mendukung satu skala indikator, jangan keluarkan label urutan kesulitan yang definitif.
+[106] 9. IRT Bab: kemampuan dan tren longitudinal
+[107] IRT Bab mengestimasi kemampuan siswa pada cakupan bab dari respons item lintas indikator dalam satu model yang tervalidasi. Satu skala bab dibangun dan dipertahankan/ditautkan antarperiode agar perubahan theta siswa bermakna.
+[108] 9.1 Hasil produk
+[TABLE 109]
+Waktu | Estimasi (contoh) | Perlu ditampilkan
+Periode 1 | θ bab = -0,80 | Nilai estimasi, SE/interval, coverage, label model.
+Periode 2 | θ bab = +0,10 | Perubahan relatif pada skala yang sama, ketidakpastian.
+Periode 3 | θ bab = +0,75 | Tren dengan catatan keterbandingan dan cakupan materi.
+[111] Contoh di atas bukan angka dari siswa nyata. Jika bab mencakup konstruk yang tidak unidimensional, evaluasi multidimensional IRT atau model kemampuan lain yang layak. Pengukuran longitudinal harus memisahkan perubahan kemampuan individu dari pergeseran populasi, paparan item, dan perbedaan cakupan indikator.
+[112] 9.2 Kebijakan kelayakan tren
+[113] Gunakan parameter item yang ditempatkan pada skala bab yang kompatibel antarperiode; pemeriksaan invariance dan linking wajib sebelum menafsirkan Δθ.
+[114] Profil awal dan periode aktivitas siswa dapat membantu desain analisis; data retry bukan evidence baru, dan item yang sudah terpapar tidak otomatis dianggap fresh.
+[115] Jika informasi respons pada suatu periode terlalu sedikit atau tidak terhubung, tampilkan “estimasi belum memadai” alih-alih garis tren yang presisi semu.
+[116] Hasil bab untuk siswa tidak otomatis dipakai sebagai prior personal Tryout; penggunaan lintas ekosistem memerlukan keputusan dan linking tersendiri.
+[117] 10. Arsitektur data, status, dan audit
+[118] 10.1 Entitas minimal yang diusulkan
+[TABLE 119]
+Entitas | Field/kunci penting
+question / question_version | question_id, family_id, item_version, indicator_id, level_id, content_status, key/rubric_version
+generator_config | config_id, config_version, scope, bounds, seed, status FROZEN/ACTIVE/RETIRED, validation_evidence
+package / package_version | package_id, type ORIGINAL/VARIANT, source_package_version, item_snapshot, active_status
+experiment / assignment | experiment_id, ecosystem, arm_id, scale_scope, package_version, cohort_window, randomization_stratum
+response / exposure | student_key, attempt_index, first_exposure flags, score, timestamp, eligibility_reason
+calibration / item_estimate | calibration_id, model_context, scale_id, model_version, item_version, a/b/steps, SE, fit, status
+comparison_decision | original_version, variant_version, anchor_set_version, tolerance_version, PASS/DRIFT/..., rationale
+tryout_batch | batch_id, week_window, original_package_id, assigned_variant_packages, anchor_selection, release_status
+chapter_ability_snapshot | chapter_id, student_key, period, theta, SE, linked_scale_version, coverage, trend_eligibility
+audit_event | actor/system, action, object_version, time, before/after, reason
+[121] Implementasi nama tabel/kolom dapat disesuaikan Software. Prinsip kontraknya: hasil tidak boleh dicari berdasarkan question_id saja; gunakan versi item, rubrik, ekosistem, konteks skala, dan calibration_version.
+[122] 10.2 Status dan ketahanan historis
+[123] Pisahkan status konten (DRAFT/CONTENT_VALID/REVIEW), pengukuran (UNCALIBRATED/CALIBRATED/INSUFFICIENT/ANOMALY), perbandingan (PENDING/PASS/DRIFT/NOT_COMPARABLE), dan distribusi (PROVISIONAL/READY/HOLD/INACTIVE). Menonaktifkan varian atau paket tidak menghapus data maupun mengubah nilai historis. Pergantian paket di tengah sesi dilarang.
+[124] 11. Penilaian, fallback, dan batas interpretasi
+[125] 11.1 Drill
+[126] Ketuntasan ≥80%, XP, dan bintang tetap mengikuti kebijakan produk/rubrik yang berlaku sampai PRD diselaraskan. Validasi Curriculum memungkinkan distribusi awal, tetapi seluruh varian baru berstatus provisional secara psikometrik. Jika kemudian terbukti DRIFT material, kebijakan Product harus menetapkan cara menangani fairness pada attempt historis dan unlock, tanpa perubahan diam-diam.
+[127] 11.2 Tryout
+[128] Hanya nilai dan pembahasan yang disajikan; tanpa ranking. Bila IRT pada paket/kelompok belum layak, gunakan fallback rubrik yang disahkan dengan label eksplisit. Jangan menyatakan nilai original dan varian ekuivalen hanya karena rentang tampilan sama-sama 0–100.
+[129] 11.3 Gate universal dan failure handling
+[TABLE 130]
+Kondisi | Perilaku minimum
+Respons kurang / coverage sempit | Status INSUFFICIENT; lanjutkan pengumpulan dan jangan adjust.
+Anchor tidak stabil / skala tak terhubung | Status NOT_COMPARABLE; tahan klaim gap original–varian serta urutan antarlevel.
+Konten/kunci bermasalah | Quarantine; review Curriculum; versi baru bila diperbaiki.
+Variasi statistik semata | Tidak mengubah konfigurasi; keputusan DRIFT harus melewati toleransi dan uncertainty gate.
+IRT Bab belum comparable antarwaktu | Tampilkan keterbatasan; jangan memplot Δθ sebagai tren definitif.
+[132] 12. Tahapan implementasi dan kriteria penerimaan
+[133] 12.1 Urutan implementasi yang disarankan
+[134] 1.  Selaraskan PRD: hierarchy indikator, distribusi A/B Drill, Tryout multi-paket tanpa ranking, kebijakan nilai/fairness, dan hak admin.
+[135] 2.  Bangun kontrak item/package/config versioning dan exposure ledger; uji first eligible attempt, idempotent submit, snapshot, serta deactivation.
+[136] 3.  Implementasikan Drill randomized A/B, concurrent IRT Level, quality gate, decision engine, dan self-adjusting per item.
+[137] 4.  Implementasikan Tryout beta dua batch, pilihan paket admin, multi-arm, evaluasi within-batch dan laporan konfigurasi.
+[138] 5.  Rancang dan validasi model IRT Indikator dengan studi reach/coverage dan linking lintas level sebelum mengaktifkan flag difficulty produksi.
+[139] 6.  Validasi IRT Bab dan linking longitudinal sebelum menampilkan grafik kemampuan lintas periode kepada siswa/guru.
+[140] 12.2 Acceptance criteria inti
+[TABLE 141]
+Komponen | Kriteria dapat diuji
+Drill A/B | Siswa pada first eligible attempt menerima tepat satu arm per level; anchor bersama identik; assignment tidak berubah saat refresh.
+Kalibrasi awal | Original dan varian dapat dievaluasi pada satu episode tanpa pilot original, dengan quality gates terpisah dari data yang sama.
+Decision & generator | PASS membekukan config item; DRIFT saja memicu adjust; status lainnya tidak mengubah config; lineage dan inactive version dapat diaudit.
+Tryout admin | Admin dapat create/read/deactivate original; membuat varian; memilih anchor dan paket aktif untuk masing-masing dari dua batch beta.
+Tryout hasil | Siswa melihat nilai dan pembahasan tanpa ranking; status IRT/fallback dan versi paket tercatat.
+Indikator | Perbandingan kesulitan L1–L5 hanya aktif pada data dengan reach, linking, precision, dan model fit yang lolos.
+Bab | Tren individual hanya aktif bila theta antarperiode pada skala yang kompatibel dan precision memadai.
+Integritas | Retry tidak masuk kalibrasi utama, prior exposure ditangani; hasil historis tak berubah oleh deactivation/recalibration.
+[143] 13. Keputusan terbuka yang memerlukan pengesahan
+[TABLE 144]
+Parameter / kebijakan | Status dan penanggung jawab
+Checkpoint X respons dan minimum per item/arm | BELUM FINAL — Data/AI menentukan berdasarkan simulation-based precision dan karakteristik 2PL/GPCM.
+Toleransi PASS/DRIFT serta kurva | BELUM FINAL — Data/AI + Curriculum; versi tolerance policy, effect size, uncertainty.
+Desain anchor Drill; kecukupan 4–5 anchor Tryout | BELUM FINAL — Data/AI + Curriculum; uji cakupan kesulitan, DIF, leakage, precision.
+IRT Indikator: linking, estimasi kemampuan berubah, coverage gate | BELUM FINAL — Data/AI; profil/selection tidak cukup tanpa model/penghubung valid.
+IRT Bab: model dimensi, window, linked reference scale | BELUM FINAL — Data/AI + Product; tentukan interval pelaporan dan minimum evidence.
+Rubrik/nilai multi-paket Tryout & fallback | BELUM FINAL — Product + Curriculum + Data/AI; hanya nilai ditampilkan, bukan ranking.
+Fairness saat varian produksi kemudian DRIFT | BELUM FINAL — Product + Curriculum; perlakuan nilai, XP, dan unlock yang telah diberikan.
+Konfigurasi reusable dan batas generate massal | BELUM FINAL — Data/AI + Curriculum; uji representativitas beberapa keluarga/seed.
+Dua batch beta dan tata rilis weekly | DISETUJUI secara konsep — Product memfinalkan kalender, deadline hasil, pemilihan paket.
+[TABLE 146]
+CATATAN PENGESAHAN / Tidak ada threshold 2%, 70%, X, selisih a/b, jumlah minimal peserta, atau jumlah anchor yang otomatis menjadi aturan produksi dari dokumen ini. Semuanya membutuhkan policy versi dan pengujian empiris.
+[148] Lampiran A. Skenario operasional ringkas
+[149] A.1 Drill — satu keluarga original/varian
+[150] Curriculum menyetujui O2 serta V2 dan target Level 2. Paket A/B aktif bersamaan dengan anchor bersama. Setelah checkpoint valid, IRT Level menemukan bahwa V2 jauh lebih sulit dari O2 dengan bukti memadai dan anchor stabil. Decision = DRIFT. Hanya Config-O2 diperbarui menjadi versi baru, V2.2 dihasilkan serta lolos validasi. V2 lama menjadi INACTIVE dan tetap ada untuk audit. Peserta yang telah melihat keluarga V2 tidak menjadi responden fresh V2.2. Jika V2.2 PASS, konfigurasi keluarga O2 dibekukan.
+[151] A.2 IRT Indikator — Level 5 dicapai 2%
+[152] Dari cohort matang sebanyak 20.000 siswa, hanya 400 mencapai Level 5. Reach rate 2% menjadi sinyal risiko, bukan pembatalan otomatis. Data/AI mengecek jumlah eligible per arm/item, profil awal, rentang kemampuan, hubungan lintas level, dan perubahan kemampuan antarsesi. Jika skala belum teridentifikasi atau precision belum memadai, status indikator = INSUFFICIENT/NOT_COMPARABLE; tidak ada klaim Level 5 lebih mudah atau lebih sulit daripada Level 4.
+[153] A.3 Tryout — evaluasi beberapa generator
+[154] Batch 1 memuat Original Package 1 dan tiga paket varian berbeda konfigurasi. Admin memilih kandidat 4–5 anchor yang identik pada semua arm. Setelah batch ditutup, Data/AI menilai item-level gap dan ringkasan stabilitas Config A/B/C pada skala batch. Batch 2 memuat Original Package 2 dan beberapa varian lain. Hasil kedua batch dapat mendukung evaluasi reuse konfigurasi tanpa mengklaim bahwa parameter kesulitan Batch 1 sama skalanya dengan Batch 2.
+[155] Lampiran B. Referensi internal dan status
+[156] Acuan yang ditelaah: (1) Product Requirements Document Numora v0.6 Final, 3 Oktober 2026; (2) Rancangan Soal Varian dan Item Response Theory Numora v1.2, 2 Oktober 2026. Dokumen v2.0 ini merangkum keputusan percakapan perancangan hingga 31 Oktober 2026. Ia merupakan spesifikasi perubahan untuk review lintas tim; bukan bukti bahwa model statistik atau threshold produksi telah tervalidasi.

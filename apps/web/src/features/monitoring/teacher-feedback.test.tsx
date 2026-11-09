@@ -5,6 +5,9 @@ import { FeedbackWorkspace } from './teacher-feedback';
 import { getTeacherFeedback, sendTeacherFeedback } from './teacher-feedback-api';
 import type { FeedbackDto } from '@/lib/generated-api-types';
 import { ApiProblem } from '@/lib/api';
+vi.mock('@/features/onboarding/user-avatar', async () => ({
+  UserAvatar: (await import('@tka/ui')).Avatar,
+}));
 
 vi.mock('./teacher-feedback-api', () => ({
   getTeacherFeedback: vi.fn(),

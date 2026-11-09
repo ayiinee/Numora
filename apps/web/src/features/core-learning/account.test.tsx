@@ -5,7 +5,7 @@ import { FeedbackScreen } from './feedback-inbox';
 import { ProfileScreen } from './profile';
 import { FeedbackOverview } from './feedback-overview';
 import { learningApi, request, LearningApiError } from './api';
-import { joinClass } from '@/lib/api';
+import { joinClass, leaveClass } from '@/lib/api';
 import type { FeedbackDto } from '@/lib/generated-api-types';
 
 const auth = vi.hoisted(() => ({
@@ -24,7 +24,11 @@ vi.mock('./api', async (original) => ({
   request: vi.fn(),
   learningApi: { dashboard: vi.fn(), currentTryout: vi.fn() },
 }));
-vi.mock('@/lib/api', async (original) => ({ ...(await original<object>()), joinClass: vi.fn() }));
+vi.mock('@/lib/api', async (original) => ({
+  ...(await original<object>()),
+  joinClass: vi.fn(),
+  leaveClass: vi.fn(),
+}));
 const profile = {
   id: 'student-a',
   role: 'STUDENT',
@@ -227,6 +231,9 @@ describe('Student account and feedback', () => {
   it('retains invalid join input and never changes affiliation before identity refresh', async () => {
     vi.mocked(joinClass).mockRejectedValue(new Error('Kode tidak valid.'));
     mount(<ProfileScreen />);
+    await waitFor(() =>
+      expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).disabled).toBe(false),
+    );
     fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: 'BAD999' } });
     fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
     await screen.findByText('Kode tidak valid.');
@@ -242,5 +249,72 @@ describe('Student account and feedback', () => {
     expect(auth.replace).not.toHaveBeenCalled();
     fireEvent.click(screen.getByRole('button', { name: 'Keluar Akun Google' }));
     await waitFor(() => expect(auth.replace).toHaveBeenCalledWith('/'));
+  });
+  it('shows all memberships, joins another class, and confirms leave without changing historical data', async () => {
+    const baseline = await vi.mocked(learningApi.dashboard)('token-a');
+    const classes = [
+      { id: 'class-a', name: 'IX A', schoolName: 'Sekolah A' },
+      { id: 'class-b', name: 'IX B', schoolName: 'Sekolah B' },
+    ];
+    auth.state = { ...auth.state, profile: { ...profile, studentAffiliation: 'SCHOOL' } };
+    vi.mocked(learningApi.dashboard).mockResolvedValue({
+      ...baseline,
+      affiliation: 'SCHOOL',
+      class: classes[0]!,
+      classes,
+    });
+    vi.mocked(joinClass).mockResolvedValue({
+      class: { id: 'class-c', name: 'IX C' },
+      joined: true,
+    });
+    vi.mocked(leaveClass)
+      .mockRejectedValueOnce(new Error('Koneksi terputus.'))
+      .mockResolvedValue({ left: true });
+    Object.defineProperty(HTMLDialogElement.prototype, 'showModal', {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.open = true;
+      },
+    });
+    Object.defineProperty(HTMLDialogElement.prototype, 'close', {
+      configurable: true,
+      value: function (this: HTMLDialogElement) {
+        this.open = false;
+      },
+    });
+    mount(<ProfileScreen />);
+    await screen.findByText('2/5 kelas aktif');
+    fireEvent.click(screen.getByText('Sekolah & Kelas'));
+    expect(screen.getByRole('button', { name: 'Keluar dari IX B' })).toBeTruthy();
+    fireEvent.change(screen.getByLabelText(/Kode kelas/), { target: { value: 'QA1234' } });
+    fireEvent.click(screen.getByRole('button', { name: 'Gabung kelas' }));
+    await waitFor(() => expect(joinClass).toHaveBeenCalledWith('token-a', 'QA1234'));
+    await waitFor(() => expect(auth.refresh).toHaveBeenCalledTimes(1));
+    fireEvent.click(screen.getByRole('button', { name: 'Keluar dari IX B' }));
+    expect(leaveClass).not.toHaveBeenCalled();
+    fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi keluar kelas' }));
+    await screen.findByText('Koneksi terputus.');
+    expect(auth.refresh).toHaveBeenCalledTimes(1);
+    fireEvent.click(screen.getByRole('button', { name: 'Konfirmasi keluar kelas' }));
+    await waitFor(() => expect(auth.refresh).toHaveBeenCalledTimes(2));
+    expect(leaveClass).toHaveBeenLastCalledWith('token-a', 'class-b');
+  });
+  it('disables additional join at five classes while leaving server membership authoritative', async () => {
+    const baseline = await vi.mocked(learningApi.dashboard)('token-a');
+    const classes = Array.from({ length: 5 }, (_, i) => ({
+      id: `class-${i}`,
+      name: `IX ${i}`,
+      schoolName: 'Sekolah',
+    }));
+    vi.mocked(learningApi.dashboard).mockResolvedValue({
+      ...baseline,
+      classes,
+      class: classes[0]!,
+      affiliation: 'SCHOOL',
+    });
+    mount(<ProfileScreen />);
+    await screen.findByText(/Batas lima kelas aktif tercapai/);
+    expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).disabled).toBe(true);
+    expect(joinClass).not.toHaveBeenCalled();
   });
 });

@@ -1,5 +1,7 @@
 # Generator service v1 — integrasi pusat
 
+**ENGINEERING DECISION — pemilik, 8 November 2026:** [konteks v2](../AI_IRT_V2_CONTEXT.md) menetapkan target A/B reguler sejak awal, PASS freeze item, DRIFT-only adjustment dan review manusia atas setiap output pada tahap awal. HTTP v1/compute v3 dan alur Simpan DRAFT di bawah tetap kontrak implementasi saat ini. SEALED atau CONTENT_VALID dari generator bukan approval Curriculum, PASS psikometrik, atau izin aktivasi otomatis. Dukungan stok/media lokal juga tidak berarti execution v1 melayaninya.
+
 **ENGINEERING DECISION — implementasi handoff 7 Oktober 2026:** alur `/admin/content/generator` memilih ORIGINAL yang sudah mapped dan disetujui, menyiapkan satu kandidat melalui compute v3, menampilkan preview tanpa assessment, lalu mengimpor VARIANT DRAFT hanya setelah klik Simpan draft. Ini tidak memberi status READY, persetujuan akademik, distribusi paket, atau hasil IRT.
 
 Sumber service: commit `3a0f21eb8b59f45f836efc74b2ef985c31bdb188` dan handoff sesudahnya `99e8e7f` di repo `numora-ai-service`. Salinan kontrak/fingerprint berada di `packages/contracts/generator-service-v1`. Cakupan teks PG, MCMA, KATEGORI termasuk kategori custom dan LaTeX; media aktif di luar v1.

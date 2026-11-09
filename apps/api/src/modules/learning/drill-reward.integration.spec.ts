@@ -208,6 +208,23 @@ integration('Drill v0.6 reward and historical pins on PostgreSQL (TEST ONLY)', (
     expect(Date.parse(attempt.serverTime)).toBeGreaterThan(0);
     for (const q of attempt.questions.slice(0, 8))
       await service.saveAnswer('student', attempt.id, q.questionInstanceId, 'A');
+    const active = await service.attempt('student', attempt.id);
+    const sessionId = active.clock!.sessionId!;
+    const paused = await service.updateClock('student', attempt.id, sessionId, 'pause');
+    expect(paused.sessionId).toBeNull();
+    expect(await service.updateClock('student', attempt.id, sessionId, 'pause')).toEqual(paused);
+    expect(await service.attempt('student', attempt.id)).toMatchObject({
+      clock: paused,
+      questions: [],
+    });
+    await expect(service.submit('student', attempt.id)).rejects.toMatchObject({
+      response: { code: 'DRILL_PAUSED' },
+    });
+    const resumed = await service.start('student', level!.id);
+    expect(resumed.id).toBe(attempt.id);
+    expect(resumed.clock?.sessionId).not.toBe(sessionId);
+    expect(resumed.clock?.elapsedMs).toBeGreaterThanOrEqual(paused.elapsedMs);
+    expect(resumed.questions[0]?.selectedOptionId).toBe('A');
     // Simulate a later failure in the very same transaction, after XP insertion.
     const trigger = `test_reward_${suffix.replaceAll('-', '')}`;
     await db.execute(

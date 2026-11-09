@@ -4,7 +4,7 @@
   "private": true,
   "scripts": {
     "build": "node -e \"console.log('contracts: no build required')\"",
-    "typecheck": "node -e \"console.log('contracts: JSON schemas validated at root')\"",
-    "test": "node -e \"console.log('contracts: use pnpm contracts:validate')\""
+    "typecheck": "node irt-calibration-v1/generate-types.mjs --check",
+    "test": "node --test irt-calibration-v1/contract.test.mjs"
   }
 }

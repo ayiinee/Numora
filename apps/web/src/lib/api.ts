@@ -1,5 +1,6 @@
 import type {
   IdentityProfileDto,
+  ProfilePhotoDto,
   ClassSummaryDto,
   StudentSummaryDto,
   ClassesResponseDto,
@@ -13,6 +14,9 @@ import type {
   VerifiedDto,
   CreatedClassDto,
   JoinedClassDto,
+  LeftClassDto,
+  LeftSchoolDto,
+  ClassBanDto,
   AdminSchoolsDto,
   TokenListDto,
   RevokedDto,
@@ -118,6 +122,20 @@ export const getIdentity = async (token: string) => {
     currentAdminRole = profile.role === 'ADMIN' ? profile.adminRole : null;
   return profile;
 };
+export const updateProfileName = (token: string, displayName: string) =>
+  apiRequest<IdentityProfile>('identity/me', token, {
+    method: 'PATCH',
+    body: JSON.stringify({ displayName }),
+  });
+export const uploadProfilePhoto = (token: string, file: File) => {
+  const body = new FormData();
+  body.set('file', file);
+  return apiRequest<IdentityProfile>('identity/me/photo', token, { method: 'POST', body });
+};
+export const deleteProfilePhoto = (token: string) =>
+  apiRequest<IdentityProfile>('identity/me/photo', token, { method: 'DELETE' });
+export const getProfilePhoto = (token: string, userId: string) =>
+  apiRequest<ProfilePhotoDto>(`identity/profile-photos/${encodeURIComponent(userId)}`, token);
 export const registerIdentity = (token: string, role: 'STUDENT' | 'TEACHER') =>
   apiRequest<IdentityProfile>('identity/me', token, {
     method: 'POST',
@@ -139,6 +157,33 @@ export const verifyTeacher = (token: string, schoolId: string, verificationToken
   });
 
 export const getTeacherClasses = (token: string) => apiRequest<ClassesResponse>('classes', token);
+export const getTeacherMemberships = (token: string) =>
+  apiRequest<SchoolListDto>('schools/mine', token);
+export const leaveTeacherSchool = (token: string, schoolId: string) =>
+  apiRequest<LeftSchoolDto>(`schools/${encodeURIComponent(schoolId)}/leave`, token, {
+    method: 'POST',
+  });
+export const takeoverClass = (token: string, joinCode: string) =>
+  apiRequest<CreatedClassDto>('classes/takeover', token, {
+    method: 'POST',
+    body: JSON.stringify({ joinCode }),
+  });
+export const getBannedClassStudents = (token: string, classId: string) =>
+  apiRequest<ClassStudentsResponse>(
+    `classes/${encodeURIComponent(classId)}/banned-students`,
+    token,
+  );
+export const setClassStudentBan = (
+  token: string,
+  classId: string,
+  studentId: string,
+  banned: boolean,
+) =>
+  apiRequest<ClassBanDto>(
+    `classes/${encodeURIComponent(classId)}/students/${encodeURIComponent(studentId)}/${banned ? 'ban' : 'unban'}`,
+    token,
+    { method: 'POST' },
+  );
 export const createTeacherClass = (token: string, name: string) =>
   apiRequest<CreatedClassDto>('classes', token, {
     method: 'POST',
@@ -148,6 +193,10 @@ export const joinClass = (token: string, joinCode: string) =>
   apiRequest<JoinedClassDto>('classes/join', token, {
     method: 'POST',
     body: JSON.stringify({ joinCode }),
+  });
+export const leaveClass = (token: string, classId: string) =>
+  apiRequest<LeftClassDto>(`classes/${encodeURIComponent(classId)}/leave`, token, {
+    method: 'POST',
   });
 export const getClassStudents = (token: string, classId: string) =>
   apiRequest<ClassStudentsResponse>(`classes/${encodeURIComponent(classId)}/students`, token);
