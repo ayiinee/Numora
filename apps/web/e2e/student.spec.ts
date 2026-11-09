@@ -1251,7 +1251,7 @@ test('joined class affiliation persists after signing out and back in', async ({
   await expect(page).toHaveURL(/\/student$/);
   await page.goto('/student/profile');
   await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
-  await expect(page.getByLabel('Kode kelas')).toHaveCount(0);
+  await expect(page.getByLabel('Kode kelas')).toBeEnabled();
   await page.goto('/student/leaderboards?tab=class');
   await expect(
     page.getByText('Aturan XP kelas sedang ditetapkan.', { exact: false }),
@@ -1295,22 +1295,25 @@ test('class join link reports the server reason for a code that no longer joins'
   await expect(page.getByRole('main').getByRole('status')).toHaveCount(0);
 });
 
-test('class join link explains the one-class rule without offering a self-transfer', async ({
-  page,
-}) => {
+test('class join link explains the five-class limit and links to the profile', async ({ page }) => {
   await fixtures(page);
   await page.route('http://localhost:3301/api/v1/classes/join', async (route) => {
     await route.fulfill({
       status: 409,
       contentType: 'application/problem+json',
-      json: { code: 'ALREADY_IN_CLASS', detail: 'Siswa sudah menjadi anggota Class lain.' },
+      json: {
+        code: 'CLASS_LIMIT_REACHED',
+        detail: 'Siswa hanya dapat memiliki maksimal 5 kelas aktif.',
+      },
     });
   });
   await page.goto('/student/join?code=FIX234');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByRole('main').getByRole('alert')).toHaveText(
-    'Siswa sudah menjadi anggota Class lain. Satu Siswa hanya boleh aktif pada satu kelas. Keluar atau pindah kelas tidak dapat dilakukan sendiri.',
+    'Siswa hanya dapat memiliki maksimal 5 kelas aktif. Kamu dapat mengikuti maksimal lima kelas aktif. Keluar dari kelas melalui Profil.',
   );
+  await page.getByRole('link', { name: 'Batal dan buka profil' }).click();
+  await expect(page).toHaveURL(/\/student\/profile$/);
 });
 
 for (const [status, code, detail, hint] of [

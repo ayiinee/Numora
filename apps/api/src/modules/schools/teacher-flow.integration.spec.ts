@@ -11,7 +11,6 @@ import {
   levels,
   scoringPolicyVersions,
   subchapters,
-  teacherSchoolMemberships,
   teacherVerificationTokens,
   users,
 } from '@tka/database';
@@ -106,6 +105,11 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
     });
 
     const firstClass = await classes.create(owner, 'IX A');
+    expect((await schools.memberships(owner)).items).toEqual([
+      { id: school.id, name: school.name },
+    ]);
+    expect((await schools.memberships(outsider)).items).toEqual([]);
+    await expect(schools.memberships('student')).rejects.toMatchObject({ status: 403 });
     const otherClass = await classes.create(owner, 'IX B');
     const listed = await classes.list(owner);
     expect(listed.items.find((item) => item.id === firstClass.id)?.joinCode).toBe(
@@ -259,10 +263,8 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       monitoring.studentProgress(owner, firstClass.id, identities.student),
     ).rejects.toMatchObject({ status: 403 });
     await schools.updateSchool('admin', school.id, { status: 'ACTIVE' });
-    await db
-      .update(teacherSchoolMemberships)
-      .set({ endedAt: new Date() })
-      .where(eq(teacherSchoolMemberships.teacherUserId, identities[owner]));
+    await schools.leaveSchool(owner, school.id);
+    expect((await schools.memberships(owner)).items).toEqual([]);
     await expect(classes.join('student', firstClass.joinCode)).resolves.toMatchObject({
       joined: true,
     });
@@ -271,6 +273,15 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       status: 403,
     });
     await classes.setBan('teacherC', firstClass.id, identities.student, true);
+    expect((await classes.bannedStudents('teacherC', firstClass.id)).items).toEqual([
+      { id: identities.student, displayName: 'student' },
+    ]);
+    await expect(classes.bannedStudents(owner, firstClass.id)).rejects.toMatchObject({
+      status: 403,
+    });
+    await expect(classes.bannedStudents('admin', firstClass.id)).rejects.toMatchObject({
+      status: 403,
+    });
     await expect(classes.join('student', firstClass.joinCode)).rejects.toMatchObject({
       status: 403,
       response: { code: 'CLASS_BANNED' },
@@ -279,6 +290,7 @@ integration('Teacher verification and Class flow against PostgreSQL', () => {
       monitoring.studentProgress('teacherC', firstClass.id, identities.student),
     ).rejects.toMatchObject({ status: 404 });
     await classes.setBan('teacherC', firstClass.id, identities.student, false);
+    expect((await classes.bannedStudents('teacherC', firstClass.id)).items).toEqual([]);
     await classes.join('student', firstClass.joinCode);
     await classes.leave('student', firstClass.id);
     await expect(classes.create(owner, 'IX C')).rejects.toMatchObject({ status: 403 });

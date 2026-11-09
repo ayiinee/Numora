@@ -17,6 +17,7 @@ export class FeedbackDto {
   @ApiProperty({ format: 'uuid' }) classId!: string;
   @ApiProperty({ format: 'uuid' }) studentId!: string;
   @ApiProperty() teacherName!: string;
+  @ApiProperty({ required: false, format: 'uuid' }) teacherId?: string;
   @ApiProperty() body!: string;
   @ApiProperty({ format: 'date-time' }) sentAt!: string;
   @ApiProperty({ type: String, nullable: true, format: 'date-time' }) readAt!: string | null;

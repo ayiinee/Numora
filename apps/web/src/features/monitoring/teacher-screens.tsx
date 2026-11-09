@@ -3,17 +3,8 @@
 import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
-import {
-  Avatar,
-  Button,
-  Card,
-  Dialog,
-  EmptyState,
-  Icon,
-  Input,
-  SectionHeader,
-  Select,
-} from '@tka/ui';
+import { Button, Card, Dialog, EmptyState, Icon, Input, SectionHeader, Select } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import { TeacherShell } from '@/components/shell';
 import { TeacherGate } from './teacher-gate';
 import { DataState, Status } from '@/features/core-learning/ui';
@@ -30,6 +21,7 @@ import { findTeacherClass, teacherKeys } from './teacher-query';
 import { useTeacherRosterCounts } from './teacher-data';
 import { TeacherAnnouncement, TeacherMetric } from './teacher-ui';
 import { TeacherInviteContent } from './teacher-class-tools';
+import { TeacherClassActions, TeacherTakeover } from './teacher-class-actions';
 import { TeacherAssessmentHistory } from './teacher-assessment-history';
 
 export function TeacherDashboardScreen() {
@@ -178,6 +170,7 @@ function TeacherDashboard({ token, teacherName }: { token: string; teacherName: 
             </p>
           )}
         </Card>
+        <TeacherTakeover token={token} />
         <section className="teacher-classes-section">
           <SectionHeader
             title="Kelas yang Anda dampingi"
@@ -338,6 +331,14 @@ function ClassStudentsContent({
             </Dialog>
           </>
         )}
+        {query.isSuccess && (
+          <TeacherClassActions
+            key={classId}
+            token={token}
+            classId={classId}
+            students={query.data.items}
+          />
+        )}
         <Card className="teacher-filter-card">
           <Input
             label="Cari siswa"
@@ -388,6 +389,7 @@ function ClassStudentsContent({
                   <tbody>
                     {filtered.map((student) => (
                       <TeacherStudentRow
+                        studentId={student.id}
                         name={student.displayName}
                         href={`/teacher/classes/${classId}/students/${student.id}`}
                         key={student.id}
@@ -477,7 +479,11 @@ function StudentProgressContent({
             </div>
             <div className="teacher-progress-summary">
               <Card className="teacher-student-identity">
-                <Avatar name={query.data.student.displayName} size="lg" />
+                <Avatar
+                  userId={query.data.student.id}
+                  name={query.data.student.displayName}
+                  size="lg"
+                />
                 <div>
                   <span className="eyebrow">Siswa di {query.data.class.name}</span>
                   <h2>{query.data.student.displayName}</h2>

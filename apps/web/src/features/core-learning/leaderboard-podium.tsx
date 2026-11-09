@@ -1,6 +1,6 @@
 'use client';
 
-import { Avatar } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import Image from 'next/image';
 import type { LeaderboardDto } from './generated-types';
 import './leaderboard-podium.css';
@@ -32,7 +32,11 @@ export function LeaderboardPodium({
         >
           <div className="student-scoreboard-podium__student">
             <div className="student-scoreboard-podium__avatar" aria-hidden="true">
-              <Avatar name={entry.displayName} size={entry.rank === 1 ? 'xl' : 'lg'} />
+              <Avatar
+                userId={entry.studentId}
+                name={entry.displayName}
+                size={entry.rank === 1 ? 'xl' : 'lg'}
+              />
             </div>
             <strong>{entry.displayName}</strong>
             {ownEntry?.studentId === entry.studentId && <small>Kamu</small>}
@@ -74,7 +78,7 @@ export function LeaderboardRankingList({
             {entry.rank}
           </span>
           <span aria-hidden="true">
-            <Avatar name={entry.displayName} size="sm" />
+            <Avatar userId={entry.studentId} name={entry.displayName} size="sm" />
           </span>
           <div>
             <strong>{entry.displayName}</strong>

@@ -1,5 +1,6 @@
 import { ApiProperty } from '@nestjs/swagger';
-import { IsDefined, IsIn } from 'class-validator';
+import { IsDefined, IsIn, IsString, Length, Matches } from 'class-validator';
+import { Transform } from 'class-transformer';
 import { ADMIN_CAPABILITIES, type AdminCapability } from './admin-capabilities';
 
 export class RegisterProfileDto {
@@ -7,6 +8,20 @@ export class RegisterProfileDto {
   @IsDefined()
   @IsIn(['STUDENT', 'TEACHER'])
   role!: 'STUDENT' | 'TEACHER';
+}
+
+export class UpdateProfileDto {
+  @ApiProperty({ minLength: 1, maxLength: 120 })
+  @Transform(({ value }) => (typeof value === 'string' ? value.trim() : value))
+  @IsString()
+  @Length(1, 120)
+  @Matches(/\S/)
+  displayName!: string;
+}
+
+export class ProfilePhotoDto {
+  @ApiProperty({ type: String, nullable: true }) url!: string | null;
+  @ApiProperty({ type: String, nullable: true, format: 'date-time' }) expiresAt!: string | null;
 }
 
 export class IdentityProfileDto {

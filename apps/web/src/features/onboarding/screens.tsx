@@ -6,6 +6,7 @@ import { useRouter } from 'next/navigation';
 import { Brand, Button, Icon, Input, Select } from '@tka/ui';
 import { TeacherVerificationFrame } from '@/features/monitoring/teacher-presentation';
 import { destination, useAuth } from './auth';
+import { postLoginDestination } from './class-invitation';
 import { AuthFrame, AuthStatus, GoogleIdentity } from './auth-presentation';
 import { getSupabase } from '@/lib/supabase';
 import { ApiProblem, getSchools, verifyTeacher, type SchoolSummary } from '@/lib/api';
@@ -110,7 +111,7 @@ export function LoginScreen() {
   const [busy, setBusy] = useState(false);
   const [error, setError] = useState('');
   useEffect(() => {
-    if (state.status === 'ready') router.replace(destination(state.profile));
+    if (state.status === 'ready') router.replace(postLoginDestination(state.profile));
     if (state.status === 'registration') router.replace('/onboarding');
   }, [router, state]);
   const login = async () => {
@@ -344,7 +345,7 @@ export function OnboardingScreen() {
   const router = useRouter();
   const { state, refresh } = useAuth();
   useEffect(() => {
-    if (state.status === 'ready') router.replace(destination(state.profile));
+    if (state.status === 'ready') router.replace(postLoginDestination(state.profile));
     if (state.status === 'signed_out') router.replace('/');
   }, [router, state]);
   return (

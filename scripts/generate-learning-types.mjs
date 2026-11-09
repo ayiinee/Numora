@@ -83,6 +83,8 @@ const groups = [
     target: 'apps/web/src/lib/generated-api-types.ts',
     names: [
       'IdentityProfileDto',
+      'UpdateProfileDto',
+      'ProfilePhotoDto',
       'RegisterProfileDto',
       'SchoolDto',
       'SchoolListDto',
@@ -93,6 +95,9 @@ const groups = [
       'CreateClassDto',
       'JoinClassDto',
       'JoinedClassDto',
+      'LeftClassDto',
+      'LeftSchoolDto',
+      'ClassBanDto',
       'StudentSummaryDto',
       'ClassesResponseDto',
       'ClassStudentsResponseDto',
