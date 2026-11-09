@@ -191,7 +191,7 @@ model, data seeds and thresholds were retained after recovery.
 
 ### Tested runtime binding
 
-`research/irt-runtime-profile-v2.json` pins the immutable Linux amd64 R image,
+`research/irt-runtime-profile-v3.json` pins the immutable Linux amd64 R image,
 scientific Python source hashes (SHA256 after LF normalization), tested Python
 version/platform and installed dependency versions. The Python research lock is
 `research/irt-python-research.lock`; it is independent of the existing generator
@@ -297,9 +297,11 @@ and calls. Missing sample/failed scientific gates remain scientific outcomes;
 timeout/dependency failures preserve their existing retry semantics. Revocation,
 cancellation and stale execution still fence artifact acceptance.
 
-Runtime profile v2 (`irt-research-windows-producer-linux-r-v2`) pins the new
-Python sources, including gate/failure helpers; profile v1 and its prior
-benchmark remain historical evidence. The R image and research-v1 thresholds
+Runtime profile v3 (`irt-research-windows-producer-linux-r-v3`) pins the new
+Python sources, including gate/failure helpers; profiles v1/v2 and their prior
+evidence remain historical. V3 additionally requires fit diagnostics for every
+arm that actually observed each item; an anchor missing one arm's diagnostics
+cannot pass using only the other arm's evidence. The R image and research-v1 thresholds
 are unchanged. Linux Python validation remains outside this follow-up.
 
 The original acceptance-v1 JSON predates the corrected CI and this outcome
@@ -331,7 +333,34 @@ or dotenv fallback is used. Run expensive checks sequentially for meaningful
 timing measurements; this follow-up is correctness evidence, not an SLO.
 
 Rollback requires checking out the earlier AI source together with runtime
-profile v1; do not pair v2 code with v1 source hashes. Research features stay
-disabled by default. Existing frozen v1 jobs are not rebound silently to v2;
+profile v1; do not pair current code with older source hashes. Research features stay
+disabled by default. Existing frozen v1 jobs are not rebound silently to a newer profile;
 finish them with their exact previous runtime or cancel and issue a newly
 pinned request. This follow-up has no migration or deployment to roll back.
+
+
+### Paired sensitivity results
+
+The committed `research/irt/anchor-sensitivity-paired-v1.json` records these
+small paired experiments (one seed, same unchanged policy/R image):
+
+| Respondents per arm | No injected DIF | +1.3 anchor difficulty shift |
+| --- | --- | --- |
+| 500 | 1,000 NOT_COMPARABLE | 500 SCORED on reference-only fit; 500 INSUFFICIENT |
+| 2,000 | 4,000 SCORED | 4,000 INSUFFICIENT; anchor sensitivity also held |
+
+At 500 with DIF, the variant lacks eligible category coverage and is excluded
+before joint fitting. Reference-only scoring is not evidence that linking
+passed or that DIF was statistically detected. At 2,000 the joint fit converges,
+but the injected-DIF dataset is held by scientific gates and no score is issued.
+The experiment does not estimate detection sensitivity, specificity, or a safe
+minimum sample size for real school data. More participants are not a promise
+that every healthy batch passes.
+
+These experiments preceded the final per-arm-diagnostic completeness guard.
+Their exact producer hash is recorded in each case. The adjacent
+`sensitivity-producer-source-v1.patch` reconstructs that experimental source
+from the current producer for provenance review only; never apply it to the
+service runtime. It omits the later failure-detail/completeness additions,
+without changing the model, thresholds or fitting image. Final runtime
+acceptance is recorded separately in the supplementary outcome report.
