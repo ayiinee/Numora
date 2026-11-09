@@ -124,14 +124,17 @@ async function startLevel(page: Page, order: number) {
   expect(response.status()).toBe(201);
   return (await response.json()) as DrillAttemptDto;
 }
-function pausedClock(page: Page, attemptId: string) {
-  return page.waitForResponse(
-    (r) =>
-      r.request().method() === 'PATCH' &&
-      r.url().endsWith(`/assessment-attempts/${attemptId}/drill-clock`) &&
-      r.request().postDataJSON()?.action === 'pause' &&
-      r.status() === 200,
-  );
+async function expectPausedDrill(request: APIRequestContext, actor: string, attemptId: string) {
+  await expect
+    .poll(async () => {
+      const attempt = await body<DrillAttemptDto>(
+        request,
+        actor,
+        `assessment-attempts/${attemptId}`,
+      );
+      return attempt.clock?.sessionId;
+    })
+    .toBeNull();
 }
 async function resumeDrill(page: Page, attemptId: string) {
   await expect(page.getByRole('heading', { name: 'Latihan dijeda', exact: true })).toBeVisible();
@@ -147,11 +150,15 @@ async function resumeDrill(page: Page, attemptId: string) {
   expect(attempt.clock?.sessionId).toEqual(expect.any(String));
   await expect(page.getByLabel('Waktu berjalan', { exact: true })).toBeVisible();
 }
-async function reloadAndResumeDrill(page: Page, attemptId: string) {
-  const paused = pausedClock(page, attemptId);
+async function reloadAndResumeDrill(
+  page: Page,
+  request: APIRequestContext,
+  actor: string,
+  attemptId: string,
+) {
   await page.reload();
-  await paused;
-  // Re-read after the unload pause is acknowledged, independent of request arrival order.
+  // Observe the persisted pause rather than a keepalive response from the unloaded document.
+  await expectPausedDrill(request, actor, attemptId);
   await page.reload();
   await resumeDrill(page, attemptId);
 }
@@ -358,11 +365,10 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     student.on('dialog', (dialog) => void dialog.accept());
-    await reloadAndResumeDrill(student, attempt.id);
+    await reloadAndResumeDrill(student, request, 'student', attempt.id);
     await expect(option(student, 'B')).toBeChecked();
-    const paused = pausedClock(student, attempt.id);
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
-    await paused;
+    await expectPausedDrill(request, 'student', attempt.id);
     // A new auth/browser context also resumes the same persisted answers.
     const resumed = await login(browser, 'student');
     await resumed.goto(`/student/drill/${attempt.id}`);
@@ -630,7 +636,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto(`/student/learn/${chapter}/${subchapter}`);
     const attempt = await startLevel(student, 1);
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
-    await reloadAndResumeDrill(student, attempt.id);
+    await reloadAndResumeDrill(student, request, 'otherStudent', attempt.id);
     await expect(option(student, 'B')).toBeVisible();
     const resumed = await body<DrillAttemptDto>(
       request,
