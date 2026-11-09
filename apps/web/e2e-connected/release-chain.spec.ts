@@ -292,13 +292,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await teacher.getByRole('button', { name: 'Buat kelas', exact: true }).click();
     const createClass = teacher.getByRole('dialog', { name: 'Buat kelas', exact: true });
     await createClass.getByLabel(/^Nama kelas/).fill('JOB06 IX Test');
-    const made = teacher.waitForResponse(
+    const classCreation = teacher.waitForResponse(
       (r) => r.request().method() === 'POST' && r.url().endsWith('/classes'),
     );
     await createClass.getByRole('button', { name: 'Buat kelas', exact: true }).click();
-    const created = await made;
-    expect(created.status()).toBe(201);
-    cls = (await created.json()) as CreatedClassDto;
+    const classResponse = await classCreation;
+    expect(classResponse.status()).toBe(201);
+    cls = (await classResponse.json()) as CreatedClassDto;
     await expect(teacher).toHaveURL(new RegExp(`/teacher/classes/${cls.id}/invite(?:\\?|$)`));
     await teacher.goto(`/teacher/classes/${cls.id}`);
     await expect(teacher.getByText('Belum ada siswa', { exact: true })).toBeVisible();
