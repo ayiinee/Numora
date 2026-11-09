@@ -6,6 +6,29 @@ afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
 });
+it('keeps teacher tab navigation available but confirms leaving an unsent note', () => {
+  window.history.replaceState(null, '', '/teacher/classes/c/students/s?tab=notes');
+  function Notes() {
+    useUnsavedWarning(true, false, undefined, {
+      message: 'Catatan belum dikirim.',
+      ignoreSearchChanges: true,
+    });
+    return (
+      <>
+        <a href="?tab=progress">Progres</a>
+        <a href="/teacher/classes/c">Kembali ke kelas</a>
+      </>
+    );
+  }
+  const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
+  render(<Notes />);
+  fireEvent.click(screen.getByRole('link', { name: 'Progres' }));
+  expect(confirm).not.toHaveBeenCalled();
+  const event = new MouseEvent('click', { bubbles: true, cancelable: true });
+  screen.getByRole('link', { name: 'Kembali ke kelas' }).dispatchEvent(event);
+  expect(confirm).toHaveBeenCalledWith('Catatan belum dikirim.');
+  expect(event.defaultPrevented).toBe(true);
+});
 it('lets the question navigator move within the document while protecting route changes', () => {
   function Session() {
     useUnsavedWarning(true);
@@ -26,7 +49,10 @@ it('lets the question navigator move within the document while protecting route 
   expect(exit.defaultPrevented).toBe(true);
 });
 it('confirms an unfinished Drill exit even with every answer saved', () => {
-  function Session() { useUnsavedWarning(false, true); return <a href="/student/learn">Keluar</a>; }
+  function Session() {
+    useUnsavedWarning(false, true);
+    return <a href="/student/learn">Keluar</a>;
+  }
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
   render(<Session />);
   const exit = new MouseEvent('click', { bubbles: true, cancelable: true });
@@ -35,7 +61,10 @@ it('confirms an unfinished Drill exit even with every answer saved', () => {
   expect(confirm).toHaveBeenCalledWith(expect.stringContaining('Timer tetap berjalan'));
 });
 it('warns about unsaved changes in the same confirmation and removes guards after completion', () => {
-  function Session({ active }: { active: boolean }) { useUnsavedWarning(active, active); return <a href="/student/learn">Keluar</a>; }
+  function Session({ active }: { active: boolean }) {
+    useUnsavedWarning(active, active);
+    return <a href="/student/learn">Keluar</a>;
+  }
   const confirm = vi.spyOn(window, 'confirm').mockReturnValue(false);
   const view = render(<Session active />);
   fireEvent.click(screen.getByRole('link', { name: 'Keluar' }));
@@ -48,7 +77,10 @@ it('warns about unsaved changes in the same confirmation and removes guards afte
 });
 it('cancels browser back navigation and restores the attempt URL', () => {
   window.history.replaceState({ fixture: true }, '', '/student/drill/attempt');
-  function Session() { useUnsavedWarning(false, true); return null; }
+  function Session() {
+    useUnsavedWarning(false, true);
+    return null;
+  }
   vi.spyOn(window, 'confirm').mockReturnValue(false);
   render(<Session />);
   window.history.replaceState({}, '', '/student/learn');
