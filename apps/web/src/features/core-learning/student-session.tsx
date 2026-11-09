@@ -2,8 +2,12 @@
 
 import { createContext, useContext, useEffect, type ReactNode } from 'react';
 import { useRouter } from 'next/navigation';
-import { destination, useAuth } from '@/features/onboarding/auth';
+import { useAuth } from '@/features/onboarding/auth';
 import { LearningProvider } from './provider';
+import {
+  rememberClassInvitation,
+  postLoginDestination,
+} from '@/features/onboarding/class-invitation';
 
 const StudentSession = createContext<string | null>(null);
 export function useStudentToken() {
@@ -16,10 +20,12 @@ export function StudentAccess({ children }: { children: ReactNode }) {
   const { state, refresh } = useAuth();
   const router = useRouter();
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/');
-    if (state.status === 'registration') router.replace('/onboarding');
+    if (state.status === 'signed_out' || state.status === 'registration') {
+      rememberClassInvitation();
+      router.replace(state.status === 'signed_out' ? '/' : '/onboarding');
+    }
     if (state.status === 'ready' && state.profile.role !== 'STUDENT')
-      router.replace(destination(state.profile));
+      router.replace(postLoginDestination(state.profile));
   }, [router, state]);
   if (state.status === 'ready' && state.profile.role === 'STUDENT')
     return (

@@ -57,12 +57,12 @@ function state(status: PvpSnapshotDto['status']): PvpSnapshotDto {
         ? {
             id: '55555555-5555-4555-8555-555555555555',
             order: 4,
-            stem: 'Sebuah tempat parkir berisi 60 kendaraan yang terdiri dari mobil (roda 4) dan sepeda motor (roda 2). Jika jumlah seluruh roda adalah 172 buah, maka banyak sepeda motor di tempat parkir tersebut adalah…',
+            stem: 'Berapa hasil \\sqrt{1156}?',
             options: [
               { id: 'A', text: '28 unit' },
               { id: 'B', text: '34 unit' },
               { id: 'C', text: '26 unit' },
-              { id: 'D', text: '32 unit' },
+              { id: 'D', text: '\\frac{64}{2} unit' },
             ],
             deadlineAt: new Date(Date.now() + 45_000).toISOString(),
             durationSeconds: 45,
@@ -253,7 +253,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         true,
       );
       const bounds = await page
-        .locator('.numora-card, .pvp-hero, .pvp-header, .pvp-ranking-hero')
+        .locator('.numora-card, .student-illustrated-hero, .pvp-header')
         .evaluateAll((elements) =>
           elements.map((element) => {
             const r = element.getBoundingClientRect();
@@ -294,6 +294,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     expect(snapshot.status).toBe('WAITING');
     publish(state('RUNNING'));
     await expect(page.getByRole('heading', { name: 'Duel Berlangsung' })).toBeVisible();
+    await expect(page.locator('.pvp-question .katex-html')).toBeVisible();
+    await expect(page.locator('.pvp-question math msqrt')).toHaveText('1156');
+    await expect(page.locator('.pvp-answer-list math mfrac')).toHaveCount(1);
     await page.getByRole('radio', { name: /B\s*\.\s*34 unit/ }).check();
     await expect(page.getByText('Jawaban dipilih • Belum dikirim')).toBeVisible();
     await capture('battle-selected');
@@ -344,7 +347,33 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
           exact: true,
         }),
       ).toHaveAttribute('aria-pressed', 'true');
-      await expect(page.getByLabel('Podium Global PvP')).toBeVisible();
+      const podium = page.getByRole('list', { name: 'Podium Global PvP' });
+      await expect(podium).toBeVisible();
+      const medals = podium.getByRole('img');
+      await expect(medals).toHaveCount(3);
+      await expect(medals.nth(0)).toHaveAccessibleName('Peringkat 1');
+      await expect(medals.nth(1)).toHaveAccessibleName('Peringkat 2');
+      await expect(medals.nth(2)).toHaveAccessibleName('Peringkat 3');
+      await expect
+        .poll(() =>
+          medals.evaluateAll((images) =>
+            images.every((img) => (img as HTMLImageElement).naturalWidth > 0),
+          ),
+        )
+        .toBe(true);
+      const [first, second, third] = await medals.evaluateAll((images) =>
+        images.map((image) => {
+          const { x, y } = image.getBoundingClientRect();
+          return { x, y };
+        }),
+      );
+      expect(second!.x).toBeLessThan(first!.x);
+      expect(first!.x).toBeLessThan(third!.x);
+      expect(first!.y).toBeLessThan(second!.y);
+      expect(second!.y).toBeLessThan(third!.y);
+      await expect(
+        page.getByRole('list', { name: 'Peringkat berikutnya' }).getByRole('listitem'),
+      ).toHaveCount(7);
       await expect(page.getByText('#8', { exact: true })).toBeVisible();
       if (width < 960) {
         const order = await page.evaluate(() =>

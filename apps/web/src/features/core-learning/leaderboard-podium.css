@@ -1,0 +1,217 @@
+.pvp-ranking-shell--easy,
+.student-scoreboard--easy {
+  --pvp-arena-accent: #276d6a;
+}
+
+.pvp-ranking-shell--medium,
+.student-scoreboard--medium {
+  --pvp-arena-accent: #5900b1;
+}
+
+.pvp-ranking-shell--hard,
+.student-scoreboard--hard {
+  --pvp-arena-accent: #963440;
+}
+
+.app-shell .student-scoreboard {
+  --scoreboard-accent: var(--pvp-arena-accent, var(--color-primary-strong));
+  --scoreboard-tint: color-mix(in srgb, var(--scoreboard-accent) 9%, var(--color-surface));
+  --card-padding: 0px;
+  display: block;
+  min-width: 0;
+  overflow: hidden;
+}
+
+.student-scoreboard__stage {
+  padding: clamp(12px, 2.5vw, 20px);
+  background: var(--scoreboard-tint);
+}
+
+.student-scoreboard__stage:has(.student-scoreboard-podium) {
+  padding-bottom: 0;
+}
+
+.student-scoreboard__stage .pvp-ranking-section-heading h2 svg {
+  color: var(--scoreboard-accent);
+}
+
+.student-scoreboard-podium {
+  container-type: inline-size;
+  display: grid;
+  grid-template-columns: repeat(3, minmax(0, 1fr));
+  align-items: end;
+  max-width: 34rem;
+  margin: clamp(16px, 3vw, 24px) auto 0;
+  padding: 0;
+  list-style: none;
+  text-align: center;
+}
+
+.student-scoreboard-podium > li {
+  --pedestal-base: clamp(83px, 33cqi, 128px);
+  --pedestal-step: clamp(19px, 8.5cqi, 29px);
+  --pedestal-depth: clamp(8px, 3.7cqi, 16px);
+  --pedestal-tier: 0;
+  --roof-left: 14%;
+  --roof-right: 86%;
+  --medal-width: clamp(48px, 20cqi, 74px);
+  grid-row: 1;
+  min-width: 0;
+}
+
+.student-scoreboard-podium > .student-scoreboard-podium__place--1 {
+  --pedestal-tier: 2;
+  --medal-width: clamp(55px, 22cqi, 85px);
+  grid-column: 2;
+}
+
+.student-scoreboard-podium > .student-scoreboard-podium__place--2 {
+  --pedestal-tier: 1;
+  --roof-right: 100%;
+  --medal-width: clamp(51px, 20.5cqi, 77px);
+  grid-column: 1;
+}
+
+.student-scoreboard-podium > .student-scoreboard-podium__place--3 {
+  --roof-left: 0%;
+  grid-column: 3;
+}
+
+.student-scoreboard-podium__student {
+  display: grid;
+  justify-items: center;
+  align-content: end;
+  gap: 4px;
+  min-width: 0;
+  margin-bottom: 8px;
+  padding-inline: 3px;
+}
+
+.student-scoreboard-podium__avatar .numora-avatar {
+  width: clamp(40px, 10vw, 56px) !important;
+  height: clamp(40px, 10vw, 56px) !important;
+  font-size: clamp(15px, 4vw, 21px) !important;
+  background: var(--scoreboard-accent) !important;
+  border: 2px solid var(--color-surface);
+}
+
+.student-scoreboard-podium__place--1 .numora-avatar {
+  width: clamp(48px, 12vw, 72px) !important;
+  height: clamp(48px, 12vw, 72px) !important;
+  font-size: clamp(18px, 4.5vw, 26px) !important;
+  background: var(--color-reward) !important;
+  color: var(--color-text) !important;
+}
+
+.student-scoreboard-podium__student > strong {
+  max-width: 100%;
+  font-size: clamp(12px, 2vw, 15px);
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.student-scoreboard-podium__student small {
+  font-size: 10px;
+  font-weight: var(--font-bold);
+}
+
+.student-scoreboard-podium__student > small {
+  color: var(--scoreboard-accent);
+}
+
+.student-scoreboard-podium__score {
+  max-width: 100%;
+  padding: 3px 6px;
+  border-radius: var(--radius-full);
+  background: var(--color-surface);
+  color: var(--scoreboard-accent);
+  font-size: clamp(11px, 2.1vw, 14px);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
+  line-height: 1.25;
+  overflow-wrap: anywhere;
+}
+
+.student-scoreboard-podium__pedestal {
+  --pedestal-height: calc(var(--pedestal-base) + var(--pedestal-tier) * var(--pedestal-step));
+  display: grid;
+  justify-items: center;
+  align-content: start;
+  height: var(--pedestal-height);
+  background: color-mix(in srgb, var(--scoreboard-accent) 64%, var(--color-surface));
+  background-clip: content-box;
+  padding-top: var(--pedestal-depth);
+  position: relative;
+}
+
+.student-scoreboard-podium__pedestal::before {
+  content: '';
+  position: absolute;
+  inset: 0 0 auto;
+  height: var(--pedestal-depth);
+  background: color-mix(in srgb, var(--scoreboard-accent) 24%, var(--color-surface));
+  clip-path: polygon(var(--roof-left) 0, var(--roof-right) 0, 100% 100%, 0 100%);
+}
+
+.student-scoreboard-podium__place--1 .student-scoreboard-podium__pedestal {
+  background-color: color-mix(in srgb, var(--scoreboard-accent) 49%, var(--color-surface));
+}
+
+.student-scoreboard-podium__pedestal img {
+  position: relative;
+  /* Overlap the roof lip to account for the transparent pixels above the ribbon. */
+  top: -3px;
+  width: auto;
+  height: auto;
+  max-width: min(100%, var(--medal-width));
+  max-height: calc(var(--pedestal-height) - var(--pedestal-depth) - 4px);
+  filter: drop-shadow(0 2px 2px color-mix(in srgb, var(--color-text) 18%, transparent));
+}
+
+.student-scoreboard .pvp-ranking-list {
+  border-top: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+.student-scoreboard .pvp-ranking-list .pvp-ranking-section-heading {
+  padding: 12px clamp(10px, 2.5vw, 20px);
+}
+
+.student-scoreboard .pvp-ranking-list ol {
+  gap: 0;
+  margin: 0;
+}
+
+.student-scoreboard .pvp-ranking-list li {
+  display: grid;
+  grid-template-columns: minmax(20px, auto) auto minmax(0, 1fr) minmax(0, max-content);
+  gap: clamp(6px, 2vw, 12px);
+  padding: 9px clamp(10px, 2.5vw, 20px);
+  border-top: 1px solid var(--color-border);
+  border-radius: 0;
+  background: transparent;
+}
+
+.student-scoreboard .pvp-ranking-list li.is-self {
+  border-left: 0;
+  background: var(--scoreboard-tint);
+  box-shadow: inset 3px 0 var(--scoreboard-accent);
+}
+
+.student-scoreboard .pvp-ranking-list .numora-avatar {
+  background: var(--scoreboard-tint) !important;
+  color: var(--scoreboard-accent) !important;
+}
+
+.student-scoreboard .pvp-ranking-list .pvp-rank-points {
+  display: block;
+  max-width: min(48vw, 16rem);
+  text-align: right;
+  font-size: clamp(13px, 2.1vw, 16px);
+  font-variant-numeric: tabular-nums;
+  overflow-wrap: anywhere;
+}
+
+.student-scoreboard .pvp-ranking-list .pvp-rank-points small {
+  margin-inline-start: 4px;
+}

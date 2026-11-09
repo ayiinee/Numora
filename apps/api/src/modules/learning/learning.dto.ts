@@ -1,5 +1,5 @@
 import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
-import { Allow, IsUUID } from 'class-validator';
+import { Allow, IsIn, IsUUID } from 'class-validator';
 import type { AssessmentAnswer } from '@tka/assessment-engine';
 import { assessmentAnswerSchema } from './assessment-answer.schema';
 import { RichContentDto, PreviewOptionDto } from '../content/content-preview.dto';
@@ -95,6 +95,22 @@ export class DrillQuestionDto {
   @ApiProperty({ type: [OptionDto] }) options!: OptionDto[];
   @ApiProperty({ type: String, nullable: true }) selectedOptionId!: string | null;
 }
+export class DrillClockDto {
+  @ApiProperty({ type: 'integer', minimum: 0 }) elapsedMs!: number;
+  @ApiProperty({ type: 'integer', minimum: 0 }) remainingMs!: number;
+  @ApiProperty({ type: String, format: 'uuid', nullable: true }) sessionId!: string | null;
+}
+
+export class UpdateDrillClockDto {
+  @ApiProperty({ format: 'uuid' })
+  @IsUUID()
+  sessionId!: string;
+
+  @ApiProperty({ enum: ['heartbeat', 'pause'] })
+  @IsIn(['heartbeat', 'pause'])
+  action!: 'heartbeat' | 'pause';
+}
+
 export class DrillAttemptDto {
   @ApiProperty({ format: 'uuid' }) id!: string;
   @ApiProperty({ format: 'uuid' }) levelId!: string;
@@ -106,6 +122,8 @@ export class DrillAttemptDto {
     description: 'Database time for count-up display; server timestamps own reward duration.',
   })
   serverTime?: string;
+  @ApiPropertyOptional({ type: DrillClockDto })
+  clock?: DrillClockDto;
   @ApiProperty() isDemo!: boolean;
   @ApiProperty({ type: [DrillQuestionDto] }) questions!: DrillQuestionDto[];
 }

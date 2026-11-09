@@ -3,7 +3,8 @@
 import { useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useInfiniteQuery, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Avatar, Button, Card, EmptyState, Icon, SectionHeader, Textarea } from '@tka/ui';
+import { Button, Card, EmptyState, Icon, SectionHeader, Textarea } from '@tka/ui';
+import { UserAvatar as Avatar } from '@/features/onboarding/user-avatar';
 import { TeacherShell } from '@/components/shell';
 import { ApiProblem, getTeacherStudentProgress } from '@/lib/api';
 import { DataState } from '@/features/core-learning/ui';
@@ -146,7 +147,7 @@ export function FeedbackWorkspace({
       <Card className="teacher-feedback-composer">
         <SectionHeader title="Tulis feedback" />
         <div className="teacher-feedback-recipient">
-          <Avatar name={studentName} />
+          <Avatar userId={studentId} name={studentName} />
           <div>
             <strong>{studentName}</strong>
             <Link href={`/teacher/classes/${classId}/students/${studentId}`}>

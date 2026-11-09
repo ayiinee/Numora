@@ -1,6 +1,9 @@
 import { cleanup, fireEvent, render, screen, waitFor, within } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { TeacherShell } from './teacher-shell';
+vi.mock('@/features/onboarding/user-avatar', async () => ({
+  OwnAvatar: (await import('@tka/ui')).Avatar,
+}));
 
 const fixture = vi.hoisted(() => ({
   pathname: '/teacher',

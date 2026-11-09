@@ -102,6 +102,10 @@ async function setup(page: Page) {
         teacherVerified: state.verified,
         studentAffiliation: null,
       };
+    else if (path.startsWith('/identity/profile-photos/')) data = { url: null, expiresAt: null };
+    else if (path === '/schools/mine') data = { items: [{ id: schoolId, name: 'SMPN 1 Jakarta' }] };
+    else if (path.endsWith('/banned-students'))
+      data = { class: { id: classId, name: 'Kelas IX-B' }, items: [] };
     else if (path === '/schools') {
       if (state.failSchools) return route.fulfill(fail(503, 'Sekolah belum dapat dimuat.'));
       data = { items: state.emptySchools ? [] : [{ id: schoolId, name: 'SMPN 1 Jakarta' }] };
@@ -268,6 +272,70 @@ async function setup(page: Page) {
   });
   return { state, errors };
 }
+test('Completion: Teacher confirms ban, unban, takeover and school departure through the UI', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.verified = true;
+  let banned = false;
+  const mutations: string[] = [];
+  await page.route('http://localhost:3301/api/v1/**', async (route) => {
+    const path = new URL(route.request().url()).pathname.replace('/api/v1', '');
+    let data: unknown;
+    if (path.endsWith('/banned-students'))
+      data = {
+        class: { id: classId, name: 'Kelas IX-B' },
+        items: banned ? [{ id: studentId, displayName: 'Kirino S.' }] : [],
+      };
+    else if (path.endsWith('/ban') || path.endsWith('/unban')) {
+      banned = path.endsWith('/ban');
+      mutations.push(path);
+      data = { banned };
+    } else if (path === '/classes/takeover') {
+      expect(route.request().postDataJSON()).toEqual({ joinCode: 'QA2345' });
+      mutations.push(path);
+      data = state.classes[1];
+    } else if (path === `/schools/${schoolId}/leave`) {
+      mutations.push(path);
+      state.verified = false;
+      data = { left: true };
+    } else return route.fallback();
+    await route.fulfill({ json: data });
+  });
+  await page.goto(`/teacher/classes/${classId}`);
+  await page.getByText('Kelola akses siswa', { exact: true }).click();
+  await page.getByLabel('Siswa aktif untuk diblokir').selectOption(studentId);
+  await page.getByRole('button', { name: 'Blokir siswa', exact: true }).click();
+  expect(mutations).toEqual([]);
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Konfirmasi perubahan akses' })
+    .click();
+  await expect(
+    page.getByText('Siswa diblokir dari kelas. Riwayat akun tetap tersimpan.', { exact: true }),
+  ).toBeVisible();
+  await page.getByLabel('Siswa yang diblokir').selectOption(studentId);
+  await page.getByRole('button', { name: 'Buka blokir', exact: true }).click();
+  await page
+    .getByRole('dialog')
+    .getByRole('button', { name: 'Konfirmasi perubahan akses' })
+    .click();
+  await expect(page.getByText(/Blokir dibuka/)).toBeVisible();
+  await page.goto('/teacher');
+  await page.getByText('Ambil alih kelas tanpa guru', { exact: true }).click();
+  await page.getByLabel('Kode kelas yang diambil alih').fill('QA2345');
+  await page.getByRole('button', { name: 'Ambil alih kelas', exact: true }).click();
+  await expect(
+    page.getByText('Kelas Kelas IX-A sekarang Anda dampingi.', { exact: true }),
+  ).toBeVisible();
+  await page.goto('/teacher/profile');
+  await page.getByRole('button', { name: 'Keluar dari SMPN 1 Jakarta', exact: true }).click();
+  expect(mutations).toHaveLength(3);
+  await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi keluar sekolah' }).click();
+  await expect(page).toHaveURL(/\/teacher\/verification-required$/);
+  expect(mutations).toHaveLength(4);
+  expect(errors).toEqual([]);
+});
 async function capture(page: Page, name: string, width: number) {
   await page.mouse.move(0, 0);
   await page.evaluate(async () => {
@@ -323,9 +391,10 @@ for (const width of [320, 360, 375, 390, 393, 430, 768, 834, 1024, 1280, 1366, 1
       'min-height',
       width < 960 ? '80px' : '64px',
     );
+    // Shared canvas follows the owner-approved token update of 8 November (docs/design/README.md).
     await expect(page.locator('.teacher-redesign-shell')).toHaveCSS(
       'background-color',
-      'rgb(243, 236, 203)',
+      'rgb(254, 253, 249)',
     );
     await expect(page.getByRole('link', { name: 'Pusat Notifikasi' })).toHaveCount(0);
     const primaryNav = page.locator(width < 960 ? '.teacher-bottom-nav' : '.teacher-sidebar__nav');
@@ -528,7 +597,8 @@ test('Teacher verification handles empty schools, expired token session and disa
   await page.setViewportSize({ width: 390, height: 900 });
   const { state, errors } = await setup(page);
   state.emptySchools = true;
-  await page.goto('/teacher/verification-required');
+  await page.goto('/teacher');
+  await expect(page).toHaveURL(/\/teacher\/verification-required$/);
   await expect(page.getByText('Belum ada sekolah aktif.')).toBeVisible();
   await expect(page.getByRole('button', { name: 'Verifikasi dan lanjutkan' })).toBeDisabled();
   await capture(page, 'verification-empty', 390);

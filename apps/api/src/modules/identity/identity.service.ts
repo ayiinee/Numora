@@ -19,6 +19,21 @@ import { and, eq, isNull } from 'drizzle-orm';
 import type { IdentityProfileDto, RegisterProfileDto } from './identity.dto';
 import { adminCapabilities } from './admin-capabilities';
 
+const bearerToken = (authorization?: string) => /^Bearer ([^\s]+)$/.exec(authorization ?? '')?.[1];
+
+function usedPassword(verifiedToken: string): boolean {
+  try {
+    const payload = verifiedToken.split('.')[1];
+    if (!payload) return false;
+    const { amr } = JSON.parse(Buffer.from(payload, 'base64url').toString('utf8')) as {
+      amr?: Array<{ method?: string } | null>;
+    };
+    return Array.isArray(amr) && amr.some((entry) => entry?.method === 'password');
+  } catch {
+    return false;
+  }
+}
+
 @Injectable()
 export class IdentityService {
   private readonly logger = new Logger(IdentityService.name);
@@ -36,7 +51,7 @@ export class IdentityService {
   }
 
   async authenticate(authorization?: string): Promise<User> {
-    const token = /^Bearer ([^\s]+)$/.exec(authorization ?? '')?.[1];
+    const token = bearerToken(authorization);
     if (!token) throw new UnauthorizedException('Bearer token is required.');
     const { data, error } = await this.authClient().auth.getUser(token);
     if (error || !data.user) throw new UnauthorizedException('Invalid or expired token.');
@@ -118,9 +133,15 @@ export class IdentityService {
       authUser.app_metadata.provider === 'google' ||
       authUser.app_metadata.providers?.includes('google');
 
-    if (!googleProvider || !authUser.email) {
-      throw new ForbiddenException('Student and Teacher registration requires Google sign-in.');
-    }
+    // Supabase has validated the exact JWT before its AMR claim is inspected.
+    const passwordSession = usedPassword(bearerToken(authorization) ?? '');
+    const markedStudent = authUser.app_metadata.numora_role === 'STUDENT';
+    const provisionedStudent =
+      markedStudent && input.role === 'STUDENT' && !!authUser.email_confirmed_at;
+    const googleRegistration = googleProvider && (!markedStudent || input.role === 'STUDENT');
+
+    if (!authUser.email || (passwordSession ? !provisionedStudent : !googleRegistration))
+      throw new ForbiddenException('Akun ini belum disiapkan untuk metode login tersebut.');
 
     const name = authUser.user_metadata.full_name ?? authUser.user_metadata.name;
 

@@ -1,0 +1,74 @@
+{
+  "schemaVersion": 1,
+  "id": "ADM-002",
+  "role": "admin",
+  "title": "Super Admin mengundang Admin dan Admin memulihkan password",
+  "priority": 2,
+  "sources": [
+    { "id": "ACCOUNTS", "path": "docs/development/ADMIN_ACCOUNTS_RUNBOOK.md" },
+    {
+      "id": "PRD",
+      "path": "docs/product/sources/PRD_Numora_v0.6.docx.md",
+      "section": "§3.2 Role Admin"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-001",
+      "title": "Undangan dibuat oleh Super Admin dan hanya diterima identitas yang dituju",
+      "source": "ACCOUNTS",
+      "checks": ["auth-screen", "accounts-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-002",
+      "title": "Recovery akun aktif menjaga assignment dan menolak akun yang tidak berhak",
+      "source": "ACCOUNTS",
+      "checks": ["auth-screen", "accounts-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-003",
+      "title": "Link ditolak tidak menampilkan form dan retry tidak membuat profil atau assignment ganda",
+      "source": "ACCOUNTS",
+      "checks": ["auth-screen", "accounts-db"],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-004",
+      "title": "Email invite dan recovery sungguhan membuka domain staging dan menolak link kedaluwarsa atau terpakai",
+      "source": "ACCOUNTS",
+      "checks": ["smtp-staging"],
+      "applicability": "required"
+    }
+  ],
+  "checks": [
+    {
+      "id": "auth-screen",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": ["apps/web/src/features/admin/accounts.test.tsx"],
+      "minimumTests": 14
+    },
+    {
+      "id": "accounts-db",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/admin/accounts.integration.spec.ts",
+        "apps/api/src/modules/admin/admin-auth.provider.spec.ts"
+      ],
+      "minimumTests": 10
+    },
+    {
+      "id": "smtp-staging",
+      "adapter": "manual",
+      "profile": "full",
+      "evidence": "manual",
+      "files": ["qa/scenarios/admin/ADM-002/MANUAL_CHECKLIST.md"],
+      "minimumTests": 1
+    }
+  ]
+}
