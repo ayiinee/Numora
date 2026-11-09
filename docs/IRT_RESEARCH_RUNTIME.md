@@ -136,13 +136,40 @@ checks passed; 2/1,800 S-X2 Holm checks held. Recovery acceptance does not estab
 production policy suitability. The anchor hold rate requires academic review;
 thresholds were not changed, and held linking is not automatic DRIFT.
 
-The final pinned HTTP/daemon/R/artifact run passed 15/15 tests in 161.198 seconds,
-including ACK <10 seconds, per-arm anchor support, identity-read denial and
-artifact tampering/immutability. Upgrade testing preserved exact historical
-attempt/score/XP rows. Python service regression passed 57 tests with 29 explicit
-environment-dependent skips; dedicated real-R and database tests are reported
-separately. Additional model/stress/partial-arm followups are still running;
-the report records them as pending until actual evidence is available.
+The final expanded-runtime-manifest upgrade/HTTP/daemon/R/artifact run passed
+15/15 tests in 301.738 seconds, including ACK <10 seconds, per-arm anchor support,
+identity-read denial and artifact tampering/immutability. Exact historical
+attempt/score/XP rows were preserved. The legacy upgrade suite additionally
+passed 9/9 after its expected nullable delivery-pin default was made explicit.
+Python service regression passed 58 tests with 29 explicit environment-dependent
+skips; real-R and PostgreSQL tests were also run separately. All 14 tests in the
+main orchestration package and all 114 scientific conformance vectors passed.
+
+Real-R probability/EAP integration and container fault tests passed 5/5. Pure
+2PL, pure GPCM and mixed three-arm engine cases converged at 500 respondents per
+arm; probability conversion errors were at most 4.45e-16. The declared 30-run
+recovery targets apply only to the two-arm mixed design at 1,000 per arm.
+
+The nondegenerate +1.3-DIF fixture fitted successfully and held linking (released
+anchor difficulty shift about 1.73); local dependence reached adjusted Q3 0.78.
+Unidentified/no-common-observation and one-cycle injections failed inside mirt;
+no valid parameters or guessed SE were accepted. These raw-engine failures are
+not canonical participant result artifacts. The constant-category first DIF
+fixture was replaced and is not counted as evidence of DIF detection.
+
+The full producer partial-arm case scored 500 reference participants while
+keeping the other arm's 500 eligible participants recorded and zero fitted.
+An empty anchor category produced scientific SUCCEEDED + INSUFFICIENT without
+invoking R or renumbering categories. Prior exposure/crossover/retry contract
+rules and legitimate wrong/omitted answers retain their existing semantics.
+
+Local research acceptance is complete. Main PR #132 remains draft because the
+base PR #130 already has generator-page horizontal overflow in browser tests.
+This branch changes no UI files. Its inherited legacy snapshot expectation was
+fixed without dropping historical assertions; remote CI rerun is pending. The
+local Node runtime was 24.15.0 versus the repository's >=24.22.1 requirement;
+official CI remains the authority for that pinned build environment. No full
+repository-green or production-readiness claim is made.
 
 The initial Docker/WSL outage was recovered with explicit owner permission;
 unrelated Tulungrejo app/database containers returned healthy. The same image,
@@ -192,3 +219,17 @@ not registered policy approvals or computed student results. Transport uses
 `irt-calibration-service-v1/examples/accepted.json` and the shared digest vector.
 Do not send a payload directly in the notification endpoint: freeze/authorize
 through main and send only notification v3 IDs/digest/generation.
+
+
+Reproduce additional checks in AI with the pinned image digest:
+
+```text
+python tools/check_irt_stress.py --image <digest> --output .scratch/irt-stress.json
+python tools/check_irt_partial.py --image <digest> --output .scratch/irt-partial.json
+python tools/run_irt_research.py --image <digest> --per-arm 500 --arms 3 --output .scratch/irt-three.json --recovery-only
+```
+
+S-X2 Holm correction is applied within each arm; release-test Holm correction
+covers the five anchors. The fixed policy/source hashes preserve that scope.
+Any academic change to scope, model or threshold requires a new policy version
+with a stated reason, not retrospective tuning of this benchmark.

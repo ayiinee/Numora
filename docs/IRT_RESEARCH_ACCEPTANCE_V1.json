@@ -1,5 +1,5 @@
 {
-  "status": "RECOVERY_ACCEPTED_FOLLOWUPS_RUNNING",
+  "status": "LOCAL_RESEARCH_ACCEPTED_WITH_UPSTREAM_CI_BLOCKER",
   "date": "2026-11-09",
   "purpose": "RESEARCH_ONLY",
   "productionApproved": false,
@@ -331,16 +331,18 @@
       "tests": 15,
       "passed": 15,
       "failed": 0,
-      "seconds": 161.198,
+      "seconds": 301.738,
+      "upgradeMode": true,
+      "historicalAttemptScoreAndXpExactlyPreserved": true,
       "acknowledgementUnder10Seconds": true,
-      "includes": "Final per-arm anchor coverage, cleanup failure handling, identity SELECT denial, tampered artifact and immutable artifact guards."
+      "note": "Final expanded source/contract/runtime manifest. Disposable loopback PostgreSQL; real R; no shared database writes."
     },
     "serviceRegression": {
-      "tests": 86,
-      "passed": 57,
+      "tests": 87,
+      "passed": 58,
       "skipped": 29,
-      "seconds": 34.03,
-      "includes": "All 1094 numerical generators and all VERIFIED conceptual stock entries; dedicated PostgreSQL/R runs reported separately."
+      "seconds": 33.191,
+      "includes": "All 1094 numerical generators and all VERIFIED conceptual stocks; dedicated R/DB tests below run separately."
     },
     "mainContracts": {
       "jsonSchemasCompiled": 17,
@@ -355,13 +357,34 @@
       "seconds": 16.055,
       "skip": "R disabled in infrastructure-only run",
       "covers": "Tampered artifact rejected before sealing; immutable artifact update rejected."
+    },
+    "oracleAndContainerFaults": {
+      "tests": 5,
+      "passed": 5,
+      "seconds": 10.752,
+      "probabilityTolerance": 1e-08,
+      "eapAndPredictionTolerance": 0.0001,
+      "covers": [
+        "Unordered GPCM steps",
+        "EAP extreme response patterns",
+        "Real container timeout/stale-authorization removal and isolation",
+        "Primary failure retained when Docker cleanup fails"
+      ]
+    },
+    "legacyUpgradeRegression": {
+      "tests": 9,
+      "passed": 9,
+      "seconds": 46.54,
+      "change": "Expected nullable tryout_batch_id default explicitly, retaining all historical field, answer and XP assertions."
+    },
+    "mainOrchestrationPackage": {
+      "testFiles": 3,
+      "passed": 14,
+      "runner": "Vitest package test command"
     }
   },
-  "remaining": [
-    "Run pure 2PL, pure GPCM and three-arm engine scenarios.",
-    "Complete anchor-DIF, local-dependence, singular-information and nonconvergence stress scenarios."
-  ],
-  "blocker": "Docker recovered after owner-authorized restart. Remaining benchmark and scientific designs are running sequentially.",
+  "remaining": [],
+  "blocker": "Local research acceptance is complete. Main PR remains draft while inherited generator browser overflow in base PR #130 is unresolved; latest repository-wide CI must rerun after the legacy snapshot expectation fix.",
   "validityLimits": [
     "Synthetic well-conditioned design only; no empirical dimensionality approval.",
     "Five anchors and sensitivity checks do not establish absence of DIF or construct equivalence.",
@@ -386,5 +409,261 @@
     "totalReplications": 30,
     "simulatedDIF": false,
     "action": "Academic review before production; no post-hoc threshold change. A sensitivity hold is NOT_COMPARABLE, not automatic DRIFT."
+  },
+  "implementationRevisions": {
+    "ai": "dcd9e0f",
+    "main": "48b0c41",
+    "runtimeProfileSha256": "5316f3eea5483b2b193385336de064c63764fbd4c0d89272fa35e6737dd562c9"
+  },
+  "additionalEngineDesigns": [
+    {
+      "design": "2PL-2",
+      "respondentsPerArm": 500,
+      "converged": true,
+      "seconds": 32.71899999998277,
+      "maximumProbabilityConversionError": 2.220446049250313e-16,
+      "reportSha256": "2292871749ac4da208e68216dd9cae4d7571395f0b228842651d360e65d382b1",
+      "scope": "Engine/probability smoke; not a 30-replication recovery acceptance for this design."
+    },
+    {
+      "design": "GPCM-2",
+      "respondentsPerArm": 500,
+      "converged": true,
+      "seconds": 179.625,
+      "maximumProbabilityConversionError": 4.440892098500626e-16,
+      "reportSha256": "e688658f713457bd2c71bfead2cd7174ac0ec8ffa2e380ac6216a5a2058f91ca",
+      "scope": "Engine/probability smoke; not a 30-replication recovery acceptance for this design."
+    },
+    {
+      "design": "MIXED-3",
+      "respondentsPerArm": 500,
+      "converged": true,
+      "seconds": 95.82800000000861,
+      "maximumProbabilityConversionError": 2.220446049250313e-16,
+      "reportSha256": "aa1e6b7ba85186876593e21f12492971945991087ff271818dc61448fe7f0c1d",
+      "scope": "Engine/probability smoke; not a 30-replication recovery acceptance for this design."
+    }
+  ],
+  "scientificStress": {
+    "ANCHOR_DIF": {
+      "converged": true,
+      "scientificFailure": null,
+      "engineError": null,
+      "maximumAdjustedQ3": 0.13892442532863497,
+      "anchorChecks": {
+        "10000000-0000-4000-8000-000000000064": {
+          "evaluated": true,
+          "p": 0,
+          "maximumLogSlopeDifference": 0.09551223524296959,
+          "maximumStepDifference": 1.7282120101882936,
+          "holmP": 0
+        },
+        "10000000-0000-4000-8000-000000000065": {
+          "evaluated": true,
+          "p": 0.00012048554837840175,
+          "maximumLogSlopeDifference": 0.08276689252285604,
+          "maximumStepDifference": 0.6221741970211356,
+          "holmP": 0.00012048554837840175
+        },
+        "10000000-0000-4000-8000-000000000066": {
+          "evaluated": true,
+          "p": 1.0799001238681605e-05,
+          "maximumLogSlopeDifference": 0.14138611536821377,
+          "maximumStepDifference": 0.8130366783381425,
+          "holmP": 2.159800247736321e-05
+        },
+        "10000000-0000-4000-8000-000000000067": {
+          "evaluated": true,
+          "p": 2.408502868256335e-07,
+          "maximumLogSlopeDifference": 0.1249717853483096,
+          "maximumStepDifference": 0.6709593406626708,
+          "holmP": 9.63401147302534e-07
+        },
+        "10000000-0000-4000-8000-000000000068": {
+          "evaluated": true,
+          "p": 3.1383806895490807e-06,
+          "maximumLogSlopeDifference": 0.3403714901581389,
+          "maximumStepDifference": 0.5887325259284912,
+          "holmP": 9.415142068647242e-06
+        }
+      }
+    },
+    "LOCAL_DEPENDENCE": {
+      "converged": true,
+      "scientificFailure": null,
+      "engineError": null,
+      "maximumAdjustedQ3": 0.7797242243385466,
+      "anchorChecks": {
+        "10000000-0000-4000-8000-000000000064": {
+          "evaluated": true,
+          "p": 0.3475621414244797,
+          "maximumLogSlopeDifference": 0.016644430473601833,
+          "maximumStepDifference": 0.3323067443140045,
+          "holmP": 1
+        },
+        "10000000-0000-4000-8000-000000000065": {
+          "evaluated": true,
+          "p": 0.9011538886414884,
+          "maximumLogSlopeDifference": 0.08633659215587833,
+          "maximumStepDifference": 0.026113778392946013,
+          "holmP": 1
+        },
+        "10000000-0000-4000-8000-000000000066": {
+          "evaluated": true,
+          "p": 0.6189591620962878,
+          "maximumLogSlopeDifference": 0.10996321522053486,
+          "maximumStepDifference": 0.18844450582663885,
+          "holmP": 1
+        },
+        "10000000-0000-4000-8000-000000000067": {
+          "evaluated": true,
+          "p": 0.5105673624380622,
+          "maximumLogSlopeDifference": 0.19839738342400048,
+          "maximumStepDifference": 0.0445712230963865,
+          "holmP": 1
+        },
+        "10000000-0000-4000-8000-000000000068": {
+          "evaluated": true,
+          "p": 0.2525107936127542,
+          "maximumLogSlopeDifference": 0.3067426431398654,
+          "maximumStepDifference": 0.030477024572963696,
+          "holmP": 1
+        }
+      }
+    },
+    "SINGULAR": {
+      "converged": false,
+      "scientificFailure": "MODEL_CONVERGENCE_FAILED",
+      "engineError": "non-character argument",
+      "maximumAdjustedQ3": null,
+      "anchorChecks": {}
+    },
+    "NONCONVERGENCE": {
+      "converged": false,
+      "scientificFailure": "MODEL_CONVERGENCE_FAILED",
+      "engineError": "non-character argument",
+      "maximumAdjustedQ3": null,
+      "anchorChecks": {}
+    }
+  },
+  "scientificStressScope": "Raw engine fault injection; not participant artifacts. SINGULAR removes common observed anchors and fails inside mirt; NONCONVERGENCE injects one cycle and fails inside mirt. No claimed successful covariance estimate or substituted uncertainty.",
+  "stressFixtureNote": "Initial constant-category DIF fixture was discarded as a DIF test. Final DIF uses a +1.3 difficulty shift with nonempty categories and successfully fitted model; sensitivity held linking.",
+  "partialAndEmptyCategory": {
+    "partial": {
+      "seconds": 24.030999999988126,
+      "state": "PARTIAL",
+      "packages": [
+        {
+          "packageId": "10000000-0000-4000-8000-00000000000a",
+          "packageVersion": 1,
+          "measurementState": "CALIBRATED",
+          "quality": {
+            "gate": "PASSED",
+            "checks": [
+              {
+                "code": "MINIMUM_ARM_COUNT",
+                "status": "PASS",
+                "statistic": 500,
+                "standardError": null
+              },
+              {
+                "code": "ANCHOR_RESPONSE_COVERAGE",
+                "status": "PASS",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "ANCHOR_CALIBRATION",
+                "status": "PASS",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "REFERENCE_SCALE_NO_LINK_REQUIRED",
+                "status": "PASS",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "VALID_ITEM_COVERAGE",
+                "status": "PASS",
+                "statistic": 30,
+                "standardError": null
+              }
+            ]
+          },
+          "reasonCodes": []
+        },
+        {
+          "packageId": "10000000-0000-4000-8000-00000000000b",
+          "packageVersion": 2,
+          "measurementState": "INSUFFICIENT",
+          "quality": {
+            "gate": "FAILED",
+            "checks": [
+              {
+                "code": "MINIMUM_ARM_COUNT",
+                "status": "PASS",
+                "statistic": 500,
+                "standardError": null
+              },
+              {
+                "code": "ANCHOR_RESPONSE_COVERAGE",
+                "status": "FAIL",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "ANCHOR_CALIBRATION",
+                "status": "PASS",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "REFERENCE_SCALE_NO_LINK_REQUIRED",
+                "status": "PASS",
+                "statistic": null,
+                "standardError": null
+              },
+              {
+                "code": "VALID_ITEM_COVERAGE",
+                "status": "FAIL",
+                "statistic": 5,
+                "standardError": null
+              }
+            ]
+          },
+          "reasonCodes": [
+            "INSUFFICIENT_SAMPLE"
+          ]
+        }
+      ],
+      "scored": 500
+    },
+    "emptyCategory": {
+      "state": "INSUFFICIENT",
+      "respondents": 1000,
+      "engineInvoked": false
+    }
+  },
+  "preProductionRequirements": [
+    "Academic approval of empirical dimensionality, linking and policies; review high anchor sensitivity hold rate.",
+    "Validated Linux Python runtime profile and capacity/security review on intended hardware (test host has 1 CPU and about 1.817 GiB Docker RAM, not the requested 2-CPU test capacity).",
+    "Canonical participant result/parameter adoption and publication remain separate future work.",
+    "Resolve upstream generator browser overflow and pass full repository CI; no automatic merge or deployment."
+  ],
+  "repositoryCI": {
+    "pr": "https://github.com/ayiinee/Numora/pull/132",
+    "draft": true,
+    "inheritedBasePr": "https://github.com/ayiinee/Numora/pull/130",
+    "observedFailures": [
+      "Historical snapshot omitted new nullable column (fixed; 9/9 local tests pass; remote rerun pending).",
+      "Generator directory horizontal overflow for two admin roles in browser-e2e shard 1.",
+      "quality aggregate follows failing tests/browser jobs."
+    ],
+    "uiFilesChangedByThisBranch": false,
+    "localNodeVersion": "24.15.0",
+    "repositoryExpectedNode": ">=24.22.1 <25",
+    "ciBuildContractAndValidate": "Previously successful; latest rerun not claimed."
   }
 }
