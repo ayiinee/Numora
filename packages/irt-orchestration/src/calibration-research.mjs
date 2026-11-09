@@ -18,6 +18,8 @@ export async function freezeCalibrationResearch(sql, draft, resources, runtime, 
   // Caller selects the frozen manifests; source attempt identity/grades are authoritative.
   const attemptIds=input.respondents.map(p=>p.attemptId);
   return sql.begin(async tx=>{
+    const [context]=await tx`SELECT ecosystem,tryout_batch_id,revision FROM measurement_contexts WHERE id=${input.context.contextId}`;
+    if(!context||context.ecosystem!=='TRYOUT'||context.tryout_batch_id!==input.context.batchId||context.revision!==input.context.revision)throw new Error('IRT_CANONICAL_CONTEXT_MISMATCH');
     const manifests=await tx`SELECT r.package_id,p.package_version,r.arm_id,arm.kind,r.anchor_question_version_ids,
       p.curriculum_approval,p.frozen_at,r.manifest_digest,
       r.manifest_digest=irt_compute.payload_digest(jsonb_build_object('packageId',p.id,'packageVersion',p.package_version,
@@ -91,7 +93,7 @@ export async function freezeCalibrationResearch(sql, draft, resources, runtime, 
       response.includedInCalibration=source.was_presented&&person.deliveryMode==='ASSIGNED'&&!response.priorExposureSources.length;
     }
     validateInput(input);
-    return freezeValidated(tx,input,resources,runtime);
+    return freezeValidated(tx,input,resources,{...runtime,pseudonymKeyVersion:keyVersion});
   });
 }
 

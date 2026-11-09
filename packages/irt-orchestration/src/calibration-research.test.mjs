@@ -28,9 +28,10 @@ test('canonical adapter rejects an unregistered package before reading grades',a
   const previous=process.env.NUMORA_IRT_RESEARCH_ENABLED;
   process.env.NUMORA_IRT_RESEARCH_ENABLED='true';
   try {
-    const sql={begin:async fn=>fn(async()=>[])};
+    let query=0;
+    const sql={begin:async fn=>fn(async()=>query++===0?[{ecosystem:'TRYOUT',tryout_batch_id:'batch',revision:1}]:[])};
     await assert.rejects(freezeCalibrationResearch(sql,{ecosystem:'TRYOUT',comparisons:[],respondents:[],
-      context:{},packages:[{packageId:'unknown'}]},null,null,{}),/IRT_CANONICAL_MANIFEST_MISMATCH/);
+      context:{batchId:'batch',revision:1},packages:[{packageId:'unknown'}]},null,null,{}),/IRT_CANONICAL_MANIFEST_MISMATCH/);
   } finally {
     if(previous===undefined)delete process.env.NUMORA_IRT_RESEARCH_ENABLED;
     else process.env.NUMORA_IRT_RESEARCH_ENABLED=previous;
