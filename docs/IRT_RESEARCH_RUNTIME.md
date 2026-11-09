@@ -306,3 +306,32 @@ The original acceptance-v1 JSON predates the corrected CI and this outcome
 work. Its numerical recovery evidence remains valid, but its old CI blocker
 and aggregate acceptance status must not be used as a current readiness claim.
 Use the supplementary outcome report delivered with this follow-up.
+
+
+### Running this follow-up
+
+From AI, run:
+
+```text
+python -B -m unittest tests.service.test_irt_math tests.service.test_irt_gates tests.service.test_irt_failures tests.service.test_irt_outcomes -v
+python -B tools/audit_irt_anchor_gates.py --reports .scratch/irt-benchmark-reference-v1 --output .scratch/anchor-audit.json
+python -B tools/evaluate_irt_anchor_sensitivity.py --image sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036 --output .scratch/anchor-paired-new
+```
+
+The audit requires the original private local benchmark files; committed hashes
+are checked and missing evidence is an error. Paired experiments use only
+synthetic data and can run without a database. Use a fresh output directory
+after changing any pinned source; mismatched checkpoints are rejected.
+
+For HTTP/daemon/R/artifact validation, run main's
+`scripts/test-irt-research-local.py` with `IRT_RESEARCH_TEST_IMAGE` set to the
+same digest and `IRT_RESEARCH_UPGRADE_TEST=true`. The harness owns a disposable
+loopback PostgreSQL instance and removes it afterward. No shared database URL
+or dotenv fallback is used. Run expensive checks sequentially for meaningful
+timing measurements; this follow-up is correctness evidence, not an SLO.
+
+Rollback requires checking out the earlier AI source together with runtime
+profile v1; do not pair v2 code with v1 source hashes. Research features stay
+disabled by default. Existing frozen v1 jobs are not rebound silently to v2;
+finish them with their exact previous runtime or cancel and issue a newly
+pinned request. This follow-up has no migration or deployment to roll back.
