@@ -37,9 +37,12 @@ BEGIN
  IF TG_OP<>'INSERT' THEN RAISE EXCEPTION 'Frozen calibration input is immutable' USING ERRCODE='23514'; END IF;
  -- Owner authorized only disposable local research in this delivery.
  IF current_database() NOT LIKE 'irt_research_test_%' THEN RAISE EXCEPTION 'Research requires disposable database' USING ERRCODE='23514'; END IF;
- IF NEW.body->>'requestId'<>NEW.id::text OR NEW.body->>'snapshotId'<>NEW.snapshot_id::text OR NEW.body#>>'{context,contextId}'<>NEW.context_id::text THEN RAISE EXCEPTION 'Calibration identity mismatch' USING ERRCODE='23514'; END IF;
+ IF NEW.body->>'requestId' IS DISTINCT FROM NEW.id::text OR NEW.body->>'snapshotId' IS DISTINCT FROM NEW.snapshot_id::text OR NEW.body#>>'{context,contextId}' IS DISTINCT FROM NEW.context_id::text THEN RAISE EXCEPTION 'Calibration identity mismatch' USING ERRCODE='23514'; END IF;
  IF jsonb_typeof(NEW.resources) IS DISTINCT FROM 'object' OR NOT NEW.resources ?& ARRAY['model','quality','eligibility','scoring','scoreMapping']
   OR (SELECT count(*) FROM jsonb_object_keys(NEW.resources))<>5 THEN RAISE EXCEPTION 'Policy resources required' USING ERRCODE='23514'; END IF;
+ IF EXISTS(SELECT 1 FROM jsonb_each(NEW.resources) x WHERE x.value->'ref' IS DISTINCT FROM NEW.body->'policies'->x.key
+  OR x.value->>'kind' IS DISTINCT FROM CASE x.key WHEN 'model' THEN 'IRT_MODEL' WHEN 'quality' THEN 'QUALITY_GATE' WHEN 'eligibility' THEN 'IRT_ELIGIBILITY' WHEN 'scoring' THEN 'IRT_SCORING' WHEN 'scoreMapping' THEN 'SCORE_MAPPING' END)
+  OR NEW.body#>'{policies,comparison}' IS DISTINCT FROM 'null'::jsonb THEN RAISE EXCEPTION 'Calibration policy binding mismatch' USING ERRCODE='23514'; END IF;
  FOR resource IN SELECT value FROM jsonb_each(NEW.resources) LOOP
   SELECT * INTO target FROM irt_compute.technical_policy_versions WHERE id=(resource#>>'{ref,id}')::uuid;
   SELECT * INTO approval FROM public.configuration_approvals WHERE id=(resource#>>'{ref,approvalId}')::uuid;
@@ -48,7 +51,7 @@ BEGIN
    OR target.digest IS DISTINCT FROM resource#>>'{ref,digest}' OR target.digest IS DISTINCT FROM irt_compute.payload_digest(target.definition)
    OR approval.technical_policy_version_id IS DISTINCT FROM target.id OR approval.revoked_at IS NOT NULL
    OR approval.approved_digest IS DISTINCT FROM target.digest OR approval.scope->>'contextId' IS DISTINCT FROM NEW.context_id::text
-   OR approval.scope->>'purpose' IS DISTINCT FROM 'RESEARCH_ONLY' THEN RAISE EXCEPTION 'Calibration policy not approved in scope' USING ERRCODE='23514'; END IF;
+   OR approval.scope->>'purpose' IS DISTINCT FROM 'RESEARCH_ONLY' OR approval.scope->>'ecosystem' IS DISTINCT FROM 'TRYOUT' THEN RAISE EXCEPTION 'Calibration policy not approved in scope' USING ERRCODE='23514'; END IF;
  END LOOP;
  NEW.input_digest:=irt_compute.payload_digest(jsonb_build_object('recipe','PG_JSONB_IRT_RESEARCH_V1','body',NEW.body,'resources',NEW.resources,'runtime',NEW.runtime_profile));
  RETURN NEW;
@@ -73,7 +76,26 @@ BEGIN
  RETURN NEW;
 END $$;
 CREATE TRIGGER irt_calibration_dispatch_guard BEFORE INSERT OR UPDATE OR DELETE ON public.irt_calibration_dispatches_v1 FOR EACH ROW EXECUTE FUNCTION public.irt_calibration_dispatch_guard_v1();
+CREATE FUNCTION public.irt_calibration_outbox_v1() RETURNS trigger LANGUAGE plpgsql AS $$
+DECLARE event_id uuid;
+BEGIN
+ INSERT INTO public.analytics_outbox(event_name,event_version,actor_user_id,entity_type,entity_id,payload)
+ SELECT 'irt.research.requested','1',NEW.actor_user_id,'irt_calibration_request',NEW.request_id,
+  jsonb_build_object('contractVersion',3,'requestId',r.id,'inputDigest',r.input_digest,'dispatchGeneration',NEW.generation)
+ FROM public.irt_calibration_requests_v1 r WHERE r.id=NEW.request_id RETURNING id INTO event_id;
+ INSERT INTO public.outbox_deliveries(outbox_id,consumer) VALUES(event_id,'irt_research');
+ RETURN NEW;
+END $$;
+CREATE TRIGGER irt_calibration_outbox AFTER INSERT ON public.irt_calibration_dispatches_v1 FOR EACH ROW EXECUTE FUNCTION public.irt_calibration_outbox_v1();
+REVOKE ALL ON FUNCTION public.irt_calibration_outbox_v1() FROM PUBLIC;
 CREATE TRIGGER irt_calibration_cancel_immutable BEFORE UPDATE OR DELETE ON public.irt_calibration_cancellations_v1 FOR EACH ROW EXECUTE FUNCTION public.measurement_append_only();
+CREATE FUNCTION public.irt_calibration_cancel_guard_v1() RETURNS trigger LANGUAGE plpgsql AS $$
+BEGIN
+ IF NOT EXISTS(SELECT 1 FROM public.users WHERE id=NEW.actor_user_id AND role='ADMIN' AND status='ACTIVE' AND admin_role IN ('SUPER_ADMIN','CONTENT_DATA_MODERATION')) THEN RAISE EXCEPTION 'Content Admin required' USING ERRCODE='23514'; END IF;
+ RETURN NEW;
+END $$;
+CREATE TRIGGER irt_calibration_cancel_guard BEFORE INSERT ON public.irt_calibration_cancellations_v1 FOR EACH ROW EXECUTE FUNCTION public.irt_calibration_cancel_guard_v1();
+REVOKE ALL ON FUNCTION public.irt_calibration_cancel_guard_v1() FROM PUBLIC;
 --> statement-breakpoint
 CREATE VIEW public.irt_calibration_inputs_v1 WITH(security_barrier=true) AS
  SELECT r.*,r.body||jsonb_build_object('inputDigest',r.input_digest) AS payload,
@@ -106,10 +128,12 @@ BEGIN
  IF TG_OP<>'INSERT' THEN RAISE EXCEPTION 'Artifact immutable' USING ERRCODE='23514'; END IF;
  SELECT * INTO job FROM irt_compute.calibration_jobs_v1 WHERE id=NEW.job_id FOR UPDATE;
  SELECT * INTO source FROM public.irt_calibration_inputs_v1 WHERE id=job.request_id;
- IF job.status<>'RUNNING' OR job.lease_expires_at<=clock_timestamp() OR source.cancelled OR NOT source.approvals_valid OR source.current_generation<>job.generation
-  OR NEW.payload->>'contractVersion'<>'irt-calibration-v1' OR NEW.payload->>'requestId'<>job.request_id::text
-  OR NEW.payload->>'executionId'<>job.execution_id::text OR NEW.payload->>'inputDigest'<>source.input_digest
-  OR (NEW.payload->>'dispatchGeneration')::int<>job.generation THEN RAISE EXCEPTION 'Invalid or stale calibration artifact' USING ERRCODE='23514'; END IF;
+ IF job.id IS NULL OR source.id IS NULL OR job.status IS DISTINCT FROM 'RUNNING' OR job.lease_expires_at IS NULL OR job.lease_expires_at<=clock_timestamp() OR source.cancelled OR NOT source.approvals_valid OR source.current_generation IS DISTINCT FROM job.generation
+  OR NEW.payload->>'contractVersion' IS DISTINCT FROM 'irt-calibration-v1' OR NEW.payload->>'requestId' IS DISTINCT FROM job.request_id::text
+  OR NEW.payload->>'executionId' IS DISTINCT FROM job.execution_id::text OR NEW.payload->>'inputDigest' IS DISTINCT FROM source.input_digest
+  OR NEW.payload->>'snapshotId' IS DISTINCT FROM source.snapshot_id::text OR NEW.payload->>'calibrationId' IS DISTINCT FROM source.body->>'calibrationId'
+  OR NEW.payload->'context' IS DISTINCT FROM source.body->'context'
+  OR (NEW.payload->>'dispatchGeneration')::int IS DISTINCT FROM job.generation THEN RAISE EXCEPTION 'Invalid or stale calibration artifact' USING ERRCODE='23514'; END IF;
  NEW.digest:=irt_compute.payload_digest(jsonb_build_object('payload',NEW.payload,'diagnostics',NEW.diagnostics,'runtime',source.runtime_profile));
  RETURN NEW;
 END $$;

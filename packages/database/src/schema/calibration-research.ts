@@ -1,4 +1,4 @@
-import { bigint, integer, jsonb, pgTable, text, timestamp, uuid, uniqueIndex, foreignKey } from 'drizzle-orm/pg-core';
+import { bigint, integer, jsonb, pgTable, text, timestamp, uuid, uniqueIndex, foreignKey, primaryKey } from 'drizzle-orm/pg-core';
 import { irtCompute } from './measurement-foundation.js';
 import { measurementContexts } from './measurement.js';
 import { users } from './identity.js';
@@ -13,7 +13,7 @@ export const irtCalibrationRequestsV1 = pgTable('irt_calibration_requests_v1', {
 export const irtCalibrationDispatchesV1 = pgTable('irt_calibration_dispatches_v1', {
   requestId: uuid('request_id').notNull().references(() => irtCalibrationRequestsV1.id),
   generation: integer('generation').notNull(), actorUserId: uuid('actor_user_id').notNull().references(() => users.id), createdAt: created(),
-}, t => [uniqueIndex('irt_calibration_dispatches_v1_pkey').on(t.requestId,t.generation)]).enableRLS();
+}, t => [primaryKey({columns:[t.requestId,t.generation]})]).enableRLS();
 export const irtCalibrationCancellationsV1 = pgTable('irt_calibration_cancellations_v1', {
   requestId: uuid('request_id').primaryKey().references(() => irtCalibrationRequestsV1.id),
   actorUserId: uuid('actor_user_id').notNull().references(() => users.id), createdAt: created(),
