@@ -71,6 +71,7 @@ export function AppShell({
   const [logoutError, setLogoutError] = useState('');
   const [loggingOut, setLoggingOut] = useState(false);
   const profile = state.status === 'ready' ? state.profile : null;
+  const isStudent = area === 'student';
   const isAdmin = area === 'admin';
   const adminItems = adminNavigation(profile);
   const adminActive = activeAdminHref(pathname, adminItems);
@@ -234,15 +235,34 @@ export function AppShell({
               <Link className="mobile-brand" href={`/${area}`}>
                 <Brand />
               </Link>
-              <span className="desktop-context">
-                {areaName}
-                <span>/</span>
-                {title ||
-                  (area === 'admin' ? adminItems : navigation[area]).find((item) =>
-                    active(item.href),
-                  )?.label ||
-                  'Beranda'}
-              </span>
+              {isStudent ? (
+                !mobileHeader && (
+                  <div className="student-desktop-heading">
+                    {backHref && (
+                      <Link href={backHref} className="materials-header__back" aria-label="Kembali">
+                        <Icon name="back" />
+                      </Link>
+                    )}
+                    <div>
+                      <h1>
+                        {title ||
+                          navigation.student.find((item) => active(item.href))?.label ||
+                          'Belajar'}
+                      </h1>
+                      {subtitle && <p>{subtitle}</p>}
+                    </div>
+                  </div>
+                )
+              ) : (
+                <span className="desktop-context">
+                  {areaName}
+                  <span>/</span>
+                  {title ||
+                    (isAdmin ? adminItems : navigation[area]).find((item) => active(item.href))
+                      ?.label ||
+                    'Beranda'}
+                </span>
+              )}
             </>
           }
           right={

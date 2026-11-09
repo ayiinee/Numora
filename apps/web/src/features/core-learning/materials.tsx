@@ -76,7 +76,6 @@ function MaterialsContent() {
     >
       <div className="materials-page">
         <div className="materials-heading">
-          <h1>Latihan Soal</h1>
           <p>Pilih bab TKA Matematika SMP untuk mulai berlatih.</p>
         </div>
         <section className="materials-activity" aria-labelledby="materials-recent">

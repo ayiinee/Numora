@@ -3678,7 +3678,8 @@ a.settings-row:hover {
   width: min(100%, 520px);
   margin-inline: auto;
 }
-.learning-map-shell:has(.adventure-summary) .page-heading {
+.learning-map-shell:has(.adventure-summary) .page-heading,
+.learning-map-shell:has(.adventure-summary) .app-topbar {
   display: none;
 }
 
@@ -7462,15 +7463,11 @@ a.settings-row:hover {
   justify-content: start;
   gap: 4px;
 }
-.materials-heading h1,
 .materials-section-title h2 {
   margin: 0;
   font-size: 20px;
   line-height: 1.35;
   font-weight: 800;
-}
-.materials-heading h1 {
-  letter-spacing: -0.03em;
 }
 .materials-heading p {
   max-width: 52ch;
@@ -7600,17 +7597,6 @@ a.settings-row:hover {
 .material-chapter__body {
   padding: 4px 14px 14px;
   background: var(--numora-soft-50);
-}
-.materials-detail__desktop-header {
-  display: none;
-}
-@media (min-width: 960px) {
-  .materials-detail__desktop-header {
-    display: block;
-  }
-  .materials-detail__desktop-header .materials-header {
-    border-radius: var(--radius-lg);
-  }
 }
 .materials-detail__heading h2 {
   margin: 4px 0;
@@ -7812,6 +7798,48 @@ a.settings-row:hover {
 .materials-header__back:focus-visible {
   outline: 2px solid white;
   outline-offset: 2px;
+}
+.student-desktop-heading {
+  display: none;
+}
+@media (min-width: 960px) {
+  /* Beranda already places its identity header inside the desktop layout. */
+  .app-shell--student:not(.student-home-shell) .app-mobile-header {
+    display: block;
+  }
+  .app-shell--student .app-topbar--custom-mobile,
+  .app-shell--student .page-heading {
+    display: none;
+  }
+  .app-shell--student .app-topbar {
+    background: var(--student-header-background);
+    border-bottom: 0;
+    color: var(--color-text-inverse);
+  }
+  .app-shell--student .app-topbar :focus-visible,
+  .app-shell--student .notification-header a:focus-visible {
+    outline-color: var(--color-text-inverse);
+  }
+  .app-shell--student .app-mobile-header :is(.materials-header, .notification-header) {
+    min-height: 76px;
+    padding-inline: 36px;
+  }
+  .student-desktop-heading {
+    display: flex;
+    align-items: center;
+    gap: var(--space-3);
+    overflow-wrap: anywhere;
+  }
+  .student-desktop-heading .materials-header__back {
+    flex: none;
+  }
+  .student-desktop-heading h1 {
+    font-size: var(--text-xl);
+    font-weight: 800;
+  }
+  .student-desktop-heading p {
+    font-size: var(--text-sm);
+  }
 }
 .notification-header__back,
 .notification-header__profile {
@@ -8112,9 +8140,6 @@ a.settings-row:hover {
   }
 }
 @media (min-width: 960px) {
-  .materials-heading h1 {
-    font-size: 28px;
-  }
   .material-chapter__toggle {
     padding: 20px;
   }

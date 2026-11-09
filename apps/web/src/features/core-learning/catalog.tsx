@@ -37,7 +37,6 @@ export function ChapterScreen() {
       mobileHeader={header}
     >
       <div className="materials-page materials-detail">
-        <header className="materials-detail__desktop-header">{header}</header>
         {query.isPending || query.isError ? (
           <DataState
             pending={query.isPending}
