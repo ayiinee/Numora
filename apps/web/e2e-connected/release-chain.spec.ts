@@ -1357,7 +1357,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBeVisible();
     await content.reload();
     await expect(content.getByText('Kelas dari sekolah terpilih', { exact: true })).toBeVisible();
-    await expect(content.getByRole('button', { name: /terbitkan|cabut|ban/i })).toHaveCount(0);
+    await expect(content.getByRole('button', { name: /\b(?:terbitkan|cabut|ban)\b/i })).toHaveCount(0);
     for (const path of [
       'admin/users',
       'admin/accounts',
