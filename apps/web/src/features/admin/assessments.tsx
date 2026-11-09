@@ -18,7 +18,6 @@ import {
   type AssessmentUsage,
 } from './assessment-routes';
 import { packageAvailabilityLabel } from './package-availability';
-import { snapshotTime } from './analytics-model';
 import type { AdminCurriculumDto, ContentPackagesDto } from './generated-types';
 
 type Props = { usage: AssessmentUsage; mode?: 'list' | 'create' | 'detail'; packageId?: string };
@@ -30,12 +29,12 @@ function Assessments({ usage, mode = 'list', packageId }: Props) {
   const back = assessmentPath(usage) + assessmentListQuery(url.params);
   return (
     <AdminFrame
-      title={`${mode === 'create' ? 'Tambah paket ' : ''}${assessmentLabels[usage]}`}
+      title={`${mode === 'create' ? 'Tambah paket ' : usage === 'TRYOUT' ? 'Bank paket ' : ''}${assessmentLabels[usage]}`}
       description=""
       icon="target"
       management
       minimalHeader
-      fullWidth={usage === 'PRETEST'}
+      fullWidth={usage !== 'DRILL'}
     >
       {mode === 'list' ? (
         <AssessmentTable
@@ -132,7 +131,7 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
   return (
     <Card
       className={
-        usage === 'PRETEST'
+        usage !== 'DRILL'
           ? 'assessment-directory assessment-directory-compact'
           : 'assessment-directory'
       }
@@ -178,7 +177,7 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
           Tambah paket
         </Link>
       </div>
-      {usage !== 'PRETEST' && (
+      {usage === 'DRILL' && (
         <details
           className="assessment-directory-filters"
           open={Boolean(status || chapter || source)}
@@ -272,7 +271,7 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                       'Versi',
                       'Status paket',
                       'Ketersediaan siswa',
-                      ...(usage === 'TRYOUT' ? ['Rilis'] : []),
+
                       'Aksi',
                     ].map((title) => (
                       <th key={title} scope="col">
@@ -308,9 +307,7 @@ function AssessmentTable({ token, usage }: { token: string; usage: AssessmentUsa
                             ? packageAvailabilityLabel(pack.availability.state)
                             : 'Belum diperiksa'}
                         </td>
-                        {usage === 'TRYOUT' && (
-                          <td>{pack.releaseAt ? snapshotTime(pack.releaseAt) : 'Belum dirilis'}</td>
-                        )}
+
                         <td>
                           <Link
                             className="numora-button numora-button--secondary assessment-manage-button"

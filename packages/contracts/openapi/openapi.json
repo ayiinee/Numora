@@ -1162,6 +1162,86 @@
         ]
       }
     },
+    "/api/v1/tryout/batches": {
+      "get": {
+        "operationId": "TryoutController_batches",
+        "parameters": [
+          {
+            "name": "authorization",
+            "required": true,
+            "in": "header",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/StudentTryoutBatchesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
+    "/api/v1/tryout/batches/{batchId}/attempts": {
+      "post": {
+        "operationId": "TryoutController_startBatch",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/StartTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutAttemptDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "tryout"
+        ]
+      }
+    },
     "/api/v1/tryout/packages/current": {
       "get": {
         "operationId": "TryoutController_current",
@@ -1915,6 +1995,330 @@
         ],
         "tags": [
           "pvp"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches": {
+      "get": {
+        "operationId": "AdminTryoutBatchesController_list",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 5,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutBatchesDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      },
+      "post": {
+        "operationId": "AdminTryoutBatchesController_create",
+        "parameters": [],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches/options": {
+      "get": {
+        "operationId": "AdminTryoutBatchesController_options",
+        "parameters": [
+          {
+            "name": "search",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
+            "name": "offset",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 0,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          },
+          {
+            "name": "limit",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "default": 5,
+              "allOf": [
+                {
+                  "$ref": "#/components/schemas/Object"
+                }
+              ]
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutBatchOptionsDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches/{id}": {
+      "get": {
+        "operationId": "AdminTryoutBatchesController_detail",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/TryoutBatchDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      },
+      "patch": {
+        "operationId": "AdminTryoutBatchesController_update",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/SaveTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches/{id}/publish": {
+      "post": {
+        "operationId": "AdminTryoutBatchesController_publish",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/TryoutBatchRevisionDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches/{id}/cancel": {
+      "post": {
+        "operationId": "AdminTryoutBatchesController_cancel",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/CancelTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
         ]
       }
     },
@@ -10329,6 +10733,175 @@
           "recommendations"
         ]
       },
+      "StudentTryoutSchoolDto": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "string"
+          },
+          "schoolName": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "schoolId",
+          "schoolName"
+        ]
+      },
+      "StudentTryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "closesAt": {
+            "type": "string"
+          },
+          "resultDueAt": {
+            "type": "string"
+          },
+          "state": {
+            "type": "string"
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentTryoutSchoolDto"
+            }
+          },
+          "mandiri": {
+            "type": "boolean"
+          },
+          "attemptId": {
+            "type": "string",
+            "nullable": true
+          },
+          "attemptStatus": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "startsAt",
+          "closesAt",
+          "resultDueAt",
+          "state",
+          "schools",
+          "mandiri",
+          "attemptId",
+          "attemptStatus"
+        ]
+      },
+      "StudentTryoutBatchesDto": {
+        "type": "object",
+        "properties": {
+          "routingActive": {
+            "type": "boolean"
+          },
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentTryoutBatchDto"
+            }
+          }
+        },
+        "required": [
+          "routingActive",
+          "items"
+        ]
+      },
+      "StartTryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "string"
+          }
+        }
+      },
+      "TryoutAttemptDto": {
+        "type": "object",
+        "properties": {
+          "closeAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "resultDueAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "resultPendingReason": {
+            "type": "string",
+            "enum": [
+              "CONTENT_PENDING",
+              "SCORING_PENDING"
+            ],
+            "nullable": true
+          },
+          "isDemo": {
+            "type": "boolean"
+          },
+          "xp": {
+            "type": "number",
+            "nullable": true,
+            "description": "Persisted XP available after completion, independently of IRT release; null for active/legacy attempts."
+          },
+          "xpPolicyVersion": {
+            "type": "number",
+            "nullable": true
+          },
+          "serverTime": {
+            "type": "string",
+            "format": "date-time"
+          },
+          "id": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "packageTitle": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "inProgress",
+              "submitted"
+            ]
+          },
+          "deadlineAt": {
+            "type": "string",
+            "format": "date-time",
+            "nullable": true
+          },
+          "questions": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/DrillQuestionDto"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "packageId",
+          "packageTitle",
+          "status",
+          "deadlineAt",
+          "questions"
+        ]
+      },
       "CurrentTryoutDto": {
         "type": "object",
         "properties": {
@@ -10503,82 +11076,6 @@
         },
         "required": [
           "packageId"
-        ]
-      },
-      "TryoutAttemptDto": {
-        "type": "object",
-        "properties": {
-          "closeAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "resultDueAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "resultPendingReason": {
-            "type": "string",
-            "enum": [
-              "CONTENT_PENDING",
-              "SCORING_PENDING"
-            ],
-            "nullable": true
-          },
-          "isDemo": {
-            "type": "boolean"
-          },
-          "xp": {
-            "type": "number",
-            "nullable": true,
-            "description": "Persisted XP available after completion, independently of IRT release; null for active/legacy attempts."
-          },
-          "xpPolicyVersion": {
-            "type": "number",
-            "nullable": true
-          },
-          "serverTime": {
-            "type": "string",
-            "format": "date-time"
-          },
-          "id": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "packageId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "packageTitle": {
-            "type": "string"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "inProgress",
-              "submitted"
-            ]
-          },
-          "deadlineAt": {
-            "type": "string",
-            "format": "date-time",
-            "nullable": true
-          },
-          "questions": {
-            "type": "array",
-            "items": {
-              "$ref": "#/components/schemas/DrillQuestionDto"
-            }
-          }
-        },
-        "required": [
-          "id",
-          "packageId",
-          "packageTitle",
-          "status",
-          "deadlineAt",
-          "questions"
         ]
       },
       "TryoutSubmitDto": {
@@ -11630,6 +12127,287 @@
           "question"
         ]
       },
+      "Object": {
+        "type": "object",
+        "properties": {}
+      },
+      "TryoutBatchPackageDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "name": {
+            "type": "string"
+          },
+          "packageVersion": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "id",
+          "name",
+          "packageVersion"
+        ]
+      },
+      "TryoutBatchSchoolDto": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "string"
+          },
+          "schoolName": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "schoolId",
+          "schoolName",
+          "packageId"
+        ]
+      },
+      "TryoutBatchParticipantDto": {
+        "type": "object",
+        "properties": {
+          "packageId": {
+            "type": "string"
+          },
+          "schoolId": {
+            "type": "string",
+            "nullable": true
+          },
+          "assigned": {
+            "type": "number"
+          },
+          "completed": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "packageId",
+          "schoolId",
+          "assigned",
+          "completed"
+        ]
+      },
+      "TryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "title": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "closesAt": {
+            "type": "string"
+          },
+          "resultDueAt": {
+            "type": "string"
+          },
+          "revision": {
+            "type": "number"
+          },
+          "state": {
+            "type": "string"
+          },
+          "editable": {
+            "type": "boolean"
+          },
+          "mandiriPackageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchPackageDto"
+            }
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchSchoolDto"
+            }
+          },
+          "participants": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchParticipantDto"
+            }
+          },
+          "resultsState": {
+            "type": "string"
+          },
+          "resultBlockers": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          }
+        },
+        "required": [
+          "id",
+          "title",
+          "startsAt",
+          "closesAt",
+          "resultDueAt",
+          "revision",
+          "state",
+          "editable",
+          "mandiriPackageId",
+          "packages",
+          "schools",
+          "participants",
+          "resultsState",
+          "resultBlockers"
+        ]
+      },
+      "TryoutBatchesDto": {
+        "type": "object",
+        "properties": {
+          "items": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchDto"
+            }
+          },
+          "total": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "items",
+          "total"
+        ]
+      },
+      "TryoutBatchOptionsDto": {
+        "type": "object",
+        "properties": {
+          "packages": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutBatchPackageDto"
+            }
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/StudentTryoutSchoolDto"
+            }
+          },
+          "packageTotal": {
+            "type": "number"
+          },
+          "schoolTotal": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "packages",
+          "schools",
+          "packageTotal",
+          "schoolTotal"
+        ]
+      },
+      "TryoutDelegationInputDto": {
+        "type": "object",
+        "properties": {
+          "schoolId": {
+            "type": "string"
+          },
+          "packageId": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "schoolId",
+          "packageId"
+        ]
+      },
+      "SaveTryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "title": {
+            "type": "string"
+          },
+          "startsAt": {
+            "type": "string"
+          },
+          "closesAt": {
+            "type": "string"
+          },
+          "packageIds": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
+          "mandiriPackageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutDelegationInputDto"
+            }
+          },
+          "expectedRevision": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "title",
+          "startsAt",
+          "closesAt",
+          "packageIds",
+          "schools"
+        ]
+      },
+      "ContentMutationDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id"
+        ]
+      },
+      "TryoutBatchRevisionDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "expectedRevision"
+        ]
+      },
+      "CancelTryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "reason": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "reason"
+        ]
+      },
       "PretestBlueprintDto": {
         "type": "object",
         "properties": {
@@ -11787,17 +12565,6 @@
           "name",
           "chapterId",
           "questionVersionIds"
-        ]
-      },
-      "ContentMutationDto": {
-        "type": "object",
-        "properties": {
-          "id": {
-            "type": "string"
-          }
-        },
-        "required": [
-          "id"
         ]
       },
       "PretestEditDto": {
@@ -12096,10 +12863,6 @@
           "accepted"
         ]
       },
-      "Object": {
-        "type": "object",
-        "properties": {}
-      },
       "GeneratorRequestsDto": {
         "type": "object",
         "properties": {
@@ -12306,6 +13069,7 @@
               "BLOCKED",
               "SCHEDULED",
               "AVAILABLE",
+              "READY_FOR_BATCH",
               "CLOSED",
               "ARCHIVED"
             ]

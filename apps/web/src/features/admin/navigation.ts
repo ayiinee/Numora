@@ -80,7 +80,15 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
           children: [
             { href: '/admin/assessments/pretest', label: 'Pretest' },
             { href: '/admin/assessments/drill', label: 'Drill' },
-            { href: '/admin/assessments/tryout', label: 'Tryout' },
+          ],
+        },
+        {
+          id: 'tryout',
+          label: 'Tryout',
+          icon: 'target',
+          children: [
+            { href: '/admin/tryout-batches', label: 'Batch Tryout' },
+            { href: '/admin/assessments/tryout', label: 'Bank paket Tryout' },
           ],
         },
         {

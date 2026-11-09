@@ -86,7 +86,7 @@ export async function prepareTryoutAnalysis(
     >`
       SELECT b.package_id,b.cutoff_at::text,b.result_due_at::text,b.release_policy,b.release_policy_digest,p.manifest_digest
       FROM measurement_contexts c JOIN tryout_batches b ON b.id=c.tryout_batch_id JOIN assessment_packages p ON p.id=b.package_id
-      WHERE c.id=${input.contextId} AND c.ecosystem='TRYOUT' AND b.status='CLOSED'
+      WHERE c.id=${input.contextId} AND c.ecosystem='TRYOUT' AND b.status='CLOSED' AND b.admin_title IS NULL
       AND b.cutoff_at<=clock_timestamp() AND p.assessment_type='TRYOUT' AND p.purpose='REGULAR'
       AND p.frozen_at IS NOT NULL AND p.manifest_digest IS NOT NULL AND b.release_policy IS NOT NULL AND b.release_policy_digest IS NOT NULL`;
     if (!ctx) fail('IRT_DEPENDENCY_NOT_APPROVED');

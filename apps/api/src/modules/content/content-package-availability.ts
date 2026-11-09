@@ -10,8 +10,6 @@ import {
   pretestDistributionEligibility,
   tryoutDistributionEligibility,
   currentPretestPackage,
-  currentTryoutPackage,
-  tryoutBatchCloseAt,
 } from '@tka/database';
 import type { AdminTransaction } from '../audit/admin-mutation';
 import type { PackageAvailabilityDto } from './content-packages.dto';
@@ -93,20 +91,8 @@ export async function packageAvailability(
     )
       blockers.push('PRETEST_NOT_SELECTED_OR_POLICY_UNSUPPORTED');
   }
-  if (p.assessmentType === 'TRYOUT') {
-    if (
-      !p.releaseAt ||
-      (!p.isDemo &&
-        (p.durationSeconds !== 600 ||
-          p.closeAt?.getTime() !== tryoutBatchCloseAt(p.releaseAt).getTime()))
-    )
-      blockers.push('TRYOUT_SCHEDULE_INVALID');
-    if (blockers.length) return result('BLOCKED', blockers);
-    if (p.releaseAt! > now) return result('SCHEDULED', ['RELEASE_PENDING']);
-    if ((p.closeAt ?? tryoutBatchCloseAt(p.releaseAt!)) <= now)
-      return result('CLOSED', ['WINDOW_CLOSED']);
-    if ((await currentTryoutPackage(tx))?.id !== p.id) blockers.push('TRYOUT_NOT_CURRENT_PACKAGE');
-  }
+  if (p.assessmentType === 'TRYOUT')
+    return blockers.length ? result('BLOCKED', blockers) : result('READY_FOR_BATCH');
   return blockers.length ? result('BLOCKED', blockers) : result('AVAILABLE');
 }
 

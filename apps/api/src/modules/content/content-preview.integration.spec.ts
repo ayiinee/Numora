@@ -11,7 +11,14 @@ import { UnauthorizedException, type INestApplication } from '@nestjs/common';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 import { getDatabase, closeDatabaseConnection, users, type ImportQuestion } from '@tka/database';
 import { ContentModule } from './content.module';
+import { TryoutBatchesService } from '../learning/tryout-batches.service';
+import { TryoutService } from '../learning/tryout.service';
+import { TryoutController } from '../learning/tryout.controller';
+import type { TryoutAttemptDto, TryoutSubmitDto } from '../learning/tryout.dto';
+import { TryoutReleaseService } from '../learning/tryout-release.service';
+import type { SaveTryoutBatchDto, TryoutBatchDto } from '../learning/tryout-batches.dto';
 import { IdentityService } from '../identity/identity.service';
+import { IdentityModule } from '../identity/identity.module';
 import { configureApplication } from '../../bootstrap';
 import { R2MediaStorage, matchesImageSignature } from './r2-media.storage';
 import type { MediaUpload } from './media-uploads.repository';
@@ -23,7 +30,6 @@ import type { ExcelParseDto } from './excel-import.dto';
 import { DrillAssessmentService } from '../learning/drill-assessment.service';
 import { PretestService } from '../learning/pretest.service';
 import { AssessmentMediaService } from '../learning/assessment-media.service';
-import { TryoutReleaseService } from '../learning/tryout-release.service';
 import {
   finalizeTryout,
   decodeAssessmentContent,
@@ -137,6 +143,7 @@ describe.skipIf(!testUrl)(
         ['unassigned', 'ADMIN', null],
         ['student', 'STUDENT', null],
         ['otherStudent', 'STUDENT', null],
+        ['unallocatedStudent', 'STUDENT', null],
         ['teacher', 'TEACHER', null],
       ];
       const ids: string[] = [];
@@ -178,7 +185,11 @@ describe.skipIf(!testUrl)(
       process.env.ALLOW_SYNTHETIC_CONTENT = 'true';
       url.username = computeLogin;
       compute = postgres(url.toString(), { max: 1, onnotice: () => {} });
-      const module = await Test.createTestingModule({ imports: [ContentModule] })
+      const module = await Test.createTestingModule({
+        imports: [ContentModule, IdentityModule],
+        controllers: [TryoutController],
+        providers: [TryoutService, TryoutReleaseService],
+      })
         .overrideProvider(ConfigService)
         .useValue({
           get: (key: string) =>
@@ -1431,7 +1442,7 @@ describe.skipIf(!testUrl)(
           expect(runtimePin).toMatchObject({ frozen: true, approved: true });
         const available = await ok<ContentPackageDetailDto>(`admin/content/packages/${pack.id}`);
         if (usage === 'PRETEST') expect(available.availability?.state).toBe('AVAILABLE');
-        if (usage === 'TRYOUT') expect(available.availability?.state).toBe('SCHEDULED');
+        if (usage === 'TRYOUT') expect(available.availability?.state).toBe('READY_FOR_BATCH');
         expect(pins!.blueprint_version_id).toBeTruthy();
         expect(pins!.scoring_policy_version_id).toBeTruthy();
         expect(pins!.curriculum_approval.manifestDigest).toMatch(/^[a-f0-9]{64}$/);
@@ -1599,18 +1610,19 @@ describe.skipIf(!testUrl)(
       expect(await pretests.result('Bearer student', pretest.id)).toEqual(completed);
       const scheduledTryout = published.find((p) => p.usage === 'TRYOUT')!.id;
       const firstTryout = await successor(scheduledTryout, 2);
+      // Package readiness is independent of legacy release dates and newer packages.
       expect(
         (await ok<ContentPackageDetailDto>(`admin/content/packages/${firstTryout}`)).availability
           ?.state,
-      ).toBe('AVAILABLE');
+      ).toBe('READY_FOR_BATCH');
       const latestTryout = await successor(scheduledTryout, 3);
       expect(
         (await ok<ContentPackageDetailDto>(`admin/content/packages/${firstTryout}`)).availability,
-      ).toMatchObject({ state: 'BLOCKED', blockers: ['TRYOUT_NOT_CURRENT_PACKAGE'] });
+      ).toMatchObject({ state: 'READY_FOR_BATCH', blockers: [] });
       expect(
         (await ok<ContentPackageDetailDto>(`admin/content/packages/${latestTryout}`)).availability
           ?.state,
-      ).toBe('AVAILABLE');
+      ).toBe('READY_FOR_BATCH');
       const [partialStudent] =
         await owner`SELECT id FROM users WHERE role='STUDENT' AND display_name='otherStudent' LIMIT 1`;
       const tryoutId = published.find((p) => p.usage === 'TRYOUT')!.id;
@@ -2616,5 +2628,271 @@ describe.skipIf(!testUrl)(
         )[0]!.n,
       ).toBeGreaterThanOrEqual(11);
     });
+    it('runs delegated multi-package Tryout batches atomically without leaking results (TEST ONLY)', async () => {
+      // All approvals and academic content below are TEST ONLY, never production acceptance.
+      const source = {
+        sourceNamespace: `BATCH_${suffix}`,
+        sourceName: 'TEST ONLY Curriculum',
+        sourceReference: 'TEST ONLY batch fixture',
+      };
+      const q = samples.find(
+        (q) => q.type === 'SINGLE_CHOICE' && !q.metadata.assetManifest?.length,
+      )!;
+      if (!q.answer || !('optionId' in q.answer))
+        throw Error('TEST ONLY single-choice key required');
+      const correctOptionId = q.answer.optionId;
+      const packageIds: string[] = [];
+      let questionIds: string[] = [];
+      for (let n = 0; n < 2; n++) {
+        const p = await ok<{ id: string }>('admin/content/packages', 'POST', {
+          familyCode: `BATCH-${suffix}-${n}`,
+          packageVersion: 1,
+          name: `TEST ONLY batch package ${n}`,
+          assessmentType: 'TRYOUT',
+          source,
+        });
+        packageIds.push(p.id);
+        if (!n) {
+          const imported = await ok<ImportReportDto>(
+            'admin/content/imports',
+            'POST',
+            {
+              sourceNamespace: source.sourceNamespace,
+              target: { packageId: p.id, expectedRevision: 0 },
+              questions: Array.from({ length: 30 }, (_, i) => ({
+                ...structuredClone(q),
+                externalId: `BATCH-Q-${i}`,
+                chapterCode: null,
+                subchapterCode: null,
+                competencyCode: null,
+                difficulty: null,
+                metadata: {
+                  ...q.metadata,
+                  sourceLevelNumber: null,
+                  sourceOrder: i + 1,
+                  assetManifest: [],
+                },
+              })),
+            },
+            'admin',
+            randomUUID(),
+          );
+          questionIds = imported.items.map((i) => i.questionVersionId!);
+        } else
+          await ok(`admin/content/packages/${p.id}`, 'PATCH', {
+            name: 'TEST ONLY second package',
+            expectedRevision: 0,
+            questionVersionIds: questionIds,
+          });
+        for (const questionVersionId of questionIds)
+          await ok(`admin/content/versions/${questionVersionId}/review`, 'POST', {
+            packageId: p.id,
+            confirmed: true,
+            notes: 'TEST ONLY approval',
+          });
+        await ok(`admin/content/packages/${p.id}/approval`, 'POST', {
+          expectedRevision: 1,
+          confirmed: true,
+          reference: 'TEST ONLY academic approval',
+        });
+        await ok(`admin/content/packages/${p.id}/publish`, 'POST', { expectedRevision: 1 });
+      }
+      const schoolA = randomUUID(),
+        schoolB = randomUUID(),
+        schoolC = randomUUID();
+      const classA = randomUUID(),
+        classB = randomUUID(),
+        classC = randomUUID();
+      await owner`INSERT INTO schools(id,code,name) VALUES(${schoolA},${'BA-' + suffix},'TEST School A'),(${schoolB},${'BB-' + suffix},'TEST School B')`;
+      await owner`INSERT INTO classes(id,school_id,name,join_code) VALUES(${classA},${schoolA},'TEST IX',${'CA-' + suffix}),(${classB},${schoolB},'TEST IX',${'CB-' + suffix})`;
+      await owner`INSERT INTO schools(id,code,name) VALUES(${schoolC},${'BC-' + suffix},'TEST School without delegation')`;
+      await owner`INSERT INTO classes(id,school_id,name,join_code) VALUES(${classC},${schoolC},'TEST IX',${'CC-' + suffix})`;
+      const [student] = await owner`SELECT id FROM users WHERE display_name='student'`;
+      const [unallocated] =
+        await owner`SELECT id FROM users WHERE display_name='unallocatedStudent'`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classC},${unallocated!.id})`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classA},${student!.id}),(${classB},${student!.id})`;
+      const makeInput = (name: string): SaveTryoutBatchDto => ({
+        title: `TEST ONLY ${name}`,
+        startsAt: new Date(Date.now() + 3600000).toISOString(),
+        closesAt: new Date(Date.now() + 7200000).toISOString(),
+        packageIds,
+        mandiriPackageId: null,
+        schools: [
+          { schoolId: schoolA, packageId: packageIds[0]! },
+          { schoolId: schoolB, packageId: packageIds[1]! },
+        ],
+      });
+      for (const role of ['operations', 'unassigned', 'student', 'teacher', ''])
+        expect(
+          (await request('admin/tryout-batches', 'POST', makeInput('denied'), role)).status,
+        ).toBe(role ? 403 : 401);
+      const options = await ok<{ schools: { schoolId: string }[] }>(
+        'admin/tryout-batches/options?limit=100&search=TEST',
+      );
+      expect(options.schools.map((s) => s.schoolId)).toContain(schoolA);
+      const created = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('one'));
+      const duplicate = await request('admin/tryout-batches', 'POST', {
+        ...makeInput('invalid'),
+        schools: [
+          { schoolId: schoolA, packageId: packageIds[0] },
+          { schoolId: schoolA, packageId: packageIds[1] },
+        ],
+      });
+      expect(duplicate.status).toBe(400);
+      expect(
+        (
+          await request(`admin/tryout-batches/${created.id}`, 'PATCH', {
+            ...makeInput('conflict'),
+            expectedRevision: 99,
+          })
+        ).status,
+      ).toBe(409);
+      const competing = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('two'));
+      const races = await Promise.all(
+        [created, competing].map((b) =>
+          request(`admin/tryout-batches/${b.id}/publish`, 'POST', { expectedRevision: 1 }),
+        ),
+      );
+      expect(races.map((r) => r.status).sort()).toEqual([201, 409]);
+      const activeId = races[0]!.ok ? created.id : competing.id;
+      const service = app.get(TryoutBatchesService);
+      const tryout = app.get(TryoutService);
+      expect(
+        (
+          await ok<{ items: { id: string }[] }>('tryout/batches', 'GET', undefined, 'otherStudent')
+        ).items.map((b) => b.id),
+      ).not.toContain(activeId);
+      await ok(`admin/tryout-batches/${activeId}`, 'PATCH', {
+        ...makeInput('Mandiri enabled before start'),
+        mandiriPackageId: packageIds[0],
+        expectedRevision: 2,
+      });
+      await expect(tryout.startBatch('Bearer student', activeId, schoolA)).rejects.toThrow();
+      // TEST ONLY advance fixture schedule, without waiting an hour. Runtime uses database time.
+      await owner`UPDATE tryout_batches SET starts_at=now()-interval '1 minute' WHERE id=${activeId}`;
+      const visible = await service.studentList(student!.id as string);
+      expect(visible.routingActive).toBe(true);
+      expect(visible.items.find((b) => b.id === activeId)!.schools).toHaveLength(2);
+      await expect(tryout.startBatch('Bearer student', activeId)).rejects.toThrow();
+      await expect(tryout.startBatch('Bearer student', activeId, randomUUID())).rejects.toThrow();
+      await expect(tryout.start('Bearer student', packageIds[0]!)).rejects.toThrow();
+      expect(
+        (await request(`tryout/batches/${activeId}/attempts`, 'POST', {}, 'unallocatedStudent'))
+          .status,
+      ).toBe(400);
+      expect(
+        (
+          await request(
+            `tryout/batches/${activeId}/attempts`,
+            'POST',
+            { schoolId: schoolA, packageId: packageIds[1] },
+            'student',
+          )
+        ).status,
+      ).toBe(400);
+      const attempts = await Promise.all([
+        ok<TryoutAttemptDto>(
+          `tryout/batches/${activeId}/attempts`,
+          'POST',
+          { schoolId: schoolB },
+          'student',
+        ),
+        ok<TryoutAttemptDto>(
+          `tryout/batches/${activeId}/attempts`,
+          'POST',
+          { schoolId: schoolA },
+          'student',
+        ),
+      ]);
+      expect(attempts[0].id).toBe(attempts[1].id);
+      const [assignment] =
+        await owner`SELECT * FROM tryout_student_assignments WHERE batch_id=${activeId} AND student_id=${student!.id}`;
+      expect(assignment!.package_id).toBe(
+        assignment!.school_id === schoolB ? packageIds[1] : packageIds[0],
+      );
+      expect(attempts[0].packageId).toBe(assignment!.package_id);
+      expect(attempts[0].questions).toHaveLength(30);
+      expect(JSON.stringify(attempts[0])).not.toContain('answerKey');
+      for (const question of attempts[0].questions)
+        await ok(
+          `tryout/attempts/${attempts[0].id}/answers/${question.questionInstanceId}`,
+          'PATCH',
+          { optionId: correctOptionId },
+          'student',
+        );
+      const resumed = await ok<TryoutAttemptDto>(
+        `tryout/attempts/${attempts[0].id}`,
+        'GET',
+        undefined,
+        'student',
+      );
+      expect(resumed.questions.map((question) => question.questionInstanceId)).toEqual(
+        attempts[0].questions.map((question) => question.questionInstanceId),
+      );
+      expect(
+        resumed.questions.every((question) => question.selectedOptionId === correctOptionId),
+      ).toBe(true);
+      expect(
+        (await request(`tryout/attempts/${attempts[0].id}`, 'GET', undefined, 'otherStudent'))
+          .status,
+      ).toBe(404);
+      const independent = await ok<TryoutAttemptDto>(
+        `tryout/batches/${activeId}/attempts`,
+        'POST',
+        {},
+        'otherStudent',
+      );
+      const [independentAssignment] =
+        await owner`SELECT package_id FROM tryout_student_assignments WHERE attempt_id=${independent.id}`;
+      expect(independentAssignment!.package_id).toBe(packageIds[0]);
+      await owner`UPDATE class_memberships SET left_at=now(),end_reason='LEFT' WHERE student_user_id=${student!.id}`;
+      expect((await tryout.startBatch('Bearer student', activeId)).id).toBe(attempts[0].id);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}`, 'PATCH', {
+            ...makeInput('locked'),
+            expectedRevision: 2,
+          })
+        ).status,
+      ).toBe(409);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}/cancel`, 'POST', {
+            expectedRevision: 2,
+            reason: 'TEST ONLY',
+          })
+        ).status,
+      ).toBe(409);
+      const submissions = await Promise.all([
+        ok<TryoutSubmitDto>(`tryout/attempts/${attempts[0].id}/submit`, 'POST', {}, 'student'),
+        ok<TryoutSubmitDto>(`tryout/attempts/${attempts[0].id}/submit`, 'POST', {}, 'student'),
+      ]);
+      expect(submissions.map((value) => value.xp)).toEqual([300, 300]);
+      const ledger = await owner`SELECT * FROM xp_ledger WHERE attempt_id=${attempts[0].id}`;
+      expect(ledger).toHaveLength(1);
+      await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
+      const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
+      expect(detail.resultBlockers).toContain('MULTI_PACKAGE_FINALIZATION_NOT_READY');
+      expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(2);
+      // Distinct recipients may share the same package; a following non-overlapping batch is valid.
+      const shared = {
+        ...makeInput('shared'),
+        mandiriPackageId: packageIds[0],
+        packageIds: [packageIds[0]!],
+        schools: [
+          { schoolId: schoolA, packageId: packageIds[0]! },
+          { schoolId: schoolB, packageId: packageIds[0]! },
+        ],
+        startsAt: detail.closesAt,
+        closesAt: new Date(Date.parse(detail.closesAt) + 3600000).toISOString(),
+      };
+      const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
+      await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });
+      await ok(`admin/tryout-batches/${next.id}/cancel`, 'POST', {
+        expectedRevision: 2,
+        reason: 'TEST ONLY cancelled schedule',
+      });
+    }, 120000);
   },
 );

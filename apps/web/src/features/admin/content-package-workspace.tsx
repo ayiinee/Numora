@@ -101,8 +101,6 @@ export function ContentPackageWorkspace({
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [approvalReference, setApprovalReference] = useState('');
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
-  const [releaseDate, setReleaseDate] = useState('');
-  const [schedule, setSchedule] = useState(false);
   const [publishConfirmed, setPublishConfirmed] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
@@ -227,8 +225,6 @@ export function ContentPackageWorkspace({
     setInspectingId(null);
     setApprovalReference('');
     setApprovalConfirmed(false);
-    setReleaseDate('');
-    setSchedule(false);
     setPublishConfirmed(false);
     setArchiveConfirmed(false);
     setMedia([]);
@@ -278,8 +274,6 @@ export function ContentPackageWorkspace({
     setNotes('');
     setApprovalReference('');
     setApprovalConfirmed(false);
-    setReleaseDate('');
-    setSchedule(false);
     setPublishConfirmed(false);
     setArchiveConfirmed(false);
     setMedia([]);
@@ -1226,49 +1220,10 @@ export function ContentPackageWorkspace({
                       <div className="assessment-publish-step">
                         <h4>2. Terbitkan paket</h4>
                         {detail.assessmentType === 'TRYOUT' && (
-                          <>
-                            <label>
-                              Waktu rilis
-                              <select
-                                value={schedule ? 'SCHEDULED' : 'NOW'}
-                                disabled={locked}
-                                onChange={(event) => {
-                                  setSchedule(event.target.value === 'SCHEDULED');
-                                  setReleaseDate('');
-                                }}
-                              >
-                                <option value="NOW">Rilis sekarang</option>
-                                <option value="SCHEDULED">Jadwalkan</option>
-                              </select>
-                            </label>
-                            {schedule && (
-                              <label>
-                                Tanggal dan jam rilis Tryout (WIB)
-                                <input
-                                  type="datetime-local"
-                                  value={releaseDate}
-                                  disabled={locked}
-                                  required
-                                  onChange={(e) => setReleaseDate(e.target.value)}
-                                />
-                              </label>
-                            )}
-                            <Button
-                              disabled={locked}
-                              onClick={() => {
-                                setReleaseDate('');
-                                setSchedule(false);
-                              }}
-                            >
-                              Rilis sekarang
-                            </Button>
-                            <p>
-                              Batch tutup tujuh hari kurang satu menit sejak rilis. Durasi 10 menit;
-                              deadline dibatasi waktu tutup. Paket baru yang sudah dirilis menjadi
-                              pilihan paket aktif dan dapat menggantikan paket sebelumnya untuk
-                              pengerjaan baru.
-                            </p>
-                          </>
+                          <p>
+                            Publikasi menyiapkan konten. Atur jadwal dan peserta melalui{' '}
+                            <Link href="/admin/tryout-batches">Batch Tryout</Link>.
+                          </p>
                         )}
                         <label>
                           <input
@@ -1280,28 +1235,18 @@ export function ContentPackageWorkspace({
                           Saya telah memeriksa paket dan menyetujui publikasi versi ini.
                         </label>
                         <Button
-                          disabled={
-                            locked ||
-                            !detail.readiness.canPublish ||
-                            !publishConfirmed ||
-                            (schedule && !releaseDate)
-                          }
+                          disabled={locked || !detail.readiness.canPublish || !publishConfirmed}
                           onClick={() =>
                             void run(async () => {
                               await publishContentPackage(token, detail.id, {
                                 expectedRevision: detail.contentRevision,
-                                ...(detail.assessmentType === 'TRYOUT' && releaseDate
-                                  ? {
-                                      releaseAt: `${releaseDate}:00+07:00`,
-                                    }
-                                  : {}),
                               });
                               await choose(detail.id);
                               setReload((n) => n + 1);
                             })
                           }
                         >
-                          {schedule ? 'Jadwalkan paket' : 'Publikasikan paket'}
+                          Publikasikan paket
                         </Button>
                       </div>
                     </div>

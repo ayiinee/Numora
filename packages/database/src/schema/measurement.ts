@@ -698,6 +698,12 @@ export const tryoutBatches = pgTable(
   {
     id: id(),
     packageId: ref('package_id', () => assessmentPackages.id).notNull(),
+    adminTitle: text('admin_title'),
+    configRevision: integer('config_revision').notNull().default(1),
+    adminPublishedAt: timestamp('admin_published_at', { withTimezone: true }),
+    cancelledAt: timestamp('cancelled_at', { withTimezone: true }),
+    cancellationReason: text('cancellation_reason'),
+    mandiriPackageId: uuid('mandiri_package_id').references(() => assessmentPackages.id),
     startsAt: timestamp('starts_at', { withTimezone: true }).notNull(),
     closesAt: timestamp('closes_at', { withTimezone: true }).notNull(),
     cutoffAt: timestamp('cutoff_at', { withTimezone: true }).notNull(),

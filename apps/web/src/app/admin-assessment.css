@@ -2339,3 +2339,19 @@
   margin: 8px 0 0;
   font-weight: 400;
 }
+
+/* Batch Tryout shares compact assessment surfaces. */
+.tryout-batch-workspace, .tryout-batch-form, .tryout-batch-form fieldset { display: grid; gap: 16px; min-width: 0; }
+.tryout-batch-form fieldset { border: 0; padding: 0; margin: 0; }
+.tryout-batch-workspace h2, .tryout-batch-workspace h3 { margin: 0; }
+.tryout-batch-form label { display: grid; gap: 6px; min-width: 0; }
+.tryout-batch-form input, .tryout-batch-form select, .tryout-batch-workspace textarea { width: 100%; min-width: 0; box-sizing: border-box; }
+.tryout-batch-dates { display: grid; grid-template-columns: repeat(2,minmax(0,1fr)); gap: 12px; }
+.tryout-batch-choice { display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 8px; border-bottom: 1px solid #e5e7eb; padding: 8px 0; }
+.tryout-batch-choice label { flex: 1; }
+.tryout-batch-option-search { border-top: 1px solid #e5e7eb; padding-top: 12px; }
+.tryout-batch-option-search form { display: flex; flex-wrap: wrap; gap: 8px; align-items: end; margin: 12px 0; }
+.tryout-batch-option-search summary { cursor: pointer; }
+@media (max-width: 600px) { .tryout-batch-dates { grid-template-columns: 1fr; } }
+
+.tryout-batch-workspace .assessment-question-table td { color: #344054; }

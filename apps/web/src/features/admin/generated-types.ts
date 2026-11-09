@@ -1,6 +1,24 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
+
+export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
+
+export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; };
+
+export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; };
+
+export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
+
+export type SaveTryoutBatchDto = { "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
+
+export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; };
+
+export type TryoutBatchOptionsDto = { "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
+
+export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
+
 export type ImportBodyDto = { "target"?: PackageTargetDto; "expectedSourceVersionId"?: string; "revisionReason"?: string; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
 export type UploadSummaryDto = { "id": string; "fileName": string; "createdAt": string; "actorName": string; "revision": number; "state": string; "status": string; "questionCount": number; "validationResult"?: string; "title": string | null; "assessmentType": string | null; "packageId": string | null; "error": string | null; };
@@ -35,7 +53,7 @@ export type ArchiveContentPackageDto = { "expectedRevision": number; };
 
 export type PrepareLegacyPretestDto = { "expectedRevision": number; "source": PackageSourceDto; };
 
-export type PackageAvailabilityDto = { "state": "DRAFT" | "BLOCKED" | "SCHEDULED" | "AVAILABLE" | "CLOSED" | "ARCHIVED"; "blockers": (string)[]; "checkedAt": string; };
+export type PackageAvailabilityDto = { "state": "DRAFT" | "BLOCKED" | "SCHEDULED" | "AVAILABLE" | "READY_FOR_BATCH" | "CLOSED" | "ARCHIVED"; "blockers": (string)[]; "checkedAt": string; };
 
 export type PackageApprovalDto = { "reference": string; "approvedAt": string; };
 

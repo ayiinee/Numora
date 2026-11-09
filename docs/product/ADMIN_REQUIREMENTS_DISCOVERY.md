@@ -1,6 +1,8 @@
-# Finalisasi Admin Numora — pertanyaan kebutuhan dan alur kerja
+# Finalisasi Admin Numora — arsip discovery dan keputusan
 
-Tanggal mulai: 9 November 2026. Pembaruan: 10 November 2026. Status keseluruhan: **PROPOSED — spesifikasi belum final**. Keputusan pemilik yang sudah eksplisit dicatat tersendiri; pertanyaan sisanya tetap OPEN.
+Tanggal mulai: 9 November 2026. Pembaruan: 10 November 2026. Status: **arsip discovery; acuan kebutuhan telah dikonsolidasikan** dalam [PRD Admin](ADMIN_PRD.md) dan [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md). Catatan di bawah mempertahankan riwayat, bukan kuesioner aktif.
+
+**ENGINEERING DECISION — instruksi terakhir pemilik, ADM-DEC-076:** “kalau tanya masalah atribut dan lain lain, gausah dipertanyakan lagi deh, pakai yang saat ini ada”. Seluruh detail rutin tanpa jawaban mengikuti baseline existing. Hanya dependency substantif pada PRD §17 yang tetap OPEN. Tidak ada pertanyaan atribut yang sedang menunggu jawaban.
 
 Tujuan: mengumpulkan keputusan untuk PRD khusus Admin dan spesifikasi teknis yang dapat menjadi acuan implementasi. Cakupan meliputi tiga subrole, seluruh modul Admin yang sudah ada, alur lintas modul, kegagalan, dan penerimaan. Prioritas diskusi pengguna adalah **alur asesmen yang belum sesuai**.
 
@@ -8,12 +10,12 @@ Dokumen ini dibuat dari pembacaan dokumentasi dan sebagian kode pada working tre
 
 ## 1. Cara menggunakan
 
-- Jawab bertahap berdasarkan ID, misalnya `AS-01: ...`. Urutan awal: asesmen bersama, Pretest, Drill, Tryout, lalu modul pendukung.
+- Gunakan [PRD Admin](ADMIN_PRD.md) sebagai acuan aktif. ID pertanyaan di sini dipertahankan untuk menelusuri asal keputusan.
 - Jawaban boleh `tetap seperti baseline`, `belum ditentukan`, atau `perlu keputusan Curriculum/Data`. Diam/tidak menjawab bukan persetujuan.
 - Untuk kebutuhan yang berubah, gunakan pola `saat ini → seharusnya → contoh`.
 - Setiap keputusan perlu ruang lingkup: Pretest/Drill/Tryout, paket baru/attempt berjalan/histori, dan subrole yang berhak.
 - **PRD RULE** menunjukkan aturan PRD yang tetap berlaku selama tidak digantikan keputusan pemilik yang tercatat. **ENGINEERING DECISION** menunjukkan keputusan teknis/operasional yang sudah tercatat. **PROPOSED** adalah rancangan yang belum disetujui. **OPEN** adalah pertanyaan atau ketergantungan yang belum selesai.
-- Semua pertanyaan tanpa jawaban di bawah berstatus **OPEN**. Pilihan jawaban dan alur bergambar teks adalah **PROPOSED**, bukan persetujuan atau fitur yang dijanjikan.
+- Bagian pertanyaan §4–19 adalah arsip historis. Pernyataan lama “belum dirinci/perlu ditanyakan” tidak membuka ulang detail rutin setelah ADM-DEC-076. Usulan ilmiah/produk yang belum disetujui tetap bukan aturan; lihat register dependency PRD §17.
 - Pertanyaan tentang penanganan insiden tidak memberi Admin izin baru untuk ban, memindahkan membership, mengganti pemilik kelas, mengubah formula, atau mengedit hasil historis.
 
 ## 2. Jawaban yang sudah diterima
@@ -93,12 +95,32 @@ Dokumen ini dibuat dari pembacaan dokumentasi dan sebagian kode pada working tre
 | ACC-03 | Batal/kirim ulang dan konflik email akun produk? | 10 November: “Sesuai: bisa batal/kirim ulang; email Siswa/Guru ditolak”. | Super dapat membatalkan undangan belum diterima dan mengirim ulang/pemulihan; email akun Siswa/Guru ditolak dengan arahan memakai email lain, tanpa konversi akun belajar. |
 | ACC-04 | Perubahan subrole/nonaktif/aktif akun Admin? | 10 November: “Sesuai dengan aturan tersebut”. | Super melakukan dengan konfirmasi, alasan wajib dan histori; akses mengikuti status terbaru. Super aktif terakhir tidak boleh dinonaktifkan/diturunkan perannya. |
 | ACC-06 | Pemulihan darurat saat tidak ada Super bisa masuk? | 10 November: “Gunakan prosedur operator teknis; penanggung jawab belum ditentukan”. | Prosedur operator di luar halaman Admin dengan alasan insiden dan audit diterima; orang/tim berwenang belum ditentukan. Tidak membuka endpoint pemulihan publik. |
+| AUD-01 | Kolom/filter histori aktivitas? | 10 November: menyetujui rekomendasi: “sesuai semua deh … selain itu sesuai rekomenasi kamu”. | Pelaku, waktu, modul/objek, tindakan, sebelum/sesudah, alasan dan berhasil/gagal; filter pelaku/modul/tanggal. Super seluruh lingkup, Operations/Content domain masing-masing; rahasia dan identitas terlarang tetap disaring. |
+| AUD-02 | Kapan histori diperiksa? | 10 November: menyetujui rekomendasi pemeriksaan saat ada masalah. | Pemeriksaan sesuai kebutuhan/insiden; belum perlu jadwal rutin. Tidak menunjuk orang/tim baru atau SLA. |
+| AUD-03 | Unduhan histori aktivitas? | 10 November: “yg unduhan history jangan dulu”. | Unduhan histori aktivitas belum diperlukan untuk scope saat ini; histori tetap dapat dibaca sesuai izin di Admin. |
+| AUD-04 | Eskalasi insiden? | 10 November: menyetujui rekomendasi alur melalui kanal tim. | Admin menelusuri masalah/histori → teruskan melalui kanal tim existing kepada teknis/Curriculum/Data sesuai kasus → penanganan dicatat sesuai kewenangan; tanpa modul tiket insiden baru. |
+| ACC-05 | Autentikasi/perangkat/sesi tambahan? | 10 November: menyetujui rekomendasi cukup autentikasi dan kontrol akses existing. | OTP/MFA atau pembatasan perangkat/sesi tambahan belum diperlukan untuk versi ini. Kontrol login/otorisasi, expiry dan proteksi existing tetap berlaku. |
+| CUR-08 | Slot Drill untuk subbab baru? | 10 November: “Ya, otomatis tersedia lima slot kosong (Rekomendasi)”. | Penambahan subbab menyediakan Level 1–5 kosong secara otomatis. Belum bisa dikerjakan sebelum paket lengkap dan memenuhi syarat; bukan publikasi konten otomatis. |
+| CUR-05 | Ringkasan kesiapan pada master materi? | 10 November: “Ya, tampilkan ringkasan kesiapan dan tautannya (Rekomendasi)”. | Tampilkan kesiapan Pretest (contoh 20/20 valid), jumlah soal/paket pada tiap level Drill, alasan belum siap dan tautan pengaturan. Kelengkapan bukan persetujuan akademik. |
+| IMP-05 | Cara simpan progres/draft? | 10 November: “Simpan otomatis progres/draft + tombol Simpan (Rekomendasi)”. | Progres impor/draft disimpan otomatis; tombol Simpan tetap memicu pemberlakuan revisi lengkap/valid sesuai aturan. Autosave tidak mengaktifkan revisi. |
+| IMP-08 | Impor pada Pretest/paket yang sudah berisi soal? | 10 November: “Admin memilih Tambahkan atau Ganti isi, dengan preview dampak (Rekomendasi)”. | Pilihan Tambahkan/Ganti berlaku pada revisi yang dikelola, setelah preview dampak; validasi jumlah/kelengkapan dan pin versi tetap berlaku. Bukan overwrite versi aktif/histori langsung. |
+| SYS-07 | Konflik edit dua Admin? | 10 November: “Ya, deteksi konflik saat simpan dan bantu memuat ulang (Rekomendasi)”. | Deteksi perubahan Admin lain saat simpan, beri informasi, pertahankan salinan edit yang belum tersimpan dan minta memuat versi terbaru sebelum melanjutkan. Tidak menimpa diam-diam atau memakai lock editor wajib. |
+| VID-01 | Atribut video? | “Cukup dengan field tersebut (Rekomendasi)”. | Judul/URL YouTube/subbab cukup; deskripsi opsional tidak mewajibkan field schema baru setelah instruksi atribut existing ADM-DEC-076. |
+| VID-07 | Urutan rekomendasi? | “Otomatis mengikuti urutan video ditambahkan”. | Urutan otomatis, bukan pengurutan manual. |
+| RPT-06 | Laporan baru setelah kasus ditutup? | “Buka kembali kasus lama menjadi Baru (Rekomendasi)”. | Soal/versi sama membuka kembali kasus lama; laporan dan histori penutupan dipertahankan. |
+| QST-06 | Media soal/pembahasan? | “Cukup; batas teknis ditentukan tim teknis (Rekomendasi)”. | PNG/JPG/WebP, preview/penggantian/alt text; batas teknis memakai implementasi existing. |
+| QST-03 | Dugaan duplikat pada impor? | “Ya, peringatan dan keputusan Admin (Rekomendasi)”. | Tandai baris dan minta keputusan sebelum apply; tidak otomatis merge lintas paket atau ubah anchor/histori. Constraint identitas tetap berlaku. |
+| CUR-02 | Atribut master? | “Sesuai dengan aturan tersebut (Rekomendasi)”. | Kode/nama/urutan/parent menurut representasi yang tersedia, sumber Curriculum dan kode tidak bentrok; instruksi terakhir memakai atribut existing mengendalikan bentuk DTO. |
+| CUR-04 | Arsip master yang masih dipakai? | “Tolak arsip sampai ketergantungan paket aktif diselesaikan (Rekomendasi)”. | Tampilkan dependency aktif; histori tetap dipertahankan setelah arsip sah. |
+| NAV-02 | Kembali ke daftar dan lanjut draft? | “Ya, pertahankan konteks daftar dan lanjutkan draft tersimpan (Rekomendasi)”. | Search/filter/halaman tetap; resume draft autosave terakhir yang berhasil. |
+| SYS-01 | Perangkat Admin? | “Laptop utama; semua fungsi tetap bisa digunakan di ponsel (Rekomendasi)”. | Fungsi tidak dibatasi desktop; izin subrole tetap. |
+| SYS-04 | Pusat notifikasi Admin? | “Cukup status dan Dashboard; belum perlu pusat notifikasi (Rekomendasi)”. | Status proses/modul/Dashboard cukup; email undangan/recovery tetap. |
 
 Ini adalah catatan jawaban, bukan persetujuan atas seluruh implementasi yang ada. F-02 tidak berarti semua batas izin existing sudah diterima tanpa pemeriksaan.
 
 ### 2.1 Keputusan kebutuhan dari klarifikasi pemilik
 
-**ENGINEERING DECISION — instruksi pemilik, 9–10 November 2026:** record berikut menyatakan arah kebutuhan yang sudah diminta eksplisit. ADM-DEC-001–035 berasal dari 9 November; ADM-DEC-036–055 dari 10 November melengkapi sekolah/demo, pengguna/kelas, Dashboard serta akun Admin. Status APPROVED di sini berlaku pada kebutuhan tersebut, bukan pada seluruh PRD Admin, validitas akademik atau implementasi yang ada.
+**ENGINEERING DECISION — instruksi pemilik, 9–10 November 2026:** record berikut menyatakan arah kebutuhan yang diminta eksplisit. ADM-DEC-001–035 berasal dari 9 November; ADM-DEC-036–076 dari 10 November. Status APPROVED berlaku pada kebutuhan tersebut, bukan bukti validitas akademik atau penerimaan implementasi. Rincian rutin pada kolom batas lama diselesaikan melalui baseline/penjabaran teknis sesuai ADM-DEC-076; konflik v2 tetap terlihat pada PRD §17.
 
 | ID | Status dan sumber | Kebutuhan yang disepakati | Batas yang masih OPEN |
 | --- | --- | --- | --- |
@@ -120,8 +142,8 @@ Ini adalah catatan jawaban, bukan persetujuan atas seluruh implementasi yang ada
 | ADM-DEC-016 | APPROVED — AS-14 | Pretest, Drill dan Tryout harus mendukung PG satu jawaban, PGK MCMA serta PGK Kategori seperti Benar/Salah per pernyataan. | Rubrik/scoring, makna benar pada Pretest PGK dan validasi akademik mengikuti handoff Curriculum/Data; tidak mengubah formula produk atau mewajibkan campuran tertentu di setiap paket. Batas runtime PG-only bukan target final. |
 | ADM-DEC-017 | APPROVED — QST-02 | Editor kontekstual dapat mengubah teks, rumus/LaTeX, pilihan/pernyataan, kunci, pembahasan, gambar soal/pembahasan serta pemetaan materi/kesulitan. | Konversi jenis soal, batas media, field metadata lain dan pembatalan approval masih perlu rincian. Hak edit tidak mengubah aturan input baru manual/impor atau histori immutable. |
 | ADM-DEC-018 | APPROVED — QST-07 | Preview cukup menampilkan soal, kunci dan pembahasan. Tidak membutuhkan simulasi pengerjaan atau nilai simulasi pada scope ini. | Susunan UI, navigasi antarsoal dan preview versi lama. Preview bukan attempt/progres/XP siswa. |
-| ADM-DEC-019 | APPROVED — IMP-02 | Satu file JSON/Excel untuk satu paket/varian di konteks tujuan. | Template, sheet/baris/media, duplikasi/retry dan apakah impor tambahan menambah atau mengganti isi revisi. Tidak mengasumsikan beberapa paket dari satu file. |
-| ADM-DEC-020 | APPROVED — IMP-03 | Progres impor tersimpan; Admin memperbaiki baris bermasalah di Admin, lalu melanjutkan. Kelengkapan/validitas tetap diperlukan sebelum paket dipakai siswa. | Cara/waktu penyimpanan, retensi, ownership sesi, recovery/konflik dan batas validasi. Menyimpan progres intake berbeda dari membuat konten DRAFT sah atau mengaktifkan paket. |
+| ADM-DEC-019 | APPROVED — IMP-02 | Satu file JSON/Excel untuk satu paket/varian di konteks tujuan. | ADM-DEC-064 menetapkan pilihan Tambahkan/Ganti dengan preview; template, sheet/baris/media dan duplikasi/retry masih perlu kontrak. Tidak mengasumsikan beberapa paket dari satu file. |
+| ADM-DEC-020 | APPROVED — IMP-03 | Progres impor tersimpan; Admin memperbaiki baris bermasalah di Admin, lalu melanjutkan. Kelengkapan/validitas tetap diperlukan sebelum paket dipakai siswa. | Autosave/tombol Simpan dan deteksi konflik dilengkapi ADM-DEC-063/065; interval, retensi, ownership sesi, recovery dan batas validasi masih perlu kontrak. Menyimpan progres intake berbeda dari membuat konten DRAFT sah atau mengaktifkan paket. |
 | ADM-DEC-021 | APPROVED — RPT-01 | Laporan untuk soal dan versi yang sama digabung menjadi satu kasus dengan daftar laporan terkait. Jumlah/record laporan asli tetap dapat ditelusuri. | Kategori/urgensi/filter, laporan baru setelah kasus ditutup, aturan video serta relasi anchor/varian yang berbagi soal. Tidak menghapus/menggabungkan histori lintas versi. |
 | ADM-DEC-022 | APPROVED — RPT-02 | Kasus tanpa assignment penanggung jawab; Content/Super boleh menangani langsung. | Konflik edit/status, catatan internal dan target operasional. Pelaku tindakan/audit tetap dicatat; tanpa assignment bukan tanpa akuntabilitas atau perubahan matriks izin. |
 | ADM-DEC-023 | APPROVED — RPT-04 | Alur Baru → Ditinjau → Selesai atau Ditolak. Alasan penutupan wajib; tautkan revisi jika ada perbaikan konten. | Reopen, syarat penutupan rinci, propagasi status kasus ke record laporan terkait dan laporan baru sesudah penutupan. Tidak mengasumsikan perbaikan otomatis menutup kasus. |
@@ -157,10 +179,31 @@ Ini adalah catatan jawaban, bukan persetujuan atas seluruh implementasi yang ada
 | ADM-DEC-053 | APPROVED — ACC-03, 10 November | Super dapat batal undangan belum diterima dan kirim ulang/pemulihan. Email yang telah dipakai Siswa/Guru ditolak dengan arahan memakai email lain. | Undangan diterima dikelola lewat status akun, bukan pembatalan undangan. Detail idempotensi, link lama dan konflik antar-Admin belum dirinci. |
 | ADM-DEC-054 | APPROVED — ACC-04, 10 November | Super mengubah subrole atau menonaktifkan/mengaktifkan Admin dengan konfirmasi, alasan wajib dan histori. Hak mengikuti status terbaru; Super aktif terakhir dilindungi dari penonaktifan/demosi. | Konkurensi, self-change dan pekerjaan belum tersimpan perlu spesifikasi. Aktif ulang sekolah tidak sama dengan aktif ulang akun Admin. |
 | ADM-DEC-055 | APPROVED pada alur — ACC-06, 10 November | Pemulihan saat tidak ada Super bisa masuk melalui operator teknis di luar halaman Admin, dengan alasan insiden dan catatan audit. | Penanggung jawab/operator berwenang masih OPEN. Tidak mengizinkan eksekusi prosedur atau menetapkan orang/tim tertentu dari jawaban ini. |
+| ADM-DEC-056 | APPROVED — AUD-01, 10 November | Histori aktivitas mencakup pelaku/waktu/modul/objek/tindakan, perubahan sebelum/sesudah, alasan dan hasil berhasil/gagal, dengan filter pelaku/modul/tanggal. Super seluruh lingkup; Operations/Content lingkup masing-masing. | Rahasia tidak masuk histori; batas identitas Content tetap berlaku. Cakupan event, redaksi perubahan, absent values pada kegagalan dan retensi perlu kontrak. |
+| ADM-DEC-057 | APPROVED — AUD-02, 10 November | Histori diperiksa saat ada masalah; jadwal pemeriksaan rutin belum diperlukan. | Orang/tim berwenang tetap mengikuti domain/izin; jawaban ini tidak menetapkan penanggung jawab operator pemulihan atau SLA baru. |
+| ADM-DEC-058 | APPROVED — AUD-03, 10 November | Unduhan/ekspor histori aktivitas belum diperlukan dalam scope ini. | Histori tetap dapat dibaca/filter di Admin sesuai izin. Tidak menetapkan retensi/penghapusan atau meniadakan logging. |
+| ADM-DEC-059 | APPROVED — AUD-04, 10 November | Insiden ditelusuri lewat masalah/histori lalu dieskalasikan melalui kanal tim existing ke teknis/Curriculum/Data sesuai kasus; penanganan sesuai kewenangan dicatat. Tanpa modul tiket insiden baru. | Tidak mengotorisasi pengiriman pesan oleh agent, memilih kanal/orang tertentu atau menambah hak perubahan hasil/membership; respons insiden ilmiah tetap mengikuti policy sah. |
+| ADM-DEC-060 | APPROVED — ACC-05, 10 November | Versi ini cukup autentikasi dan kontrol akses existing; OTP/MFA dan batas perangkat/sesi tambahan belum diperlukan. | Tidak menonaktifkan expiry, pembatasan provider, pemeriksaan assignment terkini atau proteksi Super terakhir. Penanggung jawab recovery ACC-06 tetap OPEN. |
+| ADM-DEC-061 | APPROVED — CUR-08, 10 November | Subbab baru otomatis memiliki lima slot Drill Level 1–5 kosong; belum dapat dikerjakan sampai paket lengkap dan memenuhi syarat. | Bukan pembuatan soal/varian atau publikasi otomatis. Hubungan status master/coverage dan syarat kesiapan paket perlu kontrak. |
+| ADM-DEC-062 | APPROVED — CUR-05, 10 November | Master materi menampilkan ringkasan kesiapan: Pretest, jumlah soal/paket per level Drill, alasan belum siap dan tautan pengaturan. | Ringkasan kelengkapan bukan approval Curriculum/IRT. Definisi count valid/aktif/draft dan alasan mengikuti lifecycle yang disepakati; tidak membuat checklist akademik baru. |
+| ADM-DEC-063 | APPROVED — IMP-05, 10 November | Progres impor/draft disimpan otomatis, disertai tombol Simpan. Autosave menyimpan progres; pemberlakuan revisi lengkap/valid tetap melalui tindakan Simpan sesuai ADM-DEC-006. | Interval/debounce, recovery dan ownership belum dirinci; tidak mengaktifkan perubahan hanya karena autosave berhasil atau melewati approval/jadwal. |
+| ADM-DEC-064 | APPROVED — IMP-08, 10 November | Saat impor ke Pretest/paket berisi soal, Admin memilih Tambahkan atau Ganti isi dengan preview dampak sebelum diterapkan ke revisi. | Jumlah maksimal/validasi tetap berlaku; versi aktif lama/attempt/histori dipertahankan sampai pengganti sah. Identitas duplikat, rollback draft dan media perlu rincian. |
+| ADM-DEC-065 | APPROVED — SYS-07, 10 November | Konflik edit dideteksi saat simpan; informasikan perubahan Admin lain, pertahankan salinan edit belum tersimpan dan minta muat versi terbaru sebelum melanjutkan. Tidak menimpa diam-diam. | Format pembanding/manual merge, cakupan objek dan autosave perlu kontrak. Salinan edit hanya dapat dipulihkan dalam kewenangan yang sah; bukan izin menyimpan rahasia setelah pencabutan akses. |
+| ADM-DEC-066 | APPROVED — VID-01 | Judul, URL YouTube dan subbab cukup sebagai input inti video. | Atribut existing menjadi acuan sesuai ADM-DEC-076; deskripsi opsional tidak memaksa kolom baru. |
+| ADM-DEC-067 | APPROVED — VID-07 | Rekomendasi otomatis menurut urutan video ditambahkan. | Teknis menggunakan urutan existing yang ditetapkan sistem; tidak ada pengurutan manual. |
+| ADM-DEC-068 | APPROVED — RPT-06 | Laporan baru soal/versi sama membuka kembali kasus Selesai/Ditolak menjadi Baru. | Histori penutupan dan seluruh laporan tetap; race dijaga server. |
+| ADM-DEC-069 | APPROVED — QST-06 | PNG/JPG/WebP, preview, penggantian serta alt text; batas teknis didelegasikan. | Gunakan validasi upload existing termasuk 5 MiB, verifikasi server dan media historis immutable. |
+| ADM-DEC-070 | APPROVED — QST-03 | Dugaan duplikat diberi warning/penanda baris; Admin memutuskan sebelum impor diterapkan. | Tidak auto-merge atau mengubah lineage/anchor/histori; constraint identity tetap keras. |
+| ADM-DEC-071 | APPROVED — CUR-02 | Metadata master mengikuti sumber Curriculum, kode tidak bentrok, induk sesuai struktur; sumber belum lengkap tetap draft. | Representasi existing mengikuti ADM-DEC-076; competency tidak harus ditambah field name/order. |
+| ADM-DEC-072 | APPROVED — CUR-04 | Tolak arsip master sampai ketergantungan paket aktif diselesaikan. | Histori/versi lama tidak dihapus; dependency ditampilkan. |
+| ADM-DEC-073 | APPROVED — NAV-02 | Pertahankan konteks daftar dan lanjutkan draft autosave terakhir yang sukses. | Hanya data tersimpan yang dapat dijanjikan pulih; izin tetap diperiksa. |
+| ADM-DEC-074 | APPROVED — SYS-01 | Laptop utama; semua fungsi dapat digunakan di ponsel. | Responsif mengikuti desain existing dan izin subrole. |
+| ADM-DEC-075 | APPROVED — SYS-04 | Status proses/modul/Dashboard cukup; tidak perlu pusat notifikasi Admin. | Email undangan/pemulihan tetap sesuai alur akun. |
+| ADM-DEC-076 | APPROVED — instruksi terakhir pemilik | Hentikan pertanyaan atribut/detail rutin; gunakan atribut, validasi dan pola yang saat ini tersedia. Selesaikan keluaran dokumen dari keputusan terkumpul. | Tidak menganggap dependency ilmiah terjawab, konflik kebijakan terselesaikan atau implementasi sudah selesai. |
 
 ### 2.2 Draf alur berdasarkan jawaban
 
-**Dari keputusan ADM-DEC-001–055:**
+**Catatan historis dari keputusan ADM-DEC-001–065; alur aktif yang sudah dikonsolidasikan ada pada PRD Admin.** Ringkasan Drill/availability di bawah harus dibaca bersama konflik v2 pada PRD §17, bukan langsung diterapkan:
 
 - Pretest → pilih bab tetap → manual/impor dan kelola soal → Simpan draft jika belum lengkap, versi aktif lama tetap dipakai → Simpan tepat 20 dan valid → attempt baru memakai revisi baru; attempt lama tetap pada versi lama.
 - Drill → pilih bab/subbab/level → kelola original/varian → impor/edit → validasi/Simpan. Default awal original; saat retry, pilih kandidat yang belum pernah diselesaikan siswa jika ada → jumlah selesai global paling sedikit di antara kandidat → original lalu varian sesuai urutan dibuat saat seri. Jika seluruh kandidat sudah diselesaikan, kembali ke pemerataan global. Periode/revisi masih OPEN.
@@ -176,12 +219,14 @@ Ini adalah catatan jawaban, bukan persetujuan atas seluruh implementasi yang ada
 - Pengguna/kelas → Operations/Super mencari dan memfilter daftar pengguna → buka detail siswa/kelas beserta membership/histori → arahkan pengguna melalui alur sah. Tidak ada aksi koreksi membership/ownership Admin; Content hanya struktur/agregat.
 - Dashboard → semua subrole masuk ke Dashboard scoped → pilih tanggal/sekolah/asesmen dan bandingkan periode → periksa agregat sesuai izin → refresh otomatis lima menit atau manual. Tidak membutuhkan ekspor Dashboard; definisi filter/perbandingan rinci masih OPEN.
 - Akun Admin → Super mengundang nama/email/subrole wajib → penerima membuat password dari tautan → login email/password → recovery lewat email bila perlu. Undangan bisa batal/kirim ulang; email Siswa/Guru ditolak. Ubah subrole/nonaktif/aktif wajib konfirmasi/alasan/histori; Super terakhir dilindungi. Pemulihan darurat lewat operator luar UI, orang/tim belum ditentukan.
+- Audit/insiden → catat aktivitas sesuai domain dan redaksi → filter/telusuri saat ada masalah → eskalasi melalui kanal tim existing dan catat penanganan sesuai kewenangan. Tanpa unduhan histori, jadwal audit rutin atau modul tiket insiden baru.
+- Kesiapan materi/draft → subbab baru otomatis memiliki lima slot kosong → master menampilkan kesiapan dan tautan pengaturan → impor dengan pilihan Tambahkan/Ganti dan preview → autosave progres/draft tanpa aktivasi → Simpan lengkap/valid memberlakukan revisi. Konflik edit diberitahukan tanpa menimpa perubahan lain.
 
 **ENGINEERING DECISION — sekolah nonaktif/demo, 10 November:** seluruh fitur gratis selama demo sekitar satu bulan, pembahasan berbayar ditunda. Sekolah nonaktif → kelas baca saja tanpa join/create/takeover/feedback baru → membership tetap aktif/dihitung pada batas lima → Guru membaca data lama dengan penanda nonaktif, termasuk hasil IRT terlambat jika attempt selesai sebelum penonaktifan. Benefit dari sekolah lain yang aktif tetap berlaku. Reaktivasi otomatis untuk membership/ownership sah mengikuti ADM-DEC-045; rincian akses historis masih OPEN. Demo gratis tidak menghapus izin per role/verifikasi.
 
 **PROPOSED — rincian teknis untuk spesifikasi berikutnya:** satu identitas Pretest logis per bab dapat memiliki revisi internal. Revisi tidak tampil sebagai beberapa paket Pretest bebas yang perlu dibuat pengguna. Mulai attempt dan pergantian versi harus diputuskan secara atomik di server; edit/lepas soal pada revisi baru tidak mengubah konten attempt lama. Bentuk tabel, endpoint dan strategi transaksinya belum ditetapkan oleh diskusi ini.
 
-**OPEN:** periode/revisi/eligibility Drill; validasi/perubahan master; rincian katalog; kategori/filter/bukti/konflik/reopen laporan; metadata/validasi/urutan/aktivasi video; template/recovery impor; rubrik/blueprint; kontrak reaktivasi/akses historis sekolah serta definisi filter/perbandingan metrik. Dasar asesmen/konten/video/sekolah/token serta prinsip dampak sekolah nonaktif sudah dicatat, bukan ditanyakan ulang. Cakupan pengguna/kelas, akun dan Dashboard sudah diputuskan pada ADM-DEC-041–055; rincian kontrak, audit, approval dan batch masih perlu dilengkapi. Monetisasi setelah demo ditunda tanpa menghambat discovery; IRT katalog dan jalur varian menunggu dokumen lanjutan. Tidak mengubah histori/progres/XP.
+**OPEN:** periode/revisi/eligibility Drill; validasi/perubahan master; rincian katalog; kategori/filter/bukti/konflik/reopen laporan; metadata/validasi/urutan/aktivasi video; template/recovery impor; rubrik/blueprint; kontrak reaktivasi/akses historis sekolah serta definisi filter/perbandingan metrik. Dasar asesmen/konten/video/sekolah/token serta prinsip dampak sekolah nonaktif sudah dicatat, bukan ditanyakan ulang. Cakupan pengguna/kelas, akun dan Dashboard sudah diputuskan pada ADM-DEC-041–055; audit/keamanan serta kesiapan materi dan penyimpanan draft dilengkapi ADM-DEC-056–065. Rincian kontrak, approval dan batch masih perlu dilengkapi. Monetisasi setelah demo ditunda tanpa menghambat discovery; IRT katalog dan jalur varian menunggu dokumen lanjutan. Tidak mengubah histori/progres/XP.
 
 ### 2.3 Perubahan terhadap sumber lama dan dokumen lanjutan
 
@@ -203,7 +248,7 @@ Rancangan yang sudah mulai disusun tersedia di [PRD Admin — draft](ADMIN_PRD_D
 | Sumber | Dipakai untuk |
 | --- | --- |
 | [PRD v0.6 Final](sources/PRD_Numora_v0.6.docx.md), terutama §3, §5–13, §18–19, §22–25 | Perilaku produk, batas izin, lifecycle dan acceptance awal. |
-| [PRD Admin — draft](ADMIN_PRD_DRAFT.md) dan keputusan ADM-DEC-001–055 di atas | Kebutuhan Admin yang sedang difinalkan; perubahan eksplisit pengguna mengungguli aturan lama pada lingkup yang disebut. Bagian OPEN tetap bukan keputusan; detail monetisasi setelah demo ditunda pemilik. |
+| [PRD Admin](ADMIN_PRD.md), [spesifikasi teknis](../architecture/ADMIN_TECHNICAL_SPEC.md) dan ADM-DEC-001–076 | Acuan konsolidasi. Detail rutin memakai baseline existing; dependency substantif dan konflik v2 ditandai pada PRD §17. |
 | [PRODUCT_CONTEXT](PRODUCT_CONTEXT.md), [OPEN_DECISIONS](OPEN_DECISIONS.md), [PRD_MAPPING](PRD_MAPPING.md) | Keputusan pemilik setelah PRD, supersession dan ketergantungan. Bagian historis tidak otomatis masih berlaku. |
 | [Matriks izin Admin](../api/ADMIN_PERMISSION_MATRIX.md) | Hak per aksi dan pembatasan data ketiga subrole. |
 | [Admin dan akses asesmen, 9 November](../development/ADMIN_ASSESSMENT_REWORK.md) dan [direktori asesmen](../design/ADMIN_ASSESSMENT_DIRECTORY_2026-11-09.md) | Pipeline canonical, pemisahan daftar/tambah/detail, ketersediaan siswa dan status hasil. |
@@ -345,7 +390,7 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 - **ACC-02.** Terjawab: nama, email dan satu dari tiga subrole wajib; daftar akun memuat subrole, status undangan/akun dan hasil pemrosesan pengiriman. Sukses diproses bukan bukti delivery atau acceptance.
 - **ACC-03.** Terjawab: Super boleh batal undangan belum diterima dan kirim ulang/pemulihan. Email Siswa/Guru ditolak dengan arahan email lain. Rincian link lama, retry dan konflik masih perlu kontrak.
 - **ACC-04.** Terjawab: Super mengubah subrole/nonaktif/aktif dengan konfirmasi, alasan wajib dan histori; akses mengikuti status terbaru. Super aktif terakhir tidak boleh dinonaktifkan/demosi; konflik dan pekerjaan belum tersimpan perlu rincian.
-- **ACC-05.** Apakah diperlukan pembatasan sesi atau autentikasi tambahan untuk aksi sensitif? Jika ya, tentukan masalah dan aktor yang membutuhkan; detail teknisnya disusun sebagai usulan terpisah.
+- **ACC-05.** Terjawab: cukup autentikasi dan kontrol akses existing; belum perlu OTP/MFA atau pembatasan perangkat/sesi tambahan. Proteksi existing dan penanggung jawab pemulihan yang masih OPEN tidak berubah.
 - **ACC-06.** Alur terjawab: pemulihan melalui operator teknis di luar halaman Admin, dengan alasan insiden dan audit. Penanggung jawab/orang/tim berwenang belum ditentukan; tidak mengizinkan eksekusi prosedur dari jawaban kebutuhan.
 
 ## 7. Navigasi dan Dashboard
@@ -358,7 +403,7 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 - **DASH-04.** Terjawab: refresh otomatis lima menit serta tombol Perbarui, dengan waktu pembaruan dan keadaan belum tersedia/gagal terpisah dari nol. Interval UI bukan janji SLA sumber data.
 - **DASH-05.** Terjawab: belum perlu unduhan Dashboard dalam scope ini. Ekspor audit/modul lain diputuskan terpisah.
 - **NAV-01.** Dari empat kelompok menu existing—Pemantauan, Operasional, Konten & asesmen, Administrasi—nama atau pengelompokan mana yang masih membingungkan? Sebutkan tugas yang sulit ditemukan.
-- **NAV-02.** Pada desktop/ponsel, perilaku daftar → tambah/detail → kembali apa yang diperlukan agar pencarian, filter, halaman dan draft tidak hilang? Penamaan URL dan komponen diserahkan ke spesifikasi teknis.
+- **NAV-02.** Terjawab (ADM-DEC-073): search/filter/halaman daftar tetap dan draft autosave terakhir yang sukses dapat dilanjutkan sesuai izin.
 
 ## 8. Sekolah, guru dan credential
 
@@ -399,12 +444,13 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 **PROPOSED — alur untuk diperinci:** terima master Curriculum → masukkan struktur manual → validasi relasi → review/persetujuan → dipakai soal/paket → perubahan menjadi revisi atau arsip yang menjaga histori. Pemberi persetujuan akademik belum ditentukan.
 
 - **CUR-01.** Terjawab untuk bab/subbab/indikator: Content/Super boleh mengelola berdasarkan sumber Curriculum, bukan hanya melihat struktur tetap. CUR-06 menetapkan manual saja. Lima level/subbab tetap baseline; pengelolaan kategori dan aturan produk lain belum ditetapkan ulang.
-- **CUR-02.** Bagaimana kode, nama, urutan dan hubungan induk ditetapkan dan diperiksa terhadap sumber Curriculum? Apa alur jika sumber belum lengkap atau nama serupa?
+- **CUR-02.** Terjawab (ADM-DEC-071/076): metadata/induk/kode mengikuti sumber Curriculum dan representasi DTO existing; data belum lengkap tetap draft.
 - **CUR-03.** Siapa menyatakan master/blueprint sah, bukti apa disimpan dan bagaimana membedakan validasi teknis dari persetujuan akademik?
-- **CUR-04.** Jika master yang telah dipakai direvisi/diarsipkan, apa yang terjadi pada pilihan baru, draft paket dan paket aktif? Histori versi tetap dapat dibaca.
-- **CUR-05.** Bagaimana Admin mengetahui materi yang masih kosong, belum punya Pretest/Drill atau terhalang metadata? Apakah perlu checklist coverage berdasarkan sumber yang disahkan?
+- **CUR-04.** Terjawab (ADM-DEC-072): arsip ditolak sampai ketergantungan paket aktif diselesaikan; histori tetap dipertahankan.
+- **CUR-05.** Terjawab: tampilkan ringkasan kesiapan Pretest, jumlah soal/paket tiap level Drill, alasan belum siap dan tautan pengaturannya. Kelengkapan bukan persetujuan Curriculum/IRT; definisi count/status perlu kontrak.
 - **CUR-06.** Terjawab: master bab/subbab/indikator diinput manual saja. Ini khusus struktur; impor soal JSON/Excel tetap dibutuhkan.
 - **CUR-07.** Terjawab: saat bab dibuat pada master, slot Pretest otomatis tersedia dalam keadaan kosong dan belum dapat dikerjakan siswa sampai tepat 20 soal lengkap/valid disimpan.
+- **CUR-08.** Terjawab: subbab baru otomatis memiliki lima slot Drill Level 1–5 kosong; belum dapat dikerjakan sampai paket lengkap dan memenuhi syarat. Tidak membuat soal atau menerbitkan paket otomatis.
 
 ## 11. Soal per asesmen, editor, media dan review
 
@@ -412,10 +458,10 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 
 - **QST-01.** Informasi utama di daftar/detail soal dalam Pretest/paket apa: jenis PG/MCMA/Kategori, materi, level, kesulitan, status, sumber, versi dan reviewer? Filter mana berguna dalam konteks tersebut?
 - **QST-02.** Terjawab: semua bagian yang ditanyakan dapat diedit, yaitu teks, rumus/LaTeX, pilihan/pernyataan, kunci, pembahasan, gambar soal/pembahasan dan pemetaan materi/kesulitan. Input baru tetap manual khusus Pretest; Drill/Tryout melalui impor. Perbandingan dengan sumber asli dan konversi jenis soal belum dirinci.
-- **QST-03.** Bagaimana mendeteksi soal duplikat atau impor ulang: identitas sumber, kesamaan konten, atau peringatan manual? Jangan menggabungkan versi/histori otomatis tanpa kebijakan.
+- **QST-03.** Terjawab (ADM-DEC-070): warning dan penanda baris, keputusan Admin sebelum apply; tidak auto-merge lintas paket atau memintas constraint identitas.
 - **QST-04.** Untuk setiap transisi DRAFT/READY/REVISION/ARCHIVED, siapa boleh bertindak, alasan apa wajib dan apa syaratnya? READY editorial tidak otomatis berarti scoring atau paket disetujui.
 - **QST-05.** Terjawab: paket tetap tersedia selama perbaikan; tidak memerlukan aksi tahan penggunaan baru ketika soal aktif terbukti salah. Attempt berjalan tetap versi lama; revisi lengkap/valid mengikuti aturan pemberlakuan dan ketergantungan batch. Triase, audit dan batas review tetap relevan; histori tidak ditimpa.
-- **QST-06.** Apa kebutuhan media final: format/ukuran, gambar soal dan pembahasan, alt text, preview dan penggantian? Gambar yang gagal diunggah harus terlihat sebagai kegagalan, bukan dianggap selesai.
+- **QST-06.** Terjawab (ADM-DEC-069): PNG/JPG/WebP, preview/penggantian/alt text; batas teknis memakai implementasi existing.
 - **QST-07.** Terjawab: cukup melihat tampilan soal, kunci dan pembahasan. Tidak membutuhkan simulasi pengerjaan/scoring; preview tidak menjadi attempt siswa. Navigasi dan versi lama belum dirinci.
 - **QST-08.** Terjawab: tetap perlu katalog global baca saja dengan asal jenis asesmen/paket/varian, informasi IRT dan penanda ada/tidaknya laporan masalah. Entry point input kontekstual tidak berubah; rincian IRT/laporan dilanjutkan QST-09–10.
 - **QST-09.** DEFERRED/OPEN — informasi “skor IRT” katalog mengikuti dokumen Data/AI nanti. Jangan meminta ulang metrik atau menebak parameter sebelum dokumen tersedia; nilai peserta tidak otomatis menjadi parameter soal.
@@ -429,9 +475,10 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 - **IMP-02.** Terjawab: satu file untuk satu paket/varian. Template/sheet/media, impor tambahan dan strategi mengganti/menambah isi revisi masih perlu rincian.
 - **IMP-03.** Terjawab: simpan progres impor, perbaiki baris bermasalah di Admin lalu lanjutkan. Tidak otomatis melewati baris salah; paket tetap harus lengkap/valid sebelum dipakai siswa. Cara/waktu simpan dan recovery dilanjutkan IMP-05/06.
 - **IMP-04.** Bagaimana pemetaan materi diperbaiki: per soal, massal atau dari tujuan? Saat tujuan berubah, nilai otomatis dihitung ulang tetapi pilihan manual dan sumber asli perlu diperlakukan bagaimana?
-- **IMP-05.** Apakah progres tersimpan manual, otomatis atau keduanya? Apa yang perlu ditampilkan agar jelas mana perubahan lokal dan mana yang sudah diakui server?
+- **IMP-05.** Terjawab: autosave progres/draft + tombol Simpan. Autosave tidak memberlakukan revisi; Simpan lengkap/valid mengikuti ADM-DEC-006. Interval dan rincian recovery masih perlu spesifikasi.
 - **IMP-06.** Bagaimana pengguna melanjutkan setelah refresh, upload gambar gagal, koneksi putus, retry draft atau konflik edit? Sistem harus menghindari paket/soal duplikat akibat retry.
 - **IMP-07.** Sumber dan riwayat apa yang perlu terlihat: file asli, waktu, pelaku, baris asal, koreksi pemetaan, versi template dan paket hasil? Siapa berhak mengaksesnya dan berapa lama disimpan?
+- **IMP-08.** Terjawab: saat impor ke konteks yang sudah berisi soal, Admin memilih Tambahkan atau Ganti isi dengan preview dampak pada revisi. Validasi jumlah, kelengkapan dan versi tetap berlaku; bukan overwrite histori.
 
 ## 13. Generator AI dan handoff Data
 
@@ -466,12 +513,13 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 
 **ENGINEERING DECISION — ADM-DEC-026–030:** input manual saja; satu video hanya satu subbab; maksimal tiga video aktif per subbab. Video dilaporkan tetap tampil sampai diperiksa dan boleh dinonaktifkan Admin. Cukup pemeriksaan manual/laporan siswa, tanpa pemeriksaan otomatis berkala. Urutan tampil, metadata dan aktivasi tetap perlu rincian.
 
-- **VID-01.** Siapa memilih video dan mengesahkan relevansinya; metadata/pemetaan apa wajib sebelum tampil? Maksimal tiga rekomendasi pada konteks gagal Drill tetap baseline produk.
+- **VID-01.** Terjawab (ADM-DEC-066/076): judul, URL YouTube dan subbab cukup; atribut memakai kontrak existing tanpa penambahan deskripsi wajib.
 - **VID-02.** Terjawab: maksimal tiga video aktif per subbab. Tidak membutuhkan pemilihan dari pool aktif yang lebih besar atau rotasi sistem; urutan di antara ketiganya belum ditentukan. Jika tidak ada video relevan, hasil Drill tetap tersedia sesuai PRD.
 - **VID-03.** Terjawab: video tetap tampil sampai diperiksa; Admin boleh menonaktifkan. Koreksi/penggantian setelah pemeriksaan mengikuti pengelolaan konten; bukti snapshot dan aktivasi ulang belum dirinci.
 - **VID-04.** Terjawab: cukup pemeriksaan manual Admin dan laporan siswa; tidak membutuhkan pemeriksaan otomatis berkala pada scope ini.
 - **VID-05.** Terjawab: input video manual saja. Impor file video tidak dibutuhkan dan tidak mengubah kebutuhan impor soal.
 - **VID-06.** Terjawab: satu video hanya untuk satu subbab. Identitas/normalisasi URL, duplikasi dan koreksi pemetaan masih perlu rincian.
+- **VID-07.** Terjawab (ADM-DEC-067): urutan otomatis mengikuti video ditambahkan; bukan pengurutan manual.
 
 ## 16. Laporan soal/video dan moderasi
 
@@ -482,26 +530,28 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 - **RPT-03.** Bukti apa cukup untuk investigasi: versi soal saat attempt, kunci/pembahasan, snapshot video dan alasan siswa? Data pribadi/jawaban individual tidak otomatis dibuka ke Content.
 - **RPT-04.** Terjawab: alur Baru → Ditinjau → Selesai/Ditolak sesuai, dengan alasan penutupan wajib dan tautan revisi jika ada perbaikan. Syarat penutupan rinci, reopen, propagasi status dan laporan baru setelah penutupan belum dirinci; perbaikan tidak diasumsikan otomatis menutup kasus.
 - **RPT-05.** Terjawab: cukup konfirmasi laporan terkirim. Tidak menambahkan notifikasi hasil penyelesaian atau dashboard tiket siswa dari keputusan ini.
+- **RPT-06.** Terjawab (ADM-DEC-068): laporan baru untuk soal/versi sama membuka kembali kasus lama menjadi Baru, tanpa menghapus histori penutupan.
 
 ## 17. Audit, ekspor dan penanganan insiden
 
 **Alur acuan:** aksi penting terjadi → actor/target/waktu/alasan/versi tercatat → pembaca berwenang mencari sesuai domain → investigasi → tindak lanjut terpisah. Audit tidak menjadi editor sejarah.
 
-- **AUD-01.** Aksi apa wajib mudah ditelusuri dan kolom/filter apa dibutuhkan: pelaku, domain, target, periode, perubahan status, sumber keputusan? Token/secret dan PII berlebihan tidak masuk audit.
-- **AUD-02.** Siapa meninjau audit dan seberapa sering? Scope Operations/Content tetap per domain dan identitas non-Admin untuk Content tetap dibatasi.
-- **AUD-03.** Jika ada ekspor audit/data, apa tujuan, format, pemohon/pemberi izin, kolom, retensi dan cara mencatat unduhannya? Ini kebutuhan yang perlu diputuskan, bukan fitur export otomatis.
-- **AUD-04.** Bagaimana insiden salah publikasi, akses tidak sah atau hasil tertahan dilaporkan dan dieskalasikan? Tindakan apa yang boleh dilakukan operator dan mana butuh keputusan Product/Curriculum/Data?
+- **AUD-01.** Terjawab: pelaku, waktu, modul/objek, tindakan, sebelum/sesudah, alasan dan berhasil/gagal; filter pelaku/modul/tanggal. Super seluruh lingkup, Operations/Content per domain, dengan redaksi rahasia dan batas identitas existing. Cakupan event/detail payload masih perlu kontrak.
+- **AUD-02.** Terjawab: diperiksa saat ada masalah; belum perlu jadwal rutin. Tidak menetapkan orang/tim atau SLA baru.
+- **AUD-03.** Terjawab: unduhan histori aktivitas belum diperlukan untuk versi ini. Histori tetap dibaca/filter sesuai izin; retensi tidak diputuskan oleh jawaban ini.
+- **AUD-04.** Terjawab: telusuri masalah/histori → teruskan melalui kanal tim existing kepada pihak teknis/Curriculum/Data sesuai kasus → penanganan dicatat sesuai kewenangan. Tanpa modul tiket insiden baru.
 
 ## 18. Perilaku lintas halaman dan operasi sistem
 
 **Alur acuan:** pengguna melakukan tindakan → server memvalidasi/menyimpan → UI mengakui hasil → jika gagal/konflik pengguna melihat status aktual dan dapat melanjutkan dengan aman.
 
-- **SYS-01.** Pekerjaan Admin terutama dilakukan di laptop atau juga ponsel? Aksi penting mana yang harus nyaman dilakukan pada keduanya dan kebutuhan aksesibilitas apa yang sudah diketahui?
+- **SYS-01.** Terjawab (ADM-DEC-074): laptop utama; seluruh fungsi tetap dapat digunakan di ponsel.
 - **SYS-02.** Apa yang harus terjadi jika login habis, subrole berubah atau akses dicabut ketika form/draft terbuka? Data sensitif tidak boleh tertinggal pada sesi yang kehilangan izin.
 - **SYS-03.** Tindakan massal apa yang benar-benar dibutuhkan dan mana cukup satu per satu? Untuk setiap bulk action, tentukan preview dampak, kegagalan sebagian dan audit tanpa memperluas izin domain.
-- **SYS-04.** Apakah Admin membutuhkan pemberitahuan tugas, misalnya draft menunggu review, upload gagal atau hasil overdue? Sebutkan penerima dan kanal; notifikasi Admin baru belum menjadi kebutuhan yang disetujui.
+- **SYS-04.** Terjawab (ADM-DEC-075): status proses, modul dan Dashboard cukup; tanpa pusat notifikasi Admin baru.
 - **SYS-05.** Target volume kerja dan waktu tunggu yang dapat diterima apa: jumlah soal/file, paket, pengguna, sekolah dan request generator? Engineering menyusun target/validasi teknis dari kebutuhan ini, bukan mengklaim SLO produksi dari tes lokal.
 - **SYS-06.** Siapa menetapkan retensi file asli, media tidak tertaut, draft, audit dan data pribadi? Pengarsipan tidak sama dengan penghapusan; histori akademik tidak dihapus lewat keputusan pembersihan UI.
+- **SYS-07.** Terjawab: deteksi konflik saat simpan, informasikan perubahan Admin lain, pertahankan salinan edit belum tersimpan dan bantu memuat versi terbaru sebelum melanjutkan. Cakupan autosave dan bentuk pembanding/merge perlu kontrak.
 
 ## 19. Penerimaan, migrasi dan batas versi final
 
@@ -540,6 +590,6 @@ ANC-01–02 di atas dipertahankan sebagai pertanyaan historis. ANC-06 melengkapi
 
 Saat keputusan mengubah aturan existing, perbarui sumber keputusan/spec terlebih dahulu lalu PRODUCT_CONTEXT, OPEN_DECISIONS dan PRD_MAPPING sesuai disiplin repo. ADR hanya diperbarui bila ada perubahan arsitektur. Dokumen discovery ini tetap menjadi jejak pertanyaan/jawaban, bukan sumber aturan tandingan.
 
-**Status giliran terakhir:** PEO-01–04/SCH-13, DASH-01–05 dan ACC-01–04/06 sudah dijawab; dicatat sebagai ADM-DEC-041–055. ACC-06 masih OPEN pada penanggung jawab operator, bukan pada pilihan alurnya. **Sedang ditanyakan:** AUD-01 (kolom/filter histori), AUD-02 (peninjauan), AUD-03 (unduhan audit), AUD-04 (eskalasi insiden) dan ACC-05 (autentikasi tambahan/sesi). Jawaban belum diterima; usulan tetap PROPOSED.
+**Status akhir discovery, 10 November:** sepuluh jawaban terakhir dicatat sebagai ADM-DEC-066–075; instruksi penggunaan atribut existing sebagai ADM-DEC-076. Tidak ada pertanyaan aktif. [PRD Admin](ADMIN_PRD.md) dan [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md) menjadi keluaran yang dapat digunakan tim. Dependency substantif dirangkum pada PRD §17; bukan daftar atribut yang harus dijawab pengguna.
 
-**Urutan berikutnya:** audit/keamanan → definisi filter/perbandingan Dashboard dan rincian workflow yang tersisa → dokumen lanjutan batch/IRT dan jalur varian → approval/acceptance. SCH-08–12 sudah dijawab untuk fase demo dan prinsip sekolah nonaktif. Pembahasan monetisasi setelah demo ditunda; jangan mengulanginya sebagai blocker. ANC-04/QST-09 tetap menunggu dokumen pengguna. Penetapan anchor setelah impor/generate tetap merupakan keterangan lama yang diralat.
+**Handoff:** implementasi mengikuti PRD, kontrak dan gap teknis yang tercatat. ANC-04/QST-09 tetap menunggu dokumen lanjutan; konflik distribusi Drill/konten invalid, penyerahan ilmiah dan penanggung jawab belum disamarkan sebagai keputusan selesai. Tidak membuka ulang pembahasan monetisasi atau atribut rutin. Anchor setelah impor/generate merupakan keterangan lama yang sudah diralat.

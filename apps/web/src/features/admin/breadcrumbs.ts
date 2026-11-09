@@ -28,20 +28,25 @@ export function adminBreadcrumbs(
   if (link) {
     const base = link.href.split('?')[0]!;
     const nested = pathname !== base && pathname.startsWith(base + '/');
-    const href = base.startsWith('/admin/assessments/')
-      ? base + assessmentListQuery(params)
-      : link.href;
+    const href =
+      base.startsWith('/admin/assessments/') || base === '/admin/tryout-batches'
+        ? base + assessmentListQuery(params)
+        : link.href;
     crumbs.push(nested ? { label: link.label, href } : { label: link.label });
     if (nested) {
       const tail = pathname.slice(base.length + 1);
       const label =
         tail === 'new'
-          ? 'Tambah paket'
-          : base.startsWith('/admin/assessments/')
-            ? 'Detail paket'
-            : title && title !== link.label
-              ? title
-              : 'Detail';
+          ? base === '/admin/tryout-batches'
+            ? 'Tambah batch'
+            : 'Tambah paket'
+          : base === '/admin/tryout-batches'
+            ? 'Detail batch'
+            : base.startsWith('/admin/assessments/')
+              ? 'Detail paket'
+              : title && title !== link.label
+                ? title
+                : 'Detail';
       crumbs.push({ label });
     }
   } else {

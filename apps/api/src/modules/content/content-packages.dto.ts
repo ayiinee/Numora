@@ -103,8 +103,8 @@ export class PrepareLegacyPretestDto {
   source!: PackageSourceDto;
 }
 export class PackageAvailabilityDto {
-  @ApiProperty({ enum: ['DRAFT', 'BLOCKED', 'SCHEDULED', 'AVAILABLE', 'CLOSED', 'ARCHIVED'] })
-  state!: 'DRAFT' | 'BLOCKED' | 'SCHEDULED' | 'AVAILABLE' | 'CLOSED' | 'ARCHIVED';
+  @ApiProperty({ enum: ['DRAFT', 'BLOCKED', 'SCHEDULED', 'AVAILABLE', 'READY_FOR_BATCH', 'CLOSED', 'ARCHIVED'] })
+  state!: 'DRAFT' | 'BLOCKED' | 'SCHEDULED' | 'AVAILABLE' | 'READY_FOR_BATCH' | 'CLOSED' | 'ARCHIVED';
   @ApiProperty({ type: [String] }) blockers!: string[];
   @ApiProperty({ format: 'date-time' }) checkedAt!: string;
 }

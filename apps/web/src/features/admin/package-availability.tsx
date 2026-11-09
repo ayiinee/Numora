@@ -2,6 +2,7 @@ import type { ContentPackageDto } from './generated-types';
 import { snapshotTime } from './analytics-model';
 
 const labels: Record<string, string> = {
+  READY_FOR_BATCH: 'Siap dipakai dalam batch',
   DRAFT: 'Belum diterbitkan',
   BLOCKED: 'Belum bisa dikerjakan',
   SCHEDULED: 'Menunggu jadwal mulai',
@@ -47,8 +48,8 @@ export function PackageAvailability({ detail }: { detail: ContentPackageDto }) {
           ? labels[detail.availability.state]
           : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
       </p>
-      {detail.releaseAt && <p>Rilis: {snapshotTime(detail.releaseAt)}</p>}
-      {detail.closeAt && <p>Tutup: {snapshotTime(detail.closeAt)}</p>}
+      {detail.assessmentType !== 'TRYOUT' && detail.releaseAt && <p>Rilis: {snapshotTime(detail.releaseAt)}</p>}
+      {detail.assessmentType !== 'TRYOUT' && detail.closeAt && <p>Tutup: {snapshotTime(detail.closeAt)}</p>}
       {!!detail.availability?.blockers.length && (
         <ul>
           {detail.availability.blockers.map((code) => (

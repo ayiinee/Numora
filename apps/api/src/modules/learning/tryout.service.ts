@@ -1,3 +1,4 @@
+import { TryoutBatchesService } from './tryout-batches.service';
 import { presentFixtureText } from '@tka/database';
 import { randomInt } from 'node:crypto';
 import { TRYOUT_PARTIAL_POLICY, validateTryoutPartialRubric } from '@tka/assessment-engine';
@@ -11,6 +12,8 @@ import {
 } from '@nestjs/common';
 import {
   currentTryoutPackage,
+  tryoutStudentAssignments,
+  tryoutBatches,
   tryoutBatchCloseAt,
   publishedTryoutAttemptResults,
   analyticsOutbox,
@@ -57,6 +60,7 @@ export class TryoutService {
   constructor(
     private readonly identity: IdentityService,
     private readonly releases: TryoutReleaseService,
+    private readonly batchService: TryoutBatchesService = new TryoutBatchesService(),
   ) {}
 
   private async student(authorization?: string) {
@@ -110,7 +114,7 @@ export class TryoutService {
 
   async current(authorization?: string) {
     const studentId = await this.student(authorization);
-    const current = await this.currentPackage();
+    const current = (await this.batchService.routingActive()) ? null : await this.currentPackage();
     if (!current) return { state: 'unavailable' as const };
     const { db } = getDatabase();
     let [attempt] = await db
@@ -330,14 +334,19 @@ export class TryoutService {
         assessmentType: assessmentAttempts.assessmentType,
         status: assessmentAttempts.status,
         packageId: assessmentAttempts.packageId,
-        title: assessmentPackages.name,
-        closeAt: assessmentPackages.closeAt,
+        title: sql<string>`coalesce(${tryoutBatches.adminTitle}, ${assessmentPackages.name})`,
+        managedBatch: sql<boolean>`${tryoutBatches.adminTitle} is not null`,
+        closeAt:
+          sql<Date | null>`case when ${tryoutBatches.adminTitle} is not null then ${tryoutBatches.closesAt} else ${assessmentPackages.closeAt} end`.mapWith(
+            (v) => (v ? new Date(v) : null),
+          ),
         isDemo: assessmentPackages.isDemo,
         deadlineAt: assessmentAttempts.deadlineAt,
         xpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
+      .leftJoin(tryoutBatches, eq(tryoutBatches.id, assessmentAttempts.tryoutBatchId))
       .where(eq(assessmentAttempts.id, attemptId))
       .limit(1);
     if (!attempt || attempt.studentId !== studentId || attempt.assessmentType !== 'TRYOUT')
@@ -356,11 +365,11 @@ export class TryoutService {
       await getDatabase().db.execute(
         sql`select public.record_assessment_delivery(${attemptId}::uuid, false)`,
       );
-    const pendingReason = (await this.releases.releasedPackageIds([attempt.packageId])).has(
-      attempt.packageId,
-    )
+    const pendingReason = attempt.managedBatch
       ? null
-      : await this.pendingReason(attempt.packageId);
+      : (await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
+        ? null
+        : await this.pendingReason(attempt.packageId);
     return {
       id: attempt.id,
       packageId: attempt.packageId,
@@ -392,14 +401,44 @@ export class TryoutService {
     };
   }
 
-  async start(authorization: string | undefined, packageId: string) {
+  async batches(authorization?: string) {
+    return this.batchService.studentList(await this.student(authorization));
+  }
+  async startBatch(authorization: string | undefined, batchId: string, schoolId?: string) {
+    return this.start(authorization, '', { batchId, ...(schoolId ? { schoolId } : {}) });
+  }
+  async start(
+    authorization: string | undefined,
+    requestedPackageId: string,
+    batchInput?: { batchId: string; schoolId?: string },
+  ) {
     const studentId = await this.student(authorization);
     const { db } = getDatabase();
     const attemptId = await db.transaction(async (tx) => {
       await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${packageId}))`,
+        sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${batchInput?.batchId ?? requestedPackageId}))`,
       );
-      const current = await this.currentPackage();
+      const selected = batchInput
+        ? await this.batchService.selectForStart(
+            tx,
+            studentId,
+            batchInput.batchId,
+            batchInput.schoolId,
+          )
+        : null;
+      if (selected?.existingId) return selected.existingId;
+      if (!batchInput && (await this.batchService.routingActive(tx)))
+        throw new ConflictException(
+          problem('TRYOUT_BATCH_REQUIRED', 'Mulai Tryout melalui batch yang tersedia.'),
+        );
+      const packageId = selected?.packageId ?? requestedPackageId;
+      const [selectedPackage] = selected
+        ? await tx.select().from(assessmentPackages).where(eq(assessmentPackages.id, packageId))
+        : [];
+      const current =
+        selected && selectedPackage
+          ? { ...selectedPackage, closeAt: selected.batch.closesAt, durationSeconds: 600 }
+          : await this.currentPackage();
       if (!current || current.id !== packageId)
         throw new ConflictException(
           problem('TRYOUT_PACKAGE_UNAVAILABLE', 'Paket Tryout ini tidak berjalan.'),
@@ -417,10 +456,11 @@ export class TryoutService {
             eq(assessmentAttempts.studentId, studentId),
             eq(assessmentAttempts.packageId, packageId),
             eq(assessmentAttempts.assessmentType, 'TRYOUT'),
+            isNull(assessmentAttempts.tryoutBatchId),
           ),
         )
         .limit(1);
-      if (existing) return existing.id;
+      if (!selected && existing) return existing.id;
       if (!current.scoringPolicyVersionId)
         throw new ServiceUnavailableException(
           problem('TRYOUT_POLICY_MISSING', 'Kebijakan Tryout belum tersedia.'),
@@ -518,18 +558,27 @@ export class TryoutService {
           studentId,
           packageId,
           assessmentType: 'TRYOUT',
+          tryoutBatchId: selected?.batch.id ?? null,
           tryoutXpPolicyVersion:
             policy?.policyCode !== TRYOUT_PARTIAL_POLICY &&
             items.some((item) => item.questionType !== 'SINGLE_CHOICE')
               ? null
               : TRYOUT_XP_POLICY.version,
-          classIdAtStart: membership?.classId ?? null,
+          classIdAtStart: selected ? selected.classId : (membership?.classId ?? null),
           scoringPolicyVersionId: current.scoringPolicyVersionId,
           startedAt: now,
           deadlineAt,
         })
         .returning({ id: assessmentAttempts.id });
       if (!attempt) throw new Error('Tryout attempt creation failed.');
+      if (selected)
+        await tx.insert(tryoutStudentAssignments).values({
+          attemptId: attempt.id,
+          batchId: selected.batch.id,
+          studentId,
+          schoolId: selected.schoolId,
+          packageId,
+        });
       // Shuffle once on the server; the persisted order is reused on resume/retry.
       for (let i = items.length - 1; i > 0; i--) {
         const j = randomInt(i + 1);
@@ -588,7 +637,9 @@ export class TryoutService {
         .select({ closeAt: assessmentPackages.closeAt })
         .from(assessmentPackages)
         .where(eq(assessmentPackages.id, attempt.packageId));
-      const deadlineAt = earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
+      const deadlineAt = attempt.tryoutBatchId
+        ? attempt.deadlineAt
+        : earlierDeadline(attempt.deadlineAt, pkg?.closeAt ?? null);
       if (deadlineAt && deadlineAt <= (await databaseTime(tx)))
         throw new ConflictException(problem('TRYOUT_DEADLINE_PASSED', 'Waktu Tryout sudah habis.'));
       const [item] = await tx
@@ -687,6 +738,7 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     const attempt = await this.forStudent(studentId, attemptId);
     if (
+      attempt.managedBatch ||
       attempt.status !== 'GRADED' ||
       !(await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
     )

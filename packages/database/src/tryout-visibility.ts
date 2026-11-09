@@ -10,7 +10,7 @@ import {
   tryoutResultFinalizations,
   tryoutAttemptResults,
 } from './schema/index.js';
-import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
+import { and, isNull, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -171,6 +171,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
       and(
         inArray(tryoutAttemptResults.attemptId, attemptIds),
         eq(tryoutBatches.status, 'PUBLISHED'),
+        isNull(tryoutBatches.adminTitle),
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
         inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),

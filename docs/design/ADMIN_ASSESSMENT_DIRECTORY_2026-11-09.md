@@ -61,3 +61,5 @@ Verifikasi iterasi compact: 12/12 tes browser direktori lulus, termasuk modal pe
 ### Detail terpadu - 10 November 2026
 
 **ENGINEERING DECISION - permintaan pemilik:** identitas, statistik dan aksi pengaturan/penerbitan berada dalam satu kartu compact. Tabel soal menjadi permukaan kerja utama dengan header, caption bantuan ringkas dan tombol Tinjau konsisten. Penerbitan/arsip dibuka melalui modal agar formulir tidak memenuhi halaman. Modal Tinjau menyediakan navigasi sebelumnya/berikutnya, mengosongkan catatan saat berganti soal agar catatan tidak tersimpan ke soal yang keliru. Permission, validasi dan konfirmasi existing tetap.
+
+**ENGINEERING DECISION — instruksi pemilik, 10 November 2026:** Tryout memakai lebar area, padding, toolbar dan tabel compact yang sama dengan Pretest, tanpa panel filter. Detail memakai komponen ringkasan, tabel soal, modal Pengaturan dan Penerbitan bersama. Kolom rilis WIB dan pilihan rilis sekarang/jadwalkan dipertahankan; penjelasan jadwal tersedia melalui disclosure. Tidak mengubah aturan asesmen atau rilis hasil.

@@ -3,6 +3,27 @@ import AxeBuilder from '@axe-core/playwright';
 import { setupAssessments } from './fixtures/admin-assessments';
 import { id } from './fixtures/admin';
 
+test('Tryout uses the compact Pretest layout and delegates scheduling to batches', async ({
+  page,
+}) => {
+  await setupAssessments(page);
+  await page.goto('/admin/assessments/tryout');
+  await expect(page.locator('.assessment-directory-compact')).toBeVisible();
+  await expect(page.locator('.admin-full-width-shell')).toBeVisible();
+  await expect(page.locator('.assessment-directory-filters')).toHaveCount(0);
+  await expect(page.getByRole('columnheader', { name: 'Rilis', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Tryout TEST', exact: true }).click();
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.getByRole('heading', { name: 'Tryout TEST', exact: true })).toBeVisible();
+    await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
+    await expect(page.getByRole('link', { name: 'Batch Tryout', exact: true }).last()).toBeVisible();
+    await expect(page.getByRole('combobox', { name: 'Waktu rilis', exact: true })).toHaveCount(0);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    await page.getByRole('dialog').press('Escape');
+  }
+});
+
 for (const [kind, title] of [
   ['pretest', 'Pretest TEST 1'],
   ['drill', 'Drill TEST'],
