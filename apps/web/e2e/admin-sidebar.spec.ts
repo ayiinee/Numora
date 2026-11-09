@@ -80,7 +80,8 @@ test('Admin submenu destinations and retained tabs follow query navigation, Back
     ['Bank konten', 'Tambah konten', '/admin/content/imports'],
     ['Paket asesmen', 'Pretest', '/admin/assessments/pretest'],
     ['Paket asesmen', 'Drill', '/admin/assessments/drill'],
-    ['Paket asesmen', 'Tryout', '/admin/assessments/tryout'],
+    ['Tryout', 'Batch Tryout', '/admin/tryout-batches'],
+    ['Tryout', 'Bank paket Tryout', '/admin/assessments/tryout'],
     ['Pengguna & kelas', 'Pengguna', '/admin/operations?view=users'],
     ['Pengguna & kelas', 'Kelas', '/admin/operations?view=classes'],
     ['Hasil Tryout', 'Batch & rilis hasil', '/admin/irt?view=batches'],
@@ -274,6 +275,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as c
             'Bank konten',
             'Review & laporan',
             'Paket asesmen',
+            'Tryout',
             'Hasil Tryout',
             'Akun Admin',
           ]
@@ -285,6 +287,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as c
               'Bank konten',
               'Review & laporan',
               'Paket asesmen',
+              'Tryout',
               'Hasil Tryout',
             ];
     await expect(sidebar.getByRole('navigation').locator(primary)).toHaveText(expected);

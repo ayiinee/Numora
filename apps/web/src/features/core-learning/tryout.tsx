@@ -345,7 +345,7 @@ function TryoutForm({
         }
         onSubmit={() => learningApi.submitTryout(token, attempt.id)}
         onSubmitted={() => {
-          for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
+          for (const key of ['tryout-batches', 'current-tryout', 'student-dashboard', 'assessment-history'])
             void client.invalidateQueries({ queryKey: [key] });
           router.push(`/student/tryout/${attempt.id}/result`);
         }}
