@@ -1,0 +1,50 @@
+{
+  "canonicalOwner": "Numora",
+  "cases": [
+    {
+      "case": "two-arm",
+      "fullDesignParticipants": [
+        1000,
+        1000
+      ],
+      "participants": [
+        2,
+        2
+      ],
+      "responses": 120,
+      "scientificGate": "NOT_EVALUATED"
+    },
+    {
+      "case": "three-arm-partial",
+      "fullDesignParticipants": [
+        1000,
+        1000,
+        100
+      ],
+      "participants": [
+        2,
+        2,
+        2
+      ],
+      "responses": 180,
+      "scientificGate": "NOT_EVALUATED"
+    }
+  ],
+  "files": {
+    "research-resources.json": "217c1290e9966ccbd7e78c110f88c677667c42c98d99def08756bc7310301c29",
+    "three-arm-partial.input.json": "fe794a5418690b4cb49143681712a169aaf16c66c1d4e3316685b837a522685e",
+    "three-arm-partial.truth.json": "934f2c964cc7da2ee9cb58a163a9b7fe67eac3629671f00b8a30d0b5fdd60d25",
+    "two-arm.input.json": "26073fd6bff31ba2784dc343b3e6d636fe510a4f9069f5278a679ead2e469f2f",
+    "two-arm.truth.json": "1639f1776f6ed4a1fd0b339127de0c615ab2765a90104423de360055381da1aa"
+  },
+  "inputDigests": "UNBOUND_UNTIL_POSTGRES_FREEZE",
+  "productionApproved": false,
+  "purpose": "SYNTHETIC_ONLY",
+  "small": true,
+  "sourceSha256": {
+    "contracts/irt-calibration-v1/examples/tryout-input.json": "78a5b5d0146a967886e82c9bf727c6c33e657d8db0224ffe9b5b4b3a670e9680",
+    "research/irt/policy-v1.json": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
+    "research/irt/synthetic.py": "a39c03520f8b80d2c73e23369f8e54be81f247db22a158932e84085e5560084f"
+  },
+  "version": "irt-delivery-fixtures-v1"
+}
