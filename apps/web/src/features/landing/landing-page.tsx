@@ -1,6 +1,7 @@
 import Image from 'next/image';
 import Link from 'next/link';
 import { Brand, Icon, type IconName } from '@tka/ui';
+import { ClosingScene } from './closing-scene';
 import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
 import styles from './landing.module.css';
 
@@ -195,14 +196,7 @@ export function LandingPage() {
           <Link className={styles.primary} id="aksi-penutup" href="/">
             Mulai belajar
           </Link>
-          <Image
-            src={`${illustrations}/tryout-owl.svg`}
-            alt=""
-            width={420}
-            height={320}
-            unoptimized
-            loading="lazy"
-          />
+          <ClosingScene />
         </section>
       </main>
 

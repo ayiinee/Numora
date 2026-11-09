@@ -5,6 +5,7 @@
   --ink: #27272f;
   --muted: #5c5d69;
   --accent: var(--color-primary);
+  --footer-fill: var(--accent);
   --line: #eceaf0;
   --lavender: var(--numora-purple-50);
   --button-height: 50px;
@@ -502,9 +503,7 @@
 }
 
 .browserBand,
-.schoolBand,
-.closing,
-.footer {
+.schoolBand {
   box-shadow: inset 0 1px var(--line);
 }
 
@@ -611,26 +610,60 @@
 }
 
 .closing {
+  position: relative;
+  isolation: isolate;
+  justify-content: flex-start;
   min-height: clamp(568px, calc(819px - 64.3vw), 613px);
+  padding: 40px 15px 0;
+  overflow: hidden;
 }
 
-.closing h2,
+.closing::before {
+  position: absolute;
+  inset: auto 0 0;
+  z-index: -2;
+  height: 416px;
+  background: var(--footer-fill);
+  content: '';
+}
+
+.closingScene {
+  position: absolute;
+  z-index: -1;
+  bottom: 0;
+  left: 50%;
+  width: clamp(696px, 100vw, 1440px);
+  height: auto;
+  overflow: hidden;
+  transform: translateX(-50%);
+  background-color: var(--paper);
+  background-image: linear-gradient(var(--paper) 90%, var(--footer-fill) 90%);
+  color: var(--footer-fill);
+  pointer-events: none;
+}
+
 .browserBand h2 {
   max-width: 585px;
 }
 
-.closing img {
-  width: min(88%, 420px);
-  height: auto;
-  margin-top: 34px;
+.page .closing h2 {
+  width: min(100%, 330px);
+  min-height: 90px;
+  line-height: 1.25;
+}
+
+.closing .primary {
+  margin-top: 48px;
 }
 
 .footer {
-  padding: 64px 0 32px;
+  padding: 96px 0 32px;
+  background: var(--footer-fill);
+  color: var(--color-text-inverse);
 }
 
 .footerInner {
-  width: min(calc(100% - 64px), var(--content-width));
+  width: min(calc(100% - 80px), var(--content-width));
   margin-inline: auto;
 }
 
@@ -654,7 +687,7 @@
   display: inline-flex;
   align-items: center;
   min-height: 44px;
-  color: var(--muted);
+  color: var(--numora-purple-50);
   font-size: 0.875rem;
   font-weight: 650;
 }
@@ -667,14 +700,22 @@
   gap: 12px;
   margin-top: 40px;
   padding-top: 22px;
-  border-top: 1px solid var(--line);
+  border-top: 1px solid var(--numora-purple-300);
 }
 
 .footerBottom :global(.numora-brand) {
-  color: var(--accent);
+  color: var(--color-text-inverse);
+}
+
+.page .footer :focus-visible {
+  outline-color: var(--color-text-inverse);
 }
 
 @media (max-width: 360px) {
+  .page .closing h2 {
+    min-height: 135px;
+  }
+
   .benefits .benefit:nth-child(2) {
     --art-offset: 266px;
   }
@@ -712,6 +753,11 @@
 
   .page main h2 {
     font-size: 3rem;
+  }
+
+  .page .closing h2 {
+    width: min(100%, 485px);
+    min-height: 120px;
   }
 
   .footerGroups {
@@ -800,6 +846,11 @@
     font-size: 4rem;
   }
 
+  .page .closing h2 {
+    width: min(100%, 583px);
+    min-height: 160px;
+  }
+
   .assessment {
     min-height: 722px;
   }
@@ -841,10 +892,6 @@
 
   .closing {
     min-height: clamp(566px, calc(40vw + 260px), 669px);
-  }
-
-  .closing img {
-    width: clamp(280px, calc(54.7vw - 140px), 420px);
   }
 }
 
