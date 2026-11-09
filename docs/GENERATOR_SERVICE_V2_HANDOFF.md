@@ -16,6 +16,8 @@ Main memiliki approval, inventaris, reservasi, request/dispatch, adopsi artifact
 
 ## Batas kelayakan produksi
 
+**Pembaruan lokal 9 November 2026:** delapan pembahasan telah dipulihkan; satu tambahan pembahasan canonical dan sembilan penautan gambar disiapkan serta disimulasikan tanpa menulis database bersama. Dua perbedaan redaksi terbukti ekuivalen. Lihat [laporan pemulihan sumber](audits/2026-11-09-original-source-repair/README.md). Daftar berikut merekam kondisi audit awal 8 November; status canonical/approval produksi tidak otomatis berubah.
+
 Audit memetakan **1.150 Drill + 30 Tryout = 1.180 ORIGINAL** melalui namespace impor dan external ID, bukan melalui susunan paket Tryout existing yang sudah berisi varian. Identitas/hash/versi cocok; ini tidak berarti semua original siap produksi.
 
 - Delapan sumber lokal belum menyediakan pembahasan independen untuk perbandingan lengkap.
