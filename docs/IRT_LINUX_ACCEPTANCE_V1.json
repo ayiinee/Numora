@@ -1,0 +1,242 @@
+{
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "manifest": {
+    "purpose": "RESEARCH_ONLY",
+    "productionApproved": false,
+    "producerImage": "sha256:071d5aeba5894563bfae9b262f866270a3459f8bf57409a8c724f2544fa957f7",
+    "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+    "profile": "research/irt-runtime-linux-v1.json",
+    "profileSha256": "552a427c1bd2923a41e2e06e3039ede2ec391903d1167caaaee0559975e66512",
+    "sourceSha256": {
+      "Dockerfile.irt-producer": "209fda791c48cd45fa23a34040a6df16906e6d693c7718bc50738d3bf12404c7",
+      "research/irt-python-linux.lock": "523b529216beaa5ba8319980298192cd2e4f5594aee84e743f70ea911412fe10"
+    }
+  },
+  "host": {
+    "dockerCPUs": 2,
+    "dockerMemoryBytes": 4107382784
+  },
+  "targetHardwareValidated": false,
+  "capacityEvidence": "SAMPLED_LOCAL_CORRECTNESS_NOT_SLO",
+  "cases": [
+    {
+      "label": "INSUFFICIENT",
+      "respondents": 4,
+      "arms": 2,
+      "ackSeconds": 0.10899999999674037,
+      "elapsedSeconds": 2.3280000000086147,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "INSUFFICIENT",
+      "participantStatuses": {
+        "INSUFFICIENT": 4
+      },
+      "failure": null,
+      "artifactDigest": "43ad944bacf5644f391d6345fefaa17ad6c49174f7ba7f2e4d967e984eb448fc",
+      "sameArtifactOnReplay": true
+    },
+    {
+      "label": "HEALTHY",
+      "respondents": 2000,
+      "arms": 2,
+      "ackSeconds": 0.4210000000020955,
+      "elapsedSeconds": 146.56200000000536,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "CALIBRATED",
+      "participantStatuses": {
+        "SCORED": 2000
+      },
+      "failure": null,
+      "artifactDigest": "63d6328e73efdaec41781c3181c02e208f49b29e9e535310a0fe16bee2cda0ce",
+      "sameArtifactOnReplay": true
+    },
+    {
+      "label": "CAPACITY",
+      "respondents": 4998,
+      "arms": 3,
+      "ackSeconds": 0.7660000000032596,
+      "elapsedSeconds": 373.9530000000086,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "NOT_COMPARABLE",
+      "participantStatuses": {
+        "NOT_COMPARABLE": 4998
+      },
+      "failure": null,
+      "artifactDigest": "199eea6f4859369e195ee3ed3e26e7593ce2c4d43fe437264ced7e8f6a6a7bc6",
+      "sameArtifactOnReplay": true
+    },
+    {
+      "label": "OVER_LIMIT",
+      "respondents": 5001,
+      "arms": 3,
+      "ackSeconds": 1.0469999999913853,
+      "elapsedSeconds": 184.71899999998277,
+      "executionStatus": "FAILED",
+      "measurementState": null,
+      "participantStatuses": {},
+      "failure": {
+        "code": "INVALID_INPUT",
+        "retryable": false
+      },
+      "artifactDigest": "407449b050d4152923d7fee941ab4907b4d13a9bacffeef049208a705012acf8",
+      "sameArtifactOnReplay": true
+    }
+  ],
+  "sharedDatabaseTouched": false,
+  "canonicalPublication": false,
+  "linuxRunnerFaults": "PASSED",
+  "containers": {
+    "api": {
+      "memoryLimitBytes": 268435456,
+      "cpuQuota": 2.0,
+      "oomKilled": false,
+      "readOnlyRoot": true
+    },
+    "producer": {
+      "memoryLimitBytes": 1073741824,
+      "cpuQuota": 2.0,
+      "oomKilled": false,
+      "readOnlyRoot": true
+    }
+  },
+  "status": "LINUX_LOCAL_RESEARCH_VERIFIED_CAPACITY_EXPLORATORY",
+  "sampledMetrics": {
+    "producer": {
+      "sampledPeakWorkingSetMiB": 545.3,
+      "sampledPeakCPUPercent": 102.47,
+      "samples": 161
+    },
+    "api": {
+      "sampledPeakWorkingSetMiB": 66.38,
+      "sampledPeakCPUPercent": 5.51,
+      "samples": 161
+    },
+    "R": {
+      "sampledPeakWorkingSetMiB": 530.4,
+      "sampledPeakCPUPercent": 101.44,
+      "samples": 32
+    }
+  },
+  "metricSampleErrors": 0,
+  "ownedResourcesRemoved": true,
+  "date": "2026-11-10",
+  "runtimeImplementationCommit": "0787d01",
+  "harnessImplementationCommit": "944d7a0",
+  "finalHarnessNote": "Subsequent default producer memory is 1 GiB. Recorded run started at 512 MiB and was raised to 1 GiB; not a fixed-resource benchmark.",
+  "resourceAdjustment": {
+    "reason": "Producer reached 511.9 MiB at 512 MiB limit during near-limit artifact handling; exploratory capacity sizing.",
+    "container": "producer",
+    "initialMemoryBytes": 536870912,
+    "finalMemoryBytes": 1073741824,
+    "changedDuringRun": true,
+    "timeUTC": "2026-11-09T17:41:56.247893+00:00",
+    "fixedResourceBenchmark": false
+  },
+  "tests": {
+    "linuxUnit": {
+      "passed": 27,
+      "seconds": 1.897,
+      "logSha256": "f96c7d1a34211785a3c45a8cc4cc763bcb531efd6921b947d804e5c0c82d4579"
+    },
+    "windowsRegression": {
+      "passed": 25,
+      "seconds": 62.527,
+      "logSha256": "272d2b00b5eab594e7d88d44955a3b1ce68d2fca4ad4b728d247e3fe76274090"
+    }
+  },
+  "initialHostRun": {
+    "purpose": "RESEARCH_ONLY",
+    "productionApproved": false,
+    "manifest": {
+      "purpose": "RESEARCH_ONLY",
+      "productionApproved": false,
+      "producerImage": "sha256:071d5aeba5894563bfae9b262f866270a3459f8bf57409a8c724f2544fa957f7",
+      "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+      "profile": "research/irt-runtime-linux-v1.json",
+      "profileSha256": "552a427c1bd2923a41e2e06e3039ede2ec391903d1167caaaee0559975e66512",
+      "sourceSha256": {
+        "Dockerfile.irt-producer": "209fda791c48cd45fa23a34040a6df16906e6d693c7718bc50738d3bf12404c7",
+        "research/irt-python-linux.lock": "523b529216beaa5ba8319980298192cd2e4f5594aee84e743f70ea911412fe10"
+      }
+    },
+    "host": {
+      "dockerCPUs": 1,
+      "dockerMemoryBytes": 1950724096
+    },
+    "targetHardwareValidated": false,
+    "capacityEvidence": "SAMPLED_LOCAL_CORRECTNESS_NOT_SLO",
+    "cases": [
+      {
+        "label": "INSUFFICIENT",
+        "respondents": 4,
+        "arms": 2,
+        "ackSeconds": 0.25,
+        "elapsedSeconds": 2.562999999994645,
+        "executionStatus": "SUCCEEDED",
+        "measurementState": "INSUFFICIENT",
+        "participantStatuses": {
+          "INSUFFICIENT": 4
+        },
+        "failure": null,
+        "artifactDigest": "274997ba29cfd8a87c29398b96ca8786c58e1ba9071f48fa345cb56bb75eb0b5",
+        "sameArtifactOnReplay": true
+      },
+      {
+        "label": "HEALTHY",
+        "respondents": 2000,
+        "arms": 2,
+        "ackSeconds": 0.3129999999946449,
+        "elapsedSeconds": 155.125,
+        "executionStatus": "SUCCEEDED",
+        "measurementState": "CALIBRATED",
+        "participantStatuses": {
+          "SCORED": 2000
+        },
+        "failure": null,
+        "artifactDigest": "e246d432f5d71351f728131e43def3dc31a1bb5ef9f62e5165cfa668ce48972a",
+        "sameArtifactOnReplay": true
+      }
+    ],
+    "sharedDatabaseTouched": false,
+    "canonicalPublication": false,
+    "linuxRunnerFaults": "PASSED",
+    "sampledMetrics": {
+      "producer": {
+        "sampledPeakWorkingSetMiB": 275.5,
+        "sampledPeakCPUPercent": 97.6,
+        "samples": 39
+      },
+      "api": {
+        "sampledPeakWorkingSetMiB": 60.09,
+        "sampledPeakCPUPercent": 3.18,
+        "samples": 39
+      },
+      "R": {
+        "sampledPeakWorkingSetMiB": 417.8,
+        "sampledPeakCPUPercent": 90.17,
+        "samples": 9
+      }
+    },
+    "metricSampleErrors": 4,
+    "ownedResourcesRemoved": true,
+    "status": "PARTIAL_INTERRUPTED_DURING_NEAR_LIMIT_SNAPSHOT"
+  },
+  "limitations": [
+    "One realization per case; no latency percentile or production SLO.",
+    "Capacity case completes with NOT_COMPARABLE under unchanged anchor gates; computational completion is not measurement approval.",
+    "Temporary host is 2 CPU/~3.8 GiB RAM plus 2 GiB swap; target 2 CPU/2 GiB VPS not certified.",
+    "Producer limit changed during exploratory run; measured working-set peaks are sampled and may miss peaks.",
+    "Timings start at HTTP notification and exclude synthetic generation and main snapshot freezing.",
+    "Initial host run completed 2000 respondents but Docker/PostgreSQL failed during preparation of 4998 snapshot; cause not definitively established.",
+    "Linux local HTTP/daemon/R flow tested, not a deployed two-VPS topology or real-participant approval."
+  ],
+  "sourceEvidence": {
+    "rawReportSha256": "b9b922bdb9ef33492f6cda162917332daf719540a100a70baa5ddd7fa7e61d6e",
+    "runLogSha256": "d10aeadfcb6ac9f67429944d709736ecc6d2c1ecfe20d82cd11e6ff3e46535b4"
+  },
+  "temporaryHostConfiguration": {
+    "ownerAuthorized": true,
+    "originalConfigurationRestored": true,
+    "permanentResourceChange": false
+  }
+}

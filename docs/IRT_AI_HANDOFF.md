@@ -134,8 +134,14 @@ Gunakan laporan per tahap, bukan menjumlahkan tes yang tumpang tindih. Laporan
 numerical recovery v1 berisi 30 replikasi; hanya empat memakai producer penuh.
 Outcome acceptance melengkapi success/failure path. Bukti Linux memisahkan
 pengujian correctness dan sampling kapasitas dari klaim perangkat produksi.
-Host lokal hanya satu CPU dan sekitar 1,8 GiB RAM; limit container dua CPU tidak
-membuktikan pengukuran pada mesin dua CPU. Sampling RAM dapat melewatkan puncak.
+Host awal satu CPU/sekitar 1,8 GiB RAM berhasil menyelesaikan 2.000 peserta,
+namun terputus saat menyiapkan snapshot 4.998 peserta. Pemilik mengizinkan
+resource sementara dua CPU/sekitar 3,8 GiB RAM dan 2 GiB swap. Run tersebut
+menyelesaikan 2.000 peserta SCORED dan 4.998 peserta NOT_COMPARABLE. Limit
+producer dinaikkan di tengah run dari 512 MiB ke 1 GiB karena menyentuh batas;
+ini eksplorasi sizing, bukan benchmark dengan resource tetap. R dibatasi
+2 GiB dan satu thread numerik. Sampling RAM dapat melewatkan puncak; tidak ada
+sertifikasi kapasitas VPS 2 CPU/2 GiB atau SLO produksi.
 
 Baseline tanpa DIF ditahan pada 20/30 replikasi. Sampel lebih besar membantu
 pada kasus sintetis yang diuji, tetapi belum membuktikan equivalence atau bebas

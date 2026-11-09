@@ -1,5 +1,11 @@
 # Tryout IRT research runtime
 
+**Latest technical handoff, 10 November 2026:** see `docs/IRT_AI_HANDOFF.md` and
+the Linux acceptance report. Windows-v4/Linux-v1 are the active explicit
+profiles. Earlier v1?v3 runtime references below describe historical runs.
+Local Linux correctness is verified; production academic approval and VPS
+capacity certification remain separate.
+
 **ENGINEERING DECISION — owner-approved implementation scope, 9 November 2026.**
 Research-only, synthetic local execution. This is not production approval,
 canonical student-result adoption, publication, product fallback, comparison
@@ -421,3 +427,33 @@ one CPU and about 1.8 GiB RAM. Local observations do not certify a two-CPU VPS,
 peak memory bounds, or production SLO. New Linux evidence is recorded separately
 in `research/irt/linux-acceptance-v1.json`, mirrored as main
 `docs/IRT_LINUX_ACCEPTANCE_V1.json`.
+
+
+### Completed Linux observations
+
+The pinned Linux image passed 27 unit tests and real timeout/revocation runner
+checks. The separate Windows regression passed 25 tests. The Linux network
+flow uses restricted compute roles against disposable PostgreSQL and verifies
+that no canonical attempts or XP rows are created.
+
+| Input | Scientific/technical outcome | Notification-to-result time |
+| --- | --- | --- |
+| 4 respondents | SUCCEEDED / INSUFFICIENT | 2.33 s |
+| 2,000 respondents, two arms | 2,000 SCORED | 146.56 s |
+| 4,998 respondents, three arms | 4,998 NOT_COMPARABLE, no fabricated score | 373.95 s |
+| 5,001 respondents | FAILED / INVALID_INPUT, non-retryable | 184.72 s |
+
+All replays returned the same artifact. Timings exclude main snapshot creation
+and are single observations, not latency percentiles. The temporary test host
+had two CPUs/~3.8 GiB RAM and 2 GiB swap, with original WSL configuration
+restored afterward. The producer touched its original 512 MiB limit and was
+raised to 1 GiB during the run; this is exploratory sizing, not a fixed-resource
+benchmark. Sampled peaks: producer 545.3 MiB, R 530.4 MiB, API 66.38 MiB. Peaks
+may be missed by sampling. The harness now starts producer at 1 GiB; that new
+fixed-memory default is not represented as a separately benchmarked run.
+
+The initial one-CPU/~1.8 GiB host did score 2,000 respondents (155.13 s), but
+Docker/PostgreSQL was interrupted during near-limit snapshot preparation.
+That run is explicitly partial. No inference of production suitability on a
+2 CPU/2 GiB VPS follows. See the Linux JSON report for exact source/image
+pins, measured host, artifact digests, resource adjustment and limitations.
