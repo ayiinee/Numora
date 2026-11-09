@@ -1,5 +1,7 @@
 # JOB-10 foundation: TryOut compute v3
 
+**ENGINEERING DECISION — target v2 approved 8 November 2026:** the [current design context](../AI_IRT_V2_CONTEXT.md) supersedes conflicting one-package, whole-batch fallback and Tryout rank policies. This runbook still describes the implemented foundation only: no new scientific engine, respondent score producer, multi-arm finalizer or automatic activation is enabled by the approval. Keep existing contract/guard checks until their reviewed forward implementation; `RESPONDENT_CONTRACT_NOT_APPROVED` is not cleared by updating documentation.
+
 **ENGINEERING UPDATE — 4 October 2026:** the development Supabase sandbox has
 received migrations through `0022`, including dispatch and Data API ACL
 lockdown. [Operation evidence](../data/SUPABASE_MIGRATION_2026-10-04.md) records

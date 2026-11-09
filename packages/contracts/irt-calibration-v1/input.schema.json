@@ -1,0 +1,413 @@
+{
+  "$schema": "https://json-schema.org/draft/2020-12/schema",
+  "$id": "urn:numora:irt-calibration-v1:input",
+  "type": "object",
+  "additionalProperties": false,
+  "required": [
+    "contractVersion",
+    "requestId",
+    "snapshotId",
+    "inputDigest",
+    "calibrationId",
+    "ecosystem",
+    "context",
+    "window",
+    "policies",
+    "referencePackage",
+    "referenceQuestionVersionIds",
+    "anchorQuestionVersionIds",
+    "items",
+    "packages",
+    "respondents",
+    "responses",
+    "comparisons"
+  ],
+  "properties": {
+    "contractVersion": {
+      "const": "irt-calibration-v1"
+    },
+    "requestId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "snapshotId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "inputDigest": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/digest"
+    },
+    "calibrationId": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+    },
+    "ecosystem": {
+      "enum": ["DRILL", "TRYOUT"]
+    },
+    "context": {
+      "$ref": "urn:numora:irt-calibration-v1:common#/$defs/context"
+    },
+    "window": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["startsAt", "collectionCutoffAt", "gradingCutoffAt", "resultDueAt"],
+      "properties": {
+        "startsAt": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+        },
+        "collectionCutoffAt": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+        },
+        "gradingCutoffAt": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+        },
+        "resultDueAt": {
+          "anyOf": [
+            {
+              "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "policies": {
+      "type": "object",
+      "additionalProperties": false,
+      "required": ["model", "quality", "eligibility", "scoring", "comparison", "scoreMapping"],
+      "properties": {
+        "model": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+        },
+        "quality": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+        },
+        "eligibility": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+        },
+        "scoring": {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+        },
+        "comparison": {
+          "anyOf": [
+            {
+              "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        },
+        "scoreMapping": {
+          "anyOf": [
+            {
+              "$ref": "urn:numora:irt-calibration-v1:common#/$defs/policyRef"
+            },
+            {
+              "type": "null"
+            }
+          ]
+        }
+      }
+    },
+    "referencePackage": {
+      "anyOf": [
+        {
+          "$ref": "urn:numora:irt-calibration-v1:common#/$defs/packageRef"
+        },
+        {
+          "type": "null"
+        }
+      ]
+    },
+    "referenceQuestionVersionIds": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+      },
+      "uniqueItems": true
+    },
+    "anchorQuestionVersionIds": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+      },
+      "uniqueItems": true
+    },
+    "items": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "questionVersionId",
+          "familyId",
+          "originalQuestionVersionId",
+          "rubricVersionId",
+          "contentDigest",
+          "questionType",
+          "modelFamily",
+          "maximumScoreCategory",
+          "maxPoints",
+          "contentState"
+        ],
+        "properties": {
+          "questionVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "familyId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "originalQuestionVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "rubricVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "contentDigest": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/digest"
+          },
+          "questionType": {
+            "enum": ["SINGLE_CHOICE", "MULTIPLE_CHOICE_MULTIPLE_ANSWER", "CATEGORY"]
+          },
+          "modelFamily": {
+            "enum": ["2PL", "GPCM"]
+          },
+          "maximumScoreCategory": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "maxPoints": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/points"
+          },
+          "contentState": {
+            "enum": ["CONTENT_VALID", "INVALID"]
+          }
+        }
+      }
+    },
+    "packages": {
+      "type": "array",
+      "minItems": 1,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["packageId", "packageVersion", "armId", "armKind", "questionVersionIds"],
+        "properties": {
+          "packageId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "packageVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "armId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "armKind": {
+            "enum": ["ORIGINAL", "VARIANT"]
+          },
+          "questionVersionIds": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "respondents": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "respondentId",
+          "attemptId",
+          "packageId",
+          "packageVersion",
+          "batchId",
+          "assignedArmId",
+          "deliveredArmId",
+          "deliveryMode",
+          "attemptIndex",
+          "firstValidAttempt",
+          "submittedAt",
+          "gradedAt"
+        ],
+        "properties": {
+          "respondentId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "attemptId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "packageId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "packageVersion": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "batchId": {
+            "anyOf": [
+              {
+                "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "assignedArmId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "deliveredArmId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "deliveryMode": {
+            "enum": ["ASSIGNED", "ORIGINAL_FALLBACK"]
+          },
+          "attemptIndex": {
+            "type": "integer",
+            "minimum": 1,
+            "maximum": 9007199254740991
+          },
+          "firstValidAttempt": {
+            "type": "boolean"
+          },
+          "submittedAt": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+          },
+          "gradedAt": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/timestamp"
+          }
+        }
+      }
+    },
+    "responses": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": [
+          "respondentId",
+          "attemptId",
+          "attemptItemId",
+          "questionVersionId",
+          "rubricVersionId",
+          "responseState",
+          "scoreCategory",
+          "awardedPoints",
+          "exposureState",
+          "priorExposureSources",
+          "includedInCalibration",
+          "eligibilityReasons"
+        ],
+        "properties": {
+          "respondentId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "attemptId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "attemptItemId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "questionVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "rubricVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "responseState": {
+            "enum": ["RESPONDED", "OMITTED", "NOT_PRESENTED", "INVALID"]
+          },
+          "scoreCategory": {
+            "anyOf": [
+              {
+                "type": "integer",
+                "minimum": 0,
+                "maximum": 9007199254740991
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "awardedPoints": {
+            "anyOf": [
+              {
+                "$ref": "urn:numora:irt-calibration-v1:common#/$defs/points"
+              },
+              {
+                "type": "null"
+              }
+            ]
+          },
+          "exposureState": {
+            "enum": ["FRESH", "KNOWN_PRIOR", "UNKNOWN"]
+          },
+          "priorExposureSources": {
+            "type": "array",
+            "minItems": 0,
+            "items": {
+              "enum": ["PRETEST", "PVP", "TRYOUT", "DRILL", "EXPLANATION"]
+            },
+            "uniqueItems": true
+          },
+          "includedInCalibration": {
+            "type": "boolean"
+          },
+          "eligibilityReasons": {
+            "type": "array",
+            "minItems": 1,
+            "items": {
+              "enum": [
+                "FIRST_VALID_ATTEMPT",
+                "BETA_PRIOR_EXPOSURE_ALLOWED",
+                "RETRY",
+                "PRIOR_EXPOSURE",
+                "UNKNOWN_EXPOSURE",
+                "ARM_CROSSOVER",
+                "CONTENT_INVALID",
+                "TECHNICAL_INVALID",
+                "NOT_PRESENTED"
+              ]
+            },
+            "uniqueItems": true
+          }
+        }
+      }
+    },
+    "comparisons": {
+      "type": "array",
+      "minItems": 0,
+      "items": {
+        "type": "object",
+        "additionalProperties": false,
+        "required": ["comparisonId", "originalQuestionVersionId", "variantQuestionVersionId"],
+        "properties": {
+          "comparisonId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "originalQuestionVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          },
+          "variantQuestionVersionId": {
+            "$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"
+          }
+        }
+      }
+    }
+  }
+}

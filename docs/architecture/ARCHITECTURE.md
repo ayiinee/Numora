@@ -1,5 +1,7 @@
 # Architecture
 
+**ENGINEERING DECISION — owner-approved amendment, 8 November 2026:** [variant/IRT v2 context](../AI_IRT_V2_CONTEXT.md) is the current target for day-one Drill A/B, multi-arm Tryout, separate Level/Indicator/Chapter models and bounded adjustment. It documents implementation gaps against both repositories. Numora remains authoritative for canonical content, assessment, XP and publication; AI owns compute. Approval does not change runtime/schema/contracts or validate statistical OPEN values.
+
 ## 1. Architectural goals
 
 The architecture must support:
