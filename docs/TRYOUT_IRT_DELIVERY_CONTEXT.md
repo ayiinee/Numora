@@ -1,5 +1,11 @@
 # Delivery Admin dan penyelesaian IRT Tryout
 
+**Checkpoint implementasi prioritas 1:**
+[handoff frozen, fixture dan pemeriksa kesiapan](IRT_DELIVERY_HANDOFF_V1.md).
+Manifest canonical milik Main; mirror AI, validator lintas bahasa dan harness
+snapshot disposable tersedia. Ini belum menyelesaikan runtime produksi,
+adopsi/rilis canonical atau linking ilmiah.
+
 **ENGINEERING DECISION — pemilik, 10 November 2026.** Target berikutnya adalah
 mesin IRT Tryout dan layanan antarrepo yang berfungsi dalam kurang dari 24 jam.
 Utamakan IRT; **fallback per arm diizinkan sesuai dokumen Admin**. Jawaban ini

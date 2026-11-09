@@ -1,5 +1,11 @@
 # Handoff kontrak kalibrasi IRT dan hasil Tryout v1
 
+**Implementasi input prioritas 1 — 10 November 2026:** lihat
+[handoff delivery frozen dan fixture multi-arm](IRT_DELIVERY_HANDOFF_V1.md).
+Preflight dan freeze membaca roster batch lengkap serta pin/grade authoritative;
+contoh file tetap sintetis dan belum terikat inputDigest sampai freeze PostgreSQL.
+Schema v1 tidak berubah. Adopter canonical dan finalizer tetap tahap berikutnya.
+
 **Konteks integrasi terbaru — 10 November 2026:**
 [delivery Admin dan strategi 24 jam](TRYOUT_IRT_DELIVERY_CONTEXT.md) membekukan
 pembagian tanggung jawab dan keputusan fallback per arm. Mesin/transport riset
