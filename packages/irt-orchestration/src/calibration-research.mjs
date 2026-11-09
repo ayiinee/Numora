@@ -86,7 +86,9 @@ export async function freezeCalibrationResearch(sql, draft, resources, runtime, 
     for(const response of input.responses) {
       const source=sourceMap.get(response.attemptItemId);
       const person=input.respondents.find(p=>p.attemptId===response.attemptId);
-      if(!source||source.id!==response.attemptId||source.question_version_id!==response.questionVersionId||source.rubric_version_id!==response.rubricVersionId) throw new Error('IRT_CANONICAL_GRADE_MISMATCH');
+      const item=input.items.find(i=>i.questionVersionId===response.questionVersionId);
+      if(!source||!item||source.id!==response.attemptId||source.question_version_id!==response.questionVersionId||source.rubric_version_id!==response.rubricVersionId||
+        Number(source.max_points)!==Number(item.maxPoints)||source.maximum_score_category!==item.maximumScoreCategory) throw new Error('IRT_CANONICAL_GRADE_MISMATCH');
       response.respondentId=person.respondentId;
       response.scoreCategory=source.score_category;
       response.awardedPoints=source.awarded_points;
