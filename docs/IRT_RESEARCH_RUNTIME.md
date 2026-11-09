@@ -364,3 +364,23 @@ from the current producer for provenance review only; never apply it to the
 service runtime. It omits the later failure-detail/completeness additions,
 without changing the model, thresholds or fitting image. Final runtime
 acceptance is recorded separately in the supplementary outcome report.
+
+
+### Final frozen-source verification
+
+The final runtime-v3 run passed all 17 HTTP/daemon/R/upgrade/fault tests
+(464.494 seconds on the local host), including the 2,000-participant scored
+case and all six scientific fault cases. Historical attempts, scores and a
+nonempty XP ledger were exactly preserved. The independent latest fault
+harness passed 2/2 tests; 31 math/policy/R-oracle/runner and 16 API/generator/
+contract regressions also passed. These overlapping suites must not be summed
+as independent experiments.
+
+Versioned supplementary evidence is mirrored at AI
+`research/irt/outcome-acceptance-v1.json` and main
+`docs/IRT_OUTCOME_ACCEPTANCE_V1.json`. It separates final-runtime acceptance,
+prior numerical recovery, paired sensitivity experiments and known limitations.
+An intermediate run invalidated by live source changes is explicitly recorded
+and superseded; it is not reported as passing. No production policy, Linux
+producer capacity, canonical publication or admin package workflow is approved
+by these results.
