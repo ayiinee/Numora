@@ -108,6 +108,53 @@ function option(page: Page, id: 'A' | 'B') {
   // The fixture's canonical option ID is stable across visual label punctuation.
   return page.getByRole('radio').and(page.locator(`input[value="${id}"]`));
 }
+async function startLevel(page: Page, order: number) {
+  await page
+    .getByRole('list', { name: 'Peta level latihan' })
+    .getByRole('button', { name: new RegExp(`^Level ${order},`) })
+    .click();
+  const started = page.waitForResponse(
+    (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
+  );
+  await page
+    .getByRole('dialog', { name: `Level ${order}`, exact: true })
+    .getByRole('button', { name: 'Mulai latihan', exact: true })
+    .click();
+  const response = await started;
+  expect(response.status()).toBe(201);
+  return (await response.json()) as DrillAttemptDto;
+}
+function pausedClock(page: Page, attemptId: string) {
+  return page.waitForResponse(
+    (r) =>
+      r.request().method() === 'PATCH' &&
+      r.url().endsWith(`/assessment-attempts/${attemptId}/drill-clock`) &&
+      r.request().postDataJSON()?.action === 'pause' &&
+      r.status() === 200,
+  );
+}
+async function resumeDrill(page: Page, attemptId: string) {
+  await expect(page.getByRole('heading', { name: 'Latihan dijeda', exact: true })).toBeVisible();
+  const started = page.waitForResponse(
+    (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
+  );
+  await page.getByRole('button', { name: 'Lanjutkan latihan', exact: true }).click();
+  const response = await started;
+  expect(response.status()).toBe(201);
+  const attempt = (await response.json()) as DrillAttemptDto;
+  expect(attempt.id).toBe(attemptId);
+  expect(attempt.questions).toHaveLength(10);
+  expect(attempt.clock?.sessionId).toEqual(expect.any(String));
+  await expect(page.getByLabel('Waktu berjalan', { exact: true })).toBeVisible();
+}
+async function reloadAndResumeDrill(page: Page, attemptId: string) {
+  const paused = pausedClock(page, attemptId);
+  await page.reload();
+  await paused;
+  // Re-read after the unload pause is acknowledged, independent of request arrival order.
+  await page.reload();
+  await resumeDrill(page, attemptId);
+}
 async function answer(page: Page, count: number) {
   for (let i = 1; i <= 10; i++) {
     await page.getByRole('button', { name: new RegExp(`^Soal ${i},`) }).click();
@@ -277,14 +324,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
       403,
     );
     await student.goto(`/student/learn/${chapter}/${subchapter}`);
-    const started = student.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
-    );
-    await student
-      .getByRole('list', { name: 'Pilih level latihan' })
-      .getByRole('button', { name: 'Mulai latihan', exact: true })
-      .click();
-    const attempt = (await (await started).json()) as DrillAttemptDto;
+    const attempt = await startLevel(student, 1);
     expect(attempt.questions).toHaveLength(10);
     expect(attempt.isDemo).toBe(true);
     expect(JSON.stringify(attempt)).not.toMatch(/correctOptionId|answerKey|explanation/);
@@ -312,17 +352,21 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await saved;
     student.removeAllListeners('dialog');
     student.once('dialog', async (dialog) => {
-      expect(dialog.message()).toContain('Timer tetap berjalan');
+      expect(dialog.message()).toContain('Timer akan dijeda');
       await dialog.dismiss();
     });
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     student.on('dialog', (dialog) => void dialog.accept());
-    await student.reload();
+    await reloadAndResumeDrill(student, attempt.id);
     await expect(option(student, 'B')).toBeChecked();
+    const paused = pausedClock(student, attempt.id);
+    await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await paused;
     // A new auth/browser context also resumes the same persisted answers.
     const resumed = await login(browser, 'student');
     await resumed.goto(`/student/drill/${attempt.id}`);
+    await resumeDrill(resumed, attempt.id);
     await expect(option(resumed, 'B')).toBeChecked();
     // First answer is already persisted: clear then exercise all ten real saves.
     const cleared = resumed.waitForResponse(
@@ -399,10 +443,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(levels.levels.find((l) => l.id === levelTwo)?.status).toBe('open');
     // Start and finish Level 2 through the existing Student UI on the same SHA.
     await resumed.goto(`/student/learn/${chapter}/${subchapter}`);
-    await resumed
-      .getByRole('list', { name: 'Pilih level latihan' })
-      .getByRole('button', { name: 'Mulai latihan', exact: true })
-      .click();
+    await startLevel(resumed, 2);
     await answer(resumed, 0);
     const zeroResult = await submit(resumed);
     expect(zeroResult.score).toBe(0);
@@ -587,16 +628,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto('/teacher');
     await expect(student).toHaveURL(/\/student$/);
     await student.goto(`/student/learn/${chapter}/${subchapter}`);
-    const started = student.waitForResponse(
-      (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
-    );
-    await student
-      .getByRole('list', { name: 'Pilih level latihan' })
-      .getByRole('button', { name: 'Mulai latihan', exact: true })
-      .click();
-    const attempt = (await (await started).json()) as DrillAttemptDto;
+    const attempt = await startLevel(student, 1);
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
-    await student.reload();
+    await reloadAndResumeDrill(student, attempt.id);
     await expect(option(student, 'B')).toBeVisible();
     const resumed = await body<DrillAttemptDto>(
       request,
