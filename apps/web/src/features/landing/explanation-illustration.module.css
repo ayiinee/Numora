@@ -1,0 +1,218 @@
+.scene {
+  --cycle: 17.733333s;
+  --gesture-cycle: calc(var(--cycle) / 4);
+  --bubble-cycle: calc(var(--cycle) / 6);
+}
+.bubble,
+.puff {
+  opacity: 0;
+}
+.bubble,
+.puff,
+.student,
+.eyes,
+.flask,
+.shoes,
+.scan,
+.lens-eye {
+  transform-box: fill-box;
+  transform-origin: center;
+}
+.scan {
+  opacity: 0.72;
+}
+@media (prefers-reduced-motion: no-preference) {
+  .student {
+    animation: lean var(--gesture-cycle) ease-in-out infinite;
+    transform-origin: 50% 84%;
+  }
+  .observer {
+    animation-name: peer;
+    transform-box: view-box;
+    transform-origin: 393px 193px;
+  }
+  .eyes {
+    animation: blink var(--gesture-cycle) linear infinite;
+  }
+  .observer .eyes {
+    animation-delay: calc(var(--gesture-cycle) * -0.18);
+  }
+  .flask {
+    animation: tip var(--gesture-cycle) ease-in-out infinite;
+    transform-origin: 78% 28%;
+  }
+  .shoes {
+    animation: swing var(--gesture-cycle) ease-in-out infinite;
+    transform-box: view-box;
+    transform-origin: 400px 196px;
+  }
+  .bubble {
+    animation: rise var(--bubble-cycle) ease-in-out infinite;
+  }
+  .bubble-alt {
+    animation-delay: calc(var(--bubble-cycle) * -0.5);
+  }
+  .bubble-small {
+    animation-delay: calc(var(--bubble-cycle) * -0.24);
+  }
+  .puff {
+    animation: pop var(--cycle) ease-out infinite;
+  }
+  .scan {
+    animation: scan var(--gesture-cycle) ease-in-out infinite;
+  }
+  .lens-eye {
+    animation: lens-blink var(--cycle) ease-in-out infinite;
+  }
+}
+@keyframes lean {
+  0%,
+  100% {
+    transform: translateY(0) rotate(-2deg);
+  }
+  25% {
+    transform: translate(1px, -3px) rotate(1.5deg);
+  }
+  50% {
+    transform: translateY(0) rotate(0);
+  }
+  75% {
+    transform: translate(-1px, -2px) rotate(-3deg);
+  }
+}
+@keyframes peer {
+  0%,
+  100% {
+    transform: translateY(0) rotate(1deg);
+  }
+  25% {
+    transform: translate(1px, -5px) rotate(3deg);
+  }
+  50% {
+    transform: translateY(1px) rotate(-2deg);
+  }
+  75% {
+    transform: translate(-1px, -3px) rotate(0);
+  }
+}
+@keyframes blink {
+  0%,
+  26%,
+  32%,
+  68%,
+  74%,
+  100% {
+    transform: scaleY(1);
+  }
+  29%,
+  71% {
+    transform: scaleY(0.12);
+  }
+}
+@keyframes tip {
+  0%,
+  100% {
+    transform: rotate(-3deg);
+  }
+  25% {
+    transform: translateY(-4px) rotate(8deg);
+  }
+  50% {
+    transform: rotate(1deg);
+  }
+  75% {
+    transform: translateY(-2px) rotate(-6deg);
+  }
+}
+@keyframes swing {
+  0%,
+  100% {
+    transform: rotate(0deg);
+  }
+  25% {
+    transform: rotate(-7deg);
+  }
+  50% {
+    transform: rotate(2deg);
+  }
+  75% {
+    transform: rotate(6deg);
+  }
+}
+@keyframes rise {
+  0%,
+  100% {
+    opacity: 0;
+    transform: translate(14px, 48px) scale(0.12);
+  }
+  14% {
+    opacity: 1;
+    transform: translate(9px, 36px) scale(0.45);
+  }
+  56% {
+    opacity: 1;
+    transform: translate(1px, 4px) scale(0.95);
+  }
+  83% {
+    opacity: 0.8;
+    transform: translate(-8px, -23px) scale(1.16);
+  }
+  97% {
+    opacity: 0;
+    transform: translate(-12px, -29px) scale(1.32);
+  }
+}
+@keyframes pop {
+  0%,
+  13%,
+  30%,
+  59%,
+  76%,
+  100% {
+    opacity: 0;
+    transform: scale(0.4);
+  }
+  18%,
+  64% {
+    opacity: 1;
+    transform: scale(0.8);
+  }
+  26%,
+  72% {
+    opacity: 0.15;
+    transform: scale(1.24);
+  }
+}
+@keyframes lens-blink {
+  0%,
+  37%,
+  41%,
+  83%,
+  87%,
+  100% {
+    transform: scaleY(1);
+  }
+  39%,
+  85% {
+    transform: scaleY(0.14);
+  }
+}
+@keyframes scan {
+  0%,
+  100% {
+    transform: translateY(-25px);
+    opacity: 0.52;
+  }
+  27% {
+    transform: translateY(-12px);
+    opacity: 0.65;
+  }
+  53% {
+    transform: translateY(1px);
+    opacity: 0.88;
+  }
+  78% {
+    transform: translateY(-12px);
+    opacity: 0.65;
+  }
+}

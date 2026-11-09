@@ -2,6 +2,7 @@ import Image from 'next/image';
 import Link from 'next/link';
 import { Brand, Icon, type IconName } from '@tka/ui';
 import { ClosingScene } from './closing-scene';
+import { ExplanationIllustration } from './explanation-illustration';
 import { HeroIllustration } from './hero-illustration';
 import { AccountDialog, CategoryRail, LandingHeader } from './landing-interactions';
 import { PracticeIllustration } from './practice-illustration';
@@ -13,30 +14,25 @@ const benefits = [
     id: 'cara-belajar',
     title: 'Latihan singkat dan bertahap',
     text: 'Kerjakan sepuluh soal per level. Kalau sudah menguasai level ini, kamu bisa lanjut ke tantangan berikutnya.',
+    artwork: <PracticeIllustration />,
   },
   {
     id: 'pembahasan',
     title: 'Belajar dari pembahasan',
     text: 'Setelah latihan, lihat kembali jawabanmu dan pelajari langkah penyelesaiannya. Pakai pembahasan untuk memahami soal sebelum mencoba lagi.',
-    icon: 'chat',
-    decoration: 'book',
-    tone: 'peach',
+    artwork: <ExplanationIllustration />,
   },
   {
     id: 'progres',
     title: 'Pantau progres dan bintang',
     text: 'Lihat level yang sudah terbuka, bintang yang kamu raih, dan riwayat latihanmu. Pilih materi yang perlu kamu ulang dari hasil itu.',
-    icon: 'chart',
-    decoration: 'star',
-    tone: 'gold',
+    artwork: <LearningArt icon="chart" decoration="star" tone="gold" />,
   },
   {
     id: 'materi',
     title: 'Pilih materi dan level',
     text: 'Jelajahi bab dan subbab matematika, lalu lanjutkan dari level yang tersedia. Kamu bisa belajar mandiri atau bergabung dengan kelas dari guru.',
-    icon: 'book',
-    decoration: 'geometry',
-    tone: 'materials',
+    artwork: <LearningArt icon="book" decoration="geometry" tone="materials" />,
   },
 ] as const;
 
@@ -104,26 +100,13 @@ export function LandingPage() {
         </div>
 
         <div className={styles.benefits}>
-          {benefits.map((benefit) => (
-            <section
-              key={benefit.id}
-              id={benefit.id}
-              className={styles.benefit}
-              aria-labelledby={`${benefit.id}-title`}
-            >
+          {benefits.map(({ id, title, text, artwork }) => (
+            <section key={id} id={id} className={styles.benefit} aria-labelledby={`${id}-title`}>
               <div className={styles.sectionCopy}>
-                <h2 id={`${benefit.id}-title`}>{benefit.title}</h2>
-                <p>{benefit.text}</p>
+                <h2 id={`${id}-title`}>{title}</h2>
+                <p>{text}</p>
               </div>
-              {benefit.id === 'cara-belajar' ? (
-                <PracticeIllustration />
-              ) : (
-                <LearningArt
-                  icon={benefit.icon}
-                  decoration={benefit.decoration}
-                  tone={benefit.tone}
-                />
-              )}
+              {artwork}
             </section>
           ))}
         </div>

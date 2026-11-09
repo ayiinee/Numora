@@ -453,8 +453,12 @@
   --art-offset: 218px;
 }
 
-.benefits :is(.learningArt, .practiceArt) {
+.benefits :is(.learningArt, .practiceArt, .explanationArt) {
   width: var(--art-size);
+}
+
+.explanationArt {
+  height: auto;
 }
 
 .benefit {
@@ -942,7 +946,7 @@
     margin-inline: 0;
   }
 
-  .benefit .learningArt {
+  .benefit :is(.learningArt, .explanationArt) {
     width: 530px;
     justify-self: end;
     margin-right: -116px;
@@ -954,12 +958,16 @@
     margin-right: max(-116px, calc((var(--content-width) - 100vw) / 2 + 16px));
   }
 
-  .benefits .benefit:nth-child(even) .learningArt {
+  .benefits .benefit:nth-child(even) :is(.learningArt, .explanationArt) {
     grid-column: 1;
     grid-row: 1;
     justify-self: start;
     margin-right: 0;
     margin-left: -116px;
+  }
+
+  .benefits .benefit:nth-child(even) .explanationArt {
+    margin-left: max(-116px, calc((var(--content-width) - 100vw) / 2 + 16px));
   }
 
   .benefits .benefit:nth-child(even) .sectionCopy {
