@@ -734,10 +734,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       const homeRecent = page.locator('.recent-activity__card');
       await expect(homeRecent.getByText('85%')).toBeVisible();
       await expect(homeRecent.getByText('1/3 bintang')).toBeVisible();
-      await expect(homeRecent.getByRole('link', { name: 'Lanjutkan', exact: true })).toHaveAttribute(
-        'href',
-        `/student/drill/${attemptId}`,
-      );
+      await expect(
+        homeRecent.getByRole('link', { name: 'Lanjutkan', exact: true }),
+      ).toHaveAttribute('href', `/student/drill/${attemptId}`);
       await homeRecent.screenshot({ path: testInfo.outputPath('beranda-aktivitas-390.png') });
       const homeHero = page.locator('.sh-carousel__slide--drill .sh-hero');
       const homeHeight = await homeHero.evaluate(
@@ -790,7 +789,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await expect(page.getByRole('heading', { name: 'Latihan Soal', exact: true })).toHaveCount(1);
       await page.goto('/student/assessment');
       const progressHeader = page.locator('.app-topbar');
-      await expect(progressHeader.getByRole('heading', { name: 'Progres & riwayat' })).toBeVisible();
+      await expect(
+        progressHeader.getByRole('heading', { name: 'Progres & riwayat' }),
+      ).toBeVisible();
       await expect(progressHeader).toHaveCSS('background-image', pattern);
       await expect(progressHeader.locator('.desktop-context')).toHaveCount(0);
     }
@@ -2235,9 +2236,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         overflow: document.documentElement.scrollWidth > innerWidth,
         width: innerWidth,
         cards: Array.from(
-          document.querySelectorAll(
-            '.practice-question,.adventure-summary,.drill-review',
-          ),
+          document.querySelectorAll('.practice-question,.adventure-summary,.drill-review'),
         ).map((el) => {
           const r = el.getBoundingClientRect();
           return {
