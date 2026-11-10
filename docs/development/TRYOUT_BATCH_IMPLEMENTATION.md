@@ -39,4 +39,9 @@ Lingkungan memerlukan migrasi `0055_tryout_batch_delegations.sql`, lalu build/re
 
 ### Verifikasi perubahan 11 November 2026
 
-Enam tes API terpilih (termasuk integrasi HTTP/PostgreSQL throwaway lokal) dan empat skenario browser fixture lolos setelah retest. Cakupan: fallback sekolah aktif, delegasi start baru dan pin attempt lama, otorisasi, rollback, konflik/replay, audit, paket frozen, perpanjangan tanpa overlap, tenggat hasil serta penolakan batch tutup/batal. Dua puluh lima kasus API lain tidak dijalankan oleh filter. Kontrak/tipe generated diperbarui; lint, typecheck dan build terkait diperiksa. Ini bukan acceptance IRT atau browser dengan seluruh layanan produksi. Penerapan memerlukan migrasi 0066 dan 0067 melalui workflow migrasi normal, lalu restart API. Database aplikasi/cloud tidak dimodifikasi oleh tes ini.
+Enam tes API terpilih (termasuk integrasi HTTP/PostgreSQL throwaway lokal) dan empat skenario browser fixture lolos setelah retest. Cakupan: fallback sekolah aktif, delegasi start baru dan pin attempt lama, otorisasi, rollback, konflik/replay, audit, paket frozen, perpanjangan tanpa overlap, tenggat hasil serta penolakan batch tutup/batal. Dua puluh lima kasus API lain tidak dijalankan oleh filter. Kontrak/tipe generated diperbarui; lint, typecheck dan build terkait diperiksa. Ini bukan acceptance IRT atau browser dengan seluruh layanan produksi. Penerapan memerlukan migrasi 0069, 0070 dan 0071 melalui workflow migrasi normal, lalu restart API. Database aplikasi/cloud tidak dimodifikasi oleh tes ini.
+
+
+## Integrasi main ? 11 November 2026
+
+**ENGINEERING DECISION:** urutan migrasi Tryout dipindah menjadi 0069?0071 setelah migrasi IRT 0065?0068 dari main. Gunakan journal gabungan; jangan menyalin nomor migrasi lama ke lingkungan lain. Pemeriksaan hasil mengikuti readiness IRT terbaru dari main.
