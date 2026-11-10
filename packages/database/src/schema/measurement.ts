@@ -638,6 +638,49 @@ export const irtArtifactAdoptionAttemptsV1 = pgTable(
   ],
 ).enableRLS();
 
+export const irtFinalizationRunsV1 = pgTable(
+  'irt_finalization_runs_v1',
+  {
+    id: id(),
+    batchId: uuid('batch_id').notNull(),
+    receiptId: uuid('receipt_id').notNull(),
+    version: integer('version').notNull(),
+    status: text('status').notNull().default('READY'),
+    policySnapshot: jsonb('policy_snapshot').notNull(),
+    digest: text('digest').notNull(),
+    failureCode: text('failure_code'),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('irt_finalization_runs_receipt_uq').on(t.receiptId),
+    uniqueIndex('irt_finalization_runs_batch_version_uq').on(t.batchId, t.version),
+    check('irt_finalization_runs_status_ck', sql`${t.status} in ('PENDING','RUNNING','READY','FAILED','CANCELLED')`),
+    check('irt_finalization_runs_version_ck', sql`${t.version} > 0`),
+  ],
+).enableRLS();
+
+export const irtFinalizationResultsV1 = pgTable(
+  'irt_finalization_results_v1',
+  {
+    id: id(),
+    runId: ref('run_id', () => irtFinalizationRunsV1.id).notNull(),
+    attemptId: ref('attempt_id', () => assessmentAttempts.id).notNull(),
+    mode: text('mode').notNull(),
+    score: numeric('score', { precision: 8, scale: 2 }),
+    theta: numeric('theta', { precision: 14, scale: 8 }),
+    standardError: numeric('standard_error', { precision: 14, scale: 8 }),
+    reasonCodes: jsonb('reason_codes').notNull().default([]),
+    resultSnapshot: jsonb('result_snapshot').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('irt_finalization_results_run_attempt_uq').on(t.runId, t.attemptId),
+    check('irt_finalization_results_mode_ck', sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','INSUFFICIENT','NOT_COMPARABLE')`),
+    check('irt_finalization_results_score_ck', sql`${t.score} is null or ${t.score} between 0 and 100`),
+    check('irt_finalization_results_irt_ck', sql`${t.mode} <> 'IRT' or (${t.score} is not null and ${t.theta} is not null)`),
+  ],
+).enableRLS();
+
 export const calibrationBaselines = pgTable(
   'calibration_baselines',
   {

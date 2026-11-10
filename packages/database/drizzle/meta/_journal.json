@@ -407,6 +407,13 @@
       "when": 1794276000000,
       "tag": "0057_irt_artifact_adoption_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 58,
+      "version": "7",
+      "when": 1794279600000,
+      "tag": "0058_irt_finalization_v1",
+      "breakpoints": true
     }
   ]
 }
