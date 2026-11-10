@@ -571,6 +571,73 @@ export const analysisRequestDispatches = pgTable(
   ],
 ).enableRLS();
 
+export const irtArtifactAdoptionReceiptsV1 = pgTable(
+  'irt_artifact_adoption_receipts_v1',
+  {
+    id: id(),
+    requestId: ref('request_id', () => analysisRequests.id).notNull(),
+    executionId: uuid('execution_id').notNull(),
+    artifactId: uuid('artifact_id').notNull(),
+    artifactDigest: text('artifact_digest').notNull(),
+    status: text('status').notNull().default('RECEIVED'),
+    failureCode: text('failure_code'),
+    batchId: uuid('batch_id'),
+    createdAt: createdAt(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (t) => [
+    uniqueIndex('irt_artifact_adoption_receipts_request_uq').on(t.requestId),
+    uniqueIndex('irt_artifact_adoption_receipts_artifact_uq').on(t.artifactId),
+    uniqueIndex('irt_artifact_adoption_receipts_batch_uq').on(t.batchId),
+    check('irt_artifact_adoption_receipts_status_ck', sql`${t.status} in ('RECEIVED','ADOPTED','FAILED')`),
+  ],
+).enableRLS();
+
+export const irtArtifactAdoptionPackagesV1 = pgTable(
+  'irt_artifact_adoption_packages_v1',
+  {
+    id: id(),
+    receiptId: ref('receipt_id', () => irtArtifactAdoptionReceiptsV1.id).notNull(),
+    packageId: ref('package_id', () => assessmentPackages.id).notNull(),
+    packageVersion: integer('package_version').notNull(),
+    armId: uuid('arm_id').notNull(),
+    armKind: text('arm_kind').notNull(),
+    manifestDigest: text('manifest_digest').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('irt_artifact_adoption_packages_scope_uq').on(t.receiptId, t.packageId, t.armId),
+    uniqueIndex('irt_artifact_adoption_packages_arm_uq').on(t.receiptId, t.armId),
+    check('irt_artifact_adoption_packages_version_ck', sql`${t.packageVersion} > 0`),
+    check('irt_artifact_adoption_packages_kind_ck', sql`${t.armKind} in ('ORIGINAL','VARIANT')`),
+  ],
+).enableRLS();
+
+export const irtArtifactAdoptionAttemptsV1 = pgTable(
+  'irt_artifact_adoption_attempts_v1',
+  {
+    id: id(),
+    receiptId: ref('receipt_id', () => irtArtifactAdoptionReceiptsV1.id).notNull(),
+    attemptId: ref('attempt_id', () => assessmentAttempts.id).notNull(),
+    respondentId: text('respondent_id').notNull(),
+    packageId: ref('package_id', () => assessmentPackages.id).notNull(),
+    packageVersion: integer('package_version').notNull(),
+    assignedArmId: uuid('assigned_arm_id').notNull(),
+    deliveredArmId: uuid('delivered_arm_id').notNull(),
+    resultStatus: text('result_status').notNull(),
+    reasonCodes: jsonb('reason_codes').notNull().default([]),
+    resultSnapshot: jsonb('result_snapshot').notNull(),
+    createdAt: createdAt(),
+  },
+  (t) => [
+    uniqueIndex('irt_artifact_adoption_attempts_scope_uq').on(t.receiptId, t.attemptId),
+    uniqueIndex('irt_artifact_adoption_attempts_respondent_uq').on(t.receiptId, t.respondentId),
+    index('irt_artifact_adoption_attempts_attempt_idx').on(t.attemptId),
+    check('irt_artifact_adoption_attempts_version_ck', sql`${t.packageVersion} > 0`),
+    check('irt_artifact_adoption_attempts_status_ck', sql`${t.resultStatus} in ('SCORED','INSUFFICIENT','NOT_COMPARABLE','UNSCORABLE')`),
+  ],
+).enableRLS();
+
 export const calibrationBaselines = pgTable(
   'calibration_baselines',
   {

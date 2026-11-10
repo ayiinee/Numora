@@ -215,6 +215,10 @@ export const variantEvaluations = pgTable(
     sourceOutputId: uuid('source_output_id').references((): AnyPgColumn => computeOutputs.id, {
       onDelete: 'restrict',
     }),
+    sourceRequestId: uuid('source_request_id'),
+    sourceExecutionId: uuid('source_execution_id'),
+    sourceCalibrationArtifactId: uuid('source_calibration_artifact_id'),
+    adoptionReceiptId: uuid('adoption_receipt_id'),
     controlItemResultId: uuid('control_item_result_id').references(
       (): AnyPgColumn => irtItemResults.id,
       { onDelete: 'restrict' },
