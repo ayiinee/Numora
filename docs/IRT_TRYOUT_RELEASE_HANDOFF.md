@@ -1,6 +1,6 @@
 # IRT Tryout research release handoff
 
-**ENGINEERING IMPLEMENTATION — owner-approved local research scope, 10 November 2026.**
+**ENGINEERING IMPLEMENTATION â€” owner-approved local research scope, 10 November 2026.**
 This is not production authorization. New release/publication code refuses databases outside
 `irt_research_test_*`, even when flags are enabled. Shared databases and real participants are excluded.
 
@@ -118,6 +118,10 @@ Keep `synthetic-sealed.dump` and `synthetic-roles.sql` private and untracked. Th
 local evidence directory, creates a new owned cluster, verifies input commitments, and uses restricted application roles.
 Never restore a real participant dump through this harness. Resume only when source, policy, input and runtime pins match.
 
-Docker host during this run had one CPU and approximately 1.8 GiB RAM. The three-arm run encountered Docker API
-failure/timeouts; do not interpret absent evidence as scientific insufficiency or a passed fallback case.
-A stable host and completed real three-arm verification remain required before declaring local integration ready.
+The initial host (one CPU, approximately 1.8 GiB RAM) encountered Docker API failure during three-arm freeze.
+After the previously authorized temporary increase/restart (2 CPU, 4 GiB RAM, 2 GiB swap), the real three-arm run
+completed: 2,000 NOT_COMPARABLE and 100 INSUFFICIENT; all 2,100 published through research-policy fallback.
+R oracle passed at probability tolerance 1e-8 and EAP/prediction tolerance 1e-4. Sampled R peak was 420.4 MiB;
+these samples are correctness evidence, not target-host capacity guarantees. Owned test resources were removed.
+Original `.wslconfig` was restored and takes effect on the next WSL restart; the currently running host retains
+increased resources. Tulungrejo containers resumed. No further restart was performed solely to reduce resources.
