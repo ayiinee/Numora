@@ -1,11 +1,12 @@
 """Synthetic Curriculum approvals and grades, only inside the disposable harness."""
+from copy import deepcopy
 from datetime import datetime,timedelta,timezone
 from uuid import uuid4
 from psycopg.types.json import Jsonb
 from research.irt.synthetic import generate
 
 
-def build(db,admin,context,batch,arm_count=2):
+def build(db,admin,context,batch,arm_count=2, source=None):
     def one(query,args=()):return db.execute(query,args).fetchone()['id']
     def user():return one("INSERT INTO users(auth_user_id,role,display_name,email) VALUES(%s,'STUDENT','SYNTHETIC',%s) RETURNING id",(uuid4(),str(uuid4())+'@example.test'))
     key=uuid4().hex
@@ -17,7 +18,11 @@ def build(db,admin,context,batch,arm_count=2):
     policy=one("INSERT INTO assessment_distribution_policies(code,version,definition,digest,approved_by_user_id,approved_at) VALUES(%s,1,jsonb_build_object('regularRewards',true,'preserveHistory',true,'allowOriginalFallback',true,'ecosystem','TRYOUT','contextId',%s::text),'',%s,now()) RETURNING id",(key,str(context),admin))
     arm_set=one('INSERT INTO assessment_arm_sets(context_id,blueprint_version_id,policy_id) VALUES(%s,%s,%s) RETURNING id',(context,bp,policy))
     arms=[one('INSERT INTO assessment_arms(set_id,code,kind) VALUES(%s,%s,%s) RETURNING id',(arm_set,str(uuid4()),kind)) for kind in ['ORIGINAL']+['VARIANT']*(arm_count-1)]
-    value,_=generate(1,arms=arm_count,include_mcma=True)
+    value=deepcopy(source) if source is not None else generate(1,arms=arm_count,include_mcma=True)[0]
+    assert len(value['packages']) == arm_count
+    simulated_people = value['respondents']
+    simulated_responses = {(r['attemptId'], r['questionVersionId']): r for r in value['responses']}
+    simulated_packages = deepcopy(value['packages'])
     value['context'].update(contextId=str(context),batchId=str(batch),scaleId='T:'+str(batch))
     originals=[];variants=[[] for _ in range(arm_count-1)];families=[];new_items=[]
     sources={item['questionVersionId']:item for item in value['items']}
@@ -71,25 +76,30 @@ def build(db,admin,context,batch,arm_count=2):
     value['referenceQuestionVersionIds']=list(map(str,originals));value['referencePackage']={'packageId':str(packages[0]),'packageVersion':1}
     value['respondents']=[];value['responses']=[];value['packages']=[]
     for index,(arm,package,revision,questions) in enumerate(zip(arms,packages,revisions,[originals]+variant_packages)):
-        student=user()
-        assignment=one('INSERT INTO assessment_arm_assignments(set_id,student_id,assigned_arm_id) VALUES(%s,%s,%s) RETURNING id',(arm_set,student,arm))
-        attempt=one("INSERT INTO assessment_attempts(student_id,package_id,assessment_type,tryout_batch_id,started_at) VALUES(%s,%s,'TRYOUT',%s,%s) RETURNING id",(student,package,batch,now-timedelta(minutes=2)))
-        db.execute("INSERT INTO assessment_attempt_arm_deliveries(attempt_id,assignment_id,delivered_revision_id,delivery_mode) VALUES(%s,%s,%s,'ASSIGNED')",(attempt,assignment,revision))
-        manifest=one("INSERT INTO content_delivery_manifests(student_id,module,kind,idempotency_key,issued_at) VALUES(%s,'TRYOUT','ITEM_PAYLOAD_ISSUED',%s,%s) RETURNING id",(student,uuid4().hex,now-timedelta(minutes=2)))
-        respondent=str(uuid4())
-        for pi in db.execute('SELECT * FROM package_items WHERE package_id=%s ORDER BY display_order',(package,)).fetchall():
-            item=one('INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s,%s,%s) RETURNING id',(attempt,package,pi['id'],pi['question_version_id'],pi['display_order'],pi['max_points']))
-            if pi['display_order']!=2: db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
-            meta=by_id[str(pi['question_version_id'])];special=pi['display_order'] in (1,6)
-            answer={} if pi['display_order']==1 else {'optionId':'A'} if meta['questionType']=='SINGLE_CHOICE' else {'optionIds':['A','C']} if meta['questionType']=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
-            db.execute("INSERT INTO attempt_answers(attempt_item_id,answer,awarded_points,score_category,fully_correct,response_state,graded_at) VALUES(%s,%s,%s,%s,%s,%s,%s)",(item,Jsonb(answer),0 if special else pi['max_points'],0 if special else meta['maximumScoreCategory'],not special,'OMITTED' if pi['display_order']==1 else 'INVALID' if pi['display_order']==6 else 'RESPONDED',now))
-            value['responses'].append({'respondentId':respondent,'attemptId':str(attempt),'attemptItemId':str(item),'questionVersionId':str(pi['question_version_id']),
-                'rubricVersionId':by_id[str(pi['question_version_id'])]['rubricVersionId'],'responseState':'RESPONDED','scoreCategory':0,'awardedPoints':'0.00',
-                'exposureState':'FRESH','priorExposureSources':[],'includedInCalibration':True,'eligibilityReasons':['FIRST_VALID_ATTEMPT']})
-        db.execute("UPDATE assessment_attempts SET status='SUBMITTED',finished_at=%s WHERE id=%s",(now-timedelta(minutes=1),attempt))
-        value['respondents'].append({'respondentId':respondent,'attemptId':str(attempt),'packageId':str(package),'packageVersion':1,'batchId':str(batch),
-            'assignedArmId':str(arm),'deliveredArmId':str(arm),'deliveryMode':'ASSIGNED','attemptIndex':1,'firstValidAttempt':True,
-            'submittedAt':iso(now-timedelta(minutes=1)),'gradedAt':iso(now)})
+        for simulated in [p for p in simulated_people if p['packageId']==simulated_packages[index]['packageId']]:
+            student=user()
+            assignment=one('INSERT INTO assessment_arm_assignments(set_id,student_id,assigned_arm_id) VALUES(%s,%s,%s) RETURNING id',(arm_set,student,arm))
+            attempt=one("INSERT INTO assessment_attempts(student_id,package_id,assessment_type,tryout_batch_id,started_at) VALUES(%s,%s,'TRYOUT',%s,%s) RETURNING id",(student,package,batch,now-timedelta(minutes=2)))
+            db.execute("INSERT INTO assessment_attempt_arm_deliveries(attempt_id,assignment_id,delivered_revision_id,delivery_mode) VALUES(%s,%s,%s,'ASSIGNED')",(attempt,assignment,revision))
+            manifest=one("INSERT INTO content_delivery_manifests(student_id,module,kind,idempotency_key,issued_at) VALUES(%s,'TRYOUT','ITEM_PAYLOAD_ISSUED',%s,%s) RETURNING id",(student,uuid4().hex,now-timedelta(minutes=2)))
+            respondent=str(uuid4())
+            for pi in db.execute('SELECT * FROM package_items WHERE package_id=%s ORDER BY display_order',(package,)).fetchall():
+                item=one('INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s,%s,%s) RETURNING id',(attempt,package,pi['id'],pi['question_version_id'],pi['display_order'],pi['max_points']))
+                if source is not None or pi['display_order']!=2: db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
+                meta=by_id[str(pi['question_version_id'])];special=pi['display_order'] in (1,6)
+                answer={} if pi['display_order']==1 else {'optionId':'A'} if meta['questionType']=='SINGLE_CHOICE' else {'optionIds':['A','C']} if meta['questionType']=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
+                simulated_response = simulated_responses[(simulated['attemptId'], simulated_packages[index]['questionVersionIds'][pi['display_order']-1])]
+                state = simulated_response['responseState'] if source is not None else 'OMITTED' if pi['display_order']==1 else 'INVALID' if pi['display_order']==6 else 'RESPONDED'
+                points = simulated_response['awardedPoints'] if source is not None else 0 if special else pi['max_points']
+                category = simulated_response['scoreCategory'] if source is not None else 0 if special else meta['maximumScoreCategory']
+                db.execute("INSERT INTO attempt_answers(attempt_item_id,answer,awarded_points,score_category,fully_correct,response_state,graded_at) VALUES(%s,%s,%s,%s,%s,%s,%s)",(item,Jsonb(answer),points,category,category==meta['maximumScoreCategory'],state,now))
+                value['responses'].append({'respondentId':respondent,'attemptId':str(attempt),'attemptItemId':str(item),'questionVersionId':str(pi['question_version_id']),
+                    'rubricVersionId':by_id[str(pi['question_version_id'])]['rubricVersionId'],'responseState':'RESPONDED','scoreCategory':0,'awardedPoints':'0.00',
+                    'exposureState':'FRESH','priorExposureSources':[],'includedInCalibration':True,'eligibilityReasons':['FIRST_VALID_ATTEMPT']})
+            db.execute("UPDATE assessment_attempts SET status='SUBMITTED',finished_at=%s WHERE id=%s",(now-timedelta(minutes=1),attempt))
+            value['respondents'].append({'respondentId':respondent,'attemptId':str(attempt),'packageId':str(package),'packageVersion':1,'batchId':str(batch),
+                'assignedArmId':str(arm),'deliveredArmId':str(arm),'deliveryMode':'ASSIGNED','attemptIndex':1,'firstValidAttempt':True,
+                'submittedAt':iso(now-timedelta(minutes=1)),'gradedAt':iso(now)})
         value['packages'].append({'packageId':str(package),'packageVersion':1,'armId':str(arm),'armKind':'ORIGINAL' if index==0 else 'VARIANT','questionVersionIds':list(map(str,questions))})
     db.execute("UPDATE tryout_batches SET status='CLOSED' WHERE id=%s",(batch,))
     return value
