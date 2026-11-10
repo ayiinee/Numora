@@ -1191,7 +1191,9 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+    ).toBeVisible();
     await expect(
       page
         .getByRole('region', { name: 'Profil dan progres' })
@@ -1236,9 +1238,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
@@ -1246,7 +1248,9 @@ test('joined class affiliation persists after signing out and back in', async ({
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill(' FIX234 ');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
   await expect(page).toHaveURL('http://localhost:3300/login');
@@ -1254,7 +1258,9 @@ test('joined class affiliation persists after signing out and back in', async ({
   await page.reload();
   await expect(page).toHaveURL(/\/student$/);
   await page.goto('/student/profile');
-  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toBeEnabled();
   await page.goto('/student/leaderboards?tab=class');
   await expect(
@@ -1381,7 +1387,9 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill('FIX234');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole('region', { name: 'Profil dan progres' })
@@ -1500,7 +1508,9 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await expect(page).toHaveURL(/\/teacher\/profile$/);
   await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toBeVisible();
   await expect(page.getByText('Terverifikasi', { exact: true })).toBeVisible();
-  await expect(page.getByText('Sekolah fixture', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByRole('link', { name: /^Buka daftar kelas/ })).toHaveAttribute(
     'href',
     '/teacher',

@@ -105,6 +105,7 @@ function ProfileContent({ token }: { token: string }) {
             profile={profile}
             avatarUrl={photo.data?.url ?? undefined}
             data={dashboard.data}
+            editor={<ProfileEditor embedded />}
             progressState={
               dashboard.isPending ? (
                 <>
@@ -132,6 +133,54 @@ function ProfileContent({ token }: { token: string }) {
           ) : (
             <ProfileStats data={dashboard.data} />
           )}
+          <Card
+            id="gabung-kelas"
+            className="student-profile-join"
+            aria-labelledby="profile-join-title"
+          >
+            <h2 id="profile-join-title">Gabung kelas</h2>
+            <p>
+              Kamu dapat mengikuti maksimal lima kelas aktif. Progres dan XP tetap milik akunmu.
+            </p>
+            {classes.length >= 5 && (
+              <p role="status">
+                Batas lima kelas aktif tercapai. Keluar dari salah satu kelas untuk bergabung dengan
+                kelas lain.
+              </p>
+            )}
+            <form className="student-profile-join__form" onSubmit={join}>
+              <Input
+                label="Kode kelas"
+                minLength={6}
+                maxLength={32}
+                pattern="(?:[A-Za-z0-9]{6}|[A-Za-z0-9_\x2D]{8,32})"
+                autoCapitalize="characters"
+                spellCheck={false}
+                value={joinCode}
+                onChange={(e) => setJoinCode(e.target.value.trim())}
+                placeholder="Kode dari guru"
+                required
+                autoComplete="off"
+                disabled={busy || !dashboard.data || classes.length >= 5}
+              />
+              <Button
+                type="submit"
+                disabled={busy || !dashboard.data || classes.length >= 5 || !joinCode.trim()}
+              >
+                {busy ? 'Menghubungkan…' : 'Gabung kelas'}
+              </Button>
+            </form>
+          </Card>
+          {error && !leaving && (
+            <p role="alert" className="form-error">
+              {error}
+            </p>
+          )}
+          {success && (
+            <p role="status" className="success-message">
+              {success}
+            </p>
+          )}
           {tryout.isPending ? (
             <Skeleton height={84} />
           ) : tryout.isError ? (
@@ -146,7 +195,6 @@ function ProfileContent({ token }: { token: string }) {
           </Link>
         </section>
         <div className="student-profile-account">
-          <ProfileEditor />
           <Card
             id="pengaturan-akun"
             className="student-profile-settings"
@@ -232,56 +280,6 @@ function ProfileContent({ token }: { token: string }) {
               href="/student/learn"
             />
           </Card>
-          {
-            <Card
-              id="gabung-kelas"
-              className="student-profile-join"
-              aria-labelledby="profile-join-title"
-            >
-              <h2 id="profile-join-title">Gabung kelas</h2>
-              <p>
-                Kamu dapat mengikuti maksimal lima kelas aktif. Progres dan XP tetap milik akunmu.
-              </p>
-              {classes.length >= 5 && (
-                <p role="status">
-                  Batas lima kelas aktif tercapai. Keluar dari salah satu kelas untuk bergabung
-                  dengan kelas lain.
-                </p>
-              )}
-              <form className="student-profile-join__form" onSubmit={join}>
-                <Input
-                  label="Kode kelas"
-                  minLength={6}
-                  maxLength={32}
-                  pattern="(?:[A-Za-z0-9]{6}|[A-Za-z0-9_\x2D]{8,32})"
-                  autoCapitalize="characters"
-                  spellCheck={false}
-                  value={joinCode}
-                  onChange={(e) => setJoinCode(e.target.value.trim())}
-                  placeholder="Kode dari guru"
-                  required
-                  autoComplete="off"
-                  disabled={busy || !dashboard.data || classes.length >= 5}
-                />
-                <Button
-                  type="submit"
-                  disabled={busy || !dashboard.data || classes.length >= 5 || !joinCode.trim()}
-                >
-                  {busy ? 'Menghubungkan…' : 'Gabung kelas'}
-                </Button>
-              </form>
-            </Card>
-          }
-          {error && !leaving && (
-            <p role="alert" className="form-error">
-              {error}
-            </p>
-          )}
-          {success && (
-            <p role="status" className="success-message">
-              {success}
-            </p>
-          )}
           <Dialog
             open={leaving !== null}
             onClose={() => setLeaving(null)}
