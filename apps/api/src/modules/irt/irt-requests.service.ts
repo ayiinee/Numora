@@ -3,6 +3,8 @@ import { getDatabase } from '@tka/database';
 import {
   analysisRequestDetail,
   adoptTryoutArtifact,
+  adoptTryoutArtifactV1,
+  finalizeTryoutArtifactV1,
   IrtOrchestrationError,
   listAnalysisRequests,
   prepareTryoutAnalysis,
@@ -42,6 +44,12 @@ export class IrtRequestsService {
       return analysisRequestDetail(getDatabase().client, id);
     });
   }
+  adoptResearchV1(id: string) {
+    return this.execute(() => adoptTryoutArtifactV1(getDatabase().client, id));
+  }
+  finalizeResearchV1(receiptId: string) {
+    return this.execute(() => finalizeTryoutArtifactV1(getDatabase().client, receiptId));
+  }
   detail(id: string) {
     return this.execute(() => analysisRequestDetail(getDatabase().client, id));
   }
@@ -49,3 +57,5 @@ export class IrtRequestsService {
     return this.execute(() => listAnalysisRequests(getDatabase().client, page.limit, page.offset));
   }
 }
+
+

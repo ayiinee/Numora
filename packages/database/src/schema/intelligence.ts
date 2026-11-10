@@ -258,6 +258,10 @@ export const irtBatches = pgTable(
     sourceOutputId: uuid('source_output_id').references((): AnyPgColumn => computeOutputs.id, {
       onDelete: 'restrict',
     }),
+    sourceRequestId: uuid('source_request_id'),
+    sourceExecutionId: uuid('source_execution_id'),
+    sourceCalibrationArtifactId: uuid('source_calibration_artifact_id'),
+    adoptionReceiptId: uuid('adoption_receipt_id'),
   },
   (table) => [
     index('irt_batches_package_idx').on(table.packageId),
