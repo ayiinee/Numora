@@ -178,10 +178,11 @@ export function JoinRoomForm({
           label="Kode room"
           value={code}
           maxLength={12}
-          pattern="[A-Za-z0-9]{12}"
+          pattern="[A-Z0-9]{12}"
           required
-          onChange={(event) => onChange(event.target.value)}
+          onChange={(event) => onChange(event.target.value.toUpperCase())}
           autoComplete="off"
+          spellCheck={false}
           placeholder="Masukkan kode 12 karakter…"
         />
         <Button loading={busy} disabled={disabled || !code.trim()} type="submit">
@@ -303,6 +304,7 @@ export function WaitingRoom({
   link,
   disabled,
   onReady,
+  onStart,
   onCopy,
   onShare,
   peers,
@@ -316,6 +318,7 @@ export function WaitingRoom({
   link: string;
   disabled: boolean;
   onReady: () => void;
+  onStart: () => void;
   onCopy: (value: string, label: string) => void;
   onShare: () => void;
   peers?: ReactNode;
@@ -324,6 +327,13 @@ export function WaitingRoom({
 }) {
   const self = snapshot.players.find((player) => player.studentId === selfId);
   const opponent = snapshot.players.find((player) => player.studentId !== selfId);
+  const isHost = snapshot.creatorStudentId === selfId;
+  const bothConnected = snapshot.players.every((player) => player.connectionStatus === 'CONNECTED');
+  const canStart =
+    !!opponent &&
+    snapshot.players.length === 2 &&
+    bothConnected &&
+    snapshot.players.every((player) => player.ready);
   let instruction = 'Tekan Saya siap. Duel dimulai setelah kalian berdua siap.';
   if (!opponent) {
     instruction = self?.ready
@@ -333,10 +343,12 @@ export function WaitingRoom({
     instruction = 'Lawan sedang menyambungkan kembali. Tunggu sebentar.';
   } else if (self?.ready) {
     instruction = opponent.ready
-      ? 'Kalian sudah siap. Duel akan segera dimulai.'
+      ? isHost
+        ? 'Kalian sudah siap. Tekan Mulai duel untuk masuk arena.'
+        : 'Kalian sudah siap. Menunggu tuan rumah memulai duel.'
       : `Menunggu ${opponent.displayName} menekan Siap.`;
   } else if (opponent.ready) {
-    instruction = 'Lawan sudah siap. Tekan Saya siap untuk memulai duel.';
+    instruction = 'Lawan sudah siap. Tekan Saya siap.';
   }
   return (
     <div className="pvp-waiting-layout">
@@ -386,6 +398,16 @@ export function WaitingRoom({
         >
           {self?.ready ? 'Kamu sudah siap' : 'Saya siap'}
         </Button>
+        {isHost && opponent && (
+          <Button
+            fullWidth
+            disabled={disabled || !canStart}
+            onClick={onStart}
+            leftIcon={<Icon name="play" />}
+          >
+            Mulai duel
+          </Button>
+        )}
       </Card>
       <aside className="pvp-waiting-context">
         <Card className="pvp-room-code">

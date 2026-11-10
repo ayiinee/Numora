@@ -1,7 +1,7 @@
 import { BadRequestException } from '@nestjs/common';
 import { plainToInstance } from 'class-transformer';
 import { ReviewImportedQuestionDto } from './content-packages.dto';
-import { ApiProperty } from '@nestjs/swagger';
+import { ApiProperty, ApiPropertyOptional } from '@nestjs/swagger';
 import { IsIn, IsString, Matches, MaxLength, MinLength, validateSync } from 'class-validator';
 import type { ImportQuestion } from '@tka/database';
 import { statuses, type ContentState } from './content.dto';
@@ -26,6 +26,8 @@ export class ContentReviewEventDto {
   @ApiProperty() reason!: string;
 }
 export class ContentVersionDetailDto {
+  @ApiPropertyOptional({ enum: ['DRILL', 'PRETEST', 'TRYOUT'], nullable: true, type: String })
+  usageType?: 'DRILL' | 'PRETEST' | 'TRYOUT' | null;
   @ApiProperty({ type: [ContentReviewEventDto] }) reviews!: ContentReviewEventDto[];
   @ApiProperty() id!: string;
   @ApiProperty() questionId!: string;

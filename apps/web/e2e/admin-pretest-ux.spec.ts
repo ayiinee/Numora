@@ -13,22 +13,27 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
     await expect(page.locator('.assessment-page-heading,.admin-breadcrumb')).toHaveCount(0);
     expect(fixture.calls.some((call) => call.path === 'admin/content/packages')).toBe(false);
     await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
+    const confirm = page.getByRole('dialog', { name: 'Penerbitan paket' });
+    await expect(confirm.getByText(/Yakin ingin menerbitkan paket/)).toBeVisible();
+    await expect(confirm.getByLabel('Bukti persetujuan tim kurikulum')).toHaveCount(0);
     await expect(
-      page.getByRole('button', { name: 'Publikasikan paket', exact: true }),
-    ).toBeDisabled();
-    await page.getByText('1. Simpan persetujuan tim kurikulum', { exact: true }).click();
-    await page.getByLabel('Bukti persetujuan tim kurikulum').fill('TEST ONLY reviewed source');
-    await page.getByRole('checkbox', { name: /Susunan paket/ }).check();
-    await page.getByRole('button', { name: 'Simpan persetujuan' }).click();
-    await page.getByRole('checkbox', { name: /Saya telah memeriksa paket/ }).check();
-    await page.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
+      confirm.getByRole('button', { name: 'Publikasikan paket', exact: true }),
+    ).toBeEnabled();
+    await confirm.getByRole('button', { name: 'Publikasikan paket', exact: true }).click();
+    await expect(confirm).toHaveCount(0);
+    await page.getByRole('button', { name: 'Kelola publikasi', exact: true }).click();
     const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
     await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
     await publication.getByRole('button', { name: 'Tutup dialog' }).click();
     await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bisa dikerjakan' })).toBeVisible();
     expect(fixture.calls.filter((call) => call.path.endsWith('/publish'))).toHaveLength(1);
+    expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
+      expectedRevision: 1,
+      confirmed: true,
+    });
     expect(fixture.calls.some((call) => call.path.includes('pretest-packages'))).toBe(false);
+    expect(fixture.calls.some((call) => call.path.endsWith('/approval'))).toBe(false);
     for (const width of [320, 390, 768, 1440]) {
       await page.setViewportSize({ width, height: 900 });
       await expect(page.getByRole('navigation', { name: 'Jenis asesmen' })).toHaveCount(0);

@@ -1,3 +1,4 @@
+import { hasPretestRubric } from './pretest-rubric';
 import {
   BadRequestException,
   ConflictException,
@@ -94,13 +95,14 @@ export class ContentLifecycleService {
         sourceLevelNumber:
           r.question.curriculumLevelNumber ??
           r.level?.levelNumber ??
-          (r.question.usageType === 'TRYOUT' ? null : 0),
+          (['TRYOUT', 'PRETEST'].includes(r.question.usageType ?? '') ? null : 0),
         ...(data.categories?.length ? { categories: data.categories } : {}),
         assetManifest: (v.media ?? []) as NonNullable<ImportQuestion['metadata']['assetManifest']>,
       },
     };
     const tryout = r.question.usageType === 'TRYOUT';
-    const blockers = structuralErrors(payload, false, tryout);
+    const pretest = r.question.usageType === 'PRETEST';
+    const blockers = structuralErrors(payload, false, tryout, pretest);
     if (!tryout && !v.difficulty) blockers.push('DIFFICULTY_REQUIRED');
     if (
       [r.chapter?.status, r.subchapter?.status, r.competency?.status].some((s) =>
@@ -111,7 +113,7 @@ export class ContentLifecycleService {
     if (r.question.status === 'ARCHIVED') blockers.push('QUESTION_ARCHIVED');
     if (
       r.imported &&
-      ((!tryout && !r.level) ||
+      ((!tryout && !pretest && !r.level) ||
         (r.level && (tryout ? r.level.status === 'ARCHIVED' : r.level.status !== 'READY')))
     )
       blockers.push('LEVEL_NOT_READY');
@@ -147,6 +149,7 @@ export class ContentLifecycleService {
             .where(eq(scoringRubricVersions.id, v.scoringRubricVersionId))
         : [];
       if (
+        (pretest && !(await hasPretestRubric(tx, payload, v.scoringRubricVersionId))) ||
         !rubric ||
         rubric.status !== 'SEALED' ||
         !rubric.approvedAt ||
@@ -181,6 +184,7 @@ export class ContentLifecycleService {
       id,
       reviews,
       questionId: r.question.id,
+      usageType: r.question.usageType,
       versionNumber: v.versionNumber,
       status: v.contentStatus,
       revisedFromId: v.revisedFromQuestionVersionId,

@@ -738,8 +738,7 @@ export class TryoutService {
     const studentId = await this.student(authorization);
     const attempt = await this.forStudent(studentId, attemptId);
     if (
-      attempt.managedBatch ||
-      attempt.status !== 'GRADED' ||
+      !['SUBMITTED', 'GRADED'].includes(attempt.status) ||
       !(await this.releases.releasedPackageIds([attempt.packageId])).has(attempt.packageId)
     )
       throw new ConflictException(
@@ -770,7 +769,7 @@ export class TryoutService {
       packageTitle: presentFixtureText(attempt.packageId, 'name', attempt.title),
       xp,
       xpPolicyVersion: attempt.xpPolicyVersion,
-      score: canonical?.score ?? Number(score?.score ?? 0),
+      score: canonical ? canonical.score : Number(score?.score ?? 0),
       mode: canonical?.mode ?? 'DEMO',
       publicationVersion: canonical?.version ?? null,
       correctCount: rows.filter(

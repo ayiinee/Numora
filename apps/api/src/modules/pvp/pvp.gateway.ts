@@ -94,6 +94,7 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
         state = await engine.create(user.id, p.difficulty as Difficulty, requestId);
       if (event === 'room:join') state = await engine.join(user.id, String(p.roomCode));
       if (event === 'player:ready') state = await engine.ready(user.id, String(p.matchId));
+      if (event === 'match:start') state = await engine.start(user.id, String(p.matchId));
       if (event === 'answer:submit')
         state = await engine.answer(
           user.id,
@@ -192,6 +193,15 @@ export class PvpGateway implements OnGatewayInit, OnGatewayDisconnect {
     @Ack() ack: (value: unknown) => void,
   ) {
     const response = await this.command('player:ready', s, p);
+    if (typeof ack === 'function') ack(response);
+    else s.emit('command:acknowledged', response);
+  }
+  @SubscribeMessage('match:start') async start(
+    @ConnectedSocket() s: Socket,
+    @MessageBody() p: unknown,
+    @Ack() ack: (value: unknown) => void,
+  ) {
+    const response = await this.command('match:start', s, p);
     if (typeof ack === 'function') ack(response);
     else s.emit('command:acknowledged', response);
   }

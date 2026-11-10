@@ -388,6 +388,26 @@ export class PvpEngineService {
       if (player.connectionStatus !== 'CONNECTED')
         throw failure('PLAYER_DISCONNECTED', 'Sambungkan kembali sebelum Ready.');
       await tx.update(pvpPlayers).set({ ready: true }).where(eq(pvpPlayers.id, player.id));
+    });
+    return this.snapshot(studentId, matchId);
+  }
+
+  async start(studentId: string, matchId: string) {
+    requirePvpPolicy(this.policy);
+    const { db } = getDatabase();
+    await db.transaction(async (tx) => {
+      const match = await this.locked(tx, matchId);
+      await this.member(tx, matchId, studentId);
+      if (match.status === 'RUNNING') return;
+      if (match.status !== 'WAITING' && match.status !== 'READY')
+        throw failure('MATCH_CLOSED', 'Pertandingan sudah ditutup.');
+      if (match.expiresAt && match.expiresAt <= this.now())
+        throw failure('ROOM_CLOSED', 'Room sudah kedaluwarsa.');
+      if (match.creatorStudentId !== studentId)
+        throw new ForbiddenException({
+          code: 'PVP_HOST_ONLY',
+          detail: 'Hanya pembuat room yang dapat memulai duel.',
+        });
       const players = await tx
         .select()
         .from(pvpPlayers)
@@ -406,22 +426,23 @@ export class PvpEngineService {
           ),
         )
         .for('share');
-      if (
-        players.length === 2 &&
-        activeUsers.length === 2 &&
-        players.every((p) => p.ready && p.connectionStatus === 'CONNECTED')
-      ) {
-        await tx
-          .update(pvpMatches)
-          .set({ status: 'RUNNING', startedAt: this.now() })
-          .where(eq(pvpMatches.id, matchId));
-        await this.startQuestion(tx, match, 1);
-        await this.closeInvites(tx, match.id);
-        await this.event(tx, match, 'pvp_match_started');
-      }
+      if (players.length !== 2 || activeUsers.length !== 2)
+        throw failure('PVP_ROOM_INCOMPLETE', 'Duel menunggu satu pemain lagi.');
+      if (!players.every((p) => p.ready))
+        throw failure('PVP_PLAYERS_NOT_READY', 'Kedua pemain harus siap sebelum duel dimulai.');
+      if (!players.every((p) => p.connectionStatus === 'CONNECTED'))
+        throw failure('PLAYER_DISCONNECTED', 'Sambungkan kembali sebelum memulai duel.');
+      await tx
+        .update(pvpMatches)
+        .set({ status: 'RUNNING', startedAt: this.now() })
+        .where(eq(pvpMatches.id, matchId));
+      await this.startQuestion(tx, match, 1);
+      await this.closeInvites(tx, match.id);
+      await this.event(tx, match, 'pvp_match_started');
     });
     return this.snapshot(studentId, matchId);
   }
+
   private async startQuestion(tx: Transaction, match: Match, order: number) {
     const now = this.now();
     await tx

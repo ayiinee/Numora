@@ -49,15 +49,29 @@ export const updateContentPackage = (token: string, id: string, body: UpdateCont
 export const reviewImportedQuestion = (
   token: string,
   id: string,
-  notes: string,
+  notes: string | undefined,
   packageId: string,
 ) =>
   apiRequest<ContentMutationDto>(`${root}/versions/${encodeURIComponent(id)}/review`, token, {
     method: 'POST',
-    body: JSON.stringify({ confirmed: true, notes, packageId }),
+    body: JSON.stringify({
+      confirmed: true,
+      ...(notes?.trim() ? { notes: notes.trim() } : {}),
+      packageId,
+    }),
   });
 export const classifyQuestion = (token: string, id: string, body: ClassifyQuestionDto) =>
   apiRequest<ContentMutationDto>(`${root}/questions/${encodeURIComponent(id)}/usage`, token, {
     method: 'PATCH',
     body: JSON.stringify(body),
   });
+
+export const preparePretestScoring = (token: string, id: string, expectedRevision: number) =>
+  apiRequest<ContentMutationDto>(
+    `${root}/packages/${encodeURIComponent(id)}/prepare-scoring`,
+    token,
+    {
+      method: 'POST',
+      body: JSON.stringify({ expectedRevision }),
+    },
+  );

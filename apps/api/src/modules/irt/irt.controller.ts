@@ -1,3 +1,4 @@
+import { PrepareIrtReleaseV1Dto, IrtReleaseV1Dto } from './irt-requests.dto';
 import { IrtOperationsService } from './irt-operations.service';
 import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
@@ -87,6 +88,32 @@ export class IrtController {
   @ApiOkResponse({ type: IrtRequestDto })
   adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.requests.adopt(request.adminId, id);
+  }
+  @Post('research/batches/:batchId/finalizations')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  prepareReleaseV1(
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: PrepareIrtReleaseV1Dto,
+  ) {
+    return this.requests.prepareReleaseV1(batchId, input);
+  }
+  @Post('research/finalizations/:id/publish')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  publishReleaseV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.publishReleaseV1(id);
+  }
+  @Post('research/finalize/:receiptId')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  finalizeResearchV1(@Param('receiptId', new ParseUUIDPipe()) receiptId: string) {
+    return this.requests.finalizeResearchV1(receiptId);
+  }
+  @Post('research/requests/:id/adopt')
+  @HttpCode(200)
+  adoptResearchV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.adoptResearchV1(id);
   }
   @Post('requests')
   @ApiHeader({ name: 'Idempotency-Key', required: true })
