@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING IMPLEMENTATION — distribusi Drill.** Routing pilot per level memakai assignment 1:1 yang disimpan saat percobaan pertama berhasil dibuat. Percobaan baru mengikuti revisi aktif pada kelompok asal. Sesi berjalan dan histori tetap dipin. Saat varian dihentikan, siswa tanpa assignment menunggu dan kelompok varian dapat memakai original yang sah sesuai policy. `ADM-DEP-01` untuk pemerataan completion, default original, dan rotasi lintas arm tetap terbuka. [Konfigurasi dan pengujian pilot](../data/ASSESSMENT_ARMS_V2.md#pilot-routing-drill).
+
 **ENGINEERING DECISION - usulan Reyhan, disetujui pemilik Aini pada 10 November 2026.** Ruang tunggu PvP menambah satu langkah sadar sebelum arena: `player:ready` hanya menandai kesiapan, lalu `match:start` dari pembuat room memulai pertandingan setelah server memastikan dua pemain aktif, terhubung dan siap. Input kode gabung selalu ditampilkan uppercase. Aturan server tetap: 10 soal identik, timer/poin server-authoritative, reconnect 20 detik, satu room aktif. Aini mengonfirmasi "Setuju, host memulai duel" dalam review [PR #150](https://github.com/ayiinee/Numora/pull/150); ini merupakan amendemen yang disetujui untuk alur PRD v0.6 bagian 23.5 `Ready -> Arena`. [Kontrak event dan state](../architecture/REALTIME_PVP.md).
 
 **ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Login Admin dipindahkan ke `/admin-numora`, dengan pengalihan dari `/admin/login`. Tautan Admin dihapus dari modal landing dan halaman masuk Siswa/Guru. Identitas dan izin Admin diperiksa melalui alur autentikasi serta otorisasi existing.
@@ -16,7 +18,7 @@
 
 | Perubahan target yang disetujui | Area implementasi terkait | Gate yang belum selesai |
 |---|---|---|
-| Drill A/B reguler sejak awal, original+varian aktif, assignment tetap | `learning/drill.policy.ts`, assessment packages, experiment/assignment, exposure | Forward migration untuk index/guard lama; randomisasi, pin retry dan QA |
+| Drill A/B reguler sejak awal, original+varian aktif, assignment tetap | Routing `learning/drill-distribution.ts`, assessment packages, assignment dan delivery | Approval paket dan penerimaan pilot di lingkungan tujuan |
 | Concurrent IRT Level dan adjustment hanya DRIFT; PASS freeze item | IRT snapshot/compute/adoption, generator config/version | Scientific engine, policy threshold/anchor, review Curriculum dan bounded adjuster |
 | Tryout multi-arm, satu attempt/siswa/batch | Tryout batch/package relation, allocation dan lifecycle | Multi-package contract, assignment/uniqueness dan frozen package list |
 | Nilai+pembahasan tanpa ranking; fallback per arm maksimal 72 jam | Participant result, mapping, finalization/readers dan UI | Respondent producer v3, mapping theta, detail policy fallback dan release per arm |

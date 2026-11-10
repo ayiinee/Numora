@@ -34,7 +34,7 @@ riset untuk produksi. ADM-DEP-01/02/06 juga tetap tercatat dalam sumber.
 
 | Dependency Admin aktif | Status dan batas |
 | --- | --- |
-| ADM-DEP-01 — distribusi Drill | OPEN: rekonsiliasi completion balancing/preferensi retry/default original ADM-DEC-010 dengan arm persisten dan satu original+varian aktif v2. Jangan menerapkan rotasi lintas arm diam-diam. |
+| ADM-DEP-01 — distribusi Drill | OPEN: rekonsiliasi completion balancing/preferensi retry/default original ADM-DEC-010. Routing pilot mengimplementasikan kelompok persisten v2 dengan original dan varian aktif. Pemerataan completion dan rotasi lintas arm menunggu keputusan. |
 | ADM-DEP-02 — paket invalid/DRIFT | OPEN: rekonsiliasi keep-available ADM-DEC-024 dengan stop distribusi baru v2. Laporan masuk tidak otomatis invalid; sesi/histori tetap pinned. |
 | ADM-DEP-03 — dokumen varian/batch | DEFERRED/OPEN: jalur pembuatan varian, precedence alokasi sekolah/kelas, multisekolah/Mandiri dan perubahan membership. Anchor3/5, satu varian/proses, multipaket, satu attempt/batch dan freeze sebelum mulai sudah ditetapkan. |
 | ADM-DEP-04 — penyerahan akademik/ilmiah | OPEN: blueprint/review konten, review rubrik Drill, parameter/gate/linking/mapping numerik, informasi IRT katalog dan producer/adapter/adopter/publikasi yang belum lengkap. Payload v1 dan metode reference-package prediction sudah ditetapkan; rubrik Pretest original dan Tryout yang disahkan tidak dibuka ulang. |

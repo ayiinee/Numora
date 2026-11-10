@@ -456,6 +456,13 @@
       "when": 1794301200000,
       "tag": "0064_irt_adoption_evidence_validation",
       "breakpoints": true
+    },
+    {
+      "idx": 65,
+      "version": "7",
+      "when": 1794301200001,
+      "tag": "0065_drill_ab_distribution_lock",
+      "breakpoints": true
     }
   ]
 }

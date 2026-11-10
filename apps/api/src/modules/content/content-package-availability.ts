@@ -14,6 +14,7 @@ import {
 import type { AdminTransaction } from '../audit/admin-mutation';
 import type { PackageAvailabilityDto } from './content-packages.dto';
 import { availableDrillPackages } from '../learning/drill-package-selection';
+import { configuredDrillSet, readDrillPilot } from '../learning/drill-distribution';
 import { readApprovedPolicy, isPretestPartialPolicy } from '@tka/assessment-engine';
 
 export async function packageAvailability(
@@ -44,6 +45,13 @@ export async function packageAvailability(
       : [];
     if (!scope || Object.values(scope).some((status) => status !== 'READY'))
       return result('BLOCKED', ['DRILL_SCOPE_NOT_READY']);
+    const setId = configuredDrillSet(p.levelId!);
+    if (setId !== undefined) {
+      const pilot = setId ? await readDrillPilot(tx, p.levelId!, setId) : null;
+      return pilot?.original?.package.id === p.id || pilot?.variant?.package.id === p.id
+        ? result('AVAILABLE')
+        : result('BLOCKED', ['DRILL_NOT_SELECTED_OR_POLICY_UNSUPPORTED']);
+    }
     if ((await availableDrillPackages(tx, p.levelId!))[0]?.id !== p.id)
       return result('BLOCKED', ['DRILL_NOT_SELECTED_OR_POLICY_UNSUPPORTED']);
     return result('AVAILABLE');
