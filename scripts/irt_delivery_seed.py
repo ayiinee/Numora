@@ -6,14 +6,18 @@ from psycopg.types.json import Jsonb
 from research.irt.synthetic import generate
 
 
-def build(db,admin,context,batch,arm_count=2, source=None):
+def build(db,admin,context,batch,arm_count=2, source=None, application=False):
     def one(query,args=()):return db.execute(query,args).fetchone()['id']
     def user():return one("INSERT INTO users(auth_user_id,role,display_name,email) VALUES(%s,'STUDENT','SYNTHETIC',%s) RETURNING id",(uuid4(),str(uuid4())+'@example.test'))
     key=uuid4().hex
     chapter=one("INSERT INTO chapters(code,slug,name,display_order) VALUES(%s,%s,'SYNTHETIC',(SELECT coalesce(max(display_order),0)+1 FROM chapters)) RETURNING id",(key,key))
     sub=one("INSERT INTO subchapters(chapter_id,code,slug,name,display_order) VALUES(%s,%s,%s,'SYNTHETIC',1) RETURNING id",(chapter,key,key))
     competence=one("INSERT INTO competencies(subchapter_id,code,description) VALUES(%s,%s,'SYNTHETIC') RETURNING id",(sub,key))
-    scoring=one("INSERT INTO scoring_policy_versions(policy_code,version,configuration) VALUES(%s,1,'{}') RETURNING id",(key,))
+    if application:
+        config={'prdVersion':'0.6','questionCount':30,'rubric':'OPTIONS_STATEMENTS_PARTIAL_V1','mcma':'correct_option_decisions/option_count','category':'correct_statements/statement_count','unanswered':0,'awardedPointsDecimals':2,'equivalentCorrectXpMultiplier':10,'approvedBy':'PROJECT_OWNER','approvedDate':'2026-10-07'}
+        scoring=one("SELECT id FROM scoring_policy_versions WHERE policy_code='TRYOUT_PGK_PARTIAL_V1' AND version=1")
+    else:
+        scoring=one("INSERT INTO scoring_policy_versions(policy_code,version,configuration) VALUES(%s,1,'{}') RETURNING id",(key,))
     bp=one("INSERT INTO assessment_blueprint_versions(code,version,definition,digest,status,approved_by_user_id,approved_at,approval_reference) VALUES(%s,1,'{}','SYNTHETIC','DRAFT',%s,now(),'SYNTHETIC ONLY') RETURNING id",(key,admin))
     policy=one("INSERT INTO assessment_distribution_policies(code,version,definition,digest,approved_by_user_id,approved_at) VALUES(%s,1,jsonb_build_object('regularRewards',true,'preserveHistory',true,'allowOriginalFallback',true,'ecosystem','TRYOUT','contextId',%s::text),'',%s,now()) RETURNING id",(key,str(context),admin))
     arm_set=one('INSERT INTO assessment_arm_sets(context_id,blueprint_version_id,policy_id) VALUES(%s,%s,%s) RETURNING id',(context,bp,policy))
@@ -30,12 +34,14 @@ def build(db,admin,context,batch,arm_count=2, source=None):
     for index,old_original in enumerate(value['packages'][0]['questionVersionIds']):
         template=sources[old_original];qtype=template['questionType'];maximum=template['maximumScoreCategory']
         if qtype not in rubrics:
-            rubrics[qtype]=one("INSERT INTO scoring_rubric_versions(code,version,question_type,maximum_score_category,definition,digest,status,approved_by_user_id,approved_at) VALUES(%s,1,%s,%s,'{}','SYNTHETIC','SEALED',%s,now()) RETURNING id",(uuid4().hex,qtype,maximum,admin))
+            definition={'policyCode':'TRYOUT_PGK_PARTIAL_V1','version':1,'questionType':qtype,'decisionCount':maximum,'fullyCorrectCategory':maximum,'unanswered':0,'points':'round(correctDecisions / decisionCount * maxPoints, 2)','approvedDecision':'PROJECT_OWNER_2026_10_07','categories':list(range(maximum+1))} if application else {}
+            rubrics[qtype]=one("INSERT INTO scoring_rubric_versions(code,version,question_type,maximum_score_category,definition,digest,status,approved_by_user_id,approved_at) VALUES(%s,1,%s,%s,%s,'SYNTHETIC','SEALED',%s,now()) RETURNING id",(uuid4().hex,qtype,maximum,Jsonb(definition),admin))
         rubric=rubrics[qtype]
         choices=[{'id':letter,'content':{'text':letter}} for letter in 'ABCD']
         content=choices if qtype=='SINGLE_CHOICE' else {'options':choices,'categories':[{'id':'Y','label':'Ya'},{'id':'N','label':'Tidak'}] if qtype=='CATEGORY' else []}
         answer={'optionId':'A'} if qtype=='SINGLE_CHOICE' else {'optionIds':['A','C']} if qtype=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
         family=one('INSERT INTO questions(primary_competency_id) VALUES(%s) RETURNING id',(competence,));families.append(family)
+        if application: db.execute("UPDATE questions SET status='READY' WHERE id=%s",(family,))
         original_variant=None;original=None
         for arm_index,kind in enumerate(['ORIGINAL']+['VARIANT']*(arm_count-1)):
             variant=one("INSERT INTO question_variants(question_id,variant_code,kind,origin,original_variant_id) VALUES(%s,%s,%s,'SYNTHETIC',%s) RETURNING id",(family,kind+str(arm_index),kind,original_variant))
@@ -59,6 +65,7 @@ def build(db,admin,context,batch,arm_count=2, source=None):
         package=one("INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,scoring_policy_version_id,distribution_arm_id) VALUES(%s,1,'SYNTHETIC','TRYOUT',%s,%s) RETURNING id",(uuid4().hex,scoring,arm))
         for index,qid in enumerate(questions):
             db.execute('INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s)',(package,qid,index+1,by_id[str(qid)]['maxPoints']))
+        if application: db.execute('UPDATE assessment_packages SET duration_seconds=600 WHERE id=%s',(package,))
         db.execute("UPDATE assessment_packages SET status='PUBLISHED',frozen_at=now()-interval '2 hours',release_at=now()-interval '1 hour',curriculum_approval=jsonb_build_object('reference','SYNTHETIC ONLY','approvedAt',now(),'manifestDigest',irt_compute.payload_digest(jsonb_build_object('packageId',id,'items',(SELECT jsonb_agg(to_jsonb(i) ORDER BY display_order,i.id) FROM package_items i WHERE package_id=%s)))) WHERE id=%s",(package,package))
         revision=one("INSERT INTO assessment_arm_revisions(arm_id,package_id,revision,anchor_question_version_ids,manifest_digest) VALUES(%s,%s,1,%s,'') RETURNING id",(arm,package,anchors))
         db.execute('UPDATE assessment_arms SET current_revision_id=%s WHERE id=%s',(revision,arm))

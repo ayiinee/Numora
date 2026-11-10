@@ -8483,3 +8483,34 @@ a.settings-row:hover {
 .notification-item--tryout_opened .notification-item__icon {
   background: var(--numora-gold-100);
 }
+/* Pretest invitation: shared Numora artwork and progressive disclosure. */
+.pretest-card {
+  background: linear-gradient(115deg, var(--color-primary-light), var(--color-surface));
+  border-color: var(--color-primary-light);
+  padding: 24px;
+}
+.pretest-card__art { flex: 0 0 96px; }
+.pretest-card__art img { width: 96px; height: auto; }
+.pretest-card__heading { flex-wrap: wrap; }
+.pretest-card__heading h3 { font-size: 20px; }
+.pretest-card__copy p { font-size: 14px; line-height: 1.65; }
+.pretest-card > .numora-button { flex-shrink: 0; }
+.pretest-intro-dialog { max-width: 480px; }
+.pretest-intro-dialog .numora-dialog__icon { text-align: center; }
+.pretest-intro-dialog .numora-dialog__icon img { width: 140px; height: auto; margin: 0 auto; }
+.pretest-intro-facts { display: grid; grid-template-columns: 1fr 1fr; gap: 12px; }
+.pretest-intro-facts > span { display: grid; gap: 6px; padding: 14px; border-radius: var(--radius-lg); background: var(--color-primary-light); font-size: 12px; }
+.pretest-intro-facts strong { font-size: 15px; }
+.pretest-intro-note, .pretest-intro-details { font-size: 13px; line-height: 1.6; margin-top: 16px; color: var(--color-text-muted); }
+.pretest-intro-details summary { cursor: pointer; color: var(--color-primary-strong); min-height: 44px; display: flex; align-items: center; }
+.pretest-intro-details p + p { margin-top: 8px; }
+@media (max-width: 699px) {
+  .pretest-card { gap: 12px; padding: 20px; }
+  .pretest-card__art { flex-basis: 72px; }
+  .pretest-card__art img { width: 72px; }
+  .pretest-card__copy { flex-basis: calc(100% - 84px); }
+  .pretest-card > .numora-button { flex-basis: 100%; margin-left: 0; }
+}
+@media (max-height: 700px) {
+  .pretest-intro-dialog .numora-dialog__icon img { width: 100px; }
+}
