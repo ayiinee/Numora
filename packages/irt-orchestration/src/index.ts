@@ -7,3 +7,4 @@ export * from './adoption-v1.js';
 export { contentFingerprint } from './generator-fingerprint.js';
 export type { Json as GeneratorJson } from './generator-fingerprint.js';
 export * from './finalization-v1.js';
+export * from './tryout-release-v1.js';

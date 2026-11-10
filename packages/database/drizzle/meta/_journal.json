@@ -421,6 +421,13 @@
       "when": 1794283200000,
       "tag": "0059_irt_adoption_request_binding",
       "breakpoints": true
+    },
+    {
+      "idx": 60,
+      "version": "7",
+      "when": 1794286800000,
+      "tag": "0060_irt_tryout_release_v1",
+      "breakpoints": true
     }
   ]
 }

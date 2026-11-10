@@ -261,6 +261,7 @@ export const irtBatches = pgTable(
     sourceRequestId: uuid('source_request_id'),
     sourceExecutionId: uuid('source_execution_id'),
     sourceCalibrationArtifactId: uuid('source_calibration_artifact_id'),
+    researchSnapshotId: uuid('research_snapshot_id'),
     adoptionReceiptId: uuid('adoption_receipt_id'),
   },
   (table) => [

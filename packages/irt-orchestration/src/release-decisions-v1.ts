@@ -20,7 +20,7 @@ const rounded = (n: bigint, d: bigint, places: number) => {
 };
 export function decideTryoutReleaseV1(input: CalibrationInput, output: CalibrationResult | null, policy: ResearchReleasePolicy) {
   if (policy.purpose !== 'RESEARCH_ONLY' || policy.minimumValidItems !== 24 || policy.rounding !== 'HALF_UP_2' || policy.partialArm !== 'FALLBACK_WHOLE_ARM'
-    || JSON.stringify(policy.weights) !== JSON.stringify(RESEARCH_RELEASE_POLICY_V1.weights)) error('IRT_RELEASE_POLICY_UNSUPPORTED');
+    || (['SINGLE_CHOICE','MULTIPLE_CHOICE_MULTIPLE_ANSWER','CATEGORY'] as const).some(kind => policy.weights?.[kind] !== RESEARCH_RELEASE_POLICY_V1.weights[kind])) error('IRT_RELEASE_POLICY_UNSUPPORTED');
   if (!input.respondents.length) error('IRT_RELEASE_EMPTY_BATCH');
   const itemMap = new Map(input.items.map(i => [i.questionVersionId,i]));
   const byAttempt = new Map<string, CalibrationInput['responses']>();

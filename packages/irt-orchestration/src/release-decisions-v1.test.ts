@@ -16,6 +16,7 @@ function setup() {
  return {input,output};
 }
 describe('per-arm release decisions (arithmetic fixture only)',()=>{
+ it('accepts policy weights independent of JSONB key order',()=>{const {input}=setup();expect(decideTryoutReleaseV1(input,null,{...policy,weights:{CATEGORY:3,MULTIPLE_CHOICE_MULTIPLE_ANSWER:3,SINGLE_CHOICE:2}}).results.length).toBe(input.respondents.length)});
  it('uses IRT only for fully scored calibrated arms',()=>{const {input,output}=setup();expect(decideTryoutReleaseV1(input,output,policy).results.every(r=>r.mode==='IRT')).toBe(true)});
  it('moves whole delivered arm to fallback for one insufficient participant',()=>{const {input,output}=setup(); output.outcome!.respondents[0]!.status='INSUFFICIENT';const d=decideTryoutReleaseV1(input,output,policy);const arm=input.respondents[0]!.deliveredArmId;expect(d.results.filter(r=>r.armId===arm).every(r=>r.mode==='FALLBACK')).toBe(true);expect(d.results.filter(r=>r.mode==='FALLBACK').every(r=>r.theta===null)).toBe(true)});
  it('normalizes points then applies weights once, with half-up decimal rounding',()=>{const {input}=setup();input.responses.forEach(r=>{r.awardedPoints='1.00';input.items.find(i=>i.questionVersionId===r.questionVersionId)!.maxPoints='3.00'});expect(decideTryoutReleaseV1(input,null,policy).results[0]!.score).toBe(33.33)});
