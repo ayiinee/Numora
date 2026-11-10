@@ -31,7 +31,7 @@ def main():
         source['respondents'] = []
         source['responses'] = []
         application = os.environ.get('IRT_DELIVERY_APP_TEST') == 'true'
-        value = delivery.build(db, actor, context, batch, 2, source=source, application=application)
+        value = delivery.build(db, actor, context, batch, 2, source=source, application=application or os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true')
         db.execute("UPDATE tryout_batches SET status='PLANNED',starts_at=now()+interval '1 hour',closes_at=now()+interval '1 day',cutoff_at=now()+interval '1 day',result_due_at=now()+interval '4 days' WHERE id=%s", (batch,))
         resources = {}
         for key, kind, source_key in [('model','IRT_MODEL','engine'),('quality','QUALITY_GATE','quality'),('eligibility','IRT_ELIGIBILITY','eligibility'),('scoring','IRT_SCORING','scoring'),('scoreMapping','SCORE_MAPPING','mapping')]:
@@ -54,6 +54,7 @@ def main():
         if os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true':
             from test_irt_production_authorization import verify
             verify(db,url,actor,batch,context,config,value)
+            return
         failures = 0
         for mutate in [lambda c:c['runtime'].pop('image'),lambda c:c['packages'].append(c['packages'][0]),lambda c:c['anchors'].__setitem__(0,str(uuid4())),lambda c:c['resources']['model']['ref'].__setitem__('digest','0'*64),lambda c:c.__setitem__('contextRevision',99)]:
             c = deepcopy(config); mutate(c)

@@ -477,6 +477,13 @@
       "when": 1794304800001,
       "tag": "0067_irt_production_authorization_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 68,
+      "version": "7",
+      "when": 1794304800002,
+      "tag": "0068_irt_delivery_authorization_boundary",
+      "breakpoints": true
     }
   ]
 }
