@@ -35,7 +35,7 @@ export async function releasedTryoutPackageTimes(
       and(
         inArray(tryoutBatches.packageId, packageIds),
         eq(tryoutBatches.status, 'PUBLISHED'),
-        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK', 'UNSCORABLE', 'MIXED']),
+        sql`(${tryoutResultFinalizations.mode} in ('IRT','FALLBACK') or (${tryoutResultFinalizations.sourceCalibrationRequestId} is not null and ${tryoutResultFinalizations.mode} in ('UNSCORABLE','MIXED')))`,
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
       ),
@@ -198,7 +198,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
         sql`(${tryoutBatches.adminTitle} is null or ${tryoutResultFinalizations.sourceCalibrationRequestId} is not null)`,
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
-        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK', 'UNSCORABLE', 'MIXED']),
+        sql`(${tryoutResultFinalizations.mode} in ('IRT','FALLBACK') or (${tryoutResultFinalizations.sourceCalibrationRequestId} is not null and ${tryoutResultFinalizations.mode} in ('UNSCORABLE','MIXED')))`,
       ),
     );
   const reasons: Record<string, string> = {

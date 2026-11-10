@@ -77,68 +77,97 @@ try {
     ]);
     assert.ok(replays.every((x) => x.replay && x.receiptId === adopted.receiptId));
   }
-  const ready = await prepareTryoutReleaseV1(db, batchId, requestId, a.id);
-  assert.equal(ready.status, 'READY');
-  assert.equal((await prepareTryoutReleaseV1(db, batchId, requestId, a.id)).replay, true);
-  const [locked] = await db`SELECT status FROM tryout_batches WHERE id=${batchId}`;
-  assert.equal(locked.status, 'CLOSED');
-  await assert.rejects(
-    db`UPDATE tryout_attempt_results SET score=-1 WHERE finalization_id=${ready.finalizationId}`,
-  );
-  if (['CANCEL', 'REVOKE'].includes(process.env.IRT_RELEASE_BLOCK ?? '')) {
-    if (process.env.IRT_RELEASE_BLOCK === 'CANCEL')
-      await fixture`INSERT INTO irt_calibration_cancellations_v1(request_id,actor_user_id) VALUES(${requestId},${actor.actor_user_id})`;
-    else await fixture`UPDATE configuration_approvals SET revoked_at=now() WHERE id=${a.id}`;
-    await assert.rejects(publishTryoutReleaseV1(db, ready.finalizationId));
+  if (process.env.IRT_RELEASE_BLOCK === 'COVERAGE') {
+    await assert.rejects(
+      prepareTryoutReleaseV1(db, batchId, requestId, a.id),
+      /IRT_RELEASE_COVERAGE_BELOW_POLICY/,
+    );
     assert.equal((await publishedTryoutAttemptResults(attempts)).size, 0);
-    assert.equal((await releasedTryoutPackageIds(packages)).size, 0);
     assert.deepEqual(await integrity(), before);
     console.log(
       JSON.stringify({
         purpose: 'RESEARCH_ONLY',
-        blocked: process.env.IRT_RELEASE_BLOCK,
+        blocked: 'COVERAGE',
         canonicalPublication: false,
         readerLocked: true,
         exactHistoryPreserved: true,
       }),
     );
-    process.exitCode = 0;
   } else {
-    const published = await Promise.all([
-      publishTryoutReleaseV1(db, ready.finalizationId),
-      publishTryoutReleaseV1(db, ready.finalizationId),
-    ]);
-    assert.ok(published.every((x) => x.status === 'PUBLISHED'));
-    assert.equal(published.filter((x) => !x.replay).length, 1);
+    const ready = await prepareTryoutReleaseV1(db, batchId, requestId, a.id);
+    assert.equal(ready.status, 'READY');
+    assert.equal((await prepareTryoutReleaseV1(db, batchId, requestId, a.id)).replay, true);
+    const [locked] = await db`SELECT status FROM tryout_batches WHERE id=${batchId}`;
+    assert.equal(locked.status, 'CLOSED');
     await assert.rejects(
-      db`DELETE FROM tryout_attempt_results WHERE finalization_id=${ready.finalizationId}`,
+      db`UPDATE tryout_attempt_results SET score=-1 WHERE finalization_id=${ready.finalizationId}`,
     );
-    assert.equal((await prepareTryoutReleaseV1(db, batchId, requestId, a.id)).status, 'PUBLISHED');
-    const results =
-      await db`SELECT result_mode,count(*)::int AS count FROM tryout_attempt_results WHERE finalization_id=${ready.finalizationId} GROUP BY result_mode`;
-    assert.equal(
-      results.reduce((n, x) => n + x.count, 0),
-      r.body.respondents.length,
-    );
-    assert.equal((await publishedTryoutAttemptResults(attempts)).size, attempts.length);
-    assert.equal((await releasedTryoutPackageIds(packages)).size, packages.length);
-    assert.deepEqual(await integrity(), before);
-    const [events] =
-      await db`SELECT count(*)::int AS count FROM analytics_outbox WHERE entity_id=${batchId} AND event_name='tryout.batch_published'`;
-    assert.equal(events.count, 1);
-    console.log(
-      JSON.stringify({
-        purpose: 'RESEARCH_ONLY',
-        canonicalPublication: true,
-        attemptCount: r.body.respondents.length,
-        modes: results,
-        technicalFailure: process.env.IRT_RELEASE_EXPECT_FAILURE === 'true',
-        adoptionReplay: adopted.adopted,
-        publicationReplay: true,
-        readerGate: true,
-        exactHistoryPreserved: true,
-      }),
-    );
+    if (['CANCEL', 'REVOKE'].includes(process.env.IRT_RELEASE_BLOCK ?? '')) {
+      if (process.env.IRT_RELEASE_BLOCK === 'CANCEL')
+        await fixture`INSERT INTO irt_calibration_cancellations_v1(request_id,actor_user_id) VALUES(${requestId},${actor.actor_user_id})`;
+      else await fixture`UPDATE configuration_approvals SET revoked_at=now() WHERE id=${a.id}`;
+      await assert.rejects(publishTryoutReleaseV1(db, ready.finalizationId));
+      assert.equal((await publishedTryoutAttemptResults(attempts)).size, 0);
+      assert.equal((await releasedTryoutPackageIds(packages)).size, 0);
+      assert.deepEqual(await integrity(), before);
+      console.log(
+        JSON.stringify({
+          purpose: 'RESEARCH_ONLY',
+          blocked: process.env.IRT_RELEASE_BLOCK,
+          canonicalPublication: false,
+          readerLocked: true,
+          exactHistoryPreserved: true,
+        }),
+      );
+      process.exitCode = 0;
+    } else {
+      const published = await Promise.all([
+        publishTryoutReleaseV1(db, ready.finalizationId),
+        publishTryoutReleaseV1(db, ready.finalizationId),
+      ]);
+      assert.ok(published.every((x) => x.status === 'PUBLISHED'));
+      assert.equal(published.filter((x) => !x.replay).length, 1);
+      await assert.rejects(
+        db`DELETE FROM tryout_attempt_results WHERE finalization_id=${ready.finalizationId}`,
+      );
+      assert.equal(
+        (await prepareTryoutReleaseV1(db, batchId, requestId, a.id)).status,
+        'PUBLISHED',
+      );
+      const results =
+        await db`SELECT result_mode,count(*)::int AS count FROM tryout_attempt_results WHERE finalization_id=${ready.finalizationId} GROUP BY result_mode`;
+      assert.equal(
+        results.reduce((n, x) => n + x.count, 0),
+        r.body.respondents.length,
+      );
+      assert.equal((await publishedTryoutAttemptResults(attempts)).size, attempts.length);
+      if (process.env.IRT_RELEASE_BLOCK === 'ZERO') {
+        assert.ok(results.every((x) => x.result_mode === 'UNSCORABLE'));
+        assert.ok(
+          [...(await publishedTryoutAttemptResults(attempts)).values()].every(
+            (x) => x.score === null,
+          ),
+        );
+      }
+      assert.equal((await releasedTryoutPackageIds(packages)).size, packages.length);
+      assert.deepEqual(await integrity(), before);
+      const [events] =
+        await db`SELECT count(*)::int AS count FROM analytics_outbox WHERE entity_id=${batchId} AND event_name='tryout.batch_published'`;
+      assert.equal(events.count, 1);
+      console.log(
+        JSON.stringify({
+          purpose: 'RESEARCH_ONLY',
+          canonicalPublication: true,
+          attemptCount: r.body.respondents.length,
+          modes: results,
+          technicalFailure: process.env.IRT_RELEASE_EXPECT_FAILURE === 'true',
+          adoptionReplay: adopted.adopted,
+          publicationReplay: true,
+          readerGate: true,
+          exactHistoryPreserved: true,
+        }),
+      );
+    }
   }
 } finally {
   await db.end();
