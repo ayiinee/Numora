@@ -17,3 +17,5 @@ packages/contracts/irt-calibration-service-v1/** text eol=lf
 docs/IRT_AI_HANDOFF.md text eol=lf
 docs/IRT_*ACCEPTANCE_V1.json text eol=lf
 docs/IRT_RESEARCH_RUNTIME.md text eol=lf
+
+docs/IRT_RUNTIME_HANDOFF_V2.md text eol=lf

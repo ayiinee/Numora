@@ -182,3 +182,10 @@ rilis produksi tetap belum disetujui. PIC operasional tim AI bertanggung jawab
 atas image/runtime/diagnostics; PIC Software bertanggung jawab atas adapter,
 role database, outbox, penerimaan dan publikasi. Nama individu harus diisi tim
 sebelum deployment lintas VPS.
+
+## Prioritas 2: runtime frozen delivery
+
+**ENGINEERING IMPLEMENTATION ? 10 November 2026:**
+lihat [runtime handoff v2](IRT_RUNTIME_HANDOFF_V2.md). Manifest Linux v2 mem-pin
+byte LF profil Linux-v1; v1 dan evidence lama dipertahankan. Endpoint/kontrak,
+image dan estimator existing digunakan kembali. Aktivasi produksi tetap terpisah.
