@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Pemindahan pintu masuk Admin ke `/admin-numora` telah disetujui. Rincian rute dan pengalihan dicatat di [PRD mapping](PRD_MAPPING.md).
+
 **ENGINEERING DECISION — pemilik, 10 November 2026:**
 [konteks delivery dan target IRT 24 jam](../TRYOUT_IRT_DELIVERY_CONTEXT.md)
 mencatat bahwa fallback per arm diizinkan, IRT tetap diutamakan dan

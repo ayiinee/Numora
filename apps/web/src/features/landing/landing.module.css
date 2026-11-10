@@ -333,18 +333,154 @@
   }
 }
 
-.accountDialog .primary {
-  width: 100%;
-  margin-top: 14px;
+.accountDialog {
+  width: min(440px, calc(100% - 32px));
+  max-width: calc(100% - 32px);
+  max-height: calc(100dvh - 32px);
+  padding: 32px;
+  border-color: var(--line);
+  border-radius: 24px;
+  background: var(--paper);
+  color: var(--color-text);
+  text-align: left;
+  box-shadow: 0 24px 80px rgb(33 22 51 / 20%);
+  overscroll-behavior: contain;
 }
 
-.accountDialog {
-  background: var(--paper);
-  color: var(--ink);
+.accountDialog::backdrop {
+  background: rgb(33 22 51 / 36%);
+}
+
+.accountDialog :global(.numora-dialog__icon) {
+  display: grid;
+  place-items: center;
+  width: 64px;
+  height: 64px;
+  margin-bottom: 20px;
+  border-radius: 18px;
+  background: var(--color-secondary-light);
+}
+
+.accountDialog :global(.numora-dialog__header) {
+  padding-right: 36px;
+}
+
+.accountDialog :global(.numora-dialog__header h2) {
+  margin: 0;
+  color: var(--color-text);
+  font-size: clamp(1.375rem, 4vw, 1.75rem);
+  font-weight: 800;
+  letter-spacing: -0.04em;
+  line-height: 1.25;
+}
+
+.accountDialog :global(.numora-dialog__header > button) {
+  position: absolute;
+  top: 16px;
+  right: 16px;
+  border-radius: 50%;
 }
 
 .accountDialog :global(.numora-dialog__description) {
-  color: var(--muted);
+  margin: 10px 0 0;
+  color: var(--color-text-muted);
+  font-size: 0.875rem;
+  line-height: 1.65;
+  text-wrap: pretty;
+}
+
+.accountDialog :global(.numora-dialog__content) {
+  margin-top: 24px;
+}
+
+.accountDialog :global(.auth-inline) {
+  display: grid;
+  grid-template-columns: minmax(0, 1fr);
+  gap: 20px;
+  min-width: 0;
+}
+
+.accountDialog :global(.auth-student-login-form) {
+  grid-template-columns: minmax(0, 1fr);
+  gap: 16px;
+}
+
+.accountDialog :global(input) {
+  min-width: 0;
+}
+
+.accountDialog :global(.numora-button) {
+  min-width: 0;
+  min-height: 48px;
+  height: auto;
+  padding-block: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  letter-spacing: 0;
+  text-transform: none;
+  white-space: normal;
+}
+
+.accountDialog :global(.numora-button__text) {
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 12px;
+  min-width: 0;
+}
+
+.accountDialog :global(.numora-button__text img) {
+  flex-shrink: 0;
+  object-fit: contain;
+}
+
+.accountDialog :global(.numora-button[data-variant='secondary']) {
+  border: 1px solid #747775;
+  background: #fff;
+  color: #1f1f1f;
+  box-shadow: none;
+}
+
+.accountDialog :global(.numora-button[data-variant='secondary']:hover:not(:disabled)) {
+  background: #f5f5f5;
+}
+
+.accountDialog :global(.auth-login-divider) {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  color: var(--color-text-muted);
+  font-size: 0.75rem;
+  line-height: 1.5;
+  text-align: center;
+}
+
+.accountDialog :global(.auth-login-divider)::before,
+.accountDialog :global(.auth-login-divider)::after {
+  flex: 1;
+  height: 1px;
+  background: var(--color-border-light);
+  content: '';
+}
+
+.accountDialog :global(.form-error) {
+  margin: 0;
+  padding: 12px;
+  font-size: 0.875rem;
+  line-height: 1.5;
+  overflow-wrap: anywhere;
+}
+
+@media (max-width: 480px) {
+  .accountDialog {
+    padding: 24px;
+  }
+
+  .accountDialog :global(.numora-dialog__icon) {
+    width: 56px;
+    height: 56px;
+    margin-bottom: 16px;
+  }
 }
 
 .categoryBar {

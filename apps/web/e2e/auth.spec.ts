@@ -163,7 +163,7 @@ async function capture(page: Page, name: string, width: number) {
     overflow: document.documentElement.scrollWidth > innerWidth,
     bounds: [
       ...document.querySelectorAll(
-        '.auth-brand-header,.auth-welcome,.auth-card,.auth-role-option,.auth-google-identity',
+        '.auth-brand-header,.auth-welcome,.auth-card,.login-card,.auth-role-option,.auth-google-identity',
       ),
     ].map((el) => {
       const b = el.getBoundingClientRect();
@@ -190,6 +190,39 @@ async function capture(page: Page, name: string, width: number) {
     style: 'nextjs-portal { visibility:hidden !important; }',
   });
 }
+for (const [path, emailLabel] of [
+  ['/login', 'Email Siswa'],
+  ['/admin-numora', 'Email Admin'],
+] as const) {
+  test(`Split login at ${path} reflows from two panels to a mobile form`, async ({ page }) => {
+    const { errors } = await setup(page);
+    await page.goto(path);
+    await expect(page.getByLabel(emailLabel)).toBeVisible();
+    await page.evaluate(() => document.fonts.ready);
+    const panel = page.getByRole('complementary', { name: 'Tentang Numora', includeHidden: true });
+    const main = page.getByRole('main');
+    for (const width of [1440, 960, 768, 390, 320]) {
+      await page.setViewportSize({ width, height: 844 });
+      expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(width);
+      if (width >= 960) {
+        await expect(panel).toBeVisible();
+        const brand = await panel.boundingBox();
+        const form = await main.boundingBox();
+        expect(brand).not.toBeNull();
+        expect(form).not.toBeNull();
+        expect(brand!.x + brand!.width).toBeLessThanOrEqual(form!.x + 1);
+      } else {
+        await expect(panel).toBeHidden();
+        await expect(page.getByLabel(emailLabel)).toBeVisible();
+      }
+    }
+    await page.addStyleTag({ content: 'html { font-size: 200% !important; }' });
+    await main.getByRole('button', { name: /Masuk/ }).first().scrollIntoViewIfNeeded();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBe(320);
+    expect(errors).toEqual([]);
+  });
+}
+
 test('Completion: class invitation survives signed-out login and first registration without auto-joining', async ({
   page,
 }) => {
@@ -378,7 +411,7 @@ test('Student password login retries, provisions the profile and resumes a class
   await page.goto('/student/join?code=Ab_cd-234');
   await page.getByLabel('Email Siswa').fill('kirino@example.test');
   await page.getByLabel(/^Password/).fill('TEST ONLY incorrect password');
-  const submit = page.getByRole('button', { name: 'Masuk sebagai Siswa' });
+  const submit = page.getByRole('button', { name: 'Masuk dengan email' });
   await submit.click();
   await expect(page.getByText(/Periksa email dan password/)).toBeVisible();
   expect(state.posts).toEqual([]);
@@ -412,6 +445,47 @@ test('Google login launches the existing PKCE authorize URL and origin callback'
   expect(authorize?.searchParams.get('code_challenge_method')?.toLowerCase()).toBe('s256');
   expect(errors).toEqual([]);
 });
+test('landing dialog retries Student login and uses the shared session destination', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.failPassword = true;
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Sudah punya akun' }).click();
+  const dialog = page.getByRole('dialog', { name: 'Masuk ke Numora' });
+  await dialog.getByLabel('Email Siswa').fill('kirino@example.test');
+  await dialog.getByLabel(/^Password/).fill('TEST ONLY incorrect password');
+  await dialog.getByRole('button', { name: 'Masuk dengan email' }).click();
+  await expect(dialog.getByRole('alert')).toContainText('Periksa email dan password');
+  await expect(dialog.getByLabel('Email Siswa')).toHaveValue('kirino@example.test');
+  await expect(page).toHaveURL('http://localhost:3300/');
+  state.failPassword = false;
+  await dialog.getByLabel(/^Password/).fill('TEST ONLY correct password');
+  await dialog.getByRole('button', { name: 'Masuk dengan email' }).click();
+  await expect(page).toHaveURL(/\/student$/);
+  expect(errors).toEqual([]);
+});
+
+test('landing dialog Google login launches the shared PKCE callback', async ({ page }) => {
+  const { errors } = await setup(page);
+  let authorize: URL | undefined;
+  await page.route('https://numora-e2e.supabase.co/auth/v1/authorize**', (route) => {
+    authorize = new URL(route.request().url());
+    return route.fulfill({ contentType: 'text/html', body: '<p>Fixture Google consent</p>' });
+  });
+  await page.goto('/');
+  await page.getByRole('button', { name: 'Sudah punya akun' }).click();
+  await page
+    .getByRole('dialog', { name: 'Masuk ke Numora' })
+    .getByRole('button', { name: 'Lanjutkan dengan Google' })
+    .click();
+  await expect(page.getByText('Fixture Google consent')).toBeVisible();
+  expect(authorize?.searchParams.get('provider')).toBe('google');
+  expect(authorize?.searchParams.get('redirect_to')).toBe('http://localhost:3300/auth/callback');
+  expect(authorize?.searchParams.get('code_challenge_method')?.toLowerCase()).toBe('s256');
+  expect(errors).toEqual([]);
+});
+
 test('PKCE callback exchanges once, persists a session, and recovers an expired code', async ({
   page,
 }) => {
@@ -564,15 +638,16 @@ for (const width of [390, 1280]) {
     state.role = 'ADMIN';
     state.failPassword = true;
     await page.goto('/login');
-    await page.getByRole('link', { name: 'Masuk Admin', exact: true }).click();
-    await expect(page).toHaveURL(/\/admin\/login$/);
+    await expect(page.getByRole('link', { name: 'Masuk Admin', exact: true })).toHaveCount(0);
+    await page.goto('/admin-numora');
+    await expect(page).toHaveURL(/\/admin-numora$/);
     await expect(page.getByRole('heading', { name: 'Masuk Admin' })).toBeVisible();
     await page.getByLabel('Email Admin').fill('admin@example.invalid');
-    await page.getByLabel('Password', { exact: true }).fill('TEST ONLY PASSWORD');
+    await page.getByLabel(/^Password/).fill('TEST ONLY PASSWORD');
     await capture(page, 'admin-internal-login', width);
     await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
     await expect(page.getByRole('main').getByRole('alert')).toContainText('Login Admin gagal');
-    await expect(page).toHaveURL(/\/admin\/login$/);
+    await expect(page).toHaveURL(/\/admin-numora$/);
     state.failPassword = false;
     await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
     await expect(page).toHaveURL(/\/admin\/schools$/);
@@ -584,17 +659,25 @@ for (const width of [390, 1280]) {
   });
 }
 
+test('legacy Admin login redirects to the dedicated Numora entry', async ({ page }) => {
+  const { errors } = await setup(page);
+  await page.goto('/admin/login');
+  await expect(page).toHaveURL('http://localhost:3300/admin-numora');
+  await expect(page.getByRole('heading', { name: 'Masuk Admin' })).toBeVisible();
+  expect(errors).toEqual([]);
+});
+
 test('Internal Admin login rejects a Student identity after valid provider authentication', async ({
   page,
 }) => {
   const { state, errors } = await setup(page);
   state.role = 'STUDENT';
-  await page.goto('/admin/login');
+  await page.goto('/admin-numora');
   await page.getByLabel('Email Admin').fill('student@example.invalid');
-  await page.getByLabel('Password', { exact: true }).fill('TEST ONLY PASSWORD');
+  await page.getByLabel(/^Password/).fill('TEST ONLY PASSWORD');
   await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
   await expect(page.getByRole('main').getByRole('alert')).toContainText('bukan akun Admin');
-  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(page).toHaveURL(/\/admin-numora$/);
   await expect(page.getByRole('link', { name: 'Kembali ke halaman akun' })).toHaveAttribute(
     'href',
     '/student',

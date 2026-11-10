@@ -333,7 +333,7 @@ function Shell({
                       setLogoutError('');
                       await logout();
                       dropdowns.clear();
-                      router.replace(area === 'admin' ? '/admin/login' : '/login');
+                      router.replace(area === 'admin' ? '/admin-numora' : '/login');
                     } catch {
                       setLogoutError('Belum dapat keluar. Coba lagi.');
                       setLoggingOut(false);
