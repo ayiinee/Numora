@@ -493,12 +493,6 @@ export function PvpMatchScreen() {
         onLeave={!closed ? () => setConfirmLeave(true) : undefined}
       />
       <div className="pvp-match-content">
-        {!closed && snapshot.status !== 'RUNNING' && snapshot.expiresAt && (
-          <p role="timer" aria-label="Sisa waktu room">
-            Room berlaku {roomRemaining} detik lagi.
-          </p>
-        )}
-
         {availability.isError && !closed && (
           <DataState
             pending={false}
@@ -548,6 +542,7 @@ export function PvpMatchScreen() {
         ) : (
           <WaitingRoom
             snapshot={snapshot}
+            roomRemaining={snapshot.expiresAt ? roomRemaining : undefined}
             selfId={self?.studentId}
             qr={qr}
             qrError={qrError}

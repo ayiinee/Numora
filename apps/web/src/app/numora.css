@@ -3157,26 +3157,7 @@ a.settings-row:hover {
   min-width: 0;
   overflow-wrap: anywhere;
 }
-.practice-option__indicator {
-  display: grid;
-  place-items: center;
-  border-radius: 50%;
-  width: 20px;
-  height: 20px;
-  color: transparent;
-  background: var(--color-primary-light);
-  flex-shrink: 0;
-}
-.practice-option:has(input:checked) .practice-option__indicator {
-  color: white;
-  background: var(--color-primary);
-}
-.practice-session[data-session-kind='drill'] .practice-option__indicator {
-  display: none;
-}
-.practice-session[data-session-kind='drill']
-  .practice-option:has(input[type='radio']:checked)
-  .practice-option__text {
+.practice-option:has(input[type='radio']:checked) .practice-option__text {
   font-weight: 700;
 }
 .practice-choices:disabled .practice-option {
@@ -3398,9 +3379,17 @@ a.settings-row:hover {
   .practice-question {
     border: 0 !important;
   }
-  .practice-session[data-session-kind='drill'] .practice-stem {
+  .practice-stem {
     font-size: 15px;
     line-height: 1.55;
+  }
+  .practice-option {
+    min-height: 48px;
+    padding: var(--space-3);
+    font-size: var(--text-sm);
+  }
+  .practice-choices {
+    gap: var(--space-2);
   }
   .practice-toolbar {
     margin-inline: -16px;
@@ -3738,6 +3727,19 @@ a.settings-row:hover {
   font-size: 13px;
   line-height: 1.6;
 }
+.practice-mascot-dialog .numora-dialog__icon {
+  width: 104px;
+  height: auto;
+  background: transparent;
+  margin-bottom: var(--space-3);
+}
+.practice-mascot-dialog .numora-dialog__icon > img {
+  width: 104px;
+}
+.practice-exit-encouragement {
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+}
 .practice-option:hover {
   border-color: var(--color-primary);
 }
@@ -4042,6 +4044,80 @@ a.settings-row:hover {
 }
 .tryout-catalog-content [aria-label='Riwayat Tryout'] > button {
   margin-top: 16px;
+}
+.tryout-past {
+  display: grid;
+  gap: var(--space-3);
+}
+.tryout-past h2,
+.tryout-past-card h3 {
+  color: var(--color-text-strong);
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
+  overflow-wrap: anywhere;
+}
+.tryout-past > header p,
+.tryout-past-card p {
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  margin-top: var(--space-1);
+}
+.tryout-past-card {
+  --card-padding: var(--space-3) var(--space-4) var(--space-2);
+  --card-radius: var(--radius-xl);
+}
+.tryout-past-card__summary {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: var(--space-3);
+}
+.tryout-past-card__icon {
+  display: grid;
+  place-items: center;
+  width: 40px;
+  height: 40px;
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
+  color: var(--color-primary-strong);
+}
+.tryout-past-card h3 {
+  margin-top: var(--space-1);
+}
+.tryout-past-card .tryout-past-card__notice {
+  margin-top: var(--space-3);
+  padding: var(--space-2) var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-muted);
+}
+.tryout-past-card__footer,
+.tryout-past-card__actions {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  column-gap: var(--space-3);
+}
+.tryout-past-card__footer {
+  justify-content: space-between;
+  margin-top: var(--space-3);
+  padding-top: var(--space-1);
+  border-top: 1px solid var(--color-border-light);
+}
+.tryout-past-card__footer > p {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  margin: 0;
+  min-height: 32px;
+}
+.tryout-past-card__footer svg {
+  flex-shrink: 0;
+}
+.tryout-past-card__actions {
+  row-gap: var(--space-2);
+}
+.tryout-past__more {
+  justify-self: start;
 }
 .tryout-detail-screen {
   padding-bottom: 132px;
@@ -4584,7 +4660,6 @@ a.settings-row:hover {
 .pvp-lobby-main,
 .pvp-lobby-context,
 .pvp-waiting-layout,
-.pvp-waiting-main,
 .pvp-waiting-context,
 .pvp-battle-layout,
 .pvp-battle-main,
@@ -4639,15 +4714,13 @@ a.settings-row:hover {
 .pvp-room-code,
 .pvp-ranking-podium,
 .pvp-ranking-period,
-.pvp-own-rank,
-.pvp-outcome-record {
+.pvp-own-rank {
   --card-padding: 16px;
 }
 .pvp-lobby-podium h2,
 .pvp-invitations h2,
 .pvp-classmates h2,
-.pvp-ranking-section-heading h2,
-.pvp-outcome-record h2 {
+.pvp-ranking-section-heading h2 {
   font-size: 18px;
   line-height: 1.3;
   font-weight: 800;
@@ -4893,64 +4966,106 @@ a.settings-row:hover {
   display: grid;
   gap: 16px;
 }
-.pvp-room-meta {
-  text-align: center;
+.pvp-waiting-status {
+  --card-padding: var(--space-4);
+  display: grid;
+  gap: var(--space-4);
+  align-content: start;
 }
-.pvp-room-meta > strong {
-  display: inline-block;
-  border-radius: var(--radius-full);
-  background: var(--numora-peach-200);
-  padding: 6px 16px;
-  font-size: 12px;
-  color: var(--numora-peach-900);
-}
-.pvp-room-meta > div {
+.pvp-waiting-status__heading {
   display: flex;
-  flex-wrap: wrap;
-  justify-content: center;
-  gap: 8px;
-  margin-top: 12px;
+  align-items: start;
+  justify-content: space-between;
+  gap: var(--space-3);
 }
-.pvp-room-meta span {
-  display: inline-flex;
+.pvp-waiting-status__heading > div:first-child {
+  flex: 1;
+  min-width: 0;
+}
+.pvp-waiting-status__heading h2 {
+  margin-top: var(--space-1);
+  font-size: var(--text-xl);
+  font-weight: var(--font-extrabold);
+  line-height: 1.35;
+}
+.pvp-waiting-status__heading p,
+.pvp-room-timer > span {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+}
+.pvp-room-timer {
+  display: grid;
+  gap: var(--space-1);
+  flex-shrink: 0;
+  text-align: right;
+}
+.pvp-room-timer strong {
+  display: flex;
+  justify-content: end;
   align-items: center;
-  gap: 4px;
-  border-radius: var(--radius-full);
-  padding: 4px 10px;
-  font-size: 11px;
-  background: var(--color-primary-light);
+  gap: var(--space-1);
+  font-size: var(--text-xl);
+  font-variant-numeric: tabular-nums;
+  color: var(--color-primary-strong);
+}
+.pvp-waiting-status .pvp-player-grid {
+  margin-top: var(--space-2);
+}
+.pvp-waiting-status .pvp-player-card {
+  gap: var(--space-2);
+  padding: var(--space-5) var(--space-2) var(--space-3);
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface-muted);
+}
+.pvp-waiting-status .pvp-player-card > .numora-avatar {
+  width: 44px !important;
+  height: 44px !important;
+  font-size: var(--text-lg) !important;
+}
+.pvp-waiting-status .pvp-player-card h2 {
+  font-size: var(--text-sm);
+  line-height: 1.45;
+}
+.pvp-waiting-status .pvp-player-card__status {
+  margin-top: auto;
+}
+.pvp-waiting-status .is-ready .pvp-player-card__status {
+  background: var(--color-success-light);
+  color: var(--color-success-text);
+  font-weight: var(--font-bold);
+}
+.pvp-waiting-instruction {
+  font-size: var(--text-sm);
+  line-height: 1.6;
+  color: var(--color-text-muted);
 }
 .pvp-room-code {
-  text-align: center;
+  text-align: left;
 }
-.pvp-room-code__label {
-  display: flex;
-  justify-content: space-between;
-  gap: 8px;
-  font-size: 10px;
-}
-.pvp-room-code__label > span:last-child {
-  display: flex;
-  gap: 4px;
-  color: var(--color-primary-strong);
+.pvp-room-code > h2 {
+  font-size: var(--text-base);
+  font-weight: var(--font-bold);
 }
 .pvp-room-code__copy {
-  display: flex;
-  gap: 10px;
+  display: grid;
+  grid-template-columns: minmax(0, 1fr) auto;
+  gap: var(--space-2);
   align-items: center;
-  justify-content: center;
-  margin: 20px 0;
+  padding: var(--space-2);
+  margin-block: var(--space-3);
+  border-radius: var(--radius-md);
+  background: var(--color-primary-light);
 }
-.pvp-room-code__copy h2 {
+.pvp-room-code__value {
   min-width: 0;
-  overflow-wrap: anywhere;
-  padding: 12px;
-  border-radius: 14px;
-  background: var(--color-secondary-light);
+  white-space: nowrap;
   color: var(--color-primary-strong);
-  font-size: 20px;
-  font-weight: 800;
+  font-size: var(--text-lg);
+  font-weight: var(--font-extrabold);
   letter-spacing: 1px;
+}
+.pvp-room-code__copy .numora-button {
+  min-height: 44px !important;
 }
 .pvp-room-code img {
   margin: 0 auto 16px;
@@ -4958,11 +5073,8 @@ a.settings-row:hover {
   width: 192px;
   height: 192px;
 }
-.pvp-room-code h3 {
-  font-size: 20px;
-  font-weight: 800;
-}
-.pvp-room-code > p {
+.pvp-room-code > p,
+.pvp-room-qr > p {
   font-size: 12px;
   color: var(--color-text-muted);
   margin: 6px 0 12px;
@@ -4971,31 +5083,31 @@ a.settings-row:hover {
   margin-top: 12px;
   font-size: 12px;
 }
-.pvp-room-code summary {
+.pvp-room-code summary,
+.pvp-waiting-invites > summary {
   min-height: 44px;
   display: flex;
   align-items: center;
-  justify-content: center;
+  justify-content: space-between;
+  gap: var(--space-2);
   cursor: pointer;
+  color: var(--color-primary-strong);
+  font-size: var(--text-xs);
+}
+.pvp-room-code details[open] > summary > svg {
+  rotate: 90deg;
+}
+.pvp-waiting-invites > summary {
+  justify-content: start;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-md);
+  border: 1px solid var(--color-border-light);
+  background: var(--color-surface);
 }
 .pvp-room-code details a {
   display: block;
   overflow-wrap: anywhere;
   color: var(--color-primary);
-}
-.pvp-players-heading {
-  display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.pvp-players-heading h2 {
-  font-size: 14px;
-  font-weight: 800;
-}
-.pvp-players-heading > span {
-  font-size: 11px;
-  color: var(--color-text-muted);
 }
 .pvp-player-grid {
   display: grid;
@@ -5055,7 +5167,6 @@ a.settings-row:hover {
 .pvp-player-card__points small {
   font-size: 10px;
 }
-.pvp-room-guidance,
 .pvp-lock-note {
   --card-padding: 14px;
   --card-background: var(--color-primary-light);
@@ -5064,7 +5175,6 @@ a.settings-row:hover {
   font-size: 12px;
   line-height: 1.6;
 }
-.pvp-room-guidance svg,
 .pvp-lock-note svg {
   flex-shrink: 0;
   color: var(--color-primary);
@@ -5109,7 +5219,7 @@ a.settings-row:hover {
 .pvp-scoreboard {
   --card-padding: 16px;
   display: grid;
-  grid-template-columns: minmax(0, 1fr) 60px minmax(0, 1fr);
+  grid-template-columns: minmax(0, 1fr) 28px minmax(0, 1fr);
   gap: 8px;
   background: linear-gradient(110deg, var(--color-secondary-light), var(--numora-peach-50));
 }
@@ -5145,30 +5255,40 @@ a.settings-row:hover {
   font-size: 10px;
   color: var(--color-text-muted);
 }
-.pvp-scoreboard__timer {
+.pvp-scoreboard__versus {
   align-self: center;
-  display: grid;
-  justify-items: center;
-  align-content: center;
-  width: 60px;
-  min-height: 80px;
-  border: 4px solid var(--numora-purple-200);
-  border-top-color: var(--color-primary);
-  border-radius: var(--radius-full);
-  background: white;
-}
-.pvp-scoreboard__timer > span:first-child {
-  font-size: 24px;
-  font-weight: 800;
-  line-height: 1.1;
-}
-.pvp-scoreboard__timer small {
-  font-size: 8px;
-}
-.pvp-scoreboard__timer > span:last-child {
-  font-size: 10px;
+  text-align: center;
+  font-size: var(--text-sm);
   font-weight: 800;
   color: var(--color-primary);
+}
+.pvp-round-timer {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  padding-inline: var(--space-1);
+}
+.pvp-round-timer__track {
+  flex: 1;
+  height: 6px;
+  overflow: hidden;
+  border-radius: var(--radius-full);
+  background: var(--numora-purple-100);
+}
+.pvp-round-timer__track > div {
+  height: 100%;
+  border-radius: inherit;
+  background: var(--color-primary);
+}
+.pvp-round-timer > span {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+  min-width: 72px;
+  color: var(--color-primary-strong);
+  font-size: var(--text-xs);
+  font-weight: var(--font-bold);
+  font-variant-numeric: tabular-nums;
 }
 .pvp-question {
   --card-padding: 16px;
@@ -5207,7 +5327,6 @@ a.settings-row:hover {
 }
 .pvp-answer-list .practice-option:has(input:checked) {
   background: var(--color-selected);
-  border-left: 6px solid var(--color-primary-strong);
 }
 .pvp-answer-list .practice-option__text small {
   display: block;
@@ -5267,6 +5386,7 @@ a.settings-row:hover {
   );
 }
 .pvp-outcome-hero > img:first-child {
+  width: 80px;
   margin-bottom: 12px;
 }
 .pvp-outcome-state {
@@ -5294,29 +5414,29 @@ a.settings-row:hover {
   border-radius: 16px;
 }
 .pvp-outcome-hero .pvp-player-card {
+  display: grid;
+  grid-template-rows: auto 1fr auto auto;
+  align-items: start;
+  justify-items: center;
+  padding: var(--space-4) var(--space-2);
   background: transparent;
 }
-.pvp-outcome-record h2 {
-  display: flex;
-  align-items: center;
-  gap: 10px;
-  margin-bottom: 12px;
+.pvp-outcome-hero .pvp-player-card > .numora-avatar {
+  width: 48px !important;
+  height: 48px !important;
+  font-size: var(--text-xl) !important;
 }
-.pvp-outcome-record p {
-  font-size: 13px;
-  line-height: 1.6;
+.pvp-outcome-hero .pvp-player-card h2 {
+  font-size: var(--text-base);
+  line-height: 1.45;
 }
-.pvp-outcome-record > div {
-  display: flex;
-  gap: 8px;
+.pvp-outcome-hero .pvp-player-card.is-self {
   background: var(--color-primary-light);
-  padding: 12px;
-  border-radius: 14px;
-  margin-top: 12px;
 }
-.pvp-outcome-record svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
+.pvp-outcome-hero .pvp-outcome-note {
+  margin: var(--space-3) 0 0;
+  font-size: var(--text-xs);
+  line-height: 1.6;
 }
 .pvp-secondary-link {
   background: var(--color-primary-light);
@@ -5526,9 +5646,6 @@ a.settings-row:hover {
     grid-template-columns: minmax(0, 1fr) 300px;
     gap: 24px;
   }
-  .pvp-waiting-context {
-    margin-top: 76px;
-  }
   .pvp-battle-layout {
     grid-template-columns: minmax(0, 1fr) 260px;
     gap: 24px;
@@ -5539,8 +5656,13 @@ a.settings-row:hover {
     align-self: start;
   }
   .pvp-outcome-layout {
-    grid-template-columns: minmax(0, 1fr) 320px;
-    gap: 24px;
+    grid-template-columns: minmax(0, 1fr);
+    width: 100%;
+    max-width: 660px;
+    margin-inline: auto;
+  }
+  .pvp-outcome-actions {
+    grid-template-columns: repeat(2, minmax(0, 1fr));
   }
   .pvp-ranking-layout {
     display: grid;
@@ -5725,13 +5847,67 @@ a.settings-row:hover {
   grid-column: 1;
 }
 .pvp-answer-list .practice-option {
-  font-size: 16px;
+  font-size: var(--text-base);
 }
 .pvp-answer-list .practice-option:has(input:checked) .practice-option__text {
   font-weight: 700;
 }
 .pvp-answer-list .practice-option__text small {
   font-weight: 600;
+}
+@media (max-width: 699px) {
+  .pvp-battle-main,
+  .pvp-battle-context {
+    gap: var(--space-3);
+  }
+  .pvp-scoreboard,
+  .pvp-question,
+  .pvp-lock-note,
+  .pvp-round-progress {
+    --card-padding: var(--space-3);
+    --card-radius: var(--radius-lg);
+  }
+  .pvp-scoreboard__player {
+    grid-template-columns: 32px minmax(0, 1fr);
+    gap: var(--space-1) var(--space-2);
+  }
+  .pvp-scoreboard__player:last-child {
+    grid-template-columns: minmax(0, 1fr) 32px;
+  }
+  .pvp-scoreboard__player > .numora-avatar {
+    width: 32px !important;
+    height: 32px !important;
+    font-size: var(--text-sm) !important;
+  }
+  .pvp-scoreboard__player strong {
+    font-size: var(--text-xs);
+  }
+  .pvp-scoreboard__player b {
+    font-size: var(--text-2xl);
+    line-height: var(--leading-tight);
+  }
+  .pvp-question h2 {
+    font-size: 15px;
+    line-height: 1.6;
+    font-weight: var(--font-medium);
+  }
+  .pvp-question > div {
+    gap: var(--space-1);
+    margin-bottom: var(--space-2);
+  }
+  .pvp-answer-list,
+  .pvp-answer-list .practice-choices {
+    gap: var(--space-2);
+  }
+  .pvp-answer-list .practice-option {
+    min-height: 48px;
+    font-size: var(--text-sm);
+  }
+  .pvp-answer-list .practice-option__letter {
+    width: 28px;
+    height: 28px;
+    font-size: var(--text-sm);
+  }
 }
 .pvp-ranking-podium .leaderboard-podium__record {
   font-size: 20px;

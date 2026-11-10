@@ -81,6 +81,32 @@ test('category keys use the same statement numbers and human category labels', a
   await expect(keys.locator('dd')).toHaveText(['Benar', 'Salah', 'Benar', 'Benar']);
 });
 
+test('Admin renders imported bare math and pipe tables in the bank and version detail', async ({
+  page,
+}) => {
+  const { assessment, errors } = await setupAssessment(page);
+  assessment.versions[0]!.stem =
+    'Bandingkan sqrt(16) dan luas m^(2).\n\nSiswa | Elevasi\n--- | ---:\nRani | $\\sqrt{2}$ m\nBudi | -1,4 m';
+  await page.goto('/admin/content');
+  const first = page.locator('.assessment-question-list > li').first();
+  await expect(first.locator('math msqrt').first()).toHaveText('16');
+  await expect(first.getByRole('table', { name: 'Data soal' })).toBeVisible();
+  await first.getByRole('link', { name: 'Detail, review & kesiapan' }).click();
+  await expect(page.locator('.content-payload math msup')).toHaveText('m2');
+  await expect(page.locator('.content-payload').getByRole('table')).toBeVisible();
+  for (const width of [390, 1280]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+    await page.screenshot({
+      path: test.info().outputPath(`admin-math-table-${width}.png`),
+      fullPage: true,
+    });
+  }
+  expect(errors).toEqual([]);
+});
+
 test('bank filters apply explicitly with trimmed source and reset server pagination', async ({
   page,
 }) => {

@@ -287,10 +287,11 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('button', { name: 'Gabung room' }).click();
     await expect(page).toHaveURL(new RegExp(matchId));
     expect(commands[0]?.payload.roomCode).toBe(roomCode);
+    await page.getByText('Tampilkan QR room', { exact: true }).click();
     await expect(page.getByRole('img', { name: 'QR link gabung room' })).toBeVisible();
     await capture('waiting');
     await page.getByRole('button', { name: 'Saya siap' }).click();
-    await expect(page.getByRole('button', { name: 'Menunggu pemain lain' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Kamu sudah siap' })).toBeDisabled();
     expect(snapshot.status).toBe('WAITING');
     publish(state('RUNNING'));
     await expect(page.getByRole('heading', { name: 'Duel Berlangsung' })).toBeVisible();
@@ -336,8 +337,8 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
         result: index ? 'LOSS' : 'WIN',
       })),
     });
-    await expect(page.getByRole('heading', { name: 'Kemenangan!' })).toBeVisible();
-    await expect(page.getByText('Rekor akan diperbarui oleh proyeksi leaderboard.')).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Kamu menang!' })).toBeVisible();
+    await expect(page.getByText('Poin & Rekor', { exact: true })).toHaveCount(0);
     await capture('outcome');
     for (const difficulty of ['easy', 'medium', 'hard'] as const) {
       await page.goto(`/student/leaderboards?difficulty=${difficulty}`);
