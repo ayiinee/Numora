@@ -44,10 +44,22 @@ The cumulative 180-minute ledger remains `.tmp/irt-release-acceptance/ledger.jso
 
 ## Host and production gates
 
-AI operational checkpoint `65ef225`; profile `irt-research-linux-producer-v2`, image manifest v3. Producer image `sha256:2df35c95696055a584cbc07525dc5db97d1a10129de3b356a6aa2bbbb75ff679`; unchanged R image `sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036`. See AI `deploy/irt-research.compose.yaml` and `docs/IRT_VPS_OPERATIONS.md`.
+AI operational checkpoint `65ef225`; handoff commit `40af641`; profile `irt-research-linux-producer-v2`, image manifest v3. Producer image `sha256:2df35c95696055a584cbc07525dc5db97d1a10129de3b356a6aa2bbbb75ff679`; unchanged R image `sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036`. See AI `deploy/irt-research.compose.yaml` and `docs/IRT_VPS_OPERATIONS.md`.
 
 Read-only VPS probe: **BLOCKED_CAPACITY**, 2 CPU / 1,615 MiB available versus 3.25 CPU / 4,352 MiB required including host reserve. No remote R or deployment. Proposed 4 vCPU / 8 GiB upgrade requires a new capacity measurement; it is not performed automatically.
 
 Production remains blocked pending accepted Main deployment, authoritative delivery approval, production scientific/policy approval, target capacity/private connectivity and named operator/alert owner (**TBD**). Synthetic functional success does not remove these gates. One-dimensional mixed-material validity and anchor/linking limitations still apply.
 
 Rollback: stop new Main reconciliation/intake and publication, stop worker with grace/fencing, retain all artifacts/receipts/published results and use a migration-compatible application version. Never drop research/history tables or recalculate XP.
+
+## Acceptance checkpoint ? 10 November 2026
+
+Main implementation checkpoint `bea298b`, integrated with `ece946c`; PR [#152](https://github.com/ayiinee/Numora/pull/152) targets `main`. Machine-readable evidence: `IRT_DELIVERY_OPERATIONS_ACCEPTANCE_V1.json`. Earlier release acceptance remains historical evidence for its own pins.
+
+Verified: fresh/upgrade disposable migrations with nonempty history; binding rejection cases; real application HTTP parallel start/resume and final grading; one canonical snapshot/dispatch under concurrent/restarted reconciliation; real outbox HTTP, native R, adoption, explicit publication, locked/unlocked readers, cross-participant denial, revoked approval rejection, and unchanged attempt/answer/XP/history content. Small cohorts correctly produce insufficiency and Main fallback rather than fabricated IRT scores.
+
+The new pinned Linux image separately passed a four-respondent HTTP/worker/R artifact/replay smoke test and runner fault checks. AI suite: 84 tests, 21 skipped. Docker Compose configuration validated; performance at its exact CPU limits and active-daemon signal handling remain NOT_RUN. The Linux smoke harness used higher API/worker CPU limits than Compose, so it supplies no Compose throughput claim.
+
+Full-size native Windows verification FAILED during canonical PostgreSQL freeze (`53200`, memory allocation), before R. Two-arm 2,000-respondent computation and subsequent three-arm 2,100-respondent case are NOT_RUN on this candidate. About 1.1 GiB physical RAM remained when inspected. No scientific outcome is inferred from this infrastructure failure. Retry only after capacity is available, using existing AI `tools/verify_irt_linux.py --delivery --main-release-check` and its pinned manifest; preserve the cumulative ledger.
+
+Decisions: small synthetic end-to-end integration VERIFIED; complete acceptance NOT_COMPLETE; host BLOCKED_CAPACITY; production NOT_READY. Remaining work includes full-size candidate verification, exact Compose operation/performance, active worker signal acceptance, final CI on the submitted SHA, and production approvals/operators. No deployment or shared migration occurred.
