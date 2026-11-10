@@ -46,7 +46,7 @@ test('batch creation, school delegation and compact detail work across viewports
         })),
         participants: [],
         resultsState: 'BLOCKED',
-        resultBlockers: ['MULTI_PACKAGE_FINALIZATION_NOT_READY'],
+        resultBlockers: ['IRT_DELIVERY_DISABLED'],
       };
       return route.fulfill({ json: { id: batch.id } });
     }

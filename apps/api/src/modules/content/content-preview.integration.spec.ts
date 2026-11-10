@@ -3076,7 +3076,7 @@ describe.skipIf(!testUrl)(
       expect(ledger).toHaveLength(1);
       await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
       const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
-      expect(detail.resultBlockers).toContain('MULTI_PACKAGE_FINALIZATION_NOT_READY');
+      expect(detail.resultBlockers).toContain('IRT_DELIVERY_DISABLED');
       expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(2);
       // Distinct recipients may share the same package; a following non-overlapping batch is valid.
       const shared = {

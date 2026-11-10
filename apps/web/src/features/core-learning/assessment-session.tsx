@@ -2,7 +2,7 @@
 
 import { useMutation, useQuery } from '@tanstack/react-query';
 import { Button, Card, Icon, ProgressBar } from '@tka/ui';
-import { useRef, useState, type ReactNode } from 'react';
+import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
 import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
@@ -70,6 +70,17 @@ export function AssessmentSession({
   sessionKind?: 'drill' | 'tryout' | 'pretest';
 }) {
   const [index, setIndex] = useState(0);
+  const navigator = useRef<HTMLElement>(null);
+  useEffect(() => {
+    const nav = navigator.current;
+    const active = nav?.querySelector<HTMLButtonElement>('[aria-current="step"]');
+    if (nav && active && nav.scrollWidth > nav.clientWidth) {
+      nav.scrollTo?.({
+        left: active.offsetLeft - nav.offsetLeft - (nav.clientWidth - active.offsetWidth) / 2,
+        behavior: 'smooth',
+      });
+    }
+  }, [index]);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
   const [flags, setFlags] = useState<Record<string, boolean>>({});
   const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>(() =>
@@ -127,7 +138,10 @@ export function AssessmentSession({
 
   const assetIds = [
     ...new Set(
-      [question?.stem ?? '', ...(question?.options.map((o) => o.text) ?? [])].flatMap((text) =>
+      [
+        question?.richStem?.text ?? question?.stem ?? '',
+        ...(question?.options.map((o) => o.text) ?? []),
+      ].flatMap((text) =>
         [...text.matchAll(/\[\[asset:([A-Za-z0-9_-]+)\]\]/g)].map((match) => match[1]!),
       ),
     ),
@@ -347,7 +361,7 @@ export function AssessmentSession({
             )}
           </div>
           <aside className="practice-toolbar" id="practice-navigator">
-            <nav aria-label="Navigasi soal" className="practice-numbers">
+            <nav ref={navigator} aria-label="Navigasi soal" className="practice-numbers">
               {questions.map((item, position) => (
                 <button
                   key={item.questionInstanceId}

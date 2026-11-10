@@ -5,11 +5,23 @@ import {
   IsArray,
   IsString,
   IsUUID,
+  IsInt,
+  IsObject,
+  Min,
   Length,
   ValidateNested,
 } from 'class-validator';
 import { Type } from 'class-transformer';
 import type { ConfigurationPin } from '@tka/database';
+
+export class IrtDeliveryBindingV1Dto {
+  @ApiProperty({ minimum: 0 }) @IsInt() @Min(0) expectedRevision!: number;
+  @ApiProperty({ format: 'uuid' }) @IsUUID() contextId!: string;
+  @ApiProperty({ format: 'uuid' }) @IsUUID() armSetId!: string;
+  @ApiProperty({ minimum: 1 }) @IsInt() @Min(1) batchRevision!: number;
+  // Frozen resources and manifests undergo authoritative database validation before persistence.
+  @ApiProperty({ type: Object }) @IsObject() configuration!: Record<string, unknown>;
+}
 
 export class IrtConfigurationPinDto implements ConfigurationPin {
   @ApiProperty({ format: 'uuid' }) @IsUUID() approvalId!: string;
