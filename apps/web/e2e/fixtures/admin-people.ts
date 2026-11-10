@@ -13,7 +13,7 @@ export async function setupPeople(
 ) {
   const base = await setup(page);
   base.state.adminRole = role;
-  const users: AdminUserDetailDto[] = Array.from({ length: 18 }, (_, i) => ({
+  const users: AdminUserDetailDto[] = Array.from({ length: 33 }, (_, i) => ({
     id: id(200 + i),
     displayName:
       i === 0
