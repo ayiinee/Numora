@@ -1,5 +1,12 @@
 # Handoff mesin IRT Tryout — Data/AI ke Software
 
+**Konteks delivery — 10 November 2026:**
+[rekonsiliasi Admin dan strategi 24 jam](TRYOUT_IRT_DELIVERY_CONTEXT.md)
+menjadi acuan urutan kerja terbaru: IRT Tryout multi-arm, fallback per arm di
+main, dan self-adjustment ditunda. Pilihan anchor per proses harus kompatibel
+dengan lima versi anchor bersama yang diwajibkan runtime. Tidak ada perubahan
+payload, capability, approval produksi atau deployment melalui pembaruan ini.
+
 **ENGINEERING IMPLEMENTATION, 10 November 2026.** Mesin riset lokal memakai
 data sintetis. Dokumen ini tidak menyetujui penggunaan peserta asli, publikasi
 nilai, kebijakan statistik produksi, atau deployment. Salinan di kedua repo
