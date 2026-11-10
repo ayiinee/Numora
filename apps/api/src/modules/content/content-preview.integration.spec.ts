@@ -3169,7 +3169,7 @@ describe.skipIf(!testUrl)(
         await owner`SELECT id FROM audit_logs WHERE entity_id=${activeId} AND action='tryout_batch_delegations_updated'`,
       ).toHaveLength(1);
       await expect(
-        owner`UPDATE tryout_batches SET package_id=${packageIds[1]} WHERE id=${activeId}`,
+        owner`UPDATE tryout_batches SET package_id=${packageIds[1]!} WHERE id=${activeId}`,
       ).rejects.toThrow();
       await expect(
         owner`DELETE FROM tryout_batch_packages WHERE batch_id=${activeId}`,
