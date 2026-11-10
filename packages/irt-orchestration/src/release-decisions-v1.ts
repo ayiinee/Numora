@@ -1,7 +1,7 @@
 import type { CalibrationInput, CalibrationResult } from '../../contracts/irt-calibration-v1/types.js';
 
 export interface ResearchReleasePolicy {
-  purpose: 'RESEARCH_ONLY'; minimumValidItems: number; rounding: 'HALF_UP_2';
+  purpose: 'RESEARCH_ONLY' | 'PRODUCTION'; minimumValidItems: number; rounding: 'HALF_UP_2';
   weights: { SINGLE_CHOICE: 2; MULTIPLE_CHOICE_MULTIPLE_ANSWER: 3; CATEGORY: 3 };
   partialArm: 'FALLBACK_WHOLE_ARM';
 }
@@ -9,6 +9,8 @@ export const RESEARCH_RELEASE_POLICY_V1: ResearchReleasePolicy = {
   purpose: 'RESEARCH_ONLY', minimumValidItems: 24, rounding: 'HALF_UP_2',
   weights: { SINGLE_CHOICE: 2, MULTIPLE_CHOICE_MULTIPLE_ANSWER: 3, CATEGORY: 3 }, partialArm: 'FALLBACK_WHOLE_ARM',
 };
+// Candidate only: database production approval is still mandatory.
+export const PRODUCTION_RELEASE_POLICY_CANDIDATE_V1: ResearchReleasePolicy = { ...RESEARCH_RELEASE_POLICY_V1, purpose: 'PRODUCTION' };
 const error = (code: string): never => { throw new Error(code); };
 const cents = (v: string) => {
   if (!/^\d+(?:\.\d{1,2})?$/.test(v)) throw new Error('IRT_RELEASE_POINTS_INVALID');
@@ -19,7 +21,7 @@ const rounded = (n: bigint, d: bigint, places: number) => {
   return `${v/scale}.${String(v%scale).padStart(places,'0')}`;
 };
 export function decideTryoutReleaseV1(input: CalibrationInput, output: CalibrationResult | null, policy: ResearchReleasePolicy) {
-  if (policy.purpose !== 'RESEARCH_ONLY' || policy.minimumValidItems !== 24 || policy.rounding !== 'HALF_UP_2' || policy.partialArm !== 'FALLBACK_WHOLE_ARM'
+  if (!['RESEARCH_ONLY','PRODUCTION'].includes(policy.purpose) || policy.minimumValidItems !== 24 || policy.rounding !== 'HALF_UP_2' || policy.partialArm !== 'FALLBACK_WHOLE_ARM'
     || (['SINGLE_CHOICE','MULTIPLE_CHOICE_MULTIPLE_ANSWER','CATEGORY'] as const).some(kind => policy.weights?.[kind] !== RESEARCH_RELEASE_POLICY_V1.weights[kind])) error('IRT_RELEASE_POLICY_UNSUPPORTED');
   if (!input.respondents.length) error('IRT_RELEASE_EMPTY_BATCH');
   const itemMap = new Map(input.items.map(i => [i.questionVersionId,i]));

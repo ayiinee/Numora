@@ -1,3 +1,5 @@
+// @ts-expect-error Shared JavaScript server-mode boundary.
+import { assertIrtEnabled, irtPurpose } from '../src/runtime-mode.mjs';
 import type { Sql } from 'postgres';
 import postgres from 'postgres';
 import { requireTlsDatabaseUrl } from '@tka/database';
@@ -8,8 +10,19 @@ import * as research from '../src/calibration-research.mjs';
 let connection: Sql | undefined;
 export function getIrtResearchDatabaseV1(): Sql {
   if (!connection) {
-    if (!process.env.DATABASE_URL) throw new Error('IRT_DELIVERY_DATABASE_NOT_CONFIGURED');
-    connection = postgres(requireTlsDatabaseUrl(process.env.DATABASE_URL), {
+    const url =
+      irtPurpose() === 'PRODUCTION'
+        ? process.env.NUMORA_IRT_DATABASE_URL
+        : process.env.DATABASE_URL;
+    if (!url) throw new Error('IRT_DELIVERY_DATABASE_NOT_CONFIGURED');
+    try {
+      new URL(url);
+    } catch {
+      throw new Error('IRT_DELIVERY_DATABASE_NOT_CONFIGURED');
+    }
+    if (irtPurpose() === 'PRODUCTION' && new URL(url).searchParams.get('sslmode') !== 'verify-full')
+      throw new Error('IRT_DELIVERY_DATABASE_TLS_REQUIRED');
+    connection = postgres(requireTlsDatabaseUrl(url), {
       max: 2,
       idle_timeout: 20,
     });
@@ -41,4 +54,8 @@ export function tryoutDeliveryReadinessV1(sql: Sql, batchId: string) {
     secret: process.env.NUMORA_IRT_PSEUDONYM_SECRET,
     keyVersion: process.env.NUMORA_IRT_PSEUDONYM_KEY_VERSION,
   });
+}
+
+export function requireIrtModeV1(purpose: 'RESEARCH_ONLY' | 'PRODUCTION') {
+  if (assertIrtEnabled() !== purpose) throw new Error('IRT_DELIVERY_MODE_MISMATCH');
 }
