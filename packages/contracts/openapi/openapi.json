@@ -8139,6 +8139,201 @@
         ]
       }
     },
+    "/api/v1/admin/irt/batches/{batchId}/delivery-binding": {
+      "post": {
+        "operationId": "IrtController_bindProductionDeliveryV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IrtDeliveryBindingV1Dto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/batches/{batchId}/delivery-readiness": {
+      "get": {
+        "operationId": "IrtController_productionReadinessV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/batches/{batchId}/finalizations": {
+      "post": {
+        "operationId": "IrtController_prepareProductionReleaseV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareIrtReleaseV1Dto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtReleaseV1Dto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/finalizations/{id}/publish": {
+      "post": {
+        "operationId": "IrtController_publishProductionReleaseV1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtReleaseV1Dto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/calibration-requests/{id}/adopt": {
+      "post": {
+        "operationId": "IrtController_adoptProductionV1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
     "/api/v1/admin/irt/batch-health": {
       "get": {
         "operationId": "IrtController_health",
@@ -18765,6 +18960,50 @@
           "configuration"
         ]
       },
+      "PrepareIrtReleaseV1Dto": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "requestId",
+          "approvalId"
+        ]
+      },
+      "IrtReleaseV1Dto": {
+        "type": "object",
+        "properties": {
+          "finalizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PUBLISHED"
+            ]
+          },
+          "replay": {
+            "type": "boolean"
+          },
+          "attemptCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "finalizationId",
+          "status",
+          "replay"
+        ]
+      },
       "IrtBatchHealthDto": {
         "type": "object",
         "properties": {
@@ -19026,50 +19265,6 @@
           "execution",
           "failureCode",
           "artifacts"
-        ]
-      },
-      "PrepareIrtReleaseV1Dto": {
-        "type": "object",
-        "properties": {
-          "requestId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "approvalId": {
-            "type": "string",
-            "format": "uuid"
-          }
-        },
-        "required": [
-          "requestId",
-          "approvalId"
-        ]
-      },
-      "IrtReleaseV1Dto": {
-        "type": "object",
-        "properties": {
-          "finalizationId": {
-            "type": "string",
-            "format": "uuid"
-          },
-          "status": {
-            "type": "string",
-            "enum": [
-              "READY",
-              "PUBLISHED"
-            ]
-          },
-          "replay": {
-            "type": "boolean"
-          },
-          "attemptCount": {
-            "type": "number"
-          }
-        },
-        "required": [
-          "finalizationId",
-          "status",
-          "replay"
         ]
       },
       "PrepareIrtRequestDto": {

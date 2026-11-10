@@ -1,3 +1,4 @@
+import { irtPurpose, assertIrtEnabled, assertRuntimeMode, assertIrtDatabase } from './runtime-mode.mjs';
 // Opt-in research adapter. No canonical grades, publication, XP or parameter adoption.
 import { createHmac } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
@@ -25,7 +26,7 @@ export function respondentUuid(secret, keyVersion, contextId, studentId) {
 }
 
 async function canonicalInput(tx, draft, { secret, keyVersion }) {
-  if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') throw new Error('IRT_RESEARCH_DISABLED');
+  assertIrtEnabled();
   const input = structuredClone(draft);
   if (input.ecosystem !== 'TRYOUT' || input.comparisons.length)
     throw new Error('UNSUPPORTED_CONTRACT');
@@ -270,14 +271,14 @@ async function validateResources(tx, input, resources) {
       row.revoked_at ||
       row.scope.contextId !== input.context.contextId ||
       row.scope.ecosystem !== 'TRYOUT' ||
-      row.scope.purpose !== 'RESEARCH_ONLY'
+      row.scope.purpose !== irtPurpose()
     )
       throw new Error('IRT_POLICY_NOT_APPROVED');
   }
 }
 
 export async function freezeCalibrationResearch(sql, draft, resources, runtime, options) {
-  if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') throw new Error('IRT_RESEARCH_DISABLED');
+  assertIrtEnabled();
   return sql.begin('isolation level repeatable read', async (tx) => {
     const input = await canonicalInput(tx, draft, options);
     await validateResources(tx, input, resources);
@@ -292,7 +293,7 @@ export async function freezeCalibrationResearch(sql, draft, resources, runtime, 
 export async function inspectCalibrationDelivery(sql, draft, resources, runtime, options) {
   return sql.begin('isolation level repeatable read read only', async (tx) => {
     const report = {
-      purpose: 'RESEARCH_ONLY',
+      purpose: irtPurpose(),
       structuralReady: false,
       sourceComplete: false,
       scientificGate: 'NOT_EVALUATED',
@@ -305,7 +306,7 @@ export async function inspectCalibrationDelivery(sql, draft, resources, runtime,
       report.structuralReady = true;
       await validateResources(tx, input, resources);
       if (
-        runtime?.purpose !== 'RESEARCH_ONLY' ||
+        runtime?.purpose !== irtPurpose() ||
         !/^sha256:[0-9a-f]{64}$/.test(runtime.image ?? '')
       )
         throw new Error('IRT_RUNTIME_PIN_INVALID');
@@ -337,6 +338,8 @@ export async function inspectCalibrationDelivery(sql, draft, resources, runtime,
 }
 
 export async function freezeValidated(sql, input, resources, runtime) {
+  assertRuntimeMode(runtime);
+  await assertIrtDatabase(sql);
   validateInput(input);
   if(input.ecosystem!=='TRYOUT'||input.comparisons.length)throw new Error('UNSUPPORTED_CONTRACT');
   for(const [key,kind] of Object.entries(kinds)) {
@@ -366,7 +369,7 @@ export async function dispatchCalibrationResearch(sql,requestId,actorId) {
 }
 
 export async function notifyCalibrationResearch(notification,{url,token}) {
-  if(process.env.NUMORA_IRT_RESEARCH_ENABLED!=='true')throw new Error('IRT_RESEARCH_DISABLED');
+  assertIrtEnabled();
   const response=await fetch(new URL('/api/v1/irt/compute/execute',url),{method:'POST',
     headers:{Authorization:`Bearer ${token}`,'Content-Type':'application/json'},body:JSON.stringify(notification),signal:AbortSignal.timeout(10000),redirect:'error'});
   if(!response.ok)throw new Error('IRT_ACKNOWLEDGEMENT_FAILED');
@@ -376,13 +379,14 @@ export async function notifyCalibrationResearch(notification,{url,token}) {
 }
 
 export async function deliverPendingCalibrationResearch(sql,options) {
-  if(process.env.NUMORA_IRT_RESEARCH_ENABLED!=='true')throw new Error('IRT_RESEARCH_DISABLED');
+  assertIrtEnabled();
   const rows=await sql`SELECT o.id,o.payload FROM analytics_outbox o
     JOIN outbox_deliveries d ON d.outbox_id=o.id AND d.consumer='irt_research'
     JOIN irt_calibration_inputs_v1 source ON source.id=o.entity_id
     WHERE o.event_name='irt.research.requested' AND d.delivered_at IS NULL
     AND (d.retry_at IS NULL OR d.retry_at<=clock_timestamp())
     AND source.current_generation=(o.payload->>'dispatchGeneration')::int
+    AND source.runtime_profile->>'purpose'=${irtPurpose()}
     AND source.approvals_valid AND NOT source.cancelled ORDER BY o.occurred_at,o.id LIMIT 20`;
   let acknowledged=0,failed=0;
   for(const row of rows) {
@@ -409,11 +413,13 @@ export async function verifyCalibrationResearchArtifact(sql, requestId) {
 }
 
 function deliveryEnabled() {
-  if(process.env.NUMORA_IRT_RESEARCH_ENABLED!=='true'||process.env.NUMORA_IRT_DELIVERY_ENABLED!=='true')
+  assertIrtEnabled();
+  if(process.env.NUMORA_IRT_DELIVERY_ENABLED!=='true')
     throw new Error('IRT_DELIVERY_DISABLED');
 }
 
 async function validateDeliveryRuntime(runtime) {
+  assertRuntimeMode(runtime);
   const path=process.env.NUMORA_IRT_DELIVERY_RUNTIME_PROFILE;
   if(!path||!isAbsolute(path))throw new Error('IRT_DELIVERY_RUNTIME_NOT_CONFIGURED');
   let trusted;
@@ -424,6 +430,7 @@ async function validateDeliveryRuntime(runtime) {
 export async function saveCalibrationDeliveryBinding(sql,batchId,actorId,{expectedRevision,contextId,armSetId,batchRevision,configuration}) {
   deliveryEnabled();
   await validateDeliveryRuntime(configuration.runtime);
+  await assertIrtDatabase(sql);
   return sql.begin(async tx=>{
     await tx`SELECT id FROM tryout_batches WHERE id=${batchId} FOR UPDATE`;
     const [old]=await tx`SELECT revision FROM irt_delivery_bindings_v1 WHERE batch_id=${batchId}`;
@@ -431,7 +438,7 @@ export async function saveCalibrationDeliveryBinding(sql,batchId,actorId,{expect
     const [row]=old
       ? await tx`UPDATE irt_delivery_bindings_v1 SET revision=revision+1,context_id=${contextId},arm_set_id=${armSetId},batch_revision=${batchRevision},configuration=${tx.json(configuration)}::jsonb,actor_user_id=${actorId} WHERE batch_id=${batchId} RETURNING revision,digest`
       : await tx`INSERT INTO irt_delivery_bindings_v1(batch_id,context_id,arm_set_id,batch_revision,configuration,digest,actor_user_id) VALUES(${batchId},${contextId},${armSetId},${batchRevision},${tx.json(configuration)}::jsonb,'',${actorId}) RETURNING revision,digest`;
-    const release={approvalId:configuration.releaseApprovalId,purpose:'RESEARCH_ONLY'};
+    const release={approvalId:configuration.releaseApprovalId,purpose:irtPurpose()};
     await tx`UPDATE tryout_batches SET release_policy=${tx.json(release)}::jsonb,release_policy_digest=irt_compute.payload_digest(${tx.json(release)}::jsonb) WHERE id=${batchId}`;
     await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id)
       VALUES(${actorId},'IRT_DELIVERY_BOUND','tryout_batch',${batchId})`;
@@ -498,6 +505,11 @@ export async function inspectBoundCalibrationDelivery(sql,batchId,options) {
       const [published]=await tx`SELECT id FROM tryout_result_finalizations WHERE batch_id=${batchId} AND published_at IS NOT NULL`;
       if(published)return {...report,resultState:'PUBLISHED'};
       const {binding,input}=await deliveryDraft(tx,batchId);
+      await validateDeliveryRuntime(binding.configuration.runtime);
+      if(irtPurpose()==='PRODUCTION') {
+        const [auth]=await tx`SELECT public.irt_production_authorized_v1(${binding.context_id}::uuid,${tx.json(binding.configuration.runtime)}::jsonb,${tx.json(binding.configuration.resources)}::jsonb) AS valid`;
+        if(!auth?.valid)throw new Error('IRT_DELIVERY_PRODUCTION_NOT_AUTHORIZED');
+      }
       const canonical=await canonicalInput(tx,input,options);
       await validateResources(tx,canonical,binding.configuration.resources);
       report.dispatchReady=true;
@@ -518,6 +530,7 @@ export async function freezeBoundCalibrationDelivery(sql,batchId,options) {
   return sql.begin('isolation level repeatable read',async tx=>{
     const [binding]=await tx`SELECT * FROM irt_delivery_bindings_v1 WHERE batch_id=${batchId} FOR UPDATE`;
     if(!binding)throw new Error('IRT_BINDING_MISSING');
+    await validateDeliveryRuntime(binding.configuration.runtime);
     const [progress]=await tx`SELECT request_id FROM irt_delivery_progress_v1 WHERE batch_id=${batchId}`;
     if(progress?.request_id){
       const [source]=await tx`SELECT input_digest,cancelled,approvals_valid FROM irt_calibration_inputs_v1 WHERE id=${progress.request_id}`;

@@ -17,6 +17,8 @@ import psycopg
 
 
 def main():
+    if os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true' and os.environ.get('IRT_DELIVERY_APP_TEST')=='true':
+        raise ValueError('Run production authorization and application fixtures in separate disposable databases')
     profile = json.loads((delivery.AI / 'research/irt/policy-v1.json').read_text())
     with delivery.harness.local_database() as url, psycopg.connect(url, row_factory=dict_row) as db:
         actor = db.execute("INSERT INTO users(auth_user_id,role,admin_role,display_name,email) VALUES(%s,'ADMIN','CONTENT_DATA_MODERATION','SYNTHETIC','binding@example.test') RETURNING id", (uuid4(),)).fetchone()['id']
@@ -29,7 +31,7 @@ def main():
         source['respondents'] = []
         source['responses'] = []
         application = os.environ.get('IRT_DELIVERY_APP_TEST') == 'true'
-        value = delivery.build(db, actor, context, batch, 2, source=source, application=application)
+        value = delivery.build(db, actor, context, batch, 2, source=source, application=application or os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true')
         db.execute("UPDATE tryout_batches SET status='PLANNED',starts_at=now()+interval '1 hour',closes_at=now()+interval '1 day',cutoff_at=now()+interval '1 day',result_due_at=now()+interval '4 days' WHERE id=%s", (batch,))
         resources = {}
         for key, kind, source_key in [('model','IRT_MODEL','engine'),('quality','QUALITY_GATE','quality'),('eligibility','IRT_ELIGIBILITY','eligibility'),('scoring','IRT_SCORING','scoring'),('scoreMapping','SCORE_MAPPING','mapping')]:
@@ -49,6 +51,10 @@ def main():
         config = {'contextRevision':1,'anchors':value['anchorQuestionVersionIds'],'packages':pins,'resources':resources,'runtime':json.loads(runtime_path.read_text()),'releaseApprovalId':str(approval)}
         def insert(c):
             return db.execute("INSERT INTO irt_delivery_bindings_v1(batch_id,context_id,arm_set_id,batch_revision,configuration,digest,actor_user_id) VALUES(%s,%s,%s,1,%s,'',%s) RETURNING digest",(batch,context,arm_set,Jsonb(c),actor)).fetchone()
+        if os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true':
+            from test_irt_production_authorization import verify
+            verify(db,url,actor,batch,context,config,value)
+            return
         failures = 0
         for mutate in [lambda c:c['runtime'].pop('image'),lambda c:c['packages'].append(c['packages'][0]),lambda c:c['anchors'].__setitem__(0,str(uuid4())),lambda c:c['resources']['model']['ref'].__setitem__('digest','0'*64),lambda c:c.__setitem__('contextRevision',99)]:
             c = deepcopy(config); mutate(c)

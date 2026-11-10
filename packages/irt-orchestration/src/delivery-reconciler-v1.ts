@@ -1,3 +1,5 @@
+// @ts-expect-error Shared server-mode boundary is JavaScript.
+import { assertIrtEnabled, assertIrtDatabase, irtPurpose } from '../src/runtime-mode.mjs';
 import type { Sql } from 'postgres';
 // @ts-expect-error Existing research adapter is shared JavaScript.
 import * as research from '../src/calibration-research.mjs';
@@ -6,17 +8,13 @@ import { prepareTryoutReleaseV1 } from './tryout-release-v1.js';
 
 export async function reconcileTryoutDeliveryV1(sql: Sql) {
   if (process.env.NUMORA_IRT_DELIVERY_RECONCILER_ENABLED !== 'true') return { processed: 0 };
-  if (
-    process.env.NUMORA_IRT_DELIVERY_ENABLED !== 'true' ||
-    process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true'
-  )
-    throw new Error('IRT_DELIVERY_DISABLED');
-  const [host] = await sql`SELECT current_database() AS name`;
-  if (!String(host?.name).startsWith('irt_research_test_'))
-    throw new Error('IRT_DELIVERY_DISPOSABLE_ONLY');
+  assertIrtEnabled();
+  if (process.env.NUMORA_IRT_DELIVERY_ENABLED !== 'true') throw new Error('IRT_DELIVERY_DISABLED');
+  await assertIrtDatabase(sql);
   const rows = await sql<{ batch_id: string; configuration: { releaseApprovalId: string } }[]>`
     SELECT binding.batch_id,binding.configuration FROM irt_delivery_bindings_v1 binding
     JOIN tryout_batches b ON b.id=binding.batch_id WHERE b.cutoff_at<=clock_timestamp() AND b.cancelled_at IS NULL
+    AND binding.configuration#>>'{runtime,purpose}'=${irtPurpose()}
     AND NOT EXISTS(SELECT 1 FROM tryout_result_finalizations f WHERE f.batch_id=b.id AND f.published_at IS NOT NULL)
     ORDER BY b.result_due_at,b.id LIMIT 20`;
   let processed = 0;
@@ -50,10 +48,17 @@ export async function reconcileTryoutDeliveryV1(sql: Sql) {
         ON CONFLICT(batch_id) DO UPDATE SET blocker=excluded.blocker,updated_at=clock_timestamp()`;
     }
   }
-  if (process.env.NUMORA_IRT_COMPUTE_URL && process.env.NUMORA_IRT_RESEARCH_TOKEN)
+  if (
+    process.env.NUMORA_IRT_COMPUTE_URL &&
+    (irtPurpose() === 'PRODUCTION'
+      ? process.env.NUMORA_IRT_TOKEN
+      : process.env.NUMORA_IRT_RESEARCH_TOKEN)
+  )
     await research.deliverPendingCalibrationResearch(sql, {
       url: process.env.NUMORA_IRT_COMPUTE_URL,
-      token: process.env.NUMORA_IRT_RESEARCH_TOKEN,
+      token: (irtPurpose() === 'PRODUCTION'
+        ? process.env.NUMORA_IRT_TOKEN
+        : process.env.NUMORA_IRT_RESEARCH_TOKEN)!,
     });
   return { processed };
 }

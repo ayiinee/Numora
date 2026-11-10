@@ -1,3 +1,5 @@
+// @ts-expect-error Shared server-mode boundary is JavaScript.
+import { assertIrtEnabled, assertRuntimeMode, assertIrtDatabase } from '../src/runtime-mode.mjs';
 /* eslint-disable @typescript-eslint/no-explicit-any -- shared validator checks scientific JSON at this boundary. */
 import type { Sql, TransactionSql } from 'postgres';
 // @ts-expect-error Shared JavaScript contract validator has no TypeScript declaration.
@@ -24,9 +26,13 @@ export function validateV1ArtifactShape(
 /** Re-check frozen identity, current fencing, approval and byte commitment before adoption. */
 export async function loadVerifiedTryoutArtifactV1(tx: TransactionSql, requestId: string) {
   const [source] = await tx<JsonObject[]>`
-    SELECT id::text,snapshot_id::text,input_digest,body,cancelled,approvals_valid,current_generation
+    SELECT id::text,snapshot_id::text,input_digest,body,runtime_profile,cancelled,approvals_valid,current_generation
     FROM public.irt_calibration_inputs_v1 WHERE id=${requestId}`;
   if (!source) throw new Error('IRT_V1_REQUEST_NOT_FOUND');
+  assertRuntimeMode(source.runtime_profile);
+  await assertIrtDatabase(tx);
+  if (source.runtime_profile.purpose === 'PRODUCTION')
+    await tx`SELECT public.irt_assert_production_v1(${source.body.context.contextId}::uuid,${tx.json(source.runtime_profile)}::jsonb)`;
   source.payload = { ...source.body, inputDigest: source.input_digest };
   if (source.cancelled || !source.approvals_valid) fail('IRT_V1_AUTHORIZATION_STALE');
   await tx`SELECT id FROM public.configuration_approvals WHERE id IN
@@ -52,7 +58,7 @@ export async function loadVerifiedTryoutArtifactV1(tx: TransactionSql, requestId
 
 /** Main-only adoption: no publication, canonical respondent grades, or XP. */
 export async function adoptTryoutArtifactV1(client: Sql, requestId: string) {
-  if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') fail('IRT_V1_DISABLED');
+  assertIrtEnabled('IRT_V1_DISABLED');
   return client.begin(async (tx: TransactionSql) => {
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,53))`;
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,61))`;

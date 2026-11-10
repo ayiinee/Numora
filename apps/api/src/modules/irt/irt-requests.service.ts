@@ -10,6 +10,7 @@ import {
   saveTryoutDeliveryBindingV1,
   tryoutDeliveryReadinessV1,
   getIrtResearchDatabaseV1,
+  requireIrtModeV1,
   closeIrtResearchDatabaseV1,
   IrtOrchestrationError,
   listAnalysisRequests,
@@ -25,6 +26,9 @@ import type { ContentPageDto } from '../content/content.dto';
 
 @Injectable()
 export class IrtRequestsService {
+  requireMode(purpose: 'RESEARCH_ONLY' | 'PRODUCTION') {
+    return this.execute(async () => requireIrtModeV1(purpose));
+  }
   async onModuleDestroy() {
     await closeIrtResearchDatabaseV1();
   }

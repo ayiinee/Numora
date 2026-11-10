@@ -1,3 +1,5 @@
+// @ts-expect-error Shared server-mode boundary is JavaScript.
+import { assertIrtEnabled, assertIrtDatabase, irtPurpose } from '../src/runtime-mode.mjs';
 /* eslint-disable @typescript-eslint/no-explicit-any -- contract boundary validated using the shared validator. */
 import { isDeepStrictEqual } from 'node:util';
 import type { Sql, TransactionSql } from 'postgres';
@@ -6,8 +8,8 @@ import { decideTryoutReleaseV1, type ResearchReleasePolicy } from './release-dec
 
 type Json = Record<string, any>;
 function enabled(publication = false) {
+  assertIrtEnabled();
   if (
-    process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true' ||
     process.env.NUMORA_IRT_RELEASE_ENABLED !== 'true' ||
     (publication && process.env.NUMORA_IRT_PUBLICATION_ENABLED !== 'true')
   )
@@ -15,9 +17,7 @@ function enabled(publication = false) {
 }
 async function lockSource(tx: TransactionSql, batchId: string, requestId: string) {
   await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,53))`;
-  const [host] = await tx`SELECT current_database() AS name`;
-  if (!String(host?.name).startsWith('irt_research_test_'))
-    throw new Error('IRT_RELEASE_DISPOSABLE_ONLY');
+  await assertIrtDatabase(tx);
   const [batch] = await tx<
     Json[]
   >`SELECT * FROM public.tryout_batches WHERE id=${batchId} FOR UPDATE`;
@@ -35,6 +35,8 @@ async function decision(tx: TransactionSql, batch: Json, request: Json, approval
   >`SELECT p.id::text,p.version,p.digest,p.definition FROM public.configuration_approvals a
     JOIN irt_compute.technical_policy_versions p ON p.id=a.technical_policy_version_id WHERE a.id=${approvalId}`;
   if (!policy) throw new Error('IRT_RELEASE_POLICY_MISSING');
+  if (policy.definition.purpose !== irtPurpose())
+    throw new Error('IRT_RELEASE_POLICY_MODE_MISMATCH');
   if (batch.release_policy?.approvalId !== approvalId)
     throw new Error('IRT_RELEASE_POLICY_NOT_PINNED');
   const [clock] =
@@ -81,7 +83,7 @@ async function decision(tx: TransactionSql, batch: Json, request: Json, approval
     executionId: job?.execution_id ?? null,
     generation: source.current_generation,
     policy: { id: policy.id, version: policy.version, digest: policy.digest, approvalId },
-    purpose: 'RESEARCH_ONLY',
+    purpose: irtPurpose(),
   };
 }
 

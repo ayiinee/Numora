@@ -1,3 +1,5 @@
+// @ts-expect-error Shared server-mode boundary is JavaScript.
+import { assertIrtEnabled } from '../src/runtime-mode.mjs';
 /* eslint-disable @typescript-eslint/no-explicit-any -- contract JSON is validated at this boundary. */
 import type { Sql, TransactionSql } from 'postgres';
 import { loadVerifiedTryoutArtifactV1 } from './adoption-v1.js';
@@ -62,7 +64,7 @@ function policySnapshot(body: Json) {
 
 /** Stage per-attempt IRT/fallback decisions. Never publishes or mutates attempt, XP, or history. */
 export async function finalizeTryoutArtifactV1(client: Sql, receiptId: string) {
-  if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') throw new Error('IRT_V1_DISABLED');
+  assertIrtEnabled('IRT_V1_DISABLED');
   return client.begin(async (tx: TransactionSql) => {
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${receiptId}::text,63))`;
     const [receipt] = await tx<
