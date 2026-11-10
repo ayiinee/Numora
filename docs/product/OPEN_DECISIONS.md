@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — Reyhan, 10 November 2026.** Duel PvP tidak lagi mulai otomatis pada Ready kedua; pembuat room menekan Mulai duel dan server tetap memvalidasi dua pemain aktif, terhubung serta siap. Rincian di [PRD mapping](PRD_MAPPING.md) dan [kontrak realtime](../architecture/REALTIME_PVP.md). Persetujuan pemilik atas tambahan aksi mulai eksplisit dalam alur §23.5 masih terbuka.
+
 **ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Pemindahan pintu masuk Admin ke `/admin-numora` telah disetujui. Rincian rute dan pengalihan dicatat di [PRD mapping](PRD_MAPPING.md).
 
 **ENGINEERING DECISION — pemilik, 10 November 2026:**

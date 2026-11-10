@@ -5,6 +5,7 @@ export type PvpCommand =
   | 'room:create'
   | 'room:join'
   | 'player:ready'
+  | 'match:start'
   | 'answer:submit'
   | 'match:reconnect'
   | 'room:leave'
@@ -22,6 +23,7 @@ const fields: Record<PvpCommand, string[]> = {
   'room:create': ['difficulty'],
   'room:join': ['roomCode'],
   'player:ready': ['matchId'],
+  'match:start': ['matchId'],
   'answer:submit': ['matchId', 'questionId', 'optionId'],
   'match:reconnect': ['matchId'],
   'room:leave': ['matchId'],

@@ -64,6 +64,7 @@ EXPIRED (room/invite; exact policy OPEN-07)
 - `pvp:invite:accept`
 - `pvp:invite:decline`
 - `pvp:player:ready`
+- `pvp:match:start`
 - `pvp:answer:submit`
 - `pvp:reconnect`
 - `pvp:leave`
@@ -142,7 +143,9 @@ Do not add horizontal WebSocket complexity before load tests justify it.
 
 **ENGINEERING DECISION:** Socket.IO namespace `/pvp`; event names and envelopes follow [Student Area Contract](../api/STUDENT_AREA_CONTRACT.md) and `packages/contracts/websocket/pvp-events.schema.json`. Commands use `eventVersion: "1"`, UUID `requestId`, and validated payloads. Handshake accepts Bearer auth; every command revalidates Student authorization.
 
-Client events: `room:create`, `room:join`, `player:ready`, `answer:submit`, `match:reconnect`, `room:leave`, `room:cancel`, `invitation:send`, `invitation:respond`.
+Client events: `room:create`, `room:join`, `player:ready`, `match:start`, `answer:submit`, `match:reconnect`, `room:leave`, `room:cancel`, `invitation:send`, `invitation:respond`.
+
+**ENGINEERING DECISION — Reyhan request, 10 November 2026:** Ready no longer starts the duel. The second `player:ready` leaves the room in WAITING; only the room creator may send `match:start`, and the server still requires two active, connected, Ready players before it opens question 1. This adds a deliberate pre-arena step instead of the previous instantaneous auto-start and keeps match start server-authoritative. Product confirmation that PRD v0.6 §23.5's `Ready → Arena` flow allows this explicit start action is still pending.
 
 Server state/transition events: `room:state`, `match:started`, `question:started`, `answer:acknowledged`, `question:resolved`, `player:disconnected`, `match:completed`, `match:forfeited`, `match:cancelled`, `invitation:received`. Callback envelopes use `command:acknowledged`; failures also emit `room:error`.
 
