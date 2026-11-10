@@ -3,6 +3,44 @@
 import Link from 'next/link';
 import { Button, Dialog, Icon } from '@tka/ui';
 import type { ReactNode } from 'react';
+import { StudentMascot } from '@/components/student-mascot';
+
+export function AssessmentExitDialog({
+  open,
+  title,
+  description,
+  onClose,
+  onConfirm,
+}: {
+  open: boolean;
+  title: string;
+  description: string;
+  onClose: () => void;
+  onConfirm: () => void;
+}) {
+  return (
+    <Dialog
+      className="practice-submit-dialog practice-mascot-dialog"
+      open={open}
+      title={title}
+      description={description}
+      icon={<StudentMascot pose="practice" />}
+      onClose={onClose}
+      actions={
+        <>
+          <Button fullWidth variant="secondary" onClick={onClose}>
+            Lanjut mengerjakan
+          </Button>
+          <Button fullWidth onClick={onConfirm}>
+            Ya, keluar dulu
+          </Button>
+        </>
+      }
+    >
+      <p className="practice-exit-encouragement">Sedikit demi sedikit, kamu makin paham.</p>
+    </Dialog>
+  );
+}
 
 export function AssessmentHeader({
   title = 'Sesi Latihan Soal',
@@ -89,8 +127,8 @@ export function SubmitConfirmation({
 }) {
   return (
     <Dialog
-      className="practice-submit-dialog"
-      icon={<Icon name="clipboard" width={32} height={32} />}
+      className="practice-submit-dialog practice-mascot-dialog"
+      icon={<StudentMascot pose="submitted" />}
       open={open}
       onClose={onClose}
       title={title}

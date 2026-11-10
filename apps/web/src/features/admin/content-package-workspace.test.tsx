@@ -1,18 +1,28 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ContentPackageWorkspace } from './content-package-workspace';
 import { getContentPackage, listContentPackages } from './content-package-api';
 import { createPreview, submitPreview } from './content-preview-api';
 import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
 
-if (!HTMLDialogElement.prototype.showModal)
-  HTMLDialogElement.prototype.showModal = function () {
-    this.open = true;
-  };
-if (!HTMLDialogElement.prototype.close)
-  HTMLDialogElement.prototype.close = function () {
-    this.open = false;
-  };
+const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+beforeEach(() => {
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.open = true;
+      },
+    },
+    close: {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.open = false;
+      },
+    },
+  });
+});
 
 vi.mock('next/navigation', () => {
   const router = { push: vi.fn(), replace: vi.fn() };
@@ -32,7 +42,13 @@ vi.mock('./content-package-api', () => ({
   reviewImportedQuestion: vi.fn(),
 }));
 vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  if (originalShow) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShow);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+});
 it('loads package choices five at a time and disables next on the final full page', async () => {
   const pack = {
     id: 'TEST',
