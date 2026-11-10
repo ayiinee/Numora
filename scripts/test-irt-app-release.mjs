@@ -3,11 +3,16 @@ import { readFileSync } from 'node:fs';
 import { createRequire } from 'node:module';
 import { closeDatabaseConnection } from '../packages/database/dist/index.js';
 import {
+  inspectBoundCalibrationDelivery,
+  freezeBoundCalibrationDelivery,
+} from '../packages/irt-orchestration/src/calibration-research.mjs';
+import {
   getIrtResearchDatabaseV1,
   closeIrtResearchDatabaseV1,
   adoptTryoutArtifactV1,
   prepareTryoutReleaseV1,
   publishTryoutReleaseV1,
+  reconcileTryoutDeliveryV1,
 } from '../packages/irt-orchestration/dist/index.js';
 const require = createRequire(new URL('../apps/api/package.json', import.meta.url));
 const { Test } = require('@nestjs/testing');
@@ -27,6 +32,7 @@ try {
     xp: await db`SELECT to_jsonb(x) AS row FROM xp_ledger x WHERE attempt_id=ANY(${input.attemptIds}::uuid[]) ORDER BY id`,
   });
   const before = await integrity();
+  await reconcileTryoutDeliveryV1(db);
   const adopted = await adoptTryoutArtifactV1(db, input.requestId);
   assert.equal(adopted.adopted, true);
   const replay = await adoptTryoutArtifactV1(db, input.requestId);
@@ -61,6 +67,14 @@ try {
     assert.equal((await get(person, input.attemptIds[i])).status, 409);
   await publishTryoutReleaseV1(db, prepared.finalizationId);
   await publishTryoutReleaseV1(db, prepared.finalizationId);
+  const options = {
+    secret: process.env.NUMORA_IRT_PSEUDONYM_SECRET,
+    keyVersion: process.env.NUMORA_IRT_PSEUDONYM_KEY_VERSION,
+  };
+  assert.equal(
+    (await inspectBoundCalibrationDelivery(db, input.batchId, options)).resultState,
+    'PUBLISHED',
+  );
   for (const [i, person] of input.people.entries()) {
     const response = await get(person, input.attemptIds[i]);
     assert.equal(response.status, 200);
@@ -72,6 +86,12 @@ try {
     assert.ok(result.resultMethodReason);
     assert.equal((await get(person, input.attemptIds[1 - i])).status, 404);
   }
+  assert.deepEqual(await integrity(), before);
+  await db`UPDATE configuration_approvals SET revoked_at=clock_timestamp() WHERE id=(SELECT (resources#>>'{model,ref,approvalId}')::uuid FROM irt_calibration_requests_v1 WHERE id=${input.requestId})`;
+  await assert.rejects(
+    freezeBoundCalibrationDelivery(db, input.batchId, options),
+    /IRT_DELIVERY_AUTHORIZATION_STALE/,
+  );
   assert.deepEqual(await integrity(), before);
   console.log(
     JSON.stringify({

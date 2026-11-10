@@ -495,6 +495,8 @@ export async function inspectBoundCalibrationDelivery(sql,batchId,options) {
   return sql.begin('isolation level repeatable read read only',async tx=>{
     const report={batchId,dispatchReady:false,resultState:'BLOCKED',scientificGate:'NOT_EVALUATED',productionApproved:false,blockers:[]};
     try {
+      const [published]=await tx`SELECT id FROM tryout_result_finalizations WHERE batch_id=${batchId} AND published_at IS NOT NULL`;
+      if(published)return {...report,resultState:'PUBLISHED'};
       const {binding,input}=await deliveryDraft(tx,batchId);
       const canonical=await canonicalInput(tx,input,options);
       await validateResources(tx,canonical,binding.configuration.resources);
@@ -518,9 +520,9 @@ export async function freezeBoundCalibrationDelivery(sql,batchId,options) {
     if(!binding)throw new Error('IRT_BINDING_MISSING');
     const [progress]=await tx`SELECT request_id FROM irt_delivery_progress_v1 WHERE batch_id=${batchId}`;
     if(progress?.request_id){
-      const [source]=await tx`SELECT cancelled,approvals_valid FROM irt_calibration_inputs_v1 WHERE id=${progress.request_id}`;
+      const [source]=await tx`SELECT input_digest,cancelled,approvals_valid FROM irt_calibration_inputs_v1 WHERE id=${progress.request_id}`;
       if(!source||source.cancelled||!source.approvals_valid)throw new Error('IRT_DELIVERY_AUTHORIZATION_STALE');
-      return {requestId:progress.request_id,replayed:true};
+      return {requestId:progress.request_id,inputDigest:source.input_digest,replayed:true};
     }
     await tx`UPDATE tryout_batches SET status='CLOSED' WHERE id=${batchId} AND cancelled_at IS NULL
       AND cutoff_at<=clock_timestamp() AND status IN ('PLANNED','OPEN','PROCESSING')

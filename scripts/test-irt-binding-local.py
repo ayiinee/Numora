@@ -66,17 +66,31 @@ def main():
             print(json.dumps({k:v for k,v in evidence.items() if k not in ('people','attemptIds')}),flush=True)
             if os.environ.get('IRT_DELIVERY_PIPELINE_TEST')=='true':
                 from tests.service import test_irt_postgres as fixtures
-                from fastapi.testclient import TestClient
                 from numora_service.irt.api import create_app
                 from numora_service.irt.daemon import execute_once
+                import threading
+                import time
+                import uvicorn
                 fixtures.URL=url; fixtures.IrtPostgresTests.setUpClass()
                 fixture=fixtures.IrtPostgresTests(methodName='runTest')
-                notification={'contractVersion':3,'requestId':evidence['requestId'],'inputDigest':evidence['inputDigest'],'dispatchGeneration':1}
-                client=TestClient(create_app(fixture.settings,fixture.repo),raise_server_exceptions=False)
-                response=client.post('/api/v1/irt/compute/execute',headers={'Authorization':'Bearer '+fixture.settings.token},json=notification)
-                assert response.status_code==202,response.text
-                assert execute_once(fixture.repo)
-                release_env={**env,'NUMORA_IRT_RELEASE_ENABLED':'true','NUMORA_IRT_PUBLICATION_ENABLED':'true'}
+                server=uvicorn.Server(uvicorn.Config(create_app(fixture.settings,fixture.repo),host='127.0.0.1',port=0,log_level='critical',access_log=False))
+                thread=threading.Thread(target=server.run,daemon=True);thread.start()
+                try:
+                    deadline=time.monotonic()+10
+                    while not server.started:
+                        if time.monotonic()>deadline:raise RuntimeError('Synthetic HTTP server did not start')
+                        time.sleep(.05)
+                    port=server.servers[0].sockets[0].getsockname()[1]
+                    transport_env={**env,'NUMORA_IRT_COMPUTE_URL':f'http://127.0.0.1:{port}','NUMORA_IRT_RESEARCH_TOKEN':fixture.settings.token}
+                    subprocess.run(['node','scripts/test-irt-delivery-notify.mjs'],cwd=ROOT,check=True,timeout=30,env=transport_env)
+                    assert execute_once(fixture.repo)
+                    from urllib.request import Request,urlopen
+                    request=Request(f'http://127.0.0.1:{port}/api/v1/irt/operations',headers={'Authorization':'Bearer '+fixture.settings.token})
+                    with urlopen(request,timeout=5) as response:metrics=json.load(response)
+                    assert metrics['backlog']==0 and metrics['running']==0
+                finally:
+                    server.should_exit=True;thread.join(timeout=10)
+                release_env={**env,'NUMORA_IRT_RELEASE_ENABLED':'true','NUMORA_IRT_PUBLICATION_ENABLED':'true','NUMORA_IRT_DELIVERY_RECONCILER_ENABLED':'true','NUMORA_IRT_PSEUDONYM_SECRET':'SYNTHETIC_PRIVATE_KEY_ONLY_1234567890','NUMORA_IRT_PSEUDONYM_KEY_VERSION':'test-v1'}
                 result=subprocess.run(['node','scripts/test-irt-app-release.mjs'],cwd=ROOT,input=json.dumps({**evidence,'batchId':str(batch),'approvalId':str(approval)}),text=True,capture_output=True,timeout=120,env=release_env)
                 if result.returncode: raise RuntimeError(result.stderr[-2500:])
                 print(result.stdout,flush=True)

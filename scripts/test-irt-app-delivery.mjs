@@ -6,6 +6,7 @@ import { createRequire } from 'node:module';
 import { setTimeout } from 'node:timers/promises';
 import { getDatabase, closeDatabaseConnection } from '../packages/database/dist/index.js';
 import postgres from '../packages/database/node_modules/postgres/src/index.js';
+import { reconcileTryoutDeliveryV1 } from '../packages/irt-orchestration/dist/index.js';
 import {
   saveCalibrationDeliveryBinding,
   inspectBoundCalibrationDelivery,
@@ -22,6 +23,9 @@ assert.match(new URL(process.env.DATABASE_URL).pathname, /^\/irt_research_test_/
 getDatabase(); // Instantiate Drizzle too: regression covers its JSON/date codec mutation.
 const db = postgres(process.env.DATABASE_URL, { max: 2, onnotice: () => {} });
 const options = { secret: 'SYNTHETIC_PRIVATE_KEY_ONLY_1234567890', keyVersion: 'test-v1' };
+process.env.NUMORA_IRT_DELIVERY_RECONCILER_ENABLED = 'true';
+process.env.NUMORA_IRT_PSEUDONYM_SECRET = options.secret;
+process.env.NUMORA_IRT_PSEUDONYM_KEY_VERSION = options.keyVersion;
 let app;
 try {
   const people = [];
@@ -53,6 +57,8 @@ try {
     (await inspectBoundCalibrationDelivery(db, input.batchId, options)).dispatchReady,
     false,
   );
+  await reconcileTryoutDeliveryV1(db);
+  assert.equal((await db`SELECT count(*)::int AS n FROM irt_calibration_dispatches_v1`)[0].n, 0);
   const identity = {
     me: async (authorization) => {
       const id = authorization?.replace('Bearer ', '');
@@ -110,6 +116,8 @@ try {
   const [clock] =
     await db`SELECT greatest(0,extract(epoch FROM cutoff_at-statement_timestamp())) AS seconds FROM tryout_batches WHERE id=${input.batchId}`;
   await setTimeout(Number(clock.seconds) * 1000 + 100);
+  await Promise.all([reconcileTryoutDeliveryV1(db), reconcileTryoutDeliveryV1(db)]);
+  await reconcileTryoutDeliveryV1(db);
   const first = await freezeBoundCalibrationDelivery(db, input.batchId, options);
   const replay = await freezeBoundCalibrationDelivery(db, input.batchId, options);
   assert.equal(first.requestId, replay.requestId);
