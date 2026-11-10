@@ -217,7 +217,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     const { state, errors } = await setup(page);
     await page.goto('/student/profile');
-    await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+    await expect(
+      page.locator('.student-profile-identity').getByText('SMPN 1 Jakarta', { exact: true }),
+    ).toBeVisible();
     await expect(page.getByText('Hasil tersedia')).toBeVisible();
     await expect(page.getByLabel('Kode kelas')).toBeEnabled();
     await capture(page, 'profile-school', width);
@@ -246,7 +248,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await capture(page, 'feedback-read', width);
     state.school = false;
     await page.goto('/student/profile');
-    await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+    await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
     await expect(page.getByLabel('Kode kelas')).toBeVisible();
     await capture(page, 'profile-mandiri', width);
     state.notes = [];
@@ -302,11 +304,13 @@ test('Mandiri join failure preserves input; successful join refreshes identity; 
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode kelas tidak valid.')).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toHaveValue('BAD999');
-  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
   state.failJoin = false;
   await page.getByLabel('Kode kelas').fill(' FIX234 ');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('SMPN 1 Jakarta', { exact: true }),
+  ).toBeVisible();
   expect(state.joins).toEqual(['BAD999', 'FIX234']);
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
