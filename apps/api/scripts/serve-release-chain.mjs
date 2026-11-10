@@ -64,6 +64,7 @@ for (const [alias, role] of [
   ['adminContent', 'ADMIN'],
   ['teacher', 'TEACHER'],
   ['foreignTeacher', 'TEACHER'],
+  ['reissueSourceTeacher', 'TEACHER'],
   ['unverified', 'TEACHER'],
   ['raceTeacher', 'TEACHER'],
   ['student', 'STUDENT'],

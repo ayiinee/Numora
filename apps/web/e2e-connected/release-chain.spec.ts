@@ -27,6 +27,7 @@ import type {
   CreatedClassDto,
   AdminSchoolDto,
   TokenDto,
+  TokenListDto,
   IdentityProfileDto,
 } from '../src/lib/generated-api-types';
 import type {
@@ -525,9 +526,8 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const tokensPath = `admin/schools/${school.id}/teacher-tokens`;
     const verifyPath = `schools/${school.id}/teacher-verifications`;
     const issue = () => body<TokenDto>(request, 'admin', tokensPath, 'POST', undefined, 201);
-    const used = (
-      await body<{ items: { id: string; usedAt: string | null }[] }>(request, 'admin', tokensPath)
-    ).items.find((t) => t.usedAt)!;
+    const listTokens = () => body<TokenListDto>(request, 'admin', tokensPath);
+    const used = (await listTokens()).items.find((t) => t.usedAt)!;
     await call(request, 'admin', `${tokensPath}/${used.id}/revoke`, 'POST', undefined, 409);
     const revoked = await issue();
     await call(request, 'admin', `${tokensPath}/${revoked.id}/revoke`, 'POST', undefined, 201);
@@ -542,7 +542,13 @@ test.describe.serial('JOB-06 connected release chain', () => {
       201,
     );
     expect(reissued.id).not.toBe(old.id);
-    await call(request, 'unverified', verifyPath, 'POST', { token: old.token }, 403);
+    expect((await listTokens()).items.find((token) => token.id === old.id)).toMatchObject({
+      status: 'AVAILABLE',
+      expiresAt: old.expiresAt,
+      revokedAt: null,
+    });
+    await call(request, 'admin', `${tokensPath}/${old.id}/reissue`, 'POST', undefined, 409);
+    await call(request, 'reissueSourceTeacher', verifyPath, 'POST', { token: old.token }, 201);
     const expired = await issue();
     expect(
       (await request.post(`${fixtureBase}/expire-token`, { data: { id: expired.id } })).status(),
@@ -1243,7 +1249,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     checks.push('five-class-cap-ban-unban-leave-teacherless-takeover-preserved-progress');
   });
 
-  test('all three Admin subroles retain their landing, shared UI and real server permissions', async ({
+  test('all three Admin subroles open Dashboard with shared UI and real server permissions', async ({
     browser,
     request,
   }) => {
@@ -1273,7 +1279,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
 
     const operations = await login(browser, 'adminOperations');
     await operations.goto('/admin');
-    await expect(operations).toHaveURL(/\/admin\/schools$/);
+    await expect(operations).toHaveURL(/\/admin\/analytics$/);
+    await expect(operations.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+    await operations.goto('/admin/schools');
     await expect(
       operations.getByRole('heading', { name: 'Sekolah & credential', exact: true }),
     ).toBeVisible();
@@ -1307,7 +1315,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
 
     const content = await login(browser, 'adminContent');
     await content.goto('/admin');
-    await expect(content).toHaveURL(/\/admin\/content$/);
+    await expect(content).toHaveURL(/\/admin\/analytics$/);
+    await expect(content.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+    await content.goto('/admin/content');
     await expect(content.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
     await expect(
       content.locator('.app-sidebar').getByRole('link', { name: 'Akun Admin', exact: true }),
