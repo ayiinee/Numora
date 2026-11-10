@@ -45,3 +45,8 @@ Enam tes API terpilih (termasuk integrasi HTTP/PostgreSQL throwaway lokal) dan e
 ## Integrasi main ? 11 November 2026
 
 **ENGINEERING DECISION:** urutan migrasi Tryout dipindah menjadi 0069?0071 setelah migrasi IRT 0065?0068 dari main. Gunakan journal gabungan; jangan menyalin nomor migrasi lama ke lingkungan lain. Pemeriksaan hasil mengikuti readiness IRT terbaru dari main.
+
+
+### Riwayat migrasi Development sebelum integrasi
+
+**ENGINEERING DECISION:** rekonsiliasi Development menerima hanya fingerprint LF/CRLF yang dikenal dari migrasi draft guard 0065 pada cursor 1794304800000, yang dipindah tanpa perubahan SQL menjadi 0069. Riwayat lama dipertahankan dan cursor kanonis ditambahkan tanpa menjalankan ulang guard lama. Hash/cursor lain tetap ditolak; migrasi IRT yang belum diterapkan tetap berjalan sebelum migrasi Tryout berikutnya.
