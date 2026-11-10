@@ -351,7 +351,10 @@ test('Completion: Student manages multiple memberships and updates name and phot
     .setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png });
   await page.getByRole('button', { name: 'Unggah foto', exact: true }).click();
   await expect(page.getByAltText('Kirino Baru', { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Edit profil', exact: true })).toHaveAttribute('aria-expanded', 'false');
+  await expect(page.getByRole('button', { name: 'Edit profil', exact: true })).toHaveAttribute(
+    'aria-expanded',
+    'false',
+  );
   await page.getByRole('button', { name: 'Edit profil', exact: true }).click();
   await page.getByRole('button', { name: 'Hapus foto', exact: true }).click();
   await expect(page.getByAltText('Kirino Baru', { exact: true })).toHaveCount(0);
