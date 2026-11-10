@@ -6,7 +6,9 @@ import { createOpenApiDocument } from './openapi';
 import { ProblemDetailsFilter } from './problem-details.filter';
 
 export function configureApplication(app: INestApplication) {
-  (app as NestExpressApplication).useBodyParser('json', { limit: '2mb' });
+  const expressApp = app as NestExpressApplication;
+  expressApp.useBodyParser('json', { limit: '2mb' });
+  expressApp.disable('x-powered-by');
   app.setGlobalPrefix('api/v1');
   app.useGlobalPipes(
     new ValidationPipe({
