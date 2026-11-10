@@ -2892,3 +2892,16 @@
   .tryout-detail-summary .admin-content-actions { margin-left: 0; width: 100%; }
   .tryout-detail-schedule { gap: 20px 12px; }
 }
+.tryout-batch-confirmation { width: min(520px, calc(100vw - 32px)); }
+.tryout-publish-summary { display: grid; gap: 16px; }
+.tryout-publish-summary p { margin: 0; font-size: 14px; line-height: 1.6; }
+.tryout-publish-summary .tryout-publish-question { color: var(--color-text-muted); }
+.tryout-publish-name { font-size: 20px; line-height: 1.4; overflow-wrap: anywhere; }
+.tryout-publish-summary dl { display: grid; gap: 16px; margin: 0; padding: 16px; background: var(--color-surface-muted, #f8f7fc); border: 1px solid var(--color-border-light); border-radius: 10px; }
+.tryout-publish-summary dt { color: var(--color-text-muted); font-size: 12px; margin-bottom: 4px; }
+.tryout-publish-summary dd { margin: 0; font-size: 14px; font-weight: 600; }
+.tryout-publish-summary .tryout-publish-notice { padding: 12px 14px; border-left: 3px solid #d18b17; background: #fff8eb; color: #754b0a; border-radius: 4px; }
+.tryout-batch-confirmation .numora-dialog__actions { display: flex; justify-content: flex-end; flex-wrap: wrap; gap: 10px; }
+@media (max-width: 600px) {
+  .tryout-batch-confirmation .numora-dialog__actions > button { flex: 1 1 100%; }
+}

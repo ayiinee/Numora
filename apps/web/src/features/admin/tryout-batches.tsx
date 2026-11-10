@@ -433,7 +433,24 @@ function BatchWorkspace({
               onClose={() => setAction(null)}
               title={action === 'cancel' ? 'Batalkan batch' : 'Terbitkan batch'}
               pending={pending}
-              className="admin-management-dialog"
+              className="admin-management-dialog tryout-batch-confirmation"
+              actions={
+                <>
+                  <Button variant="secondary" disabled={pending} onClick={() => setAction(null)}>
+                    Kembali
+                  </Button>
+                  <Button
+                    disabled={pending || (action === 'cancel' && !reason.trim())}
+                    onClick={() => action && void mutate(action)}
+                  >
+                    {pending
+                      ? 'Menyimpan…'
+                      : action === 'publish'
+                        ? 'Ya, terbitkan batch'
+                        : 'Konfirmasi'}
+                  </Button>
+                </>
+              }
             >
               {action === 'cancel' ? (
                 <label>
@@ -445,18 +462,24 @@ function BatchWorkspace({
                   />
                 </label>
               ) : (
-                <p>
-                  Terbitkan {detail.title}? Siswa mendapat akses sesuai delegasi saat jadwal mulai.
-                  Konfigurasi terkunci saat batch dimulai.
-                </p>
+                <div className="tryout-publish-summary">
+                  <p className="tryout-publish-question">Terbitkan batch ini?</p>
+                  <strong className="tryout-publish-name">{detail.title}</strong>
+                  <dl>
+                    <div>
+                      <dt>Mulai</dt>
+                      <dd>{wib(detail.startsAt)}</dd>
+                    </div>
+                    <div>
+                      <dt>Tutup</dt>
+                      <dd>{wib(detail.closesAt)}</dd>
+                    </div>
+                  </dl>
+                  <p>Siswa mendapat akses sesuai delegasi saat jadwal mulai.</p>
+                  <p className="tryout-publish-notice">Pengaturan terkunci saat batch dimulai.</p>
+                </div>
               )}
               {error && <p role="alert">{error}</p>}
-              <Button
-                disabled={pending || (action === 'cancel' && !reason.trim())}
-                onClick={() => action && void mutate(action)}
-              >
-                {pending ? 'Menyimpan…' : 'Konfirmasi'}
-              </Button>
             </Dialog>
           </>
         )

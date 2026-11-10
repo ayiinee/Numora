@@ -203,7 +203,7 @@ test('batch creation, school delegation and compact detail work across viewports
     .analyze();
   expect(violations.violations).toEqual([]);
   await page.getByRole('button', { name: 'Terbitkan batch', exact: true }).click();
-  await page.getByRole('button', { name: 'Konfirmasi', exact: true }).click();
+  await page.getByRole('button', { name: 'Ya, terbitkan batch', exact: true }).click();
   await expect(page.getByText('Terjadwal', { exact: true })).toBeVisible();
   await page.reload();
   await page.goto('/admin/tryout-batches');

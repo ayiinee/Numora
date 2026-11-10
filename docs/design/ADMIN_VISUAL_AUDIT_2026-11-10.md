@@ -27,3 +27,5 @@ Pemeriksaan browser menggunakan fixture sintetis existing untuk Akun, Sekolah, P
 - Putaran tambahan: 54 dari 55 tes lolos. Satu ekspektasi navigasi Operations masih memakai daftar sebelum penambahan akses baca Batch Tryout. Ekspektasi diperbarui mengikuti matriks izin existing; retest satu skenario tersebut lolos.
 - Total cakupan 178 skenario unik setelah menghapus pengulangan Operasional. Semua memiliki hasil lolos setelah perbaikan/retest. Bukti putaran tambahan tersimpan lokal di `.tmp/admin-audit-retest/` dan `.tmp/admin-audit-navigation-retest/`.
 - Dev server mencatat peringatan hydration saat skenario zoom serta satu peringatan library React `use()` saat navigasi; tidak menyebabkan assertion gagal. Build produksi lolos, tetapi tes fixture bukan pengganti acceptance dengan layanan terintegrasi.
+
+**ENGINEERING DECISION — instruksi pemilik, 11 November 2026:** modal penerbitan batch menonjolkan judul batch, memisahkan jadwal mulai/tutup, menjelaskan akses delegasi dan penguncian pengaturan, serta memakai footer Kembali / Ya, terbitkan batch. Dialog existing tetap menangani fokus dan mencegah penutupan selama pengiriman.
