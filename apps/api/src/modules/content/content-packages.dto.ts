@@ -55,7 +55,11 @@ export class ClassifyQuestionDto {
 export class ReviewImportedQuestionDto {
   @ApiProperty({ format: 'uuid' }) @IsUUID() packageId!: string;
   @ApiProperty({ enum: [true] }) @Equals(true) confirmed!: boolean;
-  @ApiProperty() @IsString() @Matches(/\S/) @MaxLength(1000) notes!: string;
+  @ApiPropertyOptional({ maxLength: 1000 })
+  @IsOptional()
+  @IsString()
+  @MaxLength(1000)
+  notes?: string;
 }
 export class ApproveContentPackageDto {
   @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
@@ -103,8 +107,11 @@ export class PrepareLegacyPretestDto {
   source!: PackageSourceDto;
 }
 export class PackageAvailabilityDto {
-  @ApiProperty({ enum: ['DRAFT', 'BLOCKED', 'SCHEDULED', 'AVAILABLE', 'READY_FOR_BATCH', 'CLOSED', 'ARCHIVED'] })
-  state!: 'DRAFT' | 'BLOCKED' | 'SCHEDULED' | 'AVAILABLE' | 'READY_FOR_BATCH' | 'CLOSED' | 'ARCHIVED';
+  @ApiProperty({
+    enum: ['DRAFT', 'BLOCKED', 'SCHEDULED', 'AVAILABLE', 'READY_FOR_BATCH', 'CLOSED', 'ARCHIVED'],
+  })
+  state!:
+    'DRAFT' | 'BLOCKED' | 'SCHEDULED' | 'AVAILABLE' | 'READY_FOR_BATCH' | 'CLOSED' | 'ARCHIVED';
   @ApiProperty({ type: [String] }) blockers!: string[];
   @ApiProperty({ format: 'date-time' }) checkedAt!: string;
 }
@@ -146,6 +153,8 @@ export class ContentPackagesDto {
   @ApiProperty() total!: number;
 }
 export class ContentPackageItemDto {
+  @ApiPropertyOptional() scoringRepairRequired?: boolean;
+  @ApiPropertyOptional({ type: [String] }) validationIssues?: string[];
   @ApiProperty() questionVersionId!: string;
   @ApiProperty() questionId!: string;
   @ApiProperty() displayOrder!: number;

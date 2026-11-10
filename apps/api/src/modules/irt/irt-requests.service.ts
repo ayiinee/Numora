@@ -3,12 +3,16 @@ import { getDatabase } from '@tka/database';
 import {
   analysisRequestDetail,
   adoptTryoutArtifact,
+  adoptTryoutArtifactV1,
+  finalizeTryoutArtifactV1,
+  prepareTryoutReleaseV1,
+  publishTryoutReleaseV1,
   IrtOrchestrationError,
   listAnalysisRequests,
   prepareTryoutAnalysis,
   retryTryoutAnalysis,
 } from '@tka/irt-orchestration';
-import type { PrepareIrtRequestDto } from './irt-requests.dto';
+import type { PrepareIrtReleaseV1Dto, PrepareIrtRequestDto } from './irt-requests.dto';
 import type { ContentPageDto } from '../content/content.dto';
 
 @Injectable()
@@ -27,6 +31,11 @@ export class IrtRequestsService {
           },
           409,
         );
+      if (error instanceof Error && /^IRT_(RELEASE|V1)_/.test(error.message))
+        throw new HttpException(
+          { code: error.message, detail: error.message },
+          error.message.endsWith('DISABLED') ? 404 : 409,
+        );
       throw error;
     }
   }
@@ -41,6 +50,20 @@ export class IrtRequestsService {
       await adoptTryoutArtifact(getDatabase().client, id, actor);
       return analysisRequestDetail(getDatabase().client, id);
     });
+  }
+  adoptResearchV1(id: string) {
+    return this.execute(() => adoptTryoutArtifactV1(getDatabase().client, id));
+  }
+  finalizeResearchV1(receiptId: string) {
+    return this.execute(() => finalizeTryoutArtifactV1(getDatabase().client, receiptId));
+  }
+  prepareReleaseV1(batchId: string, input: PrepareIrtReleaseV1Dto) {
+    return this.execute(() =>
+      prepareTryoutReleaseV1(getDatabase().client, batchId, input.requestId, input.approvalId),
+    );
+  }
+  publishReleaseV1(id: string) {
+    return this.execute(() => publishTryoutReleaseV1(getDatabase().client, id));
   }
   detail(id: string) {
     return this.execute(() => analysisRequestDetail(getDatabase().client, id));

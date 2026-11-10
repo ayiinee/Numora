@@ -29,7 +29,7 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
       });
     }
     await page.goto(`/admin/content/versions/${id(900)}`);
-    await expect(page.getByText('Isi soal', { exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Isi soal', exact: true })).toBeVisible();
     for (const width of [1440, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -63,7 +63,9 @@ test('question readers show every statement, preserve source mathematics and kee
   await expect(page.locator('.content-answer-section dd')).toHaveText('1, 3, 4');
   await expect(page.locator('.assessment-answer-marker')).toHaveCount(3);
   await expect(page.locator('.content-options > li')).toHaveCount(4);
-  await expect(page.getByText('APPROVED_PGK_RUBRIC_REQUIRED', { exact: true })).toBeVisible();
+  await expect(
+    page.getByRole('heading', { name: 'Aturan penilaian belum lengkap', exact: true }),
+  ).toBeVisible();
   expect(assessment.calls.every((call) => call.method === 'GET')).toBe(true);
 });
 

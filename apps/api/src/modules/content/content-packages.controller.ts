@@ -86,6 +86,13 @@ export class ContentPackagesController {
   ) {
     return this.packages.publish(r.adminId, id, body);
   }
+  @Post('packages/:id/prepare-scoring') @ApiOkResponse({ type: ContentMutationDto }) prepareScoring(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ArchiveContentPackageDto,
+  ) {
+    return this.packages.preparePretestScoring(r.adminId, id, body.expectedRevision);
+  }
   @Post('packages/:id/archive') @ApiOkResponse({ type: ContentMutationDto }) archive(
     @Req() r: AdminRequest,
     @Param('id', ParseUUIDPipe) id: string,

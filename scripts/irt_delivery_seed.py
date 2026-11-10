@@ -86,12 +86,12 @@ def build(db,admin,context,batch,arm_count=2, source=None):
             respondent=str(uuid4())
             with db.pipeline():
                 for pi in package_items:
+                    simulated_response = simulated_responses[(simulated['attemptId'], simulated_packages[index]['questionVersionIds'][pi['display_order']-1])]
                     item=uuid4()
                     db.execute('INSERT INTO attempt_items(id,attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s,%s,%s,%s)',(item,attempt,package,pi['id'],pi['question_version_id'],pi['display_order'],pi['max_points']))
-                    if source is not None or pi['display_order']!=2: db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
+                    if (source is not None and simulated_response['responseState']!='NOT_PRESENTED') or (source is None and pi['display_order']!=2): db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
                     meta=by_id[str(pi['question_version_id'])];special=pi['display_order'] in (1,6)
                     answer={} if pi['display_order']==1 else {'optionId':'A'} if meta['questionType']=='SINGLE_CHOICE' else {'optionIds':['A','C']} if meta['questionType']=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
-                    simulated_response = simulated_responses[(simulated['attemptId'], simulated_packages[index]['questionVersionIds'][pi['display_order']-1])]
                     state = simulated_response['responseState'] if source is not None else 'OMITTED' if pi['display_order']==1 else 'INVALID' if pi['display_order']==6 else 'RESPONDED'
                     points = simulated_response['awardedPoints'] if source is not None else 0 if special else pi['max_points']
                     category = simulated_response['scoreCategory'] if source is not None else 0 if special else meta['maximumScoreCategory']

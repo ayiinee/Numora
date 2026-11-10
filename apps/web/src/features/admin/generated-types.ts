@@ -65,13 +65,13 @@ export type ContentPackagesDto = { "items": (ContentPackageDto)[]; "total": numb
 
 export type ContentPackageDetailDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
 
-export type ContentPackageItemDto = { "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
+export type ContentPackageItemDto = { "scoringRepairRequired"?: boolean; "validationIssues"?: (string)[]; "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
 
 export type ContentDistributionDto = { "dimension": string; "value": string; "count": number; };
 
 export type ClassifyQuestionDto = { "usageType": "DRILL" | "PRETEST" | "TRYOUT"; };
 
-export type ReviewImportedQuestionDto = { "packageId": string; "confirmed": true; "notes": string; };
+export type ReviewImportedQuestionDto = { "packageId": string; "confirmed": true; "notes"?: string; };
 
 export type ExcelParseDto = { "envelope": ExcelEnvelopeDto; "media": (ExcelMediaDto)[]; "issues": (ExcelIssueDto)[]; "report": ImportReportDto | null; };
 
@@ -133,7 +133,7 @@ export type ContentReadinessDto = { "canReviewReady": boolean; "contentBlockers"
 
 export type ContentReviewEventDto = { "id": string; "actorId": string | null; "at": string; "status": string; "reason": string; };
 
-export type ContentVersionDetailDto = { "reviews": (ContentReviewEventDto)[]; "id": string; "questionId": string; "versionNumber": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "revisedFromId": string | null; "sourceNamespace": string | null; "reviewedByUserId": string | null; "reviewedAt": string | null; "payload": Record<string, unknown>; "readiness": ContentReadinessDto; };
+export type ContentVersionDetailDto = { "usageType"?: "DRILL" | "PRETEST" | "TRYOUT" | null; "reviews": (ContentReviewEventDto)[]; "id": string; "questionId": string; "versionNumber": number; "status": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "revisedFromId": string | null; "sourceNamespace": string | null; "reviewedByUserId": string | null; "reviewedAt": string | null; "payload": Record<string, unknown>; "readiness": ContentReadinessDto; };
 
 export type CreateMediaUploadDto = { "externalId": string; "assetId": string; "contentVersion"?: number; "contentType": "image/png" | "image/jpeg" | "image/webp"; "byteLength": number; "sha256": string; };
 

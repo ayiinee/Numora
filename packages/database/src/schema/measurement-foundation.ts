@@ -32,6 +32,7 @@ export const measurementState = pgEnum('measurement_state', [
   'UNCALIBRATED',
   'INSUFFICIENT',
   'CALIBRATION_FAILED',
+  'NOT_COMPARABLE',
   'CALIBRATED',
   'WATCH',
   'DRIFT',
@@ -167,7 +168,7 @@ export const technicalPolicyVersions = irtCompute
       check('technical_policy_versions_version_ck', sql`${t.version} > 0`),
       check(
         'technical_policy_versions_kind_ck',
-        sql`${t.kind} in ('VALIDATOR','IRT_MODEL','QUALITY_GATE','COMPARISON','ADJUSTMENT','SCORE_MAPPING','PACKAGE_EVALUATION','TRIAL_REQUIREMENTS','IRT_ELIGIBILITY','IRT_SCORING')`,
+        sql`${t.kind} in ('VALIDATOR','IRT_MODEL','QUALITY_GATE','COMPARISON','ADJUSTMENT','SCORE_MAPPING','PACKAGE_EVALUATION','TRIAL_REQUIREMENTS','IRT_ELIGIBILITY','IRT_SCORING','IRT_FALLBACK')`,
       ),
     ],
   )
