@@ -202,18 +202,10 @@ export class SchoolsService {
               code: 'SCHOOL_NOT_FOUND',
               detail: 'Sekolah tidak tersedia.',
             });
-          // A pre-marker HMAC digest identifies the same token as hmac-v1.
-          // Check both encodings so an old token can never be reissued by collision.
-          const [collision] = await tx
-            .select({ id: teacherVerificationTokens.id })
-            .from(teacherVerificationTokens)
-            .where(inArray(teacherVerificationTokens.tokenHash, teacherTokenHashes(token)))
-            .limit(1);
-          if (collision) throw new TokenGenerationCollision();
           if (replacedTokenId) {
-            const [revoked] = await tx
-              .update(teacherVerificationTokens)
-              .set({ revokedAt: createdAt })
+            const [source] = await tx
+              .select({ id: teacherVerificationTokens.id })
+              .from(teacherVerificationTokens)
               .where(
                 and(
                   eq(teacherVerificationTokens.id, replacedTokenId),
@@ -222,13 +214,39 @@ export class SchoolsService {
                   isNull(teacherVerificationTokens.revokedAt),
                 ),
               )
-              .returning({ id: teacherVerificationTokens.id });
-            if (!revoked)
+              .for('update');
+            if (!source)
               throw new ConflictException({
                 code: 'TOKEN_NOT_REVOCABLE',
                 detail: 'Token sudah dipakai, dicabut, atau tidak ditemukan.',
               });
+            // The school lock serializes reissues. The audit records successful issuance atomically.
+            const [previousReissue] = await tx
+              .select({ id: auditLogs.id })
+              .from(auditLogs)
+              .where(
+                and(
+                  eq(auditLogs.entityType, 'teacher_verification_token'),
+                  eq(auditLogs.action, 'teacher_token_reissued'),
+                  sql`${auditLogs.metadata}->>'replacedTokenId' = ${source.id}`,
+                ),
+              )
+              .limit(1);
+            if (previousReissue)
+              throw new ConflictException({
+                code: 'TOKEN_ALREADY_REISSUED',
+                detail:
+                  'Token ini sudah pernah diterbitkan ulang. Gunakan token terbaru atau terbitkan token terpisah.',
+              });
           }
+          // A pre-marker HMAC digest identifies the same token as hmac-v1.
+          // Check both encodings so an old token can never be reissued by collision.
+          const [collision] = await tx
+            .select({ id: teacherVerificationTokens.id })
+            .from(teacherVerificationTokens)
+            .where(inArray(teacherVerificationTokens.tokenHash, teacherTokenHashes(token)))
+            .limit(1);
+          if (collision) throw new TokenGenerationCollision();
           const [created] = await tx
             .insert(teacherVerificationTokens)
             .values({

@@ -46,6 +46,12 @@
 
 V2 telah menetapkan batas attempt/batch, freeze, komposisi3+7/5+25, metode mapping paket acuan dan fallback per arm; kontrak payload v1 sudah tersedia. Rekonsiliasi distribusi/availability dan penyerahan ilmiah/operasional tetap eksplisit. Daftar ADM-IMP-01–14 bukan laporan hasil tes. Tidak ada perubahan kontrak/schema/aplikasi dalam pekerjaan dokumentasi ini. Catatan Admin/navigasi lama yang bertentangan menjadi riwayat; route awal semua subrole sekarang Dashboard.
 
+**ENGINEERING IMPLEMENTATION — Admin dan Guru, 10 November 2026.**
+
+- ADM-AC-029 — Server mengunci subbab sebelum mengaktifkan video dan menolak jika tiga video aktif sudah terisi. Daftar Admin dan rekomendasi Drill mengikuti waktu penambahan. Sebelum rilis, periksa data lama yang memiliki lebih dari tiga video dengan status video dan pemetaan sama-sama `READY` pada subbab yang sama. Admin berwenang menentukan video yang tetap aktif sambil mempertahankan histori laporan.
+- ADM-AC-037 — Penerbitan ulang token Guru menambah token sekali pakai tanpa mengubah status atau kedaluwarsa token sumber. Token sumber yang sudah kedaluwarsa tetap kedaluwarsa. Catatan audit membatasi satu penerbitan ulang per token sumber. Bulk dan akses histori sekolah mengikuti cakupan tersendiri.
+- ADM-AC-048 — Pintu masuk `/admin` mengarahkan ketiga subrole dengan izin Analytics ke Dashboard `/admin/analytics`. Bagian ini mencakup tujuan awal. Filter, perbandingan periode, dan metrik mengikuti cakupan Dashboard tersendiri.
+
 **ENGINEERING DECISION ? pemilik, 9 November 2026:** Paket asesmen dipisah menjadi halaman daftar tabel, tambah dan detail per Pretest/Drill/Tryout; tanpa header berulang atau tab jenis. Search/filter/pagination server dan URL; seluruh mutasi di tambah/detail. [Keputusan daftar asesmen](../design/ADMIN_ASSESSMENT_DIRECTORY_2026-11-09.md).
 
 **ENGINEERING DECISION — pemilik, 9 November 2026:** menu Analytics dinamai Dashboard; halaman berfokus pada metrik dengan menghapus header berulang dan memindahkan penjelasan ke Info metrik tertutup. Route/API, lingkup subrole dan tujuan awal tetap. [Keputusan tampilan Dashboard](../design/ADMIN_ANALYTICS_UX_2026-10-30.md#dashboard-ringkas--keputusan-pemilik-9-november-2026).

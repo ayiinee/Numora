@@ -311,7 +311,7 @@ function AdminSchoolsScreenContent() {
         action === 'status'
           ? 'Status sekolah diperbarui.'
           : action.kind === 'reissue'
-            ? 'Token pengganti diterbitkan. Token lama tidak dapat digunakan.'
+            ? 'Token baru diterbitkan. Status dan masa berlaku token lama tetap sama.'
             : 'Token berhasil dicabut.',
       )
     )
@@ -730,7 +730,7 @@ function AdminSchoolsScreenContent() {
                       ? 'Nonaktifkan sekolah? Verifikasi Guru dengan sekolah ini akan ditolak. Sekolah dan riwayat tetap tersimpan.'
                       : 'Aktifkan sekolah ini agar token verifikasi Guru dapat diterbitkan kembali.'
                     : modal.kind === 'reissue'
-                      ? 'Terbit ulang token? Token lama tidak dapat digunakan lagi. Token pengganti akan ditampilkan satu kali.'
+                      ? 'Terbit ulang token? Token lama mempertahankan status dan masa berlakunya. Token baru akan ditampilkan satu kali.'
                       : 'Cabut token ini? Token tidak dapat digunakan untuk verifikasi Guru.'}
                 </p>
                 {typeof modal === 'object' && (

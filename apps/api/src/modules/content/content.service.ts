@@ -9,7 +9,7 @@ import {
   Inject,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, count, desc, eq, inArray, isNull, max, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, max, ne, sql } from 'drizzle-orm';
 import {
   assessmentPackages,
   chapters,
@@ -30,6 +30,7 @@ import {
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { isYouTubeVideoUrl } from './youtube-url';
+import { videoAdditionOrder } from './curated-video-recommendations';
 import { assertPackageUsage } from './content-package.rules';
 import { databaseTime } from '@tka/assessment-engine';
 import { AssessmentPoliciesService } from './assessment-policies.service';
@@ -669,7 +670,7 @@ export class ContentService {
         .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId));
     const [rows, [total]] = await Promise.all([
       matchingRows()
-        .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(videoSubchapterMappings.id))
+        .orderBy(...videoAdditionOrder)
         .limit(page.limit)
         .offset(page.offset),
       db.select({ total: count() }).from(matchingRows().as('filtered_videos')),
@@ -688,10 +689,46 @@ export class ContentService {
       })),
     };
   }
+
+  private async lockVideoSubchapter(tx: AdminTransaction, subchapterId: string) {
+    const [subchapter] = await tx
+      .select({ id: subchapters.id })
+      .from(subchapters)
+      .where(eq(subchapters.id, subchapterId))
+      .for('update');
+    if (!subchapter) throw new BadRequestException('Subbab tidak tersedia.');
+  }
+
+  private async assertVideoSlot(tx: AdminTransaction, subchapterId: string) {
+    const [active] = await tx
+      .select({ total: count() })
+      .from(videoSubchapterMappings)
+      .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId))
+      .where(
+        and(
+          eq(videoSubchapterMappings.subchapterId, subchapterId),
+          eq(videoSubchapterMappings.status, 'READY'),
+          eq(learningVideos.curationStatus, 'READY'),
+        ),
+      );
+    if (active!.total >= 3)
+      throw new ConflictException({
+        code: 'VIDEO_SUBCHAPTER_ACTIVE_LIMIT',
+        detail:
+          'Subbab sudah memiliki tiga video aktif. Arsipkan salah satu sebelum mengaktifkan video lain.',
+      });
+  }
+
   createVideo(actor: string, body: CreateVideoDto) {
     if (!isYouTubeVideoUrl(body.url))
       throw new BadRequestException('Gunakan URL video YouTube HTTPS yang valid.');
     return adminMutation(actor, 'video_created', 'video_mapping', async (tx) => {
+      await this.lockVideoSubchapter(tx, body.subchapterId);
+      if (body.status === 'READY') await this.assertVideoSlot(tx, body.subchapterId);
+      const [order] = await tx
+        .select({ last: max(videoSubchapterMappings.recommendationOrder) })
+        .from(videoSubchapterMappings)
+        .where(eq(videoSubchapterMappings.subchapterId, body.subchapterId));
       const v = required(
         (
           await tx
@@ -701,6 +738,8 @@ export class ContentService {
               url: body.url,
               source: body.source,
               curationStatus: body.status,
+              createdAt: sql`statement_timestamp()`,
+              updatedAt: sql`statement_timestamp()`,
             })
             .returning({ id: learningVideos.id })
         )[0],
@@ -712,7 +751,7 @@ export class ContentService {
             .values({
               videoId: v.id,
               subchapterId: body.subchapterId,
-              recommendationOrder: body.recommendationOrder,
+              recommendationOrder: (order?.last ?? 0) + 1,
               status: body.status,
             })
             .returning({ id: videoSubchapterMappings.id })
@@ -721,55 +760,69 @@ export class ContentService {
     });
   }
   updateVideo(actor: string, mappingId: string, body: UpdateVideoDto) {
-    nonempty(body);
+    const { title, url, source, status, subchapterId } = body;
+    nonempty({ title, url, source, status, subchapterId });
     return adminMutation(actor, 'video_updated', 'video_mapping', async (tx) => {
-      const m = required(
+      const mapping = required(
         (
           await tx
-            .select()
+            .select({ subchapterId: videoSubchapterMappings.subchapterId })
             .from(videoSubchapterMappings)
+            .where(eq(videoSubchapterMappings.id, mappingId))
+        )[0],
+      );
+      // Acquire the subchapter lock before the mapping and video locks on every write.
+      await this.lockVideoSubchapter(tx, mapping.subchapterId);
+      const { mapping: m, video } = required(
+        (
+          await tx
+            .select({ mapping: videoSubchapterMappings, video: learningVideos })
+            .from(videoSubchapterMappings)
+            .innerJoin(learningVideos, eq(learningVideos.id, videoSubchapterMappings.videoId))
             .where(eq(videoSubchapterMappings.id, mappingId))
             .for('update')
         )[0],
       );
       // Preserve the target of historical video reports: changing the subchapter needs a new mapping.
-      if (body.subchapterId !== undefined && body.subchapterId !== m.subchapterId)
+      if (subchapterId !== undefined && subchapterId !== m.subchapterId)
         throw new ConflictException('Buat pemetaan video baru untuk subbab berbeda.');
-      if (body.url !== undefined || body.status === 'READY') {
-        const video = required(
-          (
-            await tx
-              .select()
-              .from(learningVideos)
-              .where(eq(learningVideos.id, m.videoId))
-              .for('update')
-          )[0],
+      if ((url !== undefined || status === 'READY') && !isYouTubeVideoUrl(url ?? video.url))
+        throw new BadRequestException(
+          'Gunakan URL video YouTube HTTPS yang valid sebelum rekomendasi diaktifkan.',
         );
-        if (!isYouTubeVideoUrl(body.url ?? video.url))
-          throw new BadRequestException(
-            'Gunakan URL video YouTube HTTPS yang valid sebelum rekomendasi diaktifkan.',
-          );
+      if (status === 'READY' && (m.status !== 'READY' || video.curationStatus !== 'READY')) {
+        if (video.curationStatus !== 'READY') {
+          const [otherActiveMapping] = await tx
+            .select({ id: videoSubchapterMappings.id })
+            .from(videoSubchapterMappings)
+            .where(
+              and(
+                eq(videoSubchapterMappings.videoId, m.videoId),
+                ne(videoSubchapterMappings.id, m.id),
+                eq(videoSubchapterMappings.status, 'READY'),
+              ),
+            )
+            .limit(1);
+          if (otherActiveMapping)
+            throw new ConflictException('Video masih memiliki pemetaan aktif di subbab lain.');
+        }
+        await this.assertVideoSlot(tx, m.subchapterId);
       }
-      if (
-        body.title !== undefined ||
-        body.url !== undefined ||
-        body.source !== undefined ||
-        body.status !== undefined
-      )
+      if (title !== undefined || url !== undefined || source !== undefined || status !== undefined)
         await tx
           .update(learningVideos)
           .set({
-            title: body.title,
-            url: body.url,
-            source: body.source,
-            curationStatus: body.status,
+            title,
+            url,
+            source,
+            curationStatus: status,
             updatedAt: new Date(),
           })
           .where(eq(learningVideos.id, m.videoId));
-      if (body.status !== undefined || body.recommendationOrder !== undefined)
+      if (status !== undefined)
         await tx
           .update(videoSubchapterMappings)
-          .set({ status: body.status, recommendationOrder: body.recommendationOrder })
+          .set({ status })
           .where(eq(videoSubchapterMappings.id, mappingId));
       return { id: mappingId };
     });

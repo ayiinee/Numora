@@ -12,6 +12,7 @@ import {
 } from '@nestjs/common';
 import {
   ApiBearerAuth,
+  ApiConflictResponse,
   ApiCreatedResponse,
   ApiOkResponse,
   ApiProperty,
@@ -162,6 +163,9 @@ export class AdminSchoolsController {
 
   @Post(':schoolId/teacher-tokens/:tokenId/reissue')
   @ApiCreatedResponse({ type: TokenDto })
+  @ApiConflictResponse({
+    description: 'Token sumber tidak memenuhi syarat atau sudah diterbitkan ulang.',
+  })
   reissue(
     @Headers('authorization') authorization: string | undefined,
     @Param('schoolId', ParseUUIDPipe) schoolId: string,
