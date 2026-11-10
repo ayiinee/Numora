@@ -1,0 +1,2704 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_BATCH02_30_REVIEW_AND_SEVEN_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved the batch-2 report, seven corrections and classifications with \"setuju\" in this chat. Two optional suggestions excluded.",
+  "scope": "Editorial correctness and classification of 7 EASY and 23 MEDIUM; not empirical calibration, IRT approval or server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "items": [
+    {
+      "reviewId": "B2-01",
+      "familyId": "64b2d4fb-22e7-5974-90ed-a4d8a4d33943",
+      "sourceVersionId": "00d542a0-34b6-5489-8749-70c7ee1dac96",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pada uji coba roket air ekstrakurikuler Sains, posisi ketinggian aman roket t detik setelah diluncurkan dipenuhi oleh pertidaksamaan 15−3(2t−1)<3. Himpunan penyelesaian waktu t yang tepat jika digambarkan pada garis bilangan adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 2,5 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 2,5 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 2,5 dengan lingkaran penuh"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 2,5 dengan lingkaran penuh"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan pertidaksamaan:\n15 − 3(2t − 1) < 3 ⇒ 15 − 6t + 3 < 3 ⇒ 18 − 6t < 3\nIsolasi variabel t:\n−6t < 3 − 18 ⇒ −6t < −15\nBagi dengan −6 (balik tanda pertidaksamaan):\nt > −15 / −6 ⇒ t > 2,5\nRepresentasi Garis Bilangan:\nTanda ' > ' (tanpa sama dengan) digambarkan dengan lingkaran kosong di titik 2,5 dan panah mengarah ke kanan.\nKesalahan Umum yang Diantisipasi:\nSiswa lupa membalik tanda pertidaksamaan saat membagi dengan −6 sehingga menghasilkan t<2,5, atau keliru memilih bulatan penuh."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pada uji coba roket air ekstrakurikuler Sains, posisi ketinggian aman roket t detik setelah diluncurkan dipenuhi oleh pertidaksamaan 15−3(2t−1)<3. Himpunan penyelesaian waktu t yang tepat jika digambarkan pada garis bilangan adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 2,5 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 2,5 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 2,5 dengan lingkaran penuh"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 2,5 dengan lingkaran penuh"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan pertidaksamaan:\n15 − 3(2t − 1) < 3 ⇒ 15 − 6t + 3 < 3 ⇒ 18 − 6t < 3\nIsolasi variabel t:\n−6t < 3 − 18 ⇒ −6t < −15\nBagi dengan −6 (balik tanda pertidaksamaan):\nt > −15 / −6 ⇒ t > 2,5\nRepresentasi Garis Bilangan:\nTanda ' > ' (tanpa sama dengan) digambarkan dengan lingkaran kosong di titik 2,5 dan panah mengarah ke kanan.\nKesalahan Umum yang Diantisipasi:\nSiswa lupa membalik tanda pertidaksamaan saat membagi dengan −6 sehingga menghasilkan t<2,5, atau keliru memilih bulatan penuh."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "15−3(2t−1)<3 → 18−6t<3 → −6t<−15 → t>2,5. Lingkaran kosong di 2,5, panah kanan.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-02",
+      "familyId": "6896260e-c70b-5e15-a0e4-d1ba7edec56e",
+      "sourceVersionId": "00f042a5-917f-57b5-a0e2-09d9f5390bb7",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan antara jumlah jam kerja ekstra tim konveksi dan banyak seragam pramuka yang selesai dijahit:\nWaktu Kerja (jam) | Seragam Selesai (stel)\n$2$ | $16$\n$5$ | $40$\n$7$ | $56$\n$t$ | $72$\nSeorang siswa menyusun evaluasi waktu kerja $t$ untuk menghasilkan $72 stel$ seragam:\nEvaluasi I: \"$t=10jam$, karena dari $56$ ke $72$ bertambah $16 stel$ sehingga jam kerja bertambah $3 jam$ ($7+3=10$).\"\nEvaluasi II: \"$t=8 jam$, karena dihitung dari $72÷8=9 stel/jam$.\"\nEvaluasi III: \"$t=9jam$, karena konstanta laju penjahitan adalah $8stel/jam$ ($\\frac{16}{2}=\\frac{40}{5}=\\frac{56}{7}=8$), sehingga $t=\\frac{72}{8}=9 jam$.\"\nEvaluasi manakah yang benar berdasarkan analisis hubungan proporsional tabel?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi laju penjahitan konstan (konstanta proporsionalitas):\n$Laju=\\frac{16}{2}=\\frac{40}{5}=\\frac{56}{7}=8stel/jam$\nHitung waktu $t$ untuk $72stel$ seragam:\n$t=\\frac{72stel}{8stel/jam}=9jam$\nMaka, Evaluasi III adalah yang memuat analisis paling tepat dan logis."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan antara jumlah jam kerja ekstra tim konveksi dan banyak seragam pramuka yang selesai dijahit:\nWaktu Kerja (jam) | Seragam Selesai (stel)\n$2$ | $16$\n$5$ | $40$\n$7$ | $56$\n$t$ | $72$\nSeorang siswa menyusun evaluasi waktu kerja $t$ untuk menghasilkan $72 stel$ seragam:\nEvaluasi I: \"$t=10jam$, karena dari $56$ ke $72$ bertambah $16 stel$ sehingga jam kerja bertambah $3 jam$ ($7+3=10$).\"\nEvaluasi II: \"$t=8 jam$, karena dihitung dari $72÷8=9 stel/jam$.\"\nEvaluasi III: \"$t=9jam$, karena konstanta laju penjahitan adalah $8stel/jam$ ($\\frac{16}{2}=\\frac{40}{5}=\\frac{56}{7}=8$), sehingga $t=\\frac{72}{8}=9 jam$.\"\nEvaluasi manakah yang benar berdasarkan analisis hubungan proporsional tabel?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi laju penjahitan konstan (konstanta proporsionalitas):\n$Laju=\\frac{16}{2}=\\frac{40}{5}=\\frac{56}{7}=8stel/jam$\nHitung waktu $t$ untuk $72stel$ seragam:\n$t=\\frac{72stel}{8stel/jam}=9jam$\nMaka, Evaluasi III adalah yang memuat analisis paling tepat dan logis."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "16/2=40/5=56/7=8 stel/jam; t=72/8=9 jam. Hanya Evaluasi III benar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-03",
+      "familyId": "4f0d48da-a68c-5b95-b479-8ec5a97f0918",
+      "sourceVersionId": "02adfa87-ddce-52ba-b6f3-77d4576eceb3",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Himpunan penyelesaian dari pertidaksamaan 2(2x−3)>5x+1 jika digambarkan pada garis bilangan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik −7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik −7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 7 dengan lingkaran kosong"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan pertidaksamaan: 2(2x−3)>5x+1⟹4x−6>5x+1 4x−5x>1+6⟹−x>7\nKalikan/bagi kedua ruas dengan −1 (balik tanda): x<−7\nRepresentasi Garis Bilangan: Karena menggunakan tanda ' < ' (tanpa sama dengan), titik −7 berupa lingkaran kosong dan panah mengarah ke kiri (menunjukkan nilai yang lebih kecil dari −7).\nKesalahan Umum yang Diantisipasi:\nSiswa lupa membalik tanda pertidaksamaan saat mengubah −x>7 menjadi x<−7, sehingga memilih gambar panah yang mengarah ke kanan (x>−7)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Himpunan penyelesaian dari pertidaksamaan 2(2x−3)>5x+1 jika digambarkan pada garis bilangan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik −7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik −7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Panah mengarah ke kiri dari titik 7 dengan lingkaran kosong"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Panah mengarah ke kanan dari titik 7 dengan lingkaran kosong"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan pertidaksamaan: 2(2x−3)>5x+1⟹4x−6>5x+1 4x−5x>1+6⟹−x>7\nKalikan/bagi kedua ruas dengan −1 (balik tanda): x<−7\nRepresentasi Garis Bilangan: Karena menggunakan tanda ' < ' (tanpa sama dengan), titik −7 berupa lingkaran kosong dan panah mengarah ke kiri (menunjukkan nilai yang lebih kecil dari −7).\nKesalahan Umum yang Diantisipasi:\nSiswa lupa membalik tanda pertidaksamaan saat mengubah −x>7 menjadi x<−7, sehingga memilih gambar panah yang mengarah ke kanan (x>−7)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "4x−6>5x+1 → −x>7 → x<−7. Lingkaran kosong di −7, panah kiri.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-04",
+      "familyId": "178ad402-b493-54bb-8a00-937b09bb6ec3",
+      "sourceVersionId": "0382c2a3-310c-59e1-a685-5026fbd9dfd3",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah dadu dilempar sebanyak 240 kali. Angka 5 muncul sebanyak 44 kali. Seorang siswa menyatakan bahwa frekuensi relatif angka 5 adalah 0,20. Evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena 44 ÷ 240 = 0,20."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena frekuensi relatifnya sekitar 0,183."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena peluang teoretis angka 5 adalah 0,20."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena angka 5 muncul kurang dari 50 kali."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Tidak dapat ditentukan tanpa mengetahui hasil lemparan lainnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 44 ÷ 240 ≈ 0,183. Jadi, pernyataan siswa tidak tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah dadu dilempar sebanyak 240 kali. Angka 5 muncul sebanyak 44 kali. Seorang siswa menyatakan bahwa frekuensi relatif angka 5 adalah 0,20. Evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena 44 ÷ 240 = 0,20."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena frekuensi relatifnya sekitar 0,183."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena peluang teoretis angka 5 adalah 0,20."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena angka 5 muncul kurang dari 50 kali."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Tidak dapat ditentukan tanpa mengetahui hasil lemparan lainnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 44 ÷ 240 ≈ 0,183. Jadi, pernyataan siswa tidak tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "44/240=11/60=0,18333…; bukan 0,20.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-05",
+      "familyId": "d69b5196-bec3-58c8-95c6-5e69a0e60344",
+      "sourceVersionId": "04736cd4-98af-54e4-9995-9cd0a9175796",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah segitiga dengan luas 10 cm² didilatasi terhadap titik pusat (0, 0) sehingga menghasilkan bayangan dengan luas 90 cm². Seluruh kemungkinan faktor skala dari dilatasi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "9"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3 atau -3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "9 atau -9"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nPada dilatasi dengan faktor skala k, luas bayangan menjadi k² kali luas awal.\nL' = k² × L\n90 = k² × 10\nk² = 9\nk = 3 atau k = -3\nJadi, faktor skala yang mungkin adalah 3 atau -3."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah segitiga dengan luas 10 cm² didilatasi terhadap titik pusat (0, 0) sehingga menghasilkan bayangan dengan luas 90 cm². Seluruh kemungkinan faktor skala dari dilatasi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "9"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3 atau -3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "9 atau -9"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nPada dilatasi dengan faktor skala k, luas bayangan menjadi k² kali luas awal.\nL' = k² × L\n90 = k² × 10\nk² = 9\nk = 3 atau k = -3\nJadi, faktor skala yang mungkin adalah 3 atau -3."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "90/10=k²=9; kedua faktor k=3 dan k=−3 mungkin.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-06",
+      "familyId": "fc6646d0-0a99-582b-88eb-754beceb477a",
+      "sourceVersionId": "05873324-ac4b-5f47-8f30-cc1cf31a6dc9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang pengurus OSIS menguji dua alternatif cara pembagian $144$ buku tulis dan $180$ pulpen untuk paket bingkisan peserta lomba tanpa tersisa:\nAlternatif I: Dibuat $36$ bingkisan, masing-masing berisi $4$ buku tulis dan $5$ pulpen.\nAlternatif II: Dibuat $72$ bingkisan, masing-masing berisi $2$ buku tulis dan $2,5$ pulpen.\nManakah penilaian yang pasti benar mengenai kelayakan kedua alternatif tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Alternatif I layak dan valid, karena $36$ adalah $FPB(144,180)$ dan menghasilkan kuantitas barang bernilai bulat utuh"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Alternatif II lebih layak, karena menghasilkan jumlah bingkisan yang lebih banyak"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Alternatif I tidak layak, karena jumlah pulpen lebih banyak daripada buku tulis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Alternatif II layak, karena angka $72$ habis membagi $144$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi FPB dari $144$ dan $180$:\n$144={2}^{4}×{3}^{2}$\n$180={2}^{2}×{3}^{2}×5$\n$FPB(144,180)={2}^{2}×{3}^{2}=4×9=36$ bingkisan.\nMengevaluasi jumlah barang per bingkisan pada Alternatif I:\nBuku tulis = $144÷36=4$ buah.\nPulpen = $180÷36=5$ buah.\nAlternatif II menghasilkan $2,5$ pulpen yang secara fisik tidak mungkin dibagikan secara utuh. Maka, Penilaian I adalah yang benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pengurus OSIS menguji dua alternatif cara pembagian $144$ buku tulis dan $180$ pulpen untuk paket bingkisan peserta lomba tanpa tersisa:\nAlternatif I: Dibuat $36$ bingkisan, masing-masing berisi $4$ buku tulis dan $5$ pulpen.\nAlternatif II: Dibuat $72$ bingkisan, masing-masing berisi $2$ buku tulis dan $2,5$ pulpen.\nManakah penilaian yang pasti benar mengenai kelayakan kedua alternatif tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Alternatif I layak dan valid, karena $36$ adalah $FPB(144,180)$ dan menghasilkan kuantitas barang bernilai bulat utuh"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Alternatif II lebih layak, karena menghasilkan jumlah bingkisan yang lebih banyak"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Alternatif I tidak layak, karena jumlah pulpen lebih banyak daripada buku tulis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Alternatif II layak, karena angka $72$ habis membagi $144$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi FPB dari $144$ dan $180$:\n$144={2}^{4}×{3}^{2}$\n$180={2}^{2}×{3}^{2}×5$\n$FPB(144,180)={2}^{2}×{3}^{2}=4×9=36$ bingkisan.\nMengevaluasi jumlah barang per bingkisan pada Alternatif I:\nBuku tulis = $144÷36=4$ buah.\nPulpen = $180÷36=5$ buah.\nAlternatif II menghasilkan $2,5$ pulpen yang secara fisik tidak mungkin dibagikan secara utuh. Maka, Penilaian I adalah yang benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "FPB(144,180)=36; 144/36=4 dan 180/36=5. Alternatif II membagi pulpen menjadi 2,5 per paket sehingga tidak layak untuk barang utuh.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-07",
+      "familyId": "ecd8dab6-8c06-5948-851c-251f82e936cb",
+      "sourceVersionId": "05b92abc-28f7-5829-a7d1-e7809e635933",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Diketahui f(x) = 3x - 1 dan g(x) = x + 4. Gita menghitung (f ∘ g)(2) dengan cara berikut: (f ∘ g)(x) = f(x) + g(x) = (3x - 1) + (x + 4) = 4x + 3, sehingga (f ∘ g)(2) = 11. Penilaian yang tepat terhadap pekerjaan Gita adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena komposisi fungsi diperoleh dengan menjumlahkan kedua fungsi"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya (f ∘ g)(2) = 9, yaitu f(2) dikomposisikan dengan g(5)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya (f ∘ g)(2) = 13"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena (f ∘ g)(x) = f(g(x)) = 3(x + 4) - 1 = 3x + 11 sehingga (f ∘ g)(2) = 17"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Komposisi fungsi bukan penjumlahan: (f ∘ g)(x) = f(g(x)), yaitu g(x) disubstitusikan ke dalam f.\nf(g(x)) = 3(x + 4) - 1 = 3x + 12 - 1 = 3x + 11.\n(f ∘ g)(2) = 3(2) + 11 = 17. (Nilai 9 adalah hasil (g ∘ f)(2) = g(5), yaitu urutan komposisi yang terbalik.)"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui f(x) = 3x - 1 dan g(x) = x + 4. Gita menghitung (f ∘ g)(2) dengan cara berikut: (f ∘ g)(x) = f(x) + g(x) = (3x - 1) + (x + 4) = 4x + 3, sehingga (f ∘ g)(2) = 11. Penilaian yang tepat terhadap pekerjaan Gita adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena komposisi fungsi diperoleh dengan menjumlahkan kedua fungsi"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya (f ∘ g)(2) = 9, yaitu f(2) dikomposisikan dengan g(5)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya (f ∘ g)(2) = 13"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena (f ∘ g)(x) = f(g(x)) = 3(x + 4) - 1 = 3x + 11 sehingga (f ∘ g)(2) = 17"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Komposisi fungsi bukan penjumlahan: (f ∘ g)(x) = f(g(x)), yaitu g(x) disubstitusikan ke dalam f.\nf(g(x)) = 3(x + 4) - 1 = 3x + 12 - 1 = 3x + 11.\n(f ∘ g)(2) = 3(2) + 11 = 17. (Nilai 9 adalah hasil (g ∘ f)(2) = g(5), yaitu urutan komposisi yang terbalik.)"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "g(2)=6; f(6)=17. g(f(2))=g(5)=9 berbeda dengan f(g(2)). Komposisi bukan penjumlahan.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-08",
+      "familyId": "41059ab3-90ed-5b1b-98ef-39bd37b8eeb4",
+      "sourceVersionId": "07df0051-7483-55d0-80ae-45a9a57343bc",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang pengurus OSIS memeriksa catatan saldo kas kegiatan pentas seni sekolah. Saldo awal kas tercatat sebesar Rp120.000. Selama tiga hari persiapan, terjadi transaksi berikut:\nHari I: Pembelian kertas dekorasi Rp35.000.\nHari II: Penerimaan dana sponsor Rp75.000 dan pengeluaran sewa alat Rp40.000.\nHari III: Pengembalian sisa uang sewa (cashback) Rp15.000 dan pembelian minuman panitia Rp25.000.\nDua anggota panitia menyusun analisis perhitungan sisa saldo akhir kas:\nAnalisis I: Saldo=120.000-35.000+75.000-(40.000+15.000)-25.000=80.000\nAnalisis II: Saldo=120.000-35.000+75.000-40.000+15.000-25.000=110.000\nManakah analisis perhitungan yang benar beserta alasannya?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I, karena cashback menambah total biaya pengeluaran sewa alat"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II, karena cashback bernilai positif (menambah saldo) sehingga tidak dikurangkan"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis I, karena semua transaksi hari III dihitung di dalam tanda kurung"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis II, karena semua penerimaan uang dikelompokkan di akhir perhitungan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung perubahan saldo kas dengan menganalisis arah alur uang (pemasukan positif, pengeluaran negatif):\nSaldo Akhir= Saldo Awal-Dekorasi+Sponsor-Sewa+Cashback-Minuman\n= 120.000-35.000+75.000-40.000+15.000-25.000\n= 85.000+75.000-40.000+15.000-25.000\n= 160.000+40.000+15.000-25.000\n= 120.000+15.000-25.000\n=135.000-25.000=110.000\nPada Analisis I, pembuat persamaan keliru menuliskan -(40.000+15.000), yang artinya cashback disatukan sebagai beban pengeluaran (seharusnya -(40.000-15.000) jika ingin dikurung). Maka, Analisis II adalah yang paling tepat.\nKesalahan Umum yang Diantisipasi:\nSiswa sering keliru menganggap penerimaan dana cashback sebagai pengeluaran tambahan karena transaksi tersebut terjadi saat pengembalian uang sewa alat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pengurus OSIS memeriksa catatan saldo kas kegiatan pentas seni sekolah. Saldo awal kas tercatat sebesar Rp120.000. Selama tiga hari persiapan, terjadi transaksi berikut:\nHari I: Pembelian kertas dekorasi Rp35.000.\nHari II: Penerimaan dana sponsor Rp75.000 dan pengeluaran sewa alat Rp40.000.\nHari III: Pengembalian sisa uang sewa (cashback) Rp15.000 dan pembelian minuman panitia Rp25.000.\nDua anggota panitia menyusun analisis perhitungan sisa saldo akhir kas:\nAnalisis I: Saldo=120.000-35.000+75.000-(40.000+15.000)-25.000=80.000\nAnalisis II: Saldo=120.000-35.000+75.000-40.000+15.000-25.000=110.000\nManakah analisis perhitungan yang benar beserta alasannya?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I, karena cashback menambah total biaya pengeluaran sewa alat"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II, karena cashback bernilai positif (menambah saldo) sehingga tidak dikurangkan"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis I, karena semua transaksi hari III dihitung di dalam tanda kurung"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis II, karena semua penerimaan uang dikelompokkan di akhir perhitungan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Saldo akhir = 120.000−35.000+75.000−40.000+15.000−25.000 = 85.000+75.000−40.000+15.000−25.000 = 160.000−40.000+15.000−25.000 = 120.000+15.000−25.000 = Rp110.000. Cashback menambah saldo, bukan pengeluaran. Jadi Analisis II dengan alasan pada opsi B benar."
+        }
+      },
+      "correctionReason": "Baris antara pembahasan salah mengganti −40.000 menjadi +40.000, lalu kembali menghasilkan 120.000. Hasil akhir dan kunci benar, tetapi rantai persamaannya tidak sah.",
+      "independentSolution": "120.000−35.000+75.000−40.000+15.000−25.000=110.000. Cashback menambah saldo.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-09",
+      "familyId": "1c80ba48-6fca-5289-a95f-1164d01a7e44",
+      "sourceVersionId": "08dcd7f4-6229-587e-b042-b1157d08c784",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang pembina pramuka mengevaluasi dua usulan cara penganggaran pengadaan $39$ paket tali temali seharga Rp24.800,00 per paket:\nUsulan I: Dihitung dengan $30×20.000=600.000$\nUsulan II: Dihitung dengan $40×25.000=1.000.000$\nDua siswa memberikan evaluasi kelayakan usulan:\nEvaluasi I: \"Usulan I lebih layak karena menghasilkan nilai estimasi yang lebih hemat.\"\nEvaluasi II: \"Usulan II lebih layak sebagai batas atas (upper bound) anggaran yang aman, karena Usulan I membulatkan seluruh komponen ke bawah sehingga nilai estimasinya (Rp600.000,00) berada jauh di bawah total riil (Rp967.200,00) yang berisiko kekurangan dana.\"\nManakah evaluasi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua evaluasi salah"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I benar untuk skala penganggaran kecil"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung biaya riil: $39×24.800=Rp967.200,00$.\nEvaluasi Usulan I: Nilai Rp600.000,00 terlampau jauh di bawah biaya riil (kekurangan dana Rp367.200,00).\nEvaluasi Usulan II: Pembulatan ke atas ($39→40$ dan $24.800→25.000$) menghasilkan Rp1.000.000,00, yang menjadi batas atas anggaran yang aman dan wajar (upper bound). Maka, Evaluasi II adalah yang tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pembina pramuka mengevaluasi dua usulan cara penganggaran pengadaan $39$ paket tali temali seharga Rp24.800,00 per paket:\nUsulan I: Dihitung dengan $30×20.000=600.000$\nUsulan II: Dihitung dengan $40×25.000=1.000.000$\nDua siswa memberikan evaluasi kelayakan usulan:\nEvaluasi I: \"Usulan I lebih layak karena menghasilkan nilai estimasi yang lebih hemat.\"\nEvaluasi II: \"Usulan II lebih layak sebagai batas atas (upper bound) anggaran yang aman, karena Usulan I membulatkan seluruh komponen ke bawah sehingga nilai estimasinya (Rp600.000,00) berada jauh di bawah total riil (Rp967.200,00) yang berisiko kekurangan dana.\"\nManakah evaluasi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua evaluasi salah"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I benar untuk skala penganggaran kecil"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung biaya riil: $39×24.800=Rp967.200,00$.\nEvaluasi Usulan I: Nilai Rp600.000,00 terlampau jauh di bawah biaya riil (kekurangan dana Rp367.200,00).\nEvaluasi Usulan II: Pembulatan ke atas ($39→40$ dan $24.800→25.000$) menghasilkan Rp1.000.000,00, yang menjadi batas atas anggaran yang aman dan wajar (upper bound). Maka, Evaluasi II adalah yang tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "39×24.800=967.200. Estimasi 1.000.000 adalah batas atas, selisih 32.800; estimasi 600.000 kurang 367.200.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-10",
+      "familyId": "222978de-3bd7-5891-9d98-93be66ea991c",
+      "sourceVersionId": "0a1f8d07-4c9a-5c04-aff9-1c3690042e65",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang petugas lab IPA menganalisis kewajaran hasil operasi pembagian desimal untuk konsumsi praktikum:\n$Operasi Riil:\\frac{498,6×29,7}{5,1}=\\frac{14808,42}{5,1}≈2.903,61$\nDua siswa menganalisis model estimasi cepat dengan pembulatan ke satuan/puluhan/ratusan terdekat:\nAnalisis I: Membulatkan menjadi $\\frac{400×30}{5}=\\frac{12000}{5}=2.400$\nAnalisis II: Membulatkan menjadi $\\frac{500×30}{5}=\\frac{15000}{5}=3.000$\nHasil analisis manakah yang memberikan nilai estimasi paling akurat dan mendekati hasil sebenarnya?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I, karena $498,6$ lebih aman dibulatkan ke bawah"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II, karena $500$ sangat dekat dengan $498,6$ sehingga hasil $3.000$ dekat dengan $2.903,61$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis I, karena perkalian $400$ lebih mudah dihitung tanpa alat bantu"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis II, karena semua komponen harus dibulatkan ke atas tanpa memperhatikan posisinya"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis ketepatan pembulatan komponen:\n$498,6$ sangat dekat ke $500$ (selisih hanya $1,4$), sehingga membulatkannya ke $500$ memberikan penyimpangan minimum.\n$29,7→30$.\n$5,1→5$.\nOperasi estimasi Analisis II:\n$\\frac{500×30}{5}=\\frac{15000}{5}=3.000[cite:12]$\nDibandingkan dengan nilai riil $2.903,61$, angka $3.000$ jauh lebih akurat dibanding $2.400$."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang petugas lab IPA menganalisis kewajaran hasil operasi pembagian desimal untuk konsumsi praktikum:\n$Operasi Riil:\\frac{498,6×29,7}{5,1}=\\frac{14808,42}{5,1}≈2.903,61$\nDua siswa menganalisis model estimasi cepat dengan pembulatan ke satuan/puluhan/ratusan terdekat:\nAnalisis I: Membulatkan menjadi $\\frac{400×30}{5}=\\frac{12000}{5}=2.400$\nAnalisis II: Membulatkan menjadi $\\frac{500×30}{5}=\\frac{15000}{5}=3.000$\nHasil analisis manakah yang memberikan nilai estimasi paling akurat dan mendekati hasil sebenarnya?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I, karena $498,6$ lebih aman dibulatkan ke bawah"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II, karena $500$ sangat dekat dengan $498,6$ sehingga hasil $3.000$ dekat dengan $2.903,61$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis I, karena perkalian $400$ lebih mudah dihitung tanpa alat bantu"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis II, karena semua komponen harus dibulatkan ke atas tanpa memperhatikan posisinya"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Hasil sebenarnya adalah (498,6×29,7)/5,1 = 14.808,42/5,1 ≈ 2.903,61. Analisis I menghasilkan 2.400, sedangkan Analisis II menghasilkan 3.000. Jarak 3.000 dari hasil sebenarnya sekitar 96,39, lebih kecil daripada jarak 2.400 yang sekitar 503,61. Jadi Analisis II lebih dekat di antara dua estimasi yang diberikan. Jawaban B."
+        }
+      },
+      "correctionReason": "Pembahasan mengandung penanda referensi mentah [cite:12]. Perbandingan dua estimasi benar; penanda tersebut harus dihapus dan pembahasan dibuat mandiri.",
+      "independentSolution": "498,6×29,7=14.808,42; /5,1=2.903,611764…; galat absolut 3.000 adalah sekitar 96,388, sedangkan 2.400 sekitar 503,612. Analisis II lebih dekat.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-11",
+      "familyId": "f81a7099-9538-5d6c-a48c-f097147708af",
+      "sourceVersionId": "0a3a94a9-2ade-51ee-91b6-396d1102ef33",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah kantong berisi 3 bola merah dan 2 bola biru. Satu bola diambil secara acak. Peluang terambil bola merah adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3/5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2/5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1/3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1/2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah bola = 3 + 2 = 5. Bola merah = 3. Peluang = 3/5."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kantong berisi 3 bola merah dan 2 bola biru. Satu bola diambil secara acak. Peluang terambil bola merah adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3/5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2/5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1/3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1/2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah bola = 3 + 2 = 5. Bola merah = 3. Peluang = 3/5."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "P(merah)=3/(3+2)=3/5.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-12",
+      "familyId": "de62b14a-f081-5da0-981a-b689e017e88b",
+      "sourceVersionId": "0bfe5a86-e920-5663-8a0d-04a94a041961",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa SMP memiliki saldo awal pada kartu perpustakaan digital sebesar Rp45.000,00. Selama satu bulan, ia melakukan transaksi sebagai berikut:\n• Membayar denda keterlambatan buku sebesar Rp8.500,00\n• Menerima isi ulang (top up) saldo dari orang tuanya sebesar Rp25.000,00\n• Membayar biaya cetak tugas sekolah sebesar Rp14.000,00 dan membeli map dokumen seharga Rp6.000,00\n• Mendapatkan pengembalian tunai (cashback) program literasi sebesar Rp10.000,00\nBerapa saldo akhir pada kartu perpustakaan digital siswa tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp19.500,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp51.500,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp41.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp53.500,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nIdentifikasi jenis transaksi dengan membedakan pemasukan (bernilai positif) dan pengeluaran (bernilai negatif):\nPemasukan/Penambahan (+): Saldo awal (Rp45.000,00), top up (Rp25.000,00), dan cashback (Rp10.000,00).\nPengeluaran/Pengurangan (-): Denda keterlambatan (Rp8.500,00), biaya cetak (Rp14.000,00), dan map dokumen (Rp6.000,00).\nHitung total pemasukan dan total pengeluaran:\nTotal Pemasukan=45.000+25.000+10.000=Rp80.000,00\nTotal Pengeluaran=8.500+14.000+6.000=Rp28.500,00\nHitung saldo akhir kartu perpustakaan digital:\nSaldo Akhir=Total Pemasukan-Total Pengeluaran\nSaldo Akhir=80.000-28.500=Rp51.500,00\nAnalisis opsi pilihan jawaban:\nOpsi A (Rp19.500,00): Salah, muncul jika siswa keliru mengabaikan saldo awal (Rp45.000,00) dan hanya mengoperasikan transaksi berjalan (35.000-28.500+13.000).\nOpsi B (Rp51.500,00 - BENAR): Hasil perhitungan operasi campuran bilangan bulat/uang yang tepat dan akurat (Rp80.000,00-Rp28.500,00).\nOpsi C (Rp41.500,00): Salah, muncul jika siswa lupa memasukkan cashback (Rp10.000,00).\nOpsi D (Rp53.500,00): Salah, muncul jika siswa keliru menghitung pengeluaran denda menjadi Rp6.500,00.\nKesalahan umum yang diantisipasi: Siswa sering menjumlahkan seluruh nominal transaksi tanpa membedakan transaksi yang menambah saldo (top up/cashback) dan transaksi yang mengurangi saldo (pembayaran denda/biaya cetak/membeli barang)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa SMP memiliki saldo awal pada kartu perpustakaan digital sebesar Rp45.000,00. Semua transaksi berikut dibukukan pada saldo kartu tersebut:\n• Pembayaran denda keterlambatan buku Rp8.500,00\n• Isi ulang saldo Rp25.000,00\n• Pembayaran biaya cetak Rp14.000,00 dan pembelian map dokumen Rp6.000,00\n• Cashback program literasi Rp10.000,00 yang dikreditkan ke saldo kartu\nBerapa saldo akhir kartu tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp19.500,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp51.500,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp41.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp53.500,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Saldo awal dan penambahan saldo = 45.000+25.000+10.000 = Rp80.000,00. Total pengeluaran = 8.500+14.000+6.000 = Rp28.500,00. Saldo akhir = 80.000−28.500 = Rp51.500,00. Jawaban B. Opsi A bukan hasil perhitungan tersebut; mengabaikan saldo awal justru menghasilkan 35.000−28.500=Rp6.500,00. Opsi C mengabaikan cashback yang dinyatakan masuk saldo kartu. Opsi D tidak sesuai total pengeluaran."
+        }
+      },
+      "correctionReason": "Pembahasan opsi A menyisipkan Rp13.000 tanpa asal dalam soal dan bukan konsekuensi mengabaikan saldo awal. Kata cashback tunai juga dapat berarti tidak masuk saldo kartu, sehingga opsi C menjadi masuk akal pada tafsir tersebut. Tegaskan semua transaksi pada saldo kartu.",
+      "independentSolution": "45.000−8.500+25.000−14.000−6.000+10.000=51.500, jika seluruh transaksi termasuk cashback masuk/keluar saldo kartu. Jika cashback benar-benar tunai di luar kartu, saldo kartu 41.500; redaksi perlu diperjelas.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-13",
+      "familyId": "f79e667d-ae95-5cf8-afa9-8ab705067fa5",
+      "sourceVersionId": "0db61a20-51ea-5708-aaa8-810f3ac00bc1",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah Toko Alat Tulis memberikan penawaran harga buku tulis. Pengelola toko membuat dua bentuk formulasi harga untuk $x$ buah buku tulis:\n$4(x+3)-2x$\n$2(x+6)$\nSeorang pembeli menyatakan bahwa berapa pun jumlah buku yang dibeli ($x$), total harga pada Formulasi A dan Formulasi B akan selalu sama. Evaluasi terhadap pernyataan pembeli tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena Formulasi A menghasilkan nilai yang lebih besar untuk $x>5$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena Formulasi B tidak memiliki konstanta yang sama"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar hanya jika jumlah buku yang dibeli $x=6$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena kedua formulasi dapat disederhanakan menjadi bentuk linear yang sama yaitu $2x+12$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nUji kesamaan dua bentuk aljabar dengan menyederhanakannya:\nFormulasi A:\n\n$4(x+3)-2x=4x+12-2x=2x+12$\nFormulasi B:\n\n$2(x+6)=2x+12$\nKarena kedua formulasi menghasilkan bentuk aljabar yang sama ($2x+12$), maka untuk setiap nilai $x$, nilai dari Formulasi A selalu sama dengan Formulasi B. Jadi, pernyataan pembeli Benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah Toko Alat Tulis memberikan penawaran harga buku tulis. Pengelola toko membuat dua bentuk formulasi harga untuk $x$ buah buku tulis:\n$4(x+3)-2x$\n$2(x+6)$\nSeorang pembeli menyatakan bahwa berapa pun jumlah buku yang dibeli ($x$), total harga pada Formulasi A dan Formulasi B akan selalu sama. Evaluasi terhadap pernyataan pembeli tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena Formulasi A menghasilkan nilai yang lebih besar untuk $x>5$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena Formulasi B tidak memiliki konstanta yang sama"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar hanya jika jumlah buku yang dibeli $x=6$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena kedua formulasi dapat disederhanakan menjadi bentuk linear yang sama yaitu $2x+12$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nUji kesamaan dua bentuk aljabar dengan menyederhanakannya:\nFormulasi A:\n\n$4(x+3)-2x=4x+12-2x=2x+12$\nFormulasi B:\n\n$2(x+6)=2x+12$\nKarena kedua formulasi menghasilkan bentuk aljabar yang sama ($2x+12$), maka untuk setiap nilai $x$, nilai dari Formulasi A selalu sama dengan Formulasi B. Jadi, pernyataan pembeli Benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "4(x+3)−2x=2x+12 dan 2(x+6)=2x+12. Identik pada domain jumlah buku.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-14",
+      "familyId": "c9b796ee-4746-59eb-bc32-04e73299bd92",
+      "sourceVersionId": "0e76a4a1-e4eb-53c5-83cf-5d81457a7757",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tarif parkir sebuah gedung adalah Rp3.000 untuk jam pertama dan Rp2.000 untuk setiap jam berikutnya (dihitung per jam penuh). Dina memodelkan biaya parkir untuk t jam (t bilangan asli) sebagai f(t) = 2.000t + 3.000. Penilaian yang tepat terhadap model Dina adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena biaya bertambah Rp2.000 untuk setiap tambahan satu jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya f(t) = 3.000t"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena f(1) = 5.000, padahal tarif jam pertama Rp3.000; model yang tepat adalah f(t) = 2.000t + 1.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena grafik fungsi tarif parkir seharusnya berupa garis lurus yang kontinu"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Uji model dengan nilai kecil: f(1) = 2.000(1) + 3.000 = 5.000, tetapi tarif jam pertama hanya Rp3.000. Jadi model Dina belum tepat.\nModel yang benar: jam pertama 3.000, lalu tiap jam tambahan 2.000, sehingga f(t) = 3.000 + 2.000(t - 1) = 2.000t + 1.000. Cek: f(1) = 3.000, f(2) = 5.000.\nKarena t bilangan asli, grafiknya berupa titik-titik terpisah (diskrit), bukan garis kontinu."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tarif parkir sebuah gedung adalah Rp3.000 untuk jam pertama dan Rp2.000 untuk setiap jam berikutnya (dihitung per jam penuh). Dina memodelkan biaya parkir untuk t jam (t bilangan asli) sebagai f(t) = 2.000t + 3.000. Penilaian yang tepat terhadap model Dina adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena biaya bertambah Rp2.000 untuk setiap tambahan satu jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena seharusnya f(t) = 3.000t"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena f(1) = 5.000, padahal tarif jam pertama Rp3.000; model yang tepat adalah f(t) = 2.000t + 1.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena grafik fungsi tarif parkir seharusnya berupa garis lurus yang kontinu"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Uji model dengan nilai kecil: f(1) = 2.000(1) + 3.000 = 5.000, tetapi tarif jam pertama hanya Rp3.000. Jadi model Dina belum tepat.\nModel yang benar: jam pertama 3.000, lalu tiap jam tambahan 2.000, sehingga f(t) = 3.000 + 2.000(t - 1) = 2.000t + 1.000. Cek: f(1) = 3.000, f(2) = 5.000.\nKarena t bilangan asli, grafiknya berupa titik-titik terpisah (diskrit), bukan garis kontinu."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "3.000+2.000(t−1)=2.000t+1.000 untuk t bilangan asli positif. Model Dina memberi f(1)=5.000, bertentangan dengan tarif.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-15",
+      "familyId": "e49e46b6-f7a4-52cb-8f85-0ed9a5034fde",
+      "sourceVersionId": "0ff467ba-677a-5ead-9c75-e799109f1a7f",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Seorang pengurus perpustakaan sekolah mencatat data peminjaman buku selama satu tahun sebanyak 28.647 eksemplar. Pengurus tersebut diminta menganalisis hasil pembulatan data untuk dua jenis dokumen penyusunan laporan:\nLaporan Ringkas: Dibulatkan ke ribuan terdekat.\nLaporan Detail: Dibulatkan ke ratusan terdekat.\nEmpat orang staf memberikan hasil analisis pembulatan sebagai berikut:\nAnalisis I: Laporan Ringkas = $28.000$, Laporan Detail = $28.600$\nAnalisis II: Laporan Ringkas = $29.000$, Laporan Detail = $28.600$\nAnalisis III: Laporan Ringkas = $29.000$, Laporan Detail = $28.700$\nAnalisis IV: Laporan Ringkas = $28.000$, Laporan Detail = $28.700$\nHasil analisis siapakah yang pasti benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis aturan pembulatan untuk bilangan $28.647$:\nPembulatan ke ribuan terdekat:\nPerhatikan digit ratusan (yaitu $6$).\nKarena $6≥5$, maka digit ribuan dibulatkan ke atas ($8+1=9$) menjadi $29.000$.\nPembulatan ke ratusan terdekat:\nPerhatikan digit puluhan (yaitu $4$).\nKarena $4<5$, maka digit ratusan dibulatkan ke bawah menjadi $28.600$.\nDengan demikian, pasangannya adalah $29.000$ dan $28.600$, yang divalidasi tepat oleh Analisis II."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pengurus perpustakaan sekolah mencatat data peminjaman buku selama satu tahun sebanyak 28.647 eksemplar. Pengurus tersebut diminta menganalisis hasil pembulatan data untuk dua jenis dokumen penyusunan laporan:\nLaporan Ringkas: Dibulatkan ke ribuan terdekat.\nLaporan Detail: Dibulatkan ke ratusan terdekat.\nEmpat orang staf memberikan hasil analisis pembulatan sebagai berikut:\nAnalisis I: Laporan Ringkas = $28.000$, Laporan Detail = $28.600$\nAnalisis II: Laporan Ringkas = $29.000$, Laporan Detail = $28.600$\nAnalisis III: Laporan Ringkas = $29.000$, Laporan Detail = $28.700$\nAnalisis IV: Laporan Ringkas = $28.000$, Laporan Detail = $28.700$\nHasil analisis siapakah yang pasti benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis aturan pembulatan untuk bilangan $28.647$:\nPembulatan ke ribuan terdekat:\nPerhatikan digit ratusan (yaitu $6$).\nKarena $6≥5$, maka digit ribuan dibulatkan ke atas ($8+1=9$) menjadi $29.000$.\nPembulatan ke ratusan terdekat:\nPerhatikan digit puluhan (yaitu $4$).\nKarena $4<5$, maka digit ratusan dibulatkan ke bawah menjadi $28.600$.\nDengan demikian, pasangannya adalah $29.000$ dan $28.600$, yang divalidasi tepat oleh Analisis II."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "28.647 → ribuan terdekat 29.000; ratusan terdekat 28.600. Analisis II.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-16",
+      "familyId": "b84f5027-1e90-574c-abf0-4eab613c33ec",
+      "sourceVersionId": "100b2b40-0c4f-50b2-b7dd-e81232a5825e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Panitia kegiatan bursa buku murah di sekolah menyewa stan dengan biaya tetap Rp120.000,00 dan biaya operasional tambahan Rp3.000,00 untuk setiap buku yang terjual. Jika total biaya yang dikeluarkan panitia untuk stan tersebut adalah Rp345.000,00, model persamaan linear satu variabel dan banyak buku yang terjual adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$120.000x+3.000=345.000$; terjual 75 buku"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$3.000x-120.000=345.000$; terjual 155 buku"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$3.000x+120.000=345.000$; terjual 75 buku"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$3.000x+120.000=345.000$; terjual 115 buku"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN Misalkan $x$ adalah banyak buku yang terjual.\nBiaya tetap $=Rp120.000,00$\n\nBiaya variabel $=3.000x$\n\nTotal biaya $=Rp345.000,00$\n\nModel matematika PLSV:\n$3.000x+120.000=345.000$\nMenyelesaikan persamaan menggunakan operasi invers:\n$3.000x=345.000-120.000$\n$3.000x=225.000$\n$x=\\frac{225.000}{3.000}=75$\nJadi, model yang tepat adalah $3.000x+120.000=345.000$ dan buku yang terjual sebanyak 75 buku."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia kegiatan bursa buku murah di sekolah menyewa stan dengan biaya tetap Rp120.000,00 dan biaya operasional tambahan Rp3.000,00 untuk setiap buku yang terjual. Jika total biaya yang dikeluarkan panitia untuk stan tersebut adalah Rp345.000,00, model persamaan linear satu variabel dan banyak buku yang terjual adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$120.000x+3.000=345.000$; terjual 75 buku"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$3.000x-120.000=345.000$; terjual 155 buku"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$3.000x+120.000=345.000$; terjual 75 buku"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$3.000x+120.000=345.000$; terjual 115 buku"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN Misalkan $x$ adalah banyak buku yang terjual.\nBiaya tetap $=Rp120.000,00$\n\nBiaya variabel $=3.000x$\n\nTotal biaya $=Rp345.000,00$\n\nModel matematika PLSV:\n$3.000x+120.000=345.000$\nMenyelesaikan persamaan menggunakan operasi invers:\n$3.000x=345.000-120.000$\n$3.000x=225.000$\n$x=\\frac{225.000}{3.000}=75$\nJadi, model yang tepat adalah $3.000x+120.000=345.000$ dan buku yang terjual sebanyak 75 buku."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "3.000x+120.000=345.000 → x=225.000/3.000=75 buku.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-17",
+      "familyId": "11cde6f2-35bb-58e9-ae9c-1aedf262da01",
+      "sourceVersionId": "101e155a-7484-5cca-a80e-1a6accccc257",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang guru meminta siswa menganalisis kesalahan penyelesaian dari ekspresi aritmetika berikut:\nEkspresi:30-18÷3+4×(-2)\nEmpat orang siswa memberikan urutan analisis perhitungan sebagai berikut:\nSiswa A: (30-18)÷3+4×(-2)=12÷3-8=4-8=-4\nSiswa B: 30-18÷(3+4)×(-2)=30-18÷7×(-2)\nSiswa C: 30-(18÷3)+[4×(-2)]=30-6+(-8)=24-8=16\nSiswa D: (30-6+4)×(-2)=28×(-2)=-56\nAnalisis pengerjaan siapakah yang benar berdasarkan hirarki aturan KABATAKU/PEMDAS?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Siswa A"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Siswa B"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Siswa C"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Siswa D"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nBerdasarkan aturan KABATAKU/PEMDAS:\nDahulukan pembagian dan perkalian dari kiri ke kanan:\nPembagian: 18÷3=6\nPerkalian: 4×(-2)=-8\nLakukan pengurangan dan penjumlahan:\n30-6+(-8)=24-8=16\nLangkah analisis yang tepat diperlihatkan secara rinci oleh Siswa C.\nKesalahan Umum yang Diantisipasi:\nSiswa mengerjakan operasi secara runtut dari kiri ke kanan (seperti Siswa A) tanpa mengindahkan hirarki utama perkalian dan pembagian."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang guru meminta siswa menganalisis kesalahan penyelesaian dari ekspresi aritmetika berikut:\nEkspresi:30-18÷3+4×(-2)\nEmpat orang siswa memberikan urutan analisis perhitungan sebagai berikut:\nSiswa A: (30-18)÷3+4×(-2)=12÷3-8=4-8=-4\nSiswa B: 30-18÷(3+4)×(-2)=30-18÷7×(-2)\nSiswa C: 30-(18÷3)+[4×(-2)]=30-6+(-8)=24-8=16\nSiswa D: (30-6+4)×(-2)=28×(-2)=-56\nAnalisis pengerjaan siapakah yang benar berdasarkan hirarki aturan KABATAKU/PEMDAS?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Siswa A"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Siswa B"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Siswa C"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Siswa D"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nBerdasarkan aturan KABATAKU/PEMDAS:\nDahulukan pembagian dan perkalian dari kiri ke kanan:\nPembagian: 18÷3=6\nPerkalian: 4×(-2)=-8\nLakukan pengurangan dan penjumlahan:\n30-6+(-8)=24-8=16\nLangkah analisis yang tepat diperlihatkan secara rinci oleh Siswa C.\nKesalahan Umum yang Diantisipasi:\nSiswa mengerjakan operasi secara runtut dari kiri ke kanan (seperti Siswa A) tanpa mengindahkan hirarki utama perkalian dan pembagian."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Pembagian 18/3=6 dan perkalian 4×(−2)=−8 dikerjakan lebih dulu; 30−6−8=16.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-18",
+      "familyId": "36d6e306-96a0-57cb-99a0-ebe03a891f82",
+      "sourceVersionId": "10441e46-a4f0-54da-80d4-02d4e1d4a3ae",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Dua orang siswa memberikan evaluasi terhadap klaim kuis sifat-sifat operasi pada himpunan bilangan real $R$:\nKlaim Kuis: \"Operasi pengurangan pada bilangan real bersifat komutatif, yaitu $a-b=b-a$ untuk setiap $a,b∈R$.\"\nDua siswa memberikan evaluasi berikut:\nEvaluasi I: \"Klaim tersebut BENAR, karena $5-3=2$ dan $3-5=2$.\"\nEvaluasi II: \"Klaim tersebut SALAH, karena dengan contoh penyangkal (counterexample) $5-3=2$ sedangkan $3-5=-2$, di mana $2≠-2$.\"\nHasil evaluasi manakah yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua evaluasi salah"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I benar untuk bilangan positif saja"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nOperasi komutatif mensyaratkan hasil tetap sama bila pertukaran posisi dilakukan ($a∘b=b∘a$).\nPada pengurangan: $5-3=2$, sedangkan $3-5=-2$.\nKarena $2≠-2$, maka operasi pengurangan tidak komutatif. Maka, Evaluasi II adalah yang paling tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua orang siswa memberikan evaluasi terhadap klaim kuis sifat-sifat operasi pada himpunan bilangan real $R$:\nKlaim Kuis: \"Operasi pengurangan pada bilangan real bersifat komutatif, yaitu $a-b=b-a$ untuk setiap $a,b∈R$.\"\nDua siswa memberikan evaluasi berikut:\nEvaluasi I: \"Klaim tersebut BENAR, karena $5-3=2$ dan $3-5=2$.\"\nEvaluasi II: \"Klaim tersebut SALAH, karena dengan contoh penyangkal (counterexample) $5-3=2$ sedangkan $3-5=-2$, di mana $2≠-2$.\"\nHasil evaluasi manakah yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua evaluasi salah"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I benar untuk bilangan positif saja"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nOperasi komutatif mensyaratkan hasil tetap sama bila pertukaran posisi dilakukan ($a∘b=b∘a$).\nPada pengurangan: $5-3=2$, sedangkan $3-5=-2$.\nKarena $2≠-2$, maka operasi pengurangan tidak komutatif. Maka, Evaluasi II adalah yang paling tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "5−3=2 tetapi 3−5=−2; satu contoh penyangkal membantah klaim untuk semua bilangan real.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-19",
+      "familyId": "1e85ab58-16ec-51f5-b312-514b42982562",
+      "sourceVersionId": "11cdfd7c-c79e-53d2-a47f-d8bcc368fa81",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Data nilai dua kelompok:\nA: 72, 74, 76, 78, 80\nB: 60, 70, 76, 82, 92\nPernyataan yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean A lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean kedua kelompok sama, tetapi B lebih menyebar"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mean B lebih kecil"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua kelompok memiliki jangkauan yang sama"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 76 dan mean B = 76. Jangkauan A = 8, sedangkan B = 32. Jadi B lebih menyebar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Data nilai dua kelompok:\nA: 72, 74, 76, 78, 80\nB: 60, 70, 76, 82, 92\nPernyataan yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean A lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean kedua kelompok sama, tetapi B lebih menyebar"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mean B lebih kecil"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua kelompok memiliki jangkauan yang sama"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 76 dan mean B = 76. Jangkauan A = 8, sedangkan B = 32. Jadi B lebih menyebar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah masing-masing 380 sehingga rerata 76. Jangkauan A=8 dan B=32. Pada data ini varians populasi A=8 dan B=116,8 juga lebih besar; simpulan B sesuai data.",
+      "optionalSuggestionNotApplied": "Saran presisi, bukan kunci salah: ganti opsi B menjadi Rata-rata kedua kelompok sama, tetapi jangkauan kelompok B lebih besar. Pembahasan cukup menghitung mean dan jangkauan; hindari menjadikan range bukti umum seluruh bentuk penyebaran."
+    },
+    {
+      "reviewId": "B2-20",
+      "familyId": "bd1e859f-01b9-566b-978d-c7820b6da58a",
+      "sourceVersionId": "12c843ef-b1a9-5d15-a061-1c72af4532cd",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah kebun sekolah berbentuk persegi panjang memiliki ukuran panjang $(3x+5)meter$ dan lebar $(2x-1)meter$. Panitia penataan taman ingin menganalisis keliling kebun dan luas kebun dalam bentuk aljabar yang paling sederhana. Bentuk aljabar untuk keliling kebun tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$(5x+4)meter$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$(10x+8)meter$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$(6{x}^{2}-5)meter$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$(10x+4)meter$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN Ukuran panjang $(p)=3x+5$ dan lebar $(l)=2x-1$. Rumus keliling persegi panjang $=2(p+l)$.\nSubstitusi nilai $p$ dan $l$:\n$Keliling=2((3x+5)+(2x-1))$\nKelompokkan suku-suku sejenis di dalam kurung menggunakan sifat komutatif dan asosiatif:\n$Keliling=2((3x+2x)+(5-1))=2(5x+4)$\nGunakan sifat distributif perkalian:\n$Keliling=2(5x)+2(4)=10x+8meter$\nJadi, keliling kebun dalam bentuk aljabar paling sederhana adalah $(10x+8)meter$."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kebun sekolah berbentuk persegi panjang memiliki ukuran panjang $(3x+5)meter$ dan lebar $(2x-1)meter$. Panitia penataan taman ingin menganalisis keliling kebun dan luas kebun dalam bentuk aljabar yang paling sederhana. Bentuk aljabar untuk keliling kebun tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$(5x+4)meter$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$(10x+8)meter$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$(6{x}^{2}-5)meter$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$(10x+4)meter$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN Ukuran panjang $(p)=3x+5$ dan lebar $(l)=2x-1$. Rumus keliling persegi panjang $=2(p+l)$.\nSubstitusi nilai $p$ dan $l$:\n$Keliling=2((3x+5)+(2x-1))$\nKelompokkan suku-suku sejenis di dalam kurung menggunakan sifat komutatif dan asosiatif:\n$Keliling=2((3x+2x)+(5-1))=2(5x+4)$\nGunakan sifat distributif perkalian:\n$Keliling=2(5x)+2(4)=10x+8meter$\nJadi, keliling kebun dalam bentuk aljabar paling sederhana adalah $(10x+8)meter$."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "K=2[(3x+5)+(2x−1)]=10x+8 meter, dengan x>1/2 agar kedua ukuran positif.",
+      "optionalSuggestionNotApplied": "Saran kelengkapan redaksi: nyatakan x>1/2 agar panjang/lebar positif dan hapus penyebutan luas yang tidak ditanyakan. Formula dan kunci tidak berubah."
+    },
+    {
+      "reviewId": "B2-21",
+      "familyId": "35e7c2f6-22e3-523a-b3a5-bb63698a3a50",
+      "sourceVersionId": "135742a6-b3c3-5275-a840-ff46d32881f6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dalam eksperimen kelistrikan di laboratorium sekolah, daya listrik suatu rangkaian dianalisis menggunakan sifat-sifat operasi eksponen (bilangan berpangkat):\n$Daya Listrik=\\frac{({2}^{3}{)}^{4}×{2}^{-2}}{{2}^{2}}(dalam watt)$\nBentuk sederhana dari ekspresi daya listrik tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "${2}^{6} watt$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "${2}^{8} watt$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "${2}^{10} watt$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "${2}^{12} watt$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nGunakan sifat-sifat eksponen:\nSifat pangkat dari pangkat: $({a}^{m}{)}^{n}={a}^{m×n}$ ⇒ $({2}^{3}{)}^{4}$ = ${2}^{12}$.\nSifat perkalian eksponen:${ a}^{m}×{ a}^{n}= {a}^{m+n} ⇒ {2}^{12}×{2}^{-2}={2}^{12+(-2)}={2}^{10}$.\nSifat pembagian eksponen: $\\frac{{a}^{m}}{{a}^{n}}={a}^{m-n} ⇒\\frac{{2}^{10}}{{2}^{2}}={2}^{10-2}={2}^{8} watt$"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam eksperimen kelistrikan di laboratorium sekolah, daya listrik suatu rangkaian dianalisis menggunakan sifat-sifat operasi eksponen (bilangan berpangkat):\n$Daya Listrik=\\frac{({2}^{3}{)}^{4}×{2}^{-2}}{{2}^{2}}(dalam watt)$\nBentuk sederhana dari ekspresi daya listrik tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "${2}^{6} watt$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "${2}^{8} watt$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "${2}^{10} watt$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "${2}^{12} watt$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nGunakan sifat-sifat eksponen:\nSifat pangkat dari pangkat: $({a}^{m}{)}^{n}={a}^{m×n}$ ⇒ $({2}^{3}{)}^{4}$ = ${2}^{12}$.\nSifat perkalian eksponen:${ a}^{m}×{ a}^{n}= {a}^{m+n} ⇒ {2}^{12}×{2}^{-2}={2}^{12+(-2)}={2}^{10}$.\nSifat pembagian eksponen: $\\frac{{a}^{m}}{{a}^{n}}={a}^{m-n} ⇒\\frac{{2}^{10}}{{2}^{2}}={2}^{10-2}={2}^{8} watt$"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "(2³)^4 × 2^(−2) / 2² = 2^(12−2−2)=2^8 watt.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-22",
+      "familyId": "c941575a-7390-5da0-9805-3293edfbba21",
+      "sourceVersionId": "13eac975-7bce-5e65-8cdf-0d496965b150",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah kantong berisi bola merah, biru, dan kuning. Satu bola diambil secara acak dan dikembalikan setiap kali pengambilan. Dalam 80 percobaan, bola merah terambil 28 kali. Kesimpulan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Peluang teoretis bola merah pasti 0,35."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif bola merah adalah 0,28."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif bola merah adalah 0,35."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang bola merah tidak dapat diperkirakan melalui percobaan."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Bola merah pasti terambil sebanyak 35 kali dalam 100 percobaan berikutnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 28 ÷ 80 = 0,35. Nilai tersebut merupakan hasil percobaan, bukan kepastian peluang teoretis."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kantong berisi bola merah, biru, dan kuning. Satu bola diambil secara acak dan dikembalikan setiap kali pengambilan. Dalam 80 percobaan, bola merah terambil 28 kali. Kesimpulan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Peluang teoretis bola merah pasti 0,35."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif bola merah adalah 0,28."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif bola merah adalah 0,35."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang bola merah tidak dapat diperkirakan melalui percobaan."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Bola merah pasti terambil sebanyak 35 kali dalam 100 percobaan berikutnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 28 ÷ 80 = 0,35. Nilai tersebut merupakan hasil percobaan, bukan kepastian peluang teoretis."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "28/80=0,35 adalah frekuensi relatif; bukan kepastian peluang teoretis atau frekuensi percobaan mendatang.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-23",
+      "familyId": "1962b7a1-7bf8-5c49-a011-ca9eb064c5db",
+      "sourceVersionId": "150a3791-8c32-5c3d-b002-285181c78da9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Regu Pramuka mempersiapkan dua susunan formasi barisan. Sisi depan formasi terdiri dari (3a-2b) orang dan sisi kanan terdiri dari (2a+5b) orang. Untuk penampilan utama, pembina meminta regu membuat formasi baru yang terdiri dari 2 kali jumlah sisi depan ditambah 3 kali jumlah sisi kanan. Banyak anggota dalam formasi baru tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "12a+11b"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12a+19b"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "10a+11b"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10a+19b"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nModelkan jumlah anggota formasi baru berdasarkan perintah pembina:\nFormasiBaru=2(3a-2b)+3(2a+5b)\nGunakan sifat distributif perkalian:\n=6a-4b+6a+15b\nKelompokkan dan operasikan suku-suku sejenis:\n=(6a+6a)+(-4b+15b)\n=12a+11b"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Regu Pramuka mempersiapkan dua susunan formasi barisan. Sisi depan formasi terdiri dari (3a-2b) orang dan sisi kanan terdiri dari (2a+5b) orang. Untuk penampilan utama, pembina meminta regu membuat formasi baru yang terdiri dari 2 kali jumlah sisi depan ditambah 3 kali jumlah sisi kanan. Banyak anggota dalam formasi baru tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "12a+11b"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12a+19b"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "10a+11b"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10a+19b"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nModelkan jumlah anggota formasi baru berdasarkan perintah pembina:\nFormasiBaru=2(3a-2b)+3(2a+5b)\nGunakan sifat distributif perkalian:\n=6a-4b+6a+15b\nKelompokkan dan operasikan suku-suku sejenis:\n=(6a+6a)+(-4b+15b)\n=12a+11b"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2(3a−2b)+3(2a+5b)=6a−4b+6a+15b=12a+11b.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-24",
+      "familyId": "634c8d82-949f-581b-8bd9-5cf1efb30b25",
+      "sourceVersionId": "16ed0b42-e813-5572-8696-7fd3d6d3681c",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa memilih metode penyelesaian untuk menyelesaikan SPLDV berikut:\n$y=3x-2$\n$2x+5y=24$\nSiswa tersebut berpendapat bahwa Metode Substitusi jauh lebih efisien dibandingkan Metode Eliminasi. Evaluasi terhadap pendapat siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena nilai $y$ sudah terisolasi pada persamaan pertama sehingga dapat langsung dimasukkan ke persamaan kedua"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena metode eliminasi selalu lebih cepat dan tidak membutuhkan substitusi variabel"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar, tetapi hanya berlaku jika koefisien $x$ pada persamaan kedua bernilai negatif"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena kedua metode memerlukan jumlah langkah perhitungan yang sama persis"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nAnalisis Persamaan:\nPersamaan pertama $y=3x-2$ sudah dalam bentuk eksplisit (variabel $y$ terisolasi).\nEvaluasi Efisiensi:\nDengan Metode Substitusi, kita langsung mengganti $y$ pada persamaan kedua:\n$$2x + 5(3x - 2) = 24 \\implies 2x + 15x - 10 = 24 \\implies 17x = 34 \\implies x = 2$$\nMetode ini hanya membutuhkan 2 langkah pengerjaan dasar. Jika menggunakan eliminasi, siswa harus mengubah bentuk $y=3x-2$ menjadi $-3x+y=-2$ terlebih dahulu lalu menyamakan koefisien.\nMaka, pendapat siswa Benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui SPLDV y=3x−2 dan 2x+5y=24. Seorang siswa memilih metode substitusi agar persamaan pertama dapat langsung dimasukkan ke persamaan kedua, tanpa mengubah persamaan pertama ke bentuk Ax+By=C. Penilaian yang tepat terhadap alasan pemilihan metode tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena nilai $y$ sudah terisolasi pada persamaan pertama sehingga dapat langsung dimasukkan ke persamaan kedua"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena metode eliminasi selalu lebih cepat dan tidak membutuhkan substitusi variabel"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar, tetapi hanya berlaku jika koefisien $x$ pada persamaan kedua bernilai negatif"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena kedua metode memerlukan jumlah langkah perhitungan yang sama persis"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Variabel y sudah terisolasi pada y=3x−2 sehingga substitusi dapat langsung dilakukan: 2x+5(3x−2)=24 → 17x−10=24 → x=2. Selanjutnya y=3(2)−2=4. Opsi A sesuai alasan pemilihan metode. Hal ini tidak menyatakan bahwa eliminasi tidak sah atau bahwa substitusi selalu paling cepat."
+        }
+      },
+      "correctionReason": "Pertanyaan menilai klaim jauh lebih efisien tanpa definisi ukuran efisiensi. Pembahasan menyatakan hanya 2 langkah dasar tanpa definisi langkah. Ubah sasaran menjadi substitusi langsung dari persamaan eksplisit, bukan pembuktian metode tercepat.",
+      "independentSolution": "Substitusi langsung y=3x−2 memberi 2x+5(3x−2)=24 → 17x=34 → x=2 dan y=4. Keterisolasian y menjelaskan langkah langsung, tetapi tidak membuktikan ukuran efisiensi universal.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-25",
+      "familyId": "94dcf51e-2a5e-5f21-bb20-9004fe7dec02",
+      "sourceVersionId": "18a6f875-bd69-5e1a-83ce-9ddfa4753dd6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah panggung pertunjukan di SMP berbentuk persegi panjang dengan ukuran panjang 3sqrt(20)meter dan lebar sqrt(45)meter. Untuk dekorasi pentas seni, panitia ingin mengetahui selisih antara panjang dan lebar panggung tersebut.\nSelisih panjang dan lebar panggung pertunjukan dalam bentuk akar paling sederhana adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3sqrt(5)m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4sqrt(5)m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2sqrt(5)m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5sqrt(5)m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nSederhanakan masing-masing bentuk akar terlebih dahulu:\nPanjang (p):\np=3sqrt(20)=3sqrt(4×5)=3×2sqrt(5)=6sqrt(5)meter\nLebar (l):\nl=sqrt(45)=sqrt(9×5)=3sqrt(5)meter\nHitung selisih antara panjang dan lebar (p-l):\nSelisih=p-l=6sqrt(5)-3sqrt(5)=(6-3)sqrt(5)=3sqrt(5)meter\nAnalisis opsi pilihan jawaban:\nOpsi A (3sqrt(5)m - BENAR): Hasil pengurangan bentuk akar paling sederhana yang tepat (6sqrt(5)-3sqrt(5)=3sqrt(5)).\nOpsi B (4sqrt(5)m): Salah, muncul jika siswa keliru menyederhanakan sqrt(45)=2sqrt(5) sehingga 6sqrt(5)-2sqrt(5)=4sqrt(5).\nOpsi C (2sqrt(5)m): Salah, muncul jika siswa keliru mengoperasikan pengurangan koefisien.\nOpsi D (5sqrt(5)m): Salah, muncul jika siswa keliru menyederhanakan 3sqrt(20)=8sqrt(5) atau keliru menjumlahkan alih-alih mengurangkan.\nKesalahan umum yang diantisipasi: Siswa sering mengurangkan langsung bilangan di dalam akar tanpa menyederhanakannya terlebih dahulu (misalnya keliru menghitung 3sqrt(20-45)), atau salah dalam menyederhanakan perkalian koefisien pada 3sqrt(20)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah panggung pertunjukan di SMP berbentuk persegi panjang dengan ukuran panjang 3sqrt(20)meter dan lebar sqrt(45)meter. Untuk dekorasi pentas seni, panitia ingin mengetahui selisih antara panjang dan lebar panggung tersebut.\nSelisih panjang dan lebar panggung pertunjukan dalam bentuk akar paling sederhana adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3sqrt(5)m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4sqrt(5)m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2sqrt(5)m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5sqrt(5)m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Panjang = 3√20 = 3×2√5 = 6√5 meter. Lebar = √45 = 3√5 meter. Selisih = 6√5−3√5 = 3√5 meter, sehingga jawaban A. Opsi D, 5√5, bukan hasil selisih tersebut. Jika kedua ukuran justru dijumlahkan, hasilnya 9√5, bukan 5√5."
+        }
+      },
+      "correctionReason": "Alasan pengecoh D mengaitkan 5√5 dengan penjumlahan, padahal 6√5+3√5=9√5. Kunci dan solusi utama benar; koreksi alasan pengecoh.",
+      "independentSolution": "3√20−√45=6√5−3√5=3√5 meter. Penjumlahan bentuk yang benar akan menghasilkan 9√5, bukan 5√5.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-26",
+      "familyId": "7e700829-c7d4-5212-af50-db89e835561d",
+      "sourceVersionId": "19199c13-3c33-555c-8785-053148a34072",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan antara jam operasional mesin sablon dan jumlah kaus yang selesai diproduksi:\nWaktu Operasional (jam) | Kaus Diproduksi (lembar)\n$3$ | $24$\n$6$ | $48$\n$8$ | $64$\n$x$ | $88$\nTiga siswa memberikan evaluasi untuk menentukan nilai $x$ (waktu yang dibutuhkan untuk mencetak $88$ lembar kaus):\nEvaluasi I: \"$x=10 jam$, karena dari $64$ ke $88$ bertambah $24$ lembar sehingga jam operasional bertambah $2 jam$ ($8+2=10$).\"\nEvaluasi II: \"$x=11 jam$, karena laju konstan produksi adalah $8 lembar/jam$ ($\\frac{24}{3}=\\frac{48}{6}=\\frac{64}{8}=8$), sehingga $x=\\frac{88}{8}=11 jam$.\"\nEvaluasi III: \"$x=12 jam$, karena dihitung dari $88÷7,33≈12$.\"\nHasil evaluasi manakah yang pasti benar secara analisis hubungan proporsional?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan III"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi konstanta proporsionalitas (laju produksi per jam):\n$Laju=\\frac{24}{3}=\\frac{48}{6}=\\frac{64}{8}=8 lembar/jam$\nHitung waktu $x$ untuk $88 lembar$ kaus:\n$x=\\frac{88 lembar}{8 lembar/jam}=11 jam$\nMaka, Evaluasi II adalah yang paling tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan antara jam operasional mesin sablon dan jumlah kaus yang selesai diproduksi:\nWaktu Operasional (jam) | Kaus Diproduksi (lembar)\n$3$ | $24$\n$6$ | $48$\n$8$ | $64$\n$x$ | $88$\nTiga siswa memberikan evaluasi untuk menentukan nilai $x$ (waktu yang dibutuhkan untuk mencetak $88$ lembar kaus):\nEvaluasi I: \"$x=10 jam$, karena dari $64$ ke $88$ bertambah $24$ lembar sehingga jam operasional bertambah $2 jam$ ($8+2=10$).\"\nEvaluasi II: \"$x=11 jam$, karena laju konstan produksi adalah $8 lembar/jam$ ($\\frac{24}{3}=\\frac{48}{6}=\\frac{64}{8}=8$), sehingga $x=\\frac{88}{8}=11 jam$.\"\nEvaluasi III: \"$x=12 jam$, karena dihitung dari $88÷7,33≈12$.\"\nHasil evaluasi manakah yang pasti benar secara analisis hubungan proporsional?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan III"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMengevaluasi konstanta proporsionalitas (laju produksi per jam):\n$Laju=\\frac{24}{3}=\\frac{48}{6}=\\frac{64}{8}=8 lembar/jam$\nHitung waktu $x$ untuk $88 lembar$ kaus:\n$x=\\frac{88 lembar}{8 lembar/jam}=11 jam$\nMaka, Evaluasi II adalah yang paling tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "24/3=48/6=64/8=8 lembar/jam; x=88/8=11 jam. Evaluasi II.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-27",
+      "familyId": "670a2287-1889-51da-bb06-fafa19be08c3",
+      "sourceVersionId": "1bcd7c9a-af1e-52ca-b24f-a7e89d556e16",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Titik C(2, -3) dirotasi sebesar 90° searah jarum jam terhadap titik pusat (0,0). Koordinat bayangan titik C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(3, 2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(-3, -2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-2, 3)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(2, 3)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Rotasi 90° searah jarum jam terhadap pusat (0,0) memakai (x,y) → (y,-x), menghasilkan (-3, -2)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Titik C(2, -3) dirotasi sebesar 90° searah jarum jam terhadap titik pusat (0,0). Koordinat bayangan titik C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(3, 2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(-3, -2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-2, 3)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(2, 3)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Rotasi 90° searah jarum jam terhadap pusat (0,0) memakai (x,y) → (y,-x), menghasilkan (-3, -2)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rotasi 90° searah jarum jam: (x,y)→(y,−x). C(2,−3)→(−3,−2).",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-28",
+      "familyId": "014b1728-feb0-5440-8f65-4b4e9362a6c2",
+      "sourceVersionId": "1bd669a1-c72f-5336-ae82-831db12b12e6",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Rani menyatakan bahwa barisan 2, 6, 18, 54 adalah barisan aritmetika karena suku-sukunya selalu bertambah. Penilaian yang tepat terhadap pernyataan Rani adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena suku-sukunya selalu bertambah sehingga selisih antarsukunya tetap."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena selisih antarsukunya tidak tetap, tetapi rasio antarsukunya tetap sebesar 3 sehingga barisan tersebut adalah barisan geometri."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena rasio antarsukunya tidak tetap sehingga barisan tersebut bukan barisan geometri."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena rasio antarsukunya tetap sebesar 3 sehingga barisan tersebut adalah barisan aritmetika."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Selisih antarsuku: 6 - 2 = 4, 18 - 6 = 12, 54 - 18 = 36 (tidak tetap), sehingga bukan barisan aritmetika.\nRasio antarsuku: 6/2 = 18/6 = 54/18 = 3 (tetap), sehingga barisan tersebut adalah barisan geometri. Pernyataan Rani salah."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Rani menyatakan bahwa barisan 2, 6, 18, 54 adalah barisan aritmetika karena suku-sukunya selalu bertambah. Penilaian yang tepat terhadap pernyataan Rani adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena suku-sukunya selalu bertambah sehingga selisih antarsukunya tetap."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena selisih antarsukunya tidak tetap, tetapi rasio antarsukunya tetap sebesar 3 sehingga barisan tersebut adalah barisan geometri."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena rasio antarsukunya tidak tetap sehingga barisan tersebut bukan barisan geometri."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena rasio antarsukunya tetap sebesar 3 sehingga barisan tersebut adalah barisan aritmetika."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Selisih antarsuku: 6 - 2 = 4, 18 - 6 = 12, 54 - 18 = 36 (tidak tetap), sehingga bukan barisan aritmetika.\nRasio antarsuku: 6/2 = 18/6 = 54/18 = 3 (tetap), sehingga barisan tersebut adalah barisan geometri. Pernyataan Rani salah."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Selisih 4,12,36 tidak tetap; rasio 3,3,3 tetap. Jadi geometri, bukan aritmetika.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-29",
+      "familyId": "a6df5500-1ad6-5f5b-92b2-f64dd4fa3e7f",
+      "sourceVersionId": "1c799da1-391d-5345-b243-4a5635663c94",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Empat lokasi stasiun pengisian daya sepeda listrik di sepanjang jalan lurus di sekitar sekolah diukur posisinya (dalam km) terhadap gerbang utama sekolah (titik 0 km):\nStasiun A: $-1,85 km$\nStasiun B: $-\\sqrt{3 }km$\nStasiun C: $-\\frac{7}{4} km$\nStasiun D: $-1,70 km$\nEmpat orang siswa menganalisis urutan posisi stasiun dari yang paling jauh di sebelah kiri (paling kecil) ke yang paling dekat dengan gerbang utama (paling besar):\nAnalisis I: Stasiun A, Stasiun B, Stasiun C, Stasiun D\nAnalisis II: Stasiun A, Stasiun C, Stasiun B, Stasiun D\nAnalisis III: Stasiun A, Stasiun B, Stasiun C, Stasiun D\nAnalisis IV: Stasiun D, Stasiun B, Stasiun C, Stasiun A\nManakah hasil analisis urutan posisi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II (Urutan: Stasiun A, Stasiun C, Stasiun B, Stasiun D)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan seluruh nilai posisi ke desimal pendekatan:\nStasiun A: $-1,85km$\nStasiun B: $-\\sqrt{3}≈-1,732km$\nStasiun C: $-\\frac{7}{4}=-1,75km$\nStasiun D: $-1,70km$\nBandingkan bilangan desimal negatif pada garis bilangan (makin besar angka negatifnya, nilainya makin kecil/makin ke kiri):\n$-1,85<-1,75<-1,732<-1,70$\n$Stasiun A→Stasiun C→Stasiun B→Stasiun D$\nMaka, Analisis I / II (dengan urutan Stasiun A, Stasiun C, Stasiun B, Stasiun D) adalah yang tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Empat lokasi stasiun pengisian daya sepeda listrik di sepanjang jalan lurus di sekitar sekolah diukur posisinya (dalam km) terhadap gerbang utama sekolah (titik 0 km):\nStasiun A: $-1,85 km$\nStasiun B: $-\\sqrt{3 }km$\nStasiun C: $-\\frac{7}{4} km$\nStasiun D: $-1,70 km$\nEmpat orang siswa menganalisis urutan posisi stasiun dari yang paling jauh di sebelah kiri (paling kecil) ke yang paling dekat dengan gerbang utama (paling besar):\nAnalisis I: Stasiun A, Stasiun B, Stasiun C, Stasiun D\nAnalisis II: Stasiun A, Stasiun C, Stasiun B, Stasiun D\nAnalisis III: Stasiun C, Stasiun A, Stasiun B, Stasiun D\nAnalisis IV: Stasiun D, Stasiun B, Stasiun C, Stasiun A\nManakah hasil analisis urutan posisi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II (Urutan: Stasiun A, Stasiun C, Stasiun B, Stasiun D)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Konversi posisi: A=−1,85; C=−7/4=−1,75; B=−√3≈−1,73205; D=−1,70. Maka −1,85<−1,75<−1,73205<−1,70. Urutan yang benar adalah Stasiun A, C, B, D, yaitu Analisis II saja. Jawaban B."
+        }
+      },
+      "correctionReason": "Penutup pembahasan menyebut Analisis I / II, padahal hanya Analisis II yang berurutan A,C,B,D. Analisis I dan III diduplikasi; salah satunya sebaiknya diganti menjadi urutan salah lain.",
+      "independentSolution": "−1,85 < −7/4=−1,75 < −√3≈−1,73205 < −1,70. Urutan A,C,B,D adalah Analisis II saja. Analisis I dan III sama-sama salah dan identik.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B2-30",
+      "familyId": "5583d70d-d6df-5c45-8e36-4d61b5558db3",
+      "sourceVersionId": "1c7c9c48-7f49-5ab2-8459-cb44591e7b7a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa membandingkan efisiensi metode penyelesaian untuk mencari nilai $y$ dari sistem persamaan linear berikut:\n$x=2y-1$\n$3x+4y=27$\nSiswa tersebut menyimpulkan bahwa Metode Substitusi lebih efisien dan cepat digunakan dibanding Metode Eliminasi. Evaluasi terhadap kesimpulan siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena metode eliminasi selalu lebih cepat untuk semua bentuk SPLDV"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena metode grafik lebih mudah digunakan tanpa melakukan perhitungan"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar, karena variabel $x$ pada persamaan pertama sudah terisolasi ($x=2y-1$) sehingga dapat langsung digantikan ke persamaan kedua"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, tetapi hanya jika nilai $y$ bernilai positif"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nAnalisis Struktur Soal:\nPersamaan pertama sudah dalam bentuk eksplisit $x=2y-1$ (variabel $x$ terisolasi).\nEvaluasi Efisiensi:\nJika menggunakan Substitusi, kita dapat langsung mengganti $x$ pada persamaan kedua dengan $(2y-1)$:\n$$3(2y - 1) + 4y = 27 \\implies 6y - 3 + 4y = 27 \\implies 10y = 30 \\implies y = 3$$\nLangkah ini jauh lebih cepat karena tidak perlu menyamakan koefisien terlebih dahulu seperti pada metode eliminasi.\nMaka, kesimpulan siswa Benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui SPLDV x=2y−1 dan 3x+4y=27. Seorang siswa memilih metode substitusi untuk langsung mengganti x pada persamaan kedua tanpa mengubah bentuk eksplisit persamaan pertama. Penilaian yang tepat terhadap alasan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena metode eliminasi selalu lebih cepat untuk semua bentuk SPLDV"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena metode grafik lebih mudah digunakan tanpa melakukan perhitungan"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Benar, karena variabel $x$ pada persamaan pertama sudah terisolasi ($x=2y-1$) sehingga dapat langsung digantikan ke persamaan kedua"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, tetapi hanya jika nilai $y$ bernilai positif"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Variabel x sudah terisolasi pada x=2y−1 sehingga dapat langsung disubstitusikan: 3(2y−1)+4y=27 → 6y−3+4y=27 → 10y=30 → y=3. Kemudian x=2(3)−1=5. Jawaban C sesuai alasan substitusi langsung. Tidak diperlukan klaim bahwa metode lain selalu lebih lambat."
+        }
+      },
+      "correctionReason": "Klaim lebih efisien dan cepat tidak disertai ukuran langkah/waktu. Ubah menjadi metode yang dapat diterapkan langsung karena x terisolasi, lalu jelaskan substitusi tanpa klaim kecepatan mutlak.",
+      "independentSolution": "Substitusi x=2y−1 memberi 3(2y−1)+4y=27 → 10y=30 → y=3 dan x=5. Variabel x sudah terisolasi sehingga penggantian langsung tersedia; klaim lebih cepat secara mutlak belum memiliki metrik.",
+      "optionalSuggestionNotApplied": null
+    }
+  ]
+}

@@ -1,0 +1,2599 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_BATCH06_29_REVIEW_AND_FIVE_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved five corrections and classification of the 29 non-held batch-6 candidates with \"setuju lanjut\" in this chat. Six optional suggestions excluded; B6-17 remains held.",
+  "scope": "Editorial correctness and 9 EASY, 19 MEDIUM, 1 HARD classifications; not empirical/IRT calibration or server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "held": [
+    {
+      "reviewId": "B6-17",
+      "sourceVersionId": "4c5ed075-d8e4-5134-855d-c7811de0a9aa",
+      "familyId": "05f45988-9eb3-5a3f-973c-66f82161005a",
+      "reason": "OPEN — konfirmasi Curriculum bahwa invers matriks2×2 termasuk cakupan materi dan kompetensi yang sah untuk bank SMP/PvP. Jangan menerbitkan hanya karena aljabar benar. Perjelas pula apakah x,y dimaksud harga satuan tiket; konteks sumber belum eksplisit."
+    }
+  ],
+  "items": [
+    {
+      "reviewId": "B6-01",
+      "familyId": "5428b931-5d8c-5f70-8b08-2e6545e8f390",
+      "sourceVersionId": "443392f8-c6ec-5a88-95a2-6ec0b4225210",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pengurus kas kelas VIIB memperhitungkan alokasi anggaran kegiatan ekstrakurikuler. Nilai x yang memenuhi persamaan penyelesaian alokasi tersebut adalah (2x+1)/3=(x+5)/2. Nilai dari 3x−10 adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "23"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "26"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "29"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan persamaan pecahan dengan mengalikan silang penyebutnya: 2(2x+1)=3(x+5) 4x+2=3x+15\nKelompokkan suku sejenis dengan operasi invers: 4x−3x=15−2⟹x=13\nHitung nilai dari 3x−10: 3(13)−10=39−10=29\nKesalahan Umum yang Diantisipasi:\nSiswa sering hanya mengalikan pembilang tanpa mengalikan secara distributif (2×2x+1 menjadi 4x+1 bukannya 4x+2), atau berhenti hanya sampai menemukan nilai x=13 tanpa menghitung nilai 3x−10."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pengurus kas kelas VIIB memperhitungkan alokasi anggaran kegiatan ekstrakurikuler. Nilai x yang memenuhi persamaan penyelesaian alokasi tersebut adalah (2x+1)/3=(x+5)/2. Nilai dari 3x−10 adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "23"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "26"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "29"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan persamaan pecahan dengan mengalikan silang penyebutnya: 2(2x+1)=3(x+5) 4x+2=3x+15\nKelompokkan suku sejenis dengan operasi invers: 4x−3x=15−2⟹x=13\nHitung nilai dari 3x−10: 3(13)−10=39−10=29\nKesalahan Umum yang Diantisipasi:\nSiswa sering hanya mengalikan pembilang tanpa mengalikan secara distributif (2×2x+1 menjadi 4x+1 bukannya 4x+2), atau berhenti hanya sampai menemukan nilai x=13 tanpa menghitung nilai 3x−10."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2(2x+1)=3(x+5) →4x+2=3x+15 →x=13. Nilai3x−10=29.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-02",
+      "familyId": "0207998d-c973-5476-9d93-4eb48c2fa4a5",
+      "sourceVersionId": "4467986b-c66c-5e0d-ab75-189cfd4326b0",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Fungsi f(x) = x^(2) memiliki domain D = {-2, -1, 0, 1, 2}. Dika menyatakan bahwa range f adalah {4, 1, 0, 1, 4} sehingga memiliki 5 anggota. Penilaian yang tepat terhadap pernyataan Dika adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena banyak anggota range selalu sama dengan banyak anggota domain"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {0, 1, 4} dan anggota yang sama hanya ditulis sekali sehingga range memiliki 3 anggota"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {-2, -1, 0, 1, 2}"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {0, 1, 2, 4}"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "f(-2) = 4; f(-1) = 1; f(0) = 0; f(1) = 1; f(2) = 4.\nRange adalah himpunan semua nilai fungsi, dan pada himpunan anggota yang sama ditulis satu kali: {0, 1, 4}.\nJadi range memiliki 3 anggota, bukan 5. Banyak anggota range sama dengan banyak anggota domain hanya jika semua bayangan berbeda."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Fungsi f(x) = x^(2) memiliki domain D = {-2, -1, 0, 1, 2}. Dika menyatakan bahwa range f adalah {4, 1, 0, 1, 4} sehingga memiliki 5 anggota. Penilaian yang tepat terhadap pernyataan Dika adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena banyak anggota range selalu sama dengan banyak anggota domain"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {0, 1, 4} dan anggota yang sama hanya ditulis sekali sehingga range memiliki 3 anggota"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {-2, -1, 0, 1, 2}"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kurang tepat, karena range f adalah {0, 1, 2, 4}"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "f(-2) = 4; f(-1) = 1; f(0) = 0; f(1) = 1; f(2) = 4.\nRange adalah himpunan semua nilai fungsi, dan pada himpunan anggota yang sama ditulis satu kali: {0, 1, 4}.\nJadi range memiliki 3 anggota, bukan 5. Banyak anggota range sama dengan banyak anggota domain hanya jika semua bayangan berbeda."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Nilai fungsi4,1,0,1,4; range sebagai himpunan{0,1,4} beranggota3.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-03",
+      "familyId": "34553016-6700-582c-92ba-3e1332d5c50a",
+      "sourceVersionId": "452d85b7-c634-55cc-bce4-3ceeba80ba88",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah segitiga memiliki panjang alas 12 cm dan tinggi 10 cm. Luas segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "30 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "120 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Luas segitiga = 12 × 10/2 = 60 cm²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah segitiga memiliki panjang alas 12 cm dan tinggi 10 cm. Luas segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "30 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "120 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Luas segitiga = 12 × 10/2 = 60 cm²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Luas=12×10/2=60 cm².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-04",
+      "familyId": "e2462748-c2e1-510c-8827-94eb0080e367",
+      "sourceVersionId": "46dd0be6-3959-58e9-b134-6cede48576fb",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Rental mobil A menetapkan biaya tetap Rp200.000,00 ditambah Rp50.000,00 per hari. Rental mobil B menetapkan biaya Rp100.000,00 per hari tanpa biaya tetap. Mulai hari ke berapa biaya sewa mobil A lebih murah daripada mobil B?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hari ke-3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hari ke-4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Hari ke-5"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Hari ke-6"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Misalkan x adalah lama sewa (hari). Model biaya: A(x)=200000+50000x dan B(x)=100000x.\nBiaya sama jika 200000+50000x=100000x, sehingga 50000x=200000 dan x=4 (keduanya Rp400.000,00).\nMobil A lebih murah jika A(x)<B(x), yaitu untuk x>4. Jadi, mulai hari ke-5."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Rental mobil A menetapkan biaya tetap Rp200.000,00 ditambah Rp50.000,00 per hari. Rental mobil B menetapkan biaya Rp100.000,00 per hari tanpa biaya tetap. Mulai hari ke berapa biaya sewa mobil A lebih murah daripada mobil B?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hari ke-3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hari ke-4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Hari ke-5"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Hari ke-6"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Misalkan x adalah lama sewa (hari). Model biaya: A(x)=200000+50000x dan B(x)=100000x.\nBiaya sama jika 200000+50000x=100000x, sehingga 50000x=200000 dan x=4 (keduanya Rp400.000,00).\nMobil A lebih murah jika A(x)<B(x), yaitu untuk x>4. Jadi, mulai hari ke-5."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "200.000+50.000x<100.000x →x>4. Untuk lama sewa hari bulat, pertama5hari.",
+      "optionalSuggestionNotApplied": "Saran presisi: nyatakan sewa ditagih dalam hari bulat dan biaya tetap dibayar sekali. Jawaban mulai hari5 sesuai interpretasi sumber."
+    },
+    {
+      "reviewId": "B6-05",
+      "familyId": "0e882843-73d9-5626-9011-9eb924165711",
+      "sourceVersionId": "473342d7-4105-54fd-acc3-56e4190f189e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Jarak dua kota pada peta berskala 1 : 2.000.000 adalah 4,5 cm. Pak Rama menyatakan bahwa jarak sebenarnya kedua kota adalah 9 km karena 4,5 × 2.000.000 = 9.000.000 cm = 9 km. Penilaian yang tepat terhadap pernyataan Pak Rama adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena 9.000.000 cm sama dengan 9 km."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena 9.000.000 cm sama dengan 900 km."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena 9.000.000 cm sama dengan 90 km sehingga jarak sebenarnya adalah 90 km."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena jarak pada peta seharusnya dibagi dengan 2.000.000, bukan dikalikan."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Jarak sebenarnya = 4,5 × 2.000.000 = 9.000.000 cm. Perkalian dengan penyebut skala sudah benar.\nKesalahan terletak pada konversi satuan: 1 km = 100.000 cm, sehingga 9.000.000 cm = 90 km.\nJadi jarak sebenarnya adalah 90 km."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Jarak dua kota pada peta berskala 1 : 2.000.000 adalah 4,5 cm. Pak Rama menyatakan bahwa jarak sebenarnya kedua kota adalah 9 km karena 4,5 × 2.000.000 = 9.000.000 cm = 9 km. Penilaian yang tepat terhadap pernyataan Pak Rama adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena 9.000.000 cm sama dengan 9 km."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena 9.000.000 cm sama dengan 900 km."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena 9.000.000 cm sama dengan 90 km sehingga jarak sebenarnya adalah 90 km."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena jarak pada peta seharusnya dibagi dengan 2.000.000, bukan dikalikan."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Jarak sebenarnya = 4,5 × 2.000.000 = 9.000.000 cm. Perkalian dengan penyebut skala sudah benar.\nKesalahan terletak pada konversi satuan: 1 km = 100.000 cm, sehingga 9.000.000 cm = 90 km.\nJadi jarak sebenarnya adalah 90 km."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "4,5×2.000.000=9.000.000cm; dibagi100.000cm/km menghasilkan90km.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-06",
+      "familyId": "f5cb7002-5b8d-5f67-9058-110e64648946",
+      "sourceVersionId": "47a14533-2448-5c41-978c-e69ad59031bb",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa SMP memiliki saldo awal pada kartu kantin elektronik sebesar Rp30.000,00. Dalam satu minggu, ia melakukan transaksi sebagai berikut:\n• Membeli makan siang seharga Rp18.000,00\n• Mengisi ulang (top up) saldo sebesar Rp20.000,00\n• Membeli alat tulis seharga Rp12.500,00 dan es krim seharga Rp6.000,00\n• Mendapatkan pengembalian tunai (cashback) ke kartu sebesar Rp5.000,00\nBerapa saldo akhir pada kartu kantin elektronik siswa tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp17.500,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp18.500,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp20.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp22.500,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nIdentifikasi tanda operasi setiap transaksi:\nPemasukan/Penambahan (+): Saldo awal (Rp30.000,00), top up (Rp20.000,00), dan cashback (Rp5.000,00).\nPengeluaran/Pengurangan (-): Makan siang (Rp18.000,00), alat tulis (Rp12.500,00), dan es krim (Rp6.000,00).\nHitung total pemasukan dan total pengeluaran:\nTotal Pemasukan=30.000+20.000+5.000=Rp55.000,00\nTotal Pengeluaran=18.000+12.500+6.000=Rp36.500,00\nHitung saldo akhir kartu:\nSaldo Akhir=Total Pemasukan-Total Pengeluaran\nSaldo Akhir=55.000-36.500=Rp18.500,00\nAnalisis opsi pilihan jawaban:\nOpsi A (Rp17.500,00): Salah, muncul jika siswa keliru menghitung total pengeluaran menjadi Rp37.500,00.\nOpsi B (Rp18.500,00 - BENAR): Hasil perhitungan operasi campuran bilangan bulat/uang yang tepat dan akurat (Rp55.000,00-Rp36.500,00).\nOpsi C (Rp20.500,00): Salah, muncul jika siswa lupa memperhitungkan pengeluaran es krim (Rp6.000,00).\nOpsi D (Rp22.500,00): Salah, muncul jika siswa keliru mengasumsikan cashback sebagai pengeluaran/potongan.\nKesalahan umum yang diantisipasi: Siswa sering mengalihkan seluruh nilai transaksi menjadi penjumlahan tanpa membedakan mana transaksi yang menambah saldo (top up/cashback) dan mana transaksi yang mengurangi saldo (pembelian)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa SMP memiliki saldo awal pada kartu kantin elektronik sebesar Rp 30.000,00. Dalam satu minggu, ia melakukan transaksi sebagai berikut:\n• Membeli makan siang seharga Rp 18.000,00\n• Mengisi ulang (top up) saldo sebesar Rp 20.000,00\n• Membeli alat tulis seharga Rp 12.500,00 dan es krim seharga Rp 6.000,00\n• Mendapatkan pengembalian tunai (cashback) ke kartu sebesar Rp 5.000,00\nBerapa saldo akhir pada kartu kantin elektronik siswa tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp17.500,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp18.500,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp20.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp22.500,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Saldo awal ditambah top up dan cashback ke kartu =30.000+20.000+5.000=Rp 55.000. Pengeluaran=18.000+12.500+6.000=Rp 36.500. Saldo akhir=55.000−36.500=Rp 18.500. Jawaban B. OpsiA dapat muncul jika total pengeluaran keliru dihitungRp 37.500. OpsiC danD tidak sesuai perhitungan transaksi. Mengabaikan pengeluaran eskrim menghasilkanRp 24.500, sedangkan keliru mengurangkan cashback menghasilkanRp 8.500; keduanya bukan nilai opsiC atauD."
+        }
+      },
+      "correctionReason": "Hasil utama dan kunciB benar, tetapi alasan opsiC salah: mengabaikan eskrim menghasilkanRp24.500, bukanRp20.500. Alasan opsiD juga salah: mengurangkan cashback menghasilkanRp8.500, bukanRp22.500.",
+      "independentSolution": "30.000−18.000+20.000−12.500−6.000+5.000=18.500. Mengabaikan eskrim memberi24.500, bukan20.500. Cashback salah dikurangkan memberi8.500, bukan22.500.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-07",
+      "familyId": "46677d7d-1886-578a-85f2-e4f1569afc57",
+      "sourceVersionId": "4a45e13f-6061-54ff-8ee1-166161ab641d",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Perhatikan lima barisan berhingga berikut.\n• (i) 3, 7, 11, 15\n• (ii) 2, 6, 18, 54\n• (iii) 1, 4, 9, 16\n• (iv) 48, 24, 12, 6\n• (v) 10, 7, 4, 1\nBarisan geometri dengan rasio kurang dari 1 dan barisan aritmetika dengan beda negatif secara berurutan adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(ii) dan (v)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(iv) dan (i)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(iii) dan (v)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(iv) dan (v)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "(i) selisih tetap +4: aritmetika dengan beda positif.\n(ii) perbandingan tetap 3: geometri dengan rasio lebih dari 1.\n(iii) selisih 3, 5, 7 (tidak tetap) dan perbandingan 4, (9)/(4), (16)/(9) (tidak tetap): bukan aritmetika maupun geometri.\n(iv) perbandingan tetap (1)/(2): geometri dengan rasio kurang dari 1.\n(v) selisih tetap -3: aritmetika dengan beda negatif.\nJadi, jawaban yang tepat adalah (iv) dan (v)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan lima barisan berhingga berikut.\n• (i) 3, 7, 11, 15\n• (ii) 2, 6, 18, 54\n• (iii) 1, 4, 9, 16\n• (iv) 48, 24, 12, 6\n• (v) 10, 7, 4, 1\nBarisan geometri dengan rasio kurang dari 1 dan barisan aritmetika dengan beda negatif secara berurutan adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(ii) dan (v)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(iv) dan (i)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(iii) dan (v)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(iv) dan (v)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "(i) selisih tetap +4: aritmetika dengan beda positif.\n(ii) perbandingan tetap 3: geometri dengan rasio lebih dari 1.\n(iii) selisih 3, 5, 7 (tidak tetap) dan perbandingan 4, (9)/(4), (16)/(9) (tidak tetap): bukan aritmetika maupun geometri.\n(iv) perbandingan tetap (1)/(2): geometri dengan rasio kurang dari 1.\n(v) selisih tetap -3: aritmetika dengan beda negatif.\nJadi, jawaban yang tepat adalah (iv) dan (v)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "(iv) geometri r1/2; (v) aritmetika beda−3. (i) beda+4, (ii) rasio3, (iii) keduanya tidak tetap.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-08",
+      "familyId": "036fcec2-0daa-558e-a6e9-73cc33730a07",
+      "sourceVersionId": "4a4aef00-e854-5494-9e2d-fa352b7e8928",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan ciri-ciri suatu pemetaan atau relasi antar himpunan. Manakah dari karakteristik berikut yang menunjukkan bahwa suatu diagram panah merupakan sebuah fungsi dari himpunan A ke himpunan B?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Ada anggota himpunan A yang tidak memiliki pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Setiap anggota himpunan A memiliki tepat satu pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Ada anggota himpunan A yang memiliki lebih dari satu pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Anggota himpunan B tidak boleh ada yang bercabang."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Syarat utama fungsi (pemetaan) dari himpunan A ke B adalah setiap anggota domain (A) harus dipasangkan dengan tepat satu anggota kodomain (B). Jadi, pada diagram panah, setiap anggota di A harus mengeluarkan tepat satu anak panah."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan ciri-ciri suatu pemetaan atau relasi antar himpunan. Manakah dari karakteristik berikut yang menunjukkan bahwa suatu diagram panah merupakan sebuah fungsi dari himpunan A ke himpunan B?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Ada anggota himpunan A yang tidak memiliki pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Setiap anggota himpunan A memiliki tepat satu pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Ada anggota himpunan A yang memiliki lebih dari satu pasangan di himpunan B."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Anggota himpunan B tidak boleh ada yang bercabang."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Syarat utama fungsi (pemetaan) dari himpunan A ke B adalah setiap anggota domain (A) harus dipasangkan dengan tepat satu anggota kodomain (B). Jadi, pada diagram panah, setiap anggota di A harus mengeluarkan tepat satu anak panah."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Fungsi dariA keB memasangkan setiap anggotaA dengan tepat satu anggotaB.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-09",
+      "familyId": "9eaf8fd5-57b8-53c2-8729-2d2cda63bfff",
+      "sourceVersionId": "4a4bb422-d29f-580f-817b-1ec71eef91e0",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Kelompok A memiliki data 70, 75, 80, 85, 90. Kelompok B memiliki data 60, 70, 80, 90, 100.\nJika dibandingkan berdasarkan mean dan jangkauan, maka ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean kedua kelompok sama, tetapi jangkauan B lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean A lebih besar dan jangkauan B lebih kecil"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mean B lebih besar dan jangkauan A lebih besar"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Mean dan jangkauan keduanya sama"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 80 dan mean B = 80. Jangkauan A = 20, B = 40. Jadi B memiliki penyebaran lebih besar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Kelompok A memiliki data 70, 75, 80, 85, 90. Kelompok B memiliki data 60, 70, 80, 90, 100.\nJika dibandingkan berdasarkan mean dan jangkauan, maka ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean kedua kelompok sama, tetapi jangkauan B lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean A lebih besar dan jangkauan B lebih kecil"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mean B lebih besar dan jangkauan A lebih besar"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Mean dan jangkauan keduanya sama"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 80 dan mean B = 80. Jangkauan A = 20, B = 40. Jadi B memiliki penyebaran lebih besar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah masing-masing400; mean80. JangkauanA90−70=20, B100−60=40.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-10",
+      "familyId": "c90188a3-9b19-541f-a92c-eef499f6a2bb",
+      "sourceVersionId": "4aad4ba5-c777-5152-bc4b-8a8ee1a1229a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua siswa mengevaluasi hasil penyederhanaan total panjang dua batang pipa penyangga antena radio sekolah yang dinyatakan dalam bentuk akar berikut:\n$Panjang Pipa=\\sqrt{98}+\\sqrt{50}-\\sqrt{32 }(dalam meter)$\nEvaluasi X: \"Hasil akhirnya adalah $\\sqrt{116 }m$, karena dijumlahkan langsung: $\\sqrt{98+50-32}=\\sqrt{116}$.\"\nEvaluasi Y: \"Hasil akhirnya adalah $8\\sqrt{2 }m$, karena diuraikan menjadi $7\\sqrt{2}+5\\sqrt{2}-4\\sqrt{2}=8\\sqrt{2}$.\"\nManakah evaluasi yang benar berdasarkan kaidah penyederhanaan bentuk akar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi X, karena penjumlahan dan pengurangan di dalam akar bersifat distributif"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi X, karena $\\sqrt{116}$ tidak dapat disederhanakan lagi"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi Y, karena suku-suku bentuk akar hanya dapat dijumlahkan/dikurangkan jika memiliki radikan (angka dalam akar) yang sejenis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua evaluasi salah, karena hasil akhirnya adalah $18\\sqrt{2} m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUraikan radikan ke faktor yang memuat kuadrat sempurna:\n$\\sqrt{98}=\\sqrt{49×2}=7\\sqrt{2}$\n$\\sqrt{50}=\\sqrt{25×2}=5\\sqrt{2}$\n$\\sqrt{32}=\\sqrt{16×2}=4\\sqrt{2}$\nOperasikan koefisien dari suku sejenis $\\sqrt{2}$:\n$Panjang Pipa=(7+5-4)\\sqrt{2}=8\\sqrt{2 }m$\nMaka, Evaluasi Y adalah yang bernilai tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua siswa mengevaluasi hasil penyederhanaan total panjang dua batang pipa penyangga antena radio sekolah yang dinyatakan dalam bentuk akar berikut:\n$Panjang Pipa=\\sqrt{98}+\\sqrt{50}-\\sqrt{32 }(dalam meter)$\nEvaluasi X: \"Hasil akhirnya adalah $\\sqrt{116 }m$, karena dijumlahkan langsung: $\\sqrt{98+50-32}=\\sqrt{116}$.\"\nEvaluasi Y: \"Hasil akhirnya adalah $8\\sqrt{2 }m$, karena diuraikan menjadi $7\\sqrt{2}+5\\sqrt{2}-4\\sqrt{2}=8\\sqrt{2}$.\"\nManakah evaluasi yang benar berdasarkan kaidah penyederhanaan bentuk akar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi X, karena penjumlahan dan pengurangan di dalam akar bersifat distributif"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi X, karena $\\sqrt{116}$ tidak dapat disederhanakan lagi"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi Y, karena suku-suku bentuk akar hanya dapat dijumlahkan/dikurangkan jika memiliki radikan (angka dalam akar) yang sejenis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua evaluasi salah, karena hasil akhirnya adalah $18\\sqrt{2} m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUraikan radikan ke faktor yang memuat kuadrat sempurna:\n$\\sqrt{98}=\\sqrt{49×2}=7\\sqrt{2}$\n$\\sqrt{50}=\\sqrt{25×2}=5\\sqrt{2}$\n$\\sqrt{32}=\\sqrt{16×2}=4\\sqrt{2}$\nOperasikan koefisien dari suku sejenis $\\sqrt{2}$:\n$Panjang Pipa=(7+5-4)\\sqrt{2}=8\\sqrt{2 }m$\nMaka, Evaluasi Y adalah yang bernilai tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√98+√50−√32=(7+5−4)√2=8√2. EvaluasiY benar; √116 sendiri masih bisa disederhanakan2√29, sehingga alasanopsiB juga salah.",
+      "optionalSuggestionNotApplied": "Saran redaksi: sebut ekspresi panjang yang dianalisis, tanpa mengklaim dua batang pipa ketika ekspresi memuat tiga suku. Operasi akar dan jawabanC benar."
+    },
+    {
+      "reviewId": "B6-11",
+      "familyId": "90da4a62-e370-5734-8e2a-3c72bd2681e5",
+      "sourceVersionId": "4ad196b5-68e1-583e-b49a-f12d19ccfe08",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Panitia kegiatan penanaman pohon menargetkan penanaman 1.200 bibit dalam waktu 8 hari oleh 15 relawan. Setelah 3 hari berjalan, 3 relawan mengundurkan diri karena sakit. Evaluasi mengenai tambahan waktu yang dibutuhkan agar penanaman 1.200 bibit tersebut tetap selesai seluruhnya adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1 hari"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1,5 hari"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1,25 hari"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2 hari"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Sisa pekerjaan 15*(8-3)=75 relawan-hari; 12 relawan memerlukan 6,25 hari kerja. Tambahan 6,25-5=1,25 hari kerja. C benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia kegiatan penanaman pohon menargetkan penanaman 1.200 bibit dalam 8 hari kerja oleh 15 relawan. Setiap relawan memiliki produktivitas sama dan konstan, dengan jumlah jam kerja yang tetap setiap hari. Setelah 3 hari kerja selesai,3 relawan mengundurkan diri. Jika 12 relawan tersisa melanjutkan pekerjaan dengan pola kerja yang sama dan sebagian hari kerja dapat dihitung secara proporsional, berapa tambahan waktu kerja dibanding rencana 8 hari semula?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1 hari"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1,5 hari"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1,25 hari"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2 hari"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Sisa pekerjaan 15*(8-3)=75 relawan-hari; 12 relawan memerlukan 6,25 hari kerja. Tambahan 6,25-5=1,25 hari kerja. C benar."
+        }
+      },
+      "correctionReason": "Tambahan1,25hari kerja memerlukan asumsi seluruh relawan berproduktivitas sama dan konstan serta jam kerja perhari tetap. Nyatakan model ini agar pengurangan3orang dapat dihitung proporsional.",
+      "independentSolution": "Total rencana15×8=120relawan-hari. Setelah3hari tersisa75relawan-hari. Dua belas relawan membutuhkan75/12=6,25hari; dibanding sisa rencana5hari, tambahan1,25hari kerja. Memerlukan produktivitas sama/konstan dan durasi hari kerja tetap.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-12",
+      "familyId": "2d1fafbe-55c7-5166-9f8c-099815c8cfd5",
+      "sourceVersionId": "4b6d421a-982b-5dbd-95e0-596910d7225d",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pembina OSIS menganalisis dua penawaran harga pembuatan kaus kelas dari dua konveksi berdasarkan jumlah kaus (x) dan total biaya (y dalam rupiah):\nKonveksi I: y=35.000x+100.000\nKonveksi II: y=45.000x+20.000\nKarena kedua persamaan sudah menyatakan nilai y secara eksplisit, metode penyelesaian yang paling langsung (dengan menyamakan kedua bentuk y tanpa perlu mengubah persamaan ke bentuk umum Ax+By=C) beserta jumlah kaus saat titik impas berturut-turut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Eliminasi, dengan titik impas pada x=8 kaus"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Substitusi, dengan titik impas pada x=8 kaus"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Grafik, dengan titik impas pada x=10 kaus"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Substitusi, dengan titik impas pada x=10 kaus"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nAnalisis Efisiensi Metode:\nMetode Substitusi: Kedua persamaan berformat y=f(x). Untuk mencari titik impas (y_1=y_2), kedua ekspresi nilai y dapat langsung disamakan (disubstitusikan) tanpa mengubah bentuk awal persamaan. Ini merupakan alur tercepat dan paling langsung.\nMetode Eliminasi: Memerlukan langkah penataan ulang persamaan ke bentuk baku terlebih dahulu (misalnya 35.000x-y=-100.000 dan 45.000x-y=-20.000) sebelum variabel y dieliminasi.\nPerhitungan Jumlah Kaus (x): Samakan kedua nilai y:\n35.000x+100.000=45.000x+20.000\n100.000-20.000=45.000x-35.000x\n80.000=10.000x\nx=8kaus\nKesimpulan: Metode yang paling langsung/efisien adalah Substitusi dengan jumlah x=8 kaus (Pilihan B)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua penawaran biaya pembuatan kaus dinyatakan oleh KonveksiI:y=35.000 x+100.000 dan KonveksiII:y=45.000 x+20.000, dengan x jumlah kaus dan y biaya dalam rupiah. Untuk mencari biaya yang sama, seorang siswa mengganti y pada persamaan KonveksiI dengan ekspresi 45.000 x+20.000 dari persamaan KonveksiII. Nama metode yang digunakan pada langkah tersebut dan jumlah kaus pada titik impas adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Eliminasi, dengan titik impas pada x=8 kaus"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Substitusi, dengan titik impas pada x=8 kaus"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Grafik, dengan titik impas pada x=10 kaus"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Substitusi, dengan titik impas pada x=10 kaus"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Mengganti suatu variabel dengan ekspresi yang sama nilainya dari persamaan lain merupakan substitusi. Langkah yang dinyatakan pada soal menghasilkan 45.000 x+20.000=35.000 x+100.000, sehingga 10.000 x=80.000 dan x=8. Biaya kedua konveksi pada 8 kaus adalahRp 380.000. Jawaban B. Eliminasi juga dapat menyelesaikan sistem tersebut, tetapi soal ini menanyakan nama prosedur penggantian variabel yang dinyatakan, bukan metode tercepat secara universal."
+        }
+      },
+      "correctionReason": "Eliminasi dapat langsung mengurangkan dua persamaan berbentuk y=f(x), tanpa diubah ke bentuk baku; opsiA danB sama-sama menghasilkan x8. Hilangkan klaim metode tercepat dan minta identifikasi prosedur mengganti y pada persamaan pertama dengan ekspresi dari persamaan kedua, sehingga substitusi jelas.",
+      "independentSolution": "Samakan biaya35.000x+100.000=45.000x+20.000 →x=8, y=380.000. Substitusi benar, tetapi eliminasi juga dapat mengurangkan dua persamaan y=f(x) secara langsung, tanpa bentuk baku. Karena opsiA memberi eliminasi danx8, pilihan metode tidak tunggal secara matematis pada redaksi sumber.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-13",
+      "familyId": "869c15e8-663e-5179-b87e-8bd2481d745e",
+      "sourceVersionId": "4bb1c804-9dc7-5522-9488-3b748bdf3cfa",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Panitia acara perpisahan sekolah memiliki anggaran total Rp550.000,00. Biaya tetap untuk sewa tempat dan panggung adalah Rp100.000,00, sedangkan biaya paket konsumsi adalah Rp18.000,00 per paket. Jika $n$ menyatakan banyak paket konsumsi yang dibeli, model pertidaksamaan linear satu variabel yang tepat dan jumlah paket konsumsi maksimal yang dapat dibeli panitia adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$18.000n+100.000<550.000$; maksimal 24 paket"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$18.000n+100.000≤550.000$; maksimal 25 paket"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$18.000n-100.000≤550.000$; maksimal 36 paket"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$18.000n+100.000≥550.000$; maksimal 25 paket"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nBiaya tetap $=Rp100.000,00$\nBiaya konsumsi $=18.000n$\nAnggaran total tidak boleh dilampaui (tidak lebih dari Rp550.000,00), sehingga menggunakan tanda pertidaksamaan $≤$.\nModel PtLSV:\n$18.000n+100.000≤550.000$\nMenyelesaikan PtLSV dengan operasi invers:\n$18.000n≤550.000-100.000$\n$18.000n≤450.000$\n$n≤\\frac{450.000}{18.000}$\n$n≤25$\nKarena $n$ harus berupa bilangan bulat, banyak paket konsumsi maksimal yang dapat dibeli adalah 25 paket."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia acara perpisahan sekolah memiliki anggaran total Rp550.000,00. Biaya tetap untuk sewa tempat dan panggung adalah Rp100.000,00, sedangkan biaya paket konsumsi adalah Rp18.000,00 per paket. Jika $n$ menyatakan banyak paket konsumsi yang dibeli, model pertidaksamaan linear satu variabel yang tepat dan jumlah paket konsumsi maksimal yang dapat dibeli panitia adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$18.000n+100.000<550.000$; maksimal 24 paket"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$18.000n+100.000≤550.000$; maksimal 25 paket"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$18.000n-100.000≤550.000$; maksimal 36 paket"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$18.000n+100.000≥550.000$; maksimal 25 paket"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nBiaya tetap $=Rp100.000,00$\nBiaya konsumsi $=18.000n$\nAnggaran total tidak boleh dilampaui (tidak lebih dari Rp550.000,00), sehingga menggunakan tanda pertidaksamaan $≤$.\nModel PtLSV:\n$18.000n+100.000≤550.000$\nMenyelesaikan PtLSV dengan operasi invers:\n$18.000n≤550.000-100.000$\n$18.000n≤450.000$\n$n≤\\frac{450.000}{18.000}$\n$n≤25$\nKarena $n$ harus berupa bilangan bulat, banyak paket konsumsi maksimal yang dapat dibeli adalah 25 paket."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "18.000n+100.000≤550.000 →n≤25. Jumlah maksimum25, tanda≤ mengizinkan tepat menghabiskan anggaran.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-14",
+      "familyId": "0c80702e-ed77-516c-a496-7d96b5fe10c7",
+      "sourceVersionId": "4bb3e06c-f151-52ac-8e00-400934375da9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dimas memiliki dua ubin segitiga. Sudut-sudut pada kedua ubin sama besar, yaitu 40°, 60°, dan 80°. Sisi terpendek ubin pertama 5 cm dan sisi terpendek ubin kedua 8 cm. Dimas menyimpulkan bahwa kedua ubin kongruen karena sudut-sudutnya sama besar. Penilaian yang tepat terhadap kesimpulan Dimas adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena sudut-sudut bersesuaian yang sama besar menjamin kongruen."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Tepat, karena sudut yang sama besar menjamin sisi-sisinya sama panjang."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Tidak tepat, karena dua segitiga yang sebangun tidak mungkin kongruen."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tidak tepat, karena sudut-sudut yang sama hanya menjamin kedua ubin sebangun; kongruen mensyaratkan sisi-sisi bersesuaian sama panjang, padahal sisi terpendeknya berbeda."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Sudut-sudut bersesuaian yang sama besar (AAA) hanya menjamin kedua segitiga sebangun, bukan kongruen.\nKekongruenan mensyaratkan sisi-sisi bersesuaian sama panjang. Sisi terpendek kedua ubin berbeda (5 cm dan 8 cm), sehingga kedua ubin tidak kongruen.\nPernyataan bahwa segitiga sebangun tidak mungkin kongruen juga salah: segitiga kongruen pasti sebangun dengan faktor skala 1."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dimas memiliki dua ubin segitiga. Sudut-sudut pada kedua ubin sama besar, yaitu 40°, 60°, dan 80°. Sisi terpendek ubin pertama 5 cm dan sisi terpendek ubin kedua 8 cm. Dimas menyimpulkan bahwa kedua ubin kongruen karena sudut-sudutnya sama besar. Penilaian yang tepat terhadap kesimpulan Dimas adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena sudut-sudut bersesuaian yang sama besar menjamin kongruen."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Tepat, karena sudut yang sama besar menjamin sisi-sisinya sama panjang."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Tidak tepat, karena dua segitiga yang sebangun tidak mungkin kongruen."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tidak tepat, karena sudut-sudut yang sama hanya menjamin kedua ubin sebangun; kongruen mensyaratkan sisi-sisi bersesuaian sama panjang, padahal sisi terpendeknya berbeda."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Sudut-sudut bersesuaian yang sama besar (AAA) hanya menjamin kedua segitiga sebangun, bukan kongruen.\nKekongruenan mensyaratkan sisi-sisi bersesuaian sama panjang. Sisi terpendek kedua ubin berbeda (5 cm dan 8 cm), sehingga kedua ubin tidak kongruen.\nPernyataan bahwa segitiga sebangun tidak mungkin kongruen juga salah: segitiga kongruen pasti sebangun dengan faktor skala 1."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "AAA menjamin sebangun, tidak harus kongruen. Sisi terpendek5dan8 bersesuaian tetapi tidak sama, jadi tidak kongruen.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-15",
+      "familyId": "493d9441-1f9c-588d-9880-e04c9f162f7e",
+      "sourceVersionId": "4bc4c016-f9b8-521b-b728-5e610c6c1f78",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa kelas IX membuat empat kuis pernyataan tentang sifat-sifat himpunan bilangan real R. Manakah analisis berikut yang membuktikan bahwa pernyataan kuis tersebut SALAH (diberikan contoh penyangkal / counterexample)?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pernyataan \"Penjumlahan dua bilangan irasional selalu menghasilkan bilangan irasional\" adalah SALAH, karena sqrt(5)+(-sqrt(5))=0 (bilangan rasional)."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pernyataan \"Perkalian dua bilangan bulat selalu menghasilkan bilangan bulat\" adalah SALAH, karena 3×4=12."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pernyataan \"Setiap bilangan rasional dapat ditulis dalam bentuk pecahan (a)/(b)\" adalah SALAH, karena 0,5=(1)/(2)."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pernyataan \"Sifat komutatif berlaku pada penjumlahan bilangan real\" adalah SALAH, karena 2+3=3+2."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nAnalisis A (Benar): Pernyataan bahwa \"penjumlahan dua bilangan irasional selalu irasional\" adalah salah. Contoh penyangkalnya: sqrt(5) (irasional) ditambah -sqrt(5) (irasional) menghasilkan 0, di mana 0 adalah bilangan rasional ((0)/(1)). Ini membuktikan sifat penjumlahan irasional tidak tertutup.\nOpsi B, C, dan D memberikan alasan pendukung yang justru memperkuat kebenaran pernyataan asal, bukan membuktikan kesalahan.\nKesalahan Umum yang Diantisipasi:\nSiswa mengira himpunan bilangan irasional bersifat tertutup terhadap operasi penjumlahan sebagaimana bilangan rasional."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa kelas IX membuat empat kuis pernyataan tentang sifat-sifat himpunan bilangan real R. Manakah analisis berikut yang membuktikan bahwa pernyataan kuis tersebut SALAH (diberikan contoh penyangkal / counterexample)?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pernyataan \"Penjumlahan dua bilangan irasional selalu menghasilkan bilangan irasional\" adalah SALAH, karena sqrt(5)+(-sqrt(5))=0 (bilangan rasional)."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pernyataan \"Perkalian dua bilangan bulat selalu menghasilkan bilangan bulat\" adalah SALAH, karena 3×4=12."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pernyataan \"Setiap bilangan rasional dapat ditulis dalam bentuk pecahan (a)/(b)\" adalah SALAH, karena 0,5=(1)/(2)."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pernyataan \"Sifat komutatif berlaku pada penjumlahan bilangan real\" adalah SALAH, karena 2+3=3+2."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nAnalisis A (Benar): Pernyataan bahwa \"penjumlahan dua bilangan irasional selalu irasional\" adalah salah. Contoh penyangkalnya: sqrt(5) (irasional) ditambah -sqrt(5) (irasional) menghasilkan 0, di mana 0 adalah bilangan rasional ((0)/(1)). Ini membuktikan sifat penjumlahan irasional tidak tertutup.\nOpsi B, C, dan D memberikan alasan pendukung yang justru memperkuat kebenaran pernyataan asal, bukan membuktikan kesalahan.\nKesalahan Umum yang Diantisipasi:\nSiswa mengira himpunan bilangan irasional bersifat tertutup terhadap operasi penjumlahan sebagaimana bilangan rasional."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√5 dan−√5 irasional; jumlah0 rasional, counterexample sah. B,C,D tidak memberi counterexample klaimnya.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-16",
+      "familyId": "5491d985-9a8a-5fc4-8430-178a9c4388c6",
+      "sourceVersionId": "4c3b2cd3-f2f3-5d3b-8809-f9dbb5002c00",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Data jumlah buku yang dibaca lima siswa dalam satu bulan adalah 3, 4, 5, 5, dan 8 buku.\n\nSeorang siswa menyatakan bahwa rerata data lebih besar daripada median. Pernyataan tersebut ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena rerata = 5 dan median = 5."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena rerata = 5 dan median = 4."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena rerata = 5 dan median = 5."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena rerata = 6 dan median = 5."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata = (3 + 4 + 5 + 5 + 8) ÷ 5 = 5. Median adalah data tengah, yaitu 5. Jadi, rerata sama dengan median."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Data jumlah buku yang dibaca lima siswa dalam satu bulan adalah 3, 4, 5, 5, dan 8 buku.\n\nSeorang siswa menyatakan bahwa rerata data lebih besar daripada median. Pernyataan tersebut ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena rerata = 5 dan median = 5."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena rerata = 5 dan median = 4."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena rerata = 5 dan median = 5."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena rerata = 6 dan median = 5."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata = (3 + 4 + 5 + 5 + 8) ÷ 5 = 5. Median adalah data tengah, yaitu 5. Jadi, rerata sama dengan median."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah25 dibagi5=5; median data ketiga5. Mean sama, bukan lebihbesar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-18",
+      "familyId": "3d30a5f0-8012-57de-9ee9-c532ea167d2d",
+      "sourceVersionId": "4c6cf55b-437a-50dd-8bda-70cb5856f754",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan data berikut.\n12, 15, 18, 20, 25\nJangkauan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "13"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "15"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "18"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nJangkauan = nilai terbesar − nilai terkecil.\n25 − 12 = 13."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan data berikut.\n12, 15, 18, 20, 25\nJangkauan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "13"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "15"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "18"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nJangkauan = nilai terbesar − nilai terkecil.\n25 − 12 = 13."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jangkauan25−12=13.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-19",
+      "familyId": "95f0a92d-78b1-5212-9065-6dd4864db430",
+      "sourceVersionId": "4ce1688e-cca6-58b9-bb0c-9327825b5935",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Nilai ulangan delapan siswa adalah:\n60, 70, 75, 80, 80, 85, 90, 100\nMedian data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "77,5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Data sudah berurutan. Karena terdapat 8 data, median diperoleh dari data ke-4 dan ke-5.\n(80 + 80) ÷ 2 = 80."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Nilai ulangan delapan siswa adalah:\n60, 70, 75, 80, 80, 85, 90, 100\nMedian data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "77,5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Data sudah berurutan. Karena terdapat 8 data, median diperoleh dari data ke-4 dan ke-5.\n(80 + 80) ÷ 2 = 80."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Data8, dua tengah ke4dan5 keduanya80; median80.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-20",
+      "familyId": "2a53924b-de84-5b40-985d-914b612f9725",
+      "sourceVersionId": "4cf7b057-7e36-5bbf-8e5e-757b91006492",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang pembina regu mengevaluasi jumlah kelompok terbanyak yang dapat dibentuk dari $108$ peserta laki-laki dan $135$ peserta perempuan. Tiga regu memberikan laporan evaluasi:\nRegu A: \"Dapat dibentuk $9$ kelompok, dengan isi tiap kelompok $12$ laki-laki dan $15$ perempuan.\"\nRegu B: \"Dapat dibentuk $27$ kelompok, dengan isi tiap kelompok $4$ laki-laki dan $5$ perempuan.\"\nRegu C: \"Dapat dibentuk $54$ kelompok, dengan isi tiap kelompok $2$ laki-laki dan $2,5$ perempuan.\"\nManakah evaluasi regu yang paling tepat dan bernilai maksimum?\nSyarat pembagian: setiap kelompok atau wadah harus memiliki komposisi yang sama untuk masing-masing jenis, semua item utuh, dan seluruh item terbagi habis."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Laporan Regu A"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Laporan Regu C"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Laporan Regu B"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Laporan Regu A dan Regu B sama-sama maksimum"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan koreksi:\nMengevaluasi FPB dari $108$ dan $135$:\n$108={2}^{2}×{3}^{3}$\n$135={3}^{3}×5$\n$FPB(108,135)={3}^{3}=27$ kelompok.\nMengevaluasi keterbagian isi kelompok:\nLaki-laki = $108÷27=4$ orang.\nPerempuan = $135÷27=5$ orang. Regu A memang menghasilkan bilangan bulat ($9$ kelompok), tetapi angka $9$ bukan jumlah kelompok terbanyak/maksimum. Laporan Regu B adalah yang paling tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pembina regu mengevaluasi jumlah kelompok terbanyak yang dapat dibentuk dari $108$ peserta laki-laki dan $135$ peserta perempuan. Tiga regu memberikan laporan evaluasi:\nRegu A: \"Dapat dibentuk $9$ kelompok, dengan isi tiap kelompok $12$ laki-laki dan $15$ perempuan.\"\nRegu B: \"Dapat dibentuk $27$ kelompok, dengan isi tiap kelompok $4$ laki-laki dan $5$ perempuan.\"\nRegu C: \"Dapat dibentuk $54$ kelompok, dengan isi tiap kelompok $2$ laki-laki dan $2,5$ perempuan.\"\nManakah evaluasi regu yang paling tepat dan bernilai maksimum?\nSyarat pembagian: setiap kelompok atau wadah harus memiliki komposisi yang sama untuk masing-masing jenis, semua item utuh, dan seluruh item terbagi habis."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Laporan Regu A"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Laporan Regu C"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Laporan Regu B"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Laporan Regu A dan Regu B sama-sama maksimum"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan koreksi:\nMengevaluasi FPB dari $108$ dan $135$:\n$108={2}^{2}×{3}^{3}$\n$135={3}^{3}×5$\n$FPB(108,135)={3}^{3}=27$ kelompok.\nMengevaluasi keterbagian isi kelompok:\nLaki-laki = $108÷27=4$ orang.\nPerempuan = $135÷27=5$ orang. Regu A memang menghasilkan bilangan bulat ($9$ kelompok), tetapi angka $9$ bukan jumlah kelompok terbanyak/maksimum. Laporan Regu B adalah yang paling tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "FPB108dan135=27. Tiapkelompok4laki-laki dan5perempuan. Sembilan kelompok sah namun bukan maksimum;54 tidak membagi135.",
+      "optionalSuggestionNotApplied": "Saran bahasa: peserta disebut orang, bukan item utuh atau wadah. Prinsip FPB dan syarat kelompok maksimum tetap benar."
+    },
+    {
+      "reviewId": "B6-21",
+      "familyId": "44b68ffb-cb2b-5151-a8f7-6657fb39e4db",
+      "sourceVersionId": "4eb7b955-5a77-56c5-bf5f-b8136fc5ea64",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Jika ∠A1 = 115°, besar ∠B3 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "115°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "75°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠B3 adalah sudut luar sepihak, sehingga jumlahnya 180°.\n∠B3 = 180° - 115° = 65°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Jika ∠A1 = 115°, besar ∠B3 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "115°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "75°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠B3 adalah sudut luar sepihak, sehingga jumlahnya 180°.\n∠B3 = 180° - 115° = 65°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "A1 danB3 luar sepihak, jumlah180; B3=65°.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-22",
+      "familyId": "25344624-3e70-5064-9ea1-bc00eb79dd41",
+      "sourceVersionId": "4f2500af-af99-5e7a-9250-fe4ee8edd3b0",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Jumlah siswa yang mengikuti kegiatan olahraga selama tiga bulan adalah:\nBulan | Jumlah Siswa\nJanuari | 40\nFebruari | 50\nMaret | 60\nPersentase kenaikan jumlah siswa dari Januari ke Maret adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20%"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "25%"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "40%"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "50%"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nKenaikan = 60 − 40 = 20.\nPersentase kenaikan:\n20/40 × 100% = 50%."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Jumlah siswa yang mengikuti kegiatan olahraga selama tiga bulan adalah:\nBulan | Jumlah Siswa\nJanuari | 40\nFebruari | 50\nMaret | 60\nPersentase kenaikan jumlah siswa dari Januari ke Maret adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20%"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "25%"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "40%"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "50%"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nKenaikan = 60 − 40 = 20.\nPersentase kenaikan:\n20/40 × 100% = 50%."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Persentasekenaikan(60−40)/40×100%=50%.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-23",
+      "familyId": "77bf4c1f-d41b-5d25-a151-a63c9985ba1d",
+      "sourceVersionId": "4f4b9198-049b-5cba-8b2b-e0a6e503035f",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua kabel kawat baja penguat tiang bendera diukur panjangnya secara tidak langsung:\nKawat X: panjang $=\\sqrt{53 }meter$\nKawat Y: panjang $=\\sqrt{54 }meter$\nDua siswa mengevaluasi hasil aproksimasi panjang kedua kawat tersebut jika dibulatkan hingga satu tempat desimal (persepuluhan terdekat):\nEvaluasi X: \"Kawat X $=7,2m$ dan Kawat Y $=7,3m$.\"\nEvaluasi Y: \"Kawat X $=7,3m$ dan Kawat Y $=7,3m$.\"\nEvaluasi manakah yang benar berdasarkan uji kuadrat desimal?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi X, karena $\\sqrt{53}$ dan $\\sqrt{54}$ harus menghasilkan desimal yang berbeda"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi X, karena $7,{2}^{2}=51,84$ yang lebih dekat ke 53"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi Y, karena $7,{3}^{2}=53,29$ (paling dekat ke 53) dan $7,{3}^{2}=53,29$ juga paling dekat ke 54"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua evaluasi salah, karena nilai keduanya dibulatkan menjadi $7,4m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUji kuadrat desimal persepuluhan:\nUntuk Kawat X ($\\sqrt{53}$):\n$7,{2}^{2}=51,84$ (selisih $1,16$ ke 53)\n$7,{3}^{2}=53,29$ (selisih $0,29$ ke 53)\nKarena $53,29$ lebih dekat ke $53$, maka $\\sqrt{53}≈7,280...→$ dibulatkan ke persepuluhan terdekat menjadi $7,3 m$.\nUntuk Kawat Y ($\\sqrt{54}$):\n$7,{3}^{2}=53,29$ (selisih $0,71$ ke 54)\n$7,{4}^{2}=54,76$ (selisih $0,76$ ke 54)\nKarena $53,29$ lebih dekat ke $54$, maka $\\sqrt{54}≈7,348...→$ dibulatkan ke persepuluhan terdekat menjadi $7,3m$.\nMaka, Evaluasi Y (kedua kawat dibulatkan menjadi $7,3m$) adalah yang bernilai tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua kabel kawat baja penguat tiang bendera diukur panjangnya secara tidak langsung:\nKawat X: panjang $=\\sqrt{53 }meter$\nKawat Y: panjang $=\\sqrt{54 }meter$\nDua siswa mengevaluasi hasil aproksimasi panjang kedua kawat tersebut jika dibulatkan hingga satu tempat desimal (persepuluhan terdekat):\nEvaluasi X: \"Kawat X $=7,2m$ dan Kawat Y $=7,3m$.\"\nEvaluasi Y: \"Kawat X $=7,3m$ dan Kawat Y $=7,3m$.\"\nEvaluasi manakah yang benar berdasarkan uji kuadrat desimal?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi X, karena $\\sqrt{53}$ dan $\\sqrt{54}$ harus menghasilkan desimal yang berbeda"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi X, karena $7,{2}^{2}=51,84$ yang lebih dekat ke 53"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi Y, karena $7,{3}^{2}=53,29$ (paling dekat ke 53) dan $7,{3}^{2}=53,29$ juga paling dekat ke 54"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua evaluasi salah, karena nilai keduanya dibulatkan menjadi $7,4m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUji kuadrat desimal persepuluhan:\nUntuk Kawat X ($\\sqrt{53}$):\n$7,{2}^{2}=51,84$ (selisih $1,16$ ke 53)\n$7,{3}^{2}=53,29$ (selisih $0,29$ ke 53)\nKarena $53,29$ lebih dekat ke $53$, maka $\\sqrt{53}≈7,280...→$ dibulatkan ke persepuluhan terdekat menjadi $7,3 m$.\nUntuk Kawat Y ($\\sqrt{54}$):\n$7,{3}^{2}=53,29$ (selisih $0,71$ ke 54)\n$7,{4}^{2}=54,76$ (selisih $0,76$ ke 54)\nKarena $53,29$ lebih dekat ke $54$, maka $\\sqrt{54}≈7,348...→$ dibulatkan ke persepuluhan terdekat menjadi $7,3m$.\nMaka, Evaluasi Y (kedua kawat dibulatkan menjadi $7,3m$) adalah yang bernilai tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√53≈7,28011 dan√54≈7,34847, keduanya dibulatkan7,3. Bukti pembulatan tepat: keduanya diantara7,25dan7,35 karena7,25²=52,5625 dan7,35²=54,0225. Membandingkan galat kuadrat endpoint bukan aturan pembulatan akar universal.",
+      "optionalSuggestionNotApplied": "Saran pedagogis: gunakan titik tengah7,25dan7,35 sebagai batas pembulatan, bukan prinsip umum memilih galat kuadrat terkecil. Pada angka53dan54, perbandingan kuadrat sumber menghasilkan jawaban yang memang benar."
+    },
+    {
+      "reviewId": "B6-24",
+      "familyId": "a6e1c5dd-304a-5b61-8b2e-d4ced399da39",
+      "sourceVersionId": "509af271-96d9-56b5-9292-77fa95a2916c",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua kelompok siswa memiliki data nilai berikut.\n\nKelompok A: 70, 75, 80, 85, 90\n\nKelompok B: 60, 75, 80, 85, 100\n\nSeorang siswa menyatakan bahwa kedua kelompok memiliki rerata dan median yang sama, sehingga penyebaran nilainya juga sama.\n\nEvaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena rerata dan median yang sama selalu menunjukkan penyebaran yang sama."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena kedua kelompok mempunyai jumlah siswa yang sama."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena kedua kelompok memiliki jangkauan berbeda meskipun rerata dan median sama."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena rerata kedua kelompok berbeda."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata A = 80 dan rerata B = 80.\n\nMedian kedua kelompok = 80.\n\nJangkauan A = 90 − 70 = 20.\n\nJangkauan B = 100 − 60 = 40.\n\nRerata dan median sama tidak berarti penyebaran data sama."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua kelompok siswa memiliki data nilai berikut.\n\nKelompok A: 70, 75, 80, 85, 90\n\nKelompok B: 60, 75, 80, 85, 100\n\nSeorang siswa menyatakan bahwa kedua kelompok memiliki rerata dan median yang sama, sehingga penyebaran nilainya juga sama.\n\nEvaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena rerata dan median yang sama selalu menunjukkan penyebaran yang sama."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena kedua kelompok mempunyai jumlah siswa yang sama."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena kedua kelompok memiliki jangkauan berbeda meskipun rerata dan median sama."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena rerata kedua kelompok berbeda."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata A = 80 dan rerata B = 80.\n\nMedian kedua kelompok = 80.\n\nJangkauan A = 90 − 70 = 20.\n\nJangkauan B = 100 − 60 = 40.\n\nRerata dan median sama tidak berarti penyebaran data sama."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah masing-masing400; mean80 dan median80. RangeA20,B40; pusat sama tidak memaksa penyebaran sama.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-25",
+      "familyId": "9ae3d09f-d671-57a6-8d59-e2d3c06dbdce",
+      "sourceVersionId": "50b2cda7-48d5-5884-b631-92508405581a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Panitia penataan taman sekolah akan memasang papan pembatas kayu di sepanjang salah satu sisi lahan tempat bibit tanaman yang berbentuk persegi. Luas lahan persegi tersebut adalah 45m^2, sehingga panjang sisi lahan tersebut adalah sqrt(45)meter.\nJika nilai sqrt(45) diaproksimasi dan dibulatkan hingga satu tempat desimal (persepuluhan terdekat), perkiraan panjang papan pembatas sisi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6,5 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "6,6 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6,7 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6,8 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan batas dua bilangan kuadrat sempurna terdekat yang mengapit bilangan 45:\n36<45<49\n$$\\sqrt{36} < \\sqrt{45} < \\sqrt{49} \\implies 6 < \\sqrt{45} < 7$$\nUji perkiraan nilai desimal kuadrat di antara 6 dan 7 yang paling dekat dengan 45:\n6,6^2=43,56\n6,7^2=44,89 (selisih terhadap 45 hanya 0,11)\n6,8^2=46,24 (selisih terhadap 45 adalah 1,24)\nKarena 44,89 merupakan nilai yang paling dekat dengan 45, maka nilai aproksimasi sqrt(45)≈6,708...\nDibulatkan ke satu tempat desimal (persepuluhan terdekat) menjadi 6,7m.\nAnalisis opsi pilihan jawaban:\nOpsi A (6,5 m): Salah, muncul jika siswa keliru mengambil nilai titik tengah antara 6 dan 7.\nOpsi B (6,6 m): Salah, muncul jika siswa keliru menghitung nilai kuadrat desimal.\nOpsi C (6,7 m - BENAR): Hasil aproksimasi akar kuadrat dan pembulatan persepuluhan terdekat yang tepat (6,7^2=44,89≈45).\nOpsi D (6,8 m): Salah, muncul jika siswa keliru membulatkan ke atas dari nilai kuadrat yang lebih jauh (46,24).\nKesalahan umum yang diantisipasi: Siswa sering membagi 45 dengan 2 (45÷2=22,5m) atau langsung mengasumsikan nilai tengah (6,5m), alih-alih menguji pengkuadratan nilai desimal terdekat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia penataan taman sekolah akan memasang papan pembatas kayu di sepanjang salah satu sisi lahan tempat bibit tanaman yang berbentuk persegi. Luas lahan persegi tersebut adalah 45m^2, sehingga panjang sisi lahan tersebut adalah sqrt(45)meter.\nJika nilai sqrt(45) diaproksimasi dan dibulatkan hingga satu tempat desimal (persepuluhan terdekat), perkiraan panjang papan pembatas sisi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6,5 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "6,6 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6,7 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6,8 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan batas dua bilangan kuadrat sempurna terdekat yang mengapit bilangan 45:\n36<45<49\n$$\\sqrt{36} < \\sqrt{45} < \\sqrt{49} \\implies 6 < \\sqrt{45} < 7$$\nUji perkiraan nilai desimal kuadrat di antara 6 dan 7 yang paling dekat dengan 45:\n6,6^2=43,56\n6,7^2=44,89 (selisih terhadap 45 hanya 0,11)\n6,8^2=46,24 (selisih terhadap 45 adalah 1,24)\nKarena 44,89 merupakan nilai yang paling dekat dengan 45, maka nilai aproksimasi sqrt(45)≈6,708...\nDibulatkan ke satu tempat desimal (persepuluhan terdekat) menjadi 6,7m.\nAnalisis opsi pilihan jawaban:\nOpsi A (6,5 m): Salah, muncul jika siswa keliru mengambil nilai titik tengah antara 6 dan 7.\nOpsi B (6,6 m): Salah, muncul jika siswa keliru menghitung nilai kuadrat desimal.\nOpsi C (6,7 m - BENAR): Hasil aproksimasi akar kuadrat dan pembulatan persepuluhan terdekat yang tepat (6,7^2=44,89≈45).\nOpsi D (6,8 m): Salah, muncul jika siswa keliru membulatkan ke atas dari nilai kuadrat yang lebih jauh (46,24).\nKesalahan umum yang diantisipasi: Siswa sering membagi 45 dengan 2 (45÷2=22,5m) atau langsung mengasumsikan nilai tengah (6,5m), alih-alih menguji pengkuadratan nilai desimal terdekat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√45≈6,70820→6,7. Dapat dibuktikan dengan6,65²=44,2225<45<45,5625=6,75².",
+      "optionalSuggestionNotApplied": "Saran pedagogis: kuatkan pembulatan dengan batas6,65dan6,75; galat kuadrat terdekat tidak sama dengan aturan universal pembulatan akar."
+    },
+    {
+      "reviewId": "B6-26",
+      "familyId": "6c1b185f-f0bc-50c4-870f-7400375b7319",
+      "sourceVersionId": "50b62e03-ac3b-5216-a0ae-e239d69e37f3",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah dadu dilempar sebanyak 150 kali. Hasil percobaan menunjukkan bahwa angka 5 muncul sebanyak 20 kali. Pernyataan yang benar berdasarkan hasil percobaan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 adalah 1/5."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 adalah 1/6."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 lebih kecil daripada peluang teoretisnya."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang teoretis muncul angka 5 adalah 20/150."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif angka 5:\n20/150 = 2/15 ≈ 0,133\nPeluang teoretis muncul angka 5 pada sebuah dadu:\n1/6 ≈ 0,167\nKarena 0,133 < 0,167, maka frekuensi relatif muncul angka 5 lebih kecil daripada peluang teoretisnya."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah dadu seimbang memiliki enam sisi bernomor 1 sampai 6. Dadu dilempar 150 kali dan angka 5 muncul 20 kali. Pernyataan yang benar berdasarkan hasil percobaan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 adalah 1/5."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 adalah 1/6."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif muncul angka 5 lebih kecil daripada peluang teoretisnya."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang teoretis muncul angka 5 adalah 20/150."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Frekuensi relatif angka 5=20/150=2/15≈0,1333. Karena dadu seimbang dengan enam sisi, peluang teoretis angka 5=1/6≈0,1667. Maka frekuensi relatif lebih kecil daripada peluang teoretisnya. Jawaban C."
+        }
+      },
+      "correctionReason": "Perbandingan dengan peluangteoretis1/6 memerlukan dadu seimbang enam sisi. Tegaskan model ini di stem.",
+      "independentSolution": "20/150=2/15≈0,13333. Untuk dadu seimbang enam sisi P5=1/6≈0,16667 sehingga frekuensi relatif lebihkecil. Model dadu seimbang belum eksplisit.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-27",
+      "familyId": "8876c4a2-1e06-58db-a908-9aeddd55349e",
+      "sourceVersionId": "5116cf5e-7aba-52f5-b151-121b42971c01",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua buah kawat baja penyangga tiang bendera di lapangan sekolah diukur panjangnya secara tidak langsung:\nKawat A: panjang $=\\sqrt{58}meter$\nKawat B: panjang $=\\sqrt{59}meter$\nSeorang siswa menganalisis nilai aproksimasi panjang kedua kawat tersebut pada mistar dengan ketelitian persepuluhan meter ($0,1m$). Hasil analisis aproksimasi yang benar jika dibulatkan ke persepuluhan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$7,5m$ dan $7,6m$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$7,6m$ dan $7,6m$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$7,6m$ dan $7,7m$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$7,7m$ dan $7,8m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUji kuadrat desimal persepuluhan untuk menganalisis nilai aproksimasi:\nUntuk Kawat A ($\\sqrt{58}$):\n$7,{6}^{2}=57,76$ (selisih $0,24$ ke $58$)\n$7,{7}^{2}=59,29$ (selisih $1,29$ ke $58$)\nKarena $57,76$ paling dekat ke $58$, maka $\\sqrt{58}≈7,615...→$ dibulatkan ke persepuluhan terdekat menjadi $7,6m$.\nUntuk Kawat B ($\\sqrt{59}$):\n$7,{6}^{2}=57,76$ (selisih $1,24$ ke $59$)\n$7,{7}^{2}=59,29$ (selisih $0,29$ ke $59$)\nKarena $59,29$ paling dekat ke $59$, maka $\\sqrt{59}≈7,681...→$ dibulatkan ke persepuluhan terdekat menjadi $7,7m$.\nPasangan aproksimasi yang benar adalah $7,6m$ dan $7,7m$."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua buah kawat baja penyangga tiang bendera di lapangan sekolah diukur panjangnya secara tidak langsung:\nKawat A: panjang $=\\sqrt{58}meter$\nKawat B: panjang $=\\sqrt{59}meter$\nSeorang siswa menganalisis nilai aproksimasi panjang kedua kawat tersebut pada mistar dengan ketelitian persepuluhan meter ($0,1m$). Hasil analisis aproksimasi yang benar jika dibulatkan ke persepuluhan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$7,5m$ dan $7,6m$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$7,6m$ dan $7,6m$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$7,6m$ dan $7,7m$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$7,7m$ dan $7,8m$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUji kuadrat desimal persepuluhan untuk menganalisis nilai aproksimasi:\nUntuk Kawat A ($\\sqrt{58}$):\n$7,{6}^{2}=57,76$ (selisih $0,24$ ke $58$)\n$7,{7}^{2}=59,29$ (selisih $1,29$ ke $58$)\nKarena $57,76$ paling dekat ke $58$, maka $\\sqrt{58}≈7,615...→$ dibulatkan ke persepuluhan terdekat menjadi $7,6m$.\nUntuk Kawat B ($\\sqrt{59}$):\n$7,{6}^{2}=57,76$ (selisih $1,24$ ke $59$)\n$7,{7}^{2}=59,29$ (selisih $0,29$ ke $59$)\nKarena $59,29$ paling dekat ke $59$, maka $\\sqrt{59}≈7,681...→$ dibulatkan ke persepuluhan terdekat menjadi $7,7m$.\nPasangan aproksimasi yang benar adalah $7,6m$ dan $7,7m$."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√58≈7,61577→7,6 dan√59≈7,68115→7,7. Titikbatas pembulatan7,65²=58,5225 memisahkan58dan59.",
+      "optionalSuggestionNotApplied": "Saran pedagogis: buktikan batas pembulatan lewat7,55²,7,65²,7,75². Hasil7,6dan7,7 benar; memilih galat kuadrat terkecil bukan algoritma pembulatan akar universal."
+    },
+    {
+      "reviewId": "B6-28",
+      "familyId": "99459382-87e5-5c4f-acba-cc625c7869d7",
+      "sourceVersionId": "511a916a-521d-54f3-9b0e-ad63ac271337",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah segitiga sama kaki memiliki sudut puncak 40°. Besar masing-masing sudut alasnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "40°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "140°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "70°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Jumlah kedua sudut alas = 180° - 40° = 140°.\nKarena sama besar, tiap sudut alas = 140° ÷ 2 = 70°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah segitiga sama kaki memiliki sudut puncak 40°. Besar masing-masing sudut alasnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "40°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "140°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "70°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Jumlah kedua sudut alas = 180° - 40° = 140°.\nKarena sama besar, tiap sudut alas = 140° ÷ 2 = 70°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Sudutalas=(180−40)/2=70°.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-29",
+      "familyId": "3ea00b28-afff-5581-942d-33d6e92ce414",
+      "sourceVersionId": "51589f51-fe5f-5014-9cce-a349679919bd",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa menggambar denah denah denah tata letak stan bazar sekolah. Jarak sebenarnya antara stan pameran IPA dan stan prakarya adalah 45 meter. Jika denah tersebut digambar menggunakan skala 1:300, berapa jarak antara kedua stan pameran tersebut pada denah?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "9 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "15 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan jarak sebenarnya dari meter ke centimeter:\nJarak Sebenarnya=45 m=45×100 cm=4.500 cm\nHitung jarak pada denah menggunakan rumus skala:\nJarak Pada Denah=Jarak Sebenarnya×Skala\nJarak Pada Denah=4.500 cm×(1)/(300)=(4.500)/(300)=15 cm\nJadi, jarak kedua stan pada denah adalah 15 cm.\nKesalahan Umum yang Diantisipasi:\nSiswa lupa mengonversikan 45 m ke cm terlebih dahulu sehingga langsung membagi 45÷300=0,15 cm."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa menggambar denah tata letak stan bazar sekolah. Jarak sebenarnya antara stan pameran IPA dan stan prakarya adalah 45 meter. Jika denah tersebut digambar menggunakan skala 1:300, berapa jarak antara kedua stan pameran tersebut pada denah?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "9 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "15 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan jarak sebenarnya dari meter ke centimeter:\nJarak Sebenarnya=45 m=45 × 100 cm=4.500 cm\nHitung jarak pada denah menggunakan rumus skala:\nJarak Pada Denah=Jarak Sebenarnya×Skala\nJarak Pada Denah=4.500 cm×(1)/(300)=(4.500)/(300)=15 cm\nJadi, jarak kedua stan pada denah adalah 15 cm.\nKesalahan Umum yang Diantisipasi:\nSiswa lupa mengonversikan 45 m ke cm terlebih dahulu sehingga langsung membagi 45 ÷ 300=0,15 cm."
+        }
+      },
+      "correctionReason": "Redaksi mengulang kata denah tiga kali. Hapus duplikasi; angka dan kunci tetap.",
+      "independentSolution": "45m=4.500cm; jarakdenah4.500/300=15cm.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B6-30",
+      "familyId": "47b4ccab-dfd5-516f-a6db-4363808cc111",
+      "sourceVersionId": "516dd1ea-c7c6-5e5e-9a48-daabb7ce6af8",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Translasi T(a, b) memetakan titik P(2, -5) ke titik P'(-3, 1). Jika titik Q(-1, 4) ditranslasikan oleh T, koordinat bayangan titik Q adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(-6, 10)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(-4, 9)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(4, -1)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(-6, -2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nDiketahui:  P(2, -5) → P'(-3, 1)\nMaka:\na = -3 - 2 = -5\nb = 1 - (-5) = 6\nJadi, T(-5, 6).\nBayangan titik Q(-1, 4): Q' = (-1 + (-5), 4 + 6) = (-6, 10)\nJadi, koordinat bayangan titik Q adalah (-6, 10)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Translasi T(a, b) memetakan titik P(2, -5) ke titik P'(-3, 1). Jika titik Q(-1, 4) ditranslasikan oleh T, koordinat bayangan titik Q adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(-6, 10)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(-4, 9)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(4, -1)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(-6, -2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nDiketahui:  P(2, -5) → P'(-3, 1)\nMaka:\na = -3 - 2 = -5\nb = 1 - (-5) = 6\nJadi, T(-5, 6).\nBayangan titik Q(-1, 4): Q' = (-1 + (-5), 4 + 6) = (-6, 10)\nJadi, koordinat bayangan titik Q adalah (-6, 10)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "VektortranslasiP′−P=(−5,6); Q′=(−1−5,4+6)=(−6,10).",
+      "optionalSuggestionNotApplied": null
+    }
+  ]
+}

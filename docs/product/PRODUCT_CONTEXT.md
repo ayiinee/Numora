@@ -245,3 +245,21 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal tidak boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 10 menit dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** menyetujui klasifikasi 30 kandidat PG Drill untuk PvP (10 EASY, 10 MEDIUM, 10 HARD) dan tujuh koreksi menjadi versi baru. Ini persetujuan editorial, bukan kalibrasi IRT atau aktivasi official. [Manifest, koreksi, dan batas distribusi](../development/PVP_OWNER_REVIEW_2026-11-10.md).
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** batch kedua review PvP disetujui: 30 keluarga baru, 7 EASY/23 MEDIUM dan tujuh koreksi menjadi versi baru; dua saran opsional tidak diterapkan. [Rincian dan manifest batch 2](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-2--persetujuan-pemilik). Tidak termasuk aktivasi official atau kalibrasi IRT.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketiga review PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-3--persetujuan-pemilik) disetujui: 30 keluarga baru (7 EASY/19 MEDIUM/4 HARD), tiga koreksi menjadi versi baru, tanpa menerapkan dua saran opsional. Aktivasi official dan kalibrasi empiris/IRT tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keempat review PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-4--persetujuan-pemilik) disetujui: 30 keluarga baru (12 EASY/13 MEDIUM/5 HARD) dan lima revisi menjadi versi baru. Tiga saran opsional tidak diterapkan; aktivasi official dan kalibrasi empiris/IRT tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kelima PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-5--persetujuan-pemilik) disetujui: 30 keluarga (6 EASY/17 MEDIUM/7 HARD), delapan revisi versi baru, empat saran opsional tidak diterapkan. Tidak termasuk kalibrasi empiris/IRT atau aktivasi official.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keenam PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-6--persetujuan-pemilik) disetujui untuk 29 kandidat (9 EASY/19 MEDIUM/1 HARD) dan lima revisi. B6-17 tetap HOLD Curriculum, enam saran opsional tidak diterapkan. Tidak termasuk kalibrasi empiris/IRT atau aktivasi official.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketujuh PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-7--persetujuan-pemilik) disetujui: 30 keluarga (11 EASY/14 MEDIUM/5 HARD), lima revisi; enam saran opsional tidak diterapkan dan B6-17 tetap terpisah. Aktivasi official dan kalibrasi empiris/IRT tidak termasuk.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) disetujui: 30 keluarga (10 EASY/16 MEDIUM/4 HARD), tiga revisi; lima saran opsional tidak diterapkan dan B6-17 tetap terpisah. Tidak termasuk kalibrasi empiris/IRT atau aktivasi official.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) disetujui: 30 keluarga (9 EASY/17 MEDIUM/4 HARD), empat revisi; lima saran opsional tidak diterapkan dan B6-17 tetap terpisah. Tidak termasuk kalibrasi empiris/IRT atau aktivasi official.

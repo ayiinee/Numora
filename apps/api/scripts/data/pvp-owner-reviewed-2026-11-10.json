@@ -1,0 +1,2650 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_30_REVIEW_AND_SEVEN_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved the linked 30-candidate report and seven corrections with \"setuju\" in this chat.",
+  "scope": "Editorial correctness and EASY/MEDIUM/HARD classification; not empirical difficulty calibration or IRT approval. No server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "items": [
+    {
+      "reviewId": "EASY-01",
+      "familyId": "00738e0a-1f4a-51f1-a64a-f4aefca92c8a",
+      "sourceVersionId": "00d9c19b-54d4-5315-bf06-a09d10a8c938",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Nilai ulangan seorang siswa selama lima kali adalah:\n70, 80, 75, 85, 90\nRata-rata nilai tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "78"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nJumlah nilai:\n70 + 80 + 75 + 85 + 90 = 400.\nMean:\n400 ÷ 5 = 80."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Nilai ulangan seorang siswa selama lima kali adalah:\n70, 80, 75, 85, 90\nRata-rata nilai tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "78"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nJumlah nilai:\n70 + 80 + 75 + 85 + 90 = 400.\nMean:\n400 ÷ 5 = 80."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "400 / 5 = 80"
+    },
+    {
+      "reviewId": "EASY-02",
+      "familyId": "b1ea8893-563a-5491-b40e-c8989e963c68",
+      "sourceVersionId": "01ea0051-ac39-5935-b722-0bc89e1cebdc",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Diketahui segitiga ABC dengan ∠A = 50° dan ∠B = 60°. Besar ∠C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "60°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "70°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "90°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Jumlah sudut dalam segitiga 180°.\n∠C = 180° - (50° + 60°) = 70°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui segitiga ABC dengan ∠A = 50° dan ∠B = 60°. Besar ∠C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "60°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "70°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "90°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Jumlah sudut dalam segitiga 180°.\n∠C = 180° - (50° + 60°) = 70°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "180 - 50 - 60 = 70 derajat"
+    },
+    {
+      "reviewId": "EASY-03",
+      "familyId": "94c77ee6-009b-5379-b02d-435a3416947a",
+      "sourceVersionId": "037b701d-d3bf-5806-84d6-c247cf1d7d14",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah taman berbentuk persegi panjang memiliki panjang 12 meter dan lebar 8 meter. Luas taman tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20 m²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "40 m²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "48 m²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "96 m²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Luas persegi panjang = 12 × 8 = 96 m²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah taman berbentuk persegi panjang memiliki panjang 12 meter dan lebar 8 meter. Luas taman tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20 m²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "40 m²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "48 m²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "96 m²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Luas persegi panjang = 12 × 8 = 96 m²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "12 x 8 = 96 m2"
+    },
+    {
+      "reviewId": "EASY-04",
+      "familyId": "57112c74-ce7c-5290-bbfd-ab9362281756",
+      "sourceVersionId": "03c59e8d-5f8d-5b0b-9c50-5764bf232003",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah kotak berisi 4 bola merah, 3 bola biru, dan 3 bola hijau. Satu bola diambil secara acak.\nPeluang terambil bola biru adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3/10"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3/7"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1/2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah bola = 10. Bola biru = 3. Peluang = 3/10."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kotak berisi 4 bola merah, 3 bola biru, dan 3 bola hijau. Satu bola diambil secara acak.\nPeluang terambil bola biru adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3/10"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3/7"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1/2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah bola = 10. Bola biru = 3. Peluang = 3/10."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "3 / (4+3+3) = 3/10"
+    },
+    {
+      "reviewId": "EASY-05",
+      "familyId": "c03f51e8-a2fb-55e0-92b8-9cf0de24ba2d",
+      "sourceVersionId": "0b5548b8-8d2b-583f-9529-0e0d92f9ab90",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Seorang pengurus kebun sekolah mencatat hasil persemaian bibit tanaman selama satu semester sebanyak 47.580 bibit. Untuk keperluan laporan tahunan ke dinas pendidikan, pengurus diminta membulatkan jumlah bibit tersebut ke ribuan terdekat.\nHasil pembulatan jumlah bibit tanaman ke ribuan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "47.000 bibit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "48.000 bibit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "47.600 bibit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "50.000 bibit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk membulatkan ke ribuan terdekat, perhatikan digit ratusan (digit di sebelah kanan tempat ribuan):\nPada bilangan 47.580, digit ribuan adalah 7 dan digit ratusan adalah 5.\nKarena digit ratusan 5≥5, maka angka pada tempat ribuan dibulatkan ke atas (7+1=8).\nSehingga 47.580 dibulatkan menjadi 48.000 bibit.\nKesalahan Umum yang Diantisipasi:\nSiswa mengabaikan aturan bahwa angka 5 dibulatkan ke atas, lalu membulatkannya ke bawah menjadi 47.000 bibit."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pengurus kebun sekolah mencatat hasil persemaian bibit tanaman selama satu semester sebanyak 47.580 bibit. Untuk keperluan laporan tahunan ke dinas pendidikan, pengurus diminta membulatkan jumlah bibit tersebut ke ribuan terdekat.\nHasil pembulatan jumlah bibit tanaman ke ribuan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "47.000 bibit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "48.000 bibit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "47.600 bibit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "50.000 bibit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk membulatkan ke ribuan terdekat, perhatikan digit ratusan (digit di sebelah kanan tempat ribuan):\nPada bilangan 47.580, digit ribuan adalah 7 dan digit ratusan adalah 5.\nKarena digit ratusan 5≥5, maka angka pada tempat ribuan dibulatkan ke atas (7+1=8).\nSehingga 47.580 dibulatkan menjadi 48.000 bibit.\nKesalahan Umum yang Diantisipasi:\nSiswa mengabaikan aturan bahwa angka 5 dibulatkan ke atas, lalu membulatkannya ke bawah menjadi 47.000 bibit."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "47.580 dibulatkan ke ribuan = 48.000"
+    },
+    {
+      "reviewId": "EASY-06",
+      "familyId": "2b1c7030-0908-5a17-9dd5-25faac25d907",
+      "sourceVersionId": "13f16056-92b1-5201-8610-7779570eb262",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan data jumlah buku yang dibaca lima siswa dalam satu bulan berikut.\nSiswa | Jumlah Buku\nAndi | 4\nBudi | 6\nCitra | 3\nDeni | 7\nEka | 5\nJumlah seluruh buku yang dibaca kelima siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20 buku"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "23 buku"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25 buku"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "27 buku"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah seluruh buku:\n4 + 6 + 3 + 7 + 5 = 25 buku."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan data jumlah buku yang dibaca lima siswa dalam satu bulan berikut.\nSiswa | Jumlah Buku\nAndi | 4\nBudi | 6\nCitra | 3\nDeni | 7\nEka | 5\nJumlah seluruh buku yang dibaca kelima siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20 buku"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "23 buku"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25 buku"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "27 buku"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Jumlah seluruh buku:\n4 + 6 + 3 + 7 + 5 = 25 buku."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "4+6+3+7+5 = 25"
+    },
+    {
+      "reviewId": "EASY-07",
+      "familyId": "ac3ede24-1ede-5770-b2b6-058c275f3c57",
+      "sourceVersionId": "188766ea-e013-5960-99e0-fe3b193190c6",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Diketahui barisan bilangan 3, 6, 9, 12, 15. Nilai U_4 dan S_4 berturut-turut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "9 dan 18"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 dan 18"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "12 dan 30"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "30 dan 12"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "U_4 adalah suku ke-4, yaitu 12.\nS_4 adalah jumlah 4 suku pertama: 3+6+9+12=30.\nJadi, U_4=12 dan S_4=30."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui barisan bilangan 3, 6, 9, 12, 15. Nilai U_4 dan S_4 berturut-turut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "9 dan 18"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 dan 18"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "12 dan 30"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "30 dan 12"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "U_4 adalah suku ke-4, yaitu 12.\nS_4 adalah jumlah 4 suku pertama: 3+6+9+12=30.\nJadi, U_4=12 dan S_4=30."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "U4=12; S4=3+6+9+12=30"
+    },
+    {
+      "reviewId": "EASY-08",
+      "familyId": "ff3cf1c1-120e-5824-bff9-ca3f117a7fa7",
+      "sourceVersionId": "1d3ef78c-0c9b-5668-af78-5419d9bfb11c",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Petugas kebersihan mengisi bak kolam ikan hias di taman sekolah yang berkapasitas 360 liter hingga penuh. Keran air dinyalakan mulai pukul 08.10 WIB dan kolam terisi penuh tepat pada pukul 08.30 WIB.\nLaju aliran air (debit) dari keran tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "15 liter/menit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "18 liter/menit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "20 liter/menit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "24 liter/menit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan durasi waktu pengisian air:\nWaktu(t)=08.30-08.10=20 menit\nHitung debit air (Q) dengan membagi volume dengan waktu:\nDebit(Q)=(Volume(V))/(Waktu(t))=(360 liter)/(20 menit)=18 liter/menit\nJadi, debit aliran air keran tersebut adalah 18 liter/menit.\nKesalahan Umum yang Diantisipasi:\nSiswa salah mengoperasikan selisih waktu 08.30-08.10 menjadi 30 atau 10 menit, yang menghasilkan perhitungan debit tidak wajar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bak mula-mula kosong berkapasitas 360 liter diisi oleh keran berdebit konstan mulai pukul 08.10 WIB hingga penuh pada pukul 08.30 WIB. Berapakah debit air keran tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "15 liter/menit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "18 liter/menit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "20 liter/menit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "24 liter/menit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan durasi waktu pengisian air:\nWaktu(t)=08.30-08.10=20 menit\nHitung debit air (Q) dengan membagi volume dengan waktu:\nDebit(Q)=(Volume(V))/(Waktu(t))=(360 liter)/(20 menit)=18 liter/menit\nJadi, debit aliran air keran tersebut adalah 18 liter/menit.\nKesalahan Umum yang Diantisipasi:\nSiswa salah mengoperasikan selisih waktu 08.30-08.10 menjadi 30 atau 10 menit, yang menghasilkan perhitungan debit tidak wajar."
+        }
+      },
+      "correctionReason": "Nyatakan bak mula-mula kosong dan debit keran konstan agar 360 liter benar-benar volume tambahan. Usulan: Sebuah bak mula-mula kosong berkapasitas 360 liter diisi oleh keran berdebit konstan mulai 08.10 WIB hingga penuh pada 08.30 WIB. Berapakah debitnya?",
+      "independentSolution": "360 / (30-10) = 18 liter/menit, jika bak awalnya kosong dan debit konstan"
+    },
+    {
+      "reviewId": "EASY-09",
+      "familyId": "3d512a0b-dc6b-5684-a938-ea09ff3ed5c5",
+      "sourceVersionId": "1dd016a1-680a-5ae8-ad47-54b082529914",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah limas segi empat memiliki volume 400 cm³. Jika tinggi limas tersebut diperbesar 3 kali dari tinggi semula (ukuran alas tetap), maka volume limas yang baru adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "800 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1.000 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1.200 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1.600 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas alas tetap, sehingga volume baru = 400 × 3 = 1.200 cm³."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah limas segi empat memiliki volume 400 cm³. Jika tinggi limas tersebut diperbesar 3 kali dari tinggi semula (ukuran alas tetap), maka volume limas yang baru adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "800 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1.000 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1.200 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1.600 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas alas tetap, sehingga volume baru = 400 × 3 = 1.200 cm³."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Volume berbanding lurus tinggi jika alas tetap: 3 x 400 = 1.200 cm3"
+    },
+    {
+      "reviewId": "EASY-10",
+      "familyId": "80da56fc-9aa0-5195-91a8-2cb4ed160b8e",
+      "sourceVersionId": "13e2f6ad-e65c-5fee-a475-6fadbae8be7e",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Pada pukul 09.00, seorang siswa setinggi 150 cm memiliki bayangan sepanjang 200 cm. Pada saat yang sama, sebuah pohon memiliki bayangan sepanjang 8 m. Tinggi pohon tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "4,5 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5,5 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10,67 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Siswa beserta bayangannya dan pohon beserta bayangannya membentuk dua segitiga siku-siku yang sebangun.\ntinggi siswa / bayangan siswa = tinggi pohon / bayangan pohon → 150/200 = t/800.\nt = (150 × 800) / 200 = 600 cm = 6 m."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pada pukul 09.00, seorang siswa setinggi 150 cm memiliki bayangan sepanjang 200 cm. Pada saat yang sama, sebuah pohon memiliki bayangan sepanjang 8 m. Tinggi pohon tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "4,5 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5,5 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10,67 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Siswa beserta bayangannya dan pohon beserta bayangannya membentuk dua segitiga siku-siku yang sebangun.\ntinggi siswa / bayangan siswa = tinggi pohon / bayangan pohon → 150/200 = t/800.\nt = (150 × 800) / 200 = 600 cm = 6 m."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "1,5 / 2 = h / 8; h=6 m, dengan tanah datar dan objek tegak"
+    },
+    {
+      "reviewId": "MEDIUM-01",
+      "familyId": "fb1a1200-6bec-51ae-b3b3-693b0bd07064",
+      "sourceVersionId": "00a22aaf-633a-5570-9755-c15a186a990b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Diketahui barisan geometri berhingga 2, 6, 18, ..., 1.458. Suku ke-5 barisan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "162"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "54"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "108"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "486"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Suku pertama a=2 dan rasio r=3.\nU_5=2×3^(4)=2×81=162."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui barisan geometri berhingga 2, 6, 18, ..., 1.458. Suku ke-5 barisan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "162"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "54"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "108"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "486"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Suku pertama a=2 dan rasio r=3.\nU_5=2×3^(4)=2×81=162."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "U5=2 x 3^4=162"
+    },
+    {
+      "reviewId": "MEDIUM-02",
+      "familyId": "25a13cbe-73ea-539b-ab20-c1a28a319ac5",
+      "sourceVersionId": "01634159-efab-5934-9909-f32dd1e06812",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah jaring-jaring tabung terdiri dari dua lingkaran dan satu persegi panjang.\nJika panjang jari-jari alas tabung tersebut adalah 7 cm dan tingginya 10 cm, maka luas seluruh permukaan tabung yang dibentuk dari jaring-jaring tersebut adalah... (Gunakan $π=\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "440 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "594 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "616 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "748 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas seluruh permukaan tabung = Luas 2 lingkaran + Luas persegi panjang (selimut).\nLuas 2 lingkaran = $2×π×{r}^{2}=2×\\frac{22}{7}×7×7=308c{m}^{2}$.\nLuas persegi panjang = Keliling alas $×$ tinggi = $(2×\\frac{22}{7}×7)×10=44×10=440c{m}^{2}$.\nLuas total = $308+440=748c{m}^{2}$."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah jaring-jaring tabung terdiri dari dua lingkaran dan satu persegi panjang.\nJika panjang jari-jari alas tabung tersebut adalah 7 cm dan tingginya 10 cm, maka luas seluruh permukaan tabung yang dibentuk dari jaring-jaring tersebut adalah... (Gunakan $π=\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "440 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "594 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "616 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "748 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas seluruh permukaan tabung = Luas 2 lingkaran + Luas persegi panjang (selimut).\nLuas 2 lingkaran = $2×π×{r}^{2}=2×\\frac{22}{7}×7×7=308c{m}^{2}$.\nLuas persegi panjang = Keliling alas $×$ tinggi = $(2×\\frac{22}{7}×7)×10=44×10=440c{m}^{2}$.\nLuas total = $308+440=748c{m}^{2}$."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2 x (22/7) x 7 x (7+10)=748 cm2"
+    },
+    {
+      "reviewId": "MEDIUM-03",
+      "familyId": "96770863-5a30-593b-8750-0f049fbd0141",
+      "sourceVersionId": "01f8650c-723a-5a14-9cf7-b42c8085fcdc",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pak Ali menabung setiap bulan. Pada bulan pertama ia menabung Rp100.000,00 dan setiap bulan berikutnya tabungannya bertambah Rp25.000,00 dari bulan sebelumnya. Besar tabungan Pak Ali pada bulan ke-12 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp300.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp350.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp375.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp400.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Barisan aritmetika dengan a=100000 dan b=25000.\nU_12=100000+(12-1)×25000=100000+275000=375000.\nJadi, tabungan pada bulan ke-12 adalah Rp375.000,00."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pak Ali menabung setiap bulan. Pada bulan pertama ia menyetorkan Rp100.000,00 dan setiap bulan berikutnya jumlah setorannya bertambah Rp25.000,00 dari bulan sebelumnya. Besar uang yang disetorkan Pak Ali khusus pada bulan ke-12 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp300.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp350.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp375.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp400.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Barisan aritmetika dengan a=100000 dan b=25000.\nU_12=100000+(12-1)×25000=100000+275000=375000.\nJadi, tabungan pada bulan ke-12 adalah Rp375.000,00."
+        }
+      },
+      "correctionReason": "Istilah tabungan pada bulan ke-12 dapat dibaca saldo kumulatif (Rp2.850.000, tidak ada pada opsi). Ganti pertanyaan menjadi: Besar uang yang disetorkan Pak Ali khusus pada bulan ke-12 adalah .... Kunci C tetap.",
+      "independentSolution": "Setoran bulan ke-12 = 100.000 + 11 x 25.000 = 375.000; bukan saldo kumulatif"
+    },
+    {
+      "reviewId": "MEDIUM-04",
+      "familyId": "2c135d57-678a-5b88-aa0a-e62eebc9c322",
+      "sourceVersionId": "0354470b-fdff-547f-97a5-833b224c0fe6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Jumlah dari tiga nomor halaman berurutan pada buku agenda kegiatan OSIS yang sedang terbuka adalah 147. Nomor halaman terbesar di antara ketiga halaman tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "49"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "50"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "51"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan tiga nomor halaman berurutan adalah n, n+1, dan n+2.\nModel matematika: n+(n+1)+(n+2)=147 3n+3=147⟹3n=144⟹n=48\nKetiga nomor halaman tersebut adalah 48, 49, dan 50.\nNomor halaman terbesar adalah 50.\nKesalahan Umum yang Diantisipasi:\nSiswa sering terkecoh memilih nilai n=48 (halaman pertama) atau n+1=49 (halaman tengah) karena tidak memperhatikan bahwa yang diminta adalah nomor halaman terbesar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Jumlah tiga nomor halaman berurutan pada sebuah buku agenda adalah 147. Nomor halaman terbesar di antara ketiga halaman tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "49"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "50"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "51"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan tiga nomor halaman berurutan adalah n, n+1, dan n+2.\nModel matematika: n+(n+1)+(n+2)=147 3n+3=147⟹3n=144⟹n=48\nKetiga nomor halaman tersebut adalah 48, 49, dan 50.\nNomor halaman terbesar adalah 50.\nKesalahan Umum yang Diantisipasi:\nSiswa sering terkecoh memilih nilai n=48 (halaman pertama) atau n+1=49 (halaman tengah) karena tidak memperhatikan bahwa yang diminta adalah nomor halaman terbesar."
+        }
+      },
+      "correctionReason": "Frasa buku sedang terbuka kurang sesuai dengan tiga halaman sekaligus. Ganti menjadi: Jumlah tiga nomor halaman berurutan pada sebuah buku agenda adalah 147. Nomor halaman terbesar adalah .... Kunci C tetap.",
+      "independentSolution": "n+(n+1)+(n+2)=147; n=48; terbesar=50"
+    },
+    {
+      "reviewId": "MEDIUM-05",
+      "familyId": "d0570c40-c6b5-5abc-a8bd-7b23d3908bca",
+      "sourceVersionId": "05045239-fa86-5b77-a866-a860067dbd2a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah mesin pemotong rumput di sekolah memerlukan 1,5 liter bensin untuk beroperasi selama 2 jam dan mampu merapikan lahan rumput seluas 120m^2. Jika petugas kebersihan hendak merapikan lapangan rumput sekolah seluas 360m^2 menggunakan mesin yang sama dengan laju kerja konstan, banyak bensin yang dibutuhkan adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3,0 liter"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4,0 liter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4,5 liter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6,0 liter"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nAnalisis Hubungan Variabel: Hubungan antara luas lahan (L) dan kebutuhan bensin (B) merupakan perbandingan senilai (berbanding lurus). Semakin luas lahan yang dipotong, semakin banyak bensin yang dibutuhkan. (Informasi durasi \"2 jam\" pada soal merupakan informasi penyerta yang tidak memengaruhi perhitungan langsung hubungan antara luas lahan dan volume bensin).\nLangkah Perhitungan: Gunakan rumus perbandingan senilai: (Luas_1)/(Luas_2)=(Bensin_1)/(Bensin_2)\nSubstitusikan nilai yang diketahui: (120)/(360)=(1,5)/(B)\nSederhanakan pecahan (120)/(360) menjadi (1)/(3): (1)/(3)=(1,5)/(B)\nB=1,5×3\nB=4,5liter\nKesimpulan:\nBanyak bensin yang dibutuhkan untuk merapikan lahan seluas 360m^2 adalah 4,5 liter. Jawaban yang tepat adalah C."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah mesin pemotong rumput di sekolah memerlukan 1,5 liter bensin untuk beroperasi selama 2 jam dan mampu merapikan lahan rumput seluas 120m^2. Jika petugas kebersihan hendak merapikan lapangan rumput sekolah seluas 360m^2 menggunakan mesin yang sama dengan laju kerja konstan, banyak bensin yang dibutuhkan adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3,0 liter"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4,0 liter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4,5 liter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6,0 liter"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nAnalisis Hubungan Variabel: Hubungan antara luas lahan (L) dan kebutuhan bensin (B) merupakan perbandingan senilai (berbanding lurus). Semakin luas lahan yang dipotong, semakin banyak bensin yang dibutuhkan. (Informasi durasi \"2 jam\" pada soal merupakan informasi penyerta yang tidak memengaruhi perhitungan langsung hubungan antara luas lahan dan volume bensin).\nLangkah Perhitungan: Gunakan rumus perbandingan senilai: (Luas_1)/(Luas_2)=(Bensin_1)/(Bensin_2)\nSubstitusikan nilai yang diketahui: (120)/(360)=(1,5)/(B)\nSederhanakan pecahan (120)/(360) menjadi (1)/(3): (1)/(3)=(1,5)/(B)\nB=1,5×3\nB=4,5liter\nKesimpulan:\nBanyak bensin yang dibutuhkan untuk merapikan lahan seluas 360m^2 adalah 4,5 liter. Jawaban yang tepat adalah C."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "(360/120) x 1,5 = 4,5 liter"
+    },
+    {
+      "reviewId": "MEDIUM-06",
+      "familyId": "4a5e5f6a-0f29-5239-aad6-38524bfadbcb",
+      "sourceVersionId": "080f87cc-e84d-5b8c-9b91-6bb4d7c845db",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Budi biasanya bersepeda dari rumah ke sekolah dengan kecepatan rata-rata 15km/jam dan tiba dalam waktu 20menit. Suatu hari, Budi terlambat bangun sehingga ia hanya memiliki waktu 12menit untuk perjalanan dari rumah ke sekolah agar tidak terlambat. Kecepatan rata-rata minimal yang harus dikayuh Budi adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20km/jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "22,5km/jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25km/jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "28km/jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Budi biasanya bersepeda dari rumah ke sekolah dengan kecepatan rata-rata 15km/jam dan tiba dalam waktu 20menit. Suatu hari, Budi terlambat bangun sehingga ia hanya memiliki waktu 12menit untuk perjalanan dari rumah ke sekolah agar tidak terlambat. Kecepatan rata-rata minimal yang harus dikayuh Budi adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20km/jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "22,5km/jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25km/jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "28km/jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Jarak rumah ke sekolah = 15 × (20/60) = 5 km. Waktu yang tersedia = 12/60 = 0,2 jam. Kecepatan rata-rata minimum = 5/0,2 = 25 km/jam. Jawaban C."
+        }
+      },
+      "correctionReason": "Pembahasan hanya berisi PEMBAHASAN. Isi lengkap: Jarak rumah-sekolah = 15 x 20/60 = 5 km. Waktu tersedia = 12/60 = 0,2 jam. Kecepatan minimum = 5/0,2 = 25 km/jam. Jawaban C.",
+      "independentSolution": "Jarak=15 x (20/60)=5 km; v=5/(12/60)=25 km/jam"
+    },
+    {
+      "reviewId": "MEDIUM-07",
+      "familyId": "907e662d-cc31-56cc-a118-4397a06cfb2b",
+      "sourceVersionId": "0b4a5aeb-a1b3-50fc-8be6-8398af4b4d58",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Lapangan olahraga sekolah berbentuk persegi panjang memiliki keliling 52 meter. Berdasarkan pengukuran tim fasilitas, ukuran panjang lapangan (p) adalah 2 meter lebihnya dari dua kali lebarnya (l). Luas lapangan olahraga tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "128 m^2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "144 m^2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "160 m^2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "180 m^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nModel matematika:\n(1) Keliling: 2(p+l)=52⟹p+l=26\n(2) Hubungan dimensi: p=2l+2⟹p−2l=2\nSubstitusi p=2l+2 ke persamaan (1):\n(2l+2)+l=26⟹3l+2=26⟹3l=24⟹l=8 meter\nHitung nilai p:\np=2(8)+2=18 meter\nLuas lapangan:\nLuas=p×l=18×8=144 m2"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Lapangan olahraga sekolah berbentuk persegi panjang memiliki keliling 52 meter. Berdasarkan pengukuran tim fasilitas, ukuran panjang lapangan (p) adalah 2 meter lebihnya dari dua kali lebarnya (l). Luas lapangan olahraga tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "128 m^2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "144 m^2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "160 m^2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "180 m^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nModel matematika:\n(1) Keliling: 2(p+l)=52⟹p+l=26\n(2) Hubungan dimensi: p=2l+2⟹p−2l=2\nSubstitusi p=2l+2 ke persamaan (1):\n(2l+2)+l=26⟹3l+2=26⟹3l=24⟹l=8 meter\nHitung nilai p:\np=2(8)+2=18 meter\nLuas lapangan:\nLuas=p×l=18×8=144 m2"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "p+l=26; p=2l+2; l=8; p=18; luas=144 m2"
+    },
+    {
+      "reviewId": "MEDIUM-08",
+      "familyId": "389b9da4-d2f1-59ed-ad13-b9cdee39015c",
+      "sourceVersionId": "0e4eb6a6-71b7-58aa-ac89-82b765029d02",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pengurus OSIS membeli perlengkapan administrasi untuk kegiatan bazar sekolah berupa 4 rim kertas kuarto seharga (3x+10.000) rupiah per rim dan 3 pak spidol seharga (2x-5.000) rupiah per pak. Saat pembayaran di kasir toko, pengurus mendapat potongan voucher diskon total sebesar (2x-4.000) rupiah. Bentuk aljabar paling sederhana yang menyatakan total uang yang harus dibayarkan pengurus OSIS adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "16x+29.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "16x+21.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "18x+29.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18x+21.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nTotal biaya akhir dihitung dari total pembelian dikurangi voucher diskon:\nTotalBayar=4(3x+10.000)+3(2x-5.000)-(2x-4.000)\nGunakan sifat distributif untuk mengalikan suku-suku di dalam kurung:\n=12x+40.000+6x-15.000-2x+4.000\nKelompokkan dan operasikan suku-suku yang sejenis:\n=(12x+6x-2x)+(40.000-15.000+4.000)\n=16x+29.000"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pengurus OSIS membeli perlengkapan administrasi untuk kegiatan bazar sekolah berupa 4 rim kertas kuarto seharga (3x+10.000) rupiah per rim dan 3 pak spidol seharga (2x-5.000) rupiah per pak. Saat pembayaran di kasir toko, pengurus mendapat potongan voucher diskon total sebesar (2x-4.000) rupiah. Bentuk aljabar paling sederhana yang menyatakan total uang yang harus dibayarkan pengurus OSIS adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "16x+29.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "16x+21.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "18x+29.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18x+21.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nTotal biaya akhir dihitung dari total pembelian dikurangi voucher diskon:\nTotalBayar=4(3x+10.000)+3(2x-5.000)-(2x-4.000)\nGunakan sifat distributif untuk mengalikan suku-suku di dalam kurung:\n=12x+40.000+6x-15.000-2x+4.000\nKelompokkan dan operasikan suku-suku yang sejenis:\n=(12x+6x-2x)+(40.000-15.000+4.000)\n=16x+29.000"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "4(3x+10.000)+3(2x-5.000)-(2x-4.000)=16x+29.000"
+    },
+    {
+      "reviewId": "MEDIUM-09",
+      "familyId": "e64ef3be-935b-5b94-9bd0-4afe514e1de9",
+      "sourceVersionId": "0edf92f3-0cd9-5a43-af4d-cdb1af267a8f",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Budi menyelesaikan persamaan pecahan aljabar (3x−2)/4=(x+4)/2 untuk menentukan nilai variabel x pada tugas matematika melalui langkah-langkah berikut: 1. Mengalikan silang kedua ruas untuk menghilangkan bentuk pecahan:\nLangkah 1: 2(3x−2)=4(x+4)\nLangkah 2: 6x−4=4x+16\nLangkah 3: 6x−4x=16−4\nLangkah 4: 2x=12⟹x=6\nBerdasarkan analisis pengerjaan di atas, pada langkah manakah Budi melakukan kesalahan pertama kali, dan berapakah nilai x yang benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Langkah 1, nilai x yang benar adalah 8"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Langkah 2, nilai x yang benar adalah 12"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Langkah 3, nilai x yang benar adalah 10"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Langkah 4, nilai x yang benar adalah 5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nEvaluasi Langkah 1: 2(3x−2)=4(x+4) (Benar, mengalikan kedua ruas dengan KPK penyebut yaitu 4).\nEvaluasi Langkah 2: 6x−4=4x+16 (Benar, sifat distributif).\nEvaluasi Langkah 3: 6x−4x=16−4 (SALAH). Operasi invers memindahkan −4 dari ruas kiri ke ruas kanan seharusnya menjadi +4, yaitu 16+4=20.\nPerbaikan Penyelesaian: 2x=20⟹x=10.\nKesalahan Umum yang Diantisipasi:\nSiswa tidak teliti memeriksa perubahan tanda saat pemindahan suku dari satu ruas ke ruas lain, sehingga menganggap pengerjaan Budi sudah benar hingga Langkah 4."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Budi menyelesaikan persamaan pecahan aljabar (3x−2)/4=(x+4)/2 untuk menentukan nilai variabel x pada tugas matematika melalui langkah-langkah berikut: 1. Mengalikan silang kedua ruas untuk menghilangkan bentuk pecahan:\nLangkah 1: 2(3x−2)=4(x+4)\nLangkah 2: 6x−4=4x+16\nLangkah 3: 6x−4x=16−4\nLangkah 4: 2x=12⟹x=6\nBerdasarkan analisis pengerjaan di atas, pada langkah manakah Budi melakukan kesalahan pertama kali, dan berapakah nilai x yang benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Langkah 1, nilai x yang benar adalah 8"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Langkah 2, nilai x yang benar adalah 12"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Langkah 3, nilai x yang benar adalah 10"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Langkah 4, nilai x yang benar adalah 5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Langkah 1 benar: perkalian silang menghasilkan 2(3x−2)=4(x+4). Langkah 2 benar: sifat distributif menghasilkan 6x−4=4x+16. Kesalahan pertama terjadi pada Langkah 3: seharusnya 6x−4x=16+4, sehingga 2x=20 dan x=10. Jawaban C."
+        }
+      },
+      "correctionReason": "Kunci C benar. Pembahasan menyebut langkah 1 diperoleh dengan mengalikan KPK 4, padahal hasil itu adalah perkalian silang atau kedua ruas dikali 8. Ganti alasan menjadi: Perkalian silang menghasilkan 2(3x-2)=4(x+4). Selanjutnya 6x-4=4x+16, sehingga 2x=20 dan x=10.",
+      "independentSolution": "Langkah 3 pertama salah: 6x-4=4x+16 memberi 2x=20; x=10"
+    },
+    {
+      "reviewId": "MEDIUM-10",
+      "familyId": "dbc4f11d-be89-56ba-8d17-5a6414a6a003",
+      "sourceVersionId": "19957720-758f-5b53-a84b-65f303837a07",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah persegi memiliki panjang sisi 14 cm. Di dalam persegi tersebut dibuat sebuah lingkaran yang menyinggung keempat sisinya (gunakan π = 22/7). Analisis luas daerah di dalam persegi tetapi di luar lingkaran adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "42 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "44 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "46 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "48 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Jari-jari = 7 cm. Luas daerah = 196 − 154 = 42 cm²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah persegi memiliki panjang sisi 14 cm. Di dalam persegi tersebut dibuat sebuah lingkaran yang menyinggung keempat sisinya (gunakan π = 22/7). Analisis luas daerah di dalam persegi tetapi di luar lingkaran adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "42 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "44 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "46 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "48 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Jari-jari = 7 cm. Luas daerah = 196 − 154 = 42 cm²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "14^2 - (22/7) x 7^2 = 42 cm2"
+    },
+    {
+      "reviewId": "HARD-01",
+      "familyId": "9d4d7079-80ea-5d9e-94bf-c7dcd0a5fb2c",
+      "sourceVersionId": "0a09d8a9-0bf0-5f13-8491-dbe4626b00da",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Panitia bazar sekolah menjual makanan tradisional berupa lemper dan kue lapis.\nKelompok 1 menjual 4 lemper dan 3 kue lapis seharga Rp22.000,00.\nKelompok 2 menjual 2 lemper dan 5 kue lapis seharga Rp25.000,00.\nSeorang pembeli membawa uang Rp18.000,00 dan hendak membeli 2 lemper serta 3 kue lapis. Evaluasi terhadap kecukupan uang pembeli tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Uang pembeli kurang Rp2.000,00 dari total harga yang harus dibayar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Uang pembeli pas/cukup untuk membayar seluruh kue tanpa ada kembalian"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Uang pembeli cukup dan memiliki sisa kembalian sebesar Rp3.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Uang pembeli cukup dan memiliki sisa kembalian sebesar Rp1.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN Misalkan $l=harga1lemper$ dan $k=harga1kuelapis$. Model SPLDV:\n$4l+3k=22.000$\n$2l + 5k = 25.000 \\implies 2l = 25.000 - 5k$\nKalikan persamaan (2) dengan 2:\n$4l+10k=50.000$\nKurangkan dengan persamaan (1):\n$(4l+10k)-(4l+3k)=50.000-22.000$\n$$7k = 28.000 \\implies k = 4.000$$\nSubstitusi $k=4.000$ ke persamaan $2l$:\n$$2l = 25.000 - 5(4.000) = 25.000 - 20.000 = 5.000 \\implies l = 2.500$$\nTotal harga 2 lemper + 3 kue lapis:\n$Total=2(2.500)+3(4.000)=5.000+12.000=Rp15.000,00$\nSisa kembalian $=18.000-15.000=Rp3.000,00$.\nMaka, uang pembeli cukup dan memiliki sisa kembalian Rp3.000,00."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia bazar sekolah menjual makanan tradisional berupa lemper dan kue lapis.\nKelompok 1 menjual 4 lemper dan 3 kue lapis seharga Rp22.000,00.\nKelompok 2 menjual 2 lemper dan 5 kue lapis seharga Rp25.000,00.\nSeorang pembeli membawa uang Rp18.000,00 dan hendak membeli 2 lemper serta 3 kue lapis. Evaluasi terhadap kecukupan uang pembeli tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Uang pembeli kurang Rp2.000,00 dari total harga yang harus dibayar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Uang pembeli pas/cukup untuk membayar seluruh kue tanpa ada kembalian"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Uang pembeli cukup dan memiliki sisa kembalian sebesar Rp3.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Uang pembeli cukup dan memiliki sisa kembalian sebesar Rp1.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Misalkan l adalah harga satu lemper dan k adalah harga satu kue lapis. Diketahui 4l+3k=22.000 dan 2l+5k=25.000. Kalikan persamaan kedua dengan 2, lalu kurangkan persamaan pertama: 7k=28.000 sehingga k=4.000. Selanjutnya 2l=25.000−5(4.000)=5.000 sehingga l=2.500. Harga 2 lemper dan 3 kue lapis adalah 2(2.500)+3(4.000)=5.000+12.000=Rp17.000,00. Kembalian dari Rp18.000,00 adalah Rp1.000,00. Jawaban D."
+        }
+      },
+      "correctionReason": "Kunci D benar, tetapi pembahasan salah menulis 5.000+12.000=15.000 dan kembalian 3.000. Ganti menjadi total Rp17.000 dan kembalian Rp1.000. Jangan ubah kunci menjadi C.",
+      "independentSolution": "k=4.000; l=2.500; 2l+3k=5.000+12.000=17.000; kembalian=1.000"
+    },
+    {
+      "reviewId": "HARD-02",
+      "familyId": "a54560ab-41f5-5c74-b929-d67c6a4ce5c2",
+      "sourceVersionId": "10ee6b56-2652-5ccc-9181-0546a9745ba8",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A3 = (3x - 20)° dan ∠B1 = (2x + 10)°. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "86°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "94°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "76°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "104°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "∠A3 dan ∠B1 sudut dalam sepihak: (3x - 20) + (2x + 10) = 180 → 5x = 190 → x = 38.\n∠B1 = 2(38) + 10 = 86°. ∠B4 bertolak belakang dengan ∠B1, sehingga ∠B4 = 86°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A3 = (3x - 20)° dan ∠B1 = (2x + 10)°. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "86°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "94°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "76°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "104°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "∠A3 dan ∠B1 sudut dalam sepihak: (3x - 20) + (2x + 10) = 180 → 5x = 190 → x = 38.\n∠B1 = 2(38) + 10 = 86°. ∠B4 bertolak belakang dengan ∠B1, sehingga ∠B4 = 86°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Dalam sepihak: 3x-20+2x+10=180; x=38; B4=B1=86 derajat"
+    },
+    {
+      "reviewId": "HARD-03",
+      "familyId": "08374154-5b65-52db-8b70-100b4a093047",
+      "sourceVersionId": "13f071bc-0597-5fd8-92e0-47e2c0524452",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Dua kelompok ekstrakurikuler (Kelompok A dan Kelompok B) berencana menyewa aula sekolah untuk latihan pertunjukan.\nKelompok A: Menggunakan skema biaya dasar Rp120.000 ditambah biaya kebersihan Rp15.000 per jam.\nKelompok B: Menggunakan skema biaya dasar Rp80.000 ditambah biaya kebersihan Rp20.000 per jam.\nJika x menyatakan durasi waktu sewa dalam jam, analisis durasi sewa yang menyebabkan total biaya Kelompok B lebih mahal daripada total biaya Kelompok A adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "x<8 jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "x=8 jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "x>8 jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "x≥8 jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nTotal Biaya Kelompok A = 120.000+15.000x.\nTotal Biaya Kelompok B = 80.000+20.000x.\nSyarat: Biaya Kelompok B > Biaya Kelompok A: 80.000+20.000x>120.000+15.000x\nKelompokkan suku sejenis: 20.000x−15.000x>120.000−80.000 5.000x>40.000⟹x>8\nJadi, biaya Kelompok B lebih mahal apabila durasi sewa lebih dari 8 jam (x>8 jam).\nKesalahan Umum yang Diantisipasi:\nSiswa menyimpulkan x=8 jam sebagai jawaban akhir tanpa mengevaluasi bahwa pada saat x=8 jam, biaya kedua kelompok bernilai sama besar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua kelompok ekstrakurikuler (Kelompok A dan Kelompok B) berencana menyewa aula sekolah untuk latihan pertunjukan.\nKelompok A: Menggunakan skema biaya dasar Rp120.000 ditambah biaya kebersihan Rp15.000 per jam.\nKelompok B: Menggunakan skema biaya dasar Rp80.000 ditambah biaya kebersihan Rp20.000 per jam.\nJika x menyatakan durasi waktu sewa dalam jam, analisis durasi sewa yang menyebabkan total biaya Kelompok B lebih mahal daripada total biaya Kelompok A adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "x<8 jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "x=8 jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "x>8 jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "x≥8 jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nTotal Biaya Kelompok A = 120.000+15.000x.\nTotal Biaya Kelompok B = 80.000+20.000x.\nSyarat: Biaya Kelompok B > Biaya Kelompok A: 80.000+20.000x>120.000+15.000x\nKelompokkan suku sejenis: 20.000x−15.000x>120.000−80.000 5.000x>40.000⟹x>8\nJadi, biaya Kelompok B lebih mahal apabila durasi sewa lebih dari 8 jam (x>8 jam).\nKesalahan Umum yang Diantisipasi:\nSiswa menyimpulkan x=8 jam sebagai jawaban akhir tanpa mengevaluasi bahwa pada saat x=8 jam, biaya kedua kelompok bernilai sama besar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "80.000+20.000x > 120.000+15.000x; x>8"
+    },
+    {
+      "reviewId": "HARD-04",
+      "familyId": "4b4c207f-7ab9-5e5f-bb3e-a84a5617cb83",
+      "sourceVersionId": "e8a49b4a-68e6-520a-96ea-90a1783f82cb",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Dalam suatu latihan penyelesaian aljabar, nilai x memenuhi persamaan (2x-3)/(4)=(x+2)/(3). Nilai dari 2x+5 adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "17"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "19"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "24"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nKalikan silang untuk menghilangkan penyebut: 3(2x−3)=4(x+2) 6x−9=4x+8\nSelesaikan untuk mencari x: 6x−4x=8+9⟹2x=17⟹x=8,5\nNilai yang ditanyakan (2x+5): 2x+5=2(8,5)+5=17+5=22\nKesalahan Umum yang Diantisipasi:\nSiswa hanya mengalikan pembilang dengan salah satu suku penyebut, atau lupa mengalikan suku di dalam kurung secara menyeluruh (3×(−3) menjadi −3 bukannya −9)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam suatu latihan penyelesaian aljabar, nilai x memenuhi persamaan (2x-3)/(4)=(x+2)/(3). Nilai dari 2x+5 adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "17"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "19"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "24"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nKalikan silang untuk menghilangkan penyebut: 3(2x−3)=4(x+2) 6x−9=4x+8\nSelesaikan untuk mencari x: 6x−4x=8+9⟹2x=17⟹x=8,5\nNilai yang ditanyakan (2x+5): 2x+5=2(8,5)+5=17+5=22\nKesalahan Umum yang Diantisipasi:\nSiswa hanya mengalikan pembilang dengan salah satu suku penyebut, atau lupa mengalikan suku di dalam kurung secara menyeluruh (3×(−3) menjadi −3 bukannya −9)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "3(2x-3)=4(x+2); 2x=17; 2x+5=22"
+    },
+    {
+      "reviewId": "HARD-05",
+      "familyId": "828c98a8-33e2-550f-8455-d2b19ac2aa54",
+      "sourceVersionId": "e934e2b4-6db8-535e-b285-9db0833348c0",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Sebuah taman berbentuk juring lingkaran dengan sudut pusat $9{0}^{∘}$ dan jari-jari 14 m. Di sekeliling taman tersebut akan dipasang pagar dengan biaya Rp 150.000,00 per meter. Jika panitia memiliki anggaran sebesar Rp 7.000.000,00, evaluasi pernyataan yang tepat mengenai anggaran tersebut adalah... (Gunakan $π=\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Dana cukup, dengan sisa Rp 500.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Dana tidak cukup, kekurangan Rp 500.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Dana tidak cukup, kekurangan Rp 800.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Dana cukup, dengan sisa Rp 1.000.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKeliling juring = r + r + panjang busur.\nPanjang busur = $\\frac{9{0}^{∘}}{36{0}^{∘}}×2×\\frac{22}{7}×14=\\frac{1}{4}×88=22$ m.\nKeliling = 14 + 14 + 22 = 50 m.\nTotal biaya = $50×$ Rp 150.000,00 = Rp 7.500.000,00.\nAnggaran = Rp 7.000.000,00.\nKarena biaya lebih besar dari anggaran, maka dana tidak cukup dengan kekurangan Rp 500.000,00."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah taman berbentuk juring lingkaran dengan sudut pusat $9{0}^{∘}$ dan jari-jari 14 m. Di sekeliling taman tersebut akan dipasang pagar dengan biaya Rp 150.000,00 per meter. Jika panitia memiliki anggaran sebesar Rp 7.000.000,00, evaluasi pernyataan yang tepat mengenai anggaran tersebut adalah... (Gunakan $π=\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Dana cukup, dengan sisa Rp 500.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Dana tidak cukup, kekurangan Rp 500.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Dana tidak cukup, kekurangan Rp 800.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Dana cukup, dengan sisa Rp 1.000.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKeliling juring = r + r + panjang busur.\nPanjang busur = $\\frac{9{0}^{∘}}{36{0}^{∘}}×2×\\frac{22}{7}×14=\\frac{1}{4}×88=22$ m.\nKeliling = 14 + 14 + 22 = 50 m.\nTotal biaya = $50×$ Rp 150.000,00 = Rp 7.500.000,00.\nAnggaran = Rp 7.000.000,00.\nKarena biaya lebih besar dari anggaran, maka dana tidak cukup dengan kekurangan Rp 500.000,00."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Busur=22 m; keliling=22+28=50 m; biaya=7.500.000; kurang=500.000"
+    },
+    {
+      "reviewId": "HARD-06",
+      "familyId": "864bca63-2a16-53e6-8545-d959fc498b12",
+      "sourceVersionId": "ea1cc585-52ba-5c39-9246-c1a0381d2779",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Diketahui f(x) = 2x + 1 dan g(x) = x^(2) - 3. Nilai dari (g ∘ f)(2) - (f ∘ g)(2) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "16"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "19"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "(g ∘ f)(2) = g(f(2)) = g(5) = 5^(2) - 3 = 22.\n(f ∘ g)(2) = f(g(2)) = f(1) = 2(1) + 1 = 3.\nSelisihnya 22 - 3 = 19."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui f(x) = 2x + 1 dan g(x) = x^(2) - 3. Nilai dari (g ∘ f)(2) - (f ∘ g)(2) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "16"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "19"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "(g ∘ f)(2) = g(f(2)) = g(5) = 5^(2) - 3 = 22.\n(f ∘ g)(2) = f(g(2)) = f(1) = 2(1) + 1 = 3.\nSelisihnya 22 - 3 = 19."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "g(f(2))=22; f(g(2))=3; selisih=19"
+    },
+    {
+      "reviewId": "HARD-07",
+      "familyId": "513394aa-7ce1-53ef-86cd-9f5fb761184d",
+      "sourceVersionId": "ec40d9fc-45a6-5d52-a2f2-0f8f908e4247",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Sebuah bangun datar gabungan tersusun dari sebuah persegi dengan panjang sisi 14 cm dan sebuah setengah lingkaran yang menempel pada salah satu sisi persegi. Seorang siswa menyimpulkan bahwa keliling bangun tersebut adalah 64 cm dan luasnya adalah 273 cm². Evaluasi kesimpulan siswa tersebut! (Gunakan π = $\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pernyataan benar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pernyataan salah, keliling seharusnya 78 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pernyataan salah, luas seharusnya 308 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pernyataan salah, keliling dan luas seharusnya 50 cm dan 196 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas Persegi = 14 × 14 = 196 cm².\nLuas setengah lingkaran (diameter 14, r = 7) = 1/2 × $\\frac{22}{7}$ × 7² = 77 cm².\nLuas total gabungan = 196 + 77 = 273 cm². (Cocok)\nKeliling gabungan = sisi atas + sisi bawah + sisi tegak + busur setengah lingkaran.\nBusur = 1/2 × $\\frac{22}{7}$ × 14 = 22 cm.\nKeliling = 14 + 14 + 14 + 22 = 64 cm. (Cocok)\nJadi, kesimpulan siswa tersebut sudah benar sepenuhnya."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bangun datar gabungan tersusun dari sebuah persegi dengan panjang sisi 14 cm dan sebuah setengah lingkaran yang berada di luar persegi. Diameter setengah lingkaran berimpit tepat dengan salah satu sisi persegi; kedua daerah hanya berbagi batas tersebut. Seorang siswa menyimpulkan bahwa keliling bangun gabungan adalah 64 cm dan luasnya adalah 273 cm². Evaluasi kesimpulan siswa tersebut! (Gunakan π = 22/7)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pernyataan benar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pernyataan salah, keliling seharusnya 78 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pernyataan salah, luas seharusnya 308 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pernyataan salah, keliling dan luas seharusnya 50 cm dan 196 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas Persegi = 14 × 14 = 196 cm².\nLuas setengah lingkaran (diameter 14, r = 7) = 1/2 × $\\frac{22}{7}$ × 7² = 77 cm².\nLuas total gabungan = 196 + 77 = 273 cm². (Cocok)\nKeliling gabungan = sisi atas + sisi bawah + sisi tegak + busur setengah lingkaran.\nBusur = 1/2 × $\\frac{22}{7}$ × 14 = 22 cm.\nKeliling = 14 + 14 + 14 + 22 = 64 cm. (Cocok)\nJadi, kesimpulan siswa tersebut sudah benar sepenuhnya."
+        }
+      },
+      "correctionReason": "Tegaskan setengah lingkaran berada di luar persegi, diameternya berimpit tepat dengan satu sisi persegi, dan kedua daerah hanya berbagi batas. Rumus/jawaban A benar untuk konfigurasi ini.",
+      "independentSolution": "Jika setengah lingkaran di luar persegi dengan diameter sepanjang sisi: K=3x14+22=64; L=196+77=273"
+    },
+    {
+      "reviewId": "HARD-08",
+      "familyId": "bfb4ede4-2c13-59ea-8986-adaf9ad5f444",
+      "sourceVersionId": "ed685b46-9fc4-5f9c-ae95-1fc77470b037",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Jumlah n suku pertama suatu deret dinyatakan dengan S_n=3n^(2)-n. Nilai U_6 dan S_6 berturut-turut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "32 dan 102"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "102 dan 32"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "70 dan 102"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32 dan 70"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "S_6=3(36)-6=102 dan S_5=3(25)-5=70.\nU_6=S_6-S_5=102-70=32.\nJadi, U_6=32 dan S_6=102."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Jumlah n suku pertama suatu deret dinyatakan dengan S_n=3n^(2)-n. Nilai U_6 dan S_6 berturut-turut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "32 dan 102"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "102 dan 32"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "70 dan 102"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32 dan 70"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "S_6=3(36)-6=102 dan S_5=3(25)-5=70.\nU_6=S_6-S_5=102-70=32.\nJadi, U_6=32 dan S_6=102."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "S6=102; S5=70; U6=102-70=32"
+    },
+    {
+      "reviewId": "HARD-09",
+      "familyId": "d18523b1-ea5f-594c-b579-1778ace8bae8",
+      "sourceVersionId": "f0d204a4-f011-54a4-bb34-4d8ef0180115",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Pembina OSIS membagikan sejumlah uang saku operasional untuk panitia. Jika setiap panitia diberi Rp15.000,00, maka uang operasional tersisa Rp20.000,00. Namun, jika setiap panitia hendak diberi Rp18.000,00, pembina OSIS kekurangan uang sebesar Rp16.000,00. Evaluasi terhadap total uang operasional yang dimiliki pembina OSIS adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp200.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp180.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp160.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp120.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan $n$ adalah banyak panitia OSIS.\nTotal uang operasional dapat dinyatakan dalam dua kondisi:\nKondisi 1: $15.000n+20.000$\nKondisi 2: $18.000n-16.000$\nKarena total uang operasional sama, buat model PLSV:\n$15.000n+20.000=18.000n-16.000$\nSelesaikan persamaan dengan operasi invers:\n$20.000+16.000=18.000n-15.000n$\n$$36.000 = 3.000n \\implies n = 12\\text{ orang panitia}$$\nSubstitusi $n=12$ ke salah satu kondisi untuk mengetahui total uang:\n$TotalUang=15.000(12)+20.000=180.000+20.000=Rp200.000,00$"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pembina OSIS membagikan sejumlah uang saku operasional untuk panitia. Jika setiap panitia diberi Rp15.000,00, maka uang operasional tersisa Rp20.000,00. Namun, jika setiap panitia hendak diberi Rp18.000,00, pembina OSIS kekurangan uang sebesar Rp16.000,00. Evaluasi terhadap total uang operasional yang dimiliki pembina OSIS adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp200.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp180.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp160.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp120.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan $n$ adalah banyak panitia OSIS.\nTotal uang operasional dapat dinyatakan dalam dua kondisi:\nKondisi 1: $15.000n+20.000$\nKondisi 2: $18.000n-16.000$\nKarena total uang operasional sama, buat model PLSV:\n$15.000n+20.000=18.000n-16.000$\nSelesaikan persamaan dengan operasi invers:\n$20.000+16.000=18.000n-15.000n$\n$$36.000 = 3.000n \\implies n = 12\\text{ orang panitia}$$\nSubstitusi $n=12$ ke salah satu kondisi untuk mengetahui total uang:\n$TotalUang=15.000(12)+20.000=180.000+20.000=Rp200.000,00$"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "15.000n+20.000=18.000n-16.000; n=12; uang=200.000"
+    },
+    {
+      "reviewId": "HARD-10",
+      "familyId": "afdac5e4-e1c8-5d16-a154-68e551d11e87",
+      "sourceVersionId": "f636a861-8e2d-5276-8f01-d6b9ed4a2ad8",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 = (5x + 15)° dan ∠B2 = (3x + 5)°. Besar ∠B3 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "115°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "55°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "∠A1 = ∠A4 (bertolak belakang), dan ∠A4 dengan ∠B2 adalah sudut dalam sepihak. Maka (5x + 15) + (3x + 5) = 180 → 8x = 160 → x = 20.\n∠B2 = 3(20) + 5 = 65°. ∠B3 bertolak belakang dengan ∠B2, sehingga ∠B3 = 65°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 = (5x + 15)° dan ∠B2 = (3x + 5)°. Besar ∠B3 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "115°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "55°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "∠A1 = ∠A4 (bertolak belakang), dan ∠A4 dengan ∠B2 adalah sudut dalam sepihak. Maka (5x + 15) + (3x + 5) = 180 → 8x = 160 → x = 20.\n∠B2 = 3(20) + 5 = 65°. ∠B3 bertolak belakang dengan ∠B2, sehingga ∠B3 = 65°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "5x+15+3x+5=180; x=20; B3=B2=65 derajat"
+    }
+  ]
+}
