@@ -345,11 +345,14 @@ test('Completion: Student manages multiple memberships and updates name and phot
   await page.getByLabel('Nama tampilan').fill('  Kirino Baru  ');
   await page.getByRole('button', { name: 'Simpan nama' }).click();
   await expect(page.getByRole('heading', { name: 'Kirino Baru', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Edit profil', exact: true }).click();
   await page
     .getByLabel('Foto profil', { exact: true })
     .setInputFiles({ name: 'avatar.png', mimeType: 'image/png', buffer: png });
   await page.getByRole('button', { name: 'Unggah foto', exact: true }).click();
   await expect(page.getByAltText('Kirino Baru', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Edit profil', exact: true })).toHaveAttribute('aria-expanded', 'false');
+  await page.getByRole('button', { name: 'Edit profil', exact: true }).click();
   await page.getByRole('button', { name: 'Hapus foto', exact: true }).click();
   await expect(page.getByAltText('Kirino Baru', { exact: true })).toHaveCount(0);
   expect(mutations.filter((value) => ['POST', 'DELETE'].includes(value))).toEqual([
