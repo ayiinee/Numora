@@ -76,6 +76,7 @@ def build(db,admin,context,batch,arm_count=2, source=None):
     value['referenceQuestionVersionIds']=list(map(str,originals));value['referencePackage']={'packageId':str(packages[0]),'packageVersion':1}
     value['respondents']=[];value['responses']=[];value['packages']=[]
     for index,(arm,package,revision,questions) in enumerate(zip(arms,packages,revisions,[originals]+variant_packages)):
+        package_items=db.execute('SELECT * FROM package_items WHERE package_id=%s ORDER BY display_order',(package,)).fetchall()
         for simulated in [p for p in simulated_people if p['packageId']==simulated_packages[index]['packageId']]:
             student=user()
             assignment=one('INSERT INTO assessment_arm_assignments(set_id,student_id,assigned_arm_id) VALUES(%s,%s,%s) RETURNING id',(arm_set,student,arm))
@@ -83,19 +84,21 @@ def build(db,admin,context,batch,arm_count=2, source=None):
             db.execute("INSERT INTO assessment_attempt_arm_deliveries(attempt_id,assignment_id,delivered_revision_id,delivery_mode) VALUES(%s,%s,%s,'ASSIGNED')",(attempt,assignment,revision))
             manifest=one("INSERT INTO content_delivery_manifests(student_id,module,kind,idempotency_key,issued_at) VALUES(%s,'TRYOUT','ITEM_PAYLOAD_ISSUED',%s,%s) RETURNING id",(student,uuid4().hex,now-timedelta(minutes=2)))
             respondent=str(uuid4())
-            for pi in db.execute('SELECT * FROM package_items WHERE package_id=%s ORDER BY display_order',(package,)).fetchall():
-                item=one('INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s,%s,%s) RETURNING id',(attempt,package,pi['id'],pi['question_version_id'],pi['display_order'],pi['max_points']))
-                if source is not None or pi['display_order']!=2: db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
-                meta=by_id[str(pi['question_version_id'])];special=pi['display_order'] in (1,6)
-                answer={} if pi['display_order']==1 else {'optionId':'A'} if meta['questionType']=='SINGLE_CHOICE' else {'optionIds':['A','C']} if meta['questionType']=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
-                simulated_response = simulated_responses[(simulated['attemptId'], simulated_packages[index]['questionVersionIds'][pi['display_order']-1])]
-                state = simulated_response['responseState'] if source is not None else 'OMITTED' if pi['display_order']==1 else 'INVALID' if pi['display_order']==6 else 'RESPONDED'
-                points = simulated_response['awardedPoints'] if source is not None else 0 if special else pi['max_points']
-                category = simulated_response['scoreCategory'] if source is not None else 0 if special else meta['maximumScoreCategory']
-                db.execute("INSERT INTO attempt_answers(attempt_item_id,answer,awarded_points,score_category,fully_correct,response_state,graded_at) VALUES(%s,%s,%s,%s,%s,%s,%s)",(item,Jsonb(answer),points,category,category==meta['maximumScoreCategory'],state,now))
-                value['responses'].append({'respondentId':respondent,'attemptId':str(attempt),'attemptItemId':str(item),'questionVersionId':str(pi['question_version_id']),
-                    'rubricVersionId':by_id[str(pi['question_version_id'])]['rubricVersionId'],'responseState':'RESPONDED','scoreCategory':0,'awardedPoints':'0.00',
-                    'exposureState':'FRESH','priorExposureSources':[],'includedInCalibration':True,'eligibilityReasons':['FIRST_VALID_ATTEMPT']})
+            with db.pipeline():
+                for pi in package_items:
+                    item=uuid4()
+                    db.execute('INSERT INTO attempt_items(id,attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(%s,%s,%s,%s,%s,%s,%s)',(item,attempt,package,pi['id'],pi['question_version_id'],pi['display_order'],pi['max_points']))
+                    if source is not None or pi['display_order']!=2: db.execute('INSERT INTO content_delivery_items(manifest_id,question_version_id,family_id,attempt_item_id) VALUES(%s,%s,%s,%s)',(manifest,pi['question_version_id'],families[pi['display_order']-1],item))
+                    meta=by_id[str(pi['question_version_id'])];special=pi['display_order'] in (1,6)
+                    answer={} if pi['display_order']==1 else {'optionId':'A'} if meta['questionType']=='SINGLE_CHOICE' else {'optionIds':['A','C']} if meta['questionType']=='MULTIPLE_CHOICE_MULTIPLE_ANSWER' else {'categoryByStatementId':{'A':'Y','B':'N','C':'Y','D':'N'}}
+                    simulated_response = simulated_responses[(simulated['attemptId'], simulated_packages[index]['questionVersionIds'][pi['display_order']-1])]
+                    state = simulated_response['responseState'] if source is not None else 'OMITTED' if pi['display_order']==1 else 'INVALID' if pi['display_order']==6 else 'RESPONDED'
+                    points = simulated_response['awardedPoints'] if source is not None else 0 if special else pi['max_points']
+                    category = simulated_response['scoreCategory'] if source is not None else 0 if special else meta['maximumScoreCategory']
+                    db.execute("INSERT INTO attempt_answers(attempt_item_id,answer,awarded_points,score_category,fully_correct,response_state,graded_at) VALUES(%s,%s,%s,%s,%s,%s,%s)",(item,Jsonb(answer),points,category,category==meta['maximumScoreCategory'],state,now))
+                    value['responses'].append({'respondentId':respondent,'attemptId':str(attempt),'attemptItemId':str(item),'questionVersionId':str(pi['question_version_id']),
+                        'rubricVersionId':by_id[str(pi['question_version_id'])]['rubricVersionId'],'responseState':'RESPONDED','scoreCategory':0,'awardedPoints':'0.00',
+                        'exposureState':'FRESH','priorExposureSources':[],'includedInCalibration':True,'eligibilityReasons':['FIRST_VALID_ATTEMPT']})
             db.execute("UPDATE assessment_attempts SET status='SUBMITTED',finished_at=%s WHERE id=%s",(now-timedelta(minutes=1),attempt))
             value['respondents'].append({'respondentId':respondent,'attemptId':str(attempt),'packageId':str(package),'packageVersion':1,'batchId':str(batch),
                 'assignedArmId':str(arm),'deliveredArmId':str(arm),'deliveryMode':'ASSIGNED','attemptIndex':1,'firstValidAttempt':True,
