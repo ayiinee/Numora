@@ -82,11 +82,15 @@ export function ProfileIdentity({
             variant="ghost"
             size="sm"
             className="student-profile-identity__edit"
+            aria-label="Edit profil"
             aria-expanded={editing}
             aria-controls={editorId}
             onClick={() => setEditing((open) => !open)}
           >
-            Edit profil <Icon name="chevron" width={12} height={12} />
+            <span>
+              Edit<span className="student-profile-identity__edit-label"> profil</span>
+            </span>
+            <Icon name="chevron" width={12} height={12} />
           </Button>
         )}
       </div>

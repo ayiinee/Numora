@@ -6336,6 +6336,9 @@ a.settings-row:hover {
   }
 }
 @media (max-width: 359px) {
+  .student-profile-identity__edit-label {
+    display: none;
+  }
   .student-profile-identity.numora-card {
     --card-padding: 16px;
   }
