@@ -14,8 +14,8 @@ import {
   scoringPolicyVersions,
   scoringRubricVersions,
   assessmentPackages,
-  packageRuntimeEligibility,
-  pretestDistributionEligibility,
+  currentPretestPackage,
+  supportedPretestPolicy,
   attemptAnswers,
   attemptItems,
   chapters,
@@ -67,48 +67,10 @@ export class PretestService {
     return chapter;
   }
   private async package(chapterId: string) {
-    const [row] = await getDatabase()
-      .db.select()
-      .from(assessmentPackages)
-      .where(
-        and(
-          eq(assessmentPackages.chapterId, chapterId),
-          eq(assessmentPackages.assessmentType, 'PRETEST'),
-          eq(assessmentPackages.purpose, 'REGULAR'),
-          eq(assessmentPackages.status, 'PUBLISHED'),
-          pretestDistributionEligibility(),
-          packageRuntimeEligibility(),
-        ),
-      )
-      .orderBy(
-        asc(assessmentPackages.isDemo),
-        desc(assessmentPackages.packageVersion),
-        desc(assessmentPackages.id),
-      )
-      .limit(1);
-    if (!row || !(await this.supportedPolicy(row.scoringPolicyVersionId, row.isDemo)))
-      return undefined;
-    return row;
+    return currentPretestPackage(chapterId, getDatabase().db, isPretestPartialPolicy);
   }
   private async supportedPolicy(id: string | null, synthetic: boolean) {
-    if (!id) return false;
-    const [policy] = await getDatabase()
-      .db.select()
-      .from(scoringPolicyVersions)
-      .where(eq(scoringPolicyVersions.id, id));
-    const configuration = policy?.configuration as Record<string, unknown> | null;
-    return (
-      policy?.status === 'PUBLISHED' &&
-      policy.version === 1 &&
-      (policy.policyCode === 'PRETEST_PRD_V06' ||
-        isPretestPartialPolicy(policy) ||
-        (synthetic &&
-          allowSyntheticContent() &&
-          (policy.policyCode === 'NUMORA-ASSESSMENT-MOCK-V1-PRETEST' ||
-            (policy.policyCode.startsWith('PRETEST_PG_DEMO_') &&
-              configuration?.testOnly === true &&
-              configuration?.questionCount === 20))))
-    );
+    return supportedPretestPolicy(id, synthetic, getDatabase().db, isPretestPartialPolicy);
   }
   private async partialPolicy(id: string | null) {
     if (!id) return false;

@@ -14,6 +14,7 @@ import type {
   ContentPackageDetailDto,
 } from './generated-types';
 import { ContentPackageWorkspace } from './content-package-workspace';
+import { useAdminUrl } from './admin-url';
 import {
   downloadExcelTemplate,
   downloadFile,
@@ -37,6 +38,7 @@ export function JsonContentImportScreen() {
   );
 }
 function ContentImportContent() {
+  const url = useAdminUrl();
   const targetPanel = useRef<HTMLDetailsElement>(null);
   const { state, refresh } = useAuth();
   const token =
@@ -275,6 +277,12 @@ function ContentImportContent() {
                   : 'Pilih paket tujuan untuk impor JSON'}
               </summary>
               <ContentPackageWorkspace
+                urlContext={Boolean(url.params.get('package'))}
+                initialUsage={
+                  (['PRETEST', 'TRYOUT'].includes(url.params.get('type') ?? '')
+                    ? url.params.get('type')
+                    : 'DRILL') as 'DRILL' | 'PRETEST' | 'TRYOUT'
+                }
                 embedded
                 token={token}
                 disabled={busy || editing}

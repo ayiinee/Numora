@@ -9,8 +9,14 @@ import type {
   ApproveContentPackageDto,
   PublishContentPackageDto,
   ArchiveContentPackageDto,
+  PrepareLegacyPretestDto,
 } from './generated-types';
 const root = 'admin/content';
+export const prepareLegacyPretest = (token: string, id: string, body: PrepareLegacyPretestDto) =>
+  apiRequest<ContentMutationDto>(`${root}/packages/${encodeURIComponent(id)}/intake`, token, {
+    method: 'POST',
+    body: JSON.stringify(body),
+  });
 export const archiveContentPackage = (token: string, id: string, body: ArchiveContentPackageDto) =>
   apiRequest<ContentMutationDto>(`${root}/packages/${encodeURIComponent(id)}/archive`, token, {
     method: 'POST',

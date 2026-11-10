@@ -1,4 +1,7 @@
 'use client';
+import { ManagedTryouts } from './tryout-batches';
+import { request } from './api';
+import type { StudentTryoutBatchesDto } from './generated-types';
 
 import { Button, Card, EmptyState, Icon, Tabs } from '@tka/ui';
 import { StudentMascot } from '@/components/student-mascot';
@@ -23,14 +26,42 @@ import {
 } from './tryout-presentation';
 
 export function TryoutScreen() {
-  return <StudentGate>{(token) => <CurrentTryout token={token} />}</StudentGate>;
+  return <StudentGate>{(token) => <TryoutEntry token={token} />}</StudentGate>;
 }
 
-function CurrentTryout({ token }: { token: string }) {
+function TryoutEntry({ token }: { token: string }) {
+  const query = useQuery({
+    queryKey: ['tryout-batches'],
+    queryFn: () => request<StudentTryoutBatchesDto>(token, '/tryout/batches'),
+    refetchInterval: 30000,
+  });
+  if (!query.data)
+    return (
+      <LearningFrame title="Tryout">
+        <DataState
+          pending={query.isPending}
+          error={query.error}
+          retry={() => void query.refetch()}
+        />
+      </LearningFrame>
+    );
+  return query.data.routingActive ? (
+    <ManagedTryouts token={token} data={query.data} refresh={() => void query.refetch()} />
+  ) : (
+    <CurrentTryout token={token} />
+  );
+}
+export function LegacyTryoutHistoryScreen() {
+  return (
+    <StudentGate>{(token) => <CurrentTryout token={token} initialTab="history" />}</StudentGate>
+  );
+}
+
+function CurrentTryout({ token, initialTab = 'current' }: { token: string; initialTab?: string }) {
   const router = useRouter();
   const [details, setDetails] = useState(false);
   const [rulesAccepted, setRulesAccepted] = useState<string | null>(null);
-  const [tab, setTab] = useState('current');
+  const [tab, setTab] = useState(initialTab);
   const starting = useRef(false);
   const detailTitle = useRef<HTMLDivElement>(null);
   const detailsButton = useRef<HTMLButtonElement>(null);
@@ -314,7 +345,7 @@ function TryoutForm({
         }
         onSubmit={() => learningApi.submitTryout(token, attempt.id)}
         onSubmitted={() => {
-          for (const key of ['current-tryout', 'student-dashboard', 'assessment-history'])
+          for (const key of ['tryout-batches', 'current-tryout', 'student-dashboard', 'assessment-history'])
             void client.invalidateQueries({ queryKey: [key] });
           router.push(`/student/tryout/${attempt.id}/result`);
         }}

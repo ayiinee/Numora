@@ -159,7 +159,7 @@ it('clears analytics on access revocation and renders unavailable distinctly fro
   mocks.state.profile.capabilities = [];
   view.rerender(<AdminAnalyticsScreen />);
   expect(screen.queryByText('TEST real zero')).toBeNull();
-  expect(screen.getByText('Akses analytics Admin diperlukan.')).toBeTruthy();
+  expect(screen.getByText('Akses Dashboard Admin diperlukan.')).toBeTruthy();
 });
 
 const analyticsSnapshot = (label: string) => ({
@@ -202,7 +202,7 @@ it('does not restore analytics when an in-flight response finishes after capabil
   view.rerender(<AdminAnalyticsScreen />);
   await act(async () => resolve(analyticsSnapshot('TEST revoked snapshot')));
   expect(screen.queryByText('TEST revoked snapshot')).toBeNull();
-  expect(screen.getByText('Akses analytics Admin diperlukan.')).toBeTruthy();
+  expect(screen.getByText('Akses Dashboard Admin diperlukan.')).toBeTruthy();
 });
 
 it('does not prepare through a stale capability when the Admin assignment is missing', () => {

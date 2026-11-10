@@ -18,6 +18,7 @@ const context = vi.hoisted(() => ({
 }));
 
 vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
   usePathname: () => '/admin/operations',
   useRouter: () => ({ replace: context.replace }),
 }));

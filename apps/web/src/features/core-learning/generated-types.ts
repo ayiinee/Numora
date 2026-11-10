@@ -1,6 +1,12 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type StudentTryoutBatchesDto = { "routingActive": boolean; "items": (StudentTryoutBatchDto)[]; };
+
+export type StudentTryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "state": string; "schools": (StudentTryoutSchoolDto)[]; "mandiri": boolean; "attemptId": string | null; "attemptStatus": string | null; };
+
+export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
+
 export type StudentMaterialsDto = { "chapters": (MaterialChapterDto)[]; "recentChapterId": string | null; };
 
 export type MaterialChapterDto = { "id": string; "title": string; "order": number; "category": "algebra" | "geometry" | "numbers" | "statistics" | null; "totalLevels": number; "completedLevels": number; "continueSubchapterId": string | null; "subchapters": (MaterialSubchapterDto)[]; };

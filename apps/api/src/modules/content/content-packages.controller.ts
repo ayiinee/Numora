@@ -26,6 +26,7 @@ import {
   ContentPackagesDto,
   CreateContentPackageDto,
   UpdateContentPackageDto,
+  PrepareLegacyPretestDto,
 } from './content-packages.dto';
 
 @ApiTags('admin-content-packages')
@@ -34,6 +35,13 @@ import {
 @Controller('admin/content')
 export class ContentPackagesController {
   constructor(@Inject(ContentPackagesService) private readonly packages: ContentPackagesService) {}
+  @Post('packages/:id/intake') @ApiCreatedResponse({ type: ContentMutationDto }) prepareLegacy(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: PrepareLegacyPretestDto,
+  ) {
+    return this.packages.prepareLegacyPretest(r.adminId, id, body);
+  }
   @Get('packages') @ApiOkResponse({ type: ContentPackagesDto }) list(
     @Query() query: ContentPackageQueryDto,
   ) {

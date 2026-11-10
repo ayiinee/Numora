@@ -26,6 +26,27 @@ riset untuk produksi. ADM-DEP-01/02/06 juga tetap tercatat dalam sumber.
 
 **ENGINEERING DECISION — klarifikasi pemilik, 9 November 2026.** Timer Drill menghitung durasi aktif sejak Mulai latihan, dijeda saat siswa keluar, dan dilanjutkan dari durasi tersimpan saat siswa memilih Lanjutkan latihan. Durasi aktif menjadi input bonus XP. [Kebijakan timer Drill](../development/DRILL_V06_REWARDS.md).
 
+**ENGINEERING DECISION — penutupan discovery rutin Admin, 10 November 2026:** [PRD Admin v1.0](ADMIN_PRD.md) dan [Spesifikasi Teknis Admin](../architecture/ADMIN_TECHNICAL_SPEC.md) mengonsolidasikan [ADM-DEC-001–076](ADMIN_REQUIREMENTS_DISCOVERY.md#21-keputusan-kebutuhan-dari-klarifikasi-pemilik). Instruksi terakhir pemilik: gunakan atribut/validator/pola existing; hentikan pertanyaan atribut. Daftar pertanyaan discovery hanya arsip. Metadata/urutan video, media, duplikat impor, arsip master, konteks daftar/draft, mobile dan notification center sudah dijawab; bukan OPEN lagi.
+
+| Dependency Admin aktif | Status dan batas |
+| --- | --- |
+| ADM-DEP-01 — distribusi Drill | OPEN: rekonsiliasi completion balancing/preferensi retry/default original ADM-DEC-010 dengan arm persisten dan satu original+varian aktif v2. Jangan menerapkan rotasi lintas arm diam-diam. |
+| ADM-DEP-02 — paket invalid/DRIFT | OPEN: rekonsiliasi keep-available ADM-DEC-024 dengan stop distribusi baru v2. Laporan masuk tidak otomatis invalid; sesi/histori tetap pinned. |
+| ADM-DEP-03 — dokumen varian/batch | DEFERRED/OPEN: jalur pembuatan varian, precedence alokasi sekolah/kelas, multisekolah/Mandiri dan perubahan membership. Anchor3/5, satu varian/proses, multipaket, satu attempt/batch dan freeze sebelum mulai sudah ditetapkan. |
+| ADM-DEP-04 — penyerahan akademik/ilmiah | OPEN: blueprint/review konten, review rubrik Drill, parameter/gate/linking/mapping numerik, informasi IRT katalog dan producer/adapter/adopter/publikasi yang belum lengkap. Payload v1 dan metode reference-package prediction sudah ditetapkan; rubrik Pretest original dan Tryout yang disahkan tidak dibuka ulang. |
+| ADM-DEP-05 — pihak berwenang | OPEN: nama pemberi persetujuan akhir/akademik/Data dan operator recovery; pemisahan pembuat/pemeriksa belum ditetapkan. Gate existing tetap, tanpa bypass. |
+| ADM-DEP-06 — histori sekolah lintas transisi | OPEN: kewenangan saat ownership berubah/periode nonaktif berulang/attempt melewati cutoff. Kelas read-only, membership tetap dihitung, hasil IRT terlambat untuk attempt selesai sebelum cutoff, dan reaktivasi hak sah otomatis sudah ditetapkan. |
+
+Detail rutin memakai baseline dan penjabaran teknis yang diberi label sesuai statusnya; tidak dianggap penghalang dokumen atau alasan meminta jawaban atribut lagi. Monetisasi setelah demo ditunda. Tidak ada perubahan runtime atau hasil QA aplikasi dalam konsolidasi ini. Catatan Admin historis di bawah tidak menggantikan register aktif pada [PRD §17](ADMIN_PRD.md#17-ketergantungan-substantif-dan-rekonsiliasi).
+
+**ENGINEERING DECISION ? pemilik, 9 November 2026:** Paket asesmen dipisah menjadi halaman daftar tabel, tambah dan detail per Pretest/Drill/Tryout; tanpa header berulang atau tab jenis. Search/filter/pagination server dan URL; seluruh mutasi di tambah/detail. [Keputusan daftar asesmen](../design/ADMIN_ASSESSMENT_DIRECTORY_2026-11-09.md).
+
+**ENGINEERING DECISION — pemilik, 9 November 2026:** menu Analytics dinamai Dashboard; halaman berfokus pada metrik dengan menghapus header berulang dan memindahkan penjelasan ke Info metrik tertutup. Route/API, lingkup subrole dan tujuan awal tetap. [Keputusan tampilan Dashboard](../design/ADMIN_ANALYTICS_UX_2026-10-30.md#dashboard-ringkas--keputusan-pemilik-9-november-2026).
+
+**ENGINEERING DECISION — pemilik, 9 November 2026:** sidebar Admin memakai empat kelompok dengan dropdown dua tingkat yang dapat terbuka bersamaan, preferensi sesi per akun/assignment, dan penanda aktif berdasarkan URL. Tab halaman tetap dipertahankan pada tahap pertama; tujuan subrole dan permission existing tetap berlaku. [Struktur dan penerimaan sidebar](../design/ADMIN_NAVIGATION_UX_2026-11-02.md#sidebar-dropdown--keputusan-pemilik-9-november-2026).
+
+**ENGINEERING DECISION — pemilik, 9 November 2026:** [rencana Admin](../development/ADMIN_ASSESSMENT_REWORK.md) menyatukan workspace asesmen dan memperbaiki Pretest resmi sampai konsumen siswa. Analytics Operations/Content memakai agregat scoped existing; tujuan awal tiap subrole tetap. Jadwal Tryout tetap fleksibel. **OPEN:** approval akademik dan kontrak respondent/mapping/fallback Data/AI tidak ditutup oleh perubahan UI atau fixture; eksperimen draft AI/IRT ditunda.
+
 **ENGINEERING DECISION — owner instruction, 29 October 2026:** integrate runtime #102 and QA #109 after accepted Admin #110, preserving canonical SQL 0000–0048, historical XP/pins and source provenance. Development application requires verified backup and isolated upgrade/replay. The [integration and audited history-adoption boundary](../development/RUNTIME_QA_INTEGRATION_2026-10-29.md) does not resolve academic OPEN items or claim independent release acceptance.
 
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** hapus halaman Ringkasan untuk seluruh Admin, termasuk Super Admin. `/admin` hanya menjadi pintu masuk berdasarkan assignment aktif: Super Admin dan Operations ke `/admin/schools`, Content/Data/Moderation ke `/admin/content`. Menu Ringkasan dan kartu pemilih modul dihapus; akun tanpa assignment tetap menerima pesan akses tanpa modul. Permintaan ini tidak mengubah Analytics, otorisasi NestJS, kontrak API, maupun data tersimpan. Keputusan ini menggantikan pengecualian lama yang mempertahankan Ringkasan untuk Super Admin.
@@ -253,3 +274,10 @@ When a joint decision is reached, record its owner/date and update the PRD or mo
 **ENGINEERING DECISION — generator paket, pemilik 7 Oktober 2026:** generate berdasarkan tujuan paket, hasil/download JSON dan impor dengan preview/validasi existing disetujui. **OPEN:** mapping/blueprint produksi tetap memerlukan handoff Curriculum; paket membutuhkan keluarga original mapped yang berbeda dan scope sesuai tujuan. Tidak mengarang original/approval untuk mengisi jumlah yang kurang.
 
 **ENGINEERING DECISION — owner request:** generator results share the generator workspace. Generated packages enter existing question-import URL at step 2 without manual file transfer; source approvals and publication dependencies remain unchanged.
+
+
+## Batch Tryout dan delegasi ? 10 November 2026
+
+**ENGINEERING DECISION ? persetujuan pemilik:** bank paket terpisah dari batch pelaksanaan. Batch memiliki judul, rentang mulai/tutup bebas dalam WIB, beberapa versi paket dan delegasi Mandiri/sekolah. Batch terbit tidak boleh bertabrakan. Siswa Mandiri tidak memiliki kelas aktif; sekolah tanpa delegasi tidak mendapat akses. Siswa multisekolah memilih satu sekolah yang sah saat mulai; assignment/attempt dikunci per siswa/batch. Beberapa penerima boleh memakai paket sama. Konfigurasi dapat direvisi sebelum mulai, terkunci saat mulai. Pembatalan hanya sebelum mulai. Durasi attempt sepuluh menit, dibatasi penutupan batch.
+
+**ENGINEERING DECISION:** delegasi adalah alokasi Admin, bukan randomisasi A/B. Paket historis, attempt dan XP tidak ditulis ulang. Aktivasi start berbasis batch terjadi setelah batch Admin pertama diterbitkan; endpoint start paket lama kemudian menolak start baru. Resume/histori tetap tersedia. Hasil multi-paket menunggu finalisasi seluruh batch dengan kontrak/policy sah; kegagalan tidak menghasilkan nilai buatan.

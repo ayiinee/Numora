@@ -5,6 +5,24 @@ import { getContentPackage, listContentPackages } from './content-package-api';
 import { createPreview, submitPreview } from './content-preview-api';
 import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
 
+if (!HTMLDialogElement.prototype.showModal)
+  HTMLDialogElement.prototype.showModal = function () {
+    this.open = true;
+  };
+if (!HTMLDialogElement.prototype.close)
+  HTMLDialogElement.prototype.close = function () {
+    this.open = false;
+  };
+
+vi.mock('next/navigation', () => {
+  const router = { push: vi.fn(), replace: vi.fn() };
+  return {
+    useRouter: () => router,
+    usePathname: () => '/admin/content/imports',
+    useSearchParams: () => new URLSearchParams(),
+    useParams: () => ({}),
+  };
+});
 vi.mock('@/lib/api', () => ({ apiRequest: vi.fn(async () => ({ items: [] })) }));
 vi.mock('./content-package-api', () => ({
   getContentPackage: vi.fn(),
@@ -171,10 +189,12 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
       disabled={false}
       onSelect={vi.fn()}
       refreshKey={0}
+      mode="detail"
+      packageId={id}
     />,
   );
-  fireEvent.change(await screen.findByLabelText('Paket tujuan'), { target: { value: id } });
-  fireEvent.click(await screen.findByRole('button', { name: 'Muat gambar untuk review' }));
+  fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
+  fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
   expect(submitPreview).toHaveBeenCalledWith('TEST ONLY', id, expect.any(String));

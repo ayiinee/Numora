@@ -16,6 +16,7 @@ import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
 import {
   allowSyntheticContent,
   assessmentPackages,
+  assessmentAttempts,
   auditLogs,
   assessmentBlueprintVersions,
   scoringPolicyVersions,
@@ -57,6 +58,7 @@ import type {
   CreateContentPackageDto,
   ReviewImportedQuestionDto,
   UpdateContentPackageDto,
+  PrepareLegacyPretestDto,
 } from './content-packages.dto';
 import type { ExcelQuestionDto } from './excel-import.dto';
 
@@ -66,12 +68,99 @@ export class ContentPackagesService {
     @Inject(ContentImportService) private readonly importer: ContentImportService,
     @Inject(R2MediaStorage) private readonly storage: R2MediaStorage,
   ) {}
+  prepareLegacyPretest(actor: string, id: string, body: PrepareLegacyPretestDto) {
+    this.importer.enabled();
+    return adminMutation(
+      actor,
+      'pretest_canonical_intake_prepared',
+      'assessment_package',
+      async (tx) => {
+        const [old] = await tx
+          .select()
+          .from(assessmentPackages)
+          .where(eq(assessmentPackages.id, id))
+          .for('update');
+        if (!old || old.assessmentType !== 'PRETEST' || old.purpose !== 'REGULAR')
+          throw new NotFoundException({ code: 'CONTENT_PACKAGE_NOT_FOUND' });
+        const source = {
+          sourceNamespace: body.source.sourceNamespace,
+          sourceName: body.source.sourceName.trim(),
+          sourceReference: body.source.sourceReference.trim(),
+        };
+        if (old.importSource) {
+          if (
+            old.importSource.sourceNamespace === source.sourceNamespace &&
+            old.importSource.sourceName === source.sourceName &&
+            old.importSource.sourceReference === source.sourceReference
+          )
+            return { id: old.id };
+          throw new ConflictException({ code: 'PACKAGE_ALREADY_HAS_SOURCE' });
+        }
+        if (old.contentRevision !== body.expectedRevision)
+          throw new ConflictException({ code: 'PACKAGE_REVISION_CONFLICT' });
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext(${old.familyCode}))`);
+        const [used] = await tx
+          .select({ id: assessmentAttempts.id })
+          .from(assessmentAttempts)
+          .where(eq(assessmentAttempts.packageId, id))
+          .limit(1);
+        if (old.status === 'DRAFT' && !old.manifestDigest && !old.frozenAt && !used) {
+          await tx
+            .update(assessmentPackages)
+            .set({ importSource: source, contentRevision: old.contentRevision + 1 })
+            .where(eq(assessmentPackages.id, id));
+          return { id };
+        }
+        const version = old.packageVersion + 1;
+        const [existing] = await tx
+          .select()
+          .from(assessmentPackages)
+          .where(
+            and(
+              eq(assessmentPackages.familyCode, old.familyCode),
+              eq(assessmentPackages.packageVersion, version),
+            ),
+          );
+        if (existing) {
+          if (
+            existing.status === 'DRAFT' &&
+            existing.assessmentType === 'PRETEST' &&
+            existing.chapterId === old.chapterId &&
+            existing.importSource?.sourceNamespace === source.sourceNamespace &&
+            existing.importSource?.sourceName === source.sourceName &&
+            existing.importSource?.sourceReference === source.sourceReference
+          )
+            return { id: existing.id };
+          throw new ConflictException({
+            code: 'PACKAGE_VERSION_EXISTS',
+            detail: 'Versi berikutnya sudah ada. Buka paket tersebut untuk melanjutkan.',
+          });
+        }
+        const [created] = await tx
+          .insert(assessmentPackages)
+          .values({
+            familyCode: old.familyCode,
+            packageVersion: version,
+            name: old.name,
+            assessmentType: 'PRETEST',
+            chapterId: old.chapterId,
+            isDemo: old.isDemo,
+            importSource: source,
+          })
+          .returning({ id: assessmentPackages.id });
+        return created!;
+      },
+    );
+  }
   async list(query: ContentPackageQueryDto): Promise<ContentPackagesDto> {
     this.importer.enabled();
     return getDatabase().db.transaction(async (tx) => {
       const where = and(
         inArray(assessmentPackages.assessmentType, ['DRILL', 'PRETEST', 'TRYOUT']),
         eq(assessmentPackages.purpose, 'REGULAR'),
+        query.search?.trim()
+          ? sql`(position(lower(${query.search.trim()}) in lower(${assessmentPackages.name})) > 0 or position(lower(${query.search.trim()}) in lower(${assessmentPackages.familyCode})) > 0)`
+          : undefined,
         query.usageType ? eq(assessmentPackages.assessmentType, query.usageType) : undefined,
         query.status ? sql`${assessmentPackages.status}::text = ${query.status}` : undefined,
         query.chapterId
@@ -86,7 +175,11 @@ export class ContentPackagesService {
           .select({ id: assessmentPackages.id })
           .from(assessmentPackages)
           .where(where)
-          .orderBy(desc(assessmentPackages.packageVersion), asc(assessmentPackages.familyCode))
+          .orderBy(
+            desc(assessmentPackages.packageVersion),
+            asc(assessmentPackages.familyCode),
+            asc(assessmentPackages.id),
+          )
           .limit(query.limit ?? 100)
           .offset(query.offset ?? 0),
         tx.select({ total: count() }).from(assessmentPackages).where(where),
@@ -808,7 +901,7 @@ export class ContentPackagesService {
         .update(assessmentPackages)
         .set({
           status: 'PUBLISHED',
-          ...(['TRYOUT', 'PRETEST'].includes(p.assessmentType)
+          ...(['PRETEST', 'TRYOUT'].includes(p.assessmentType)
             ? {
                 frozenAt: now,
                 curriculumApproval: sql`jsonb_set(jsonb_set(${assessmentPackages.curriculumApproval}, '{compositionDigest}', ${assessmentPackages.curriculumApproval}->'manifestDigest'), '{manifestDigest}', to_jsonb(irt_compute.payload_digest(jsonb_build_object('packageId', ${id}::uuid, 'blueprintVersionId', ${assessmentPackages.blueprintVersionId}, 'scoringPolicyVersionId', ${policy.id}::uuid, 'items', (select jsonb_agg(to_jsonb(i) order by i.display_order,i.id) from public.package_items i where i.package_id=${id}::uuid)))))`,
@@ -882,16 +975,28 @@ export class ContentPackagesService {
         )
           throw new BadRequestException({ code: 'PACKAGE_SCOPE_MISMATCH' });
       }
-      await tx.delete(packageItems).where(eq(packageItems.packageId, id));
-      if (body.questionVersionIds.length)
-        await tx.insert(packageItems).values(
-          body.questionVersionIds.map((questionVersionId, index) => ({
-            packageId: id,
-            questionVersionId,
-            displayOrder: index + 1,
-            maxPoints: '1',
-          })),
+      const currentItems = await tx
+        .select({ questionVersionId: packageItems.questionVersionId })
+        .from(packageItems)
+        .where(eq(packageItems.packageId, id))
+        .orderBy(asc(packageItems.displayOrder));
+      const sameMembership =
+        currentItems.length === body.questionVersionIds.length &&
+        currentItems.every(
+          (item, index) => item.questionVersionId === body.questionVersionIds[index],
         );
+      if (!sameMembership) {
+        await tx.delete(packageItems).where(eq(packageItems.packageId, id));
+        if (body.questionVersionIds.length)
+          await tx.insert(packageItems).values(
+            body.questionVersionIds.map((questionVersionId, index) => ({
+              packageId: id,
+              questionVersionId,
+              displayOrder: index + 1,
+              maxPoints: '1',
+            })),
+          );
+      }
       await tx
         .update(assessmentPackages)
         .set({ name: body.name.trim(), contentRevision: p.contentRevision + 1 })
