@@ -17,9 +17,13 @@ test('Tryout uses the compact Pretest layout and delegates scheduling to batches
     await page.setViewportSize({ width, height: 900 });
     await expect(page.getByRole('heading', { name: 'Tryout TEST', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
-    await expect(page.getByRole('link', { name: 'Batch Tryout', exact: true }).last()).toBeVisible();
+    await expect(
+      page.getByRole('link', { name: 'Batch Tryout', exact: true }).last(),
+    ).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Waktu rilis', exact: true })).toHaveCount(0);
-    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
     await page.getByRole('dialog').press('Escape');
   }
 });
@@ -215,7 +219,14 @@ test('published packages expose archive only inside detail and Pretest has no fi
 test('detail prioritizes questions and keeps release controls usable across viewports', async ({
   page,
 }) => {
-  await setupAssessments(page);
+  const { fixture } = await setupAssessments(page);
+  fixture.packs[0]!.readiness = {
+    ...fixture.packs[0]!.readiness,
+    canPublish: false,
+    actualCount: 0,
+    blockers: ['COUNT'],
+    checks: [{ code: 'COUNT', passed: false, detail: '0/20 soal.' }],
+  };
   await page.goto('/admin/assessments/pretest/' + id(9000));
   await expect(page.getByRole('heading', { name: 'Daftar soal', exact: true })).toBeVisible();
   await expect(page.getByRole('heading', { name: 'Belum ada soal', exact: true })).toBeVisible();
@@ -229,9 +240,13 @@ test('detail prioritizes questions and keeps release controls usable across view
       true,
     );
     await page.getByRole('button', { name: 'Penerbitan', exact: true }).click();
+    await expect(page.getByRole('button', { name: 'Publikasikan paket', exact: true })).toHaveCount(
+      0,
+    );
     await expect(
-      page.getByRole('button', { name: 'Publikasikan paket', exact: true }),
-    ).toBeDisabled();
+      page.getByRole('heading', { name: 'Lengkapi paket sebelum diterbitkan' }),
+    ).toBeVisible();
+    await expect(page.getByText('0/20 soal.', { exact: true })).toBeVisible();
     await page.getByRole('dialog').press('Escape');
     await page.screenshot({
       path: test.info().outputPath('detail-' + width + '.png'),
@@ -281,7 +296,7 @@ test('all twenty questions are visible with readable answer disclosures and expl
   await page.goto('/admin/assessments/pretest/' + pack.id);
   await expect(page.locator('.assessment-question-table tbody tr')).toHaveCount(20);
   await expect(page.getByRole('link', { name: 'Impor soal', exact: true })).toHaveCount(0);
-  await page.getByRole('button', { name: 'Tinjau', exact: true }).nth(19).click();
+  await page.getByRole('button', { name: 'Lihat soal', exact: true }).nth(19).click();
   await expect(
     page.getByRole('button', { name: 'Keluarkan soal 20 dari paket', exact: true }),
   ).toBeVisible();
@@ -334,19 +349,14 @@ test('invalid legacy questions explain repair and cannot be reviewed', async ({ 
   await expect(
     page.getByRole('table').getByText('Perlu diperbaiki', { exact: true }),
   ).toBeVisible();
-  await page.getByRole('button', { name: 'Tinjau', exact: true }).click();
-  const dialog = page.getByRole('dialog');
-  await expect(dialog.getByRole('heading', { name: 'Soal belum bisa ditinjau' })).toBeVisible();
-  await dialog
-    .getByLabel('Catatan pemeriksaan soal ini', { exact: true })
-    .fill('TEST ONLY checking invalid question');
-  await expect(
-    dialog.getByRole('button', { name: 'Tandai soal 1 sudah ditinjau', exact: true }),
-  ).toBeDisabled();
-  await expect(
-    dialog.getByRole('link', { name: 'Periksa / perbaiki soal', exact: true }),
-  ).toHaveAttribute('href', '/admin/content/versions/' + id(21000));
-  await dialog.getByRole('button', { name: 'Lengkapi sumber untuk impor perbaikan' }).click();
+  const row = page.getByRole('table').locator('tbody tr').first();
+  await expect(row.getByRole('button', { name: 'Tinjau', exact: true })).toHaveCount(0);
+  await expect(row.getByRole('link', { name: 'Perbaiki', exact: true })).toHaveAttribute(
+    'href',
+    '/admin/content/versions/' + id(21000) + '?package=' + pack.id,
+  );
+  await expect(page.getByRole('columnheader', { name: 'Masalah', exact: true })).toBeVisible();
+  await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
   await expect(page.getByLabel('Kode sumber stabil', { exact: true })).toBeVisible();
 });
 

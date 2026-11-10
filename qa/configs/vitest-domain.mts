@@ -5,6 +5,10 @@ export default defineConfig({
   test: {
     environment: 'node',
     maxWorkers: 1,
-    include: ['qa/scenarios/**/*.test.ts', 'packages/assessment-engine/src/rewards.spec.ts'],
+    include: [
+      'qa/scenarios/**/*.test.ts',
+      'packages/assessment-engine/src/rewards.spec.ts',
+      'packages/assessment-engine/src/pretest-partial.spec.ts',
+    ],
   },
 });

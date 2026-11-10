@@ -172,6 +172,9 @@ function PretestForm({
       questions={attempt.questions}
       headerExtra={<span>Tanpa batas waktu</span>}
       onReload={onReload}
+      loadMedia={async (questionId, phase, assetIds) =>
+        (await learningApi.media(token, attempt.id, questionId, phase, assetIds)).media
+      }
       notice={
         <Card>
           <p>

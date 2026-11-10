@@ -1,3 +1,4 @@
+import { hasPretestRubric, ensurePretestRubric } from './pretest-rubric';
 import { presentFixtureText } from '@tka/database';
 import {
   PRETEST_PARTIAL_POLICY,
@@ -150,6 +151,90 @@ export class ContentPackagesService {
           .returning({ id: assessmentPackages.id });
         return created!;
       },
+    );
+  }
+  preparePretestScoring(actor: string, id: string, expectedRevision: number) {
+    this.importer.enabled();
+    return adminMutation(
+      actor,
+      'pretest_scoring_prepared',
+      'assessment_package',
+      async (tx) => {
+        const p = await packageContext(tx, id, true);
+        if (p.assessmentType !== 'PRETEST')
+          throw new ConflictException({ code: 'PRETEST_REQUIRED' });
+        if (p.status !== 'DRAFT') throw new ConflictException({ code: 'PACKAGE_IMMUTABLE' });
+        assertDraftRevision(p, expectedRevision);
+        const rows = await tx
+          .select({ item: packageItems, version: questionVersions })
+          .from(packageItems)
+          .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+          .where(eq(packageItems.packageId, id))
+          .orderBy(asc(packageItems.displayOrder));
+        let changed = false;
+        for (const { item, version } of rows) {
+          let content;
+          try {
+            content = decodeAssessmentContent(version);
+          } catch {
+            throw new ConflictException({
+              code: 'PRETEST_CONTENT_INVALID',
+              detail: `Isi atau kunci soal ${item.displayOrder} belum valid. Perbaiki konten dahulu.`,
+            });
+          }
+          if (await hasPretestRubric(tx, content, version.scoringRubricVersionId)) continue;
+          const rubricId = await ensurePretestRubric(tx, actor, content);
+          await tx
+            .select()
+            .from(questionVariants)
+            .where(eq(questionVariants.id, version.variantId))
+            .for('update');
+          const [latest] = await tx
+            .select()
+            .from(questionVersions)
+            .where(eq(questionVersions.variantId, version.variantId))
+            .orderBy(desc(questionVersions.versionNumber))
+            .limit(1);
+          const oldId = version.id;
+          const [next] = await tx
+            .insert(questionVersions)
+            .values({
+              ...version,
+              id: undefined,
+              createdAt: undefined,
+              versionNumber: latest!.versionNumber + 1,
+              scoringRubricVersionId: rubricId,
+              revisedFromQuestionVersionId: oldId,
+              validationState: 'DRAFT',
+              validationDecisionId: null,
+              contentStatus: 'DRAFT',
+              reviewedAt: null,
+              reviewedByUserId: null,
+            })
+            .returning();
+          const [imported] = await tx
+            .select()
+            .from(contentImportVersions)
+            .where(eq(contentImportVersions.questionVersionId, oldId));
+          if (imported) {
+            await tx
+              .insert(contentImportVersions)
+              .values({ ...imported, createdAt: undefined, questionVersionId: next!.id });
+          }
+          await tx
+            .update(packageItems)
+            .set({ questionVersionId: next!.id, rubricVersionId: rubricId })
+            .where(and(eq(packageItems.packageId, id), eq(packageItems.questionVersionId, oldId)));
+          changed = true;
+        }
+        if (changed)
+          await tx
+            .update(assessmentPackages)
+            .set({ contentRevision: p.contentRevision + 1 })
+            .where(eq(assessmentPackages.id, id));
+        return { id };
+      },
+      { expectedRevision, policyCode: PRETEST_PARTIAL_POLICY },
     );
   }
   async list(query: ContentPackageQueryDto): Promise<ContentPackagesDto> {
@@ -410,13 +495,18 @@ export class ContentPackagesService {
     const checked =
       items.length && structurallyValid && p.source
         ? (
-            await this.importer.validateWithin(tx, {
-              sourceNamespace: p.source.sourceNamespace,
-              ...(p.status === 'DRAFT'
-                ? { target: { packageId: id, expectedRevision: p.contentRevision } }
-                : {}),
-              questions: items.map((i) => i.question!),
-            })
+            await this.importer.validateWithin(
+              tx,
+              {
+                sourceNamespace: p.source.sourceNamespace,
+                ...(p.status === 'DRAFT'
+                  ? { target: { packageId: id, expectedRevision: p.contentRevision } }
+                  : {}),
+                questions: items.map((i) => i.question!),
+              },
+              false,
+              p.assessmentType,
+            )
           ).report
         : null;
     const checks = checked?.package?.checks.filter((c) => c.code !== 'PUBLICATION') ?? [
@@ -520,26 +610,63 @@ export class ContentPackagesService {
         ? 'Persetujuan Curriculum sesuai dengan susunan paket ini.'
         : 'Catat persetujuan Curriculum setelah semua soal ditinjau.',
     });
-    const compatible = rows.every((r) => {
+    const runtimeIssues = new Map<string, string[]>();
+    const scoringRepairs = new Set<string>();
+    for (const r of rows) {
+      const issues: string[] = [];
       try {
         if (p.assessmentType === 'DRILL') decodeSingleChoiceVersion(r.version);
         else if (['TRYOUT', 'PRETEST'].includes(p.assessmentType)) {
           const content = decodeAssessmentContent(r.version);
-          if (content.type !== 'SINGLE_CHOICE' && !r.version.scoringRubricVersionId) return false;
+          if (
+            p.assessmentType === 'PRETEST' &&
+            !(await hasPretestRubric(tx, content, r.version.scoringRubricVersionId))
+          )
+            scoringRepairs.add(r.version.id);
+          if (
+            content.type !== 'SINGLE_CHOICE' &&
+            (p.assessmentType === 'PRETEST'
+              ? scoringRepairs.has(r.version.id)
+              : !r.version.scoringRubricVersionId)
+          )
+            issues.push(
+              'Aturan penilaian belum sesuai. Untuk Pretest Draft, tekan Siapkan penilaian otomatis.',
+            );
         }
-        if (Array.isArray(r.version.media) && r.version.media.length) this.storage.settings(true);
-        return true;
       } catch {
-        return false;
+        issues.push(
+          'Format soal atau kunci jawaban tidak dapat dibaca oleh sistem penilaian. Perbaiki isi dan kunci pada versi soal.',
+        );
       }
-    });
+      if (Array.isArray(r.version.media) && r.version.media.length) {
+        try {
+          this.storage.settings(true);
+        } catch {
+          issues.push(
+            'Layanan gambar belum dikonfigurasi. Pengelola server perlu melengkapi konfigurasi penyimpanan gambar.',
+          );
+        }
+      }
+      if (issues.length) runtimeIssues.set(r.version.id, issues);
+    }
+    const compatible = runtimeIssues.size === 0;
     checks.push({
       code: 'RUNTIME',
       passed: rows.length > 0 && compatible,
       detail: compatible
         ? 'Soal dapat dimainkan; Tryout PGK memakai rubrik parsial dan gambar memakai akses R2 terotorisasi.'
-        : 'Periksa konten, kunci dan gambar. Draft PGK lama tanpa rubrik perlu diimpor ulang untuk membuat versi scoring baru.',
+        : `Soal ${rows
+            .filter((r) => runtimeIssues.has(r.version.id))
+            .map((r) => r.item.displayOrder)
+            .join(
+              ', ',
+            )} belum dapat digunakan siswa. Lihat rincian masalah pada masing-masing soal.`,
     });
+    // Pretest publication validates content automatically; editorial steps are not prerequisites.
+    if (p.assessmentType === 'PRETEST') {
+      for (let i = checks.length - 1; i >= 0; i--)
+        if (['REVIEW', 'BLUEPRINT'].includes(checks[i]!.code)) checks.splice(i, 1);
+    }
     const canPublish = p.status === 'DRAFT' && checks.every((c) => c.passed);
     const distribution: ContentPackageDetailDto['distribution'] = [];
     for (const dimension of [
@@ -566,6 +693,23 @@ export class ContentPackagesService {
       ...p,
       items: items.map((item) => ({
         ...item,
+        scoringRepairRequired: scoringRepairs.has(item.questionVersionId),
+        validationIssues: [
+          ...new Set([
+            ...(runtimeIssues.get(item.questionVersionId) ?? []),
+            ...(!item.question
+              ? ['Isi, pilihan, kunci atau metadata soal belum sesuai format.']
+              : []),
+            ...(checked?.items.find((entry) => entry.externalId === item.question?.externalId)
+              ?.blockers ?? []),
+            ...(item.usageType !== p.assessmentType
+              ? ['Tujuan soal tidak sesuai jenis paket.']
+              : []),
+            ...(rows.find((r) => r.version.id === item.questionVersionId)?.version.difficulty
+              ? []
+              : ['Kesulitan soal belum diisi.']),
+          ]),
+        ],
         question: item.question
           ? {
               ...item.question,
@@ -730,7 +874,7 @@ export class ContentPackagesService {
         .where(eq(packageItems.packageId, id))
         .orderBy(asc(questions.id))
         .for('update', { of: questions });
-      if (body.confirmed === true) {
+      if (body.confirmed === true || p.assessmentType === 'PRETEST') {
         const current = await this.detailWithin(tx, id);
         if (
           current.readiness.checks.some(
@@ -1124,7 +1268,7 @@ export class ContentPackagesService {
           .where(eq(questionVersions.id, id));
         return { id };
       },
-      { notes: body.notes.trim(), confirmed: body.confirmed },
+      { notes: body.notes?.trim() ?? '', confirmed: body.confirmed },
     );
   }
 }

@@ -5586,6 +5586,51 @@
         ]
       }
     },
+    "/api/v1/admin/content/packages/{id}/prepare-scoring": {
+      "post": {
+        "operationId": "ContentPackagesController_prepareScoring",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ArchiveContentPackageDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-content-packages"
+        ]
+      }
+    },
     "/api/v1/admin/content/packages/{id}/archive": {
       "post": {
         "operationId": "ContentPackagesController_archive",
@@ -12801,6 +12846,15 @@
       "ContentVersionDetailDto": {
         "type": "object",
         "properties": {
+          "usageType": {
+            "type": "string",
+            "enum": [
+              "DRILL",
+              "PRETEST",
+              "TRYOUT"
+            ],
+            "nullable": true
+          },
           "reviews": {
             "type": "array",
             "items": {
@@ -12907,13 +12961,13 @@
             ]
           },
           "notes": {
-            "type": "string"
+            "type": "string",
+            "maxLength": 1000
           }
         },
         "required": [
           "packageId",
-          "confirmed",
-          "notes"
+          "confirmed"
         ]
       },
       "GeneratorMappingDto": {
@@ -13495,6 +13549,15 @@
       "ContentPackageItemDto": {
         "type": "object",
         "properties": {
+          "scoringRepairRequired": {
+            "type": "boolean"
+          },
+          "validationIssues": {
+            "type": "array",
+            "items": {
+              "type": "string"
+            }
+          },
           "questionVersionId": {
             "type": "string"
           },

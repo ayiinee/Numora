@@ -1,8 +1,5 @@
-import {
-  PRETEST_PARTIAL_POLICY,
-  pretestPartialRubricDefinition,
-  TRYOUT_PARTIAL_POLICY,
-} from '@tka/assessment-engine';
+import { hasPretestRubric, ensurePretestRubric } from './pretest-rubric';
+import { TRYOUT_PARTIAL_POLICY } from '@tka/assessment-engine';
 import { randomUUID } from 'node:crypto';
 import {
   Inject,
@@ -281,7 +278,7 @@ export class ContentImportService {
           .limit(1);
         if (!receipt) errors.push('MEDIA_RECEIPT_INVALID');
       }
-      if (q.metadata.scoringRubricVersionId !== undefined) {
+      if (!pretest && q.metadata.scoringRubricVersionId !== undefined) {
         const rubricId = q.metadata.scoringRubricVersionId;
         if (
           typeof rubricId !== 'string' ||
@@ -328,7 +325,7 @@ export class ContentImportService {
         if (target && family?.usageType === null) errors.push('QUESTION_UNCLASSIFIED');
         else if (target && family?.usageType !== target.assessmentType)
           errors.push('QUESTION_USAGE_MISMATCH');
-        else if (!target && family?.usageType) errors.push('PACKAGE_TARGET_REQUIRED');
+        else if (!target && !usage && family?.usageType) errors.push('PACKAGE_TARGET_REQUIRED');
         if (
           q.metadata.sourceQuestionId &&
           (q.metadata.sourceQuestionId === identity.questionId ||
@@ -525,6 +522,19 @@ export class ContentImportService {
     // Lock the package before identities; all package writers take this row lock.
     const target = body.target ? await packageContext(tx, body.target.packageId, true) : undefined;
     if (target) assertDraftRevision(target, body.target!.expectedRevision);
+    if (target && body.expectedSourceVersionId) {
+      const [item] = await tx
+        .select()
+        .from(packageItems)
+        .where(
+          and(
+            eq(packageItems.packageId, target.id),
+            eq(packageItems.questionVersionId, body.expectedSourceVersionId),
+          ),
+        );
+      if (!item || body.questions.length !== 1)
+        throw new ConflictException({ code: 'PACKAGE_REVISION_CONFLICT' });
+    }
     for (const id of [
       ...new Set(
         body.questions.map((q) =>
@@ -566,7 +576,11 @@ export class ContentImportService {
     });
     const items: ImportItemDto[] = [];
     for (const [i, r] of records.entries()) {
-      if (r.latest?.hash === r.hash) {
+      if (
+        r.latest?.hash === r.hash &&
+        (target?.assessmentType !== 'PRETEST' ||
+          (await hasPretestRubric(tx, r.q, r.latest.version.scoringRubricVersionId)))
+      ) {
         items.push({
           ...report.items[i]!,
           outcome: 'SKIPPED_UNCHANGED',
@@ -614,27 +628,20 @@ export class ContentImportService {
         typeof r.q.metadata.scoringRubricVersionId === 'string'
           ? r.q.metadata.scoringRubricVersionId
           : undefined;
-      if (
-        ['TRYOUT', 'PRETEST'].includes(target?.assessmentType ?? '') &&
-        r.q.type !== 'SINGLE_CHOICE' &&
-        !rubricId
-      ) {
+      if (target?.assessmentType === 'TRYOUT' && r.q.type !== 'SINGLE_CHOICE' && !rubricId) {
         const count = r.q.options.length;
-        const pretest = target?.assessmentType === 'PRETEST';
-        const code = `${pretest ? PRETEST_PARTIAL_POLICY : TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
-        const definition = pretest
-          ? pretestPartialRubricDefinition(r.q.type, count)
-          : {
-              policyCode: TRYOUT_PARTIAL_POLICY,
-              version: 1,
-              questionType: r.q.type,
-              decisionCount: count,
-              categories: Array.from({ length: count + 1 }, (_, i) => i),
-              fullyCorrectCategory: count,
-              points: 'round(correctDecisions / decisionCount * maxPoints, 2)',
-              unanswered: 0,
-              approvedDecision: 'PROJECT_OWNER_2026_10_07',
-            };
+        const code = `${TRYOUT_PARTIAL_POLICY}_${r.q.type}_${count}`;
+        const definition = {
+          policyCode: TRYOUT_PARTIAL_POLICY,
+          version: 1,
+          questionType: r.q.type,
+          decisionCount: count,
+          categories: Array.from({ length: count + 1 }, (_, i) => i),
+          fullyCorrectCategory: count,
+          points: 'round(correctDecisions / decisionCount * maxPoints, 2)',
+          unanswered: 0,
+          approvedDecision: 'PROJECT_OWNER_2026_10_07',
+        };
         await tx
           .insert(scoringRubricVersions)
           .values({
@@ -658,6 +665,8 @@ export class ContentImportService {
           throw new ConflictException({ code: 'SCORING_RUBRIC_NOT_READY' });
         rubricId = rubric.id;
       }
+      if (target?.assessmentType === 'PRETEST')
+        rubricId = await ensurePretestRubric(tx, actor, r.q);
       const data = snapshot(r.q);
       const [version] = await tx
         .insert(questionVersions)
@@ -672,7 +681,7 @@ export class ContentImportService {
           explanation: data.explanation,
           media: data.assets,
           difficulty: r.q.difficulty ?? null,
-          levelId: r.level!.id,
+          levelId: r.level?.id ?? null,
           contentStatus: 'DRAFT',
           validationState: 'DRAFT',
           revisedFromQuestionVersionId: r.latest?.version!.id,
@@ -706,15 +715,27 @@ export class ContentImportService {
       const ordered = items
         .map((item, index) => ({ item, order: records[index]!.q.metadata.sourceOrder! }))
         .sort((a, b) => a.order - b.order);
-      await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
-      await tx.insert(packageItems).values(
-        ordered.map(({ item }, index) => ({
-          packageId: target.id,
-          questionVersionId: item.questionVersionId!,
-          displayOrder: index + 1,
-          maxPoints: '1',
-        })),
-      );
+      if (body.expectedSourceVersionId) {
+        await tx
+          .update(packageItems)
+          .set({ questionVersionId: items[0]!.questionVersionId!, rubricVersionId: null })
+          .where(
+            and(
+              eq(packageItems.packageId, target.id),
+              eq(packageItems.questionVersionId, body.expectedSourceVersionId),
+            ),
+          );
+      } else {
+        await tx.delete(packageItems).where(eq(packageItems.packageId, target.id));
+        await tx.insert(packageItems).values(
+          ordered.map(({ item }, index) => ({
+            packageId: target.id,
+            questionVersionId: item.questionVersionId!,
+            displayOrder: index + 1,
+            maxPoints: '1',
+          })),
+        );
+      }
       await tx
         .update(assessmentPackages)
         .set({ contentRevision: target.contentRevision + 1 })
