@@ -442,6 +442,13 @@
       "when": 1794294000000,
       "tag": "0062_irt_research_gpcm_steps",
       "breakpoints": true
+    },
+    {
+      "idx": 63,
+      "version": "7",
+      "when": 1794297600000,
+      "tag": "0063_irt_adoption_receipt_guards",
+      "breakpoints": true
     }
   ]
 }
