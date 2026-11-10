@@ -28,6 +28,7 @@ import { ReportsModule } from '../reports/reports.module';
 import { AdminModule } from '../admin/admin.module';
 import { IrtModule } from '../irt/irt.module';
 import { ContentService } from './content.service';
+import { curatedVideoRecommendations } from './curated-video-recommendations';
 import type {
   AdminCurriculumDto,
   AdminVersionDto,
@@ -518,6 +519,86 @@ suite('Admin/content through HTTP and real PostgreSQL', () => {
         ),
     ).toHaveLength(3);
   });
+  it('serializes video activations and shows recommendations in addition order', async () => {
+    const { id: subchapterId } = await mutation('subchapters', {
+      chapterId: chapter,
+      code: 'VIDEOS',
+      name: 'TEST videos',
+      displayOrder: 2,
+    });
+    const video = {
+      title: 'TEST recommendation',
+      url: 'https://www.youtube.com/watch?v=TESTVIDEO01',
+      source: 'TEST',
+      subchapterId,
+    };
+    const first = await mutation('videos', { ...video, status: 'READY', recommendationOrder: 5 });
+    const second = await mutation('videos', { ...video, status: 'READY', recommendationOrder: 1 });
+    const draft = await mutation('videos', video);
+    const responses = await Promise.all([
+      request(`admin/content/videos/${draft.id}`, 'PATCH', { status: 'READY' }),
+      request('admin/content/videos', 'POST', { ...video, status: 'READY' }),
+    ]);
+    expect(responses.map((response) => response.status).sort()).toEqual(
+      responses[0]!.ok ? [200, 409] : [201, 409],
+    );
+    await expect(
+      responses.find((response) => response.status === 409)!.json(),
+    ).resolves.toMatchObject({
+      code: 'VIDEO_SUBCHAPTER_ACTIVE_LIMIT',
+    });
+    const last = responses[0]!.ok ? draft : ((await responses[1]!.json()) as ContentMutationDto);
+    const fourth = await mutation('videos', video);
+    for (const response of [
+      await request('admin/content/videos', 'POST', { ...video, status: 'READY' }),
+      await request(`admin/content/videos/${fourth.id}`, 'PATCH', { status: 'READY' }),
+    ]) {
+      expect(response.status).toBe(409);
+      await expect(response.json()).resolves.toMatchObject({
+        code: 'VIDEO_SUBCHAPTER_ACTIVE_LIMIT',
+      });
+    }
+    const { db } = getDatabase();
+    // Simulate a stored manual order that disagrees with the original addition order.
+    await db
+      .update(videoSubchapterMappings)
+      .set({ recommendationOrder: 99 })
+      .where(eq(videoSubchapterMappings.id, first.id));
+    const readOrder = async () =>
+      (await curatedVideoRecommendations(db, subchapterId)).map(({ mappingId }) => mappingId);
+    await expect(readOrder()).resolves.toEqual([first.id, second.id, last.id]);
+    const list = (await (await request('admin/content/videos?limit=100')).json()) as {
+      items: { mappingId: string; subchapterId: string }[];
+    };
+    expect(
+      list.items.filter((item) => item.subchapterId === subchapterId).map((item) => item.mappingId),
+    ).toEqual(
+      last.id === draft.id
+        ? [first.id, second.id, draft.id, fourth.id]
+        : [first.id, second.id, draft.id, last.id, fourth.id],
+    );
+    expect(
+      (await request(`admin/content/videos/${first.id}`, 'PATCH', { recommendationOrder: 1 }))
+        .status,
+    ).toBe(400);
+    await mutation(
+      `videos/${first.id}`,
+      { title: 'Edited', status: 'READY', recommendationOrder: 2 },
+      'PATCH',
+    );
+    const [stored] = await db
+      .select()
+      .from(videoSubchapterMappings)
+      .where(eq(videoSubchapterMappings.id, first.id));
+    expect(stored!.recommendationOrder).toBe(99);
+    await mutation(`videos/${first.id}`, { status: 'ARCHIVED' }, 'PATCH');
+    await mutation(`videos/${fourth.id}`, { status: 'READY' }, 'PATCH');
+    await expect(readOrder()).resolves.toEqual([second.id, last.id, fourth.id]);
+    await mutation(`videos/${fourth.id}`, { status: 'ARCHIVED' }, 'PATCH');
+    await mutation(`videos/${first.id}`, { status: 'READY' }, 'PATCH');
+    await expect(readOrder()).resolves.toEqual([first.id, second.id, last.id]);
+  });
+
   it('rejects unsafe video writes and activation of invalid imported metadata', async () => {
     for (const url of [
       'http://youtu.be/TESTVIDEO00',

@@ -861,6 +861,8 @@ export const tryoutResultFinalizations = pgTable(
     version: integer('version').notNull(),
     mode: text('mode').notNull(),
     sourceOutputId: ref('source_output_id', () => computeOutputs.id),
+    sourceCalibrationRequestId: uuid('source_calibration_request_id').unique(),
+    releaseApprovalId: ref('release_approval_id', () => configurationApprovals.id),
     scoringPolicyVersionId: ref(
       'scoring_policy_version_id',
       () => scoringPolicyVersions.id,
@@ -876,10 +878,11 @@ export const tryoutResultFinalizations = pgTable(
     uniqueIndex('tryout_result_finalizations_published_uq')
       .on(t.batchId)
       .where(sql`${t.publishedAt} is not null`),
-    check('tryout_result_finalizations_mode_ck', sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE')`),
+    check('tryout_result_finalizations_mode_ck', sql`${t.mode} in ('IRT','FALLBACK','UNSCORABLE','MIXED')`),
+    check('tryout_result_finalizations_mixed_ck', sql`${t.mode} <> 'MIXED' or ${t.sourceCalibrationRequestId} is not null`),
     check(
       'tryout_result_finalizations_irt_ck',
-      sql`${t.mode} <> 'IRT' or (${t.sourceOutputId} is not null and ${t.mappingApprovalId} is not null)`,
+      sql`${t.mode} <> 'IRT' or ((${t.sourceOutputId} is not null or ${t.sourceCalibrationRequestId} is not null) and ${t.mappingApprovalId} is not null)`,
     ),
   ],
 ).enableRLS();
@@ -914,10 +917,14 @@ export const tryoutAttemptResults = pgTable(
     maximumPoints: numeric('maximum_points'),
     rank: integer('rank'),
     percentile: numeric('percentile'),
+    resultMode: text('result_mode'),
+    deliveredArmId: uuid('delivered_arm_id'),
+    resultReason: text('result_reason'),
     coverage: jsonb('coverage').notNull(),
   },
   (t) => [
     uniqueIndex('tryout_attempt_results_attempt_uq').on(t.finalizationId, t.attemptId),
+    check('tryout_attempt_results_result_mode_check', sql`${t.resultMode} in ('IRT','FALLBACK','UNSCORABLE')`),
     check(
       'tryout_attempt_results_bounds_ck',
       sql`(${t.rank} is null or ${t.rank} > 0) and (${t.percentile} is null or ${t.percentile} between 0 and 100) and (${t.standardError} is null or ${t.standardError} >= 0)`,

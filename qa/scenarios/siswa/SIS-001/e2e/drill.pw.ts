@@ -23,15 +23,19 @@ test('SIS-001 TC-001 real browser saves, resumes, submits 80 and retains one XP 
   actor,
 }) => {
   await student.goto('/student/learn/' + chapter + '/' + subchapter);
-  const started = student.waitForResponse(
-    (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
-  );
   await student
-    .getByRole('list', { name: 'Pilih level latihan' })
-    .getByRole('button', { name: 'Mulai latihan', exact: true })
-    .first()
+    .getByRole('list', { name: 'Peta level latihan' })
+    .getByRole('button', { name: 'Level 1, Terbuka', exact: true })
     .click();
-  const attempt: DrillAttemptDto = await (await started).json();
+  const detail = student.getByRole('dialog', { name: 'Level 1', exact: true });
+  const [started] = await Promise.all([
+    student.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
+    ),
+    detail.getByRole('button', { name: 'Mulai latihan', exact: true }).click(),
+  ]);
+  expect(started.status()).toBe(201);
+  const attempt: DrillAttemptDto = await started.json();
   expect(attempt.questions).toHaveLength(10);
   expect(JSON.stringify(attempt)).not.toMatch(/answerKey|correctOptionId|explanation/);
   const first = student.getByRole('radio').and(student.locator('input[value="B"]'));
@@ -46,7 +50,31 @@ test('SIS-001 TC-001 real browser saves, resumes, submits 80 and retains one XP 
   );
   await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
   await retried;
-  await student.reload();
+  await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+  const [paused] = await Promise.all([
+    student.waitForResponse(
+      (r) =>
+        r.url().endsWith(`/assessment-attempts/${attempt.id}/drill-clock`) &&
+        r.request().method() === 'PATCH' &&
+        r.request().postDataJSON()?.action === 'pause',
+    ),
+    student
+      .getByRole('dialog', { name: 'Jeda latihan dulu?', exact: true })
+      .getByRole('button', { name: 'Ya, keluar dulu', exact: true })
+      .click(),
+  ]);
+  expect(paused.status()).toBe(200);
+  expect(await paused.json()).toMatchObject({ sessionId: null });
+  await student.goto(`/student/drill/${attempt.id}`);
+  const pausedScreen = student.getByRole('region', { name: 'Latihan dijeda' });
+  const [resumed] = await Promise.all([
+    student.waitForResponse(
+      (r) => r.request().method() === 'POST' && r.url().endsWith('/assessments/drill/attempts'),
+    ),
+    pausedScreen.getByRole('button', { name: 'Lanjutkan latihan', exact: true }).click(),
+  ]);
+  expect(resumed.status()).toBe(201);
+  expect(await resumed.json()).toMatchObject({ id: attempt.id });
   await expect(first).toBeChecked();
   for (let i = 1; i <= 10; i++) {
     await student.getByRole('button', { name: new RegExp('^Soal ' + i + ',') }).click();
@@ -163,7 +191,7 @@ test('SIS-001 TC-003 anonymous, foreign Student and wrong role cannot read or mo
   try {
     const page = await context.newPage();
     await page.goto('/student/drill/' + attempt.id);
-    await expect(page).toHaveURL('http://localhost:3500/');
+    await expect(page).toHaveURL('http://localhost:3500/login');
     await expect(
       page.getByRole('button', { name: 'Lanjutkan dengan Google', exact: true }),
     ).toBeVisible();

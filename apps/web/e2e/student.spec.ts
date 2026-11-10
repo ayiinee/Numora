@@ -4,6 +4,7 @@ import { resolve } from 'node:path';
 import type { TryoutResultDto } from '../src/features/core-learning/generated-types';
 import { id as adminFixtureId, selectContentSection } from './fixtures/admin';
 import { setupAssessments } from './fixtures/admin-assessments';
+import { analyticsSnapshot } from './fixtures/admin-analytics';
 
 const browserErrors = new WeakMap<Page, string[]>();
 test.beforeEach(({ page }) => {
@@ -326,6 +327,7 @@ async function fixtures(
           },
         ],
       };
+    else if (path === '/admin/analytics') data = analyticsSnapshot();
     else if (path === '/admin/schools')
       data = { items: [{ id: chapterId, code: 'QA', name: 'Sekolah fixture', status: 'ACTIVE' }] };
     else if (path === `/admin/schools/${chapterId}`)
@@ -2065,7 +2067,7 @@ for (const { role, verified, path, destination } of [
     path: '/admin/schools',
     destination: '/teacher/verification-required',
   },
-  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/content' },
+  { role: 'ADMIN', verified: true, path: '/student', destination: '/admin/analytics' },
 ] as const) {
   test(`${role}${verified ? '' : ' unverified'} cannot enter ${path}`, async ({ page }) => {
     await fixtures(page, role, verified);

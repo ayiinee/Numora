@@ -111,6 +111,18 @@ function SubchapterContent({
     queryKey: ['chapter', chapterId],
     queryFn: chapterId ? () => learningApi.chapter(token, chapterId) : skipToken,
   });
+  const pretestChapter = useQuery({
+    queryKey: ['pretest-chapter', chapterId],
+    queryFn: chapterId ? () => learningApi.pretestChapter(token, chapterId) : skipToken,
+  });
+  const placementAttemptId =
+    pretestChapter.data?.state === 'completed' ? pretestChapter.data.attemptId : null;
+  const placement = useQuery({
+    queryKey: ['pretest-result', placementAttemptId],
+    queryFn: placementAttemptId
+      ? () => learningApi.pretestResult(token, placementAttemptId)
+      : skipToken,
+  }).data;
   const start = useMutation({
     mutationFn: (levelId: string) => learningApi.start(token, levelId),
     onSuccess: (attempt) => {
@@ -138,6 +150,15 @@ function SubchapterContent({
     : chapterQuery.isPending
       ? 'Memuat bab…'
       : 'Bab tidak tersedia';
+  // Match the saved placement to this subchapter by ID, then respect current Drill progress.
+  const placementLevel =
+    placement?.chapterId === subchapter.chapterId && placement.mappingStatus === 'applied'
+      ? levels.find(
+          (level) =>
+            level.order === placement.initialLevel &&
+            placement.unlockedLevels.some((unlocked) => unlocked.id === level.id),
+        )
+      : undefined;
   const completed = levels.filter((level) => level.status === 'completed').length;
   return (
     <div className="learning-adventure">
@@ -164,6 +185,7 @@ function SubchapterContent({
           key={query.data.subchapter.id}
           data={query.data}
           chapterLabel={chapterLabel}
+          placementLevelId={placementLevel?.id}
           pending={start.isPending}
           requestedLevelId={start.variables}
           startError={start.error?.message}

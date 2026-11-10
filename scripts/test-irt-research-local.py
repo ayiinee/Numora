@@ -17,7 +17,9 @@ BIN=Path(os.environ.get('POSTGRES_BIN','C:/Program Files/PostgreSQL/16/bin'))
 
 @contextmanager
 def local_database():
-    with tempfile.TemporaryDirectory(prefix='numora-irt-research-') as folder:
+    # Keep this harness's disposable WAL on the workspace drive, not Windows TEMP.
+    scratch=ROOT/'.tmp';scratch.mkdir(exist_ok=True)
+    with tempfile.TemporaryDirectory(prefix='numora-irt-research-',dir=scratch) as folder:
         target=Path(folder);cluster=target/'cluster';suffix='.exe' if os.name=='nt' else ''
         ctl=str(BIN/('pg_ctl'+suffix))
         with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
@@ -48,7 +50,13 @@ try {await migrateIntegratedDatabase(db,process.argv[2]);} finally {await db.end
                     attempt=db.execute("INSERT INTO assessment_attempts(student_id,package_id,assessment_type,status,started_at,finished_at,raw_points,score_0_100) VALUES(%s,%s,'TRYOUT','GRADED',now()-interval '2 minutes',now()-interval '1 minute',3,10) RETURNING id",(student,package)).fetchone()[0]
                     db.execute("INSERT INTO xp_ledger(student_id,attempt_id,source_type,xp_amount) VALUES(%s,%s,'TRYOUT',30)",(student,attempt))
                     history=db.execute('SELECT to_jsonb(a),to_jsonb(x) FROM assessment_attempts a JOIN xp_ledger x ON x.attempt_id=a.id WHERE a.id=%s',(attempt,)).fetchone()
-            subprocess.run(['node','--input-type=module','-e',migrate,url,str(canonical)],cwd=ROOT,check=True,timeout=180)
+            try:
+                subprocess.run(['node','--input-type=module','-e',migrate,url,str(canonical)],cwd=ROOT,check=True,timeout=180)
+            except subprocess.CalledProcessError:
+                evidence=ROOT/'.tmp/irt-release-acceptance/migration-server.log'
+                evidence.parent.mkdir(parents=True,exist_ok=True)
+                evidence.write_text((target/'postgres.log').read_text(errors='replace'))
+                raise
             yield url
             if history is not None:
                 with psycopg.connect(url) as db:

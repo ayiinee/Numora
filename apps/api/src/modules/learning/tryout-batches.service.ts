@@ -21,6 +21,7 @@ import {
 } from '@tka/database';
 import { readApprovedPolicy } from '@tka/assessment-engine';
 import { scoringPolicyVersions } from '@tka/database';
+import { getIrtResearchDatabaseV1, tryoutDeliveryReadinessV1 } from '@tka/irt-orchestration';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import type {
   UpdateTryoutDelegationsDto,
@@ -167,6 +168,12 @@ export class TryoutBatchesService {
     };
   }
   async detail(id: string): Promise<TryoutBatchDto> {
+    let readiness = { resultState: 'BLOCKED', blockers: ['IRT_DELIVERY_DISABLED'] };
+    if (
+      process.env.NUMORA_IRT_DELIVERY_ENABLED === 'true' &&
+      process.env.NUMORA_IRT_RESEARCH_ENABLED === 'true'
+    )
+      readiness = await tryoutDeliveryReadinessV1(getIrtResearchDatabaseV1(), id);
     return getDatabase().db.transaction(async (tx) => {
       const b = await this.batch(tx, id);
       const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
@@ -233,9 +240,9 @@ export class TryoutBatchesService {
         packages,
         schools: delegated,
         participants,
-        resultsState: 'BLOCKED',
+        resultsState: readiness.resultState,
         resultBlockers: [
-          'MULTI_PACKAGE_FINALIZATION_NOT_READY',
+          ...readiness.blockers,
           ...(now > b.resultDueAt ? ['RESULT_DEADLINE_EXCEEDED'] : []),
         ],
       };

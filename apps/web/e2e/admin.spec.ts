@@ -434,13 +434,6 @@ async function setup(page: Page) {
         state.schools.push(school);
         result = school;
       } else if (path.endsWith('/teacher-tokens') || path.endsWith('/reissue')) {
-        if (path.endsWith('/reissue')) {
-          const previous = state.tokens.find((t) => path.includes(t.id));
-          if (previous) {
-            previous.revokedAt = '2026-10-04T00:00:00Z';
-            previous.status = 'REVOKED';
-          }
-        }
         const issued = {
           id: id(110 + state.tokens.length),
           token: 'DEMO-ONE-TIME',
@@ -589,6 +582,43 @@ const panels = [
   ['Audit', 'audit'],
 ] as const;
 
+test('Admin video form uses automatic order and keeps input when activation is full', async ({
+  page,
+}) => {
+  const { state, errors } = await setup(page);
+  state.data.videos.items[0]!.status = 'DRAFT';
+  const limitMessage = 'Subbab sudah memiliki tiga video aktif.';
+  await page.route('**/api/v1/admin/content/videos/*', async (route) => {
+    if (route.request().method() !== 'PATCH') return route.fallback();
+    await route.fulfill({
+      status: 409,
+      contentType: 'application/problem+json',
+      json: { status: 409, code: 'VIDEO_SUBCHAPTER_ACTIVE_LIMIT', detail: limitMessage },
+    });
+  });
+  await page.goto('/admin/content?view=videos');
+  await page.getByText('Tambah video', { exact: true }).click();
+  const title = page.getByLabel('Judul video');
+  await title.fill('Draf video tes');
+  await expect(page.getByLabel('Urutan rekomendasi')).toHaveCount(0);
+  await page.getByRole('button', { name: 'Atur READY', exact: true }).click();
+  await expect(page.getByRole('alert').filter({ hasText: limitMessage })).toBeVisible();
+  await expect(title).toHaveValue('Draf video tes');
+
+  await page.getByLabel('URL HTTPS').fill('https://www.youtube.com/watch?v=dQw4w9WgXcQ');
+  await page.getByLabel('Sumber / penyedia').fill('YouTube');
+  await page.getByLabel('Subbab', { exact: true }).selectOption(id(2));
+  await page.getByRole('button', { name: 'Simpan draf video' }).click();
+  await expect(title).toHaveValue('');
+  expect(state.mutations.at(-1)?.body).toEqual({
+    title: 'Draf video tes',
+    url: 'https://www.youtube.com/watch?v=dQw4w9WgXcQ',
+    source: 'YouTube',
+    subchapterId: id(2),
+  });
+  expect(errors).toEqual([]);
+});
+
 for (const width of [390, 1280]) {
   test(`Admin ten-row pagination and horizontal filters at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
@@ -733,7 +763,10 @@ for (const width of [320, 375, 768, 1440]) {
       if (request.url().includes('/api/v1/admin/analytics')) analyticsRequests.push(request.url());
     });
     await page.goto('/admin');
-    await expect(page).toHaveURL(/\/admin\/content$/);
+    await expect(page).toHaveURL(/\/admin\/analytics$/);
+    await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
+    await expect.poll(() => analyticsRequests.length).toBeGreaterThan(0);
+    await page.goto('/admin/content');
     await expect(page.locator('.admin-content-shell')).toBeVisible();
     await expect(page.locator('.admin-page-header')).toHaveCount(0);
     if (width < 960) {
@@ -750,11 +783,6 @@ for (const width of [320, 375, 768, 1440]) {
       await expect(toggle).toBeFocused();
     }
     await expect(page.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
-    await page.goto('/admin/analytics');
-    await expect(page).toHaveURL(/\/admin\/analytics$/);
-    await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
-    await expect.poll(() => analyticsRequests.length).toBeGreaterThan(0);
-    await page.goto('/admin/content');
     await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
     await expect(page.getByRole('combobox', { name: 'Kompetensi', exact: true })).not.toBeVisible();
     await capture(page, 'content-ux-questions', width);
@@ -802,15 +830,8 @@ for (const width of [390, 1280]) {
         0,
       );
       await expect(page.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
-      if (role === 'CONTENT_DATA_MODERATION') {
-        await expect(page).toHaveURL(/\/admin\/content$/);
-        await expect(page.locator('.admin-page-header')).toHaveCount(0);
-        await expect(page.getByRole('heading', { name: 'Bank soal', exact: true })).toBeVisible();
-      } else if (role === 'SUPER_ADMIN') {
+      if (role) {
         await expect(page).toHaveURL(/\/admin\/analytics$/);
-      } else if (role === 'OPERATIONS') {
-        await expect(page).toHaveURL(/\/admin\/schools$/);
-        if (role === 'OPERATIONS') await expect(page.locator('.admin-page-header')).toHaveCount(0);
       } else {
         await expect(page.getByRole('heading', { name: 'Akses Admin', exact: true })).toBeVisible();
         await expect(page.getByText(/Belum ada modul/)).toBeVisible();
@@ -954,8 +975,14 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS'] as const) {
     await page.getByRole('button', { name: /SMPN 1 Jakarta/ }).click();
     await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);
     await page.getByRole('button', { name: 'Terbit ulang', exact: true }).first().click();
+    await expect(page.getByRole('dialog')).toContainText('Token lama mempertahankan status');
     await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi', exact: true }).click();
     await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toBeVisible();
+    expect(state.tokens.find((item) => item.id === id(110))).toMatchObject({
+      status: 'AVAILABLE',
+      revokedAt: null,
+      expiresAt: '2099-01-01T00:00:00Z',
+    });
     await page.getByRole('button', { name: 'Cabut', exact: true }).first().click();
     await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi', exact: true }).click();
     await expect(page.getByText('DEMO-ONE-TIME', { exact: true })).toHaveCount(0);

@@ -30,6 +30,7 @@ describe.skipIf(!process.env.TEST_DATABASE_URL)(
       await original.join(fixture.students[1]!.id, running.roomCode);
       await original.ready(fixture.students[0]!.id, running.matchId);
       await original.ready(fixture.students[1]!.id, running.matchId);
+      await original.start(fixture.students[0]!.id, running.matchId);
       const waiting = await original.create(fixture.students[2]!.id, 'easy', randomUUID());
       const recovering = new PvpEngineService(fixture.policy);
       const ids = [running.matchId, waiting.matchId];

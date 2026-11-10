@@ -346,6 +346,32 @@ it('keeps ready waiting on the server and allows Mandiri to share without classm
   expect(mocks.emit.mock.calls[0]![1].payload).toEqual({ matchId: mocks.matchId });
   expect(screen.getByRole('button', { name: 'Bagikan Link Duel' })).toBeTruthy();
 });
+it('sends the host-only start command once the server snapshot marks both players ready', async () => {
+  const snapshot = matchSnapshot('WAITING');
+  snapshot.players = [
+    { ...snapshot.players[0]!, ready: true },
+    {
+      ...snapshot.players[0]!,
+      studentId: 'TEST-peer',
+      displayName: 'Teman',
+      slot: 2,
+      ready: true,
+    },
+  ];
+  serveMatch(snapshot);
+  mocks.emit.mockResolvedValue({ payload: { ok: true, state: snapshot } });
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  const start = await screen.findByRole('button', { name: 'Mulai duel' });
+  await waitFor(() => expect(start.hasAttribute('disabled')).toBe(false));
+  fireEvent.click(start);
+  await waitFor(() => expect(mocks.emit).toHaveBeenCalled());
+  expect(mocks.emit.mock.calls[0]![0]).toBe('match:start');
+  expect(mocks.emit.mock.calls[0]![1].payload).toEqual({ matchId: mocks.matchId });
+});
 it('locks expired round controls and waits for the server instead of advancing or scoring locally', async () => {
   const snapshot = matchSnapshot();
   snapshot.question!.deadlineAt = new Date(Date.now() - 1000).toISOString();

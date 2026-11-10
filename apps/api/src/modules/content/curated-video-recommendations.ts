@@ -2,6 +2,8 @@ import { and, asc, eq } from 'drizzle-orm';
 import { getDatabase, learningVideos, videoSubchapterMappings } from '@tka/database';
 import { isYouTubeVideoUrl } from './youtube-url';
 
+export const videoAdditionOrder = [asc(learningVideos.createdAt), asc(videoSubchapterMappings.id)];
+
 type Reader = Pick<ReturnType<typeof getDatabase>['db'], 'select'>;
 export async function curatedVideoRecommendations(db: Reader, subchapterId: string) {
   const items: { id: string; mappingId: string; title: string; url: string; source: string }[] = [];
@@ -23,7 +25,7 @@ export async function curatedVideoRecommendations(db: Reader, subchapterId: stri
           eq(learningVideos.curationStatus, 'READY'),
         ),
       )
-      .orderBy(asc(videoSubchapterMappings.recommendationOrder), asc(videoSubchapterMappings.id))
+      .orderBy(...videoAdditionOrder)
       .limit(100)
       .offset(offset);
     for (const item of page) {

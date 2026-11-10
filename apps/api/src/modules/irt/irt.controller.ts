@@ -1,3 +1,8 @@
+import {
+  IrtDeliveryBindingV1Dto,
+  PrepareIrtReleaseV1Dto,
+  IrtReleaseV1Dto,
+} from './irt-requests.dto';
 import { IrtOperationsService } from './irt-operations.service';
 import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
@@ -77,6 +82,64 @@ export class IrtController {
   options() {
     return this.operations.options();
   }
+  @Post('research/batches/:batchId/delivery-binding')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  async bindDeliveryV1(
+    @Req() request: AdminRequest,
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: IrtDeliveryBindingV1Dto,
+  ) {
+    await this.requests.requireMode('RESEARCH_ONLY');
+    return this.requests.bindDeliveryV1(request.adminId, batchId, input);
+  }
+  @Get('research/batches/:batchId/delivery-readiness')
+  @ApiOkResponse({ type: Object })
+  async deliveryReadinessV1(@Param('batchId', new ParseUUIDPipe()) batchId: string) {
+    await this.requests.requireMode('RESEARCH_ONLY');
+    return this.requests.deliveryReadinessV1(batchId);
+  }
+  @Post('batches/:batchId/delivery-binding')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  async bindProductionDeliveryV1(
+    @Req() request: AdminRequest,
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: IrtDeliveryBindingV1Dto,
+  ) {
+    await this.requests.requireMode('PRODUCTION');
+    return this.requests.bindDeliveryV1(request.adminId, batchId, input);
+  }
+  @Get('batches/:batchId/delivery-readiness')
+  @ApiOkResponse({ type: Object })
+  async productionReadinessV1(@Param('batchId', new ParseUUIDPipe()) batchId: string) {
+    await this.requests.requireMode('PRODUCTION');
+    return this.requests.deliveryReadinessV1(batchId);
+  }
+  @Post('batches/:batchId/finalizations')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  async prepareProductionReleaseV1(
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: PrepareIrtReleaseV1Dto,
+  ) {
+    await this.requests.requireMode('PRODUCTION');
+    return this.requests.prepareReleaseV1(batchId, input);
+  }
+  @Post('finalizations/:id/publish')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  async publishProductionReleaseV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.requests.requireMode('PRODUCTION');
+    return this.requests.publishReleaseV1(id);
+  }
+  @Post('calibration-requests/:id/adopt')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  async adoptProductionV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.requests.requireMode('PRODUCTION');
+    return this.requests.adoptResearchV1(id);
+  }
   @Get('batch-health')
   @ApiOkResponse({ type: IrtBatchHealthListDto })
   health(@Query() page: ContentPageDto) {
@@ -88,15 +151,34 @@ export class IrtController {
   adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.requests.adopt(request.adminId, id);
   }
+  @Post('research/batches/:batchId/finalizations')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  async prepareReleaseV1(
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: PrepareIrtReleaseV1Dto,
+  ) {
+    await this.requests.requireMode('RESEARCH_ONLY');
+    return this.requests.prepareReleaseV1(batchId, input);
+  }
+  @Post('research/finalizations/:id/publish')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  async publishReleaseV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.requests.requireMode('RESEARCH_ONLY');
+    return this.requests.publishReleaseV1(id);
+  }
   @Post('research/finalize/:receiptId')
   @HttpCode(200)
   @ApiOkResponse({ type: Object })
-  finalizeResearchV1(@Param('receiptId', new ParseUUIDPipe()) receiptId: string) {
+  async finalizeResearchV1(@Param('receiptId', new ParseUUIDPipe()) receiptId: string) {
+    await this.requests.requireMode('RESEARCH_ONLY');
     return this.requests.finalizeResearchV1(receiptId);
   }
   @Post('research/requests/:id/adopt')
   @HttpCode(200)
-  adoptResearchV1(@Param('id', new ParseUUIDPipe()) id: string) {
+  async adoptResearchV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    await this.requests.requireMode('RESEARCH_ONLY');
     return this.requests.adoptResearchV1(id);
   }
   @Post('requests')
@@ -140,4 +222,3 @@ export class IrtController {
     return this.irt.batches(page);
   }
 }
-

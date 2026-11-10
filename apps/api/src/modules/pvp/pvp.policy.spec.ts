@@ -29,6 +29,7 @@ describe('PvP policy and boundaries', () => {
     for (const action of [
       engine.create(randomUUID(), 'easy', randomUUID()),
       engine.ready(randomUUID(), randomUUID()),
+      engine.start(randomUUID(), randomUUID()),
       engine.invite(randomUUID(), randomUUID(), randomUUID()),
     ])
       await expect(action).rejects.toMatchObject({

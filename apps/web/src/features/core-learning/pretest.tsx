@@ -1,7 +1,8 @@
 'use client';
 
+import { StudentMascot } from '@/components/student-mascot';
 import { useState } from 'react';
-import { Badge, Button, Card, Dialog, Icon } from '@tka/ui';
+import { Badge, Button, Card, Dialog } from '@tka/ui';
 
 export type PretestChapterState =
   'unavailable' | 'available' | 'inProgress' | 'completed' | 'skipped' | 'mappingUnavailable';
@@ -35,8 +36,9 @@ export function PretestCard({
         'Pretest untuk bab ini belum dapat dimulai. Kamu tetap bisa belajar dari materi.',
     },
     available: {
-      label: 'Opsional',
-      description: 'Kenali kemampuan awalmu sebelum mulai berlatih di bab ini.',
+      label: 'Temukan levelmu',
+      description:
+        'Mulai dari level yang pas dengan kemampuanmu. Yuk, kenali kekuatanmu di bab ini!',
     },
     inProgress: {
       label: 'Belum selesai',
@@ -74,21 +76,19 @@ export function PretestCard({
   return (
     <>
       <Card className="pretest-card" role="region" aria-label={`Pretest ${chapterTitle}`}>
-        <span className="pretest-card__icon" aria-hidden="true">
-          <Icon name="clipboard" width={24} height={24} />
-        </span>
+        <div className="pretest-card__art">
+          <StudentMascot pose="placement" compact />
+        </div>
         <div className="pretest-card__copy">
           <div className="pretest-card__heading">
             <h3>Pretest Bab</h3>
             <Badge variant={state === 'completed' ? 'success' : 'secondary'}>{status.label}</Badge>
           </div>
           <p>{status.description}</p>
-          <span className="pretest-card__meta">20 soal · Opsional · Tanpa XP</span>
+          <span className="pretest-card__meta">20 soal &middot; Tanpa batas waktu</span>
         </div>
         {(state === 'available' || state === 'skipped' || (state === 'unavailable' && onSkip)) && (
-          <Button variant="secondary" onClick={() => setDialogOpen(true)}>
-            Lihat informasi
-          </Button>
+          <Button onClick={() => setDialogOpen(true)}>Cek kemampuanmu</Button>
         )}
         {state === 'inProgress' && (
           <Button
@@ -128,9 +128,10 @@ export function PretestCard({
           open={dialogOpen}
           onClose={() => setDialogOpen(false)}
           title={`Pretest ${chapterTitle}`}
-          description="Baca informasi ini sebelum memilih tindakan."
+          className="pretest-intro-dialog"
+          description="Temukan titik awal belajarmu lewat 20 soal, tanpa batas waktu."
           pending={pending !== null}
-          icon={<Icon name="clipboard" width={28} height={28} />}
+          icon={<StudentMascot pose="placement" compact />}
           actions={
             <>
               <Button
@@ -151,23 +152,33 @@ export function PretestCard({
             </>
           }
         >
-          <ul className="pretest-info-list">
-            <li>Pretest berisi 20 soal dan bersifat opsional.</li>
-            <li>Pretest yang selesai tidak dapat diulang dan tidak memberikan XP.</li>
-            <li>Jika memilih Skip, Level 1 pada semua subbab bab ini akan terbuka.</li>
-            <li>
-              Skip tidak menghabiskan kesempatan. Jawaban yang sudah tersimpan tetap bisa
-              dilanjutkan.
-            </li>
-            <li>
-              0–7 benar membuka Level 1; 8–18 Level 2; 19–20 Level 3, sesuai blueprint bab. Progres
+          <div className="pretest-intro-facts">
+            <span>
+              <strong>20 soal</strong>Kenali kemampuan awal
+            </span>
+            <span>
+              <strong>Level yang pas</strong>Mulai belajar lebih terarah
+            </span>
+          </div>
+          <p className="pretest-intro-note">
+            Bisa dilanjutkan kapan saja. Setelah selesai, pretest tidak dapat diulang dan tidak
+            memberikan XP.
+          </p>
+          <details className="pretest-intro-details">
+            <summary>Cara penempatan & pilihan lewati</summary>
+            <p>
+              0-7 benar membuka Level 1; 8-18 Level 2; 19-20 Level 3, sesuai blueprint bab. Progres
               Drill yang sudah ada dipertahankan.
-            </li>
-            <li>
-              Jawaban yang tersimpan di server dapat dilanjutkan tanpa batas waktu sebelum Pretest
-              selesai.
-            </li>
-          </ul>
+            </p>
+            <p>
+              Pretest bersifat opsional. Jika memilih Skip, Level 1 pada semua subbab bab ini akan
+              terbuka.
+            </p>
+            <p>
+              Skip tidak menghabiskan kesempatan. Jawaban yang sudah tersimpan tetap bisa
+              dilanjutkan tanpa batas waktu sebelum selesai.
+            </p>
+          </details>
           {error && (
             <p className="form-error" role="alert">
               {error}

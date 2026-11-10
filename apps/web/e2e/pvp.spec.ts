@@ -94,6 +94,7 @@ test.beforeAll(async () => {
               player.studentId === selfId ? { ...player, ready: true } : player,
             ),
           };
+        if (event === 'match:start') snapshot = state('RUNNING');
         if (event === 'answer:submit' && snapshot.question)
           snapshot = {
             ...snapshot,
@@ -286,7 +287,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByLabel(/Sedang.*45/).check();
     await capture('lobby-create');
     await page.getByRole('tab', { name: 'Gabung via Kode' }).click();
-    await page.getByRole('textbox', { name: 'Kode room' }).fill(roomCode.toLowerCase());
+    const codeInput = page.getByRole('textbox', { name: 'Kode room' });
+    await codeInput.fill(roomCode.toLowerCase());
+    await expect(codeInput).toHaveValue(roomCode);
     await capture('lobby-join');
     await page.getByRole('button', { name: 'Gabung room' }).click();
     await expect(page).toHaveURL(new RegExp(matchId));
@@ -297,7 +300,15 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('button', { name: 'Saya siap' }).click();
     await expect(page.getByRole('button', { name: 'Kamu sudah siap' })).toBeDisabled();
     expect(snapshot.status).toBe('WAITING');
-    publish(state('RUNNING'));
+    publish({
+      ...state('WAITING'),
+      players: players().map((player) => ({ ...player, ready: true })),
+    });
+    const startDuel = page.getByRole('button', { name: 'Mulai duel' });
+    await expect(startDuel).toBeEnabled();
+    await capture('waiting-host-start');
+    await startDuel.click();
+    expect(commands.some((command) => command.event === 'match:start')).toBe(true);
     await expect(page.getByRole('heading', { name: 'Duel Berlangsung' })).toBeVisible();
     await expect(page.locator('.pvp-question .katex-html')).toBeVisible();
     await expect(page.locator('.pvp-question math msqrt')).toHaveText('1156');

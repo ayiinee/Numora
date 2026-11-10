@@ -65,3 +65,17 @@ it('keeps HTML in table cells inert and retains malformed rows after the table',
   expect(container.textContent).toContain('<img src=x onerror=alert(1)>');
   expect(container.textContent).toContain('extra | cells | here');
 });
+
+it('renders imported academic tables without a separator row', () => {
+  content(
+    'Tabel jarak.\n\nWaktu (jam) | 1 | 2 | 3 | 4\nJarak (km) | 45 | 90 | 135 | 180\n\nPilih pernyataan.',
+  );
+  const table = screen.getByRole('table');
+  expect(within(table).getAllByRole('columnheader')).toHaveLength(5);
+  expect(
+    within(table)
+      .getAllByRole('cell')
+      .map((cell) => cell.textContent),
+  ).toEqual(['Jarak (km)', '45', '90', '135', '180']);
+  expect(screen.getByText('Pilih pernyataan.')).toBeTruthy();
+});

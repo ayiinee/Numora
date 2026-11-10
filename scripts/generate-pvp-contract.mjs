@@ -12,6 +12,7 @@ const commandPayloads = {
   'room:create': object({ difficulty: { enum: ['easy', 'medium', 'hard'] } }),
   'room:join': object({ roomCode: { type: 'string', pattern: '^[A-Za-z0-9]{12}$' } }),
   'player:ready': object({ matchId: uuid }),
+  'match:start': object({ matchId: uuid }),
   'answer:submit': object({
     matchId: uuid,
     questionId: uuid,

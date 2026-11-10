@@ -121,7 +121,8 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     const room = create.payload.state as PvpSnapshotDto;
     expect((await command(second, 'room:join', { roomCode: room.roomCode })).payload.ok).toBe(true);
     await command(first, 'player:ready', { matchId: room.matchId });
-    const started = await command(second, 'player:ready', { matchId: room.matchId });
+    await command(second, 'player:ready', { matchId: room.matchId });
+    const started = await command(first, 'match:start', { matchId: room.matchId });
     expect(started.payload.state.status).toBe('RUNNING');
     const q = started.payload.state.question.id;
     const saved = await command(first, 'answer:submit', {
@@ -150,7 +151,8 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
     let room = await engine.create(a, 'easy', randomUUID());
     await engine.join(b, room.roomCode);
     await engine.ready(a, room.matchId);
-    room = await engine.ready(b, room.matchId);
+    await engine.ready(b, room.matchId);
+    room = await engine.start(a, room.matchId);
     const clock = engine.now;
     Object.defineProperty(engine, 'now', {
       value: () => new Date(room.question!.deadlineAt),
@@ -275,6 +277,7 @@ integration('PvP Socket.IO and REST with isolated PostgreSQL/Redis, TEST ONLY po
       for (const [event, payload] of [
         ['room:create', { difficulty: 'easy' }],
         ['player:ready', { matchId: randomUUID() }],
+        ['match:start', { matchId: randomUUID() }],
         ['invitation:send', { matchId: randomUUID(), recipientStudentId: fixture.students[1]!.id }],
       ] as const) {
         expect((await command(socket, event, payload)).payload).toMatchObject({

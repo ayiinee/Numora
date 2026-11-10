@@ -1,0 +1,161 @@
+{
+  "version": "irt-sprint-baseline-2026-11-11-v1",
+  "observedAt": "2026-11-10T17:23:56.703972+00:00",
+  "timezone": "Asia/Jakarta",
+  "purpose": "SPRINT_PLANNING_ONLY",
+  "productionApproved": false,
+  "main": {
+    "sha": "75d32d1cdc589a09f2a6c5d71a6928654ed53f60",
+    "deployedSha": "75d32d1cdc589a09f2a6c5d71a6928654ed53f60",
+    "productionCandidate": {
+      "pr": 157,
+      "sha": "a4cf0ab941cb9a19987ca6b01ea869acb7cbe5ef",
+      "merged": false,
+      "mergeable": true,
+      "requiredChecks": {
+        "validate": "success",
+        "tests": "success",
+        "connected": "success",
+        "browser-e2e (1)": "success",
+        "browser-e2e (2)": "success",
+        "build-contract": "success",
+        "quality": "success"
+      }
+    }
+  },
+  "ai": {
+    "sha": "27cc419b33ef3717870de654707933b738260efc",
+    "manifest": {
+      "path": "research/irt-linux-image-v4.json",
+      "sha256": "b0d1763fb6321f8783b25cb768e59aee03019235dc3f70781532f581ab9dfdef"
+    },
+    "researchProfile": {
+      "path": "research/irt-runtime-linux-v3.json",
+      "sha256": "07f345313c5c9f49db28d1bc895d8c867eb652671e2accbd1f60b912a4fa394b"
+    },
+    "productionCandidateProfile": {
+      "path": "research/irt-runtime-linux-production-v1.json",
+      "sha256": "4f3e2e39b44a8f8682ca837c2e83ea5e43ba7de9e9b0095193c3421dc8ec932f"
+    },
+    "researchPolicy": {
+      "path": "research/irt/policy-v1.json",
+      "sha256": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d"
+    },
+    "productionCandidatePolicy": {
+      "path": "research/irt/policy-production-candidate-v1.json",
+      "sha256": "c5b13fb88f03182597484fd401181e8cb7211f67db229135ed18ed7f60de10b6"
+    },
+    "rSource": {
+      "path": "research/irt/compute.R",
+      "sha256": "aeb96a0b96595afdb868a8fc2867805be0d26c6a1b0eca6fd5291ed2376d3215"
+    },
+    "producerImage": "sha256:88a37a5442ec5dc55332af830053666f50fc3cef2393c505698ce39cd008969a",
+    "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036"
+  },
+  "contracts": [
+    {
+      "name": "irt-calibration-v1",
+      "mainTree": "e9a3ef2781a02d6a3d659aa236ae022c9532071e",
+      "aiTree": "e9a3ef2781a02d6a3d659aa236ae022c9532071e",
+      "gitTreesIdentical": true
+    },
+    {
+      "name": "irt-calibration-service-v1",
+      "mainTree": "b743ce3c84965fdac08ae10e3b992cdb11164a6f",
+      "aiTree": "b743ce3c84965fdac08ae10e3b992cdb11164a6f",
+      "gitTreesIdentical": true
+    },
+    {
+      "name": "generator-service-v1",
+      "mainTree": "7ff44b82908f22da06a0482d91a2c7cc6a50a613",
+      "aiTree": "08110356cfacedc2691fbca2bf668b4317186e1d",
+      "gitTreesIdentical": false
+    },
+    {
+      "name": "generator-service-v2",
+      "mainTree": "f9a6a3aaa54c7cd47d24dffeadf14948f9feaf1d",
+      "aiTree": "1ff68a4421b84afd8498cff30e3f832d06bbbe64",
+      "gitTreesIdentical": false
+    }
+  ],
+  "contractDifferences": {
+    "generator-service-v1": [
+      "fingerprint.ts: formatting and equivalent property omission; executable equivalence NOT_RUN in step 1"
+    ],
+    "generator-service-v2": [
+      "contract.test.mjs present only in Main; remaining tracked files identical"
+    ]
+  },
+  "fixture": {
+    "mainPath": "packages/testing/fixtures/irt-delivery-v1",
+    "mainTree": "754d2d32cb045004606186f09ab00c6c5605a4b7",
+    "generatorFixture": "existing scripts/test-generator-local.py fixtures; select exact cases in step 2",
+    "drillFixture": "NOT_CREATED; deterministic LEVEL fixture required in step 4"
+  },
+  "vps": {
+    "mainServices": "numora-web,numora-api,numora-worker,caddy: active",
+    "cpu": 8,
+    "memoryMiB": 7936,
+    "availableMiB": 6779,
+    "swapMiB": 0,
+    "aiDeployment": "RESEARCH_ONLY",
+    "runningProducerImagePrefix": "2df35c956960",
+    "candidateDeployed": false,
+    "generatorOperation": "NOT_VERIFIED",
+    "productionEnrollment": "NOT_VERIFIED",
+    "fullSizeCandidateAcceptance": "NOT_RUN"
+  },
+  "testBudget": {
+    "previousLimitSeconds": 10800,
+    "previousConsumedSeconds": 10787.967,
+    "previousLedger": "Main .tmp/irt-release-acceptance/ledger.json",
+    "newSprintBudget": "UNALLOCATED",
+    "newRuntimeTests": "NOT_RUN",
+    "step1Verification": "read-only Git/GitHub/VPS metadata and document consistency only; no R, database mutation or CI rerun"
+  },
+  "effortPercent": [
+    {
+      "step": 1,
+      "percent": 5
+    },
+    {
+      "step": 2,
+      "percent": 12
+    },
+    {
+      "step": 3,
+      "percent": 12
+    },
+    {
+      "step": 4,
+      "percent": 15
+    },
+    {
+      "step": 5,
+      "percent": 22
+    },
+    {
+      "step": 6,
+      "percent": 10
+    },
+    {
+      "step": 7,
+      "percent": 9
+    },
+    {
+      "step": 8,
+      "percent": 15
+    }
+  ],
+  "blockers": [
+    "PR_157_REVIEW_AND_MERGE",
+    "GENERATOR_DEPLOYMENT_AND_APPROVED_MAPPING_AUDIT",
+    "DRILL_ADAPTER_POLICY_ENGINE_ADOPTION_NOT_IMPLEMENTED",
+    "PRODUCTION_POLICY_AND_SCIENTIFIC_ACCEPTANCE",
+    "VPS_MIGRATION_JOURNAL_OPERATOR_VERIFICATION",
+    "PRIVATE_CONFIGURATION_AND_RESTRICTED_ROLES",
+    "FULL_SIZE_EXACT_LIMITS_AND_ACTIVE_SHUTDOWN_ACCEPTANCE",
+    "NAMED_OPERATOR_AND_ALERT_DESTINATION",
+    "NEW_TEST_BUDGET_UNALLOCATED"
+  ]
+}
