@@ -49,6 +49,9 @@ def main():
         config = {'contextRevision':1,'anchors':value['anchorQuestionVersionIds'],'packages':pins,'resources':resources,'runtime':json.loads(runtime_path.read_text()),'releaseApprovalId':str(approval)}
         def insert(c):
             return db.execute("INSERT INTO irt_delivery_bindings_v1(batch_id,context_id,arm_set_id,batch_revision,configuration,digest,actor_user_id) VALUES(%s,%s,%s,1,%s,'',%s) RETURNING digest",(batch,context,arm_set,Jsonb(c),actor)).fetchone()
+        if os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true':
+            from test_irt_production_authorization import verify
+            verify(db,url,actor,batch,context,config,value)
         failures = 0
         for mutate in [lambda c:c['runtime'].pop('image'),lambda c:c['packages'].append(c['packages'][0]),lambda c:c['anchors'].__setitem__(0,str(uuid4())),lambda c:c['resources']['model']['ref'].__setitem__('digest','0'*64),lambda c:c.__setitem__('contextRevision',99)]:
             c = deepcopy(config); mutate(c)

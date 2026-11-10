@@ -470,6 +470,13 @@
       "when": 1794304800000,
       "tag": "0066_irt_delivery_binding_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794304800001,
+      "tag": "0067_irt_production_authorization_v1",
+      "breakpoints": true
     }
   ]
 }
