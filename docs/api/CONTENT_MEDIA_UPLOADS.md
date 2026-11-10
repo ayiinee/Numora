@@ -111,6 +111,31 @@ Migrasi belum diterapkan ke Cloud. Rantai rekonsiliasi 4 Oktober 2026 mempertaha
 
 Enam file total **9.191 byte**, lima isi unik. Satu gambar boleh muncul di beberapa posisi; sampel mempertahankan satu key per penggunaan agar mudah review. `assetOrder` dan marker `[[asset:...]]` menjaga urutan di stem/opsi/pernyataan/pembahasan.
 
+## Akses gambar siswa pada sesi Pretest, Drill dan Tryout
+
+**ENGINEERING IMPLEMENTATION — 10 November 2026:** `POST /api/v1/assessment-attempts/:attemptId/media` kini menerima sesi `PRETEST` reguler pada fase `WORK`, sesuai pemanggilan halaman Pretest existing. Perbaikan ini menutup penolakan `404 ATTEMPT_NOT_FOUND` yang sebelumnya terjadi karena endpoint hanya menerima Drill/Tryout. Bentuk request/response dan jalur frontend tetap sama.
+
+Request memakai `Authorization: Bearer <session JWT>` dan body:
+
+```json
+{
+  "instanceId": "55b630fb-bb9d-4076-bb4a-323c19391f96",
+  "phase": "WORK",
+  "assetIds": ["diagram-1"]
+}
+```
+
+Respons `200` berisi `{ media: [{ instanceId, assetId, altText, url, expiresAt }] }`. URL GET R2 berlaku 900 detik dan dapat diperbarui dengan request yang sama selama sesi masih aktif. Endpoint menerima identitas aset, bukan bucket/object key dari klien.
+
+- Pemanggil harus Siswa ACTIVE dan pemilik sesi reguler. Sesi milik siswa lain disembunyikan sebagai `404 ATTEMPT_NOT_FOUND`.
+- UUID instance harus berasal dari sesi tersebut; instance asing/tidak ditemukan menghasilkan `404 ATTEMPT_ITEM_NOT_FOUND`.
+- `WORK` hanya tersedia pada status `IN_PROGRESS`; sesi selesai menghasilkan `409 ATTEMPT_NOT_ACTIVE`.
+- Aset pembahasan tidak boleh diminta saat `WORK`; aset asing atau pembahasan menghasilkan `400 MEDIA_SCOPE_INVALID`.
+- Pretest selalu menolak `REVIEW` dengan `409 ASSESSMENT_REVIEW_UNAVAILABLE`, termasuk setelah selesai. Aturan review Drill/Tryout tetap mengikuti pin policy dan rilis hasil.
+- Kredensial/bucket R2 tetap diperlukan pada server; tanpa konfigurasi yang sah pembacaan tautan gagal dengan `503 R2_NOT_CONFIGURED`.
+
+Regresi HTTP berada di `assessment-publisher.integration.spec.ts`, memakai PostgreSQL localhost terisolasi dan Auth/R2 fixture. Kasus mencakup sukses Pretest/Drill, login/role, kepemilikan sesi, instance asing, aset asing, pembahasan saat pengerjaan, sesi selesai dan larangan review Pretest. Pengujian tersebut tidak membuktikan kredensial R2 atau deployment website nyata.
+
 ## Bukti pengujian dan batasnya
 
 Tes HTTP menggunakan guard/validasi asli dengan database/storage terisolasi. Tes storage memakai signer SDK asli dan network mock; memeriksa staging vs final, header signature, hash/type/size dan error sanitization. Tes uploader memastikan token tidak terkirim ke R2, kegagalan PUT tidak completion, receipt mismatch tidak mengisi key, dan replay VERIFIED tidak PUT ulang. Tes integrasi PostgreSQL menguji race reservasi/completion dan audit satu kali, hanya pada database TEST lokal; CI menyediakan database tersebut.

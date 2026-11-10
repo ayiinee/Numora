@@ -37,4 +37,8 @@ Jika proses aplikasi masih memakai kode lama, mulai ulang API dan web dari repo 
 
 ## Pengujian otomatis pada PR
 
+**ENGINEERING IMPLEMENTATION — 10 November 2026:** pemeriksaan layanan di atas belum mencakup jalur HTTP yang dipakai halaman Pretest. Jalur `POST /api/v1/assessment-attempts/:attemptId/media` diperbaiki agar menerima sesi Pretest reguler pada fase WORK; sebelumnya allowlist Drill/Tryout menolak Pretest dengan 404. Fase REVIEW tetap tertutup untuk Pretest. Regresi HTTP dengan PostgreSQL lokal mencakup ownership, instance/aset asing, media pembahasan dan sesi selesai; lihat [kontrak akses gambar siswa](../api/CONTENT_MEDIA_UPLOADS.md#akses-gambar-siswa-pada-sesi-pretest-drill-dan-tryout). Perbaikan kode ini tidak menerbitkan ulang soal/paket atau mengubah R2.
+
+Verifikasi perbaikan: 15 tes lulus pada `assessment-publisher.integration.spec.ts` dan `pretest-tryout.integration.spec.ts`, memakai PostgreSQL localhost terpisah dengan Auth/R2 fixture. Build/typecheck API, lint file terkait, validasi kontrak dan pemeriksaan tipe hasil generate juga lulus. Tidak ada deploy atau pemeriksaan browser/R2 nyata dalam verifikasi ini.
+
 Suite `pretest-tryout.integration.spec.ts` juga menguji paket original sintetis pada PostgreSQL localhost yang terisolasi, melalui HTTP API nyata. Skenario mencakup paket original yang sudah disetujui tanpa hasil kalibrasi varian, ketiga tipe soal, perlindungan kepemilikan sesi, hapus/lanjutkan jawaban, nilai sebagian, kumpulkan berulang, serta tidak adanya XP. Suite ini berjalan pada job pengujian GitHub ketika `TEST_DATABASE_URL` tersedia. Pemeriksaan berkas gambar Development di atas merupakan bukti terpisah dan tidak dijalankan otomatis oleh CI.

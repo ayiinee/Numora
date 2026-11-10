@@ -1815,6 +1815,7 @@
     },
     "/api/v1/assessment-attempts/{attemptId}/media": {
       "post": {
+        "description": "Requires an active Student who owns the regular attempt and its question instance. WORK is available only while the attempt is in progress and excludes explanation media. Pretest does not allow REVIEW.",
         "operationId": "AssessmentMediaController_media",
         "parameters": [
           {
@@ -1853,6 +1854,7 @@
             "bearer": []
           }
         ],
+        "summary": "Get private media links for a Pretest, Drill or Tryout attempt",
         "tags": [
           "core-learning"
         ]
