@@ -107,11 +107,6 @@ export function QuestionChoices({
             )}
             {value === option.id && selectedHint && <small>{selectedHint}</small>}
           </span>
-          {!multiple && (
-            <span className="practice-option__indicator" aria-hidden="true">
-              ✓
-            </span>
-          )}
         </label>
       ))}
     </fieldset>

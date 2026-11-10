@@ -85,12 +85,6 @@
   cursor: pointer;
 }
 
-.level-path__node[aria-pressed='true'] {
-  box-shadow:
-    0 0 0 2px white,
-    0 0 0 5px var(--color-primary-strong);
-}
-
 .level-path__node:focus-visible {
   outline: 3px solid var(--color-text);
   outline-offset: 6px;

@@ -1191,7 +1191,9 @@ for (const joinCode of ['FIX234', 'QA_LEGACY-CLASS'])
     await page.getByRole('link', { name: 'Buka profil siswa', exact: true }).click();
     await page.getByLabel('Kode kelas').fill(` ${joinCode} `);
     await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+    ).toBeVisible();
     await expect(
       page
         .getByRole('region', { name: 'Profil dan progres' })
@@ -1236,9 +1238,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('BELAJAR MANDIRI', { exact: true })).toBeVisible();
+  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
@@ -1246,7 +1248,9 @@ test('joined class affiliation persists after signing out and back in', async ({
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill(' FIX234 ');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await page.evaluate(() => localStorage.setItem('test-logged-out', '1'));
   await page.getByRole('button', { name: 'Keluar Akun Google' }).click();
   await expect(page).toHaveURL('http://localhost:3300/login');
@@ -1254,7 +1258,9 @@ test('joined class affiliation persists after signing out and back in', async ({
   await page.reload();
   await expect(page).toHaveURL(/\/student$/);
   await page.goto('/student/profile');
-  await expect(page.getByText('TERAFILIASI SEKOLAH')).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toBeEnabled();
   await page.goto('/student/leaderboards?tab=class');
   await expect(
@@ -1381,7 +1387,9 @@ test('class join link warns an already affiliated Student and stays server-autho
   await page.goto('/student/profile');
   await page.getByLabel('Kode kelas').fill('FIX234');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-  await expect(page.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+  await expect(
+    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
+  ).toBeVisible();
   await expect(
     page
       .getByRole('region', { name: 'Profil dan progres' })
@@ -1607,7 +1615,7 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
       ? [
           {
             questionInstanceId: questionId,
-            stem: 'Berapa hasil sqrt(16)?',
+            stem: 'Berapa hasil sqrt(16)?\n\nSiswa | Elevasi | Satuan | Catatan\n--- | ---: | --- | ---\nRani | 2 | m | Di atas titik netral\nBudi | -1,4 | m | Di bawah titik netral',
             options: [
               { id: 'A', text: '\\frac{8}{2}' },
               { id: 'B', text: 'π' },
@@ -1655,7 +1663,13 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
     });
   }
 
+  await page.goto('/student/learn');
   await page.goto(url);
+  // Seed same-document history, as produced by a client-side route into the attempt.
+  await page.evaluate((attemptUrl) => {
+    window.history.replaceState(window.history.state, '', '/student/learn');
+    window.history.pushState(window.history.state, '', attemptUrl);
+  }, url);
   await expect(page.getByRole('heading', { name: 'Latihan dijeda' })).toBeVisible();
   await expect(duration).toContainText('0:42');
   await expectPausedLayout(320);
@@ -1671,13 +1685,32 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   await expect(page.locator('.practice-option__indicator').first()).toBeHidden();
   await expect(page.locator('.practice-option__text').first()).toHaveCSS('font-weight', '700');
   await expect(page.getByRole('radio').first()).toBeChecked();
+  await expect(page.getByRole('table', { name: 'Data soal' })).toBeVisible();
+  await expect(page.getByRole('columnheader')).toHaveCount(4);
+  await expect(page.locator('.practice-save-notice')).toHaveCount(0);
+  await page.setViewportSize({ width: 320, height: 668 });
+  expect(await page.evaluate(() => document.documentElement.scrollWidth)).toBeLessThanOrEqual(320);
+  await page.screenshot({ path: testInfo.outputPath('drill-table-320.png'), fullPage: true });
+  await page.evaluate(() => window.history.back());
+  const exitDialog = page.getByRole('dialog', { name: 'Jeda latihan dulu?' });
+  await expect(exitDialog).toBeVisible();
+  await expect(exitDialog).toContainText('Timer akan dijeda');
+  expect(pauseCount).toBe(0);
+  await page.screenshot({ path: testInfo.outputPath('drill-exit-320.png') });
+  await exitDialog.getByRole('button', { name: 'Lanjut mengerjakan' }).click();
+  await expect(exitDialog).toBeHidden();
+  await expect(page).toHaveURL(url);
+  expect(pauseCount).toBe(0);
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
-  page.once('dialog', async (dialog) => {
-    expect(dialog.message()).toContain('Timer akan dijeda');
-    await dialog.accept();
-  });
   await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await expect(exitDialog).toBeVisible();
+  await page.keyboard.press('Escape');
+  await expect(exitDialog).toBeHidden();
+  await expect(page.getByRole('link', { name: 'Kembali ke materi' })).toBeFocused();
+  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await page.screenshot({ path: testInfo.outputPath('drill-exit-1280.png') });
+  await exitDialog.getByRole('button', { name: 'Ya, keluar dulu' }).click();
   await expect(page).toHaveURL('/student/learn');
   await expect.poll(() => pauseCount).toBe(1);
   await page.goto(url);

@@ -1424,9 +1424,9 @@ test('Admin loading, pinned Tryout edits, report follow-up and logout remain exp
   await expect(page.getByRole('heading', { name: 'Masuk Admin', exact: true })).toBeVisible();
   await page.goto('/admin/content');
   await expect(page.getByRole('heading', { name: 'Versi soal', exact: true })).toHaveCount(0);
-  await expect(page).toHaveURL(/\/admin\/login$/);
+  await expect(page).toHaveURL(/\/admin-numora$/);
   await expect(page.getByRole('heading', { name: 'Masuk Admin', exact: true })).toBeVisible();
-  await expect(page).toHaveURL('http://localhost:3300/admin/login');
+  await expect(page).toHaveURL('http://localhost:3300/admin-numora');
   expect(errors).toEqual([]);
 });
 

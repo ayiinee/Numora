@@ -212,12 +212,12 @@ it('shows the current match after a route change and ignores snapshots from othe
       <PvpMatchScreen />
     </StudentAccess>,
   );
-  await screen.findByText('Room REST-ROOM');
+  await screen.findByText('REST-ROOM', { exact: true });
   await waitFor(() => expect(mocks.listeners).toHaveLength(1));
   act(() =>
     mocks.listeners[0]!.get('room:state')!({ payload: snapshot('TEST-match', 'OLD-ROOM') }),
   );
-  await screen.findByText('Room OLD-ROOM');
+  await screen.findByText('OLD-ROOM', { exact: true });
   mocks.matchId = 'NEW-match';
   view.rerender(
     <StudentAccess>
@@ -225,15 +225,15 @@ it('shows the current match after a route change and ignores snapshots from othe
     </StudentAccess>,
   );
   await waitFor(() => expect(mocks.listeners).toHaveLength(2));
-  await screen.findByText('Room REST-ROOM');
-  expect(screen.queryByText('Room OLD-ROOM')).toBeNull();
+  await screen.findByText('REST-ROOM', { exact: true });
+  expect(screen.queryByText('OLD-ROOM', { exact: true })).toBeNull();
   act(() => mocks.listeners[1]!.get('room:state')!({ payload: snapshot('NEW-match', 'NEW-ROOM') }));
-  await screen.findByText('Room NEW-ROOM');
+  await screen.findByText('NEW-ROOM', { exact: true });
   act(() =>
     mocks.listeners[1]!.get('room:state')!({ payload: snapshot('TEST-match', 'FOREIGN-ROOM') }),
   );
-  expect(screen.getByText('Room NEW-ROOM')).toBeTruthy();
-  expect(screen.queryByText('Room FOREIGN-ROOM')).toBeNull();
+  expect(screen.getByText('NEW-ROOM', { exact: true })).toBeTruthy();
+  expect(screen.queryByText('FOREIGN-ROOM', { exact: true })).toBeNull();
 });
 
 function matchSnapshot(status: PvpSnapshotDto['status'] = 'RUNNING'): PvpSnapshotDto {
@@ -341,7 +341,7 @@ it('keeps ready waiting on the server and allows Mandiri to share without classm
   await waitFor(() => expect(ready.hasAttribute('disabled')).toBe(false));
   await screen.findByText('Belum ada teman sekelas. Kamu tetap dapat membagikan link room.');
   fireEvent.click(ready);
-  await screen.findByRole('button', { name: 'Menunggu pemain lain' });
+  await screen.findByRole('button', { name: 'Kamu sudah siap' });
   expect(screen.queryByRole('radio')).toBeNull();
   expect(mocks.emit.mock.calls[0]![1].payload).toEqual({ matchId: mocks.matchId });
   expect(screen.getByRole('button', { name: 'Bagikan Link Duel' })).toBeTruthy();

@@ -8,7 +8,11 @@ import { Panel, PrimaryButton, Status } from './ui';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { useAssessmentDeadline } from './use-assessment-deadline';
 import { LearningApiError } from './api';
-import { AssessmentHeader, SubmitConfirmation } from './assessment-presentation';
+import {
+  AssessmentExitDialog,
+  AssessmentHeader,
+  SubmitConfirmation,
+} from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
 
 import { ContentRichText } from '@/components/content-rich-text';
@@ -108,10 +112,11 @@ export function AssessmentSession({
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
-  useUnsavedWarning(
+  const exitDialog = useUnsavedWarning(
     !submit.isSuccess && unsaved !== null,
     sessionKind === 'drill' && !submit.isSuccess,
     sessionKind === 'drill' && !submit.isSuccess ? onExitConfirmed : undefined,
+    { customDialog: true },
   );
 
   if (!question)
@@ -328,10 +333,6 @@ export function AssessmentSession({
                 </Button>
               </Status>
             )}
-            <p className="practice-save-notice">
-              Hanya jawaban berstatus Tersimpan yang telah diterima server. Refresh atau keluar
-              dapat menghilangkan perubahan yang belum tersimpan.
-            </p>
             {submit.isError && (!confirmationOpen || deadline.expired) && (
               <div>
                 <p role="alert" className="form-error">
@@ -411,12 +412,14 @@ export function AssessmentSession({
           pending={submit.isPending}
           error={submit.isError ? submit.error.message : undefined}
         />
+        <AssessmentExitDialog {...exitDialog} />
       </div>
     );
   }
 
   return (
     <div className="assessment-session space-y-5">
+      <AssessmentExitDialog {...exitDialog} />
       {notice}
       <p className="text-sm text-slate-700">
         Hanya jawaban berstatus Tersimpan yang telah diterima server. Refresh atau keluar dapat
