@@ -10,10 +10,18 @@ import { IdentityModule } from '../dist/modules/identity/identity.module.js';
 import { GeneratorController } from '../dist/modules/content/generator.controller.js';
 import { GeneratorService } from '../dist/modules/content/generator.service.js';
 import { GeneratorPackagesController } from '../dist/modules/content/generator-packages.controller.js';
+import { ContentPackagesService } from '../dist/modules/content/content-packages.service.js';
 import { GeneratorPackagesService } from '../dist/modules/content/generator-packages.service.js';
 import { configureApplication } from '../dist/bootstrap.js';
 
-export async function verifyV2Browser({ owner, client, fixture, service, packages }) {
+export async function verifyV2Browser({
+  owner,
+  client,
+  fixture,
+  service,
+  packages,
+  contentPackages,
+}) {
   const sessions = {};
   let app, web, browser, timer;
   const auth = createServer((req, res) => {
@@ -87,6 +95,7 @@ export async function verifyV2Browser({ owner, client, fixture, service, package
       providers: [
         { provide: GeneratorService, useValue: service },
         { provide: GeneratorPackagesService, useValue: packages },
+        { provide: ContentPackagesService, useValue: contentPackages },
       ],
     }).compile();
     app = module.createNestApplication({ logger: false });
@@ -104,7 +113,7 @@ export async function verifyV2Browser({ owner, client, fixture, service, package
     }
     web = spawn(
       process.execPath,
-      ['node_modules/next/dist/bin/next', 'dev', '-p', String(webPort)],
+      ['node_modules/next/dist/bin/next', 'dev', '--webpack', '-p', String(webPort)],
       {
         cwd: 'apps/web',
         env: {
@@ -164,7 +173,7 @@ export async function verifyV2Browser({ owner, client, fixture, service, package
         'tryout-1-b1-q07',
       ].includes(i.qid),
     );
-    assert(samples.length >= 5);
+    assert.equal(samples.length, 6);
     timer = setInterval(() => void pollGenerator(client).catch(() => {}), 500);
     await mkdir('outputs/generator-v2', { recursive: true });
     for (const item of samples) {
@@ -199,9 +208,27 @@ export async function verifyV2Browser({ owner, client, fixture, service, package
       });
       console.log(`V2 connected browser preview/save passed: ${item.qid}`);
     }
-    const [group] =
-      await owner`select id from generator_packages where canonical_package_id is not null order by created_at limit 1`;
-    if (group) {
+    const level = fixture.items.find((i) => i.qid === 'pg-16-4-1').level;
+    const option = (await packages.catalog()).options.find(
+      (o) => o.assessmentType === 'DRILL' && o.scopeId === level && o.canGenerate,
+    );
+    assert.ok(option, 'Complete media-bearing Drill package required');
+    const group = await packages.prepare(fixture.actor, randomUUID(), {
+      assessmentType: option.assessmentType,
+      scopeId: option.scopeId,
+      title: 'TEST ONLY browser DRAFT',
+    });
+    await pollGenerator(client);
+    assert.equal((await packages.detail(group.id)).status, 'READY');
+    for (const [alias, width] of [
+      ['content', 390],
+      ['super', 1440],
+    ]) {
+      await page.setViewportSize({ width, height: 1000 });
+      await page.evaluate(
+        (session) => localStorage.setItem('sb-127-auth-token', JSON.stringify(session)),
+        sessions[alias],
+      );
       await page.goto(`${origin}/admin/content/imports?generatorPackage=${group.id}`);
       await page.getByRole('heading', { name: '2. Preview dan tujuan', exact: true }).waitFor();
       const image = page.locator('img[src^="data:image/png"]');
@@ -211,22 +238,38 @@ export async function verifyV2Browser({ owner, client, fixture, service, package
       await page
         .getByText('Validasi lulus. Paket siap disimpan sebagai DRAFT.', { exact: true })
         .waitFor();
-      await page.getByRole('button', { name: 'Kembali ke preview', exact: true }).click();
-      await page.getByRole('heading', { name: '2. Preview dan tujuan', exact: true }).waitFor();
-      await image.first().waitFor();
+      await page.getByRole('button', { name: 'Simpan draft', exact: true }).click();
+      await page
+        .getByText('Paket dan seluruh soal tersimpan sebagai DRAFT.', { exact: true })
+        .waitFor();
+      await page.getByText('10/10', { exact: true }).waitFor();
+      const current = await packages.detail(group.id);
+      assert.ok(current.packageId);
+      const [stored] =
+        await owner`SELECT status FROM assessment_packages WHERE id=${current.packageId}`;
+      assert.equal(stored.status, 'DRAFT');
+      assert(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth));
       await page.screenshot({
-        path: 'outputs/generator-v2/package-preview-mobile.png',
+        path: `outputs/generator-v2/package-draft-${alias}-${width}.png`,
         fullPage: true,
       });
-      console.log('V2 connected browser package image preview passed');
+      await page.reload();
+      await page.getByRole('heading', { name: '2. Preview dan tujuan', exact: true }).waitFor();
+      assert.equal((await packages.detail(group.id)).packageId, current.packageId);
+      console.log(`V2 browser package preview/validate/DRAFT/reload PASS: ${alias} ${width}`);
     }
-    await page.setViewportSize({ width: 1440, height: 1000 });
-    await page.screenshot({ path: 'outputs/generator-v2/admin-desktop.png', fullPage: true });
     assert.deepEqual(errors, []);
   } finally {
     clearInterval(timer);
     await browser?.close();
-    if (web) web.kill();
+    if (web) {
+      if (process.platform === 'win32')
+        spawn('taskkill', ['/pid', String(web.pid), '/t', '/f'], {
+          windowsHide: true,
+          stdio: 'ignore',
+        });
+      else web.kill();
+    }
     await app?.close();
     await new Promise((r) => auth.close(r));
   }

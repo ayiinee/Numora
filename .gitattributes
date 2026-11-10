@@ -21,3 +21,6 @@ docs/IRT_RESEARCH_RUNTIME.md text eol=lf
 docs/IRT_RUNTIME_HANDOFF_V2.md text eol=lf
 
 docs/IRT_RUNTIME_ACCEPTANCE_V2.json text eol=lf
+
+# Shared sprint baseline stays byte-identical across checkouts.
+docs/IRT_SPRINT_BASELINE_* text eol=lf

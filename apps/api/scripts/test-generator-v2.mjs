@@ -9,6 +9,8 @@ import { ConfigService } from '@nestjs/config';
 import { getDatabase, closeDatabaseConnection, claimComputeExecution } from '@tka/database';
 import { pollGenerator, generatorHttp } from '@tka/irt-orchestration';
 import { GeneratorService } from '../dist/modules/content/generator.service.js';
+import { ContentPackagesService } from '../dist/modules/content/content-packages.service.js';
+import { ContentImportService } from '../dist/modules/content/content-import.service.js';
 import { GeneratorPackagesService } from '../dist/modules/content/generator-packages.service.js';
 import { MediaUploadsRepository } from '../dist/modules/content/media-uploads.repository.js';
 import { MediaUploadsService } from '../dist/modules/content/media-uploads.service.js';
@@ -50,6 +52,7 @@ const s3 = createServer(async (req, res) => {
 });
 await new Promise((r) => s3.listen(0, '127.0.0.1', r));
 const config = new ConfigService({
+  CONTENT_IMPORT_PREVIEW_ENABLED: 'true',
   R2_ACCOUNT_ID: 'a'.repeat(32),
   R2_ACCESS_KEY_ID: 'TEST',
   R2_SECRET_ACCESS_KEY: 'TEST',
@@ -63,9 +66,20 @@ const service = new GeneratorService(
   new MediaUploadsService(new MediaUploadsRepository(), new R2MediaStorage(config)),
 );
 const packages = new GeneratorPackagesService(service);
-const baseline = (
-  await owner`select (select count(*) from assessment_attempts)::int as attempts,(select count(*) from xp_ledger)::int as xp`
-)[0];
+async function historyState() {
+  const state = {};
+  for (const table of [
+    'assessment_attempts',
+    'attempt_items',
+    'attempt_answers',
+    'xp_ledger',
+    'tryout_attempt_results',
+    'student_item_exposures',
+  ])
+    state[table] = await owner.unsafe(`SELECT to_jsonb(t) AS row FROM ${table} t ORDER BY id`);
+  return state;
+}
+let baseline;
 const results = [];
 async function notification(id) {
   const [n] =
@@ -121,6 +135,24 @@ async function parallel(items, fn, concurrency = 6) {
   );
 }
 try {
+  // Nonempty unrelated history makes content-integrity assertions meaningful.
+  const [source] =
+    await owner`SELECT v.id FROM question_versions v JOIN questions q ON q.id=(SELECT question_id FROM question_variants WHERE id=v.variant_id) WHERE q.usage_type='TRYOUT' AND v.question_type='SINGLE_CHOICE' LIMIT 1`;
+  assert.ok(source, 'Selected fixture must include a Tryout PG history source');
+  const [person] =
+    await owner`INSERT INTO users(auth_user_id,role,display_name,email) VALUES(${randomUUID()},'STUDENT','TEST HISTORY',${randomUUID() + '@example.test'}) RETURNING id`;
+  const [pack] =
+    await owner`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(${randomUUID()},1,'TEST HISTORY','TRYOUT') RETURNING id`;
+  const [placed] =
+    await owner`INSERT INTO package_items(package_id,question_version_id,display_order,max_points) VALUES(${pack.id},${source.id},1,1) RETURNING id`;
+  const [attempt] =
+    await owner`INSERT INTO assessment_attempts(student_id,package_id,assessment_type) VALUES(${person.id},${pack.id},'TRYOUT') RETURNING id`;
+  const [item] =
+    await owner`INSERT INTO attempt_items(attempt_id,package_id,package_item_id,question_version_id,display_order,max_points) VALUES(${attempt.id},${pack.id},${placed.id},${source.id},1,1) RETURNING id`;
+  await owner`INSERT INTO attempt_answers(attempt_item_id,answer,awarded_points,graded_at) VALUES(${item.id},'{"optionId":"A"}',1,now())`;
+  await owner`UPDATE assessment_attempts SET status='GRADED',finished_at=now(),raw_points=1,score_0_100=100 WHERE id=${attempt.id}`;
+  await owner`INSERT INTO xp_ledger(student_id,attempt_id,source_type,xp_amount) VALUES(${person.id},${attempt.id},'TRYOUT',10)`;
+  baseline = await historyState();
   const inventory = await owner`select * from generator_stock_sets order by id`;
   if (inventory.length) {
     const manifest = {
@@ -260,6 +292,8 @@ try {
   const options = (await packages.catalog()).options.filter(
     (o) => o.canGenerate && (o.assessmentType === 'TRYOUT' || levels.has(o.scopeId)),
   );
+  if (process.env.GENERATOR_EXPECTED_PACKAGE_COUNT)
+    assert.equal(options.length, Number(process.env.GENERATOR_EXPECTED_PACKAGE_COUNT));
   for (const option of options) {
     const group = await packages.prepare(fixture.actor, randomUUID(), {
       assessmentType: option.assessmentType,
@@ -276,19 +310,26 @@ try {
     assert.equal(p.status, 'DRAFT');
     assert.equal(p.n, option.requiredCount);
   }
-  const after = (
-    await owner`select (select count(*) from assessment_attempts)::int as attempts,(select count(*) from xp_ledger)::int as xp`
-  )[0];
   if (process.env.GENERATOR_V2_BROWSER === 'true') {
     const { verifyV2Browser } = await import('./test-generator-v2-browser.mjs');
-    await verifyV2Browser({ owner, client, fixture, service, packages });
+    await verifyV2Browser({
+      owner,
+      client,
+      fixture,
+      service,
+      packages,
+      contentPackages: new ContentPackagesService(
+        new ContentImportService(config),
+        new R2MediaStorage(config),
+      ),
+    });
   }
   // Approval revocation between compute and adoption must block a new save.
   const revoked = await service.prepare(fixture.actor, randomUUID(), catalog.items[0].id);
   await compute(revoked.id);
   await client`update configuration_approvals set revoked_at=clock_timestamp() where id=${catalog.items[0].id}`;
   await assert.rejects(() => service.save(fixture.actor, revoked.id));
-  assert.deepEqual(after, baseline);
+  assert.deepEqual(await historyState(), baseline);
   console.log(
     JSON.stringify({
       passed: true,
@@ -296,6 +337,8 @@ try {
       mediaCandidates: results.filter((r) => r.media).length,
       packages: options.length,
       historyAndXpUnchanged: true,
+      historyContentCompared: true,
+      historicalAttempts: baseline.assessment_attempts.length,
     }),
   );
 } finally {
