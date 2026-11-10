@@ -182,3 +182,11 @@ menggantikan grading, approval, coverage atau perlindungan histori.
 
 Comparison PASS/DRIFT, self-adjustment, validasi reuse config, laporan HTML baru,
 IRT Drill dan studi konfirmasi besar berada di luar target 24 jam ini.
+
+## Rekonsiliasi runtime ? Prioritas 2
+
+**ENGINEERING IMPLEMENTATION ? 10 November 2026:** blocker CRLF/LF di atas
+ditangani dengan manifest image v2 yang mem-pin profil Git LF secara exact.
+Profil JSON, image dan policy statistik tetap; manifest v1 tidak ditulis ulang.
+Lihat [runtime handoff v2](IRT_RUNTIME_HANDOFF_V2.md) dan laporan acceptance
+prioritas 2 untuk hasil integrasi serta batas bukti. Bukan approval produksi.

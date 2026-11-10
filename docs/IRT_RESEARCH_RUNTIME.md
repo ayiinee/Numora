@@ -457,3 +457,10 @@ Docker/PostgreSQL was interrupted during near-limit snapshot preparation.
 That run is explicitly partial. No inference of production suitability on a
 2 CPU/2 GiB VPS follows. See the Linux JSON report for exact source/image
 pins, measured host, artifact digests, resource adjustment and limitations.
+
+## Runtime handoff revision ? 10 November 2026
+
+Use `research/irt-linux-image-v2.json` for current exact LF profile commitment;
+image/profile v1 semantics and historical acceptance remain unchanged. See
+`docs/IRT_RUNTIME_HANDOFF_V2.md` for canonical delivery fixture acceptance.
+Production adoption, fallback and publication remain Main responsibilities.

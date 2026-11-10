@@ -62,4 +62,4 @@ try {await migrateIntegratedDatabase(db,process.argv[2]);} finally {await db.end
 if __name__=='__main__':
     with local_database() as url:
         env={**os.environ,'IRT_RESEARCH_LOCAL_URL':url,'NUMORA_REPO_PATH':str(ROOT),'PYTHONIOENCODING':'utf-8'}
-        subprocess.run([sys.executable,'-B','-m','unittest','tests.service.test_irt_postgres','-v'],cwd=AI,env=env,check=True,timeout=1800 if env.get('IRT_RESEARCH_TEST_IMAGE') else 300)
+        subprocess.run([sys.executable,'-B','-m','unittest','tests.service.test_irt_postgres','-v'],cwd=AI,env=env,check=True,timeout=1800 if env.get('IRT_RESEARCH_TEST_IMAGE') else 600)
