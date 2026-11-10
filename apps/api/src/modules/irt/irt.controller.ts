@@ -88,6 +88,11 @@ export class IrtController {
   adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.requests.adopt(request.adminId, id);
   }
+  @Post('research/requests/:id/adopt')
+  @HttpCode(200)
+  adoptResearchV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.adoptResearchV1(id);
+  }
   @Post('requests')
   @ApiHeader({ name: 'Idempotency-Key', required: true })
   @ApiCreatedResponse({ type: IrtRequestDto })

@@ -3,6 +3,7 @@ import { getDatabase } from '@tka/database';
 import {
   analysisRequestDetail,
   adoptTryoutArtifact,
+  adoptTryoutArtifactV1,
   IrtOrchestrationError,
   listAnalysisRequests,
   prepareTryoutAnalysis,
@@ -41,6 +42,9 @@ export class IrtRequestsService {
       await adoptTryoutArtifact(getDatabase().client, id, actor);
       return analysisRequestDetail(getDatabase().client, id);
     });
+  }
+  adoptResearchV1(id: string) {
+    return this.execute(() => adoptTryoutArtifactV1(getDatabase().client, id));
   }
   detail(id: string) {
     return this.execute(() => analysisRequestDetail(getDatabase().client, id));
