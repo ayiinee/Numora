@@ -1,3 +1,4 @@
+/* eslint-disable @typescript-eslint/no-explicit-any -- contract JSON is validated at this boundary. */
 import type { Sql, TransactionSql } from 'postgres';
 
 type Json = Record<string, any>;
