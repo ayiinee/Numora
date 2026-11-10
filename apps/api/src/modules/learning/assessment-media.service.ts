@@ -12,6 +12,7 @@ import {
   attemptItems,
   getDatabase,
   questionVersions,
+  tryoutBatches,
   type ContentAsset,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
@@ -46,6 +47,13 @@ export class AssessmentMediaService {
       );
     if (!row) throw new NotFoundException({ code: 'ASSESSMENT_MEDIA_NOT_FOUND' });
     const attempt = row.attempt;
+    if (phase === 'REVIEW' && attempt.tryoutBatchId) {
+      const [batch] = await getDatabase()
+        .db.select({ title: tryoutBatches.adminTitle })
+        .from(tryoutBatches)
+        .where(eq(tryoutBatches.id, attempt.tryoutBatchId));
+      if (batch?.title) throw new ForbiddenException({ code: 'ASSESSMENT_REVIEW_NOT_AVAILABLE' });
+    }
     if (
       phase === 'REVIEW' &&
       (attempt.status !== 'GRADED' ||

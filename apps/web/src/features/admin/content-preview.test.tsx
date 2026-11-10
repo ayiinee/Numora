@@ -54,6 +54,7 @@ vi.mock('@/features/onboarding/auth', () => ({
   useAuth: () => ({ state: auth.state, logout: vi.fn(), refresh: vi.fn() }),
 }));
 vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
   usePathname: () => '/admin/content/imports',
   useRouter: () => ({ replace: vi.fn() }),
 }));

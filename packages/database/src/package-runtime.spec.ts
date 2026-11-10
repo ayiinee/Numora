@@ -1,5 +1,18 @@
 import { describe, expect, it } from 'vitest';
 import { allowSyntheticContent, developmentProjectRef } from './package-runtime.js';
+import { pretestDistributionEligibility } from './package-runtime.js';
+import { assessmentPackages } from './schema/assessments.js';
+import { drizzle } from 'drizzle-orm/postgres-js';
+
+describe('pretest distribution query', () => {
+  it('qualifies the outer package ID in SELECT expressions and correlated subqueries', () => {
+    const query = drizzle.mock().select({ eligible: pretestDistributionEligibility() })
+      .from(assessmentPackages).toSQL();
+    expect(query.sql).toContain('public.package_can_distribute("assessment_packages"."id")');
+    expect(query.sql.match(/i\.package_id="assessment_packages"\."id"/g)).toHaveLength(3);
+    expect(query.sql).not.toContain('i.package_id="id"');
+  });
+});
 
 describe('synthetic content isolation', () => {
   const dev = {

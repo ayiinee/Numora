@@ -37,6 +37,7 @@ import { GeneratorImportWorkflow } from './generator-import-workflow';
 import { ADMIN_PAGE_SIZE } from './pagination';
 import { adminOffset, useAdminUrl } from './admin-url';
 import { ImportNavigation } from './content-import-navigation';
+import { PackageAvailability } from './package-availability';
 export const ContentImportScreen = withAdminWorkspace(ContentImportScreenProtected, 'content');
 function ContentImportScreenProtected({
   generatorPackageId,
@@ -101,6 +102,7 @@ function UploadContent() {
   const destination = (): UploadDestinationDto => ({ assessmentType: usage, title, ...scope });
   const [confirmed, setConfirmed] = useState(false),
     [releaseDate, setReleaseDate] = useState('');
+  const [scheduled, setScheduled] = useState(false);
   const [history, setHistory] = useState<UploadListDto>({ items: [], total: 0 }),
     [historyLoading, setHistoryLoading] = useState(false),
     [historyError, setHistoryError] = useState('');
@@ -164,6 +166,7 @@ function UploadContent() {
     commitBody.current = null;
     setConfirmed(false);
     setReleaseDate('');
+    setScheduled(false);
     const next = await getUpload(token, id);
     if (!active()) return;
     apply(next);
@@ -250,6 +253,7 @@ function UploadContent() {
     setScope({ chapterId: null, subchapterId: null, levelId: null });
     setConfirmed(false);
     setReleaseDate('');
+    setScheduled(false);
     setDirty(false);
     setError('');
     mediaCache.current.clear();
@@ -274,6 +278,7 @@ function UploadContent() {
       setTitle('');
       setConfirmed(false);
       setReleaseDate('');
+      setScheduled(false);
       mediaCache.current.clear();
       saveKey.current = null;
       commitBody.current = null;
@@ -316,7 +321,7 @@ function UploadContent() {
     !releaseDate || Number.isFinite(new Date(`${releaseDate}:00+07:00`).getTime());
   return (
     <AdminFrame
-      title="Impor soal"
+      title="Tambah konten"
       description="Upload, periksa soal, lalu pilih jenis paket dan judulnya."
       icon="book"
       management
@@ -543,6 +548,40 @@ function UploadContent() {
                 {step === 3 && (
                   <section className="upload-panel">
                     <h2>3. Pemetaan dan validasi</h2>
+                    {usage === 'TRYOUT' && (
+                      <div className="upload-actions">
+                        <label>
+                          Waktu rilis
+                          <select
+                            value={scheduled ? 'SCHEDULED' : 'NOW'}
+                            disabled={busy}
+                            onChange={(event) => {
+                              setScheduled(event.target.value === 'SCHEDULED');
+                              setReleaseDate('');
+                            }}
+                          >
+                            <option value="NOW">Rilis sekarang</option>
+                            <option value="SCHEDULED">Jadwalkan</option>
+                          </select>
+                        </label>
+                        {scheduled && (
+                          <label>
+                            Tanggal rilis (WIB)
+                            <input
+                              type="datetime-local"
+                              value={releaseDate}
+                              onChange={(event) => setReleaseDate(event.target.value)}
+                              disabled={busy}
+                            />
+                          </label>
+                        )}
+                        <p>
+                          Jadwal diterapkan setelah konfirmasi publikasi. Batch tujuh hari kurang
+                          satu menit, pengerjaan sepuluh menit. Paket yang baru dirilis dapat
+                          menggantikan pilihan paket aktif sebelumnya.
+                        </p>
+                      </div>
+                    )}
                     <p>
                       {rows.length}/{expected} soal.{' '}
                       {rows.length === expected
@@ -812,6 +851,14 @@ function UploadContent() {
                 {step === 4 && p && (
                   <section className="upload-panel">
                     <h2>4. {p.status === 'DRAFT' ? 'Periksa dan Publish' : 'Detail paket'}</h2>
+                    <PackageAvailability detail={p} />
+                    <p>
+                      <Link
+                        href={`/admin/assessments/${p.assessmentType.toLowerCase()}/${encodeURIComponent(p.id)}`}
+                      >
+                        Buka workspace paket dan akses siswa
+                      </Link>
+                    </p>
                     <dl className="upload-package-summary">
                       <div>
                         <dt>Judul</dt>
@@ -886,26 +933,41 @@ function UploadContent() {
                           )}
                         </details>
                         {p.assessmentType === 'TRYOUT' && (
-                          <label>
-                            Tanggal dan jam rilis Tryout (WIB, opsional)
-                            <input
-                              type="datetime-local"
-                              value={releaseDate}
-                              aria-invalid={!!releaseDate && !releaseValid}
+                          <div>
+                            <label htmlFor="upload-tryout-release-mode">Waktu rilis Tryout</label>
+                            <select
+                              id="upload-tryout-release-mode"
+                              value={scheduled ? 'SCHEDULED' : 'NOW'}
                               disabled={busy}
-                              onChange={(e) => setReleaseDate(e.target.value)}
-                            />
-                            <Button disabled={busy} onClick={() => setReleaseDate('')}>
-                              Gunakan waktu sekarang
-                            </Button>
+                              onChange={(event) => {
+                                setScheduled(event.target.value === 'SCHEDULED');
+                                setReleaseDate('');
+                              }}
+                            >
+                              <option value="NOW">Rilis sekarang</option>
+                              <option value="SCHEDULED">Jadwalkan</option>
+                            </select>
+                            {scheduled && (
+                              <label>
+                                Tanggal dan jam rilis Tryout (WIB)
+                                <input
+                                  type="datetime-local"
+                                  value={releaseDate}
+                                  aria-invalid={!!releaseDate && !releaseValid}
+                                  disabled={busy}
+                                  onChange={(e) => setReleaseDate(e.target.value)}
+                                />
+                              </label>
+                            )}
                             <small>
-                              Kosongkan untuk Publish sekarang. Durasi 10 menit; batch tutup 7 hari
-                              setelah rilis.
+                              Pilih Rilis sekarang atau isi jadwal rilis. Durasi 10 menit; batch
+                              tutup tujuh hari kurang satu menit setelah rilis. Paket baru yang
+                              dirilis dapat menggantikan paket aktif sebelumnya.
                             </small>
                             {releaseDate && !releaseValid && (
                               <small role="alert">Isi tanggal dan jam yang valid.</small>
                             )}
-                          </label>
+                          </div>
                         )}
                         <label className="upload-confirm">
                           <input
@@ -925,7 +987,8 @@ function UploadContent() {
                               busy ||
                               !ready ||
                               !confirmed ||
-                              (p.assessmentType === 'TRYOUT' && !releaseValid)
+                              (p.assessmentType === 'TRYOUT' &&
+                                (!releaseValid || (scheduled && !releaseDate)))
                             }
                             onClick={() =>
                               void run(async () => {

@@ -82,7 +82,13 @@ const attention = [
     action: 'Tinjau request',
   },
 ];
-export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) {
+export function AnalyticsDashboard({
+  metrics,
+  canManageContent = false,
+}: {
+  metrics: AnalyticsMetric[];
+  canManageContent?: boolean;
+}) {
   const byKey = new Map(metrics.map((metric) => [metric.key, metric]));
   const consumed = new Set<string>();
   const kpis = primary.filter((item) => byKey.has(item.key));
@@ -139,8 +145,9 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                 </dt>
                 <dd>
                   <MetricValue metric={metric} />
-                  <p>{metricDescriptions[item.key]}</p>
-                  {item.key === 'overdueReleases' && <Link href="/admin/irt">Periksa rilis</Link>}
+                  {item.key === 'overdueReleases' && canManageContent && (
+                    <Link href="/admin/irt">Periksa rilis</Link>
+                  )}
                 </dd>
               </div>
             );
@@ -157,7 +164,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
               <header>
                 <div>
                   <h2 id="analytics-activity-title">Pengerjaan belajar</h2>
-                  <p>Jumlah pengerjaan kumulatif, bukan jumlah siswa unik.</p>
                 </div>
                 <span className="analytics-context">Kumulatif</span>
               </header>
@@ -175,11 +181,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                   </section>
                 ))}
               </div>
-              <p className="analytics-note">
-                Semua batang memakai skala yang sama, dimulai dari nol. Selesai termasuk dalam
-                dimulai; keduanya tidak dijumlahkan. Selesai berarti pengerjaan berstatus GRADED,
-                bukan tingkat penguasaan materi.
-              </p>
             </section>
           )}
           {followups.length > 0 && (
@@ -190,7 +191,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
               <header>
                 <div>
                   <h2 id="analytics-attention-title">Perlu ditinjau</h2>
-                  <p>Periksa konteks sebelum mengambil tindakan.</p>
                 </div>
               </header>
               <ul>
@@ -200,15 +200,10 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                       <h3>{item.label}</h3>
                       <MetricValue metric={byKey.get(item.key)} />
                     </div>
-                    <p>{item.description}</p>
-                    <Link href={item.href}>{item.action}</Link>
+                    {canManageContent && <Link href={item.href}>{item.action}</Link>}
                   </li>
                 ))}
               </ul>
-              <p className="analytics-note">
-                Kategori dapat saling terkait. Angka di sini tidak dijumlahkan menjadi total
-                masalah.
-              </p>
             </section>
           )}
         </div>
@@ -220,7 +215,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
               <header>
                 <div>
                   <h2 id="analytics-students-title">Keanggotaan siswa</h2>
-                  <p>Akun aktif menurut keanggotaan kelas yang tercatat.</p>
                 </div>
               </header>
               <ComparisonRows
@@ -233,10 +227,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                   },
                 ]}
               />
-              <p className="analytics-note">
-                Mandiri berarti tidak memiliki keanggotaan aktif. Satu akun tetap dihitung satu kali
-                pada kelompoknya.
-              </p>
             </section>
           )}
           {hasCoverage && (
@@ -244,7 +234,6 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
               <header>
                 <div>
                   <h2 id="analytics-coverage-title">Cakupan paket Drill</h2>
-                  <p>Level dengan paket Drill aktif dibanding seluruh level tercatat.</p>
                 </div>
               </header>
               <div className="analytics-coverage-value">
@@ -267,11 +256,7 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                       : 'Cakupan belum dapat dihitung karena data belum tersedia.'}
                 </p>
               )}
-              <p className="analytics-note">
-                Hanya paket Drill terbit non-demo. Cakupan menunjukkan ketersediaan paket, bukan
-                kualitas atau kelulusan siswa.
-              </p>
-              <Link className="analytics-panel-link" href="/admin/content?view=drill">
+              <Link className="analytics-panel-link" href="/admin/assessments/drill">
                 Kelola paket Drill
               </Link>
             </section>
@@ -290,12 +275,7 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
                     .filter((metric) => metricDomain(metric) === domain)
                     .map((metric) => (
                       <div key={metric.key} data-metric={metric.key}>
-                        <dt>
-                          {metricLabels[metric.key] ?? metric.label}
-                          {metricDescriptions[metric.key] && (
-                            <small>{metricDescriptions[metric.key]}</small>
-                          )}
-                        </dt>
+                        <dt>{metricLabels[metric.key] ?? metric.label}</dt>
                         <dd>
                           <MetricValue metric={metric} />
                         </dd>
@@ -308,7 +288,25 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
         </section>
       )}
       <details className="analytics-definitions">
-        <summary>Cara membaca dashboard</summary>
+        <summary>
+          <Icon name="info" /> Info metrik
+        </summary>
+        <dl>
+          {[...kpis.map((item) => ({ key: item.key, label: item.label })), ...other]
+            .filter((metric) => metricDescriptions[metric.key])
+            .map((metric) => (
+              <div key={metric.key}>
+                <dt>{metricLabels[metric.key] ?? metric.label}:</dt>
+                <dd>{metricDescriptions[metric.key]}</dd>
+              </div>
+            ))}
+          {followups.map((item) => (
+            <div key={item.key}>
+              <dt>{item.label}:</dt>
+              <dd>{item.description}</dd>
+            </div>
+          ))}
+        </dl>
         <ul>
           <li>
             Angka mengikuti data tersimpan saat pembaruan. Dashboard ini tidak menyediakan filter
@@ -326,6 +324,31 @@ export function AnalyticsDashboard({ metrics }: { metrics: AnalyticsMetric[] }) 
             Nilai nol adalah data yang sah. Tidak tersedia berarti sumber belum dapat dibaca; angka
             tersebut tidak diganti dengan nol.
           </li>
+          {activities.length > 0 && (
+            <li>
+              Pengerjaan dihitung kumulatif, bukan siswa unik. Semua batang memakai skala yang sama
+              dari nol. Selesai berarti GRADED dan termasuk dalam dimulai; keduanya tidak
+              dijumlahkan atau dianggap sebagai penguasaan materi.
+            </li>
+          )}
+          {followups.length > 0 && (
+            <li>
+              Kategori tindak lanjut dapat saling terkait dan tidak dijumlahkan. Penanganan konten
+              dan hasil dilakukan oleh Admin Content atau Super Admin.
+            </li>
+          )}
+          {hasStudents && (
+            <li>
+              Mandiri berarti tanpa keanggotaan kelas aktif. Satu akun aktif dihitung sekali pada
+              kelompoknya.
+            </li>
+          )}
+          {hasCoverage && (
+            <li>
+              Cakupan Drill membandingkan level dengan paket terbit non-demo terhadap seluruh level
+              tercatat. Ini menunjukkan ketersediaan paket, bukan kualitas atau kelulusan.
+            </li>
+          )}
         </ul>
       </details>
     </>

@@ -321,18 +321,23 @@ for (const width of [320, 768, 1440]) {
       width < 960
         ? page.locator('#mobile-menu')
         : page.getByRole('navigation', { name: 'Navigasi Ruang admin' });
-    for (const name of ['Ringkasan', 'Analytics'])
+    for (const name of ['Ringkasan', 'Dashboard'])
       await expect(navigation.getByRole('link', { name, exact: true })).toHaveCount(0);
-    for (const name of ['Sekolah & credential', 'Pengguna & kelas'])
-      await expect(navigation.getByRole('link', { name, exact: true })).toBeVisible();
+    await expect(
+      navigation.getByRole('link', { name: 'Sekolah & verifikasi guru', exact: true }),
+    ).toBeVisible();
+    const peopleMenu = navigation.getByRole('button', { name: 'Pengguna & kelas', exact: true });
+    await expect(peopleMenu).toBeVisible();
     if (width < 960) {
-      await navigation.getByRole('link', { name: 'Pengguna & kelas', exact: true }).focus();
+      await peopleMenu.focus();
       await page.keyboard.press('Escape');
       await expect(page.locator('#mobile-menu')).toHaveCount(0);
       await expect(page.getByRole('button', { name: 'Menu navigasi' })).toBeFocused();
     }
     await page.goto('/admin/analytics');
-    await expect(page).toHaveURL(/\/admin\/schools$/);
+    await expect(page.getByRole('main').getByRole('alert')).toContainText(
+      'Akses Dashboard Admin diperlukan.',
+    );
     expect(requests.some((path) => path === 'admin/analytics')).toBe(false);
     await page.goto('/admin/operations');
     await expect(page.getByRole('button', { name: 'Lihat detail', exact: true })).toBeVisible();
@@ -365,7 +370,7 @@ test('Content only loads limited structure with counts and no individual records
   await expect(page.getByRole('note')).toContainText('Akses baca saja');
   await expect(page.getByText('2 tersedia', { exact: true })).toBeVisible();
   await expect(
-    page.getByRole('button', { name: /buat|edit|generate|regenerate|ban/i }),
+    page.getByRole('button', { name: /\b(?:buat|edit|generate|regenerate|ban)\b/i }),
   ).toHaveCount(0);
   await page.screenshot({ path: '../../.tmp/admin-content-permissions.png', fullPage: true });
   await page.getByRole('button', { name: 'Lihat kelas sekolah' }).click();

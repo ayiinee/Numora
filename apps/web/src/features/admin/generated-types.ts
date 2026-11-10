@@ -1,6 +1,24 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
+export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
+
+export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
+
+export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; };
+
+export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; };
+
+export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
+
+export type SaveTryoutBatchDto = { "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
+
+export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; };
+
+export type TryoutBatchOptionsDto = { "packages": (TryoutBatchPackageDto)[]; "schools": (StudentTryoutSchoolDto)[]; "packageTotal": number; "schoolTotal": number; };
+
+export type StudentTryoutSchoolDto = { "schoolId": string; "schoolName": string; };
+
 export type ImportBodyDto = { "target"?: PackageTargetDto; "expectedSourceVersionId"?: string; "revisionReason"?: string; "sourceNamespace": string; "questions": (Record<string, unknown>)[]; };
 
 export type UploadSummaryDto = { "id": string; "fileName": string; "createdAt": string; "actorName": string; "revision": number; "state": string; "status": string; "questionCount": number; "validationResult"?: string; "title": string | null; "assessmentType": string | null; "packageId": string | null; "error": string | null; };
@@ -33,15 +51,19 @@ export type PublishContentPackageDto = { "confirmed"?: true; "expectedRevision":
 
 export type ArchiveContentPackageDto = { "expectedRevision": number; };
 
+export type PrepareLegacyPretestDto = { "expectedRevision": number; "source": PackageSourceDto; };
+
+export type PackageAvailabilityDto = { "state": "DRAFT" | "BLOCKED" | "SCHEDULED" | "AVAILABLE" | "READY_FOR_BATCH" | "CLOSED" | "ARCHIVED"; "blockers": (string)[]; "checkedAt": string; };
+
 export type PackageApprovalDto = { "reference": string; "approvedAt": string; };
 
 export type UpdateContentPackageDto = { "expectedRevision": number; "name": string; "questionVersionIds": (string)[]; };
 
-export type ContentPackageDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
+export type ContentPackageDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; };
 
 export type ContentPackagesDto = { "items": (ContentPackageDto)[]; "total": number; };
 
-export type ContentPackageDetailDto = { "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
+export type ContentPackageDetailDto = { "blueprintVersionId"?: string | null; "scoringPolicyVersionId"?: string | null; "frozenAt"?: string | null; "releaseAt"?: string | null; "closeAt"?: string | null; "availability"?: PackageAvailabilityDto; "origin"?: "IMPORT" | "LEGACY_MANUAL"; "legacyPreparation"?: "CONTINUE_IMPORT" | "NEW_VERSION" | null; "curriculumApproval"?: PackageApprovalDto | null; "id": string; "familyCode": string; "packageVersion": number; "name": string; "assessmentType": "DRILL" | "PRETEST" | "TRYOUT"; "contentRevision": number; "status": string; "isDemo": boolean; "source": PackageSourceDto | null; "chapterId": string | null; "levelId": string | null; "chapterCode": string | null; "chapterName": string | null; "subchapterCode": string | null; "subchapterName": string | null; "levelNumber": number | null; "items": (ContentPackageItemDto)[]; "readiness": PackageValidationDto; "distribution": (ContentDistributionDto)[]; };
 
 export type ContentPackageItemDto = { "questionVersionId": string; "questionId": string; "displayOrder": number; "usageType": "DRILL" | "PRETEST" | "TRYOUT" | null; "contentStatus": string; "reviewedAt": string | null; "reviewedByUserId": string | null; "question": ExcelQuestionDto | null; };
 

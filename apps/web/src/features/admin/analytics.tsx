@@ -1,9 +1,7 @@
 'use client';
-import { useEffect } from 'react';
-import { useRouter } from 'next/navigation';
 import { Button } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
-import { adminCanReadAnalytics } from './admin-access';
+import { adminCanAccess, adminCanReadAnalytics } from './admin-access';
 import { AdminFrame, AdminLoading, AdminMessage } from './admin-presentation';
 import { AnalyticsDashboard } from './analytics-dashboard';
 import { metricNumber, snapshotTime } from './analytics-model';
@@ -11,31 +9,13 @@ import { useAnalyticsSnapshot } from './analytics-query';
 
 export function AdminAnalyticsScreen() {
   const { state } = useAuth();
-  const router = useRouter();
   const profile = state.status === 'ready' ? state.profile : null;
-  const redirectTo =
-    profile?.role === 'ADMIN' && profile.status === 'ACTIVE'
-      ? profile.adminRole === 'CONTENT_DATA_MODERATION'
-        ? '/admin/content'
-        : profile.adminRole === 'OPERATIONS'
-          ? '/admin/schools'
-          : null
-      : null;
-  useEffect(() => {
-    if (redirectTo) router.replace(redirectTo);
-  }, [redirectTo, router]);
-  if (redirectTo) return null;
   return (
-    <AdminFrame
-      title="Analytics"
-      description="Pantau aktivitas belajar, kesiapan konten, dan tindak lanjut operasional."
-      icon="chart"
-      management
-    >
+    <AdminFrame title="Dashboard" description="" icon="chart" management minimalHeader>
       {state.status === 'loading' ? (
         <AdminLoading message="Memeriksa akses..." />
       ) : !adminCanReadAnalytics(profile) || state.status !== 'ready' ? (
-        <AdminMessage error message="Akses analytics Admin diperlukan." login />
+        <AdminMessage error message="Akses Dashboard Admin diperlukan." login />
       ) : (
         <AnalyticsPanel
           key={JSON.stringify([
@@ -44,65 +24,60 @@ export function AdminAnalyticsScreen() {
             state.profile.capabilities,
           ])}
           token={state.session.access_token}
+          canManageContent={adminCanAccess(profile, 'content')}
         />
       )}
     </AdminFrame>
   );
 }
-function AnalyticsPanel({ token }: { token: string }) {
+function AnalyticsPanel({ token, canManageContent }: { token: string; canManageContent: boolean }) {
   const query = useAnalyticsSnapshot(token);
   if (query.denied)
-    return <AdminMessage error message={query.error ?? 'Akses analytics telah berubah.'} login />;
+    return <AdminMessage error message={query.error ?? 'Akses Dashboard telah berubah.'} login />;
   const data = query.data;
   const unavailable = data?.metrics.filter((metric) => metricNumber(metric) === null).length ?? 0;
   return (
     <div className="admin-analytics-workspace">
       <div className="analytics-toolbar">
-        <div>
-          <span className="analytics-snapshot-label">Snapshot data tersimpan</span>
-          <p>
-            {data ? (
-              <time dateTime={data.generatedAt}>{snapshotTime(data.generatedAt)}</time>
-            ) : (
-              'Belum ada snapshot'
-            )}
-            {data && query.error && <strong className="analytics-stale">Data sebelumnya</strong>}
-          </p>
-        </div>
+        <p className="analytics-updated">
+          {data && <span>Diperbarui</span>}
+          {data ? (
+            <time dateTime={data.generatedAt}>{snapshotTime(data.generatedAt)}</time>
+          ) : (
+            'Belum ada data'
+          )}
+          {data && query.error && <strong className="analytics-stale">Data sebelumnya</strong>}
+        </p>
         <Button
           variant="secondary"
           loading={query.loading}
           disabled={query.loading}
           onClick={query.retry}
         >
-          Perbarui analytics
+          Perbarui
         </Button>
       </div>
       {query.error && <AdminMessage error message={query.error} retry={query.retry} />}
       {!data ? (
         query.loading ? (
-          <AdminLoading message="Memuat analytics..." />
+          <AdminLoading message="Memuat Dashboard..." />
         ) : null
       ) : (
         <>
           {query.loading && (
             <p className="analytics-feedback" role="status">
-              Memperbarui data. Snapshot sebelumnya tetap ditampilkan sampai pembaruan selesai.
+              Memperbarui data…
             </p>
           )}
           {unavailable > 0 && (
             <p className="analytics-feedback is-warning" role="status">
-              {unavailable} metrik belum tersedia. Nilai yang belum dapat dibaca tidak diganti
-              dengan nol.
+              {unavailable} metrik belum tersedia.
             </p>
           )}
           {!data.metrics.length ? (
-            <AdminMessage
-              message="Belum ada metrik analytics yang dikirim oleh sumber data."
-              retry={query.retry}
-            />
+            <AdminMessage message="Belum ada data Dashboard." retry={query.retry} />
           ) : (
-            <AnalyticsDashboard metrics={data.metrics} />
+            <AnalyticsDashboard metrics={data.metrics} canManageContent={canManageContent} />
           )}
         </>
       )}

@@ -102,7 +102,7 @@ export class PretestService {
           .where(eq(assessmentBlueprintVersions.id, p.blueprintVersionId))
       : [];
     const definition = blueprint?.definition as { chapterId?: string } | undefined;
-    const publicationBlockers = [...reviewBlockers, 'SHARED_PACKAGE_PUBLISHER_REQUIRED'];
+    const publicationBlockers = [...reviewBlockers, 'PRETEST_CANONICAL_INTAKE_REQUIRED'];
     if (!p.manifestDigest) publicationBlockers.push('PRETEST_REVIEW_REQUIRED');
     if (!blueprint || !this.supportedBlueprint(blueprint) || definition?.chapterId !== p.chapterId)
       publicationBlockers.push('APPROVED_PRETEST_BLUEPRINT_REQUIRED');
@@ -308,7 +308,7 @@ export class PretestService {
     throw new ConflictException({
       code: 'PRETEST_PUBLICATION_BLOCKED',
       detail:
-        'Paket Authoring lama tidak dipublikasikan di sini. Siapkan versi baru melalui unggah dan review pada Paket Pretest; versi yang sudah direview tetap terkunci.',
+        'Gunakan workspace Paket asesmen untuk menyiapkan impor, persetujuan dan publikasi melalui pipeline paket bersama. Paket lama tetap dipertahankan.',
       blockers: detail.publicationBlockers,
     });
   }
