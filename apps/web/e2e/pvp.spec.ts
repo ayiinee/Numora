@@ -110,6 +110,10 @@ test.beforeAll(async () => {
             recordEligible: false,
             endReason: 'FORFEIT',
             question: null,
+            players: snapshot.players.map((player) => ({
+              ...player,
+              result: player.studentId === selfId ? 'FORFEIT' : 'WIN',
+            })),
           };
         ack({ event: 'command:acknowledged', payload: { ok: true, state: snapshot } });
       },
@@ -391,8 +395,9 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByRole('button', { name: 'Menyerah', exact: true })).toBeVisible();
     await page.getByRole('button', { name: 'Menyerah', exact: true }).click();
     await page.getByRole('button', { name: 'Ya, keluar' }).click();
+    await expect(page.getByRole('heading', { name: 'Kamu kalah kali ini' })).toBeVisible();
     await expect(
-      page.getByRole('heading', { name: 'Duel berakhir karena menyerah' }),
+      page.getByText('Duel berakhir karena kamu keluar atau tidak tersambung kembali.'),
     ).toBeVisible();
     await expect(
       page.getByText('Pertandingan ini tidak berkontribusi pada leaderboard.'),

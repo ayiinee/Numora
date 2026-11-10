@@ -3,6 +3,9 @@ import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { useUnsavedWarning } from './use-unsaved-warning';
 import { AssessmentExitDialog } from './assessment-presentation';
 
+const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+
 beforeEach(() => {
   window.history.replaceState({ fixture: true }, '', '/student/drill/attempt');
   Object.defineProperties(HTMLDialogElement.prototype, {
@@ -23,8 +26,10 @@ beforeEach(() => {
 afterEach(() => {
   cleanup();
   vi.restoreAllMocks();
-  Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
-  Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+  if (originalShow) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShow);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
 });
 
 function Session({
