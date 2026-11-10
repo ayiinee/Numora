@@ -130,7 +130,7 @@ export async function setupImports(
 ) {
   const base = await setupGenerator(page, role);
   const state = {
-    uploads: Array.from({ length: 7 }, (_, n) => importUpload(n, mixed)),
+    uploads: Array.from({ length: 12 }, (_, n) => importUpload(n, mixed)),
     pack: importPackage(mixed),
     calls: [] as { method: string; path: string; key: string | undefined; body: unknown }[],
     failHistory: false,
@@ -174,7 +174,7 @@ export async function setupImports(
       if (query.get('assessmentType'))
         rows = rows.filter((item) => item.assessmentType === query.get('assessmentType'));
       const offset = Number(query.get('offset') ?? 0),
-        limit = Number(query.get('limit') ?? 5);
+        limit = Number(query.get('limit') ?? 10);
       return route.fulfill({
         json: { items: rows.slice(offset, offset + limit), total: rows.length },
       });

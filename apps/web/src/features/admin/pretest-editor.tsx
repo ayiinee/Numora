@@ -1,4 +1,6 @@
 'use client';
+
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { useEffect, useState, type ReactNode } from 'react';
 import { Button, Dialog } from '@tka/ui';
 import { apiRequest } from '@/lib/api';
@@ -60,7 +62,7 @@ export function PretestEditor({
     if (!chapter) return;
     let active = true;
     const params = new URLSearchParams({
-      limit: '5',
+      limit: String(ADMIN_PAGE_SIZE),
       offset: String(offset),
       usageType: 'PRETEST',
       status: 'READY',

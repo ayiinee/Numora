@@ -25,8 +25,9 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
     const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
     await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
     await publication.getByRole('button', { name: 'Tutup dialog' }).click();
-    await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
+    await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bisa dikerjakan' })).toBeVisible();
+    await page.getByRole('dialog').press('Escape');
     expect(fixture.calls.filter((call) => call.path.endsWith('/publish'))).toHaveLength(1);
     expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
       expectedRevision: 1,
@@ -62,14 +63,14 @@ test('Package filters, pagination, Back and reload preserve the selected context
   await setupAssessments(page);
   await page.goto('/admin/assessments?type=PRETEST&status=DRAFT');
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await expect(page).toHaveURL(/offset=5/);
-  await page.getByRole('link', { name: 'Pretest TEST 6', exact: true }).click();
-  await expect(page.getByRole('heading', { name: /Pretest TEST 6/ })).toBeVisible();
+  await expect(page).toHaveURL(/offset=10/);
+  await page.getByRole('link', { name: 'Pretest TEST 11', exact: true }).click();
+  await expect(page.getByRole('heading', { name: /Pretest TEST 11/ })).toBeVisible();
   await page.reload();
-  await expect(page.getByRole('heading', { name: /Pretest TEST 6/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: /Pretest TEST 11/ })).toBeVisible();
   await page.goBack();
-  await expect(page.getByRole('heading', { name: /Pretest TEST 6/ })).toHaveCount(0);
-  await expect(page).toHaveURL(/offset=5/);
+  await expect(page.getByRole('heading', { name: /Pretest TEST 11/ })).toHaveCount(0);
+  await expect(page).toHaveURL(/offset=10/);
 });
 
 test('Package load failure can be retried and an empty search explains the next action', async ({

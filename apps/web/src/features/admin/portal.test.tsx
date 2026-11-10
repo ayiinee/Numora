@@ -268,6 +268,7 @@ describe('internal Admin login', () => {
     await waitFor(() =>
       expect((screen.getByLabelText(/^Password/) as HTMLInputElement).value).toBe(''),
     );
+    expect(mocks.refresh).toHaveBeenCalledOnce();
   });
   it('waits for identity and handles a non-Admin account without offering signup', async () => {
     mocks.state = {
@@ -288,9 +289,12 @@ describe('internal Admin login', () => {
     ready('CONTENT_DATA_MODERATION', ['CONTENT_MANAGE']);
     const view = render(<AdminLoginScreen />);
     await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin'));
-    mocks.state = { status: 'error' };
+    mocks.state = { status: 'error', message: 'Koneksi ke server gagal. Coba lagi.' };
     view.rerender(<AdminLoginScreen />);
+    expect(screen.getByRole('alert').textContent).toBe('Koneksi ke server gagal. Coba lagi.');
     fireEvent.click(screen.getByRole('button', { name: 'Periksa lagi' }));
     expect(mocks.refresh).toHaveBeenCalledOnce();
+    fireEvent.click(screen.getByRole('button', { name: 'Ganti akun' }));
+    await waitFor(() => expect(mocks.logout).toHaveBeenCalledOnce());
   });
 });

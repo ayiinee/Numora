@@ -103,6 +103,7 @@ export function ContentPackageWorkspace({
   const [approvalReference, setApprovalReference] = useState('');
   const [approvalConfirmed, setApprovalConfirmed] = useState(false);
   const [publishConfirmed, setPublishConfirmed] = useState(false);
+  const [informationOpen, setInformationOpen] = useState<'access' | 'readiness' | null>(null);
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
@@ -1270,45 +1271,84 @@ export function ContentPackageWorkspace({
                 </div>
               </Dialog>
             </section>
-            <aside className="assessment-detail-sidebar" aria-label="Kesiapan dan publikasi paket">
-              <details className="assessment-student-access">
-                <summary>Akses siswa dan informasi versi</summary>
-                <PackageAvailability detail={detail} />
-              </details>
-              <details className="assessment-detail-checklist" open={!detail.readiness.canPublish}>
-                <summary>Syarat penerbitan paket</summary>
-                <p>
-                  Syarat ini berlaku untuk seluruh paket. Jumlah soal saja belum menunjukkan paket
-                  siap diterbitkan.
-                </p>
-                <ul className="monitoring-list">
-                  {detail.readiness.checks
-                    .filter((check) => check.code !== 'COUNT')
-                    .map((check) => (
-                      <li key={check.code}>
-                        <Badge variant={check.passed ? 'success' : 'warning'}>
-                          {check.passed ? 'Lolos' : 'Belum'}
-                        </Badge>{' '}
-                        {check.detail}
-                        {!check.passed && checklistActions[check.code] && (
-                          <p>{checklistActions[check.code]}</p>
-                        )}
-                      </li>
-                    ))}
-                </ul>
-                {!detail.readiness.canPublish && (
-                  <p role="alert">
-                    {detail.readiness.checks.filter((check) => !check.passed).length} syarat belum
-                    terpenuhi. Ikuti petunjuk pada baris bertanda <strong>Belum</strong>.
-                  </p>
+            <aside
+              className="assessment-detail-sidebar assessment-status-panels"
+              aria-label="Kesiapan dan publikasi paket"
+            >
+              <div className="assessment-information-actions">
+                <Button variant="secondary" onClick={() => setInformationOpen('access')}>
+                  <Icon name="users" width={18} height={18} /> Akses siswa
+                </Button>
+                <Button variant="secondary" onClick={() => setInformationOpen('readiness')}>
+                  <Icon name="clipboard" width={18} height={18} /> Syarat penerbitan
+                </Button>
+              </div>
+              <Dialog
+                open={informationOpen !== null}
+                onClose={() => setInformationOpen(null)}
+                title={
+                  informationOpen === 'access'
+                    ? 'Akses siswa dan informasi versi'
+                    : 'Syarat penerbitan paket'
+                }
+                className="admin-management-dialog assessment-information-dialog"
+              >
+                {informationOpen === 'access' ? (
+                  <PackageAvailability detail={detail} />
+                ) : (
+                  <section className="assessment-detail-checklist">
+                    <p>
+                      {detail.readiness.checks.filter((check) => check.passed).length} dari{' '}
+                      {detail.readiness.checks.length} syarat terpenuhi
+                    </p>
+                    <p>Status kelengkapan paket berdasarkan pemeriksaan sistem.</p>
+                    <ul className="assessment-publication-checks">
+                      {detail.readiness.checks.map((check) => (
+                        <li key={check.code}>
+                          <Icon
+                            name={check.passed ? 'check-circle' : 'info'}
+                            width={20}
+                            height={20}
+                          />
+                          <div>
+                            <Badge variant={check.passed ? 'success' : 'warning'} size="sm">
+                              {check.passed ? 'Lolos' : 'Belum'}
+                            </Badge>
+                            <p>
+                              {check.detail ||
+                                checklistActions[check.code] ||
+                                'Rincian syarat belum tersedia.'}
+                            </p>
+                            {!check.passed && check.detail && checklistActions[check.code] && (
+                              <small>{checklistActions[check.code]}</small>
+                            )}
+                          </div>
+                        </li>
+                      ))}
+                    </ul>
+                    {detail.readiness.checks.length === 0 && (
+                      <p className="assessment-checklist-empty">
+                        Rincian pemeriksaan belum tersedia. Buka Penerbitan untuk memeriksa kesiapan
+                        paket.
+                      </p>
+                    )}
+                    {!detail.readiness.canPublish &&
+                      detail.readiness.checks.some((check) => !check.passed) && (
+                        <p role="alert" className="assessment-checklist-note">
+                          {detail.readiness.checks.filter((check) => !check.passed).length} syarat
+                          belum terpenuhi. Ikuti petunjuk pada baris bertanda <strong>Belum</strong>
+                          .
+                        </p>
+                      )}
+                    {detail.curriculumApproval && (
+                      <p>
+                        Persetujuan tim kurikulum: {detail.curriculumApproval.reference} ·{' '}
+                        {new Date(detail.curriculumApproval.approvedAt).toLocaleString('id-ID')}
+                      </p>
+                    )}
+                  </section>
                 )}
-                {detail.curriculumApproval && (
-                  <p>
-                    Persetujuan tim kurikulum: {detail.curriculumApproval.reference} ·{' '}
-                    {new Date(detail.curriculumApproval.approvedAt).toLocaleString('id-ID')}
-                  </p>
-                )}
-              </details>
+              </Dialog>
               <Dialog
                 open={publicationOpen}
                 onClose={() => setPublicationOpen(false)}

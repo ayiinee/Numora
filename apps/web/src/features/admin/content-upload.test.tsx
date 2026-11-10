@@ -149,25 +149,25 @@ it('preserves the local preview and title after a stale revision instead of sile
   expect(getUpload).not.toHaveBeenCalled();
   expect(saveUpload).not.toHaveBeenCalled();
 });
-it('requests five upload history rows and resets pagination when filtering', async () => {
+it('requests ten upload history rows and resets pagination when filtering', async () => {
   vi.mocked(listUploads).mockImplementation(async (_token, query) => {
     const offset = Number(new URLSearchParams(query).get('offset'));
     return {
-      items: Array.from({ length: offset ? 1 : 5 }, (_, n) => ({
+      items: Array.from({ length: offset ? 1 : 10 }, (_, n) => ({
         ...fresh,
         id: `upload-${offset + n}`,
         fileName: `TEST-${offset + n}.xlsx`,
       })),
-      total: 6,
+      total: 11,
     };
   });
   render(<ContentImportScreen />);
   fireEvent.click(screen.getByRole('button', { name: 'Riwayat unggahan' }));
-  await screen.findByText('TEST-4.xlsx');
-  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('limit')).toBe('5');
+  await screen.findByText('TEST-9.xlsx');
+  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('limit')).toBe('10');
   fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
-  await screen.findByText('TEST-5.xlsx');
-  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('offset')).toBe('5');
+  await screen.findByText('TEST-10.xlsx');
+  expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('offset')).toBe('10');
   fireEvent.change(screen.getByLabelText('Cari file atau judul'), { target: { value: 'TEST' } });
   await waitFor(() =>
     expect(new URLSearchParams(vi.mocked(listUploads).mock.lastCall![1]).get('offset')).toBe('0'),

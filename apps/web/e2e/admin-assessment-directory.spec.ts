@@ -68,22 +68,22 @@ test('search, filters, pagination and list context survive detail reload and Bac
 }) => {
   await setupAssessments(page);
   await page.goto('/admin/assessments/pretest?status=DRAFT');
-  await expect(page.getByRole('table').getByRole('row')).toHaveCount(6);
+  await expect(page.getByRole('table').getByRole('row')).toHaveCount(11);
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await page.getByRole('link', { name: 'Pretest TEST 6', exact: true }).click();
-  await expect(page).toHaveURL(new RegExp(`/pretest/${id(9005)}\\?`));
-  await expect(page.getByRole('heading', { name: 'Pretest TEST 6', exact: true })).toBeVisible();
+  await page.getByRole('link', { name: 'Pretest TEST 11', exact: true }).click();
+  await expect(page).toHaveURL(new RegExp(`/pretest/${id(9010)}\\?`));
+  await expect(page.getByRole('heading', { name: 'Pretest TEST 11', exact: true })).toBeVisible();
   await page.reload();
   await page.getByRole('link', { name: /Kembali ke daftar/ }).click();
-  await expect(page).toHaveURL(/status=DRAFT&offset=5/);
-  await expect(page.getByRole('link', { name: 'Pretest TEST 6', exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/status=DRAFT&offset=10/);
+  await expect(page.getByRole('link', { name: 'Pretest TEST 11', exact: true })).toBeVisible();
   await page.getByLabel('Cari nama atau kode paket', { exact: true }).fill('TEST-PRE-6');
   await page.getByLabel('Cari nama atau kode paket', { exact: true }).press('Enter');
   await expect(page).not.toHaveURL(/offset=/);
   await expect(page.getByRole('table').getByRole('row')).toHaveCount(2);
   await expect(page.getByRole('link', { name: 'Pretest TEST 7', exact: true })).toBeVisible();
   await page.goBack();
-  await expect(page).toHaveURL(/offset=5/);
+  await expect(page).toHaveURL(/offset=10/);
   await expect(page.locator('.assessment-directory-filters')).toHaveCount(0);
   await page.goto('/admin/assessments/pretest?status=ARCHIVED');
   await expect(page.getByText(/Belum ada paket yang cocok/)).toBeVisible();
@@ -93,8 +93,8 @@ test('detail redirects the wrong kind, renames DRAFT, and never fetches a packag
   page,
 }) => {
   const { fixture } = await setupAssessments(page);
-  await page.goto(`/admin/assessments/pretest/${id(9100)}?offset=5`);
-  await expect(page).toHaveURL(new RegExp(`/tryout/${id(9100)}\\?offset=5`));
+  await page.goto(`/admin/assessments/pretest/${id(9100)}?offset=10`);
+  await expect(page).toHaveURL(new RegExp(`/tryout/${id(9100)}\\?offset=10`));
   await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
   await page.getByLabel('Nama paket', { exact: true }).fill('Renamed TEST');
   await page.getByRole('button', { name: 'Simpan nama', exact: true }).click();
@@ -109,7 +109,7 @@ test('detail redirects the wrong kind, renames DRAFT, and never fetches a packag
 
 test('a failed create retains fields and Cancel returns to the filtered list', async ({ page }) => {
   const { fixture } = await setupAssessments(page);
-  await page.goto('/admin/assessments/tryout/new?search=TEST&offset=5');
+  await page.goto('/admin/assessments/tryout/new?search=TEST&offset=10');
   await page.getByLabel('Judul paket').fill('TEST ONLY retained');
   await page.getByLabel('Kode keluarga paket').fill('TEST-RETAIN');
   await page.getByLabel('Kode sumber stabil').fill('TEST_ONLY');
@@ -123,7 +123,7 @@ test('a failed create retains fields and Cancel returns to the filtered list', a
   await expect(page.getByLabel('Judul paket')).toHaveValue('TEST ONLY retained');
   fixture.status = 200;
   await page.getByRole('link', { name: 'Batal', exact: true }).click();
-  await expect(page).toHaveURL(/tryout\?search=TEST&offset=5/);
+  await expect(page).toHaveURL(/tryout\?search=TEST&offset=10/);
 });
 
 test('directory handles missing availability and is usable on narrow screens', async ({ page }) => {
@@ -212,7 +212,7 @@ test('published packages expose archive only inside detail and Pretest has no fi
     publication.getByText('Paket diarsipkan. Histori pengerjaan tetap dipertahankan.'),
   ).toBeVisible();
   await publication.getByRole('button', { name: 'Tutup dialog' }).click();
-  await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
+  await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Paket diarsipkan' })).toBeVisible();
 });
 
@@ -234,6 +234,15 @@ test('detail prioritizes questions and keeps release controls usable across view
   await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
   await expect(page.getByLabel('Nama paket', { exact: true })).toBeVisible();
   await page.getByRole('dialog').press('Escape');
+  await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
+  await page.getByText('Informasi teknis versi paket', { exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Ketersediaan untuk siswa' })).toBeVisible();
+  await page.getByRole('dialog').press('Escape');
+  await expect(page.getByRole('button', { name: 'Akses siswa', exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Syarat penerbitan', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Syarat penerbitan paket' })).toBeVisible();
+  await expect(page.locator('.assessment-publication-checks > li')).toHaveCount(1);
+  await page.getByRole('dialog').press('Escape');
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -246,7 +255,7 @@ test('detail prioritizes questions and keeps release controls usable across view
     await expect(
       page.getByRole('heading', { name: 'Lengkapi paket sebelum diterbitkan' }),
     ).toBeVisible();
-    await expect(page.getByText('0/20 soal.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText('0/20 soal.', { exact: true })).toBeVisible();
     await page.getByRole('dialog').press('Escape');
     await page.screenshot({
       path: test.info().outputPath('detail-' + width + '.png'),
@@ -364,7 +373,7 @@ test('navbar breadcrumbs link back to the assessment directory with list context
   page,
 }) => {
   await setupAssessments(page);
-  await page.goto('/admin/assessments/pretest/' + id(9000) + '?search=TEST&offset=5');
+  await page.goto('/admin/assessments/pretest/' + id(9000) + '?search=TEST&offset=10');
   await expect(page.getByRole('heading', { name: 'Pretest TEST 1', exact: true })).toBeVisible();
   const nav = page.locator('.admin-navbar-breadcrumb');
   await expect(nav.getByRole('link', { name: 'Ruang admin', exact: true })).toHaveAttribute(
@@ -373,6 +382,6 @@ test('navbar breadcrumbs link back to the assessment directory with list context
   );
   await expect(nav.locator('[aria-current="page"]')).toHaveText('Detail paket');
   await nav.getByRole('link', { name: 'Pretest', exact: true }).click();
-  await expect(page).toHaveURL(/pretest\?search=TEST&offset=5$/);
+  await expect(page).toHaveURL(/pretest\?search=TEST&offset=10$/);
   await expect(nav.locator('[aria-current="page"]')).toHaveText('Pretest');
 });

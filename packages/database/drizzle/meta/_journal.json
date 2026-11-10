@@ -484,6 +484,27 @@
       "when": 1794304800002,
       "tag": "0068_irt_delivery_authorization_boundary",
       "breakpoints": true
+    },
+    {
+      "idx": 69,
+      "version": "7",
+      "when": 1794304800003,
+      "tag": "0069_tryout_draft_schedule_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 70,
+      "version": "7",
+      "when": 1794308400000,
+      "tag": "0070_tryout_live_delegations",
+      "breakpoints": true
+    },
+    {
+      "idx": 71,
+      "version": "7",
+      "when": 1794312000000,
+      "tag": "0071_tryout_extend_open_batch",
+      "breakpoints": true
     }
   ]
 }

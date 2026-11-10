@@ -1,4 +1,6 @@
 'use client';
+
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { useCallback, useEffect, useState } from 'react';
 import Link from 'next/link';
 import { Button } from '@tka/ui';
@@ -199,7 +201,7 @@ function QuestionRows({
           })}
         </ol>
       )}
-      {ids.length > 5 && (
+      {ids.length > ADMIN_PAGE_SIZE && (
         <div className="pretest-order-footer">
           <span>
             {page.pagination.offset + 1}–{page.pagination.offset + page.items.length} dari{' '}

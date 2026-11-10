@@ -120,17 +120,17 @@ test('bank filters apply explicitly with trimmed source and reset server paginat
   await page.getByRole('button', { name: /^Filter soal/ }).click();
   await page.getByLabel('Status versi', { exact: true }).selectOption('READY');
   await page.getByLabel('Sumber soal', { exact: true }).fill('  Tryout 1  ');
-  expect(assessment.calls.at(-1)?.query).toContain('offset=5');
+  expect(assessment.calls.at(-1)?.query).toContain('offset=10');
   await page.getByRole('button', { name: 'Terapkan filter', exact: true }).click();
   await expect(page.locator('.assessment-question-list > li')).toHaveCount(1);
   expect(Object.fromEntries(new URLSearchParams(assessment.calls.at(-1)!.query))).toMatchObject({
     offset: '0',
     status: 'READY',
     source: 'Tryout 1',
-    limit: '5',
+    limit: '10',
   });
   await page.getByRole('button', { name: 'Reset filter', exact: true }).click();
-  await expect(page.locator('.assessment-question-list > li')).toHaveCount(5);
+  await expect(page.locator('.assessment-question-list > li')).toHaveCount(10);
   await expect(page.getByLabel('Sumber soal', { exact: true })).toHaveValue('');
 });
 
@@ -291,7 +291,7 @@ test('bank errors and empty filters offer a clear recovery path', async ({ page 
   });
   assessment.failStatus = 0;
   await page.getByRole('button', { name: 'Muat ulang data' }).click();
-  await expect(page.locator('.assessment-question-list > li')).toHaveCount(5);
+  await expect(page.locator('.assessment-question-list > li')).toHaveCount(10);
   await page.getByRole('button', { name: /^Filter soal/ }).click();
   await page.getByLabel('Sumber soal', { exact: true }).fill('Tidak ada sumber ini');
   await page.getByRole('button', { name: 'Terapkan filter', exact: true }).click();
@@ -304,7 +304,7 @@ test('bank errors and empty filters offer a clear recovery path', async ({ page 
     style: 'nextjs-portal{visibility:hidden!important}',
   });
   await page.locator('.assessment-empty').getByRole('button', { name: 'Reset filter' }).click();
-  await expect(page.locator('.assessment-question-list > li')).toHaveCount(5);
+  await expect(page.locator('.assessment-question-list > li')).toHaveCount(10);
 });
 
 test('initial loading explains pending data and then reveals the bank without a blank workspace', async ({
@@ -330,7 +330,7 @@ test('initial loading explains pending data and then reveals the bank without a 
   } finally {
     release();
   }
-  await expect(page.locator('.assessment-question-list > li')).toHaveCount(5);
+  await expect(page.locator('.assessment-question-list > li')).toHaveCount(10);
 });
 
 for (const role of ['OPERATIONS', null] as const) {

@@ -229,7 +229,9 @@ function PretestPanel({
           <header className="pretest-section-heading">
             <div>
               <h2>Daftar paket</h2>
-              <p>Maksimal 5 paket per halaman. Pilih paket untuk memeriksa isinya.</p>
+              <p>
+                Maksimal {ADMIN_PAGE_SIZE} paket per halaman. Pilih paket untuk memeriksa isinya.
+              </p>
             </div>
             <Button
               variant="secondary"

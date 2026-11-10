@@ -8,7 +8,7 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
     const { errors } = await setupGenerator(page, role);
     await page.goto('/admin/content/generator');
     await expect(page.getByRole('heading', { name: /^Generator paket/ }).first()).toBeVisible();
-    await expect(page.locator('.generator-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.generator-table tbody tr')).toHaveCount(10);
     for (const width of [1440, 1024, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
       await page.screenshot({
@@ -84,25 +84,25 @@ test('Generator pagination survives detail navigation and reload without generat
   page,
 }) => {
   const { generator } = await setupGenerator(page);
-  Object.assign(generator.items[5]!, { status: 'FAILED', failedCount: 1 });
+  Object.assign(generator.items[10]!, { status: 'FAILED', failedCount: 1 });
   await page.goto('/admin/content/generator');
   const pager = page.getByRole('navigation', { name: 'Halaman riwayat generator' });
   await pager.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await expect(page).toHaveURL(/offset=5/);
+  await expect(page).toHaveURL(/offset=10/);
   await expect(page.locator('.generator-table tbody tr')).toHaveCount(2);
-  await expect(page.getByText('Menampilkan 6–7 dari 7 paket yang dimuat.')).toBeVisible();
+  await expect(page.getByText('Menampilkan 11–12 dari 12 paket yang dimuat.')).toBeVisible();
   await page
-    .getByRole('button', { name: `Lihat detail ${generator.items[5]!.title}`, exact: true })
+    .getByRole('button', { name: `Lihat detail ${generator.items[10]!.title}`, exact: true })
     .click();
   await expect(
-    page.getByRole('heading', { name: generator.items[5]!.title, exact: true }),
+    page.getByRole('heading', { name: generator.items[10]!.title, exact: true }),
   ).toBeVisible();
   await page.reload();
   await expect(
-    page.getByRole('heading', { name: generator.items[5]!.title, exact: true }),
+    page.getByRole('heading', { name: generator.items[10]!.title, exact: true }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Kembali ke riwayat', exact: true }).click();
-  await expect(page).toHaveURL(/offset=5/);
+  await expect(page).toHaveURL(/offset=10/);
   await expect(page.locator('.generator-table tbody tr')).toHaveCount(2);
   expect(generator.requests.filter((request) => request.method === 'POST')).toEqual([]);
 });
@@ -210,7 +210,7 @@ test('Generator distinguishes failed list, failed catalog and an empty history',
   await expect(page.getByText(/Belum ada paket generator/)).toHaveCount(0);
   generator.failList = false;
   await page.getByRole('button', { name: 'Coba lagi', exact: true }).click();
-  await expect(page.locator('.generator-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.generator-table tbody tr')).toHaveCount(10);
   generator.failCatalog = true;
   await page.getByRole('button', { name: 'Generate paket', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Buat paket generator' });
@@ -279,7 +279,7 @@ test('Generator ignores a late detail response after returning to history', asyn
   await page.getByRole('button', { name: `Lihat detail ${pack.title}`, exact: true }).click();
   await pending;
   await page.getByRole('button', { name: 'Kembali ke riwayat', exact: true }).click();
-  await expect(page.locator('.generator-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.generator-table tbody tr')).toHaveCount(10);
   release();
   await expect(page).not.toHaveURL(/package=/);
   await expect(page.locator('.generator-detail')).toHaveCount(0);

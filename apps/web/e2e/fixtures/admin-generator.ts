@@ -34,7 +34,7 @@ export async function setupGenerator(
   const base = await setup(page);
   base.state.adminRole = role;
   const state = {
-    items: Array.from({ length: 7 }, (_, index) => generatorPack(index)),
+    items: Array.from({ length: 12 }, (_, index) => generatorPack(index)),
     catalog: {
       options: [
         {

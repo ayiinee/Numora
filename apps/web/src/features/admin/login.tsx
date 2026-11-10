@@ -38,6 +38,7 @@ export function AdminLoginScreen() {
       if (authError)
         throw new Error('Login Admin gagal. Periksa email dan password, lalu coba lagi.');
       setPassword('');
+      await refresh();
     } catch {
       setError('Login Admin gagal. Periksa email, password, dan koneksi, lalu coba lagi.');
     } finally {
@@ -92,9 +93,14 @@ export function AdminLoginScreen() {
         ) : null}
         {state.status === 'error' && (
           <div className="page-stack">
-            <p role="alert">Akun belum dapat diperiksa. Periksa koneksi dan coba lagi.</p>
+            <p role="alert">
+              {state.message ?? 'Akun belum dapat diperiksa. Periksa koneksi dan coba lagi.'}
+            </p>
             <Button variant="secondary" onClick={() => void refresh()}>
               Periksa lagi
+            </Button>
+            <Button variant="secondary" loading={busy} onClick={() => void switchAccount()}>
+              Ganti akun
             </Button>
           </div>
         )}

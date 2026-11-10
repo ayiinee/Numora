@@ -48,6 +48,13 @@ export function adminNavigation(profile: IdentityProfile | null): AdminNavigatio
       href: '/admin/structures',
       icon: 'school',
     });
+  if (adminCanAccess(profile, 'tryoutRead') && !adminCanAccess(profile, 'content'))
+    operations.push({
+      id: 'tryout',
+      label: 'Batch Tryout',
+      href: '/admin/tryout-batches',
+      icon: 'target',
+    });
   const content: AdminNavigationItem[] = adminCanAccess(profile, 'content')
     ? [
         {

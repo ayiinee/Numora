@@ -30,12 +30,12 @@ test('Content structure directory is readable and responsive without exposing ma
 }) => {
   const { structures, errors } = await setupStructures(page);
   await page.goto('/admin/structures');
-  await expect(page.locator('tbody tr')).toHaveCount(5);
+  await expect(page.locator('tbody tr')).toHaveCount(10);
   const heading = page.getByRole('heading', { name: 'Sekolah & kelas', exact: true });
   expect((await heading.boundingBox())!.height).toBeGreaterThan(20);
   for (const view of ['schools', 'classes']) {
     if (view === 'classes') await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
-    await expect(page.locator('tbody tr')).toHaveCount(5);
+    await expect(page.locator('tbody tr')).toHaveCount(10);
     for (const width of [1440, 1024, 768, 390, 320]) {
       await page.setViewportSize({ width, height: 900 });
       expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -84,15 +84,15 @@ test('Content structure search, paging and school drilldown survive history and 
   await page.goto('/admin/structures');
   const nav = page.getByRole('navigation', { name: 'Halaman struktur' });
   await nav.getByRole('button', { name: 'Berikutnya' }).click();
-  await expect(page.getByText('Sekolah Fixture 7', { exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/offset=5/);
-  await page.getByRole('searchbox').fill('  SMP-TEST-1  ');
+  await expect(page.getByText('Sekolah Fixture 11', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/offset=10/);
+  await page.getByRole('searchbox').fill('  Tunas Bangsa  ');
   await page.getByRole('button', { name: 'Cari', exact: true }).click();
   await expect(page.locator('tbody tr')).toHaveCount(1);
   expect(structures.calls.at(-1)!.query).toMatchObject({
     offset: '0',
-    limit: '5',
-    search: 'SMP-TEST-1',
+    limit: '10',
+    search: 'Tunas Bangsa',
   });
   await page.getByText('Status lainnya', { exact: false }).click();
   await expect(page.getByText('Kedaluwarsa', { exact: true })).toBeVisible();
@@ -106,7 +106,7 @@ test('Content structure search, paging and school drilldown survive history and 
   );
   await expect(page.getByText('Kelas dari sekolah terpilih', { exact: true })).toBeVisible();
   await nav.getByRole('button', { name: 'Berikutnya' }).click();
-  await expect(page.getByText('Kelas IX-6 Fixture', { exact: true })).toBeVisible();
+  await expect(page.getByText('Kelas IX-11 Fixture', { exact: true })).toBeVisible();
   await expect(page.locator('tbody tr')).toHaveCount(1);
   await nav.getByRole('button', { name: 'Sebelumnya' }).click();
   await expect(page.getByText('Kelas IX-1 Fixture', { exact: true })).toBeVisible();
@@ -138,14 +138,14 @@ test('Content structure loading, failure, empty results and keyboard tabs have r
   );
   structures.failStatus = 0;
   await page.getByRole('button', { name: 'Coba lagi' }).click();
-  await expect(page.locator('tbody tr')).toHaveCount(5);
+  await expect(page.locator('tbody tr')).toHaveCount(10);
   await page.getByRole('searchbox').fill('tidak-ada');
   await page.getByRole('button', { name: 'Cari', exact: true }).click();
   await expect(
     page.getByRole('heading', { name: 'Belum ada struktur sesuai filter.' }),
   ).toBeVisible();
   await page.getByRole('button', { name: 'Reset filter' }).click();
-  await expect(page.locator('tbody tr')).toHaveCount(5);
+  await expect(page.locator('tbody tr')).toHaveCount(10);
   await page.getByRole('tab', { name: 'Sekolah', exact: true }).focus();
   await page.keyboard.press('ArrowRight');
   await expect(page.getByRole('tab', { name: 'Kelas', exact: true })).toBeFocused();
@@ -174,7 +174,7 @@ for (const status of [401, 403])
 test('Content structure drops stale results after assignment is removed', async ({ page }) => {
   const { state, structures } = await setupStructures(page);
   await page.goto('/admin/structures');
-  await expect(page.locator('tbody tr')).toHaveCount(5);
+  await expect(page.locator('tbody tr')).toHaveCount(10);
   state.adminRole = null;
   const previous = structures.calls.length;
   await page.reload();

@@ -11,7 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ContentAdminGuard } from '../identity/content-admin.guard';
+import { AdminGuard } from '../identity/admin.guard';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
 import type { AdminRequest } from '../identity/admin.guard';
 import { TryoutBatchesService } from '../learning/tryout-batches.service';
 import {
@@ -22,16 +23,22 @@ import {
   TryoutBatchesDto,
   TryoutBatchQueryDto,
   TryoutBatchRevisionDto,
+  UpdateTryoutDelegationsDto,
+  ExtendTryoutBatchDto,
 } from '../learning/tryout-batches.dto';
 import { ContentMutationDto } from './content.dto';
 
 @ApiTags('admin-tryout-batches')
 @ApiBearerAuth()
-@UseGuards(ContentAdminGuard)
+@UseGuards(AdminGuard)
+@RequireAdminCapability('CONTENT_MANAGE')
 @Controller('admin/tryout-batches')
 export class AdminTryoutBatchesController {
   constructor(private readonly batches: TryoutBatchesService) {}
-  @Get() @ApiOkResponse({ type: TryoutBatchesDto }) list(@Query() query: TryoutBatchQueryDto) {
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
+  @Get()
+  @ApiOkResponse({ type: TryoutBatchesDto })
+  list(@Query() query: TryoutBatchQueryDto) {
     return this.batches.list(query);
   }
   @Get('options') @ApiOkResponse({ type: TryoutBatchOptionsDto }) options(
@@ -39,9 +46,10 @@ export class AdminTryoutBatchesController {
   ) {
     return this.batches.options(query);
   }
-  @Get(':id') @ApiOkResponse({ type: TryoutBatchDto }) detail(
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
+  @Get(':id')
+  @ApiOkResponse({ type: TryoutBatchDto })
+  detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.batches.detail(id);
   }
   @Post() @ApiCreatedResponse({ type: ContentMutationDto }) create(
@@ -56,6 +64,20 @@ export class AdminTryoutBatchesController {
     @Body() body: SaveTryoutBatchDto,
   ) {
     return this.batches.save(r.adminId, body, id);
+  }
+  @Patch(':id/delegations') @ApiOkResponse({ type: ContentMutationDto }) delegations(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: UpdateTryoutDelegationsDto,
+  ) {
+    return this.batches.updateDelegations(r.adminId, id, body);
+  }
+  @Post(':id/extend') @ApiCreatedResponse({ type: ContentMutationDto }) extend(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ExtendTryoutBatchDto,
+  ) {
+    return this.batches.extend(r.adminId, id, body);
   }
   @Post(':id/publish') @ApiCreatedResponse({ type: ContentMutationDto }) publish(
     @Req() r: AdminRequest,

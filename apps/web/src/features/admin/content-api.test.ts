@@ -14,13 +14,13 @@ describe('Admin independent workbench loading', () => {
     );
     await loadAdminWorkbench('TEST ONLY', 5, 'questions', {}, true);
     const bank = new URL(paths.find((p) => p.includes('/content/versions'))!);
-    expect(bank.searchParams.get('limit')).toBe('5');
+    expect(bank.searchParams.get('limit')).toBe('10');
     expect(bank.searchParams.get('offset')).toBe('5');
     expect(bank.searchParams.get('catalog')).toBe('COMPACT_DEMO');
     paths.length = 0;
     await loadAdminWorkbench('TEST ONLY', 5, 'verification', {}, true);
     const history = new URL(paths.find((p) => p.includes('/content/versions'))!);
-    expect(history.searchParams.get('limit')).toBe('5');
+    expect(history.searchParams.get('limit')).toBe('10');
     expect(history.searchParams.has('catalog')).toBe(false);
   });
   it('keeps the question editor usable when optional metrics fail and never requests unrelated queues', async () => {

@@ -144,6 +144,7 @@ describe.skipIf(!testUrl)(
         ['student', 'STUDENT', null],
         ['otherStudent', 'STUDENT', null],
         ['unallocatedStudent', 'STUDENT', null],
+        ['lateStudent', 'STUDENT', null],
         ['teacher', 'TEACHER', null],
       ];
       const ids: string[] = [];
@@ -2848,8 +2849,8 @@ describe.skipIf(!testUrl)(
       let questionIds: string[] = [];
       for (let n = 0; n < 2; n++) {
         const p = await ok<{ id: string }>('admin/content/packages', 'POST', {
-          familyCode: `BATCH-${suffix}-${n}`,
-          packageVersion: 1,
+          familyCode: `BATCH-${suffix}`,
+          packageVersion: n + 1,
           name: `TEST ONLY batch package ${n}`,
           assessmentType: 'TRYOUT',
           source,
@@ -2934,7 +2935,81 @@ describe.skipIf(!testUrl)(
         'admin/tryout-batches/options?limit=100&search=TEST',
       );
       expect(options.schools.map((s) => s.schoolId)).toContain(schoolA);
+      const expired = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        ...makeInput('expired draft'),
+      });
+      await owner`UPDATE tryout_batches SET starts_at=now()-interval '2 hours', closes_at=now()-interval '1 hour', cutoff_at=now()-interval '1 hour', result_due_at=now()-interval '1 hour'+interval '72 hours' WHERE id=${expired.id}`;
+      expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${expired.id}`)).editable).toBe(true);
+      expect(
+        (
+          await request(`admin/tryout-batches/${expired.id}/publish`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(400);
+      await ok(`admin/tryout-batches/${expired.id}`, 'PATCH', {
+        ...makeInput('rescheduled draft'),
+        expectedRevision: 1,
+      });
+      await ok(`admin/tryout-batches/${expired.id}/cancel`, 'POST', {
+        expectedRevision: 2,
+        reason: 'TEST ONLY draft cleanup',
+      });
+      const inactive = await ok<{ id: string }>(
+        'admin/tryout-batches',
+        'POST',
+        makeInput('inactive recipient'),
+      );
+      await owner`UPDATE schools SET status='INACTIVE' WHERE id=${schoolA}`;
+      expect(
+        (
+          await request(`admin/tryout-batches/${inactive.id}/publish`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(400);
+      const unchanged = await ok<TryoutBatchDto>(`admin/tryout-batches/${inactive.id}`);
+      expect(unchanged.state).toBe('DRAFT');
+      expect(unchanged.revision).toBe(1);
+      await owner`UPDATE schools SET status='ACTIVE' WHERE id=${schoolA}`;
+      await ok(`admin/tryout-batches/${inactive.id}/cancel`, 'POST', {
+        expectedRevision: 1,
+        reason: 'TEST ONLY inactive school cleanup',
+      });
+      const defaults = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        ...makeInput('default only'),
+        schools: [],
+      });
+      await ok(`admin/tryout-batches/${defaults.id}/publish`, 'POST', { expectedRevision: 1 });
+      await ok(`admin/tryout-batches/${defaults.id}/cancel`, 'POST', {
+        expectedRevision: 2,
+        reason: 'TEST ONLY cleanup',
+      });
       const created = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('one'));
+      expect((await request('admin/tryout-batches', 'GET', undefined, 'operations')).status).toBe(
+        200,
+      );
+      expect(
+        (await request(`admin/tryout-batches/${created.id}`, 'GET', undefined, 'operations'))
+          .status,
+      ).toBe(200);
+      expect(
+        (await request('admin/tryout-batches/options', 'GET', undefined, 'operations')).status,
+      ).toBe(403);
+      for (const [path, method, payload] of [
+        [
+          `admin/tryout-batches/${created.id}`,
+          'PATCH',
+          { ...makeInput('forbidden'), expectedRevision: 1 },
+        ],
+        [`admin/tryout-batches/${created.id}/publish`, 'POST', { expectedRevision: 1 }],
+        [
+          `admin/tryout-batches/${created.id}/cancel`,
+          'POST',
+          { expectedRevision: 1, reason: 'TEST ONLY forbidden' },
+        ],
+      ] as const)
+        expect((await request(path, method, payload, 'operations')).status).toBe(403);
       const duplicate = await request('admin/tryout-batches', 'POST', {
         ...makeInput('invalid'),
         schools: [
@@ -2980,10 +3055,19 @@ describe.skipIf(!testUrl)(
       await expect(tryout.startBatch('Bearer student', activeId)).rejects.toThrow();
       await expect(tryout.startBatch('Bearer student', activeId, randomUUID())).rejects.toThrow();
       await expect(tryout.start('Bearer student', packageIds[0]!)).rejects.toThrow();
+      const fallback = await ok<TryoutAttemptDto>(
+        `tryout/batches/${activeId}/attempts`,
+        'POST',
+        {},
+        'unallocatedStudent',
+      );
+      expect(fallback.packageId).toBe(packageIds[0]);
+      await owner`UPDATE schools SET status='INACTIVE' WHERE id=${schoolC}`;
       expect(
-        (await request(`tryout/batches/${activeId}/attempts`, 'POST', {}, 'unallocatedStudent'))
-          .status,
-      ).toBe(400);
+        (await service.studentList(unallocated!.id as string)).items.find((b) => b.id === activeId)!
+          .schools,
+      ).toHaveLength(0);
+      await owner`UPDATE schools SET status='ACTIVE' WHERE id=${schoolC}`;
       expect(
         (
           await request(
@@ -3049,6 +3133,65 @@ describe.skipIf(!testUrl)(
       const [independentAssignment] =
         await owner`SELECT package_id FROM tryout_student_assignments WHERE attempt_id=${independent.id}`;
       expect(independentAssignment!.package_id).toBe(packageIds[0]);
+      const recipients = {
+        expectedRevision: 3,
+        mandiriPackageId: packageIds[0],
+        schools: [
+          { schoolId: schoolA, packageId: packageIds[1] },
+          { schoolId: schoolB, packageId: packageIds[0] },
+          { schoolId: schoolC, packageId: packageIds[1] },
+        ],
+      };
+      expect(
+        (
+          await request(
+            `admin/tryout-batches/${activeId}/delegations`,
+            'PATCH',
+            recipients,
+            'operations',
+          )
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', {
+            ...recipients,
+            schools: [{ schoolId: schoolC, packageId: randomUUID() }],
+          })
+        ).status,
+      ).toBe(400);
+      const recipientRace = await Promise.all([
+        request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', recipients),
+        request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', recipients),
+      ]);
+      expect(recipientRace.map((r) => r.status).sort()).toEqual([200, 409]);
+      expect(
+        await owner`SELECT id FROM audit_logs WHERE entity_id=${activeId} AND action='tryout_batch_delegations_updated'`,
+      ).toHaveLength(1);
+      await expect(
+        owner`UPDATE tryout_batches SET package_id=${packageIds[1]!} WHERE id=${activeId}`,
+      ).rejects.toThrow();
+      await expect(
+        owner`DELETE FROM tryout_batch_packages WHERE batch_id=${activeId}`,
+      ).rejects.toThrow();
+      const [late] = await owner`SELECT id FROM users WHERE display_name='lateStudent'`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classC},${late!.id})`;
+      const lateAttempt = await ok<TryoutAttemptDto>(
+        `tryout/batches/${activeId}/attempts`,
+        'POST',
+        {},
+        'lateStudent',
+      );
+      expect(lateAttempt.packageId).toBe(packageIds[1]);
+      expect((await tryout.startBatch('Bearer unallocatedStudent', activeId)).packageId).toBe(
+        packageIds[0],
+      );
+      expect((await tryout.startBatch('Bearer student', activeId)).packageId).toBe(
+        attempts[0].packageId,
+      );
+      expect(
+        (await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).delegationsEditable,
+      ).toBe(true);
       await owner`UPDATE class_memberships SET left_at=now(),end_reason='LEFT' WHERE student_user_id=${student!.id}`;
       expect((await tryout.startBatch('Bearer student', activeId)).id).toBe(attempts[0].id);
       expect(
@@ -3077,7 +3220,7 @@ describe.skipIf(!testUrl)(
       await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
       const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
       expect(detail.resultBlockers).toContain('IRT_DELIVERY_DISABLED');
-      expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(2);
+      expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(4);
       // Distinct recipients may share the same package; a following non-overlapping batch is valid.
       const shared = {
         ...makeInput('shared'),
@@ -3092,10 +3235,85 @@ describe.skipIf(!testUrl)(
       };
       const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
       await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });
+      const extension = { expectedRevision: 4, closesAt: shared.closesAt };
+      const beforeExtension =
+        await owner`SELECT id,package_id,deadline_at,status FROM assessment_attempts WHERE tryout_batch_id=${activeId} ORDER BY id`;
+      expect(
+        (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension, 'operations'))
+          .status,
+      ).toBe(403);
+      expect(
+        (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension)).status,
+      ).toBe(409);
+      expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).revision).toBe(4);
+
       await ok(`admin/tryout-batches/${next.id}/cancel`, 'POST', {
         expectedRevision: 2,
         reason: 'TEST ONLY cancelled schedule',
       });
+      const extensionRace = await Promise.all([
+        request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension),
+        request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension),
+      ]);
+      expect(extensionRace.map((r) => r.status).sort()).toEqual([201, 409]);
+      const extended = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
+      expect(extended.closesAt).toBe(extension.closesAt);
+      expect(extended.resultDueAt).toBe(
+        new Date(Date.parse(extension.closesAt) + 72 * 3600000).toISOString(),
+      );
+      expect(extended.revision).toBe(5);
+      expect(extended.extendable).toBe(true);
+      const afterExtension =
+        await owner`SELECT id,package_id,deadline_at,status FROM assessment_attempts WHERE tryout_batch_id=${activeId} ORDER BY id`;
+      expect(afterExtension).toEqual(beforeExtension);
+      expect(
+        await owner`SELECT id FROM audit_logs WHERE entity_id=${activeId} AND action='tryout_batch_extended'`,
+      ).toHaveLength(1);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}/extend`, 'POST', {
+            expectedRevision: 5,
+            closesAt: detail.closesAt,
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await request(`admin/tryout-batches/${next.id}/extend`, 'POST', {
+            expectedRevision: 3,
+            closesAt: extension.closesAt,
+          })
+        ).status,
+      ).toBe(409);
+      await expect(
+        owner`UPDATE tryout_batches SET closes_at=closes_at-interval '1 minute',cutoff_at=closes_at-interval '1 minute',result_due_at=closes_at-interval '1 minute'+interval '72 hours' WHERE id=${activeId}`,
+      ).rejects.toThrow();
+      const terminal = await ok<{ id: string }>(
+        'admin/tryout-batches',
+        'POST',
+        makeInput('terminal fixture'),
+      );
+      // TEST ONLY atomically age an unpublished fixture, without waiting or disabling guards.
+      await owner`UPDATE tryout_batches SET admin_published_at=now()-interval '3 hours',starts_at=now()-interval '2 hours',closes_at=now()-interval '1 hour',cutoff_at=now()-interval '1 hour',result_due_at=now()-interval '1 hour'+interval '72 hours' WHERE id=${terminal.id}`;
+      expect(
+        (
+          await request(`admin/tryout-batches/${terminal.id}/extend`, 'POST', {
+            expectedRevision: 1,
+            closesAt: extension.closesAt,
+          })
+        ).status,
+      ).toBe(409);
+      expect(
+        (
+          await request(`admin/tryout-batches/${terminal.id}/delegations`, 'PATCH', {
+            expectedRevision: 1,
+            schools: [],
+          })
+        ).status,
+      ).toBe(409);
+      await expect(
+        owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
+      ).rejects.toThrow();
     }, 120000);
   },
 );

@@ -311,7 +311,7 @@ describe('Admin content UI', () => {
     fireEvent.change(field, { target: { value: '6' } });
     expect(field.validity.rangeOverflow).toBe(true);
   });
-  it('shows six demo taxonomy entries in pages of five, retains real material and allows inspecting remaining fixtures', async () => {
+  it('shows six demo taxonomy entries within one ten-row page, retains real material and allows inspecting remaining fixtures', async () => {
     context.state.profile = {
       ...(context.state.profile as object),
       adminRole: 'CONTENT_DATA_MODERATION',
@@ -333,10 +333,8 @@ describe('Admin content UI', () => {
     render(<AdminContentScreen initialView="curriculum" />);
     const list = await screen.findByRole('list', { name: 'Daftar materi' });
     const pager = screen.getByRole('navigation', { name: 'Halaman materi' });
-    expect(within(list).getAllByRole('listitem')).toHaveLength(5);
+    expect(within(list).getAllByRole('listitem')).toHaveLength(7);
     expect(screen.getByText(/7 entri materi/)).toBeTruthy();
-    fireEvent.click(within(pager).getByRole('button', { name: 'Berikutnya' }));
-    expect(within(list).getAllByRole('listitem')).toHaveLength(2);
     expect(within(list).getByText('Materi demo 6')).toBeTruthy();
     expect(within(list).getByText('Materi resmi')).toBeTruthy();
     expect(within(pager).getByRole('button', { name: 'Berikutnya' }).hasAttribute('disabled')).toBe(
@@ -346,7 +344,7 @@ describe('Admin content UI', () => {
     expect(screen.getByText(/9 entri materi/)).toBeTruthy();
     expect(within(pager).getByText('Halaman 1 · Jumlah data: 9')).toBeTruthy();
   });
-  it('uses five-item bank pages and server nextOffset so a full final page cannot open an empty page', async () => {
+  it('uses ten-item bank pages and server nextOffset so a full final page cannot open an empty page', async () => {
     context.state.profile = {
       ...(context.state.profile as object),
       adminRole: 'CONTENT_DATA_MODERATION',
@@ -354,13 +352,13 @@ describe('Admin content UI', () => {
     vi.mocked(loadAdminWorkbench).mockImplementation(async (_t, offset) => ({
       ...data,
       versions: {
-        total: 10,
-        items: Array.from({ length: 5 }, (_, i) => ({
+        total: 20,
+        items: Array.from({ length: 10 }, (_, i) => ({
           ...data.versions.items[0]!,
           id: `version-${offset + i}`,
           stem: `Soal ${offset + i + 1}`,
         })),
-        nextOffset: offset === 0 ? 5 : null,
+        nextOffset: offset === 0 ? 10 : null,
         hasNext: offset === 0,
       },
     }));
@@ -368,14 +366,14 @@ describe('Admin content UI', () => {
     await screen.findByRole('heading', { name: 'Soal 1' });
     const pager = screen.getByRole('navigation', { name: 'Halaman data' });
     fireEvent.click(within(pager).getByRole('button', { name: 'Berikutnya' }));
-    await screen.findByRole('heading', { name: 'Soal 6' });
+    await screen.findByRole('heading', { name: 'Soal 11' });
     expect(screen.queryByRole('heading', { name: 'Soal 1' })).toBeNull();
     const secondPager = screen.getByRole('navigation', { name: 'Halaman data' });
-    expect(within(secondPager).getByText('Halaman 2 · Jumlah data: 10')).toBeTruthy();
+    expect(within(secondPager).getByText('Halaman 2 · Jumlah data: 20')).toBeTruthy();
     expect(
       within(secondPager).getByRole('button', { name: 'Berikutnya' }).hasAttribute('disabled'),
     ).toBe(true);
-    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, 'questions', {}, true);
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 10, 'questions', {}, true);
     fireEvent.click(within(secondPager).getByRole('button', { name: 'Sebelumnya' }));
     await screen.findByRole('heading', { name: 'Soal 1' });
   });
@@ -717,7 +715,7 @@ describe('Admin content UI', () => {
     expect(screen.getByRole('link', { name: 'Ke halaman masuk' })).toBeTruthy();
   });
   it('changes question pages without clearing the unsaved editor', async () => {
-    const versions = Array.from({ length: 6 }, (_, i) => ({
+    const versions = Array.from({ length: 11 }, (_, i) => ({
       ...data.versions.items[0]!,
       id: `version-${i}`,
       stem: `Soal halaman ${i}`,
@@ -725,26 +723,26 @@ describe('Admin content UI', () => {
     vi.mocked(loadAdminWorkbench).mockImplementation(async (_token, offset) => ({
       ...data,
       versions: {
-        items: versions.slice(offset, offset + 5),
+        items: versions.slice(offset, offset + 10),
         total: versions.length,
         hasNext: offset === 0,
-        nextOffset: offset === 0 ? 5 : null,
+        nextOffset: offset === 0 ? 10 : null,
       },
     }));
     render(<AdminContentScreen />);
     await screen.findByText('Soal halaman 0');
     fireEvent.click(screen.getByRole('button', { name: 'Tambah soal PG' }));
-    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(5);
+    expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(10);
     fireEvent.change(screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)'), {
       target: { value: 'Draf belum disimpan' },
     });
     fireEvent.click(screen.getByRole('button', { name: 'Berikutnya' }));
-    await screen.findByText('Soal halaman 5');
+    await screen.findByText('Soal halaman 10');
     expect(document.querySelectorAll('.admin-content-view .monitoring-list > li')).toHaveLength(1);
     expect(
       (screen.getByLabelText('Teks soal (LaTeX inline diperbolehkan)') as HTMLTextAreaElement)
         .value,
     ).toBe('Draf belum disimpan');
-    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 5, 'questions', {}, false);
+    expect(loadAdminWorkbench).toHaveBeenLastCalledWith('test-token', 10, 'questions', {}, false);
   });
 });

@@ -82,10 +82,10 @@ test('user filters apply trimmed names, role, status and affiliation through the
     status: 'ACTIVE',
     affiliation: 'SCHOOL',
     offset: '0',
-    limit: '5',
+    limit: '10',
   });
   await page.getByRole('button', { name: 'Hapus filter', exact: true }).click();
-  await expect(page.locator('.people-users-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.people-users-table tbody tr')).toHaveCount(10);
   expect(state.calls.every((call) => call.method === 'GET')).toBe(true);
 });
 
@@ -125,7 +125,7 @@ test('school and teacher lookups search by name and only apply after confirmatio
     style: 'nextjs-portal{visibility:hidden!important}',
   });
   await page.getByRole('button', { name: 'Terapkan filter', exact: true }).click();
-  await expect(page.locator('.people-classes-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.people-classes-table tbody tr')).toHaveCount(10);
   const call = state.calls.filter((call) => call.path === 'admin/classes').at(-1)!;
   expect(Object.fromEntries(new URLSearchParams(call.query))).toMatchObject({
     schoolId: id(101),
@@ -172,7 +172,7 @@ test('membership history pages independently and minimal account details remain 
   await page.goto(`/admin/operations?userId=${id(200)}`);
   await expect(page.getByText('user0@example.test', { exact: true })).toBeVisible();
   const membership = page.getByRole('region', { name: 'Keanggotaan dan verifikasi sekolah' });
-  await expect(membership.locator('tbody tr')).toHaveCount(5);
+  await expect(membership.locator('tbody tr')).toHaveCount(10);
   await membership.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(membership.getByText('Halaman 2')).toBeVisible();
   await expect(page.getByText('user0@example.test', { exact: true })).toBeVisible();
@@ -257,7 +257,7 @@ test('membership failure does not conceal the loaded account and can retry', asy
   await expect(membership.getByRole('alert')).toBeVisible();
   state.failPath = '';
   await membership.getByRole('button', { name: 'Coba lagi' }).click();
-  await expect(membership.locator('tbody tr')).toHaveCount(5);
+  await expect(membership.locator('tbody tr')).toHaveCount(10);
 });
 
 for (const target of ['memberships', 'roster'] as const) {
