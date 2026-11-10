@@ -945,7 +945,7 @@ describe.skipIf(!testUrl)(
       const reviewed = await ok<ContentPackageDetailDto>(`admin/content/packages/${pretest.id}`);
       expect(reviewed.items[0]!.reviewedByUserId).toBe(actor);
       expect(reviewed.items[0]!.contentStatus).toBe('DRAFT');
-      expect(reviewed.readiness.checks.find((c) => c.code === 'REVIEW')!.passed).toBe(true);
+      expect(reviewed.readiness.checks.some((c) => c.code === 'REVIEW')).toBe(false);
       expect(reviewed.readiness.canPublish).toBe(false);
       expect(
         (
@@ -1331,7 +1331,7 @@ describe.skipIf(!testUrl)(
               reference: 'TEST ONLY',
             })
           ).status,
-        ).toBe(409);
+        ).toBe(usage === 'PRETEST' ? 201 : 409);
         for (const item of imported.items)
           await ok(`admin/content/versions/${item.questionVersionId}/review`, 'POST', {
             packageId: pack.id,
@@ -1751,6 +1751,209 @@ describe.skipIf(!testUrl)(
       expect((await ok<ContentPackageDetailDto>(`admin/content/packages/${tryoutId}`)).status).toBe(
         'ARCHIVED',
       );
+    });
+
+    it('prepares legacy Pretest scoring atomically without changing content or order', async () => {
+      const [published] =
+        await owner`SELECT id,chapter_id FROM assessment_packages WHERE assessment_type='PRETEST' AND status='PUBLISHED' LIMIT 1`;
+      const source = {
+        sourceNamespace: `REPAIR-${suffix}`,
+        sourceName: 'TEST ONLY',
+        sourceReference: 'TEST ONLY',
+      };
+      const draft = await ok<{ id: string }>('admin/content/packages', 'POST', {
+        familyCode: `REPAIR-${suffix}`,
+        packageVersion: 100,
+        name: 'TEST ONLY scoring repair',
+        assessmentType: 'PRETEST',
+        chapterId: published!.chapter_id,
+        isDemo: false,
+        source,
+      });
+      const template = structuredClone(samples.find((q) => q.type === 'SINGLE_CHOICE')!);
+      template.difficulty = 'EASY';
+      template.metadata.sourceLevelNumber = null;
+      const rows = Array.from({ length: 20 }, (_, i) => ({
+        ...structuredClone(template),
+        externalId: `REPAIR-${i}`,
+        type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',
+        answer: { optionIds: [template.options[0]!.id] },
+        metadata: { ...template.metadata, assetManifest: [], sourceOrder: i + 1 },
+      }));
+      const imported = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        {
+          sourceNamespace: source.sourceNamespace,
+          target: { packageId: draft.id, expectedRevision: 0 },
+          questions: rows,
+        },
+        'admin',
+        randomUUID(),
+      );
+      const [wrongRubric] =
+        await owner`SELECT id FROM scoring_rubric_versions WHERE question_type='MULTIPLE_CHOICE_MULTIPLE_ANSWER' AND definition->>'policyCode'<>'PRETEST_PGK_PARTIAL_V1' LIMIT 1`;
+      expect(wrongRubric).toBeTruthy();
+      async function legacyVersion(oldId: string, invalid = false, rubric: string | null = null) {
+        const [row] =
+          await owner`INSERT INTO question_versions(variant_id,version_number,question_type,stem,options_or_statements,answer_key,explanation,media,difficulty,level_id,content_status,revised_from_question_version_id,scoring_rubric_version_id)
+          SELECT variant_id,(SELECT max(v.version_number)+1 FROM question_versions v WHERE v.variant_id=q.variant_id),question_type,
+            CASE WHEN ${invalid} THEN '{"text":""}'::jsonb ELSE stem END,options_or_statements,answer_key,explanation,media,difficulty,level_id,'DRAFT',id,${rubric}
+          FROM question_versions q WHERE id=${oldId} RETURNING id`;
+        await owner`INSERT INTO content_import_versions(question_version_id,identity_id,import_id,content_hash,provenance)
+          SELECT ${row!.id},identity_id,import_id,content_hash,provenance FROM content_import_versions WHERE question_version_id=${oldId}`;
+        await owner`UPDATE package_items SET question_version_id=${row!.id},rubric_version_id=null WHERE package_id=${draft.id} AND question_version_id=${oldId}`;
+        return row!.id;
+      }
+      for (const [index, item] of imported.items.entries())
+        await legacyVersion(item.questionVersionId!, false, index === 2 ? wrongRubric!.id : null);
+      const before =
+        await owner`SELECT v.*,i.display_order,i.max_points FROM question_versions v JOIN package_items i ON i.question_version_id=v.id WHERE i.package_id=${draft.id} ORDER BY i.display_order`;
+      for (const token of ['operations', 'student', 'unassigned'])
+        expect(
+          (
+            await request(
+              `admin/content/packages/${draft.id}/prepare-scoring`,
+              'POST',
+              { expectedRevision: 1 },
+              token,
+            )
+          ).status,
+        ).toBe(403);
+      expect(
+        (
+          await request(`admin/content/packages/${draft.id}/prepare-scoring`, 'POST', {
+            expectedRevision: 0,
+          })
+        ).status,
+      ).toBe(409);
+      const invalidId = await legacyVersion(before[1]!.id, true);
+      const [countBefore] = await owner`SELECT count(*)::int AS n FROM question_versions`;
+      expect(
+        (
+          await request(`admin/content/packages/${draft.id}/prepare-scoring`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBeGreaterThanOrEqual(400);
+      const [countFailed] = await owner`SELECT count(*)::int AS n FROM question_versions`;
+      expect(countFailed!.n).toBe(countBefore!.n);
+      const unchanged = await ok<ContentPackageDetailDto>(`admin/content/packages/${draft.id}`);
+      expect(unchanged.contentRevision).toBe(1);
+      expect(unchanged.items.map((i) => i.questionVersionId)).toEqual(
+        before.map((i, n) => (n === 1 ? invalidId : i.id)),
+      );
+      await owner`UPDATE package_items SET question_version_id=${before[1]!.id} WHERE package_id=${draft.id} AND question_version_id=${invalidId}`;
+      await ok(`admin/content/packages/${draft.id}/prepare-scoring`, 'POST', {
+        expectedRevision: 1,
+      });
+      const after =
+        await owner`SELECT v.*,i.display_order,i.max_points FROM question_versions v JOIN package_items i ON i.question_version_id=v.id WHERE i.package_id=${draft.id} ORDER BY i.display_order`;
+      expect(after).toHaveLength(20);
+      for (let i = 0; i < 20; i++) {
+        expect(after[i]!.id).not.toBe(before[i]!.id);
+        for (const field of [
+          'stem',
+          'options_or_statements',
+          'answer_key',
+          'explanation',
+          'media',
+          'display_order',
+          'max_points',
+        ])
+          expect(after[i]![field]).toEqual(before[i]![field]);
+        expect(after[i]!.scoring_rubric_version_id).toBeTruthy();
+      }
+      await ok(`admin/content/packages/${draft.id}/prepare-scoring`, 'POST', {
+        expectedRevision: 2,
+      });
+      const repeated = await ok<ContentPackageDetailDto>(`admin/content/packages/${draft.id}`);
+      expect(repeated.contentRevision).toBe(2);
+      expect(repeated.items.map((i) => i.questionVersionId)).toEqual(after.map((i) => i.id));
+      expect(repeated.items.every((i) => !i.scoringRepairRequired)).toBe(true);
+      await legacyVersion(after[0]!.id);
+      const reimport = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        {
+          sourceNamespace: source.sourceNamespace,
+          target: { packageId: draft.id, expectedRevision: 2 },
+          questions: rows,
+        },
+        'admin',
+        randomUUID(),
+      );
+      expect(reimport.items[0]!.questionVersionId).not.toBe(after[0]!.id);
+      expect(reimport.items.slice(1).every((i) => i.outcome === 'SKIPPED_UNCHANGED')).toBe(true);
+      const repeatImport = await ok<ImportReportDto>(
+        'admin/content/imports',
+        'POST',
+        {
+          sourceNamespace: source.sourceNamespace,
+          target: { packageId: draft.id, expectedRevision: 3 },
+          questions: rows,
+        },
+        'admin',
+        randomUUID(),
+      );
+      expect(repeatImport.items.every((i) => i.outcome === 'SKIPPED_UNCHANGED')).toBe(true);
+      const ready = await ok<ContentPackageDetailDto>(`admin/content/packages/${draft.id}`);
+      expect(ready.readiness.canPublish, JSON.stringify(ready.readiness)).toBe(true);
+      const historical =
+        await owner`SELECT id,score_0_100,pretest_result,scoring_policy_version_id FROM assessment_attempts WHERE assessment_type='PRETEST' ORDER BY id`;
+      await ok(`admin/content/packages/${draft.id}/publish`, 'POST', { expectedRevision: 4 });
+      const publishedDetail = await ok<ContentPackageDetailDto>(
+        `admin/content/packages/${draft.id}`,
+      );
+      expect(publishedDetail.status).toBe('PUBLISHED');
+      expect(
+        publishedDetail.items.every((item) => !item.validationIssues?.length),
+        JSON.stringify(publishedDetail.items.map((item) => item.validationIssues)),
+      ).toBe(true);
+      expect(publishedDetail.items.every((item) => item.question !== null)).toBe(true);
+
+      const pretests = new PretestService(app.get(IdentityService));
+      const attempt = await pretests.start('Bearer otherStudent', published!.chapter_id);
+      const [pinned] =
+        await owner`SELECT package_id FROM assessment_attempts WHERE id=${attempt.id}`;
+      expect(pinned!.package_id).toBe(draft.id);
+      for (const [index, question] of attempt.questions.entries()) {
+        if (index === 19) continue;
+        await pretests.saveAnswer(
+          'Bearer otherStudent',
+          attempt.id,
+          question.questionInstanceId,
+          {
+            optionIds:
+              index < 10
+                ? [template.options[0]!.id]
+                : [template.options[0]!.id, template.options[1]!.id],
+          },
+          0,
+        );
+      }
+      const result = await pretests.submit('Bearer otherStudent', attempt.id);
+      const expectedPoints = 10 + (9 * (template.options.length - 1)) / template.options.length;
+      expect(result.correctCount).toBe(10);
+      expect(result.score).toBeCloseTo(expectedPoints * 5, 2);
+      expect(result.initialLevel).toBe(2);
+      expect(await pretests.submit('Bearer otherStudent', attempt.id)).toEqual(result);
+      const [effects] =
+        await owner`SELECT (SELECT count(*)::int FROM xp_ledger WHERE attempt_id=${attempt.id}) AS xp`;
+      expect(effects!.xp).toBe(0);
+      const preserved =
+        await owner`SELECT id,score_0_100,pretest_result,scoring_policy_version_id FROM assessment_attempts WHERE assessment_type='PRETEST' AND id<>${attempt.id} ORDER BY id`;
+      expect(preserved).toEqual(historical);
+      const old =
+        await owner`SELECT scoring_rubric_version_id FROM question_versions WHERE id=${before[0]!.id}`;
+      expect(old[0]!.scoring_rubric_version_id).toBeNull();
+      expect(
+        (
+          await request(`admin/content/packages/${published!.id}/prepare-scoring`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(409);
     });
 
     it('renames a draft without replacing durable package items or their points and rejects stale writes', async () => {
