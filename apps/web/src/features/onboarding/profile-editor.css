@@ -13,3 +13,11 @@
 .profile-editor p {
   overflow-wrap: anywhere;
 }
+
+.profile-editor--embedded {
+  padding: var(--space-4);
+  margin-bottom: var(--space-4);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-raised);
+  color: var(--color-text);
+}

@@ -1,4 +1,4 @@
-import { afterEach, expect, it, vi } from 'vitest';
+import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ContentPackageWorkspace } from './content-package-workspace';
 import {
@@ -9,14 +9,24 @@ import {
 import { createPreview, submitPreview } from './content-preview-api';
 import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
 
-if (!HTMLDialogElement.prototype.showModal)
-  HTMLDialogElement.prototype.showModal = function () {
-    this.open = true;
-  };
-if (!HTMLDialogElement.prototype.close)
-  HTMLDialogElement.prototype.close = function () {
-    this.open = false;
-  };
+const originalShow = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'showModal');
+const originalClose = Object.getOwnPropertyDescriptor(HTMLDialogElement.prototype, 'close');
+beforeEach(() => {
+  Object.defineProperties(HTMLDialogElement.prototype, {
+    showModal: {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.open = true;
+      },
+    },
+    close: {
+      configurable: true,
+      value(this: HTMLDialogElement) {
+        this.open = false;
+      },
+    },
+  });
+});
 
 vi.mock('next/navigation', () => {
   const router = { push: vi.fn(), replace: vi.fn() };
@@ -37,7 +47,13 @@ vi.mock('./content-package-api', () => ({
   preparePretestScoring: vi.fn(),
 }));
 vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
-afterEach(cleanup);
+afterEach(() => {
+  cleanup();
+  if (originalShow) Object.defineProperty(HTMLDialogElement.prototype, 'showModal', originalShow);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'showModal');
+  if (originalClose) Object.defineProperty(HTMLDialogElement.prototype, 'close', originalClose);
+  else Reflect.deleteProperty(HTMLDialogElement.prototype, 'close');
+});
 it('allows a valid Pretest draft to publish without manual review or approval inputs', async () => {
   const pack = {
     id: 'pretest-test',

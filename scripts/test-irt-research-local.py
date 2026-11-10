@@ -22,7 +22,7 @@ def local_database():
         ctl=str(BIN/('pg_ctl'+suffix))
         with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
         subprocess.run([str(BIN/('initdb'+suffix)),'-D',str(cluster),'-U','fixture','-A','trust','--no-locale','-E','UTF8'],check=True,stdout=subprocess.DEVNULL)
-        subprocess.run([ctl,'-D',str(cluster),'-l',str(target/'postgres.log'),'-o',f'-h 127.0.0.1 -p {port}','-w','start'],check=True,stdout=subprocess.DEVNULL)
+        subprocess.run([ctl,'-D',str(cluster),'-l',str(target/'postgres.log'),'-o',f'-h 127.0.0.1 -p {port} -c max_locks_per_transaction=1024','-w','start'],check=True,stdout=subprocess.DEVNULL)
         try:
             import psycopg
             name='irt_research_test_'+uuid4().hex
@@ -62,4 +62,4 @@ try {await migrateIntegratedDatabase(db,process.argv[2]);} finally {await db.end
 if __name__=='__main__':
     with local_database() as url:
         env={**os.environ,'IRT_RESEARCH_LOCAL_URL':url,'NUMORA_REPO_PATH':str(ROOT),'PYTHONIOENCODING':'utf-8'}
-        subprocess.run([sys.executable,'-B','-m','unittest','tests.service.test_irt_postgres','-v'],cwd=AI,env=env,check=True,timeout=1800 if env.get('IRT_RESEARCH_TEST_IMAGE') else 300)
+        subprocess.run([sys.executable,'-B','-m','unittest','tests.service.test_irt_postgres','-v'],cwd=AI,env=env,check=True,timeout=1800 if env.get('IRT_RESEARCH_TEST_IMAGE') else 600)

@@ -1,5 +1,17 @@
 # Handoff mesin IRT Tryout — Data/AI ke Software
 
+**Prioritas 1 — 10 November 2026:** [handoff delivery frozen](IRT_DELIVERY_HANDOFF_V1.md)
+menetapkan mapping sumber, preflight read-only, fixture canonical/mirror dan
+harness snapshot tanpa dispatch/R. Ini kesiapan input riset, bukan adopsi atau
+publikasi hasil siswa. Kontrak ilmiah/transport existing tetap digunakan.
+
+**Konteks delivery — 10 November 2026:**
+[rekonsiliasi Admin dan strategi 24 jam](TRYOUT_IRT_DELIVERY_CONTEXT.md)
+menjadi acuan urutan kerja terbaru: IRT Tryout multi-arm, fallback per arm di
+main, dan self-adjustment ditunda. Pilihan anchor per proses harus kompatibel
+dengan lima versi anchor bersama yang diwajibkan runtime. Tidak ada perubahan
+payload, capability, approval produksi atau deployment melalui pembaruan ini.
+
 **ENGINEERING IMPLEMENTATION, 10 November 2026.** Mesin riset lokal memakai
 data sintetis. Dokumen ini tidak menyetujui penggunaan peserta asli, publikasi
 nilai, kebijakan statistik produksi, atau deployment. Salinan di kedua repo
@@ -170,3 +182,10 @@ rilis produksi tetap belum disetujui. PIC operasional tim AI bertanggung jawab
 atas image/runtime/diagnostics; PIC Software bertanggung jawab atas adapter,
 role database, outbox, penerimaan dan publikasi. Nama individu harus diisi tim
 sebelum deployment lintas VPS.
+
+## Prioritas 2: runtime frozen delivery
+
+**ENGINEERING IMPLEMENTATION ? 10 November 2026:**
+lihat [runtime handoff v2](IRT_RUNTIME_HANDOFF_V2.md). Manifest Linux v2 mem-pin
+byte LF profil Linux-v1; v1 dan evidence lama dipertahankan. Endpoint/kontrak,
+image dan estimator existing digunakan kembali. Aktivasi produksi tetap terpisah.

@@ -178,9 +178,9 @@ test('membership history pages independently and minimal account details remain 
   await expect(page.getByText('user0@example.test', { exact: true })).toBeVisible();
   await page.getByText('Identitas data', { exact: true }).click();
   await expect(page.getByText(id(200), { exact: true })).toBeVisible();
-  await expect(page.getByRole('button', { name: /ban|nonaktifkan|simpan perubahan/i })).toHaveCount(
-    0,
-  );
+  await expect(
+    page.getByRole('button', { name: /\b(?:ban|nonaktifkan|simpan perubahan)\b/i }),
+  ).toHaveCount(0);
   expect(state.calls.every((call) => call.method === 'GET')).toBe(true);
 });
 

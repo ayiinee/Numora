@@ -154,7 +154,7 @@ test('moderation opens the archived target directly without fetching current ban
     await expect(page.locator('.admin-management-shell')).toBeVisible();
     await expect(page.locator('.app-sidebar a[aria-current="page"]')).toHaveAttribute(
       'href',
-      '/admin/content',
+      '/admin/content?view=reports',
     );
     await page.screenshot({
       path: test.info().outputPath(`report-detail-${width}.png`),

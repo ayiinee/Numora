@@ -253,7 +253,9 @@ export function PlayerCard({
   reconnectRemaining?: number | undefined;
 }) {
   return (
-    <article className={`pvp-player-card${player.studentId === selfId ? ' is-self' : ''}`}>
+    <article
+      className={`pvp-player-card${player.studentId === selfId ? ' is-self' : ''}${player.ready && player.connectionStatus !== 'DISCONNECTED' ? ' is-ready' : ''}`}
+    >
       {player.studentId === creatorId && <span className="pvp-player-card__host">Tuan Rumah</span>}
       <Avatar name={player.displayName} size="lg" />
       <h2>
@@ -279,13 +281,14 @@ export function PlayerCard({
             ? 'Menang'
             : player.result === 'DRAW'
               ? 'Seri'
-              : 'Selesai bermain'}
+              : player.result === 'LOSS' || player.result === 'FORFEIT'
+                ? 'Kalah'
+                : 'Selesai bermain'}
         </p>
       )}
       {!closed && player.connectionStatus === 'DISCONNECTED' && player.reconnectDeadlineAt && (
         <p role="timer" aria-label={`Waktu reconnect ${player.displayName}`}>
-          {reconnectRemaining ?? '—'} detik untuk tersambung kembali. Keputusan akhir mengikuti
-          server.
+          Menyambungkan kembali · {reconnectRemaining ?? '—'} detik
         </p>
       )}
     </article>
@@ -304,6 +307,7 @@ export function WaitingRoom({
   onShare,
   peers,
   reconnectRemaining,
+  roomRemaining,
 }: {
   snapshot: PvpSnapshotDto;
   selfId?: string | undefined;
@@ -316,74 +320,42 @@ export function WaitingRoom({
   onShare: () => void;
   peers?: ReactNode;
   reconnectRemaining: Record<string, number>;
+  roomRemaining?: number | undefined;
 }) {
   const self = snapshot.players.find((player) => player.studentId === selfId);
+  const opponent = snapshot.players.find((player) => player.studentId !== selfId);
+  let instruction = 'Tekan Saya siap. Duel dimulai setelah kalian berdua siap.';
+  if (!opponent) {
+    instruction = self?.ready
+      ? 'Kamu sudah siap. Ajak teman bergabung untuk memulai duel.'
+      : 'Kamu bisa menekan Siap sambil menunggu teman bergabung.';
+  } else if (opponent.connectionStatus === 'DISCONNECTED') {
+    instruction = 'Lawan sedang menyambungkan kembali. Tunggu sebentar.';
+  } else if (self?.ready) {
+    instruction = opponent.ready
+      ? 'Kalian sudah siap. Duel akan segera dimulai.'
+      : `Menunggu ${opponent.displayName} menekan Siap.`;
+  } else if (opponent.ready) {
+    instruction = 'Lawan sudah siap. Tekan Saya siap untuk memulai duel.';
+  }
   return (
     <div className="pvp-waiting-layout">
-      <div className="pvp-waiting-main">
-        <div className="pvp-room-meta">
-          <strong>
-            {snapshot.players.length < 2 ? 'Menunggu Lawan Bergabung…' : 'Menunggu Kesiapan Pemain'}
-          </strong>
+      <Card className="pvp-waiting-status" aria-label="Kesiapan duel">
+        <div className="pvp-waiting-status__heading">
           <div>
-            <span>
-              <Icon name="clock" width={14} height={14} />
-              {difficultyLabels[snapshot.difficulty]}
-            </span>
-            <span>10 Soal Acak Campuran</span>
-            <span>
-              <Icon name="gamepad" width={14} height={14} />
-              Mode 1 vs 1
-            </span>
+            <p>{difficultyLabels[snapshot.difficulty]} · 10 soal</p>
+            <h2>{opponent ? 'Lawan sudah bergabung' : 'Menunggu lawan'}</h2>
           </div>
-        </div>
-        <Card className="pvp-room-code">
-          <div className="pvp-room-code__label">
-            <span>KODE AKSES DUEL</span>
-            <span>
-              <Icon name="users" width={14} height={14} />
-              Bagikan ke teman
-            </span>
-          </div>
-          <div className="pvp-room-code__copy">
-            <h2>Room {snapshot.roomCode}</h2>
-            <Button
-              size="sm"
-              onClick={() => onCopy(snapshot.roomCode, 'Kode')}
-              leftIcon={<Icon name="clipboard" width={16} height={16} />}
-            >
-              Salin
-            </Button>
-          </div>
-          {qr ? (
-            <img src={qr} width={192} height={192} alt="QR link gabung room" />
-          ) : (
-            <p role="status">
-              {qrError ? 'QR belum tersedia. Gunakan kode atau link room.' : 'Menyiapkan QR…'}
-            </p>
+          {roomRemaining !== undefined && (
+            <div className="pvp-room-timer">
+              <span>Sisa waktu room</span>
+              <strong role="timer" aria-label="Sisa waktu room" aria-live="off">
+                <Icon name="clock" width={16} height={16} />
+                {String(Math.floor(roomRemaining / 60)).padStart(2, '0')}:
+                {String(roomRemaining % 60).padStart(2, '0')}
+              </strong>
+            </div>
           )}
-          <h3>Scan untuk Masuk Cepat</h3>
-          <p>Arahkan kamera smartphone temanmu ke QR ini.</p>
-          <Button
-            variant="secondary"
-            onClick={onShare}
-            leftIcon={<Icon name="arrow" width={16} height={16} />}
-          >
-            Bagikan Link Duel
-          </Button>
-          <details>
-            <summary>Link room</summary>
-            <a href={link}>{link}</a>
-            <Button variant="ghost" onClick={() => onCopy(link, 'Link')}>
-              Salin link
-            </Button>
-          </details>
-        </Card>
-        <div className="pvp-players-heading">
-          <h2>Pemain di Arena ({snapshot.players.length}/2)</h2>
-          <span>
-            {snapshot.players.length < 2 ? 'Membutuhkan 1 lawan' : 'Dua pemain bergabung'}
-          </span>
         </div>
         <div className="pvp-player-grid">
           {snapshot.players.map((player) => (
@@ -395,32 +367,84 @@ export function WaitingRoom({
               reconnectRemaining={reconnectRemaining[player.studentId]}
             />
           ))}
-          {snapshot.players.length < 2 && (
+          {!opponent && (
             <article className="pvp-player-card pvp-player-card--vacant">
               <StudentMascot pose="opponent" compact />
-              <h2>Mencari Lawan…</h2>
-              <p>Bagikan kode atau link room.</p>
+              <h2>Lawan belum bergabung</h2>
+              <p>Bagikan kode room di bawah.</p>
             </article>
           )}
         </div>
-      </div>
-      <aside className="pvp-waiting-context">
-        {peers}
-        <Card className="pvp-room-guidance">
-          <Icon name="info" />
-          <p>
-            Kedua pemain perlu menyatakan siap. Duel dimulai sesuai state server setelah kesiapan
-            keduanya diterima.
-          </p>
-        </Card>
+        <p className="pvp-waiting-instruction" role="status">
+          {instruction}
+        </p>
         <Button
           fullWidth
           disabled={disabled || !self || self.ready}
           onClick={onReady}
-          leftIcon={<Icon name="gamepad" />}
+          leftIcon={<Icon name={self?.ready ? 'check' : 'gamepad'} />}
         >
-          {self?.ready ? 'Menunggu pemain lain' : 'Saya siap'}
+          {self?.ready ? 'Kamu sudah siap' : 'Saya siap'}
         </Button>
+      </Card>
+      <aside className="pvp-waiting-context">
+        <Card className="pvp-room-code">
+          <h2>Ajak teman bergabung</h2>
+          <p>Kirim kode atau link room ke temanmu.</p>
+          <div className="pvp-room-code__copy">
+            <strong className="pvp-room-code__value">{snapshot.roomCode}</strong>
+            <Button
+              variant="secondary"
+              size="sm"
+              onClick={() => onCopy(snapshot.roomCode, 'Kode')}
+              leftIcon={<Icon name="clipboard" width={16} height={16} />}
+            >
+              Salin
+            </Button>
+          </div>
+          {!qr && (
+            <p role="status">
+              {qrError ? 'QR belum tersedia. Gunakan kode atau link room.' : 'Menyiapkan QR…'}
+            </p>
+          )}
+          <Button
+            fullWidth
+            variant="secondary"
+            onClick={onShare}
+            leftIcon={<Icon name="arrow" width={16} height={16} />}
+          >
+            Bagikan Link Duel
+          </Button>
+          {qr && (
+            <details className="pvp-room-qr">
+              <summary>
+                Tampilkan QR room
+                <Icon name="chevron" width={16} height={16} />
+              </summary>
+              <img src={qr} width={192} height={192} alt="QR link gabung room" />
+              <p>Minta temanmu memindai QR untuk bergabung.</p>
+            </details>
+          )}
+          <details open={qrError || undefined}>
+            <summary>
+              Link room
+              <Icon name="chevron" width={16} height={16} />
+            </summary>
+            <a href={link}>{link}</a>
+            <Button variant="ghost" onClick={() => onCopy(link, 'Link')}>
+              Salin link
+            </Button>
+          </details>
+        </Card>
+        {peers && (
+          <details className="pvp-waiting-invites">
+            <summary>
+              <Icon name="users" width={16} height={16} />
+              Undang teman sekelas
+            </summary>
+            {peers}
+          </details>
+        )}
       </aside>
     </div>
   );
@@ -479,13 +503,9 @@ export function BattleRoom({
               </>
             )}
           </div>
-          <div className="pvp-scoreboard__timer">
-            <span role="timer" aria-label="Sisa waktu">
-              {remaining}
-            </span>
-            <small>DETIK</small>
-            <span>VS</span>
-          </div>
+          <span className="pvp-scoreboard__versus" aria-hidden="true">
+            VS
+          </span>
           <div className="pvp-scoreboard__player">
             {opponent && (
               <>
@@ -503,6 +523,22 @@ export function BattleRoom({
             )}
           </div>
         </Card>
+        <div className="pvp-round-timer">
+          <div className="pvp-round-timer__track" aria-hidden="true">
+            <div
+              style={{
+                width: `${Math.max(0, Math.min(100, (remaining / question.durationSeconds) * 100))}%`,
+              }}
+            />
+          </div>
+          <span>
+            <Icon name="clock" width={14} height={14} />
+            <span role="timer" aria-label="Sisa waktu">
+              {remaining}
+            </span>
+            detik
+          </span>
+        </div>
         <Card className="pvp-question">
           <div>
             <span>Soal {question.order} dari 10</span>
@@ -600,57 +636,58 @@ export function MatchOutcome({
   selfId?: string | undefined;
 }) {
   const self = snapshot.players.find((player) => player.studentId === selfId);
-  const title =
-    snapshot.status === 'CANCELLED'
-      ? 'Pertandingan dibatalkan'
-      : snapshot.endReason === 'FORFEIT'
-        ? 'Duel berakhir karena menyerah'
-        : self?.result === 'WIN'
-          ? 'Kemenangan!'
-          : self?.result === 'DRAW'
-            ? 'Hasil seri'
-            : 'Duel selesai';
+  const cancelled = snapshot.status === 'CANCELLED';
+  const lost = self?.result === 'LOSS' || self?.result === 'FORFEIT';
+  let title = 'Duel selesai';
+  let description = 'Lihat poin akhir kedua pemain di bawah.';
+  if (cancelled) {
+    title = snapshot.endReason === 'ROOM_EXPIRED' ? 'Waktu tunggu habis' : 'Duel dibatalkan';
+    description = 'Buat room baru untuk bermain lagi.';
+  } else if (self?.result === 'WIN') {
+    title = 'Kamu menang!';
+    description =
+      snapshot.endReason === 'FORFEIT'
+        ? 'Lawan keluar atau tidak tersambung kembali. Kamu menang pada duel ini.'
+        : 'Kerja bagus! Tantang temanmu lagi di duel berikutnya.';
+  } else if (lost) {
+    title = 'Kamu kalah kali ini';
+    description =
+      self?.result === 'FORFEIT'
+        ? 'Duel berakhir karena kamu keluar atau tidak tersambung kembali.'
+        : 'Tetap semangat. Latihan lagi, lalu coba duel berikutnya.';
+  } else if (self?.result === 'DRAW') {
+    title = 'Duel berakhir seri';
+    description = 'Poin kalian sama. Siap mencoba duel lagi?';
+  }
   return (
     <div className="pvp-outcome-layout">
       <Card className="pvp-outcome-hero">
         <StudentMascot pose={outcomePose(snapshot.status, self?.result)} />
         <span className="pvp-outcome-state">
-          {snapshot.status === 'CANCELLED' ? 'DIBATALKAN' : 'PVP • SELESAI'}
+          {difficultyLabels[snapshot.difficulty]} · Duel 1 vs 1
         </span>
         <h2>{title}</h2>
-        <p>Duel Matematika TKA SMP • Tingkat {difficultyLabels[snapshot.difficulty]}</p>
+        <p>{description}</p>
         <div className="pvp-player-grid">
           {snapshot.players.map((player) => (
             <PlayerCard key={player.studentId} player={player} selfId={selfId} closed />
           ))}
         </div>
+        {!snapshot.recordEligible && (
+          <p className="pvp-outcome-note">Pertandingan ini tidak berkontribusi pada leaderboard.</p>
+        )}
       </Card>
-      <aside>
-        <Card className="pvp-outcome-record">
-          <h2>
-            <Icon name="chart" />
-            Poin &amp; Rekor
-          </h2>
-          <p>
-            {snapshot.recordEligible
-              ? 'Rekor akan diperbarui oleh proyeksi leaderboard.'
-              : 'Pertandingan ini tidak berkontribusi pada leaderboard.'}
-          </p>
-          <div>
-            <Icon name="info" />
-            <p>Poin pertandingan dan XP kelas terpisah. PvP tidak masuk leaderboard kelas.</p>
-          </div>
-        </Card>
+      <aside className="pvp-outcome-actions">
+        <Link className="button-link" href="/student/pvp">
+          <Icon name="gamepad" />
+          Main lagi
+        </Link>
         <Link
-          className="button-link"
+          className="button-link pvp-secondary-link"
           href={`/student/leaderboards?difficulty=${snapshot.difficulty}`}
         >
           <Icon name="trophy" />
           Lihat Leaderboard PvP
-        </Link>
-        <Link className="button-link pvp-secondary-link" href="/student/pvp">
-          <Icon name="back" />
-          Kembali ke PvP
         </Link>
       </aside>
     </div>

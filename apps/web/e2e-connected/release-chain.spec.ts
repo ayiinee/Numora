@@ -310,14 +310,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto('/student/profile');
     await student.getByLabel(/^Kode kelas/).fill(cls.joinCode);
     await student.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student.locator('.student-profile-identity').getByText(school.name, { exact: true }),
+    ).toBeVisible();
     await expect(
       student
         .getByRole('region', { name: 'Profil dan progres' })
         .getByText(cls.name, { exact: true }),
     ).toBeVisible();
     await student.reload();
-    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student.locator('.student-profile-identity').getByText(school.name, { exact: true }),
+    ).toBeVisible();
     await expect(
       student
         .getByRole('region', { name: 'Profil dan progres' })
@@ -362,16 +366,20 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.getByRole('button', { name: 'Coba simpan lagi', exact: true }).click();
     await saved;
     student.removeAllListeners('dialog');
-    student.once('dialog', async (dialog) => {
-      expect(dialog.message()).toContain('Timer akan dijeda');
-      await dialog.dismiss();
-    });
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    const exitDialog = student.getByRole('dialog', { name: 'Jeda latihan dulu?' });
+    await expect(exitDialog).toBeVisible();
+    await expect(exitDialog).toContainText('Timer akan dijeda');
+    await exitDialog.getByRole('button', { name: 'Lanjut mengerjakan', exact: true }).click();
+    await expect(exitDialog).toBeHidden();
     await expect(student).toHaveURL(new RegExp(`/student/drill/${attempt.id}$`));
     student.on('dialog', (dialog) => void dialog.accept());
     await reloadAndResumeDrill(student, request, 'student', attempt.id);
     await expect(option(student, 'B')).toBeChecked();
     await student.getByRole('link', { name: 'Kembali ke materi', exact: true }).click();
+    await expect(exitDialog).toBeVisible();
+    await exitDialog.getByRole('button', { name: 'Ya, keluar dulu', exact: true }).click();
+    await expect(student).toHaveURL(/\/student\/learn$/);
     await expectPausedDrill(request, 'student', attempt.id);
     // A new auth/browser context also resumes the same persisted answers.
     const resumed = await login(browser, 'student');
@@ -670,7 +678,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const admin = await login(browser, 'admin');
     await admin.goto('/teacher');
     await expect(admin).toHaveURL(/\/admin\/analytics$/);
-    await expect(admin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(admin.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
     await expect(admin.locator('[data-metric]')).toHaveCount(22);
     await expect(admin.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
     await admin.goto('/admin/schools');
@@ -1259,7 +1267,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     const superAdmin = await login(browser, 'admin');
     await superAdmin.goto('/admin');
     await expect(superAdmin).toHaveURL(/\/admin\/analytics$/);
-    await expect(superAdmin.getByRole('heading', { name: 'Analytics', exact: true })).toBeVisible();
+    await expect(superAdmin.getByRole('heading', { name: 'Dashboard', exact: true })).toBeVisible();
     await expect(superAdmin.locator('[data-metric]')).toHaveCount(22);
     await call(request, 'admin', 'admin/accounts?limit=5&offset=0');
 
@@ -1357,7 +1365,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBeVisible();
     await content.reload();
     await expect(content.getByText('Kelas dari sekolah terpilih', { exact: true })).toBeVisible();
-    await expect(content.getByRole('button', { name: /terbitkan|cabut|ban/i })).toHaveCount(0);
+    await expect(content.getByRole('button', { name: /\b(?:terbitkan|cabut|ban)\b/i })).toHaveCount(
+      0,
+    );
     for (const path of [
       'admin/users',
       'admin/accounts',

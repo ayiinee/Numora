@@ -138,7 +138,7 @@ export function AdminMessage({
             </Button>
           )}
           {login && (
-            <Link className="admin-recovery-link" href="/admin/login">
+            <Link className="admin-recovery-link" href="/admin-numora">
               Ke halaman masuk
             </Link>
           )}

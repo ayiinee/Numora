@@ -1,8 +1,8 @@
 'use client';
 
 import Link from 'next/link';
-import type { ReactNode } from 'react';
-import { Avatar, Badge, Card, Icon, ListRow, ProgressBar, type IconName } from '@tka/ui';
+import { useId, useState, type ReactNode } from 'react';
+import { Avatar, Badge, Button, Card, Icon, ListRow, ProgressBar, type IconName } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
 import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
 
@@ -34,60 +34,71 @@ export function ProfileIdentity({
   avatarUrl,
   data,
   progressState,
+  editor,
 }: {
   profile: IdentityProfile;
   avatarUrl?: string | undefined;
   data?: StudentDashboardDto | undefined;
   progressState?: ReactNode;
+  editor?: ReactNode;
 }) {
+  const [editing, setEditing] = useState(false);
+  const editorId = useId();
   const school = profile.studentAffiliation === 'SCHOOL';
   const classCount = data?.classes?.length ?? (data?.class ? 1 : 0);
   return (
     <Card className="student-profile-identity" aria-labelledby="profile-name">
-      <div className="student-profile-identity__badges">
-        <Badge
-          variant="secondary"
-          style={{
-            background: 'var(--pvp-glass)',
-            color: 'var(--color-text-inverse)',
-            borderColor: 'var(--pvp-glass-border)',
-            fontSize: '10px',
-          }}
-        >
-          <Icon name={school ? 'school' : 'user'} width={14} height={14} />
-          {school ? 'TERAFILIASI SEKOLAH' : 'BELAJAR MANDIRI'}
-        </Badge>
-        <span className="student-profile-active">
-          {profile.status === 'ACTIVE' ? '● Aktif' : 'Tidak aktif'}
-        </span>
-      </div>
-      <div className="student-profile-identity__person">
-        <div className="student-profile-avatar">
-          <Avatar
-            name={profile.displayName}
-            size="lg"
-            style={{ width: 56, height: 56, fontSize: 22 }}
-            {...(avatarUrl ? { src: avatarUrl } : {})}
-          />
+      <div className="student-profile-identity__header">
+        <div className="student-profile-identity__person">
+          <div className="student-profile-avatar">
+            <Avatar
+              name={profile.displayName}
+              size="lg"
+              style={{ width: 56, height: 56, fontSize: 22 }}
+              {...(avatarUrl ? { src: avatarUrl } : {})}
+            />
+          </div>
+          <div>
+            <h2 id="profile-name">{profile.displayName}</h2>
+            <p>
+              {school
+                ? classCount > 1
+                  ? 'Siswa sekolah'
+                  : (data?.class?.schoolName ?? 'Siswa sekolah')
+                : 'User Mandiri'}
+            </p>
+            <small>
+              {school
+                ? classCount > 1
+                  ? `${classCount} kelas aktif`
+                  : (data?.class?.name ?? 'Terhubung dengan kelas')
+                : 'Belajar sesuai ritmemu'}
+            </small>
+          </div>
         </div>
-        <div>
-          <h2 id="profile-name">{profile.displayName}</h2>
-          <p>
-            {school
-              ? classCount > 1
-                ? 'Siswa sekolah'
-                : (data?.class?.schoolName ?? 'Siswa sekolah')
-              : 'User Mandiri'}
-          </p>
-          <small>
-            {school
-              ? classCount > 1
-                ? `${classCount} kelas aktif`
-                : (data?.class?.name ?? 'Terhubung dengan kelas')
-              : 'Belajar sesuai ritmemu'}
-          </small>
-        </div>
+        {editor && (
+          <Button
+            type="button"
+            variant="ghost"
+            size="sm"
+            className="student-profile-identity__edit"
+            aria-label="Edit profil"
+            aria-expanded={editing}
+            aria-controls={editorId}
+            onClick={() => setEditing((open) => !open)}
+          >
+            <span>
+              Edit<span className="student-profile-identity__edit-label"> profil</span>
+            </span>
+            <Icon name="chevron" width={12} height={12} />
+          </Button>
+        )}
       </div>
+      {editor && (
+        <div id={editorId} hidden={!editing}>
+          {editor}
+        </div>
+      )}
       <div className="student-profile-identity__progress">
         {data ? (
           <>

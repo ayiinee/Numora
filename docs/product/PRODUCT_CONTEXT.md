@@ -1,5 +1,13 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION — pemilik, 10 November 2026:**
+[rekonsiliasi delivery Admin dan IRT Tryout](../TRYOUT_IRT_DELIVERY_CONTEXT.md)
+memuat sumber Admin utuh, batas master/batch frozen, anchor per proses dan
+kebutuhan lima anchor identik lintas arm. Target 24 jam mengutamakan IRT dan
+mengizinkan fallback per arm sesuai dokumen Admin; self-adjustment ditunda.
+Ini pembaruan konteks, bukan bukti runtime Admin, adopsi canonical atau rilis
+produksi telah selesai. PROPOSED/OPEN sumber tetap dibedakan dari keputusan sah.
+
 **ENGINEERING DECISION — pemilik, 9 November 2026.** Pretest original memakai nilai sebagian per opsi/pernyataan seperti Tryout, jawaban kosong 0, bobot 1 per soal, dan tanpa XP. Level awal memakai total poin sebelum pembulatan: kurang dari 8 level 1, 8 sampai kurang dari 19 level 2, mulai 19 level 3. Dua koreksi sumber disetujui dan empat paket original diterbitkan sebagai versi baru. Aturan PG lama dan hasil historis tetap dipin. [Rincian penerbitan dan verifikasi](../development/PRETEST_ORIGINAL_RELEASE_2026-11-09.md).
 
 **ENGINEERING DECISION — permintaan pengguna, 9 November 2026.** Siswa yang disiapkan pengelola di Supabase Auth dapat masuk dengan email dan password. Akun Auth yang belum punya profil hanya dapat memakai jalur ini jika pengelola menandainya sebagai Siswa di metadata server. Login Google dan identitas akun yang sudah terhubung tetap tersedia, termasuk bagi Siswa lama.

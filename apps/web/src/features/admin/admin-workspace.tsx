@@ -44,7 +44,7 @@ export function AdminWorkspace({
     [profile, parentError],
   );
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/admin/login');
+    if (state.status === 'signed_out') router.replace('/admin-numora');
     if (state.status === 'registration') router.replace('/onboarding');
     if (state.status === 'ready' && state.profile.role !== 'ADMIN')
       router.replace(destination(state.profile));

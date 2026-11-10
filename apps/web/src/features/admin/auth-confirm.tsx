@@ -137,7 +137,7 @@ export function AdminAuthConfirmScreen() {
               </Button>
             </form>
           )}
-          <Link href={done ? '/admin' : '/admin/login'}>
+          <Link href={done ? '/admin' : '/admin-numora'}>
             {done ? 'Buka portal Admin' : 'Kembali ke login'}
           </Link>
         </section>

@@ -2,6 +2,7 @@
 import katex from 'katex';
 import { useState } from 'react';
 import type { PreviewMediaDto } from '@/features/admin/generated-types';
+import { contentBlocks } from './content-tables';
 
 function Media({ asset, onRetry }: { asset: PreviewMediaDto | undefined; onRetry: () => void }) {
   const [failed, setFailed] = useState(false);
@@ -35,7 +36,7 @@ const delimiters =
   /\[\[asset:([A-Za-z0-9_-]+)\]\]|(\$\$[\s\S]*?\$\$|\$[^$\n]+\$|\\\([\s\S]*?\\\)|\\\[[\s\S]*?\\\])/;
 const root = /([+-]?)\\?\bsqrt\(([^()\n]+)\)/;
 const fraction = /([+-]?)\(([^()\n]+)\)\s*\/\s*\(([^()\n]+)\)/;
-const script = /\^(\{[^{}\n]+\}|-?\d+|[A-Za-z]|\\[A-Za-z]+)/;
+const script = /\^(\{[^{}\n]+\}|\([^()\n]+\)|-?\d+|[A-Za-z]|\\[A-Za-z]+)/;
 const power = new RegExp(/(?:[A-Za-z0-9]+|\([^()\n]+\))/.source + script.source);
 // Recognize common commands in mixed prose. Full equations can use explicit delimiters.
 const command =
@@ -68,6 +69,7 @@ function commandEnd(text: string, name: string, end: number) {
 }
 
 function braced(exponent: string) {
+  if (exponent.startsWith('(')) return '{' + exponent.slice(1, -1) + '}';
   return exponent.startsWith('{') ? exponent : '{' + exponent + '}';
 }
 
@@ -132,7 +134,7 @@ export function ContentRichText({
   text,
   media,
   retry,
-  renderBareMath = false,
+  renderBareMath = true,
   renderMedia = true,
 }: {
   text: string;
@@ -141,25 +143,75 @@ export function ContentRichText({
   renderBareMath?: boolean;
   renderMedia?: boolean;
 }) {
+  const inline = (value: string) =>
+    Array.from(contentParts(value, renderBareMath), (part, i) => {
+      if (part.asset && renderMedia) {
+        const asset = media.find((item) => item.assetId === part.asset);
+        return <Media key={`${i}:${asset?.url ?? 'missing'}`} asset={asset} onRetry={retry} />;
+      }
+      if (part.formula !== undefined) {
+        // Only KaTeX output becomes HTML. trust:false rejects HTML/URL commands.
+        const html = katex.renderToString(part.formula, {
+          displayMode: part.display ?? false,
+          throwOnError: false,
+          trust: false,
+          maxExpand: 1000,
+        });
+        return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
+      }
+      return <span key={i}>{part.text}</span>;
+    });
   return (
     <span className="content-rich-text">
-      {Array.from(contentParts(text, renderBareMath), (part, i) => {
-        if (part.asset && renderMedia) {
-          const asset = media.find((item) => item.assetId === part.asset);
-          return <Media key={`${i}:${asset?.url ?? 'missing'}`} asset={asset} onRetry={retry} />;
-        }
-        if (part.formula !== undefined) {
-          // Only KaTeX output becomes HTML. trust:false rejects HTML/URL commands.
-          const html = katex.renderToString(part.formula, {
-            displayMode: part.display ?? false,
-            throwOnError: false,
-            trust: false,
-            maxExpand: 1000,
-          });
-          return <span key={i} dangerouslySetInnerHTML={{ __html: html }} />;
-        }
-        return <span key={i}>{part.text}</span>;
-      })}
+      {contentBlocks(text).map((block, index) =>
+        block.type === 'text' ? (
+          <span key={index}>{inline(block.text)}</span>
+        ) : (
+          <span
+            key={index}
+            className="content-table-scroll"
+            role="region"
+            aria-label="Tabel pada soal"
+            tabIndex={0}
+          >
+            <span
+              className="content-rich-table"
+              role="table"
+              aria-label="Data soal"
+              style={{ minWidth: `${block.headers.length * 96}px` }}
+            >
+              <span role="rowgroup">
+                <span role="row">
+                  {block.headers.map((cell, column) => (
+                    <span
+                      role="columnheader"
+                      key={column}
+                      style={{ textAlign: block.alignments[column] }}
+                    >
+                      {inline(cell)}
+                    </span>
+                  ))}
+                </span>
+              </span>
+              <span role="rowgroup">
+                {block.rows.map((row, rowIndex) => (
+                  <span role="row" key={rowIndex}>
+                    {row.map((cell, column) => (
+                      <span
+                        role="cell"
+                        key={column}
+                        style={{ textAlign: block.alignments[column] }}
+                      >
+                        {inline(cell)}
+                      </span>
+                    ))}
+                  </span>
+                ))}
+              </span>
+            </span>
+          </span>
+        ),
+      )}
     </span>
   );
 }

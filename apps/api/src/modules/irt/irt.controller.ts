@@ -88,6 +88,17 @@ export class IrtController {
   adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.requests.adopt(request.adminId, id);
   }
+  @Post('research/finalize/:receiptId')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  finalizeResearchV1(@Param('receiptId', new ParseUUIDPipe()) receiptId: string) {
+    return this.requests.finalizeResearchV1(receiptId);
+  }
+  @Post('research/requests/:id/adopt')
+  @HttpCode(200)
+  adoptResearchV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.adoptResearchV1(id);
+  }
   @Post('requests')
   @ApiHeader({ name: 'Idempotency-Key', required: true })
   @ApiCreatedResponse({ type: IrtRequestDto })
@@ -129,3 +140,4 @@ export class IrtController {
     return this.irt.batches(page);
   }
 }
+

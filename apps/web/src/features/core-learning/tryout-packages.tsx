@@ -4,7 +4,7 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
-import { Badge, Button, Card } from '@tka/ui';
+import { Badge, Button, Card, Icon } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
@@ -33,12 +33,11 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
     );
   return (
-    <section aria-label="Paket Tryout terlewat">
-      <h2>Terlewat</h2>
-      <p>
-        Paket terlewat tetap terlihat dan tidak dapat dimulai. Paket yang sudah dikerjakan hanya
-        menyediakan status hasil serta pembahasan setelah rilis.
-      </p>
+    <section className="tryout-past" aria-label="Paket Tryout terlewat">
+      <header>
+        <h2>Paket terlewat</h2>
+        <p>Paket sudah ditutup. Jika sudah mengerjakan, cek hasil dan pembahasan setelah rilis.</p>
+      </header>
       {!packages.length && (
         <Status title="Belum ada paket terlewat">
           Paket yang telah ditutup akan muncul di sini.
@@ -46,41 +45,60 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
       )}
       <div className="activity-list">
         {packages.map((pack) => (
-          <Card key={pack.id} fullWidth>
-            <Badge variant={pack.state === 'resultReady' ? 'success' : 'secondary'}>
-              {pack.attemptId
-                ? pack.state === 'resultReady'
-                  ? 'Hasil dirilis'
-                  : 'Menunggu hasil'
-                : 'Terkunci · Belum dikerjakan'}
-            </Badge>
-
-            <h3>{pack.title}</h3>
-            <p>
-              {pack.questionCount} soal ·{' '}
-              {pack.durationSeconds == null
-                ? 'Durasi belum tersedia'
-                : `${Math.ceil(pack.durationSeconds / 60)} menit`}
-            </p>
-            <p>Ditutup {wib(pack.closeAt)}</p>
+          <Card key={pack.id} fullWidth className="tryout-past-card">
+            <div className="tryout-past-card__summary">
+              <span className="tryout-past-card__icon">
+                <Icon name={pack.attemptId ? 'clipboard' : 'lock'} width={20} height={20} />
+              </span>
+              <div>
+                <Badge size="sm" variant={pack.state === 'resultReady' ? 'success' : 'secondary'}>
+                  {pack.attemptId
+                    ? pack.state === 'resultReady'
+                      ? 'Hasil dirilis'
+                      : 'Menunggu hasil'
+                    : 'Terkunci · Belum dikerjakan'}
+                </Badge>
+                <h3>{pack.title}</h3>
+                <p>
+                  {pack.questionCount ?? '—'} soal ·{' '}
+                  {pack.durationSeconds == null
+                    ? 'Durasi belum tersedia'
+                    : `${Math.ceil(pack.durationSeconds / 60)} menit`}
+                </p>
+              </div>
+            </div>
             {pack.attemptId && pack.state !== 'resultReady' && (
-              <p>
-                Hasil dan pembahasan maksimal 72 jam setelah penutupan: {wib(pack.resultDueAt)}.
+              <p className="tryout-past-card__notice">
+                {pack.resultDueAt
+                  ? `Hasil dan pembahasan dirilis paling lambat ${wib(pack.resultDueAt)}.`
+                  : 'Hasil dan pembahasan dirilis maksimal 72 jam setelah paket ditutup.'}
               </p>
             )}
-            <Link className="button-link" href={`/student/tryout/packages/${pack.id}`}>
-              Lihat detail paket
-            </Link>
-            {pack.attemptId && (
-              <Link className="button-link" href={`/student/tryout/${pack.attemptId}/result`}>
-                {pack.state === 'resultReady' ? 'Lihat hasil dan pembahasan' : 'Lihat status hasil'}
-              </Link>
-            )}
+            <footer className="tryout-past-card__footer">
+              <p>
+                <Icon name="clock" width={16} height={16} />
+                <span>Ditutup {wib(pack.closeAt)}</span>
+              </p>
+              <div className="tryout-past-card__actions">
+                <Link className="section-link" href={`/student/tryout/packages/${pack.id}`}>
+                  Lihat detail paket
+                  <Icon name="chevron" width={16} height={16} />
+                </Link>
+                {pack.attemptId && (
+                  <Link className="button-link" href={`/student/tryout/${pack.attemptId}/result`}>
+                    {pack.state === 'resultReady'
+                      ? 'Lihat hasil dan pembahasan'
+                      : 'Lihat status hasil'}
+                  </Link>
+                )}
+              </div>
+            </footer>
           </Card>
         ))}
       </div>
       {query.hasNextPage && (
         <Button
+          className="tryout-past__more"
           variant="secondary"
           disabled={query.isFetchingNextPage}
           onClick={() => void query.fetchNextPage()}
