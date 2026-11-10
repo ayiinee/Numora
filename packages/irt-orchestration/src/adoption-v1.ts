@@ -6,7 +6,7 @@ const fail = (code: string): never => {
   throw new Error(code);
 };
 
-function assertPayload(payload: JsonObject, input: JsonObject, artifactDigest: string) {
+export function validateV1ArtifactShape(payload: JsonObject, input: JsonObject, artifactDigest = '') {
   if (
     payload.contractVersion !== 'irt-calibration-v1' ||
     payload.requestId !== input.id ||
@@ -68,7 +68,7 @@ export async function adoptTryoutArtifactV1(client: Sql, requestId: string) {
         if (existing.artifact_digest !== job.artifact_digest) fail('IRT_V1_ADOPTION_CONFLICT');
         return { requestId, adopted: existing.status === 'ADOPTED', receiptId: existing.id };
       }
-      const { attempts } = assertPayload(job.payload, input!, job.artifact_digest);
+      const { attempts } = validateV1ArtifactShape(job.payload, input!, job.artifact_digest);
       const snapshot = await tx<{ attempt_id: string }[]>`
         SELECT DISTINCT attempt_id::text FROM public.response_snapshot_items WHERE snapshot_id=${input!.snapshot_id}`;
       const expected = new Set((snapshot ?? []).map((row: { attempt_id: string }) => row.attempt_id));
