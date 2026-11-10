@@ -35,7 +35,12 @@ const db = postgres(process.env.IRT_VERIFY_URL, { max: 4, onnotice: () => {} });
 const fixture = postgres(process.env.IRT_FIXTURE_URL, { max: 1, onnotice: () => {} });
 const integrity = async () => {
   const result = {};
-  for (const table of ['assessment_attempts', 'attempt_answers', 'xp_ledger']) {
+  for (const table of [
+    'assessment_attempts',
+    'attempt_answers',
+    'xp_ledger',
+    'irt_compute.calibration_artifacts_v1',
+  ]) {
     const [r] =
       await fixture`SELECT irt_compute.payload_digest(coalesce(jsonb_agg(to_jsonb(t) ORDER BY t.id),'[]'::jsonb)) AS digest FROM ${fixture(table)} t`;
     result[table] = r.digest;
@@ -154,6 +159,18 @@ try {
       const [events] =
         await db`SELECT count(*)::int AS count FROM analytics_outbox WHERE entity_id=${batchId} AND event_name='tryout.batch_published'`;
       assert.equal(events.count, 1);
+      process.env.NUMORA_IRT_PUBLICATION_ENABLED = 'false';
+      await assert.rejects(
+        publishTryoutReleaseV1(db, ready.finalizationId),
+        /IRT_RELEASE_DISABLED/,
+      );
+      process.env.NUMORA_IRT_RELEASE_ENABLED = 'false';
+      await assert.rejects(
+        prepareTryoutReleaseV1(db, batchId, requestId, a.id),
+        /IRT_RELEASE_DISABLED/,
+      );
+      assert.equal((await publishedTryoutAttemptResults(attempts)).size, attempts.length);
+      assert.deepEqual(await integrity(), before);
       console.log(
         JSON.stringify({
           purpose: 'RESEARCH_ONLY',
@@ -165,6 +182,7 @@ try {
           publicationReplay: true,
           readerGate: true,
           exactHistoryPreserved: true,
+          rollbackFlagsPreservePublishedResults: true,
         }),
       );
     }

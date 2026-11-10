@@ -20,6 +20,9 @@ from research.irt.synthetic import generate
 
 def main():
     parser=argparse.ArgumentParser();parser.add_argument('--engine-double',action='store_true');args=parser.parse_args()
+    output=ROOT/'.tmp/irt-release-acceptance'/('local-engine-double.json' if args.engine_double else 'local-report.json')
+    output.parent.mkdir(parents=True,exist_ok=True)
+    report={'purpose':'RESEARCH_ONLY','engineDouble':args.engine_double,'productionApproved':False,'cases':[]}
     local_database=runpy.run_path(str(ROOT/'scripts/test-irt-research-local.py'))['local_database']
     with local_database() as url:
         from tests.service import test_irt_postgres as fixtures
@@ -50,7 +53,10 @@ def main():
                 assert execute_once(fixture.repo,lambda work,**kwargs:scientific_fixture(work))
             else:assert execute_once(fixture.repo)
             result=subprocess.run(['node','scripts/test-irt-release-cases.mjs',notification['requestId']],cwd=ROOT,
-                env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url,'IRT_RELEASE_EXPECT_FAILURE':str(failure).lower(),'IRT_RELEASE_BLOCK':block},check=True,timeout=120)
-            assert result.returncode==0
+                env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url,'IRT_RELEASE_EXPECT_FAILURE':str(failure).lower(),'IRT_RELEASE_BLOCK':block},capture_output=True,text=True,timeout=120)
+            if result.returncode:raise RuntimeError('Main release assertions failed: '+result.stderr[-1500:])
+            case=json.loads(result.stdout);report['cases'].append(case);print(json.dumps(case),flush=True)
+            output.write_text(json.dumps(report,indent=2)+'\n')
+        report['status']='PASSED';output.write_text(json.dumps(report,indent=2)+'\n')
 
 if __name__=='__main__':main()
