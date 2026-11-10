@@ -11,7 +11,7 @@ export async function setupAssessment(
 ) {
   const base = await setup(page);
   base.state.adminRole = role;
-  const versions: AdminVersionDto[] = Array.from({ length: 7 }, (_, i) => ({
+  const versions: AdminVersionDto[] = Array.from({ length: 12 }, (_, i) => ({
     id: id(900 + i),
     questionId: id(920 + i),
     primaryCompetencyId: null,
@@ -145,8 +145,8 @@ export async function setupAssessment(
     const offset = Number(params.get('offset') ?? 0);
     return route.fulfill({
       json: {
-        items: items.slice(offset, offset + 5),
-        nextOffset: items.length > offset + 5 ? offset + 5 : null,
+        items: items.slice(offset, offset + 10),
+        nextOffset: items.length > offset + 10 ? offset + 10 : null,
       },
     });
   });

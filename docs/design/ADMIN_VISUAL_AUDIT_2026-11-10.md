@@ -29,3 +29,7 @@ Pemeriksaan browser menggunakan fixture sintetis existing untuk Akun, Sekolah, P
 - Dev server mencatat peringatan hydration saat skenario zoom serta satu peringatan library React `use()` saat navigasi; tidak menyebabkan assertion gagal. Build produksi lolos, tetapi tes fixture bukan pengganti acceptance dengan layanan terintegrasi.
 
 **ENGINEERING DECISION — instruksi pemilik, 11 November 2026:** modal penerbitan batch menonjolkan judul batch, memisahkan jadwal mulai/tutup, menjelaskan akses delegasi dan penguncian pengaturan, serta memakai footer Kembali / Ya, terbitkan batch. Dialog existing tetap menangani fokus dan mencegah penutupan selama pengiriman.
+
+## Pagination Admin - 11 November 2026
+
+**ENGINEERING DECISION - instruksi owner:** daftar Admin yang sebelumnya menampilkan 5 baris menggunakan 10 baris per halaman. Ukuran yang sudah lebih besar tetap dipertahankan. Jumlah aktual mengikuti data tersedia; filter tetap mengembalikan pagination ke halaman pertama.

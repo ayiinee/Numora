@@ -329,14 +329,14 @@ async function setup(page: Page) {
         revokedAt: null,
       },
     ] as TeacherTokenSummary[],
-    users: Array.from({ length: 6 }, (_, n) => ({
+    users: Array.from({ length: 11 }, (_, n) => ({
       id: id(600 + n),
       displayName: `Pengguna TEST ${n + 1}`,
       role: 'STUDENT',
       status: 'ACTIVE',
       createdAt: '2026-10-01T00:00:00Z',
     })) as AdminUserDto[],
-    classes: Array.from({ length: 6 }, (_, n) => ({
+    classes: Array.from({ length: 11 }, (_, n) => ({
       id: id(700 + n),
       name: `Kelas TEST ${n + 1}`,
       schoolId: id(101),
@@ -485,7 +485,7 @@ async function setup(page: Page) {
     if (path === '/admin/schools' || path.endsWith('/teacher-tokens')) {
       const rows = path === '/admin/schools' ? state.schools : state.tokens;
       const offset = Number(url.searchParams.get('offset') ?? 0),
-        limit = Number(url.searchParams.get('limit') ?? 5);
+        limit = Number(url.searchParams.get('limit') ?? 10);
       data = {
         items: rows.slice(offset, offset + limit),
         nextOffset: offset + limit < rows.length ? offset + limit : null,
@@ -590,21 +590,21 @@ const panels = [
 ] as const;
 
 for (const width of [390, 1280]) {
-  test(`Admin five-row pagination and horizontal filters at ${width}px`, async ({ page }) => {
+  test(`Admin ten-row pagination and horizontal filters at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 900 });
     const { state, errors } = await setup(page);
     await page.goto('/admin/operations');
-    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(10);
     const nextRequest = page.waitForRequest(
       (r) =>
-        r.url().includes('/admin/users?') && new URL(r.url()).searchParams.get('offset') === '5',
+        r.url().includes('/admin/users?') && new URL(r.url()).searchParams.get('offset') === '10',
     );
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-    expect(new URL((await nextRequest).url()).searchParams.get('limit')).toBe('5');
+    expect(new URL((await nextRequest).url()).searchParams.get('limit')).toBe('10');
     await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
     await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
     await expect(page.getByRole('button', { name: 'Berikutnya', exact: true })).toBeDisabled();
-    await page.getByLabel('Nama pengguna').fill('TEST 1');
+    await page.getByLabel('Nama pengguna').fill('TEST 2');
     await page.getByRole('button', { name: 'Cari', exact: true }).click();
     await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
     await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
@@ -620,20 +620,20 @@ for (const width of [390, 1280]) {
     }
     await capture(page, 'pagination-users', width);
     await page.getByRole('tab', { name: 'Kelas', exact: true }).click();
-    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(10);
     await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
     await expect(page.locator('.people-table tbody tr')).toHaveCount(1);
     await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
-    await expect(page.locator('.people-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.people-table tbody tr')).toHaveCount(10);
     await capture(page, 'pagination-classes', width);
 
-    state.data.versions.items = Array.from({ length: 6 }, (_, n) => ({
+    state.data.versions.items = Array.from({ length: 11 }, (_, n) => ({
       ...state.data.versions.items[0]!,
       id: id(300 + n),
       stem: `Soal TEST ${n + 1}`,
     }));
     await page.goto('/admin/content');
-    await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(5);
+    await expect(page.locator('.admin-content-view .monitoring-list > li')).toHaveCount(10);
     await page.getByRole('button', { name: 'Tambah soal PG', exact: true }).click();
     await page
       .getByLabel('Teks soal (LaTeX inline diperbolehkan)')
@@ -654,13 +654,13 @@ for (const width of [390, 1280]) {
     }
     await capture(page, 'pagination-questions', width);
 
-    state.schools = Array.from({ length: 6 }, (_, n) => ({
+    state.schools = Array.from({ length: 11 }, (_, n) => ({
       ...state.schools[0]!,
       id: id(101 + n),
       name: `Sekolah TEST ${n + 1}`,
     }));
     await page.goto('/admin/schools');
-    await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(10);
     const schoolsNav = page.getByRole('navigation', { name: 'Halaman sekolah' });
     await schoolsNav.getByRole('button', { name: 'Berikutnya' }).click();
     await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(1);
@@ -671,7 +671,7 @@ for (const width of [390, 1280]) {
 }
 
 for (const width of [320, 375, 768, 1440]) {
-  test(`Content catalog pagination at ${width}px shows six materials and five questions per page`, async ({
+  test(`Content catalog pagination at ${width}px shows six materials and ten questions per page`, async ({
     page,
   }) => {
     await page.setViewportSize({ width, height: 960 });
@@ -702,36 +702,21 @@ for (const width of [320, 375, 768, 1440]) {
     await page.goto('/admin/content?view=curriculum');
     const materials = page.getByRole('list', { name: 'Daftar materi' });
     const materialPages = page.getByRole('navigation', { name: 'Halaman materi' });
-    await expect(materials.getByRole('listitem')).toHaveCount(5);
+    await expect(materials.getByRole('listitem')).toHaveCount(6);
     await expect(page.getByText(/6 entri materi/)).toBeVisible();
     await expect(materials.getByText('Materi demo 1', { exact: true })).toBeVisible();
     await capture(page, 'content-catalog-materials-page1', width);
-    await materialPages.getByRole('button', { name: 'Berikutnya' }).click();
-    await expect(materials.getByRole('listitem')).toHaveCount(1);
-    await expect(materials.getByText('Materi demo 6', { exact: true })).toBeVisible();
-    await expect(materialPages.getByText('Halaman 2')).toBeVisible();
     await expect(materialPages.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
-    await materialPages.getByRole('button', { name: 'Sebelumnya' }).click();
-    await expect(materials.getByText('Materi demo 1', { exact: true })).toBeVisible();
     await selectContentSection(page, 'Soal');
     const questions = page.getByRole('list', { name: 'Daftar soal' });
     const questionPages = page.getByRole('navigation', { name: 'Halaman data' });
-    await expect(questions.locator(':scope > li')).toHaveCount(5);
+    await expect(questions.locator(':scope > li')).toHaveCount(10);
     await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toBeVisible();
     const firstRequest = new URL(bankRequests[0]!);
     expect(firstRequest.searchParams.get('catalog')).toBe('COMPACT_DEMO');
-    expect(firstRequest.searchParams.get('limit')).toBe('5');
+    expect(firstRequest.searchParams.get('limit')).toBe('10');
     await capture(page, 'content-catalog-questions-page1', width);
-    await questionPages.getByRole('button', { name: 'Berikutnya' }).focus();
-    await page.keyboard.press('Enter');
-    await expect(questions.locator(':scope > li')).toHaveCount(5);
-    await expect(questions.getByText('DEMO: Contoh soal 6', { exact: true })).toBeVisible();
-    await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toHaveCount(0);
-    await expect(questionPages.getByText('Halaman 2', { exact: true })).toBeVisible();
     await expect(questionPages.getByRole('button', { name: 'Berikutnya' })).toBeDisabled();
-    expect(new URL(bankRequests.at(-1)!).searchParams.get('offset')).toBe('5');
-    await questionPages.getByRole('button', { name: 'Sebelumnya' }).click();
-    await expect(questions.getByText('DEMO: Contoh soal 1', { exact: true })).toBeVisible();
     expect(errors).toEqual([]);
     expect(state.mutations).toEqual([]);
   });
@@ -1119,7 +1104,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   await page.goto('/admin/content');
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
-  expect(state.offsets).toContain('5');
+  expect(state.offsets).toContain('10');
   await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
   for (const list of [

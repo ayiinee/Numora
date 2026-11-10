@@ -40,7 +40,7 @@ export async function setupPretest(
     usageType: 'PRETEST',
     imported: true,
   }));
-  const packs: PretestDto[] = Array.from({ length: 7 }, (_, i) => ({
+  const packs: PretestDto[] = Array.from({ length: 12 }, (_, i) => ({
     id: id(4000 + i),
     familyCode: `PRETEST-TEST-${i + 1}`,
     packageVersion: i + 1,
@@ -145,7 +145,7 @@ export async function setupPretest(
     if (path.endsWith('/curriculum')) return route.fulfill({ json: { items: chapters } });
     if (path === 'admin/content/pretest-packages') {
       const offset = Number(url.searchParams.get('offset') ?? 0),
-        limit = Number(url.searchParams.get('limit') ?? 6);
+        limit = Number(url.searchParams.get('limit') ?? 11);
       return route.fulfill({ json: { items: packs.slice(offset, offset + limit) } });
     }
     const pack = packs.find((p) => path === `admin/content/pretest-packages/${p.id}`);
@@ -156,8 +156,8 @@ export async function setupPretest(
         url.searchParams.get('chapterId') === id(5001) ? questions.slice(24) : questions;
       return route.fulfill({
         json: {
-          items: items.slice(offset, offset + 5),
-          nextOffset: offset + 5 < items.length ? offset + 5 : null,
+          items: items.slice(offset, offset + 10),
+          nextOffset: offset + 10 < items.length ? offset + 10 : null,
         },
       });
     }

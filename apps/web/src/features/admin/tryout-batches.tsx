@@ -1,5 +1,7 @@
 'use client';
 
+import { ADMIN_PAGE_SIZE } from './pagination';
+
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useEffect, useState } from 'react';
@@ -108,7 +110,7 @@ function BatchWorkspace({
           if (active) setDetail(v);
         })
       : apiRequest<TryoutBatchesDto>(
-          `admin/tryout-batches?limit=5&offset=${offset}&search=${encodeURIComponent(search)}`,
+          `admin/tryout-batches?limit=${ADMIN_PAGE_SIZE}&offset=${offset}&search=${encodeURIComponent(search)}`,
           token,
         ).then((v) => {
           if (active) setData(v);
@@ -261,7 +263,7 @@ function BatchWorkspace({
               {!data.items.length && <p>Belum ada batch yang cocok.</p>}
               <AdminPagination
                 offset={offset}
-                hasNext={offset + 5 < data.total}
+                hasNext={offset + ADMIN_PAGE_SIZE < data.total}
                 totalItems={data.total}
                 onChange={(value) => url.update({ offset: value || null })}
               />

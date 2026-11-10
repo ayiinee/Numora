@@ -140,19 +140,19 @@ test('recovery and cancellation require confirmation and preserve safe retry', a
   expect(mutations(state, '/retry')).toHaveLength(1);
 });
 
-test('server search and independent pagination use five-item pages', async ({ page }) => {
+test('server search and independent pagination use ten-item pages', async ({ page }) => {
   const state = await setupAccounts(page);
   await page.goto('/admin/accounts');
   const accounts = page.getByRole('navigation', { name: 'Halaman akun Admin' });
   await accounts.getByRole('button', { name: 'Berikutnya' }).click();
   await expect(accounts.getByText('Halaman 2')).toBeVisible();
-  await expect(page.getByText('admin6@example.test', { exact: true })).toBeVisible();
+  await expect(page.getByText('admin11@example.test', { exact: true })).toBeVisible();
   await accounts.getByRole('button', { name: 'Sebelumnya' }).click();
   await expect(page.getByText('admin0@example.test', { exact: true })).toBeVisible();
   await page.getByRole('tab', { name: 'Undangan', exact: true }).click();
   const invites = page.getByRole('navigation', { name: 'Halaman undangan' });
   await invites.getByRole('button', { name: 'Berikutnya' }).click();
-  await expect(page.getByText('Undangan Fixture 6', { exact: true })).toBeVisible();
+  await expect(page.getByText('Undangan Fixture 11', { exact: true })).toBeVisible();
   await invites.getByRole('button', { name: 'Sebelumnya' }).click();
   await expect(page.getByText('Undangan Fixture 0', { exact: true })).toBeVisible();
   await invites.getByRole('button', { name: 'Berikutnya' }).click();
@@ -237,7 +237,7 @@ test('invitation states and account actions remain readable at 125 percent zoom'
   await page.goto('/admin/accounts');
   await page.getByRole('tab', { name: 'Undangan', exact: true }).click();
   await expect(page.getByText('Perlu ditangani', { exact: true })).toBeVisible();
-  await expect(page.getByText('Menunggu penerimaan', { exact: true })).toBeVisible();
+  await expect(page.getByText('Menunggu penerimaan', { exact: true }).first()).toBeVisible();
   await page.screenshot({
     path: test.info().outputPath('invitations-desktop.png'),
     fullPage: true,

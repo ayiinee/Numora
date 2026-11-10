@@ -1,4 +1,6 @@
 'use client';
+
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { useState } from 'react';
 import Link from 'next/link';
 import { Button, Icon } from '@tka/ui';
@@ -43,7 +45,7 @@ export function ContentBank({
       <div className="assessment-list-heading">
         <div>
           <h3>Versi soal</h3>
-          <span>Maksimal 5 soal per halaman</span>
+          <span>Maksimal {ADMIN_PAGE_SIZE} soal per halaman</span>
         </div>
         <Button
           variant="secondary"

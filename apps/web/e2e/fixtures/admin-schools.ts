@@ -8,7 +8,7 @@ export async function setupSchools(
 ) {
   const base = await setup(page);
   base.state.adminRole = role;
-  base.state.schools = Array.from({ length: 7 }, (_, index) => ({
+  base.state.schools = Array.from({ length: 12 }, (_, index) => ({
     id: id(101 + index),
     code: `SMP-TEST-${index + 1}`,
     name:
@@ -45,7 +45,7 @@ export async function setupSchools(
         row(3, 'REVOKED'),
         row(4, 'AVAILABLE'),
         row(5, 'EXPIRED'),
-        row(6, 'AVAILABLE'),
+        ...Array.from({ length: 6 }, (_, i) => row(i + 6, 'AVAILABLE')),
       ],
       [id(102)]: [row(7, 'AVAILABLE')],
     } as Record<string, TeacherTokenSummary[]>,
@@ -112,8 +112,8 @@ export async function setupSchools(
       );
       return route.fulfill({
         json: {
-          items: rows.slice(offset, offset + 5),
-          nextOffset: offset + 5 < rows.length ? offset + 5 : null,
+          items: rows.slice(offset, offset + 10),
+          nextOffset: offset + 10 < rows.length ? offset + 10 : null,
         },
       });
     }
@@ -130,8 +130,8 @@ export async function setupSchools(
       const offset = Number(url.searchParams.get('offset') ?? 0);
       return route.fulfill({
         json: {
-          items: tokens.slice(offset, offset + 5),
-          nextOffset: offset + 5 < tokens.length ? offset + 5 : null,
+          items: tokens.slice(offset, offset + 10),
+          nextOffset: offset + 10 < tokens.length ? offset + 10 : null,
         },
       });
     }

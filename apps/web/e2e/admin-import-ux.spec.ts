@@ -71,7 +71,7 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
       ).violations,
     ).toEqual([]);
     await page.goto('/admin/content/imports?view=history');
-    await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(5);
+    await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(10);
     await screenshot(page, 'upload-history');
     await page.goto('/admin/content/imports?mode=json');
     await expect(
@@ -91,14 +91,14 @@ test('Import history URL retains filters, pagination, reload and browser Back', 
   const { imports } = await setupImports(page);
   await page.goto('/admin/content/imports?view=history');
   const pager = page.getByRole('navigation', { name: 'Halaman riwayat unggahan' });
-  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(10);
   await pager.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await expect(page).toHaveURL(/offset=5/);
+  await expect(page).toHaveURL(/offset=10/);
   await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(2);
   await page.reload();
   await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(2);
   await page
-    .getByRole('button', { name: `Lanjutkan ${imports.uploads[5]!.fileName}`, exact: true })
+    .getByRole('button', { name: `Lanjutkan ${imports.uploads[10]!.fileName}`, exact: true })
     .click();
   await expect(page.locator('.excel-preview-stem').first()).toBeVisible();
   await page.goBack();
@@ -129,7 +129,7 @@ test('Import preview shows all statements and keys while selection survives pagi
   await page.getByLabel('Pilih soal TEST-IMPORT-1', { exact: true }).uncheck();
   const pager = page.getByRole('navigation', { name: 'Halaman preview soal Excel' });
   await pager.getByRole('button', { name: 'Berikutnya', exact: true }).click();
-  await expect(page.getByLabel('Pilih soal TEST-IMPORT-6', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Pilih soal TEST-IMPORT-11', { exact: true })).toBeVisible();
   await pager.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByLabel('Pilih soal TEST-IMPORT-1', { exact: true })).not.toBeChecked();
   expect(imports.calls.filter((call) => call.method !== 'GET')).toEqual([]);
@@ -234,7 +234,7 @@ test('Import recovers a failed session and ignores a late session response after
   await page.getByRole('button', { name: `Lanjutkan ${target.fileName}`, exact: true }).click();
   await requested;
   await page.goBack();
-  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(10);
   release();
   await expect(page).toHaveURL(/view=history/);
   await expect(page.locator('.excel-preview-stem')).toHaveCount(0);
@@ -268,7 +268,7 @@ test('Import distinguishes history failure from an empty filtered result', async
   ).toHaveCount(0);
   imports.failHistory = false;
   await page.getByRole('button', { name: 'Coba lagi', exact: true }).click();
-  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(5);
+  await expect(page.locator('.upload-history-table tbody tr')).toHaveCount(10);
   await page.getByText('Filter riwayat', { exact: true }).click();
   await page.getByLabel('Cari file atau judul').fill('TIDAK-ADA');
   await expect(

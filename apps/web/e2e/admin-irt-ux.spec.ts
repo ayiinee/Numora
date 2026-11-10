@@ -45,7 +45,7 @@ test('IRT request directory, detail and technical evidence remain readable and a
 }) => {
   const { errors, irt } = await setupIrt(page);
   await page.goto('/admin/irt?view=requests');
-  await expect(page.locator('[data-request]')).toHaveCount(5);
+  await expect(page.locator('[data-request]')).toHaveCount(10);
   for (const width of [1440, 390]) {
     await page.setViewportSize({ width, height: 900 });
     await page.evaluate(() => window.scrollTo(0, 0));
@@ -88,21 +88,21 @@ test('IRT preserves independent pagination, selected request and browser history
 }) => {
   const { irt } = await setupIrt(page);
   await page.goto('/admin/irt');
-  await expect(page.locator('[data-batch]')).toHaveCount(5);
+  await expect(page.locator('[data-batch]')).toHaveCount(10);
   await page
     .getByRole('navigation', { name: 'Halaman batch' })
     .getByRole('button', { name: 'Berikutnya' })
     .click();
   await expect(page.locator('[data-batch]')).toHaveCount(2);
-  await expect(page).toHaveURL(/batchesOffset=5/);
+  await expect(page).toHaveURL(/batchesOffset=10/);
   await page.getByRole('button', { name: 'Request analisis', exact: true }).click();
-  await expect(page.locator('[data-request]')).toHaveCount(5);
+  await expect(page.locator('[data-request]')).toHaveCount(10);
   await page
     .getByRole('navigation', { name: 'Halaman request' })
     .getByRole('button', { name: 'Berikutnya' })
     .click();
   await expect(page.locator('[data-request]')).toHaveCount(2);
-  await page.getByRole('button', { name: `Detail request ${id(406)}`, exact: true }).click();
+  await page.getByRole('button', { name: `Detail request ${id(411)}`, exact: true }).click();
   await page.reload();
   await expect(page.getByRole('heading', { name: 'Detail request', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Kembali ke daftar request', exact: true }).click();
@@ -111,8 +111,8 @@ test('IRT preserves independent pagination, selected request and browser history
   await expect(page.getByRole('heading', { name: 'Detail request', exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Lihat batch & publikasi', exact: true }).click();
   await expect(page.locator('[data-batch]')).toHaveCount(2);
-  expect(irt.gets).toContain('requests?limit=6&offset=5');
-  expect(irt.gets).toContain('batch-health?limit=6&offset=5');
+  expect(irt.gets).toContain('requests?limit=11&offset=10');
+  expect(irt.gets).toContain('batch-health?limit=11&offset=10');
   expect(irt.posts).toEqual([]);
 });
 test('IRT prepare preserves choices, scope and the operation key after a transport failure', async ({
@@ -242,12 +242,12 @@ test('IRT independent loader failures do not hide healthy history and can be ret
   irt.optionsStatus = 503;
   irt.requestsStatus = 503;
   await page.goto('/admin/irt');
-  await expect(page.locator('[data-batch]')).toHaveCount(5);
+  await expect(page.locator('[data-batch]')).toHaveCount(10);
   await page.getByRole('button', { name: 'Request analisis', exact: true }).click();
   await expect(page.locator('[data-request]')).toHaveCount(0);
   irt.requestsStatus = 200;
   await page.getByRole('button', { name: 'Perbarui request', exact: true }).click();
-  await expect(page.locator('[data-request]')).toHaveCount(5);
+  await expect(page.locator('[data-request]')).toHaveCount(10);
   await page.getByRole('button', { name: `Detail request ${id(400)}`, exact: true }).click();
   await expect(
     page.getByRole('button', { name: 'Kirim ulang request', exact: true }),
@@ -258,7 +258,7 @@ test('IRT independent loader failures do not hide healthy history and can be ret
   await expect(page.locator('[data-batch]')).toHaveCount(0);
   irt.batchesStatus = 200;
   await page.getByRole('button', { name: 'Perbarui batch', exact: true }).click();
-  await expect(page.locator('[data-batch]')).toHaveCount(5);
+  await expect(page.locator('[data-batch]')).toHaveCount(10);
 });
 for (const reader of ['requests', 'batches', 'options', 'detail'] as const)
   test(`IRT clears all data and actions after ${reader} access is revoked`, async ({ page }) => {
@@ -439,7 +439,7 @@ test('IRT Super Admin can read both workspaces while retaining Dashboard as the 
 }) => {
   const { irt } = await setupIrt(page, 'SUPER_ADMIN');
   await page.goto('/admin/irt');
-  await expect(page.locator('[data-batch]')).toHaveCount(5);
+  await expect(page.locator('[data-batch]')).toHaveCount(10);
   await expect(
     page
       .getByRole('navigation', { name: 'Navigasi Ruang admin', exact: true })

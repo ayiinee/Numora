@@ -30,7 +30,7 @@ export async function setupPeople(
     affiliation: i % 3 === 1 ? null : i % 2 === 0 ? 'SCHOOL' : 'MANDIRI',
     teacherVerified: i % 3 === 1 ? i !== 4 : null,
   }));
-  const classes: AdminClassDto[] = Array.from({ length: 7 }, (_, i) => ({
+  const classes: AdminClassDto[] = Array.from({ length: 12 }, (_, i) => ({
     id: id(400 + i),
     name: i === 0 ? 'Kelas IX-A Fixture' : `Kelas IX-${i + 1} Fixture`,
     schoolId: id(101),
@@ -42,7 +42,7 @@ export async function setupPeople(
     createdAt: '2026-10-01T01:00:00Z',
     archivedAt: i === 2 ? '2026-10-20T01:00:00Z' : null,
   }));
-  const memberships: AdminMembershipDto[] = Array.from({ length: 7 }, (_, i) => ({
+  const memberships: AdminMembershipDto[] = Array.from({ length: 12 }, (_, i) => ({
     id: id(600 + i),
     schoolId: id(101),
     schoolName: base.state.schools[0]!.name,
@@ -54,7 +54,7 @@ export async function setupPeople(
   }));
   const roster: AdminRosterMemberDto[] = users
     .filter((user) => user.role === 'STUDENT')
-    .slice(0, 8)
+    .slice(0, 12)
     .map((entry, i) => ({
       id: entry.id,
       displayName: entry.displayName,
@@ -97,8 +97,8 @@ export async function setupPeople(
         offset = Number(q.get('offset') ?? 0),
         search = (q.get('search') ?? '').toLowerCase();
       const pageOf = (rows: unknown[]) => ({
-        items: rows.slice(offset, offset + 5),
-        nextOffset: offset + 5 < rows.length ? offset + 5 : null,
+        items: rows.slice(offset, offset + 10),
+        nextOffset: offset + 10 < rows.length ? offset + 10 : null,
       });
       if (path.endsWith('/memberships')) {
         const teacher =

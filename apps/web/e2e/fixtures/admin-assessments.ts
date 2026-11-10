@@ -9,7 +9,7 @@ export async function setupAssessments(
 ) {
   const base = await setup(page);
   base.state.adminRole = role;
-  const packs: ContentPackageDetailDto[] = Array.from({ length: 7 }, (_, index) => ({
+  const packs: ContentPackageDetailDto[] = Array.from({ length: 12 }, (_, index) => ({
     id: id(9000 + index),
     familyCode: `TEST-PRE-${index}`,
     packageVersion: 1,
@@ -173,7 +173,7 @@ export async function setupAssessments(
             .includes(url.searchParams.get('source')!.toLowerCase()),
         );
       const offset = Number(url.searchParams.get('offset') ?? 0),
-        limit = Number(url.searchParams.get('limit') ?? 6);
+        limit = Number(url.searchParams.get('limit') ?? 11);
       return route.fulfill({
         json: { items: items.slice(offset, offset + limit), total: items.length },
       });
