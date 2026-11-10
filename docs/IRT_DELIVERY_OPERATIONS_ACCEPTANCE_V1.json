@@ -1,0 +1,98 @@
+{
+  "version": "irt-delivery-operations-acceptance-v1",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "mainImplementationCommit": "bea298b",
+  "mainIntegratedBaseline": "ece946c",
+  "mainPr": "https://github.com/ayiinee/Numora/pull/152",
+  "aiCommit": "40af641",
+  "runtimeManifest": "research/irt-linux-image-v3.json",
+  "checks": {
+    "freshAndHistoryUpgrade": "PASS",
+    "bindingNegativeCases": "PASS",
+    "applicationParallelStartResumeGrading": "PASS",
+    "reconcilerRestartReplay": "PASS",
+    "outboxHttpRAdoptionPublicationReaders": "PASS",
+    "approvalRevocation": "PASS",
+    "attemptAnswerXpHistoryContentIntegrity": "PASS",
+    "linuxSmallRealR": "PASS",
+    "linuxRunnerFaults": "PASS",
+    "composeConfiguration": "PASS",
+    "composeExactLimitsPerformance": "NOT_RUN",
+    "activeDaemonSignal": "NOT_RUN"
+  },
+  "linuxSmall": {
+    "respondents": 4,
+    "executionStatus": "SUCCEEDED",
+    "measurementState": "INSUFFICIENT",
+    "ackSeconds": 0.078,
+    "computeSeconds": 2.672,
+    "scientificCalibrationAccepted": false
+  },
+  "aiUnitTests": {
+    "tests": 84,
+    "skipped": 21,
+    "status": "PASS"
+  },
+  "fullSize": {
+    "twoArm": {
+      "respondents": 2000,
+      "freeze": "FAILED",
+      "code": "53200",
+      "reason": "POSTGRES_MEMORY_ALLOCATION_FAILED",
+      "R": "NOT_RUN"
+    },
+    "threeArmPartial": {
+      "respondents": 2100,
+      "status": "NOT_RUN"
+    },
+    "changedGate": false
+  },
+  "vps": {
+    "measuredAt": "2026-11-10T12:48:19Z",
+    "status": "BLOCKED_CAPACITY",
+    "cpu": 2,
+    "availableMiB": 1615,
+    "requiredCpu": 3.25,
+    "requiredMiB": 4352,
+    "deployment": "NOT_RUN",
+    "R": "NOT_RUN"
+  },
+  "ci": {
+    "query": "GitHub checks at exact final PR head",
+    "checkpoint": "ffa8d33",
+    "passed": [
+      "validate",
+      "tests",
+      "connected",
+      "build-contract"
+    ],
+    "pending": [
+      "browser-e2e (1)",
+      "browser-e2e (2)",
+      "quality"
+    ],
+    "note": "Live CI is authoritative; this checkpoint does not assert final-head success."
+  },
+  "decisions": {
+    "smallSyntheticIntegration": "VERIFIED",
+    "completeAcceptance": "NOT_COMPLETE",
+    "host": "BLOCKED_CAPACITY",
+    "production": "NOT_READY"
+  },
+  "budget": {
+    "limitSeconds": 10800,
+    "ledger": ".tmp/irt-release-acceptance/ledger.json",
+    "reset": false
+  },
+  "blockers": [
+    "FULL_SIZE_CANDIDATE_ACCEPTANCE",
+    "COMPOSE_EXACT_LIMITS_ACCEPTANCE",
+    "ACTIVE_DAEMON_SIGNAL_ACCEPTANCE",
+    "FINAL_HEAD_CI",
+    "VPS_CAPACITY",
+    "PRODUCTION_POLICY_AND_SCIENTIFIC_APPROVAL",
+    "PRIVATE_CONFIGURATION",
+    "OPERATOR_AND_ALERT_OWNER_TBD"
+  ]
+}
