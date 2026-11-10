@@ -31,7 +31,11 @@
     "research/irt-linux-image-v4.json": "d0927f674f377aa3e731baf8ffa2171956b42a1744c5f77f6b4ff6b6f92e1322",
     "research/irt-runtime-linux-v3.json": "07f345313c5c9f49db28d1bc895d8c867eb652671e2accbd1f60b912a4fa394b",
     "research/irt/policy-v1.json": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
-    "research/irt/compute.R": "93955dfb694d387003e49f558ef36bb7e3204622cae7d34ce8434fc182057ca2"
+    "research/irt/compute.R": "93955dfb694d387003e49f558ef36bb7e3204622cae7d34ce8434fc182057ca2",
+    "research/irt-runtime-windows-v4.json": "f2ccb270a1f75773d3f65e377d5e46aa6cee9959fbdfc17bd0cb8cd45b6481b5",
+    "research/irt-runtime-windows-v6.json": "106fde0bc2ed6f92071a5307104091222fc59d2c4e1d6735e915bfe699346a50",
+    "research/irt-runtime-linux-production-v1.json": "4f3e2e39b44a8f8682ca837c2e83ea5e43ba7de9e9b0095193c3421dc8ec932f",
+    "research/irt/policy-production-candidate-v1.json": "a498e3aa9326481ea8826e96495a41f42854ba9a9a94c14c9e5d4d331f5ff9ff"
   },
   "status": "NOT_READY",
   "budgetSeconds": 3600,
@@ -531,5 +535,11 @@
       "Reader explanation exposure append is authorized and separately checked",
       "Default flags and existing production authorization boundary retained"
     ]
+  },
+  "runtimeByEvidence": {
+    "linuxContainerSmallAndAttemptedLarge": "research/irt-runtime-linux-v3.json",
+    "nativeApplicationAndContractualFaults": "research/irt-runtime-windows-v6.json",
+    "authorizationOnly": "research/irt-runtime-windows-v4.json copied with synthetic PRODUCTION purpose; authorization regression only, not production runtime acceptance",
+    "nativeFullSizeFreeze": "research/irt-runtime-linux-v3.json frozen commitment only; no producer/R execution"
   }
 }

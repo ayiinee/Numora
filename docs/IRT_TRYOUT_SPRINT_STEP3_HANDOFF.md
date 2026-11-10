@@ -2,7 +2,7 @@
 
 **NOT READY untuk acceptance menyeluruh.** Perubahan tahap ini memperkuat pengujian dan pelaporan; tidak mengubah estimator, threshold, API publik, policy produk, atau database bersama. Urutan 4 belum dimulai.
 
-Baseline Main `66a0dc808dba4cbf8f5b9240a23182881b7281b6` (PR #157 dan #159 merged); AI `8b8a4672109f6e51cc015035c64741404038d3f4`, clean. Pin lengkap dan hasil berada pada [laporan mesin](IRT_TRYOUT_SPRINT_STEP3_ACCEPTANCE.json). Required checks pada head PR final tetap authoritative; merge/bypass tidak menggantikan acceptance yang belum selesai.
+Baseline Main `66a0dc808dba4cbf8f5b9240a23182881b7281b6` (PR #157 dan #159 merged); AI `8b8a4672109f6e51cc015035c64741404038d3f4`, clean. Pin per evidence dibedakan: container Linux memakai profile linux-v3; aplikasi/fault native memakai windows-v6. Tes otorisasi memakai profile windows-v4 dengan purpose produksi sintetis, bukan penerimaan runtime produksi. Hash seluruh profile tercatat dalam laporan. Pin lengkap dan hasil berada pada [laporan mesin](IRT_TRYOUT_SPRINT_STEP3_ACCEPTANCE.json). Required checks pada head PR final tetap authoritative; merge/bypass tidak menggantikan acceptance yang belum selesai.
 
 ## Bukti dan batas
 
