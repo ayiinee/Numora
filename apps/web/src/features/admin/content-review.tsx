@@ -11,7 +11,12 @@ import { contentStatusLabel } from './content-question-format';
 import { ContentBlockers } from './content-blockers';
 import { adminAccessDenied } from './operational-query';
 import { getContentPackage, preparePretestScoring } from './content-package-api';
-import type { ContentVersionDetailDto, ImportBodyDto } from './generated-types';
+import type {
+  ContentVersionDetailDto,
+  ContentMutationDto,
+  ReviewContentDto,
+  ImportBodyDto,
+} from './generated-types';
 
 export function ContentReviewScreen({ id }: { id: string }) {
   const { state } = useAuth();
@@ -229,6 +234,51 @@ function Review({ id }: { id: string }) {
                         </Button>
                       )}
                     </div>
+                    {detail.usageType !== 'PRETEST' && (
+                      <form
+                        onSubmit={(e) => {
+                          e.preventDefault();
+                          const f = new FormData(e.currentTarget);
+                          const body: ReviewContentDto = {
+                            status: String(f.get('status')) as ReviewContentDto['status'],
+                            expectedStatus: detail.status,
+                            reason: String(f.get('reason')).trim(),
+                          };
+                          void run(async () => {
+                            await apiRequest<ContentMutationDto>(
+                              `admin/content/versions/${id}/review`,
+                              token,
+                              { method: 'POST', body: JSON.stringify(body) },
+                            );
+                            setNotice('Keputusan review tersimpan.');
+                            setRevision((r) => r + 1);
+                          });
+                        }}
+                      >
+                        <h3>Catat keputusan review</h3>
+                        <p>
+                          READY: siap secara konten. REVISION: perlu diperbaiki. ARCHIVED: hentikan
+                          penggunaan baru. Alasan keputusan akan disimpan dalam riwayat.
+                        </p>
+                        <label>
+                          Status review
+                          <select name="status" disabled={busy || detail.status === 'ARCHIVED'}>
+                            <option value="READY" disabled={!detail.readiness.canReviewReady}>
+                              Siap (READY)
+                            </option>
+                            <option value="REVISION">Perlu revisi (REVISION)</option>
+                            <option value="ARCHIVED">Diarsipkan (ARCHIVED)</option>
+                          </select>
+                        </label>
+                        <label>
+                          Alasan review
+                          <textarea name="reason" required maxLength={2000} disabled={busy} />
+                        </label>
+                        <Button disabled={busy || detail.status === 'ARCHIVED'}>
+                          Simpan review
+                        </Button>
+                      </form>
+                    )}
                   </Card>
                   {detail.sourceNamespace && (
                     <Card className="content-import-card assessment-review-revision">

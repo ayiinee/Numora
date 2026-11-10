@@ -62,6 +62,8 @@ it('offers editable missing fields and automatic scoring preparation', async () 
   expect(screen.getByRole('button', { name: 'Validasi dan simpan revisi' })).toBeTruthy();
   expect(screen.getByText(/Kunci jawaban tidak perlu diubah/)).toBeTruthy();
   expect(screen.getByRole('button', { name: 'Siapkan penilaian otomatis' })).toBeTruthy();
+  expect(screen.queryByLabelText('Status review')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Simpan review' })).toBeNull();
 });
 it('discards the previous report target when navigation to another report fails', async () => {
   mock.api.mockResolvedValueOnce({

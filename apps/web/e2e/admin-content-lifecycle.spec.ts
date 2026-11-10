@@ -114,7 +114,9 @@ test('Content reviews rich versions and sees academic publication blocker at nar
   for (const width of [320, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     await page.goto(`/admin/content/versions/${versionId}`);
-    await expect(page.getByText('APPROVED_PGK_RUBRIC_REQUIRED')).toBeVisible();
+    await expect(
+      page.getByRole('heading', { name: 'Aturan penilaian belum lengkap', exact: true }),
+    ).toBeVisible();
     await page.getByText('Identitas versi & riwayat review', { exact: true }).click();
     await expect(page.getByRole('link', { name: userId })).toHaveAttribute(
       'href',

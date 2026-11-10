@@ -8,6 +8,7 @@ import { AdminPagination } from './admin-pagination';
 import { AdminMessage } from './admin-presentation';
 import { useAdminAccessError } from './admin-workspace';
 import {
+  approveContentPackage,
   archiveContentPackage,
   createContentPackage,
   getContentPackage,
@@ -99,6 +100,9 @@ export function ContentPackageWorkspace({
   const [notes, setNotes] = useState('');
   const [inspectingId, setInspectingId] = useState<string | null>(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [approvalReference, setApprovalReference] = useState('');
+  const [approvalConfirmed, setApprovalConfirmed] = useState(false);
+  const [publishConfirmed, setPublishConfirmed] = useState(false);
   const [publicationOpen, setPublicationOpen] = useState(false);
   const [archiveConfirmed, setArchiveConfirmed] = useState(false);
   const [media, setMedia] = useState<PreviewMediaDto[]>([]);
@@ -222,6 +226,9 @@ export function ContentPackageWorkspace({
     setNotes('');
     setInspectingId(null);
     setArchiveConfirmed(false);
+    setApprovalReference('');
+    setApprovalConfirmed(false);
+    setPublishConfirmed(false);
     setMedia([]);
   }, [detail?.id, detail?.contentRevision, detail?.status]);
   async function run(action: () => Promise<void>) {
@@ -1320,7 +1327,89 @@ export function ContentPackageWorkspace({
                         : 'Persetujuan dan penerbitan'
                       : 'Pengelolaan publikasi'}
                   </h3>
-                  {detail.status === 'DRAFT' && (
+                  {detail.status === 'DRAFT' && detail.assessmentType !== 'PRETEST' && (
+                    <div className="content-import-card">
+                      <p className="assessment-publication-summary">
+                        {detail.readiness.canPublish
+                          ? 'Paket siap diterbitkan setelah konfirmasi.'
+                          : 'Paket belum siap diterbitkan. Perbaiki soal dan lengkapi syarat penerbitan terlebih dahulu.'}
+                      </p>
+                      <details className="assessment-approval-step">
+                        <summary>1. Simpan persetujuan tim kurikulum</summary>
+                        <div>
+                          <label>
+                            Bukti persetujuan tim kurikulum
+                            <input
+                              value={approvalReference}
+                              maxLength={1000}
+                              disabled={locked}
+                              onChange={(e) => setApprovalReference(e.target.value)}
+                              placeholder="Tautan dokumen atau referensi persetujuan"
+                            />
+                          </label>
+                          <label>
+                            <input
+                              type="checkbox"
+                              checked={approvalConfirmed}
+                              disabled={locked}
+                              onChange={(e) => setApprovalConfirmed(e.target.checked)}
+                            />
+                            Susunan paket, kesulitan, kunci dan pembahasan sudah disetujui tim
+                            kurikulum.
+                          </label>
+                          <Button
+                            variant="secondary"
+                            disabled={locked || !approvalReference.trim() || !approvalConfirmed}
+                            onClick={() =>
+                              void run(async () => {
+                                await approveContentPackage(token, detail.id, {
+                                  expectedRevision: detail.contentRevision,
+                                  reference: approvalReference,
+                                  confirmed: true,
+                                });
+                                await choose(detail.id);
+                              })
+                            }
+                          >
+                            Simpan persetujuan
+                          </Button>
+                        </div>
+                      </details>
+                      <div className="assessment-publish-step">
+                        <h4>2. Terbitkan paket</h4>
+                        {detail.assessmentType === 'TRYOUT' && (
+                          <p>
+                            Publikasi menyiapkan konten. Atur jadwal dan peserta melalui{' '}
+                            <Link href="/admin/tryout-batches">Batch Tryout</Link>.
+                          </p>
+                        )}
+                        <label>
+                          <input
+                            type="checkbox"
+                            checked={publishConfirmed}
+                            onChange={(event) => setPublishConfirmed(event.target.checked)}
+                            disabled={locked}
+                          />
+                          Saya telah memeriksa paket dan menyetujui publikasi versi ini.
+                        </label>
+                        <Button
+                          disabled={locked || !detail.readiness.canPublish || !publishConfirmed}
+                          onClick={() =>
+                            void run(async () => {
+                              await publishContentPackage(token, detail.id, {
+                                expectedRevision: detail.contentRevision,
+                              });
+                              await choose(detail.id);
+                              setReload((n) => n + 1);
+                            })
+                          }
+                        >
+                          Publikasikan paket
+                        </Button>
+                      </div>
+                    </div>
+                  )}
+                  {detail.status === 'DRAFT' && detail.assessmentType === 'PRETEST' && (
                     <div className="content-import-card">
                       {publicationProblems.length > 0 ? (
                         <div className="assessment-publication-problems" role="alert">
