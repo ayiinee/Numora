@@ -67,11 +67,22 @@ const expectedItems = Object.values(approved.counts).reduce((sum, count) => sum 
 const manifest = JSON.parse(readFileSync(new URL(approved.file, import.meta.url), 'utf8'));
 const apply = process.argv.includes('--apply');
 const rehearse = process.argv.includes('--rehearse');
+const production = process.argv.includes('--production');
 assert(!(apply && rehearse), 'Choose apply or rehearse');
 const write = apply || rehearse;
-const actor = process.argv.find((a) => a.startsWith('--actor='))?.slice(8);
-if (write)
-  assert.equal(actor, manifest.operatorId, 'Explicit approved existing content operator required');
+const requestedActor = process.argv.find((a) => a.startsWith('--actor='))?.slice(8);
+if (production)
+  assert(
+    /^[0-9a-f]{8}-(?:[0-9a-f]{4}-){3}[0-9a-f]{12}$/i.test(requestedActor ?? ''),
+    'Production requires --actor=<active Super Admin user UUID>',
+  );
+else if (write)
+  assert.equal(
+    requestedActor,
+    manifest.operatorId,
+    'Explicit approved existing content operator required',
+  );
+const actor = production ? requestedActor : manifest.operatorId;
 const canonical = (v) =>
   Array.isArray(v)
     ? v.map(canonical)
@@ -125,12 +136,43 @@ for (const item of manifest.items) {
   decodeAssessmentContent({ questionType: 'SINGLE_CHOICE', ...item.replacement });
 }
 const connection = process.env.DATABASE_MIGRATION_URL || process.env.DATABASE_URL;
-assert(connection, 'Database connection required');
-assert(
-  ['require', 'verify-full'].includes(new URL(connection).searchParams.get('sslmode')),
-  'TLS required',
-);
-const db = postgres(connection, { max: 1, connect_timeout: 15, onnotice: () => {} });
+assert(connection && URL.canParse(connection), 'Valid database connection required');
+const target = new URL(connection);
+assert(['require', 'verify-full'].includes(target.searchParams.get('sslmode')), 'TLS required');
+const productionRef = 'bfvbstmkcpanqqehfevr';
+const directProductionHost = target.hostname === `db.${productionRef}.supabase.co`;
+const targetUser = decodeURIComponent(target.username);
+const poolerProductionUser = targetUser.endsWith(`.${productionRef}`);
+if (production) {
+  assert(
+    process.env.SUPABASE_PROJECT_REF === productionRef &&
+      process.env.DATABASE_MIGRATION_URL === connection &&
+      ['postgres:', 'postgresql:'].includes(target.protocol) &&
+      (target.port || '5432') === '5432' &&
+      target.pathname === '/postgres' &&
+      target.searchParams.getAll('sslmode').length === 1 &&
+      [...target.searchParams.keys()].every((key) =>
+        ['sslmode', 'connect_timeout'].includes(key),
+      ) &&
+      ((directProductionHost && targetUser === 'postgres') ||
+        (/^[a-z0-9-]+\.pooler\.supabase\.com$/.test(target.hostname) &&
+          targetUser === `postgres.${productionRef}`)),
+    'Production requires DATABASE_MIGRATION_URL for the Numora production project and matching SUPABASE_PROJECT_REF',
+  );
+} else {
+  assert(
+    !directProductionHost &&
+      !poolerProductionUser &&
+      process.env.SUPABASE_PROJECT_REF !== productionRef,
+    'Use --production to target the Numora production project',
+  );
+}
+const db = postgres(connection, {
+  max: 1,
+  connect_timeout: 15,
+  onnotice: () => {},
+  ...(production ? { port: 5432 } : {}),
+});
 const rollback = new Error('REHEARSAL_ROLLBACK');
 let result;
 try {
@@ -138,10 +180,11 @@ try {
     await tx`set local statement_timeout='30000'`;
     await tx`set local lock_timeout='10000'`;
     if (write) await tx`select pg_advisory_xact_lock(hashtext(${manifest.reference}))`;
+    const operatorRole = production ? 'SUPER_ADMIN' : 'CONTENT_DATA_MODERATION';
+    const lockOperator = write ? tx`for share` : tx``;
     const [operator] =
-      await tx`select id from users where id=${manifest.operatorId} and role='ADMIN' and status='ACTIVE' and admin_role='CONTENT_DATA_MODERATION'`;
-    if (write) await tx`select id from users where id=${manifest.operatorId} for share`;
-    assert(operator, 'Approved content operator no longer active');
+      await tx`select id from users where id=${actor} and role='ADMIN' and status='ACTIVE' and admin_role=${operatorRole} ${lockOperator}`;
+    assert(operator, `Release operator must be an active ${operatorRole}`);
     const sourceIds = manifest.items.map((i) => i.sourceVersionId);
     if (write)
       await tx`select id from question_variants where id in (select variant_id from question_versions where id in ${tx(sourceIds)}) order by id for update`;
@@ -150,16 +193,20 @@ try {
    from question_versions v join question_variants va on va.id=v.variant_id join questions q on q.id=va.question_id join competencies c on c.id=q.primary_competency_id join subchapters s on s.id=c.subchapter_id join chapters ch on ch.id=s.chapter_id left join levels l on l.id=v.level_id join content_import_versions imported on imported.question_version_id=v.id where v.id in ${tx(sourceIds)} order by v.id`;
     assert.equal(sources.length, expectedItems);
     const sourceHash = hash(sources);
-    const [previousImport] =
-      await tx`select * from content_imports where actor_user_id=${manifest.operatorId} and idempotency_key=${manifest.reference}`;
+    const previousImports =
+      await tx`select * from content_imports where idempotency_key=${manifest.reference} and (${production} or actor_user_id=${actor})`;
+    assert(previousImports.length <= 1, 'Multiple releases exist for this batch; reconcile first');
+    const [previousImport] = previousImports;
     if (previousImport)
       assert.equal(previousImport.fingerprint, hash(manifest), 'Release manifest drift');
     let releaseImport = previousImport;
+    const sourceAttribution = production ? { sourceManifestOperatorId: manifest.operatorId } : {};
     if (write && !releaseImport)
       [releaseImport] =
-        await tx`insert into content_imports(actor_user_id,idempotency_key,fingerprint,source_namespace,report) values(${actor},${manifest.reference},${hash(manifest)},${manifest.reference},${tx.json({ reference: manifest.reference, approvalSource: manifest.approvalSource, scope: manifest.scope, operatorBasis: manifest.operatorBasis, items: expectedItems, corrections: approved.corrections })}) returning *`;
+        await tx`insert into content_imports(actor_user_id,idempotency_key,fingerprint,source_namespace,report) values(${actor},${manifest.reference},${hash(manifest)},${manifest.reference},${tx.json({ reference: manifest.reference, approvalSource: manifest.approvalSource, scope: manifest.scope, operatorBasis: manifest.operatorBasis, items: expectedItems, corrections: approved.corrections, ...sourceAttribution })}) returning *`;
     result = {
       mode: apply ? 'apply' : rehearse ? 'rehearse-rollback' : 'read-only',
+      ...(production ? { targetProjectRef: productionRef } : {}),
       reference: manifest.reference,
       manifestDigest: hash(manifest),
       items: [],
@@ -171,7 +218,7 @@ try {
       assert.equal(v.usage_type, 'DRILL');
       assert.equal(v.question_type, 'SINGLE_CHOICE');
       assert.equal(v.difficulty, 'OWNER_ACCEPTED_UNCALIBRATED');
-      assert.equal(v.reviewed_by_user_id, manifest.operatorId);
+      if (!production) assert.equal(v.reviewed_by_user_id, manifest.operatorId);
       for (const status of [
         v.content_status,
         v.family_status,
@@ -186,8 +233,11 @@ try {
         v.media === null || (typeof v.media === 'object' && Object.keys(v.media).length === 0),
         'Unsupported media',
       );
-      const [existing] =
-        await tx`select q.* from question_versions q join content_import_versions i on i.question_version_id=q.id join content_imports c on c.id=i.import_id where c.idempotency_key=${manifest.reference} and c.actor_user_id=${manifest.operatorId} and q.revised_from_question_version_id=${v.id}`;
+      const existingVersions = previousImport
+        ? await tx`select q.* from question_versions q join content_import_versions i on i.question_version_id=q.id where i.import_id=${previousImport.id} and q.revised_from_question_version_id=${v.id}`
+        : [];
+      assert(existingVersions.length <= 1, 'Multiple revisions exist for this source version');
+      const [existing] = existingVersions;
       if (existing) {
         assert.deepEqual(payload(existing), item.replacement);
         assert.equal(existing.difficulty, item.difficulty);
@@ -222,6 +272,8 @@ try {
           sourcePayloadDigest: hash(item.source),
           approvalSource: manifest.approvalSource,
           operatorBasis: manifest.operatorBasis,
+          ...sourceAttribution,
+          ...(production ? { sourceReviewedByUserId: v.reviewed_by_user_id } : {}),
           empiricallyCalibrated: false,
           correctionReason: item.correctionReason,
         },
@@ -241,7 +293,7 @@ try {
    from question_versions v join question_variants va on va.id=v.variant_id join questions q on q.id=va.question_id join competencies c on c.id=q.primary_competency_id join subchapters s on s.id=c.subchapter_id join chapters ch on ch.id=s.chapter_id left join levels l on l.id=v.level_id join content_import_versions imported on imported.question_version_id=v.id where v.id in ${tx(sourceIds)} order by v.id`;
     assert.equal(hash(after), sourceHash, 'Source rows changed');
     result.originalVersionsUnchanged = true;
-    if (write) {
+    if (releaseImport && (write || production)) {
       const [{ n }] =
         await tx`select count(*)::int n from content_import_versions where import_id=${releaseImport.id}`;
       assert.equal(n, expectedItems);

@@ -18,7 +18,27 @@ Manifest sumber, pengganti, kunci, alasan koreksi dan solusi independen ada pada
 
 ## Operator terbatas
 
-`apps/api/scripts/release-owner-reviewed-pvp.mjs` secara default READ ONLY. `--rehearse` menjalankan penulisan dalam transaksi yang sengaja dibatalkan; `--apply` membuat 30 versi READY baru dalam satu transaksi. Kedua mode penulisan memerlukan `--actor` operator Content/Data/Moderation existing yang juga menangani seluruh sumber dan rilis original sebelumnya; status aktif dan izin diperiksa kembali. Atribusi adalah eksekusi atas persetujuan pemilik dan review berbantuan AI, bukan klaim bahwa operator melakukan review manual terpisah.
+`apps/api/scripts/release-owner-reviewed-pvp.mjs` secara default READ ONLY. `--rehearse` menjalankan penulisan dalam transaksi yang sengaja dibatalkan. `--apply` menyimpan satu batch dalam satu transaksi. Pada jalur sumber, kedua mode penulisan memerlukan `--actor` operator Content/Data/Moderation yang tercatat di manifest. Atribusi mencatat eksekusi atas persetujuan pemilik dan review berbantuan AI.
+
+### Penerbitan ke Production
+
+**ENGINEERING IMPLEMENTATION:** `--production` memerlukan `--actor` berisi `public.users.id` dari Super Admin Production yang aktif. Skrip memeriksa project `bfvbstmkcpanqqehfevr` melalui `SUPABASE_PROJECT_REF` dan URL TLS operator di `DATABASE_MIGRATION_URL`. Catatan revisi dan audit memakai akun penerbit Production. Provenance mencatat UUID operator manifest dan reviewer yang tersimpan pada versi sumber di database tujuan secara terpisah. Pengulangan memeriksa batch berdasarkan referensi rilis sehingga Super Admin lain bisa memverifikasi rilis yang sama.
+
+Dari root repo di VPS, gunakan checkout yang memuat skrip ini dan build `@tka/assessment-engine` terlebih dahulu. Siapkan `/etc/numora/migration.env` dengan target Production dan ganti `UUID_SUPER_ADMIN_PROD` di bawah dengan UUID profilnya. Jalankan simulasi untuk semua batch sebelum menerbitkan:
+
+```bash
+PVP_RELEASE_ACTOR='UUID_SUPER_ADMIN_PROD'
+(
+  set -e
+  for batch in {1..9}; do
+    pnpm exec dotenv -o --no-expand -e /etc/numora/migration.env -- \
+      node apps/api/scripts/release-owner-reviewed-pvp.mjs \
+      --production --actor="$PVP_RELEASE_ACTOR" --batch="$batch" --rehearse
+  done
+)
+```
+
+Pada setiap hasil simulasi, cek `rolledBack: true`, `originalVersionsUnchanged: true` dan 30 item per batch, kecuali batch 6 yang berisi 29. Setelah semua lulus, jalankan loop yang sama dengan `--apply`. Jalankan sekali lagi tanpa `--rehearse` atau `--apply` untuk memverifikasi bahwa 269 item berstatus `already-released`. Tiap batch punya transaksi sendiri. Jika sebuah batch gagal, perbaiki penyebabnya dan ulangi perintah untuk batch yang sama. Verifikasi selector `strict` sebelum mengaktifkan mode PvP resmi.
 
 Operator memeriksa digest manifest persetujuan, snapshot sumber, hierarchy READY, tipe PG, media, decoder, kunci/opsi tetap, tepat 10 keluarga per kesulitan dan versi terbaru. Kunci advisory serta lock per varian melindungi alokasi versi. Asal-usul impor dan audit disimpan bersama versi baru, tanpa menyalin keputusan validasi versi lama. Pengulangan memverifikasi rilis existing tanpa menambah versi. Tidak mengubah versi sumber, package items, attempt, hasil, XP, assignment atau pin sesi.
 
