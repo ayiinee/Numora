@@ -2,6 +2,16 @@
 
 **ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Pemindahan pintu masuk Admin ke `/admin-numora` telah disetujui. Rincian rute dan pengalihan dicatat di [PRD mapping](PRD_MAPPING.md).
 
+**ENGINEERING DECISION — pemilik, 10 November 2026:**
+[konteks delivery dan target IRT 24 jam](../TRYOUT_IRT_DELIVERY_CONTEXT.md)
+mencatat bahwa fallback per arm diizinkan, IRT tetap diutamakan dan
+self-adjustment ditunda. Sumber Admin §17 tetap menyisakan ADM-DEP-03
+(alokasi kelas/sekolah, multisekolah/Mandiri, membership dan jalur varian),
+ADM-DEP-04 (akademik/ilmiah serta integrasi), ADM-DEP-05 (pihak berwenang).
+Lima anchor per pasangan tidak menjamin lima versi bersama lintas arm.
+Jangan menganggap penyerahan dokumen menutup dependency atau menyetujui policy
+riset untuk produksi. ADM-DEP-01/02/06 juga tetap tercatat dalam sumber.
+
 **ENGINEERING DECISION — Teacher presentation boundary, 9 November 2026:** [Teacher UI alignment](../design/TEACHER_UI_ALIGNMENT_2026-11-09.md) uses only existing server fields and operations. It resolves no academic OPEN item and introduces no class-wide mastery, trends, notification endpoint or ranking. Missing data stays distinct from zero.
 
 **ENGINEERING DECISION — pemilik, 9 November 2026.** Nilai sebagian Pretest original sudah disetujui: ketepatan per opsi/pernyataan, jawaban kosong 0, bobot 1 per soal, tanpa XP. Batas level memakai total sebelum pembulatan: kurang dari 8, 8 sampai kurang dari 19, dan mulai 19. Keputusan ini khusus Pretest; review rubrik Drill tetap terpisah. [Rincian dan bukti penerbitan](../development/PRETEST_ORIGINAL_RELEASE_2026-11-09.md).

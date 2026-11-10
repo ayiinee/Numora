@@ -1,5 +1,14 @@
 # Konteks arsitektur varian dan IRT v2
 
+**Pembaruan pemilik — 10 November 2026:** baca
+[rekonsiliasi delivery Admin dan strategi 24 jam](TRYOUT_IRT_DELIVERY_CONTEXT.md).
+Target terdekat: IRT Tryout multi-arm dan integrasi main, dengan IRT diutamakan
+serta fallback per arm diizinkan. Self-adjustment ditunda; uji total tiga jam.
+Anchor dipin per proses/pasangan sebelum generate, sedangkan runtime bersama
+masih membutuhkan lima versi identik lintas arm. Alokasi sekolah/kelas dan
+approval yang OPEN pada sumber Admin tetap dependency. Urutan tindak lanjut
+lama di bawah bukan jadwal target 24 jam dan bukan klaim semua mesin belum ada.
+
 **ENGINEERING DECISION — perubahan produk/arsitektur disetujui pemilik, 8 November 2026.** Dokumen ini mencatat rancangan target yang menggantikan kebijakan lama pada bagian yang bertentangan. Ini bukan laporan implementasi atau pengesahan statistik. PRD v0.6 dan keputusan lain tetap berlaku di luar perubahan yang disebutkan di sini.
 
 Salinan dokumen ini dipelihara identik di repo Numora dan Numora-ai-service. Perubahan berikutnya harus diselaraskan pada keduanya. Pembaruan ini hanya dokumentasi; tidak mengubah kode, kontrak executable, migrasi, database, konfigurasi deployment, atau hasil siswa.
