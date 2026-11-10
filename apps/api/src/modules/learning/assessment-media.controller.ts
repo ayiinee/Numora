@@ -12,7 +12,7 @@ import {
   Post,
   ForbiddenException,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import { ApiBearerAuth, ApiOkResponse, ApiOperation, ApiTags } from '@nestjs/swagger';
 import {
   assessmentAttempts,
   attemptItems,
@@ -38,6 +38,11 @@ export class AssessmentMediaController {
   ) {}
   @Post(':attemptId/media')
   @HttpCode(200)
+  @ApiOperation({
+    summary: 'Get private media links for a Pretest, Drill or Tryout attempt',
+    description:
+      'Requires an active Student who owns the regular attempt and its question instance. WORK is available only while the attempt is in progress and excludes explanation media. Pretest does not allow REVIEW.',
+  })
   @ApiOkResponse({ type: MediaLinksDto })
   async media(
     @Headers('authorization') authorization: string | undefined,
@@ -54,14 +59,18 @@ export class AssessmentMediaController {
       .where(and(eq(assessmentAttempts.id, id), eq(assessmentAttempts.studentId, user.id)));
     if (
       !attempt ||
-      !['DRILL', 'TRYOUT'].includes(attempt.assessmentType) ||
+      !['PRETEST', 'DRILL', 'TRYOUT'].includes(attempt.assessmentType) ||
       attempt.purpose !== 'REGULAR'
     )
       throw new NotFoundException({ code: 'ATTEMPT_NOT_FOUND' });
     if (body.phase === 'WORK' && attempt.status !== 'IN_PROGRESS')
       throw new ConflictException({ code: 'ATTEMPT_NOT_ACTIVE' });
     if (body.phase === 'REVIEW') {
-      if (attempt.status !== 'GRADED' || !attempt.finishedAt)
+      if (
+        attempt.assessmentType === 'PRETEST' ||
+        attempt.status !== 'GRADED' ||
+        !attempt.finishedAt
+      )
         throw new ConflictException({ code: 'ASSESSMENT_REVIEW_UNAVAILABLE' });
       if (
         attempt.assessmentType === 'DRILL'
