@@ -19,10 +19,12 @@ from numora_service.irt.runtime import profile
 from research.irt.synthetic import generate
 
 def main():
-    parser=argparse.ArgumentParser();parser.add_argument('--engine-double',action='store_true');args=parser.parse_args()
-    output=ROOT/'.tmp/irt-release-acceptance'/('local-engine-double.json' if args.engine_double else 'local-report.json')
+    parser=argparse.ArgumentParser();parser.add_argument('--engine-double',action='store_true')
+    parser.add_argument('--output',type=Path,help='Dedicated ignored evidence path; avoids overwriting earlier run reports')
+    args=parser.parse_args()
+    output=args.output or ROOT/'.tmp/irt-release-acceptance'/('local-engine-double.json' if args.engine_double else 'local-report.json')
     output.parent.mkdir(parents=True,exist_ok=True)
-    report={'purpose':'RESEARCH_ONLY','engineDouble':args.engine_double,'productionApproved':False,'cases':[]}
+    report={'purpose':'RESEARCH_ONLY','engineDouble':args.engine_double,'R':'CONTRACTUAL_DOUBLE' if args.engine_double else 'NOT_INVOKED_BELOW_SAMPLE_MINIMUM','productionApproved':False,'cases':[]}
     local_database=runpy.run_path(str(ROOT/'scripts/test-irt-research-local.py'))['local_database']
     with local_database() as url:
         from tests.service import test_irt_postgres as fixtures

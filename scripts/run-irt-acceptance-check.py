@@ -1,5 +1,5 @@
 """Cumulative wall-time budget, including overlapping checks once; no command/credential logging."""
-import argparse,json,os,subprocess,time
+import argparse,json,os,signal,subprocess,time
 from contextlib import contextmanager
 from datetime import datetime,timezone
 from pathlib import Path
@@ -39,9 +39,18 @@ with ledger() as data:
 start=time.monotonic();code=124
 try:
  command=a.command[1:] if a.command[:1]==['--'] else a.command
- code=subprocess.run(command,timeout=min(a.timeout,remaining),check=False).returncode
-except subprocess.TimeoutExpired:
- print('IRT_ACCEPTANCE_CHECK_TIMEOUT',flush=True)
+ process=subprocess.Popen(command,start_new_session=os.name!='nt')
+ try:
+  code=process.wait(timeout=min(a.timeout,remaining))
+ except subprocess.TimeoutExpired:
+  # Kill only this run's descendants; they must not keep spending a closed budget.
+  if os.name=='nt':
+   subprocess.run(['taskkill','/PID',str(process.pid),'/T','/F'],stdout=subprocess.DEVNULL,stderr=subprocess.DEVNULL,timeout=10,check=False)
+  else:
+   try:os.killpg(process.pid,signal.SIGKILL)
+   except ProcessLookupError:pass
+  process.wait(timeout=10)
+  print('IRT_ACCEPTANCE_CHECK_TIMEOUT',flush=True)
 finally:
  with ledger() as data:
   row=next(c for c in data['checks'] if c.get('id')==key)

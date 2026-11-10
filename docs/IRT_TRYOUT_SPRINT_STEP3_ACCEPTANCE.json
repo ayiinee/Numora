@@ -1,0 +1,545 @@
+{
+  "version": "irt-tryout-sprint-step3-v1",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "mainBaseline": "66a0dc808dba4cbf8f5b9240a23182881b7281b6",
+  "aiBaseline": "8b8a4672109f6e51cc015035c64741404038d3f4",
+  "contracts": {
+    "irt-calibration-v1": {
+      "check-parity.mjs": "076364f2b9e68da4f5e40bb0661c4b3f8f43b97dea12b697f3768dddc1348c5c",
+      "common.schema.json": "3588e42889406afb34a9b5fc309ed9291d68f325c655a59e2abc5826d0f8f894",
+      "conformance.fixture.json": "ef1fc40e401a71250a12b434451d8b57fda6b9b62fa124122e40dcebcc4a82e0",
+      "contract.test.mjs": "8c330b7fdee94ca3106ebc29518243b2de7d641006097bc525258e4fd4a87eb7",
+      "dispatch.fixture.json": "b72c95d979d57e6aa21898351b6c298a232bedc17e95824d6d3d24f23eabf85e",
+      "generate-types.mjs": "b17fd98d2e8836d2141d867ee718cf200d0657e65952473b3a0ec8046e1bfdac",
+      "input.schema.json": "483467117552dc3f375e52162633bcff228e819c616da467267738c458e6786f",
+      "README.md": "01e8c49ed5d6d4ac6d8111981948802d1eba637b388a66dd14d66e7b85d4213f",
+      "result.schema.json": "5a4d611ca1f42e679bc5c81b02a67f5300d0e45b766b7aac184ae881f5d532df",
+      "test_contract.py": "8bb4f4c16fb4e27f8576ccc51f359b17dad1755f2a2978d8ca6ee8a511de5bfd",
+      "types.d.ts": "bfae0c41489562b4bce73803dca27eb5238fec05784ee858da58d3e12546fb1f",
+      "validate.mjs": "bb2e373104392542a3cead91e7f8ec77c2f606e65c65690ffdd7849512bd82f1",
+      "validate.py": "8ce42d1170bae31a966c861e813286c5413366759d5ab9c9945236226ad38306"
+    },
+    "irt-calibration-service-v1": {
+      "digest-vector.json": "77dbe003ff261107e532eea1379f4c1287c57bc10da27df4b7d9164e608eeb6c",
+      "notification.schema.json": "9f603937640d1e7e49c30088cb764bcca91537c95cd4f9193192313a49984044",
+      "README.md": "469769ed663701232c68122dac719b5531451b215716a238f37627e213eb2871",
+      "response.schema.json": "98d0d212849f2df683edd406e2f89d565ea6aec153992e40ac8019e863a6d13e"
+    }
+  },
+  "pins": {
+    "research/irt-linux-image-v4.json": "d0927f674f377aa3e731baf8ffa2171956b42a1744c5f77f6b4ff6b6f92e1322",
+    "research/irt-runtime-linux-v3.json": "07f345313c5c9f49db28d1bc895d8c867eb652671e2accbd1f60b912a4fa394b",
+    "research/irt/policy-v1.json": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
+    "research/irt/compute.R": "93955dfb694d387003e49f558ef36bb7e3204622cae7d34ce8434fc182057ca2",
+    "research/irt-runtime-windows-v4.json": "f2ccb270a1f75773d3f65e377d5e46aa6cee9959fbdfc17bd0cb8cd45b6481b5",
+    "research/irt-runtime-windows-v6.json": "106fde0bc2ed6f92071a5307104091222fc59d2c4e1d6735e915bfe699346a50",
+    "research/irt-runtime-linux-production-v1.json": "4f3e2e39b44a8f8682ca837c2e83ea5e43ba7de9e9b0095193c3421dc8ec932f",
+    "research/irt/policy-production-candidate-v1.json": "a498e3aa9326481ea8826e96495a41f42854ba9a9a94c14c9e5d4d331f5ff9ff"
+  },
+  "status": "NOT_READY",
+  "budgetSeconds": 3600,
+  "fixtureRecipeSha256": "cf91cd1df87d2310e3cadfbf72b9af60cbc4eb900fb4e3bbd110787d4696a775",
+  "images": {
+    "producerImage": "sha256:88a37a5442ec5dc55332af830053666f50fc3cef2393c505698ce39cd008969a",
+    "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036"
+  },
+  "mainVerificationSource": "5244a53edfa960d2b6ea36fe5a5e4771336ccd9e",
+  "decisions": {
+    "completeLocalIntegration": "NOT_READY",
+    "hostAcceptance": "NOT_RUN",
+    "production": "NOT_READY",
+    "step4": "NOT_STARTED"
+  },
+  "nativeFreeze": {
+    "purpose": "RESEARCH_ONLY",
+    "R": "NOT_RUN",
+    "cases": [
+      {
+        "case": "two-arm",
+        "status": "PASS",
+        "respondents": 2000,
+        "responses": 60000,
+        "bodyBytes": 30747669,
+        "inputDigest": "18c892d94ff22e66c72c3443966945c1b7145474cb26913d1d5ee5886e34a182",
+        "dispatches": 1,
+        "digestVerified": true,
+        "seconds": 205.922
+      },
+      {
+        "case": "three-arm-partial",
+        "status": "PASS",
+        "respondents": 2100,
+        "responses": 63000,
+        "bodyBytes": 32296459,
+        "inputDigest": "23597284900f897b547d31fff7ddefb0a8f5a199211111e3cfed485277d1053b",
+        "dispatches": 1,
+        "digestVerified": true,
+        "seconds": 203.625
+      }
+    ]
+  },
+  "linux": {
+    "purpose": "RESEARCH_ONLY",
+    "productionApproved": false,
+    "manifest": {
+      "version": "irt-linux-image-manifest-v4",
+      "purpose": "RESEARCH_ONLY",
+      "productionApproved": false,
+      "producerImage": "sha256:88a37a5442ec5dc55332af830053666f50fc3cef2393c505698ce39cd008969a",
+      "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+      "profile": "research/irt-runtime-linux-v3.json",
+      "profileSha256": "07f345313c5c9f49db28d1bc895d8c867eb652671e2accbd1f60b912a4fa394b",
+      "runtimeSelection": "linux-v3",
+      "productionProfile": "research/irt-runtime-linux-production-v1.json",
+      "productionProfileSha256": "4f3e2e39b44a8f8682ca837c2e83ea5e43ba7de9e9b0095193c3421dc8ec932f",
+      "supersedes": "research/irt-linux-image-v3.json",
+      "revisionReason": "Explicit production authorization boundary; scientific method and thresholds unchanged.",
+      "sourceSha256": {
+        "Dockerfile.irt-producer": "80a0eecefebfb7515dbcb9969889e13cc626c5ff0fb1898d1c952981350f5bc2",
+        "research/irt-python-linux.lock": "523b529216beaa5ba8319980298192cd2e4f5594aee84e743f70ea911412fe10",
+        "tools/verify_irt_linux.py": "93fd5cb1bcce1482e7fa55ce70a3fac124c28f80fa555ce57fc71bce635a08fd"
+      }
+    },
+    "host": {
+      "dockerCPUs": 2,
+      "dockerMemoryBytes": 4107378688
+    },
+    "targetHardwareValidated": false,
+    "capacityEvidence": "SAMPLED_LOCAL_CORRECTNESS_NOT_SLO",
+    "cases": [
+      {
+        "label": "INSUFFICIENT",
+        "respondents": 4,
+        "arms": 2,
+        "ackSeconds": 0.06299999996554106,
+        "elapsedSeconds": 3.875,
+        "executionStatus": "SUCCEEDED",
+        "measurementState": "INSUFFICIENT",
+        "participantStatuses": {
+          "INSUFFICIENT": 4
+        },
+        "canonicalSnapshot": true,
+        "mainVerified": true,
+        "selection": {
+          "fittedPerArm": {
+            "48364ef0-f45f-4482-ac63-4512e04fd8e2": 0,
+            "b2a86a70-118f-4931-bc7f-31a39ff1a6bb": 0
+          },
+          "eligiblePerArm": {
+            "48364ef0-f45f-4482-ac63-4512e04fd8e2": 2,
+            "b2a86a70-118f-4931-bc7f-31a39ff1a6bb": 2
+          }
+        },
+        "failure": null,
+        "artifactDigest": "2eeb8e550bf86873ed50ea5848883aa422c61fb416855b112bc04b1e22ce408e",
+        "sameArtifactOnReplay": true
+      }
+    ],
+    "sharedDatabaseTouched": false,
+    "canonicalPublication": true,
+    "linuxRunnerFaults": "PASSED",
+    "fixtureRecipeSha256": "cf91cd1df87d2310e3cadfbf72b9af60cbc4eb900fb4e3bbd110787d4696a775",
+    "releaseChecks": [
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "FALLBACK",
+            "count": 4
+          }
+        ],
+        "technicalFailure": false,
+        "adoptionReplay": true,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true,
+        "checkerSha256": "4059d56e49768b2d32a2bcf4016cc98a74177158e5f2d81ac37169fea4a605f1"
+      }
+    ],
+    "status": "FAILED",
+    "failureType": "OperationalError",
+    "sampledMetrics": {
+      "producer": {
+        "sampledPeakWorkingSetMiB": 43.62,
+        "sampledPeakCPUPercent": 0.42,
+        "samples": 14
+      },
+      "api": {
+        "sampledPeakWorkingSetMiB": 49.84,
+        "sampledPeakCPUPercent": 1.54,
+        "samples": 14
+      }
+    },
+    "metricSampleErrors": 1,
+    "ownedResourcesRemoved": false,
+    "rExecution": "NOT_INVOKED_BELOW_SAMPLE_MINIMUM"
+  },
+  "releaseCases": {
+    "purpose": "RESEARCH_ONLY",
+    "engineDouble": false,
+    "R": "NOT_INVOKED_BELOW_SAMPLE_MINIMUM",
+    "productionApproved": false,
+    "cases": [
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "FALLBACK",
+            "count": 4
+          }
+        ],
+        "technicalFailure": false,
+        "adoptionReplay": true,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "FALLBACK",
+            "count": 4
+          }
+        ],
+        "technicalFailure": true,
+        "adoptionReplay": false,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "CANCEL",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "REVOKE",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "UNSCORABLE",
+            "count": 4
+          }
+        ],
+        "technicalFailure": false,
+        "adoptionReplay": true,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "COVERAGE",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      }
+    ],
+    "status": "PASSED"
+  },
+  "contractualRelease": {
+    "status": "PASS",
+    "respondents": 1000,
+    "engine": "CONTRACTUAL_DOUBLE",
+    "scientificAcceptance": false,
+    "publicationReplay": true,
+    "fullRowIntegrityIncludingItemsAndExposure": true
+  },
+  "checks": {
+    "contractByteParity": "PASS",
+    "separateApiIrtLogins": "PASS",
+    "applicationParallelStartResumeGradeFreeze": "PASS",
+    "freshInstallAndHistoryUpgrade": "PASS",
+    "applicationHttpWorkerAdoptionPublicationReader": "PASS",
+    "authorizedExplanationEvents": 60,
+    "historicalExposureRowsUnchanged": true,
+    "unitDecisionAndAdoption": {
+      "passed": 12
+    },
+    "contractAndAdapter": {
+      "passed": 118
+    },
+    "mathematics": {
+      "passed": 6
+    },
+    "rOracle": "BLOCKED_DOCKER_UNAVAILABLE",
+    "transportFaultSuite": {
+      "status": "TIMEOUT",
+      "completedBeforeTimeout": [
+        "HTTP replay",
+        "concurrent accept",
+        "digest and revoked approval",
+        "compute canonical-write denial",
+        "frozen input immutable",
+        "PostgreSQL digest vector",
+        "atomic outbox/cancellation",
+        "technical failure",
+        "single daemon lease",
+        "Main canonical grades/pins",
+        "Main HTTP outbox",
+        "expired execution fencing",
+        "retry cap and revoke before seal",
+        "artifact tampering/immutability",
+        "safe failure diagnostics"
+      ],
+      "rImageTest": "SKIPPED",
+      "timeoutDuring": "scientific faults 6x1000",
+      "isolatedRerun": "PASS",
+      "isolatedRerunTests": 2,
+      "isolatedRerunSeconds": 544.969,
+      "faultScenarios": [
+        "NONCONVERGENCE",
+        "COVARIANCE",
+        "MISSING_FIT",
+        "MISSING_GROUP",
+        "DEPENDENCE",
+        "LINKING"
+      ],
+      "evidenceType": "CONTRACTUAL_ENGINE_FAULTS_NO_R"
+    },
+    "budgetDescendantRegression": "PASS_WINDOWS_LINUX_CI_PENDING",
+    "noObservationsHttpArtifact": "PASS_UNSCORABLE_NO_R",
+    "applicationReaderEvidence": {
+      "attempts": 2,
+      "resultMode": "FALLBACK",
+      "R": "NOT_INVOKED_BELOW_SAMPLE_MINIMUM",
+      "explanationEventsAdded": 60,
+      "priorExposureRowsUnchanged": true,
+      "historyAndXpUnchanged": true,
+      "otherParticipantDenied": true,
+      "prePublicationLocked": true
+    },
+    "readerRegressionFailures": [
+      "Initial full exposure equality correctly detected legitimate explanation events",
+      "Filtered postgres Result versus Array comparison corrected; row contents still checked exactly"
+    ]
+  },
+  "blockers": [
+    "DOCKER_DESKTOP_API_UNAVAILABLE",
+    "FULL_SIZE_TWO_ARM_REAL_R_NOT_RUN",
+    "FULL_SIZE_THREE_ARM_REAL_R_NOT_RUN",
+    "R_ORACLE_NOT_RUN",
+    "OWNED_DOCKER_RESOURCE_CLEANUP_UNCONFIRMED",
+    "FINAL_HEAD_CI_PENDING",
+    "GENERATOR_DEDICATED_BROWSER_ACCEPTANCE_OPEN",
+    "PRODUCTION_POLICY_SCIENTIFIC_APPROVAL_HOST_OPERATIONS_SEPARATE"
+  ],
+  "budget": {
+    "limitSeconds": 3600,
+    "ledger": ".tmp/irt-sprint-step3/ledger.json",
+    "priorLedgersReset": false,
+    "snapshot": {
+      "budgetSeconds": 3600,
+      "checks": [
+        {
+          "id": "8453a21d68f64bce953493576d4d66d1",
+          "name": "canonical-linux-delivery-release",
+          "startedAt": "2026-11-10T18:39:02.178241+00:00",
+          "seconds": 90.219,
+          "exitCode": 1
+        },
+        {
+          "id": "ea4a8eda647b4c33939dd650dbfcccdc",
+          "name": "separate-api-irt-logins",
+          "startedAt": "2026-11-10T18:39:22.245243+00:00",
+          "seconds": 20.235,
+          "exitCode": 0
+        },
+        {
+          "id": "4fba09746f414098a6cadc75ff6c301e",
+          "name": "native-full-size-freeze",
+          "startedAt": "2026-11-10T18:41:28.889577+00:00",
+          "seconds": 463.75,
+          "exitCode": 0
+        },
+        {
+          "id": "818f76ecc3954233816d3fa207b5ea10",
+          "name": "application-grading-freeze-upgrade",
+          "startedAt": "2026-11-10T18:41:48.852709+00:00",
+          "seconds": 39.016,
+          "exitCode": 0
+        },
+        {
+          "id": "7c24bccee46046beadb496b8a70d2672",
+          "name": "contractual-release-regression",
+          "startedAt": "2026-11-10T18:42:56.042369+00:00",
+          "seconds": 141.282,
+          "exitCode": 0
+        },
+        {
+          "id": "4f1a67f5cb994c209fc7d31d07a70bfe",
+          "name": "release-adoption-unit",
+          "startedAt": "2026-11-10T18:43:26.253576+00:00",
+          "seconds": 2.5,
+          "exitCode": 0
+        },
+        {
+          "id": "64eb0b41750346c3a6c2f4db6a238337",
+          "name": "transport-fencing-database-regression",
+          "startedAt": "2026-11-10T18:44:19.856573+00:00",
+          "seconds": 300.031,
+          "exitCode": 124
+        },
+        {
+          "id": "3bd91ad81f0b4405b8092d2a2924e77d",
+          "name": "release-checker-lint",
+          "startedAt": "2026-11-10T18:45:38.560350+00:00",
+          "seconds": 3.406,
+          "exitCode": 0
+        },
+        {
+          "id": "6f679c42606d42af8c3998c27f5bcd15",
+          "name": "release-failure-cancellation-zero-coverage",
+          "startedAt": "2026-11-10T18:46:16.931624+00:00",
+          "seconds": 34.562,
+          "exitCode": 0
+        },
+        {
+          "id": "f38c27d2e17d412c9f69291e00d57656",
+          "name": "release-dedicated-evidence-path",
+          "startedAt": "2026-11-10T18:47:48.073767+00:00",
+          "seconds": 32.922,
+          "exitCode": 0
+        },
+        {
+          "id": "47af5a95851f4a48a9903e08ec4ff06b",
+          "name": "budget-descendant-regression",
+          "startedAt": "2026-11-10T18:50:13.060681+00:00",
+          "seconds": 4.891,
+          "exitCode": 0
+        },
+        {
+          "id": "a3ae0423a06045abbc1b7e76c6bf805c",
+          "name": "contract-conformance",
+          "startedAt": "2026-11-10T18:50:33.552183+00:00",
+          "seconds": 0.719,
+          "exitCode": 0
+        },
+        {
+          "id": "bea4d636c01c4fe9bb161381ec0ea865",
+          "name": "probability-eap-math",
+          "startedAt": "2026-11-10T18:50:44.428811+00:00",
+          "seconds": 0.297,
+          "exitCode": 0
+        },
+        {
+          "id": "245c0f7b01934a40b1a6362cedde5bc4",
+          "name": "small-application-http-worker-reader",
+          "startedAt": "2026-11-10T18:51:30.361700+00:00",
+          "seconds": 42.75,
+          "exitCode": 1
+        },
+        {
+          "id": "2bb45050c40e493eadd6849ac6c532a5",
+          "name": "scientific-faults-no-observations-isolated",
+          "startedAt": "2026-11-10T18:52:04.267277+00:00",
+          "seconds": 559.219,
+          "exitCode": 0
+        },
+        {
+          "id": "a76f9c0280c24d8abc3660cdb0865229",
+          "name": "application-reader-authorized-exposure",
+          "startedAt": "2026-11-10T18:52:54.453556+00:00",
+          "seconds": 52.015,
+          "exitCode": 1
+        },
+        {
+          "id": "345adc53aee94cd29d2f63f9abd20646",
+          "name": "reader-exposure-lint",
+          "startedAt": "2026-11-10T18:53:51.360652+00:00",
+          "seconds": 5.875,
+          "exitCode": 0
+        },
+        {
+          "id": "7e27021e1d25415fac10078d8297498c",
+          "name": "application-reader-row-identity-regression",
+          "startedAt": "2026-11-10T18:54:31.874766+00:00",
+          "seconds": 50.891,
+          "exitCode": 0
+        },
+        {
+          "id": "3321dfeb2f244a3fb3ceb19fa9eb5228",
+          "name": "ci-definition-regression",
+          "startedAt": "2026-11-10T18:56:42.788677+00:00",
+          "seconds": 0.797,
+          "exitCode": 0
+        },
+        {
+          "id": "2004279e38cf4ffc8d9d142606afcb4e",
+          "name": "no-observations-http-null-status",
+          "startedAt": "2026-11-10T18:58:33.898240+00:00",
+          "seconds": 18.781,
+          "exitCode": 0
+        }
+      ],
+      "priorUnmeteredLocalSeconds": 60,
+      "consumedWallSeconds": 1220.249,
+      "accountingNote": "Conservative 60-second allowance for descendant/cleanup activity after the pre-fix transport test timeout; not a budget reset."
+    },
+    "finalCiAndRetestAccounting": "Final local ledger and exact-head GitHub checks are authoritative; this is a pre-CI checkpoint."
+  },
+  "ci": {
+    "status": "PENDING",
+    "required": [
+      "validate",
+      "tests",
+      "connected",
+      "browser-e2e (1)",
+      "browser-e2e (2)",
+      "build-contract",
+      "quality"
+    ],
+    "acceptanceSubstitute": false
+  },
+  "toolchain": {
+    "nodeLocal": "v24.15.0",
+    "nodeCiRequired": "24.22.1",
+    "pythonLocal": "3.11.3",
+    "postgresNative": "16.11",
+    "localPnpm": "COREPACK_SHIM_UNAVAILABLE_USED_NODE_DIRECTLY"
+  },
+  "review": {
+    "latestMainStillBaseline": true,
+    "publicApiChanged": false,
+    "scientificMethodChanged": false,
+    "migrationAdded": false,
+    "sharedDatabaseAccessed": false,
+    "aiChanged": false,
+    "recommendation": "DRAFT_NOT_READY_FOR_COMPLETE_ACCEPTANCE",
+    "notes": [
+      "Required checks must be inspected on final PR head",
+      "Native freeze success does not explain historical 53200 or certify Docker capacity",
+      "Linux small sample never invoked R",
+      "Reader explanation exposure append is authorized and separately checked",
+      "Default flags and existing production authorization boundary retained"
+    ]
+  },
+  "runtimeByEvidence": {
+    "linuxContainerSmallAndAttemptedLarge": "research/irt-runtime-linux-v3.json",
+    "nativeApplicationAndContractualFaults": "research/irt-runtime-windows-v6.json",
+    "authorizationOnly": "research/irt-runtime-windows-v4.json copied with synthetic PRODUCTION purpose; authorization regression only, not production runtime acceptance",
+    "nativeFullSizeFreeze": "research/irt-runtime-linux-v3.json frozen commitment only; no producer/R execution"
+  }
+}

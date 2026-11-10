@@ -32,6 +32,8 @@ jobs:
           pnpm --version
       - name: Install dependencies
         run: pnpm install --frozen-lockfile
+      - name: Acceptance budget and process cleanup regression
+        run: python3 scripts/test-irt-acceptance-budget.py
       - name: Script checks
         run: pnpm test:checks
       - name: Validate QA workflow

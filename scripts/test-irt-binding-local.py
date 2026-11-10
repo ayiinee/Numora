@@ -98,7 +98,7 @@ def main():
                     server.should_exit=True;thread.join(timeout=10)
                 release_env={**env,'NUMORA_IRT_RELEASE_ENABLED':'true','NUMORA_IRT_PUBLICATION_ENABLED':'true','NUMORA_IRT_DELIVERY_RECONCILER_ENABLED':'true','NUMORA_IRT_PSEUDONYM_SECRET':'SYNTHETIC_PRIVATE_KEY_ONLY_1234567890','NUMORA_IRT_PSEUDONYM_KEY_VERSION':'test-v1'}
                 result=subprocess.run(['node','scripts/test-irt-app-release.mjs'],cwd=ROOT,input=json.dumps({**evidence,'batchId':str(batch),'approvalId':str(approval)}),text=True,capture_output=True,timeout=120,env=release_env)
-                if result.returncode: raise RuntimeError(result.stderr[-2500:])
+                if result.returncode: raise RuntimeError(result.stderr[:1800]+'\n...\n'+result.stderr[-700:])
                 print(result.stdout,flush=True)
             return
         student = db.execute("INSERT INTO users(auth_user_id,role,display_name,email) VALUES(%s,'STUDENT','SYNTHETIC','start@example.test') RETURNING id",(uuid4(),)).fetchone()['id']
