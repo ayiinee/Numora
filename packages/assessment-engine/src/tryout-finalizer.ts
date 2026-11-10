@@ -7,6 +7,7 @@ import {
   getDatabase,
   questionVersions,
   assessmentPackages,
+  tryoutBatches,
   scoringPolicyVersions,
   scoringRubricVersions,
 } from '@tka/database';
@@ -64,7 +65,8 @@ export async function finalizeTryout(request: Request) {
       .select()
       .from(assessmentPackages)
       .where(eq(assessmentPackages.id, attempt.packageId));
-    const close = packageRow?.closeAt ?? null;
+    const [batch] = attempt.tryoutBatchId ? await tx.select().from(tryoutBatches).where(eq(tryoutBatches.id, attempt.tryoutBatchId)) : [];
+    const close = batch?.adminTitle ? batch.closesAt : packageRow?.closeAt ?? null;
     const deadline =
       attempt.deadlineAt === null
         ? close

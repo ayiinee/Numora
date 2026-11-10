@@ -4,7 +4,15 @@ import { setupAnalytics } from './fixtures/admin-analytics';
 test('Analytics dashboard visual audit', async ({ page }) => {
   const { errors } = await setupAnalytics(page);
   await page.goto('/admin/analytics');
-  await expect(page.getByRole('heading', { name: /^Analytics/ })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Dashboard', exact: true })).toHaveClass(
+    'sr-only',
+  );
+  await expect(page.locator('.assessment-page-heading, .admin-breadcrumb')).toHaveCount(0);
+  await expect(page.locator('.analytics-kpis')).toBeVisible();
+  await expect(page.locator('.analytics-definitions')).not.toHaveAttribute('open', '');
+  await expect(
+    page.getByText('Akun berstatus aktif; bukan pengguna aktif harian.', { exact: true }),
+  ).toBeHidden();
   await expect(page.getByText('Akun siswa aktif', { exact: true })).toBeVisible();
   await expect(page.locator('[data-metric]')).toHaveCount(22);
   const keys = await page
@@ -49,9 +57,9 @@ test('Analytics refresh keeps the timestamp and snapshot until a new response is
     await route.fallback();
   });
   const requested = page.waitForRequest((request) => request.url().endsWith('/admin/analytics'));
-  await page.getByRole('button', { name: 'Perbarui analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
   await requested;
-  await expect(page.getByRole('button', { name: /Perbarui analytics/ })).toBeDisabled();
+  await expect(page.getByRole('button', { name: /Perbarui/ })).toBeDisabled();
   await expect(page.locator('[data-metric=students]')).toContainText('3.600');
   await expect(page.locator('.analytics-toolbar time')).toContainText('15.00 WIB');
   analytics.data.metrics.find((metric) => metric.key === 'students')!.value = 4000;
@@ -70,7 +78,7 @@ test('Analytics labels a retained snapshot on refresh failure and recovers on re
   await page.goto('/admin/analytics');
   await expect(page.locator('[data-metric=students]')).toContainText('3.600');
   analytics.status = 503;
-  await page.getByRole('button', { name: 'Perbarui analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
   await expect(page.locator('.admin-state[role=alert]')).toContainText(
     'Analytics sementara tidak tersedia.',
   );
@@ -114,16 +122,14 @@ test('Analytics distinguishes valid zero, unavailable, empty and a failed initia
   const metric = analytics.data.metrics.find((metric) => metric.key === 'readyVersions')!;
   metric.value = null;
   metric.unavailableReason = 'QUERY_UNAVAILABLE';
-  await page.getByRole('button', { name: 'Perbarui analytics', exact: true }).click();
+  await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
   await expect(page.locator('[data-metric=readyVersions] .analytics-value')).toHaveText(
     'Tidak tersedia',
   );
   await expect(page.getByText('1 metrik belum tersedia.', { exact: false })).toBeVisible();
   analytics.data.metrics = [];
-  await page.getByRole('button', { name: 'Perbarui analytics', exact: true }).click();
-  await expect(
-    page.getByText('Belum ada metrik analytics yang dikirim oleh sumber data.', { exact: true }),
-  ).toBeVisible();
+  await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
+  await expect(page.getByText('Belum ada data Dashboard.', { exact: true })).toBeVisible();
   await expect(page.locator('.analytics-kpis')).toHaveCount(0);
 });
 
@@ -133,7 +139,7 @@ for (const status of [401, 403])
     await page.goto('/admin/analytics');
     await expect(page.locator('[data-metric=students]')).toBeVisible();
     analytics.status = status;
-    await page.getByRole('button', { name: 'Perbarui analytics', exact: true }).click();
+    await page.getByRole('button', { name: 'Perbarui', exact: true }).click();
     await expect(page.locator('.admin-state[role=alert]')).toBeVisible();
     await expect(
       page.locator('.analytics-kpis,.analytics-activity,.analytics-attention'),
@@ -144,10 +150,20 @@ for (const role of ['OPERATIONS', 'CONTENT_DATA_MODERATION', null] as const)
   test(`Analytics role boundary ${role ?? 'unassigned'}`, async ({ page }) => {
     const { analytics } = await setupAnalytics(page, role);
     await page.goto('/admin/analytics');
-    if (role === 'OPERATIONS') await expect(page).toHaveURL(/\/admin\/schools$/);
-    else if (role === 'CONTENT_DATA_MODERATION') await expect(page).toHaveURL(/\/admin\/content$/);
-    else await expect(page.locator('.admin-state[role=alert]')).toBeVisible();
-    expect(analytics.requests).toEqual([]);
+    if (role) {
+      await expect(page).toHaveURL(/\/admin\/analytics$/);
+      await expect(page.locator('.assessment-page-heading, .admin-breadcrumb')).toHaveCount(0);
+      await expect(page.locator('[data-metric]')).not.toHaveCount(0);
+      expect(analytics.requests.length).toBeGreaterThan(0);
+      expect(analytics.requests.every((method) => method === 'GET')).toBe(true);
+      if (role === 'OPERATIONS')
+        await expect(page.locator('.admin-analytics-workspace a[href="/admin/irt"]')).toHaveCount(
+          0,
+        );
+    } else {
+      await expect(page.locator('.admin-state[role=alert]')).toBeVisible();
+      expect(analytics.requests).toEqual([]);
+    }
   });
 
 test('Analytics is the first landing and first navigation item for an authorized Super Admin', async ({
@@ -165,7 +181,7 @@ test('Analytics is the first landing and first navigation item for an authorized
         ? page.locator('#mobile-menu')
         : page.getByRole('navigation', { name: 'Navigasi Ruang admin', exact: true });
     const first = nav.getByRole('link').first();
-    await expect(first).toHaveText('Analytics');
+    await expect(first).toHaveText('Dashboard');
     await expect(first).toHaveAttribute('aria-current', 'page');
     await expect(nav.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
   }
@@ -195,7 +211,7 @@ test('Analytics glossary and links work with keyboard on a short zoomed viewport
   await page.evaluate(() => {
     document.documentElement.style.zoom = '1.25';
   });
-  const summary = page.getByText('Cara membaca dashboard', { exact: true });
+  const summary = page.getByText('Info metrik', { exact: true });
   await summary.focus();
   await page.keyboard.press('Enter');
   await expect(page.locator('.analytics-definitions')).toHaveAttribute('open', '');

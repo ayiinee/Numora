@@ -28,6 +28,8 @@ const explanations: Record<string, string> = {
     'Paket Authoring lama perlu dibuat sebagai versi baru melalui unggah dan review pada Paket Pretest.',
   SHARED_PACKAGE_PUBLISHER_REQUIRED:
     'Gunakan Paket Pretest untuk unggah dan review versi baru. Paket Authoring lama yang sudah direview tetap terkunci.',
+  PRETEST_CANONICAL_INTAKE_REQUIRED:
+    'Lanjutkan paket lama melalui impor pada Paket asesmen, lalu review dan publikasikan melalui pipeline bersama.',
   APPROVED_PRETEST_BLUEPRINT_REQUIRED:
     'Blueprint Pretest yang disahkan Curriculum belum terhubung.',
   PRETEST_REVIEW_REQUIRED: 'Paket Pretest belum direview.',

@@ -7,7 +7,7 @@ test('IRT visual audit', async ({ page }) => {
   const { errors, irt } = await setupIrt(page);
   await page.goto('/admin/irt');
   await expect(
-    page.getByRole('heading', { name: 'Request IRT & publikasi', exact: true }),
+    page.getByRole('heading', { name: 'Hasil Tryout & IRT', exact: true }),
   ).toBeVisible();
   await expect(
     page.getByText('Tryout Matematika · Pekan 43', { exact: true }).first(),
@@ -434,7 +434,7 @@ test('IRT terminal requests and failed adoption are not presented as actionable 
   expect(irt.batches[1]!.publishedAt).toBeNull();
 });
 
-test('IRT Super Admin can read both workspaces while retaining Analytics as the first menu', async ({
+test('IRT Super Admin can read both workspaces while retaining Dashboard as the first menu', async ({
   page,
 }) => {
   const { irt } = await setupIrt(page, 'SUPER_ADMIN');
@@ -445,7 +445,7 @@ test('IRT Super Admin can read both workspaces while retaining Analytics as the 
       .getByRole('navigation', { name: 'Navigasi Ruang admin', exact: true })
       .getByRole('link')
       .first(),
-  ).toHaveText('Analytics');
+  ).toHaveText('Dashboard');
   await page.getByRole('button', { name: 'Request analisis', exact: true }).click();
   await page.getByRole('button', { name: `Detail request ${id(400)}`, exact: true }).click();
   await expect(page.locator('.irt-states')).toContainText('Gagal');

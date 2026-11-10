@@ -8,6 +8,7 @@ export * from './measurement-contract.js';
 export * from './measurement-handoff.js';
 export * from './notification-events.js';
 export * from './tryout-visibility.js';
+export * from './pretest-visibility.js';
 
 export * from './fixture-presentation.js';
 export * from './assessment-arms.js';

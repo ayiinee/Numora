@@ -1,9 +1,16 @@
-import { type Page } from '@playwright/test';
+import { expect, type Locator, type Page } from '@playwright/test';
 import type { AdminClassDto } from '../../src/features/admin/generated-types';
 import type { AdminSchool, TeacherTokenSummary } from '../../src/lib/api';
 import fixture from './admin-workbench.json';
 
 export const id = (n: number) => `00000000-0000-4000-8000-${String(n).padStart(12, '0')}`;
+
+export async function expandAdminMenu(navigation: Locator, name: string) {
+  const group = navigation.getByRole('button', { name, exact: true });
+  await expect(group).toBeVisible();
+  if ((await group.getAttribute('aria-expanded')) === 'false') await group.click();
+  await expect(group).toHaveAttribute('aria-expanded', 'true');
+}
 
 export async function selectContentSection(page: Page, label: string) {
   const select = page.getByRole('combobox', {
@@ -192,12 +199,14 @@ export async function setup(page: Page) {
       return route.fulfill({ json: { items: state.classes, nextOffset: null } });
     if (path === `/admin/classes/${id(700)}`) return route.fulfill({ json: state.classes[0] });
     const data: Record<string, unknown> = {
+      '/admin/content/packages': { items: [], total: 0 },
       '/admin/content/curriculum': state.data.curriculum,
       '/admin/content/versions': state.data.versions,
       '/admin/content/videos': state.data.videos,
       '/admin/reports': state.data.reports,
       '/admin/irt': state.data.irt,
       '/admin/irt/batches': state.data.irtBatches,
+      '/admin/irt/options': { enabled: false, configurations: [] },
       '/admin/audit-logs': state.data.audit,
       '/admin/dashboard': state.data.dashboard,
       '/admin/content/tryout-packages': state.data.packages,

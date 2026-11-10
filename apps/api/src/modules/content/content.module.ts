@@ -1,3 +1,5 @@
+import { AdminTryoutBatchesController } from './tryout-batches.controller';
+import { TryoutBatchesService } from '../learning/tryout-batches.service';
 import { PretestController } from './pretest.controller';
 import { PretestService } from './pretest.service';
 import { Module } from '@nestjs/common';
@@ -32,6 +34,7 @@ import { ContentUploadsService } from './content-uploads.service';
 @Module({
   imports: [IdentityModule, ConfigModule],
   controllers: [
+    AdminTryoutBatchesController,
     PretestController,
     ContentLifecycleController,
     GeneratorController,
@@ -45,6 +48,7 @@ import { ContentUploadsService } from './content-uploads.service';
     ContentUploadsController,
   ],
   providers: [
+    TryoutBatchesService,
     PretestService,
     AssessmentPoliciesService,
     AssessmentReadinessService,
@@ -63,6 +67,12 @@ import { ContentUploadsService } from './content-uploads.service';
     MediaUploadsRepository,
     R2MediaStorage,
   ],
-  exports: [ContentService, DrillPackagesService, ContentLifecycleService, R2MediaStorage],
+  exports: [
+    TryoutBatchesService,
+    ContentService,
+    DrillPackagesService,
+    ContentLifecycleService,
+    R2MediaStorage,
+  ],
 })
 export class ContentModule {}

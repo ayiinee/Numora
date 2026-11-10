@@ -14,6 +14,7 @@ import {
 } from '@tka/database';
 import type { AdminTransaction } from '../audit/admin-mutation';
 import type { ContentPackageDto } from './content-packages.dto';
+import { legacyPreparation, packageAvailability } from './content-package-availability';
 
 export const packageCounts: Record<QuestionUsage, number> = { DRILL: 10, PRETEST: 20, TRYOUT: 30 };
 export async function packageContext(
@@ -41,6 +42,14 @@ export async function packageContext(
       ? await tx.select().from(chapters).where(eq(chapters.id, p.chapterId))
       : [];
   return {
+    blueprintVersionId: p.blueprintVersionId,
+    scoringPolicyVersionId: p.scoringPolicyVersionId,
+    frozenAt: p.frozenAt?.toISOString() ?? null,
+    releaseAt: p.releaseAt?.toISOString() ?? null,
+    closeAt: p.closeAt?.toISOString() ?? null,
+    availability: await packageAvailability(tx, p),
+    origin: p.importSource ? 'IMPORT' : 'LEGACY_MANUAL',
+    legacyPreparation: await legacyPreparation(tx, p),
     id: p.id,
     familyCode: p.familyCode,
     packageVersion: p.packageVersion,

@@ -34,7 +34,7 @@ export function useAnalyticsSnapshot(token: string) {
             token,
             loading: false,
             denied,
-            error: cause instanceof Error ? cause.message : 'Analytics belum dapat dimuat.',
+            error: cause instanceof Error ? cause.message : 'Dashboard belum dapat dimuat.',
             ...(!denied && previous.token === token && previous.data
               ? { data: previous.data }
               : {}),

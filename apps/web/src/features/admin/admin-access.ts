@@ -6,7 +6,7 @@ export function adminCanReadAnalytics(profile: IdentityProfile | null) {
   return (
     profile?.role === 'ADMIN' &&
     profile.status === 'ACTIVE' &&
-    profile.adminRole === 'SUPER_ADMIN' &&
+    ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'].includes(profile.adminRole ?? '') &&
     Boolean(
       profile.capabilities?.some(
         (capability) => capability === 'ANALYTICS_CONTENT' || capability === 'ANALYTICS_OPERATIONS',

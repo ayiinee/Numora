@@ -1,5 +1,16 @@
+import { StartTryoutBatchDto, StudentTryoutBatchesDto } from './tryout-batches.dto';
 import { assessmentAnswerInput } from './assessment-answer.input';
-import { Body, Controller, Get, Headers, Param, ParseUUIDPipe, Patch, Post, Query } from '@nestjs/common';
+import {
+  Body,
+  Controller,
+  Get,
+  Headers,
+  Param,
+  ParseUUIDPipe,
+  Patch,
+  Post,
+  Query,
+} from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
 import { SaveDrillAnswerDto, SavedAnswerDto } from './learning.dto';
 import {
@@ -19,19 +30,40 @@ import { TryoutService } from './tryout.service';
 export class TryoutController {
   constructor(private readonly tryout: TryoutService) {}
 
+  @Get('batches')
+  @ApiOkResponse({ type: StudentTryoutBatchesDto })
+  batches(@Headers('authorization') authorization?: string) {
+    return this.tryout.batches(authorization);
+  }
+
+  @Post('batches/:batchId/attempts')
+  @ApiCreatedResponse({ type: TryoutAttemptDto })
+  startBatch(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('batchId', ParseUUIDPipe) batchId: string,
+    @Body() input: StartTryoutBatchDto,
+  ) {
+    return this.tryout.startBatch(authorization, batchId, input.schoolId);
+  }
+
   @Get('packages/current')
   @ApiOkResponse({ type: CurrentTryoutDto })
   current(@Headers('authorization') authorization?: string) {
     return this.tryout.current(authorization);
   }
 
-  @Get('packages') @ApiOkResponse({ type: TryoutPackagesDto })
+  @Get('packages')
+  @ApiOkResponse({ type: TryoutPackagesDto })
   packages(@Headers('authorization') authorization?: string, @Query('cursor') cursor?: string) {
     return this.tryout.packages(authorization, cursor);
   }
 
-  @Get('packages/:packageId') @ApiOkResponse({ type: TryoutPackageDto })
-  packageDetail(@Headers('authorization') authorization: string | undefined, @Param('packageId', ParseUUIDPipe) packageId: string) {
+  @Get('packages/:packageId')
+  @ApiOkResponse({ type: TryoutPackageDto })
+  packageDetail(
+    @Headers('authorization') authorization: string | undefined,
+    @Param('packageId', ParseUUIDPipe) packageId: string,
+  ) {
     return this.tryout.packageDetail(authorization, packageId);
   }
 

@@ -25,7 +25,7 @@ export function AdminIrtScreen() {
   const profile = state.status === 'ready' ? state.profile : null;
   return (
     <AdminFrame
-      title="Request IRT & publikasi"
+      title="Hasil Tryout & IRT"
       description="Tinjau analisis Tryout dan kesiapan rilis nilai serta pembahasan."
       icon="chart"
       management
