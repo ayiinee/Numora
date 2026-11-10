@@ -7843,9 +7843,6 @@ a.settings-row:hover {
   color: var(--color-primary);
   white-space: nowrap;
 }
-.material-chapter--geometry .material-chapter__copy small b {
-  color: var(--numora-peach-800);
-}
 .material-chapter.is-completed .material-chapter__copy small b {
   color: var(--color-success);
 }
