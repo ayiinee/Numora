@@ -5,12 +5,14 @@ import {
   adoptTryoutArtifact,
   adoptTryoutArtifactV1,
   finalizeTryoutArtifactV1,
+  prepareTryoutReleaseV1,
+  publishTryoutReleaseV1,
   IrtOrchestrationError,
   listAnalysisRequests,
   prepareTryoutAnalysis,
   retryTryoutAnalysis,
 } from '@tka/irt-orchestration';
-import type { PrepareIrtRequestDto } from './irt-requests.dto';
+import type { PrepareIrtReleaseV1Dto, PrepareIrtRequestDto } from './irt-requests.dto';
 import type { ContentPageDto } from '../content/content.dto';
 
 @Injectable()
@@ -28,6 +30,11 @@ export class IrtRequestsService {
             detail: 'Request tidak sesuai state atau dependency yang disetujui.',
           },
           409,
+        );
+      if (error instanceof Error && /^IRT_(RELEASE|V1)_/.test(error.message))
+        throw new HttpException(
+          { code: error.message, detail: error.message },
+          error.message.endsWith('DISABLED') ? 404 : 409,
         );
       throw error;
     }
@@ -50,6 +57,14 @@ export class IrtRequestsService {
   finalizeResearchV1(receiptId: string) {
     return this.execute(() => finalizeTryoutArtifactV1(getDatabase().client, receiptId));
   }
+  prepareReleaseV1(batchId: string, input: PrepareIrtReleaseV1Dto) {
+    return this.execute(() =>
+      prepareTryoutReleaseV1(getDatabase().client, batchId, input.requestId, input.approvalId),
+    );
+  }
+  publishReleaseV1(id: string) {
+    return this.execute(() => publishTryoutReleaseV1(getDatabase().client, id));
+  }
   detail(id: string) {
     return this.execute(() => analysisRequestDetail(getDatabase().client, id));
   }
@@ -57,5 +72,3 @@ export class IrtRequestsService {
     return this.execute(() => listAnalysisRequests(getDatabase().client, page.limit, page.offset));
   }
 }
-
-

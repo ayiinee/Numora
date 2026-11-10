@@ -8092,6 +8092,86 @@
         ]
       }
     },
+    "/api/v1/admin/irt/research/batches/{batchId}/finalizations": {
+      "post": {
+        "operationId": "IrtController_prepareReleaseV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/PrepareIrtReleaseV1Dto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtReleaseV1Dto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/research/finalizations/{id}/publish": {
+      "post": {
+        "operationId": "IrtController_publishReleaseV1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/IrtReleaseV1Dto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
     "/api/v1/admin/irt/research/finalize/{receiptId}": {
       "post": {
         "operationId": "IrtController_finalizeResearchV1",
@@ -18758,6 +18838,50 @@
           "execution",
           "failureCode",
           "artifacts"
+        ]
+      },
+      "PrepareIrtReleaseV1Dto": {
+        "type": "object",
+        "properties": {
+          "requestId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "approvalId": {
+            "type": "string",
+            "format": "uuid"
+          }
+        },
+        "required": [
+          "requestId",
+          "approvalId"
+        ]
+      },
+      "IrtReleaseV1Dto": {
+        "type": "object",
+        "properties": {
+          "finalizationId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "READY",
+              "PUBLISHED"
+            ]
+          },
+          "replay": {
+            "type": "boolean"
+          },
+          "attemptCount": {
+            "type": "number"
+          }
+        },
+        "required": [
+          "finalizationId",
+          "status",
+          "replay"
         ]
       },
       "PrepareIrtRequestDto": {

@@ -1,3 +1,4 @@
+import { PrepareIrtReleaseV1Dto, IrtReleaseV1Dto } from './irt-requests.dto';
 import { IrtOperationsService } from './irt-operations.service';
 import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
@@ -88,6 +89,21 @@ export class IrtController {
   adopt(@Req() request: AdminRequest, @Param('id', new ParseUUIDPipe()) id: string) {
     return this.requests.adopt(request.adminId, id);
   }
+  @Post('research/batches/:batchId/finalizations')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  prepareReleaseV1(
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: PrepareIrtReleaseV1Dto,
+  ) {
+    return this.requests.prepareReleaseV1(batchId, input);
+  }
+  @Post('research/finalizations/:id/publish')
+  @HttpCode(200)
+  @ApiOkResponse({ type: IrtReleaseV1Dto })
+  publishReleaseV1(@Param('id', new ParseUUIDPipe()) id: string) {
+    return this.requests.publishReleaseV1(id);
+  }
   @Post('research/finalize/:receiptId')
   @HttpCode(200)
   @ApiOkResponse({ type: Object })
@@ -140,4 +156,3 @@ export class IrtController {
     return this.irt.batches(page);
   }
 }
-

@@ -6,6 +6,7 @@ from pathlib import Path
 import runpy
 import subprocess
 import sys
+from unittest.mock import patch
 
 ROOT=Path(__file__).resolve().parents[1]
 AI=Path(os.environ['NUMORA_AI_SERVICE_PATH']).resolve()
@@ -26,15 +27,18 @@ def main():
         fixture=cls(methodName='runTest')
         spec=importlib.util.spec_from_file_location('linux_verify',AI/'tools/verify_irt_linux.py')
         verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
-        notification,_=verifier.canonical_fixture(ROOT,fixture,url,generate(2,20261119,arms=2,include_mcma=True)[0],profile())
         client=TestClient(create_app(fixture.settings,fixture.repo),raise_server_exceptions=False)
         headers={'Authorization':'Bearer '+fixture.settings.token}
-        response=client.post('/api/v1/irt/compute/execute',headers=headers,json=notification)
-        assert response.status_code==202,response.text
-        assert execute_once(fixture.repo)
-        result=subprocess.run(['node','scripts/test-irt-release-cases.mjs',notification['requestId']],cwd=ROOT,
-            env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url},check=True,timeout=120)
-        assert result.returncode==0
+        for failure in (False,True):
+            notification,_=verifier.canonical_fixture(ROOT,fixture,url,generate(2,20261119,arms=2,include_mcma=True)[0],profile())
+            response=client.post('/api/v1/irt/compute/execute',headers=headers,json=notification)
+            assert response.status_code==202,response.text
+            if failure:
+                with patch('numora_service.irt.daemon.run',side_effect=ValueError('TIMEOUT')):
+                    assert execute_once(fixture.repo)
+            else:assert execute_once(fixture.repo)
+            result=subprocess.run(['node','scripts/test-irt-release-cases.mjs',notification['requestId']],cwd=ROOT,
+                env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url,'IRT_RELEASE_EXPECT_FAILURE':str(failure).lower()},check=True,timeout=120)
+            assert result.returncode==0
 
 if __name__=='__main__':main()
-

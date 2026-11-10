@@ -9,8 +9,9 @@ import {
   tryoutBatches,
   tryoutResultFinalizations,
   tryoutAttemptResults,
+  assessmentAttempts,
 } from './schema/index.js';
-import { and, isNull, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
+import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -34,12 +35,34 @@ export async function releasedTryoutPackageTimes(
       and(
         inArray(tryoutBatches.packageId, packageIds),
         eq(tryoutBatches.status, 'PUBLISHED'),
-        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),
+        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK', 'UNSCORABLE', 'MIXED']),
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
       ),
     );
   const canonicalTimes = new Map(canonical.map((row) => [row.packageId, row.releasedAt!]));
+  // Multi-arm releases use one atomic finalization; expose each actually delivered package.
+  const armPackages = await db
+    .select({
+      packageId: assessmentAttempts.packageId,
+      releasedAt: tryoutResultFinalizations.publishedAt,
+    })
+    .from(tryoutAttemptResults)
+    .innerJoin(assessmentAttempts, eq(assessmentAttempts.id, tryoutAttemptResults.attemptId))
+    .innerJoin(
+      tryoutResultFinalizations,
+      eq(tryoutResultFinalizations.id, tryoutAttemptResults.finalizationId),
+    )
+    .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutResultFinalizations.batchId))
+    .where(
+      and(
+        inArray(assessmentAttempts.packageId, packageIds),
+        isNotNull(tryoutResultFinalizations.sourceCalibrationRequestId),
+        eq(tryoutBatches.status, 'PUBLISHED'),
+        lte(tryoutResultFinalizations.publishedAt, now),
+      ),
+    );
+  for (const row of armPackages) canonicalTimes.set(row.packageId, row.releasedAt!);
   const batches = await db
     .select({
       id: irtBatches.id,
@@ -145,8 +168,8 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
     return new Map<
       string,
       {
-        score: number;
-        resultMethod: 'IRT' | 'STANDARD';
+        score: number | null;
+        resultMethod: 'IRT' | 'STANDARD' | null;
         reason: string | null;
         mode: string;
         version: number;
@@ -157,7 +180,8 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
     .select({
       attemptId: tryoutAttemptResults.attemptId,
       score: tryoutAttemptResults.score,
-      mode: tryoutResultFinalizations.mode,
+      mode: sql<string>`coalesce(${tryoutAttemptResults.resultMode},${tryoutResultFinalizations.mode})`,
+      resultReason: tryoutAttemptResults.resultReason,
       policy: tryoutResultFinalizations.policySnapshot,
       version: tryoutResultFinalizations.version,
     })
@@ -171,10 +195,10 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
       and(
         inArray(tryoutAttemptResults.attemptId, attemptIds),
         eq(tryoutBatches.status, 'PUBLISHED'),
-        isNull(tryoutBatches.adminTitle),
+        sql`(${tryoutBatches.adminTitle} is null or ${tryoutResultFinalizations.sourceCalibrationRequestId} is not null)`,
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
-        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),
+        inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK', 'UNSCORABLE', 'MIXED']),
       ),
     );
   const reasons: Record<string, string> = {
@@ -184,7 +208,11 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
   };
   return new Map(
     rows
-      .filter((row) => row.score !== null && Number.isFinite(Number(row.score)))
+      .filter((row) =>
+        row.mode === 'UNSCORABLE'
+          ? row.score === null
+          : row.score !== null && Number.isFinite(Number(row.score)),
+      )
       .map((row) => {
         const policy =
           row.policy && typeof row.policy === 'object' && !Array.isArray(row.policy)
@@ -194,11 +222,21 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
         return [
           row.attemptId,
           {
-            score: Number(row.score),
+            score: row.score === null ? null : Number(row.score),
             mode: row.mode,
             version: row.version,
-            resultMethod: row.mode === 'IRT' ? ('IRT' as const) : ('STANDARD' as const),
-            reason: row.mode === 'FALLBACK' ? (reasons[code] ?? null) : null,
+            resultMethod:
+              row.mode === 'UNSCORABLE'
+                ? null
+                : row.mode === 'IRT'
+                  ? ('IRT' as const)
+                  : ('STANDARD' as const),
+            reason:
+              row.mode === 'FALLBACK'
+                ? (reasons[code] ?? row.resultReason ?? null)
+                : row.mode === 'UNSCORABLE'
+                  ? 'NO_VALID_ITEMS'
+                  : null,
           },
         ];
       }),
