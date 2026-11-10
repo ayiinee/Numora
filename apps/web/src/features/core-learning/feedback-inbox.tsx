@@ -71,6 +71,7 @@ function FeedbackInbox({ token }: { token: string }) {
     ).values(),
   ];
   const visible = filter === 'unread' ? items.filter((item) => item.readAt === null) : items;
+  const hasUnread = !summary.isError && (summary.data?.unreadCount ?? 0) > 0;
   useEffect(() => {
     const target = window.location.hash.match(/^#feedback-([0-9a-f-]{36})$/i)?.[1];
     if (!target || filter !== 'all') return;
@@ -105,7 +106,8 @@ function FeedbackInbox({ token }: { token: string }) {
               aria-pressed={filter === 'unread'}
               onClick={() => setFilter('unread')}
             >
-              <span aria-hidden="true">●</span> Baru & Belum Dibaca
+              {hasUnread && <span aria-hidden="true">●</span>}
+              Baru & Belum Dibaca
               {summary.data && !summary.isError ? ` (${summary.data.unreadCount})` : ''}
             </button>
           </div>

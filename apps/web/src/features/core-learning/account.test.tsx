@@ -131,7 +131,8 @@ describe('Student account and feedback', () => {
     notes = [{ ...note, readAt }];
     resolveRead({ id: note.id, readAt });
     await screen.findByText('Sudah Dibaca');
-    await screen.findByRole('button', { name: 'Baru & Belum Dibaca (0)' });
+    const emptyFilter = await screen.findByRole('button', { name: 'Baru & Belum Dibaca (0)' });
+    expect(emptyFilter.querySelector('span')).toBeNull();
   });
   it.each(['failure', 'wrong-id'])(
     'keeps unread state after %s and supports explicit retry',
@@ -183,6 +184,7 @@ describe('Student account and feedback', () => {
     );
     mount(<FeedbackScreen />);
     const filter = await screen.findByRole('button', { name: 'Baru & Belum Dibaca (1)' });
+    expect(filter.querySelector('span')?.textContent).toBe('●');
     fireEvent.click(filter);
     expect(screen.getByText(/Filter menampilkan catatan yang sudah dimuat/)).toBeTruthy();
     fireEvent.click(await screen.findByRole('button', { name: 'Tandai Dibaca' }));
