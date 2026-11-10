@@ -127,13 +127,17 @@ integration('admin operations readers and limited structure in PostgreSQL', () =
     ]);
     expect(replacements.filter((result) => result.status === 'fulfilled')).toHaveLength(1);
     expect(replacements.find((result) => result.status === 'rejected')).toMatchObject({
-      reason: { status: 409 },
+      reason: { status: 409, response: { code: 'TOKEN_ALREADY_REISSUED' } },
     });
     const [original] = await db
       .select()
       .from(teacherVerificationTokens)
       .where(eq(teacherVerificationTokens.id, issued.id));
-    expect(original!.revokedAt).not.toBeNull();
+    expect(original).toMatchObject({
+      expiresAt: new Date(issued.expiresAt),
+      revokedAt: null,
+      usedAt: null,
+    });
     const tokenAudit = await db
       .select()
       .from(auditLogs)

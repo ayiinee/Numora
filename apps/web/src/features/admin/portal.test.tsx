@@ -73,17 +73,24 @@ function ready(adminRole: string | null, capabilities: string[] = []) {
 }
 
 describe('Admin portal navigation', () => {
-  it('opens Analytics first for Super Admin with the required capability', async () => {
-    ready('SUPER_ADMIN', ['CONTENT_MANAGE', 'OPERATIONS_MANAGE', 'ANALYTICS_CONTENT']);
-    const entry = render(<AdminEntryScreen />);
-    await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/analytics'));
-    entry.unmount();
-    render(<AppShell area="admin">Analytics</AppShell>);
-    const links = within(
-      screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }),
-    ).getAllByRole('link');
-    expect(links[0]!.getAttribute('href')).toBe('/admin/analytics');
-  });
+  it.each([
+    ['SUPER_ADMIN', 'ANALYTICS_CONTENT'],
+    ['OPERATIONS', 'ANALYTICS_OPERATIONS'],
+    ['CONTENT_DATA_MODERATION', 'ANALYTICS_CONTENT'],
+  ] as const)(
+    'opens Dashboard first for %s with the required capability',
+    async (role, capability) => {
+      ready(role, [capability]);
+      const entry = render(<AdminEntryScreen />);
+      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/analytics'));
+      entry.unmount();
+      render(<AppShell area="admin">Analytics</AppShell>);
+      const links = within(
+        screen.getByRole('navigation', { name: 'Navigasi Ruang admin' }),
+      ).getAllByRole('link');
+      expect(links[0]!.getAttribute('href')).toBe('/admin/analytics');
+    },
+  );
   it.each([
     ['SUPER_ADMIN', '/admin/schools'],
     ['OPERATIONS', '/admin/schools'],
@@ -187,15 +194,6 @@ describe('Admin portal navigation', () => {
     expect(main.queryByRole('link', { name: 'Ringkasan' })).toBeNull();
     expect(main.getByRole('link', { name: 'Dashboard' })).toBeTruthy();
   });
-  it.each([AdminEntryScreen])(
-    'redirects retired Operations pages to schools without rendering them',
-    async (Page) => {
-      ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
-      const { container } = render(<Page />);
-      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/schools'));
-      expect(container.textContent).toBe('');
-    },
-  );
   it('keeps only operational modules in Operations navigation', () => {
     ready('OPERATIONS', ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS']);
     render(<AppShell area="admin">Sekolah</AppShell>);
@@ -206,15 +204,6 @@ describe('Admin portal navigation', () => {
     for (const name of ['Ringkasan', 'Bank konten', 'Akun Admin'])
       expect(navigation.queryByRole('link', { name })).toBeNull();
   });
-  it.each([AdminEntryScreen])(
-    'redirects retired Content pages to the bank without rendering them',
-    async (Page) => {
-      ready('CONTENT_DATA_MODERATION', ['CONTENT_MANAGE', 'ANALYTICS_CONTENT']);
-      const { container } = render(<Page />);
-      await waitFor(() => expect(mocks.replace).toHaveBeenCalledWith('/admin/content'));
-      expect(container.textContent).toBe('');
-    },
-  );
   it.each(['CONTENT_DATA_MODERATION', 'OPERATIONS', 'SUPER_ADMIN'])(
     'hides Content and Operations page banners while preserving the Super banner for %s',
     (role) => {

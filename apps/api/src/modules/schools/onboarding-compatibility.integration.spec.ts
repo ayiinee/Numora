@@ -121,9 +121,17 @@ integration('onboarding compatibility and collision transactions', () => {
     const replacement = await f.schools.reissueToken('admin', f.school.id, original.id);
     expect(replacement.token).toBe(next);
     expect(generate).toHaveBeenCalledTimes(2);
-    await expect(
-      f.schools.verifyTeacher('teacher', f.school.id, original.token),
-    ).rejects.toMatchObject({ status: 403 });
+    const tokenList = await f.schools.listTokens('admin', f.school.id);
+    expect(tokenList.items).toEqual(
+      expect.arrayContaining([
+        expect.objectContaining({
+          id: original.id,
+          expiresAt: new Date(original.expiresAt),
+          status: 'AVAILABLE',
+        }),
+        expect.objectContaining({ id: replacement.id, status: 'AVAILABLE' }),
+      ]),
+    );
     const [stored] = await f.db
       .select()
       .from(teacherVerificationTokens)
@@ -139,9 +147,63 @@ integration('onboarding compatibility and collision transactions', () => {
       .from(teacherVerificationTokens)
       .where(eq(teacherVerificationTokens.id, replacement.id));
     expect(unchanged!.revokedAt).toBeNull();
+    const uses = await Promise.allSettled([
+      f.schools.verifyTeacher('legacyTeacher', f.school.id, original.token),
+      f.schools.verifyTeacher('shortTeacher', f.school.id, original.token),
+    ]);
+    expect(uses.filter(({ status }) => status === 'fulfilled')).toHaveLength(1);
+    expect(uses).toContainEqual({
+      status: 'rejected',
+      reason: expect.objectContaining({ status: 403 }),
+    });
     await expect(
       f.schools.verifyTeacher('teacher', f.school.id, replacement.token.toLowerCase()),
     ).resolves.toEqual({ verified: true });
+    generate.mockRestore();
+    await expect(f.schools.reissueToken('admin', f.school.id, original.id)).rejects.toMatchObject({
+      status: 409,
+    });
+  });
+  it('reissues an expired source without restoring it and respects school scope and revocation', async () => {
+    const f = await fixture();
+    const old = await f.schools.issueToken('admin', f.school.id);
+    const anotherSchool = await f.schools.createSchool('admin', `OTHER-${randomUUID()}`, 'Other');
+    await expect(f.schools.reissueToken('admin', anotherSchool.id, old.id)).rejects.toMatchObject({
+      status: 409,
+    });
+
+    const expiredAt = new Date(Date.now() - 60_000);
+    await f.db
+      .update(teacherVerificationTokens)
+      .set({ createdAt: new Date(expiredAt.getTime() - 72 * 60 * 60 * 1000), expiresAt: expiredAt })
+      .where(eq(teacherVerificationTokens.id, old.id));
+    const fresh = await f.schools.reissueToken('admin', f.school.id, old.id);
+    await expect(f.schools.verifyTeacher('teacher', f.school.id, old.token)).rejects.toMatchObject({
+      status: 403,
+    });
+    const extra = await f.schools.reissueToken('admin', f.school.id, fresh.id);
+    await f.schools.revokeToken('admin', f.school.id, fresh.id);
+    await expect(f.schools.reissueToken('admin', f.school.id, fresh.id)).rejects.toMatchObject({
+      status: 409,
+    });
+    await expect(
+      f.schools.verifyTeacher('teacher', f.school.id, fresh.token),
+    ).rejects.toMatchObject({
+      status: 403,
+    });
+    await f.schools.updateSchool('admin', f.school.id, { status: 'INACTIVE' });
+    await expect(f.schools.reissueToken('admin', f.school.id, extra.id)).rejects.toMatchObject({
+      status: 404,
+    });
+    await expect(
+      f.schools.verifyTeacher('teacher', f.school.id, extra.token),
+    ).rejects.toMatchObject({
+      status: 404,
+    });
+    await f.schools.updateSchool('admin', f.school.id, { status: 'ACTIVE' });
+    await expect(f.schools.verifyTeacher('teacher', f.school.id, extra.token)).resolves.toEqual({
+      verified: true,
+    });
   });
   it('keeps shared class codes reusable, supports legacy codes, and permits concurrent joins below the five-class cap', async () => {
     const f = await fixture();

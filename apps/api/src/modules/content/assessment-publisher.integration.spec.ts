@@ -14,6 +14,7 @@ import {
   questions,
   scoringPolicyVersions,
   scoringRubricVersions,
+  subchapters,
   xpLedger,
 } from '@tka/database';
 import { finalizeTryout } from '@tka/assessment-engine';
@@ -455,101 +456,134 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     expect(grades).toHaveLength(30);
     expect(grades.every((g) => g.attempt_answers.scoreCategory !== null)).toBe(true);
   });
-  it('authorizes pinned media by owner and review phase without leaking explanation media during work', async () => {
-    const { db } = getDatabase();
-    const [source] = await db
-      .select()
-      .from(questionVersions)
-      .where(eq(questionVersions.id, fixture.versionIds[0]!));
-    const assets = [
-      {
-        assetId: 'stem',
-        placement: 'STEM',
-        objectKey: 'fixture-stem',
-        bucket: 'TEST',
-        altText: 'TEST stem',
-      },
-      {
-        assetId: 'secret',
-        placement: 'EXPLANATION',
-        objectKey: 'fixture-secret',
-        bucket: 'TEST',
-        altText: 'TEST explanation',
-      },
-    ];
-    const [copy] = await db
-      .insert(questionVersions)
-      .values({ ...source!, id: randomUUID(), versionNumber: 99, media: assets })
-      .returning();
-    const [p] = await db
-      .insert(assessmentPackages)
-      .values({
-        assessmentType: 'DRILL',
-        familyCode: `MEDIA-${fixture.suffix}`,
-        packageVersion: 1,
-        name: 'TEST media',
-        levelId: fixture.level,
-        scoringPolicyVersionId: fixture.policy,
-      })
-      .returning();
-    const [item] = await db
-      .insert(packageItems)
-      .values({ packageId: p!.id, questionVersionId: copy!.id, displayOrder: 1, maxPoints: '1' })
-      .returning();
-    const [a] = await db
-      .insert(assessmentAttempts)
-      .values({
-        studentId: fixture.student,
-        packageId: p!.id,
-        assessmentType: 'DRILL',
-        levelIdAtStart: fixture.level,
-        scoringPolicyVersionId: fixture.policy,
-      })
-      .returning();
-    const [pin] = await db
-      .insert(attemptItems)
-      .values({
-        attemptId: a!.id,
-        packageId: p!.id,
-        packageItemId: item!.id,
-        questionVersionId: copy!.id,
-        displayOrder: 1,
-        maxPoints: '1',
-      })
-      .returning();
-    const path = `assessment-attempts/${a!.id}/media`,
-      body = { instanceId: pin!.id, phase: 'WORK', assetIds: ['stem'] };
-    expect((await fixture.request(path, 'POST', body, 'other')).status).toBe(404);
-    expect(
-      (await fixture.request(path, 'POST', { ...body, assetIds: ['secret'] }, 'student')).status,
-    ).toBe(400);
-    expect(
-      (
-        await fixture.request(
-          path,
-          'POST',
-          { ...body, phase: 'REVIEW', assetIds: ['secret'] },
-          'student',
-        )
-      ).status,
-    ).toBe(409);
-    const allowed = await fixture.request(path, 'POST', body, 'student');
-    expect(allowed.status).toBe(200);
-    expect(await allowed.json()).toMatchObject({
-      media: [{ assetId: 'stem', altText: 'TEST stem' }],
-    });
-    await db
-      .update(assessmentAttempts)
-      .set({ status: 'GRADED', finishedAt: new Date() })
-      .where(eq(assessmentAttempts.id, a!.id));
-    const reviewed = await fixture.request(
-      path,
-      'POST',
-      { ...body, phase: 'REVIEW', assetIds: ['secret'] },
-      'student',
-    );
-    expect(reviewed.status, await reviewed.text()).toBe(200);
-  });
+  it.each(['DRILL', 'PRETEST'] as const)(
+    'authorizes pinned %s media by owner and phase without leaking Pretest review or work explanations',
+    async (assessmentType) => {
+      const { db } = getDatabase();
+      const [subchapter] = await db
+        .select({ chapterId: subchapters.chapterId })
+        .from(subchapters)
+        .where(eq(subchapters.id, fixture.subchapter));
+      const [source] = await db
+        .select()
+        .from(questionVersions)
+        .where(eq(questionVersions.id, fixture.versionIds[0]!));
+      const assets = [
+        {
+          assetId: 'stem',
+          placement: 'STEM',
+          objectKey: 'fixture-stem',
+          bucket: 'TEST',
+          altText: 'TEST stem',
+        },
+        {
+          assetId: 'secret',
+          placement: 'EXPLANATION',
+          objectKey: 'fixture-secret',
+          bucket: 'TEST',
+          altText: 'TEST explanation',
+        },
+      ];
+      const [copy] = await db
+        .insert(questionVersions)
+        .values({
+          ...source!,
+          id: randomUUID(),
+          versionNumber: assessmentType === 'PRETEST' ? 100 : 99,
+          media: assets,
+        })
+        .returning();
+      const [p] = await db
+        .insert(assessmentPackages)
+        .values({
+          assessmentType,
+          familyCode: `MEDIA-${assessmentType}-${fixture.suffix}`,
+          packageVersion: 1,
+          name: 'TEST media',
+          levelId: fixture.level,
+          chapterId: subchapter!.chapterId,
+          scoringPolicyVersionId: fixture.policy,
+        })
+        .returning();
+      const [item] = await db
+        .insert(packageItems)
+        .values({ packageId: p!.id, questionVersionId: copy!.id, displayOrder: 1, maxPoints: '1' })
+        .returning();
+      const [a] = await db
+        .insert(assessmentAttempts)
+        .values({
+          studentId: fixture.student,
+          packageId: p!.id,
+          assessmentType,
+          levelIdAtStart: fixture.level,
+          chapterIdAtStart: subchapter!.chapterId,
+          scoringPolicyVersionId: fixture.policy,
+        })
+        .returning();
+      const [pin] = await db
+        .insert(attemptItems)
+        .values({
+          attemptId: a!.id,
+          packageId: p!.id,
+          packageItemId: item!.id,
+          questionVersionId: copy!.id,
+          displayOrder: 1,
+          maxPoints: '1',
+        })
+        .returning();
+      const path = `assessment-attempts/${a!.id}/media`,
+        body = { instanceId: pin!.id, phase: 'WORK', assetIds: ['stem'] };
+      expect((await fixture.request(path, 'POST', body, 'other')).status).toBe(404);
+      expect((await fixture.request(path, 'POST', body, '')).status).toBe(401);
+      expect((await fixture.request(path, 'POST', body, 'admin')).status).toBe(403);
+      expect(
+        (await fixture.request(path, 'POST', { ...body, instanceId: randomUUID() }, 'student'))
+          .status,
+      ).toBe(404);
+      expect(
+        (await fixture.request(path, 'POST', { ...body, instanceId: fixture.itemId }, 'student'))
+          .status,
+      ).toBe(404);
+      expect(
+        (await fixture.request(path, 'POST', { ...body, assetIds: ['unknown'] }, 'student')).status,
+      ).toBe(400);
+      expect(
+        (await fixture.request(path, 'POST', { ...body, assetIds: ['secret'] }, 'student')).status,
+      ).toBe(400);
+      expect(
+        (
+          await fixture.request(
+            path,
+            'POST',
+            { ...body, phase: 'REVIEW', assetIds: ['secret'] },
+            'student',
+          )
+        ).status,
+      ).toBe(409);
+      const allowed = await fixture.request(path, 'POST', body, 'student');
+      expect(allowed.status).toBe(200);
+      expect(await allowed.json()).toMatchObject({
+        media: [{ assetId: 'stem', altText: 'TEST stem' }],
+      });
+      await db
+        .update(assessmentAttempts)
+        .set({ status: 'GRADED', finishedAt: new Date() })
+        .where(eq(assessmentAttempts.id, a!.id));
+      expect((await fixture.request(path, 'POST', body, 'student')).status).toBe(409);
+      const reviewed = await fixture.request(
+        path,
+        'POST',
+        { ...body, phase: 'REVIEW', assetIds: ['secret'] },
+        'student',
+      );
+      if (assessmentType === 'PRETEST') {
+        expect(reviewed.status).toBe(409);
+        expect(await reviewed.json()).toMatchObject({ code: 'ASSESSMENT_REVIEW_UNAVAILABLE' });
+      } else {
+        expect(reviewed.status, await reviewed.text()).toBe(200);
+      }
+    },
+  );
   it('supports editorial pins under the restricted main role and rejects partial approval evidence', async () => {
     const { db } = getDatabase();
     await expect(

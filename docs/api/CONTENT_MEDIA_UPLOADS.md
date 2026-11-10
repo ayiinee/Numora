@@ -75,6 +75,12 @@ Tambahkan lifecycle rule khusus prefix **`question-media/_pending/`** untuk meng
 
 Tidak ada signed GET endpoint dalam PR ini. Untuk preview/penyajian soal, backend berikutnya harus memeriksa hak akses soal lalu menandatangani GET key VERIFIED dan menyertakan URL sementara dalam respons. Pembahasan/kunci tidak boleh bocor lewat endpoint media. Gambar private belum bisa ditampilkan hanya dengan mengubah objectKey menjadi URL publik.
 
+## Memindahkan media ke bucket baru
+
+**ENGINEERING IMPLEMENTATION:** `R2_LEGACY_READ_BUCKET` memetakan satu nama bucket lama pada referensi media ke `R2_BUCKET` saat API membuat signed GET. Object key tetap sama. Reservasi dan penyelesaian upload tetap terikat ke bucket aktif, dan nama bucket lain ditolak. Referensi media pada versi soal serta bukti upload tetap menggunakan nama yang tercatat.
+
+Jeda upload selama cutover, selesaikan reservasi yang masih diperlukan, lalu salin objek dan verifikasi key serta byte di bucket tujuan. Terapkan CORS pada bucket tujuan dan siapkan kredensial runtime khusus bucket itu. Deploy API yang mendukung pemetaan sebelum mengubah konfigurasi runtime. Misalnya, set `R2_BUCKET=numora-prod` dan `R2_LEGACY_READ_BUCKET=numora-bucket`, lalu restart API. Uji pembacaan gambar soal lama dan upload media baru sebelum membuka kembali upload. Buat reservasi baru untuk upload yang belum selesai saat bucket diganti.
+
 ## Migrasi database
 
 Drizzle menghasilkan **`0021_content_media_uploads.sql`**, menambah satu tabel reservasi `content_media_uploads` beserta FK user, uniqueness actor/idempotency, indeks, constraint ukuran/hash/status/expiry, dan RLS aktif tanpa policy browser. Operasi melalui NestJS memakai koneksi database server yang sudah digunakan repo. Pastikan role server mempunyai hak yang diperlukan; jangan memberi akses Supabase Data API pada Student untuk tabel ini.
@@ -110,6 +116,31 @@ Migrasi belum diterapkan ke Cloud. Rantai rekonsiliasi 4 Oktober 2026 mempertaha
 4. Review diff `assets.draft.json`, JSON aggregate/per-soal dan plan. Hanya key final terverifikasi dan receipt non-rahasia yang boleh ikut commit lanjutan. `validation-report.json` adalah snapshot validasi offline saat PR dibuat, bukan laporan upload terbaru.
 
 Enam file total **9.191 byte**, lima isi unik. Satu gambar boleh muncul di beberapa posisi; sampel mempertahankan satu key per penggunaan agar mudah review. `assetOrder` dan marker `[[asset:...]]` menjaga urutan di stem/opsi/pernyataan/pembahasan.
+
+## Akses gambar siswa pada sesi Pretest, Drill dan Tryout
+
+**ENGINEERING IMPLEMENTATION — 10 November 2026:** `POST /api/v1/assessment-attempts/:attemptId/media` kini menerima sesi `PRETEST` reguler pada fase `WORK`, sesuai pemanggilan halaman Pretest existing. Perbaikan ini menutup penolakan `404 ATTEMPT_NOT_FOUND` yang sebelumnya terjadi karena endpoint hanya menerima Drill/Tryout. Bentuk request/response dan jalur frontend tetap sama.
+
+Request memakai `Authorization: Bearer <session JWT>` dan body:
+
+```json
+{
+  "instanceId": "55b630fb-bb9d-4076-bb4a-323c19391f96",
+  "phase": "WORK",
+  "assetIds": ["diagram-1"]
+}
+```
+
+Respons `200` berisi `{ media: [{ instanceId, assetId, altText, url, expiresAt }] }`. URL GET R2 berlaku 900 detik dan dapat diperbarui dengan request yang sama selama sesi masih aktif. Endpoint menerima identitas aset, bukan bucket/object key dari klien.
+
+- Pemanggil harus Siswa ACTIVE dan pemilik sesi reguler. Sesi milik siswa lain disembunyikan sebagai `404 ATTEMPT_NOT_FOUND`.
+- UUID instance harus berasal dari sesi tersebut; instance asing/tidak ditemukan menghasilkan `404 ATTEMPT_ITEM_NOT_FOUND`.
+- `WORK` hanya tersedia pada status `IN_PROGRESS`; sesi selesai menghasilkan `409 ATTEMPT_NOT_ACTIVE`.
+- Aset pembahasan tidak boleh diminta saat `WORK`; aset asing atau pembahasan menghasilkan `400 MEDIA_SCOPE_INVALID`.
+- Pretest selalu menolak `REVIEW` dengan `409 ASSESSMENT_REVIEW_UNAVAILABLE`, termasuk setelah selesai. Aturan review Drill/Tryout tetap mengikuti pin policy dan rilis hasil.
+- Kredensial/bucket R2 tetap diperlukan pada server; tanpa konfigurasi yang sah pembacaan tautan gagal dengan `503 R2_NOT_CONFIGURED`.
+
+Regresi HTTP berada di `assessment-publisher.integration.spec.ts`, memakai PostgreSQL localhost terisolasi dan Auth/R2 fixture. Kasus mencakup sukses Pretest/Drill, login/role, kepemilikan sesi, instance asing, aset asing, pembahasan saat pengerjaan, sesi selesai dan larangan review Pretest. Pengujian tersebut tidak membuktikan kredensial R2 atau deployment website nyata.
 
 ## Bukti pengujian dan batasnya
 
