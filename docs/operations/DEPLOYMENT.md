@@ -65,21 +65,21 @@ Stable staging/production domain is required to finalize OAuth redirect URIs and
 
 ### Redirect allowlist
 
-Google login is a three-party redirect chain, and each hop has its own allowlist. A mismatch or an unreviewed consent screen is what produces the browser/Google "not secure" or "unverified app" interstitial at login; the application code cannot fix it.
+Google login is a three-party redirect chain, and each hop has its own allowlist. An allowlist mismatch can cause a redirect error. Diagnose browser HTTP/TLS warnings separately from Google's testing or unverified-app warnings; they have different causes and fixes. Check the exact error and the affected hop before changing configuration.
 
-| Hop                 | Setting to keep in sync                                                                                                                                                      |
-| ------------------- | ---------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
-| Browser → app       | App is served only over HTTPS on the canonical domain. The login button uses `window.location.origin`, so the operator must never serve the app from an ad-hoc host or port. |
-| App → Supabase Auth | Supabase **Site URL** equals the canonical app origin, and **Redirect URLs** contain exactly `<site url>/auth/callback` for every environment.                               |
-| Supabase → Google   | The Google OAuth client's **Authorized redirect URIs** contain Supabase's `/auth/v1/callback` for the same Supabase project.                                                 |
+| Hop                 | Setting to keep in sync                                                                                                                                                          |
+| ------------------- | -------------------------------------------------------------------------------------------------------------------------------------------------------------------------------- |
+| Browser → app       | App is served only over HTTPS on the canonical domain. The login button uses `window.location.origin`, so the operator must never serve the app from an ad-hoc host or port.     |
+| App → Supabase Auth | Each environment's Supabase **Site URL** equals its canonical app origin, and **Redirect URLs** allow that environment's exact `/auth/callback` URL.                             |
+| Supabase → Google   | That environment's Google OAuth client authorizes the callback URL shown by its Supabase project (`/auth/v1/callback`). Keep testing and production in separate Google projects. |
 
-`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_API_URL` baked into the web bundle must be HTTPS origins; a relative or `http://localhost` fallback in a production build sends the login redirect to an origin the allowlists do not cover.
+`NEXT_PUBLIC_SUPABASE_URL` and `NEXT_PUBLIC_API_URL` baked into the production web bundle must point to the intended environment over HTTPS. Preserve the API base path `/api/v1`. The app callback uses `window.location.origin`; a wrong API URL instead breaks API access, including identity loading. Use exact production redirect URLs rather than broad preview wildcards. Local development origins belong only in the separate testing configuration. See [Supabase redirect configuration](https://supabase.com/docs/guides/auth/redirect-urls).
 
 ### Google OAuth consent screen
 
-- Publishing status must be **In production**. A screen left in **Testing** shows Google a red "Google hasn't verified this app" warning to every student and caps the invite list to test users.
-- Verification requires the app to be reachable, the domain to be owned by the project, and the declared scopes to be limited to `openid email profile`. Homepage, application, and privacy-policy links must point at the deployed site.
-- Both the staging and production Supabase project callbacks must be authorized on the client before verification is submitted, otherwise re-verification is needed later.
+- Set the public production app to **In production**. For an External app in **Testing**, access normally uses a test-user allowlist capped at 100. Google makes an exception when only the basic identity scopes `openid`, `email`, and `profile` are requested: users need not be on that allowlist. A testing warning is distinct from the standard unverified-app warning; Testing alone does not imply every student sees the latter.
+- Request only the scopes needed for sign-in. Sensitive or restricted scopes can require additional scope verification and show an unverified-app warning until approved. Publishing alone does not complete verification. Brand verification governs display of the production app's name/logo. Keep the homepage and privacy-policy links reachable and the domain ownership verified for the applicable verification process. See [Google OAuth app states](https://developers.google.com/identity/protocols/oauth2/production-readiness/overview).
+- Use separate Google Cloud projects and OAuth clients for testing/staging and production. Authorize each Supabase callback only in the corresponding environment's client; do not add staging callbacks or development origins to the production client. Review the production project's actual branding, scopes and redirect URIs before submitting it for the required verification. See [Google production OAuth policy](https://developers.google.com/identity/protocols/oauth2/production-readiness/policy-compliance).
 
 ### Transport security and response headers
 
