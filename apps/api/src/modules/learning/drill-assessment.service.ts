@@ -4,12 +4,14 @@ import {
   ConflictException,
   ForbiddenException,
   Injectable,
+  Logger,
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
 import {
   analyticsOutbox,
   assessmentAttempts,
+  assessmentAttemptArmDeliveries,
   allowSyntheticContent,
   assessmentPackages,
   attemptAnswers,
@@ -19,9 +21,6 @@ import {
   getDatabase,
   levelProgress,
   levels,
-  packageItems,
-  questions,
-  questionVariants,
   questionVersions,
   scoringPolicyVersions,
   scoringRubricVersions,
@@ -44,19 +43,16 @@ import {
   readApprovedPolicy,
   roundPolicy,
   approvedStars,
-  validateRubricCoverage,
   type ApprovedPolicy,
 } from '@tka/assessment-engine';
 import { and, asc, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
-import { availableDrillPackages } from './drill-package-selection';
+import { availableDrillPackages, loadDrillPackageItems } from './drill-package-selection';
+import { configuredDrillSet, resolveDrillDelivery } from './drill-distribution';
 import { IdentityService } from '../identity/identity.service';
 import { curatedVideoRecommendations } from '../content/curated-video-recommendations';
 import { recordSupportEvent } from '../reports/support-events';
 import { changeDrillClock, drillClock, elapsedDrillMs, startDrillClock } from './drill-timer';
-import {
-  allowsChapter3Override,
-  gradeChapter3Answer,
-} from './drill-chapter3-override';
+import { allowsChapter3Override, gradeChapter3Answer } from './drill-chapter3-override';
 import {
   DRILL_QUESTION_COUNT,
   DRILL_REWARD_POLICY_VERSION,
@@ -70,6 +66,8 @@ const problem = (code: string, detail: string) => ({ code, detail });
 
 @Injectable()
 export class DrillAssessmentService {
+  private readonly logger = new Logger(DrillAssessmentService.name);
+
   constructor(private readonly identity: IdentityService) {}
 
   private async student(authorization?: string) {
@@ -84,7 +82,7 @@ export class DrillAssessmentService {
     const { db } = getDatabase();
     const attemptId = await db.transaction(async (tx) => {
       await tx.execute(
-        sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${levelId}))`,
+        sql`select pg_advisory_xact_lock(hashtext(${studentId}), hashtext(${levelId.toLowerCase()}))`,
       );
       const [level] = await tx
         .select({
@@ -164,12 +162,21 @@ export class DrillAssessmentService {
         return existing.id;
       }
 
-      const packages = await availableDrillPackages(tx, levelId);
-
-      if (!packages.length)
+      const setId = configuredDrillSet(level.id);
+      const delivery = setId ? await resolveDrillDelivery(tx, level.id, setId, studentId) : null;
+      const selected =
+        setId === undefined
+          ? selectDrillPackage(await availableDrillPackages(tx, level.id))
+          : delivery?.candidate.package;
+      if (!selected) {
+        if (setId !== undefined)
+          this.logger.warn({ event: 'drill_pilot_start_unavailable', levelId: level.id });
         throw new ServiceUnavailableException(
-          problem('DRILL_PACKAGE_UNAVAILABLE', 'Paket Drill belum tersedia.'),
+          problem('DRILL_PACKAGE_UNAVAILABLE', 'Paket Drill belum tersedia. Coba lagi nanti.'),
         );
+      }
+      const items = delivery?.candidate.items ?? (await loadDrillPackageItems(tx, selected));
+
       const [last] = await tx
         .select({ id: assessmentAttempts.id, packageId: assessmentAttempts.packageId })
         .from(assessmentAttempts)
@@ -184,81 +191,6 @@ export class DrillAssessmentService {
         )
         .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
         .limit(1);
-      const selected = selectDrillPackage(packages);
-      if (!selected)
-        throw new ServiceUnavailableException(
-          problem('DRILL_VARIANT_UNAVAILABLE', 'Varian Drill berikutnya belum tersedia.'),
-        );
-
-      const items = await tx
-        .select({
-          packageItemId: packageItems.id,
-          displayOrder: packageItems.displayOrder,
-          maxPoints: packageItems.maxPoints,
-          rubricVersionId: packageItems.rubricVersionId,
-          maximumScoreCategory: packageItems.maximumScoreCategory,
-          questionVersionId: questionVersions.id,
-          questionType: questionVersions.questionType,
-          contentStatus: questionVersions.contentStatus,
-          questionStatus: questions.status,
-          stem: questionVersions.stem,
-          optionsOrStatements: questionVersions.optionsOrStatements,
-          answerKey: questionVersions.answerKey,
-          explanation: questionVersions.explanation,
-        })
-        .from(packageItems)
-        .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
-        .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
-        .innerJoin(questions, eq(questions.id, questionVariants.questionId))
-        .where(eq(packageItems.packageId, selected.id))
-        .orderBy(asc(packageItems.displayOrder));
-      if (
-        items.length !== DRILL_QUESTION_COUNT ||
-        items.some(
-          (item) => !Number.isFinite(Number(item.maxPoints)) || Number(item.maxPoints) <= 0,
-        )
-      )
-        throw new ServiceUnavailableException(
-          problem('DRILL_PACKAGE_INVALID', 'Paket Drill harus berisi 10 soal bernilai satu poin.'),
-        );
-      const ownerOverride = allowsChapter3Override(selected);
-      const rubricIds = [
-        ...new Set(items.flatMap((item) => (item.rubricVersionId ? [item.rubricVersionId] : []))),
-      ];
-      const rubrics = rubricIds.length
-        ? await tx
-            .select()
-            .from(scoringRubricVersions)
-            .where(inArray(scoringRubricVersions.id, rubricIds))
-        : [];
-      try {
-        items.forEach((item) =>
-          ownerOverride
-            ? decodeAssessmentContent(item)
-            : validateRubricCoverage(
-                decodeRuntimeQuestion(item),
-                rubrics.find((r) => r.id === item.rubricVersionId),
-              ),
-        );
-      } catch (error) {
-        if (error instanceof AssessmentFinalizationError)
-          throw new ServiceUnavailableException(problem('PGK_SCORING_PENDING', error.message));
-        throw error;
-      }
-
-      if (
-        items.some(
-          (item) =>
-            item.contentStatus === 'ARCHIVED' ||
-            item.questionStatus === 'ARCHIVED' ||
-            (!selected.isDemo &&
-              (item.contentStatus !== 'READY' || item.questionStatus !== 'READY')),
-        )
-      ) {
-        throw new ServiceUnavailableException(
-          problem('DRILL_CONTENT_NOT_READY', 'Konten Drill belum disetujui atau telah diarsipkan.'),
-        );
-      }
       const [membership] = await tx
         .select({ classId: classMemberships.classId })
         .from(classMemberships)
@@ -294,6 +226,15 @@ export class DrillAssessmentService {
           maximumScoreCategory: item.maximumScoreCategory,
         })),
       );
+      if (delivery) {
+        await tx.insert(assessmentAttemptArmDeliveries).values({
+          attemptId: attempt.id,
+          assignmentId: delivery.assignmentId,
+          deliveredRevisionId: delivery.candidate.revisionId,
+          deliveryMode: delivery.fallbackReason ? 'ORIGINAL_FALLBACK' : 'ASSIGNED',
+          fallbackReason: delivery.fallbackReason,
+        });
+      }
       await recordDomainEvent(
         tx,
         attempt.id,
