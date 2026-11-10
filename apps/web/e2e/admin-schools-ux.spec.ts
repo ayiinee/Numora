@@ -145,9 +145,9 @@ test('school and token pages preserve URL state, browser Back and edit drafts', 
   await page.goto('/admin/schools');
   const schools = page.getByRole('navigation', { name: 'Halaman sekolah' });
   await schools.getByRole('button', { name: 'Berikutnya' }).click();
-  await expect(page.getByText('SMP Negeri Fixture 7', { exact: true })).toBeVisible();
-  await expect(page).toHaveURL(/offset=5/);
-  await page.getByRole('searchbox', { name: 'Cari sekolah' }).fill('  SMP-TEST-1  ');
+  await expect(page.getByText('SMP Negeri Fixture 11', { exact: true })).toBeVisible();
+  await expect(page).toHaveURL(/offset=10/);
+  await page.getByRole('searchbox', { name: 'Cari sekolah' }).fill('  Tunas Bangsa  ');
   await page.getByRole('button', { name: 'Cari sekolah', exact: true }).click();
   await expect(page.locator('.schools-directory-table tbody tr')).toHaveCount(1);
   await expect(schools.getByText('Halaman 1')).toBeVisible();
@@ -155,7 +155,7 @@ test('school and token pages preserve URL state, browser Back and edit drafts', 
   const tokenNav = page.getByRole('navigation', { name: 'Halaman token Guru' });
   await tokenNav.getByRole('button', { name: 'Berikutnya' }).click();
   await expect(tokenNav.getByText('Halaman 2')).toBeVisible();
-  await expect(page).toHaveURL(/tokenOffset=5/);
+  await expect(page).toHaveURL(/tokenOffset=10/);
   await page.getByRole('button', { name: 'Edit sekolah', exact: true }).click();
   const dialog = page.getByRole('dialog', { name: 'Edit sekolah' });
   await dialog.getByLabel('Ubah nama').fill('Draf belum disimpan');
@@ -166,7 +166,7 @@ test('school and token pages preserve URL state, browser Back and edit drafts', 
   await expect(dialog.getByLabel('Ubah nama')).toHaveValue('Draf belum disimpan');
   await dialog.getByRole('button', { name: 'Batal', exact: true }).click();
   await page.getByRole('button', { name: 'Kembali ke daftar sekolah' }).click();
-  await expect(page.getByRole('searchbox', { name: 'Cari sekolah' })).toHaveValue('SMP-TEST-1');
+  await expect(page.getByRole('searchbox', { name: 'Cari sekolah' })).toHaveValue('Tunas Bangsa');
   await page.goBack();
   await expect(page.getByRole('button', { name: 'Edit sekolah', exact: true })).toBeVisible();
   await page.reload();

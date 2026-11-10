@@ -1,5 +1,7 @@
 'use client';
 
+import { ADMIN_PAGE_SIZE } from './pagination';
+
 import Link from 'next/link';
 import { Button, Icon } from '@tka/ui';
 import type { AdminSchool, TeacherTokenSummary } from '@/lib/api';
@@ -49,7 +51,7 @@ export function SchoolDirectory({
         </tr>
       </thead>
       <tbody>
-        {schools.slice(0, 5).map((school) => (
+        {schools.slice(0, ADMIN_PAGE_SIZE).map((school) => (
           <tr key={school.id}>
             <td>
               <div className="schools-identity">
@@ -178,7 +180,7 @@ export function SchoolTokens({
         </tr>
       </thead>
       <tbody>
-        {tokens.slice(0, 5).map((item) => (
+        {tokens.slice(0, ADMIN_PAGE_SIZE).map((item) => (
           <tr key={item.id}>
             <td>
               <span className="schools-cell-label">Diterbitkan</span>

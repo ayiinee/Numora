@@ -3,7 +3,9 @@ import { resolve } from 'node:path';
 
 const source = resolve('packages/contracts/openapi/openapi.json');
 const names = [
-  'StudentTryoutBatchesDto', 'StudentTryoutBatchDto', 'StudentTryoutSchoolDto',
+  'StudentTryoutBatchesDto',
+  'StudentTryoutBatchDto',
+  'StudentTryoutSchoolDto',
   'StudentMaterialsDto',
   'MaterialChapterDto',
   'MaterialSubchapterDto',
@@ -125,7 +127,17 @@ const groups = [
   {
     target: 'apps/web/src/features/admin/generated-types.ts',
     names: [
-      'TryoutBatchDto', 'TryoutBatchesDto', 'TryoutBatchSchoolDto', 'TryoutBatchPackageDto', 'TryoutBatchParticipantDto', 'SaveTryoutBatchDto', 'TryoutDelegationInputDto', 'TryoutBatchOptionsDto', 'StudentTryoutSchoolDto',
+      'TryoutBatchDto',
+      'TryoutBatchesDto',
+      'TryoutBatchSchoolDto',
+      'TryoutBatchPackageDto',
+      'TryoutBatchParticipantDto',
+      'SaveTryoutBatchDto',
+      'UpdateTryoutDelegationsDto',
+      'ExtendTryoutBatchDto',
+      'TryoutDelegationInputDto',
+      'TryoutBatchOptionsDto',
+      'StudentTryoutSchoolDto',
       'ImportBodyDto',
       'UploadSummaryDto',
       'UploadDetailDto',

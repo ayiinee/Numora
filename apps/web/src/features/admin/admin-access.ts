@@ -1,6 +1,6 @@
 import type { IdentityProfile } from '@/lib/api';
 
-export type AdminWorkspacePermission = 'operations' | 'content' | 'accounts';
+export type AdminWorkspacePermission = 'operations' | 'content' | 'accounts' | 'tryoutRead';
 
 export function adminCanReadAnalytics(profile: IdentityProfile | null) {
   return (
@@ -21,6 +21,11 @@ export function adminCanAccess(
   permission: AdminWorkspacePermission,
 ) {
   if (profile?.role !== 'ADMIN' || profile.status !== 'ACTIVE') return false;
+  if (permission === 'tryoutRead')
+    return (
+      ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'].includes(profile.adminRole ?? '') &&
+      Boolean(profile.capabilities?.includes('OPERATIONS_LIMITED_READ'))
+    );
   if (permission === 'accounts')
     return (
       profile.adminRole === 'SUPER_ADMIN' &&

@@ -1,3 +1,4 @@
+import { ADMIN_PAGE_SIZE } from '@/features/admin/pagination';
 import type {
   IdentityProfileDto,
   ProfilePhotoDto,
@@ -211,7 +212,7 @@ export type TeacherTokenSummary = TokenSummaryDto;
 export type IssuedTeacherToken = TokenDto;
 export const listAdminSchools = (token: string, filters = { offset: 0, search: '' }) =>
   apiRequest<AdminSchoolsDto>(
-    `admin/schools?limit=5&offset=${filters.offset}&search=${encodeURIComponent(filters.search)}`,
+    `admin/schools?limit=${ADMIN_PAGE_SIZE}&offset=${filters.offset}&search=${encodeURIComponent(filters.search)}`,
     token,
   );
 export const getAdminSchool = (token: string, id: string) =>
@@ -228,7 +229,7 @@ export const updateSchool = (token: string, schoolId: string, input: UpdateSchoo
   });
 export const listTeacherTokens = (token: string, schoolId: string, offset = 0) =>
   apiRequest<TokenListDto>(
-    `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens?limit=5&offset=${offset}`,
+    `admin/schools/${encodeURIComponent(schoolId)}/teacher-tokens?limit=${ADMIN_PAGE_SIZE}&offset=${offset}`,
     token,
   );
 export const issueTeacherToken = (token: string, schoolId: string) =>

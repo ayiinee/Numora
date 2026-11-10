@@ -294,3 +294,23 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Automatic Pretest rubric - 10 November 2026
 
 **ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.
+
+
+## Audit Tryout - 10 November 2026
+
+**ENGINEERING DECISION - perbaikan aturan existing:** Draft belum terbit dapat dijadwal ulang saat tanggal lewat; batch terbit tetap terkunci saat mulai. Sekolah delegasi divalidasi ulang saat publikasi. Operasional dapat membaca daftar/detail batch; options dan mutasi khusus Content/Super. [Temuan dan verifikasi](../development/TRYOUT_AUDIT_2026-11-10.md). **OPEN:** rilis hasil canonical multi-paket masih dependency delivery; guard tidak dibuka dan policy tidak dikarang.
+
+
+## Fallback paket utama - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.
+
+
+## Delegasi batch terbit - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** penerima sekolah/Mandiri dapat diubah selama batch belum berakhir atau dibatalkan, termasuk saat berjalan. Perubahan hanya memengaruhi start baru. Daftar versi paket, paket utama, isi, jadwal mulai dan attempt existing tetap dipin. Mutasi khusus penerima memakai Content capability, expectedRevision, row lock, transaksi dan audit; batch tutup/batal ditolak.
+
+
+## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal tidak boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 10 menit dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.

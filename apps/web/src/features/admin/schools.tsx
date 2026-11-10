@@ -1,4 +1,6 @@
 'use client';
+
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { useCallback, useEffect, useRef, useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { Button, Dialog, Icon } from '@tka/ui';
@@ -502,7 +504,7 @@ function AdminSchoolsScreenContent() {
                   {schools.length
                     ? `Menampilkan ${offset + 1}–${offset + schools.length}`
                     : '0 ditampilkan'}
-                  <span>Maksimal 5 per halaman</span>
+                  <span>Maksimal {ADMIN_PAGE_SIZE} per halaman</span>
                 </p>
                 <AdminPagination
                   offset={offset}

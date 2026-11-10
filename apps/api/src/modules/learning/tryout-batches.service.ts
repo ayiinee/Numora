@@ -23,7 +23,13 @@ import { readApprovedPolicy } from '@tka/assessment-engine';
 import { scoringPolicyVersions } from '@tka/database';
 import { getIrtResearchDatabaseV1, tryoutDeliveryReadinessV1 } from '@tka/irt-orchestration';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
-import type { SaveTryoutBatchDto, TryoutBatchDto, TryoutBatchQueryDto } from './tryout-batches.dto';
+import type {
+  UpdateTryoutDelegationsDto,
+  ExtendTryoutBatchDto,
+  SaveTryoutBatchDto,
+  TryoutBatchDto,
+  TryoutBatchQueryDto,
+} from './tryout-batches.dto';
 
 export function batchState(
   b: { adminPublishedAt: Date | null; cancelledAt: Date | null; startsAt: Date; closesAt: Date },
@@ -39,7 +45,7 @@ export function batchState(
           ? 'OPEN'
           : 'CLOSED';
 }
-export function validateBatchInput(body: SaveTryoutBatchDto) {
+export function validateBatchInput(body: SaveTryoutBatchDto, now?: Date) {
   if (
     !body.title.trim() ||
     !Number.isFinite(Date.parse(body.startsAt)) ||
@@ -47,6 +53,8 @@ export function validateBatchInput(body: SaveTryoutBatchDto) {
     Date.parse(body.closesAt) <= Date.parse(body.startsAt)
   )
     throw new BadRequestException('Judul dan rentang waktu batch wajib valid.');
+  if (now && Date.parse(body.startsAt) <= now.getTime())
+    throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
   if (new Set(body.schools.map((s) => s.schoolId)).size !== body.schools.length)
     throw new BadRequestException('Sekolah hanya boleh memiliki satu delegasi.');
   const selected = new Set(body.packageIds);
@@ -58,12 +66,33 @@ export function validateBatchInput(body: SaveTryoutBatchDto) {
     throw new BadRequestException('Paket delegasi harus termasuk paket batch.');
 }
 
+export function batchEditable(
+  b: { adminPublishedAt: Date | null; cancelledAt: Date | null; startsAt: Date },
+  now: Date,
+) {
+  return !b.cancelledAt && (!b.adminPublishedAt || now < b.startsAt);
+}
+
+export function validateBatchExtension(
+  b: Parameters<typeof batchState>[0] & { status: string },
+  closesAt: string,
+  now: Date,
+) {
+  if (batchState(b, now) !== 'OPEN' || !['PLANNED', 'OPEN'].includes(b.status))
+    throw new ConflictException(
+      'Hanya batch yang sedang berjalan dan belum berakhir yang dapat diperpanjang.',
+    );
+  if (!Number.isFinite(Date.parse(closesAt)) || Date.parse(closesAt) <= b.closesAt.getTime())
+    throw new BadRequestException('Waktu tutup baru harus lebih akhir dari waktu tutup saat ini.');
+}
+
 @Injectable()
 export class TryoutBatchesService {
   async options(query: TryoutBatchQueryDto) {
     const db = getDatabase().db;
     const packageWhere = and(
       eq(assessmentPackages.assessmentType, 'TRYOUT'),
+      query.familyCode ? eq(assessmentPackages.familyCode, query.familyCode) : undefined,
       query.search ? ilike(assessmentPackages.name, `%${query.search}%`) : undefined,
     );
     const schoolWhere = and(
@@ -76,6 +105,16 @@ export class TryoutBatchesService {
           id: assessmentPackages.id,
           name: assessmentPackages.name,
           packageVersion: assessmentPackages.packageVersion,
+          familyCode: assessmentPackages.familyCode,
+          status: assessmentPackages.status,
+          usedBatchCount:
+            sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
+              Number,
+            ),
+          valid:
+            sql<boolean>`${assessmentPackages.status} = 'PUBLISHED' and not ${assessmentPackages.isDemo}`.mapWith(
+              Boolean,
+            ),
         })
         .from(assessmentPackages)
         .where(packageWhere)
@@ -144,11 +183,24 @@ export class TryoutBatchesService {
           id: assessmentPackages.id,
           name: assessmentPackages.name,
           packageVersion: assessmentPackages.packageVersion,
+          familyCode: assessmentPackages.familyCode,
+          status: assessmentPackages.status,
+          usedBatchCount:
+            sql<number>`(select count(*) from tryout_batch_packages tbp where tbp.package_id = ${assessmentPackages.id})`.mapWith(
+              Number,
+            ),
+          valid:
+            sql<boolean>`${assessmentPackages.status} = 'PUBLISHED' and not ${assessmentPackages.isDemo}`.mapWith(
+              Boolean,
+            ),
         })
         .from(tryoutBatchPackages)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatchPackages.packageId))
         .where(eq(tryoutBatchPackages.batchId, id))
-        .orderBy(asc(assessmentPackages.name));
+        .orderBy(
+          sql`case when ${assessmentPackages.id} = ${b.packageId} then 0 else 1 end`,
+          asc(assessmentPackages.name),
+        );
       const delegated = await tx
         .select({
           schoolId: schools.id,
@@ -181,7 +233,9 @@ export class TryoutBatchesService {
         resultDueAt: b.resultDueAt.toISOString(),
         revision: b.configRevision,
         state: batchState(b, now),
-        editable: !b.cancelledAt && now < b.startsAt,
+        editable: batchEditable(b, now),
+        delegationsEditable: ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
+        extendable: batchState(b, now) === 'OPEN' && ['PLANNED', 'OPEN'].includes(b.status),
         mandiriPackageId: b.mandiriPackageId,
         packages,
         schools: delegated,
@@ -239,15 +293,27 @@ export class TryoutBatchesService {
     }
   }
   private async validatePublished(tx: AdminTransaction, id: string, body: SaveTryoutBatchDto) {
-    const recipients = new Set([
-      ...body.schools.map((s) => s.packageId),
-      ...(body.mandiriPackageId ? [body.mandiriPackageId] : []),
-    ]);
-    if (!recipients.size || body.packageIds.some((p) => !recipients.has(p)))
-      throw new BadRequestException('Setiap paket harus memiliki penerima Mandiri atau sekolah.');
+    await this.validateSchools(tx, body.schools);
     const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     if (new Date(body.startsAt) <= new Date(clock!.now))
       throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
+    await this.validateSchedule(tx, id, body.startsAt, body.closesAt);
+    await this.ready(tx, body.packageIds);
+    const selected = await tx
+      .select({ familyCode: assessmentPackages.familyCode })
+      .from(assessmentPackages)
+      .where(inArray(assessmentPackages.id, body.packageIds));
+    if (new Set(selected.map((p) => p.familyCode)).size > 1)
+      throw new BadRequestException(
+        'Semua paket dalam batch harus memiliki parent code yang sama agar anchor IRT seimbang.',
+      );
+  }
+  private async validateSchedule(
+    tx: AdminTransaction,
+    id: string,
+    startsAt: string,
+    closesAt: string,
+  ) {
     const overlap = await tx
       .select({ id: tryoutBatches.id })
       .from(tryoutBatches)
@@ -256,13 +322,41 @@ export class TryoutBatchesService {
           isNotNull(tryoutBatches.adminPublishedAt),
           isNull(tryoutBatches.cancelledAt),
           sql`${tryoutBatches.id} <> ${id}`,
-          sql`${tryoutBatches.startsAt} < ${body.closesAt}::timestamptz and ${tryoutBatches.closesAt} > ${body.startsAt}::timestamptz`,
+          sql`${tryoutBatches.startsAt} < ${closesAt}::timestamptz and ${tryoutBatches.closesAt} > ${startsAt}::timestamptz`,
         ),
       )
       .limit(1);
     if (overlap.length)
       throw new ConflictException('Jadwal bertabrakan dengan batch yang sudah diterbitkan.');
-    await this.ready(tx, body.packageIds);
+  }
+  extend(actor: string, id: string, body: ExtendTryoutBatchDto) {
+    const audit = { ...body, previousClosesAt: '' };
+    return adminMutation(
+      actor,
+      'tryout_batch_extended',
+      'tryout_batch',
+      async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+        const b = await this.batch(tx, id, true);
+        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+        if (body.expectedRevision !== b.configRevision)
+          throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
+        validateBatchExtension(b, body.closesAt, new Date(clock!.now));
+        await this.validateSchedule(tx, id, b.startsAt.toISOString(), body.closesAt);
+        audit.previousClosesAt = b.closesAt.toISOString();
+        await tx
+          .update(tryoutBatches)
+          .set({
+            closesAt: new Date(body.closesAt),
+            cutoffAt: new Date(body.closesAt),
+            resultDueAt: new Date(Date.parse(body.closesAt) + 72 * 3600000),
+            configRevision: b.configRevision + 1,
+          })
+          .where(eq(tryoutBatches.id, id));
+        return { id };
+      },
+      audit,
+    );
   }
   async save(actor: string, body: SaveTryoutBatchDto, id?: string) {
     validateBatchInput(body);
@@ -274,6 +368,8 @@ export class TryoutBatchesService {
         await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
         const old = id ? await this.batch(tx, id, true) : null;
         if (old) await this.mutable(tx, old, body.expectedRevision);
+        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+        validateBatchInput(body, new Date(clock!.now));
         if (old?.adminPublishedAt) await this.validatePublished(tx, old.id, body);
         const packs = await tx
           .select({ id: assessmentPackages.id })
@@ -286,22 +382,7 @@ export class TryoutBatchesService {
           );
         if (packs.length !== body.packageIds.length)
           throw new BadRequestException('Paket Tryout tidak ditemukan.');
-        if (body.schools.length) {
-          const valid = await tx
-            .select({ id: schools.id })
-            .from(schools)
-            .where(
-              and(
-                inArray(
-                  schools.id,
-                  body.schools.map((s) => s.schoolId),
-                ),
-                eq(schools.status, 'ACTIVE'),
-              ),
-            );
-          if (valid.length !== body.schools.length)
-            throw new BadRequestException('Sekolah delegasi tidak aktif atau tidak ditemukan.');
-        }
+        if (!old?.adminPublishedAt) await this.validateSchools(tx, body.schools);
         const values = {
           adminTitle: body.title.trim(),
           packageId: body.packageIds[0]!,
@@ -335,13 +416,72 @@ export class TryoutBatchesService {
       { configuration: body, allocationMethod: 'ADMIN_DELEGATION' },
     );
   }
+  updateDelegations(actor: string, id: string, body: UpdateTryoutDelegationsDto) {
+    return adminMutation(
+      actor,
+      'tryout_batch_delegations_updated',
+      'tryout_batch',
+      async (tx) => {
+        const b = await this.batch(tx, id, true);
+        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+        if (!['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, new Date(clock!.now))))
+          throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
+        if (body.expectedRevision !== b.configRevision)
+          throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
+        const packages = await tx
+          .select()
+          .from(tryoutBatchPackages)
+          .where(eq(tryoutBatchPackages.batchId, id));
+        validateBatchInput({
+          title: b.adminTitle!,
+          startsAt: b.startsAt.toISOString(),
+          closesAt: b.closesAt.toISOString(),
+          packageIds: packages.map((p) => p.packageId),
+          ...body,
+        });
+        await this.validateSchools(tx, body.schools);
+        await tx.delete(tryoutSchoolDelegations).where(eq(tryoutSchoolDelegations.batchId, id));
+        if (body.schools.length)
+          await tx
+            .insert(tryoutSchoolDelegations)
+            .values(body.schools.map((s) => ({ ...s, batchId: id })));
+        await tx
+          .update(tryoutBatches)
+          .set({
+            mandiriPackageId: body.mandiriPackageId ?? null,
+            configRevision: b.configRevision + 1,
+          })
+          .where(eq(tryoutBatches.id, id));
+        return { id };
+      },
+      { configuration: body, appliesTo: 'NEW_STARTS_ONLY' },
+    );
+  }
+  private async validateSchools(tx: AdminTransaction, delegated: SaveTryoutBatchDto['schools']) {
+    if (!delegated.length) return;
+    const valid = await tx
+      .select({ id: schools.id })
+      .from(schools)
+      .where(
+        and(
+          inArray(
+            schools.id,
+            delegated.map((s) => s.schoolId),
+          ),
+          eq(schools.status, 'ACTIVE'),
+        ),
+      )
+      .for('share');
+    if (valid.length !== delegated.length)
+      throw new BadRequestException('Sekolah delegasi tidak aktif atau tidak ditemukan.');
+  }
   private async mutable(
     tx: AdminTransaction,
     b: typeof tryoutBatches.$inferSelect,
     revision?: number,
   ) {
     const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
-    if (b.cancelledAt || new Date(clock!.now) >= b.startsAt)
+    if (!batchEditable(b, new Date(clock!.now)))
       throw new ConflictException('Konfigurasi batch sudah dikunci.');
     if (revision !== b.configRevision)
       throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
@@ -399,7 +539,12 @@ export class TryoutBatchesService {
   }
   async studentSchools(tx: AdminTransaction, studentId: string) {
     return tx
-      .selectDistinct({ schoolId: classes.schoolId, schoolName: schools.name, classId: classes.id })
+      .selectDistinct({
+        schoolId: classes.schoolId,
+        schoolName: schools.name,
+        classId: classes.id,
+        schoolActive: sql<boolean>`${schools.status} = 'ACTIVE'`.mapWith(Boolean),
+      })
       .from(classMemberships)
       .innerJoin(classes, eq(classes.id, classMemberships.classId))
       .innerJoin(schools, eq(schools.id, classes.schoolId))
@@ -438,22 +583,13 @@ export class TryoutBatchesService {
               eq(assessmentAttempts.studentId, studentId),
             ),
           );
-        const delegated = memberships.length
-          ? await tx
-              .select({ schoolId: schools.id, schoolName: schools.name })
-              .from(tryoutSchoolDelegations)
-              .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
-              .where(
-                and(
-                  eq(tryoutSchoolDelegations.batchId, b.id),
-                  inArray(
-                    tryoutSchoolDelegations.schoolId,
-                    memberships.map((m) => m.schoolId),
-                  ),
-                  eq(schools.status, 'ACTIVE'),
-                ),
-              )
-          : [];
+        const delegated = [
+          ...new Map(
+            memberships
+              .filter((m) => m.schoolActive)
+              .map((m) => [m.schoolId, { schoolId: m.schoolId, schoolName: m.schoolName }]),
+          ).values(),
+        ];
         const mandiri = !memberships.length && !!b.mandiriPackageId;
         if (!attempt && !mandiri && !delegated.length) continue;
         items.push({
@@ -512,31 +648,26 @@ export class TryoutBatchesService {
       if (schoolId) throw new BadRequestException('Sekolah tidak sesuai keanggotaan siswa.');
       packageId = b.mandiriPackageId;
     } else {
-      const delegated = await tx
+      const eligible = [
+        ...new Map(memberships.filter((m) => m.schoolActive).map((m) => [m.schoolId, m])).values(),
+      ];
+      const selected = schoolId
+        ? eligible.find((m) => m.schoolId === schoolId)
+        : eligible.length === 1
+          ? eligible[0]
+          : undefined;
+      if (!selected) throw new BadRequestException('Pilih sekolah sesuai keanggotaan aktif.');
+      const [delegation] = await tx
         .select()
         .from(tryoutSchoolDelegations)
-        .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
         .where(
           and(
             eq(tryoutSchoolDelegations.batchId, batchId),
-            inArray(
-              tryoutSchoolDelegations.schoolId,
-              memberships.map((m) => m.schoolId),
-            ),
-            eq(schools.status, 'ACTIVE'),
+            eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
           ),
         );
-      const selected = schoolId
-        ? delegated.find((d) => d.schools.id === schoolId)
-        : delegated.length === 1
-          ? delegated[0]
-          : undefined;
-      if (!selected)
-        throw new BadRequestException(
-          'Pilih sekolah dengan delegasi yang sesuai keanggotaan aktif.',
-        );
-      packageId = selected.tryout_school_delegations.packageId;
-      contextSchool = selected.schools.id;
+      packageId = delegation?.packageId ?? b.packageId;
+      contextSchool = selected.schoolId;
     }
     if (!packageId) throw new BadRequestException('Batch tidak tersedia untuk kelompok siswa ini.');
     await this.ready(tx, [packageId]);

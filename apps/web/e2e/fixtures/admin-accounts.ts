@@ -4,13 +4,16 @@ import type { AdminAccountDto, AdminInvitationDto } from '../../src/features/adm
 export const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 export const account = (index: number): AdminAccountDto => ({
   id: index === 0 ? userId : `aaaaaaaa-aaaa-4aaa-8aaa-${String(index).padStart(12, '0')}`,
-  displayName: [
-    'Super Fixture',
-    'Nadia Operasional',
-    'Raka Konten',
-    'Alya Tim Kurikulum dan Moderasi',
-    'Dimas Tanpa Assignment',
-  ][index % 5]!,
+  displayName:
+    index >= 5
+      ? `Admin Fixture ${index}`
+      : [
+          'Super Fixture',
+          'Nadia Operasional',
+          'Raka Konten',
+          'Alya Tim Kurikulum dan Moderasi',
+          'Dimas Tanpa Assignment',
+        ][index % 5]!,
   email: index === 3 ? 'kurikulum.dan.moderasi.wilayah@example.test' : `admin${index}@example.test`,
   adminRole: (
     [
@@ -73,7 +76,7 @@ export async function setupAccounts(
     session,
   );
   const state = {
-    accounts: Array.from({ length: 7 }, (_, index) => account(index)),
+    accounts: Array.from({ length: 12 }, (_, index) => account(index)),
     invitations: [
       invitation(0, 'FAILED'),
       invitation(1),
@@ -81,7 +84,7 @@ export async function setupAccounts(
       invitation(3, 'CANCELLED'),
       invitation(4, 'SENDING'),
       invitation(5, 'RESERVED'),
-      invitation(6),
+      ...Array.from({ length: 6 }, (_, i) => invitation(i + 6)),
     ],
     requests: [] as {
       path: string;
@@ -193,7 +196,7 @@ export async function setupAccounts(
         });
       }
       const input = req.postDataJSON();
-      const created = { ...invitation(8), ...input, targetRole: input.adminRole };
+      const created = { ...invitation(100), ...input, targetRole: input.adminRole };
       state.invitations.unshift(created);
       return route.fulfill({ json: created });
     }

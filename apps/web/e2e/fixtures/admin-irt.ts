@@ -12,7 +12,7 @@ export async function setupIrt(
 ) {
   const base = await setup(page);
   base.state.adminRole = role;
-  const batches: IrtBatchHealthDto[] = Array.from({ length: 7 }, (_, index) => ({
+  const batches: IrtBatchHealthDto[] = Array.from({ length: 12 }, (_, index) => ({
     id: id(100 + index),
     packageId: id(200 + index),
     title: [
@@ -37,7 +37,7 @@ export async function setupIrt(
     prepareBlockers: index === 3 ? ['BATCH_NOT_CLOSED', 'ATTEMPTS_NOT_FINALIZED'] : [],
     publicationBlockers: index === 2 ? [] : ['RESPONDENT_CONTRACT_NOT_APPROVED'],
   }));
-  const requests: IrtRequestDto[] = Array.from({ length: 7 }, (_, index) => ({
+  const requests: IrtRequestDto[] = Array.from({ length: 12 }, (_, index) => ({
     id: id(400 + index),
     packageId: id(200 + index),
     contextId: id(300 + index),
@@ -165,7 +165,7 @@ export async function setupIrt(
     if (path === 'options') return route.fulfill({ json: options });
     if (path === 'batch-health' || path === 'requests') {
       const offset = Number(url.searchParams.get('offset') ?? 0),
-        limit = Number(url.searchParams.get('limit') ?? 6);
+        limit = Number(url.searchParams.get('limit') ?? 11);
       return route.fulfill({
         json: { items: (path === 'requests' ? requests : batches).slice(offset, offset + limit) },
       });

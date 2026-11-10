@@ -1,4 +1,6 @@
 'use client';
+
+import { ADMIN_PAGE_SIZE } from './pagination';
 import { Button, Icon } from '@tka/ui';
 import type { ReactNode } from 'react';
 import type { AdminUserDto, AdminUserDetailDto, AdminClassDto } from './generated-types';
@@ -248,7 +250,7 @@ export function PeopleFooter({
     <footer className="people-directory-footer">
       <p>
         {count ? `Menampilkan ${offset + 1}–${offset + count}` : '0 ditampilkan'}
-        <span>Maksimal 5 per halaman</span>
+        <span>Maksimal {ADMIN_PAGE_SIZE} per halaman</span>
       </p>
       <AdminPagination
         label={label}

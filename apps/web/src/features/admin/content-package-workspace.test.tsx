@@ -171,34 +171,34 @@ it('loads package choices five at a time and disables next on the final full pag
   };
   vi.mocked(listContentPackages)
     .mockResolvedValueOnce({
-      total: 10,
-      items: Array.from({ length: 6 }, (_, i) => ({
+      total: 20,
+      items: Array.from({ length: 11 }, (_, i) => ({
         ...pack,
         id: `TEST-${i}`,
         name: `Paket TEST ${i}`,
       })),
     })
     .mockResolvedValueOnce({
-      total: 10,
-      items: Array.from({ length: 5 }, (_, i) => ({
+      total: 20,
+      items: Array.from({ length: 10 }, (_, i) => ({
         ...pack,
-        id: `TEST-${i + 5}`,
-        name: `Paket TEST ${i + 5}`,
+        id: `TEST-${i + 10}`,
+        name: `Paket TEST ${i + 10}`,
       })),
     });
   render(
     <ContentPackageWorkspace token="TEST" disabled={false} onSelect={vi.fn()} refreshKey={0} />,
   );
   await screen.findByLabelText('Paket tujuan');
-  expect(screen.queryByRole('option', { name: /Paket TEST 5/ })).toBeNull();
+  expect(screen.queryByRole('option', { name: /Paket TEST 10/ })).toBeNull();
   fireEvent.click(screen.getByRole('button', { name: 'Paket berikutnya' }));
   await waitFor(() =>
     expect(listContentPackages).toHaveBeenLastCalledWith(
       'TEST',
-      'usageType=DRILL&status=DRAFT&limit=6&offset=5',
+      'usageType=DRILL&status=DRAFT&limit=11&offset=10',
     ),
   );
-  await screen.findByRole('option', { name: /Paket TEST 5/ });
+  await screen.findByRole('option', { name: /Paket TEST 10/ });
   expect(
     (screen.getByRole('button', { name: 'Paket berikutnya' }) as HTMLButtonElement).disabled,
   ).toBe(true);

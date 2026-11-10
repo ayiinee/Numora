@@ -186,8 +186,8 @@ export async function setup(page: Page) {
       );
       return route.fulfill({
         json: {
-          items: schools.slice(offset, offset + 5),
-          nextOffset: schools.length > offset + 5 ? offset + 5 : null,
+          items: schools.slice(offset, offset + 10),
+          nextOffset: schools.length > offset + 10 ? offset + 10 : null,
         },
       });
     }

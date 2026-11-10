@@ -1,5 +1,7 @@
 'use client';
 
+import { ADMIN_PAGE_SIZE } from './pagination';
+
 import { useAuth } from '@/features/onboarding/auth';
 import { apiRequest } from '@/lib/api';
 import { Button } from '@tka/ui';
@@ -368,7 +370,7 @@ function GeneratorResultsScreenProtected({
               <header className="generator-section-heading">
                 <div>
                   <h2>Riwayat paket</h2>
-                  <p>Riwayat terbaru dari server. Maksimal 5 paket per halaman.</p>
+                  <p>Riwayat terbaru dari server. Maksimal {ADMIN_PAGE_SIZE} paket per halaman.</p>
                 </div>
                 <Button
                   variant="secondary"

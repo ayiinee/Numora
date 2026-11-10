@@ -280,7 +280,7 @@ for (const role of ['SUPER_ADMIN', 'OPERATIONS', 'CONTENT_DATA_MODERATION'] as c
             'Akun Admin',
           ]
         : role === 'OPERATIONS'
-          ? ['Dashboard', 'Sekolah & verifikasi guru', 'Pengguna & kelas']
+          ? ['Dashboard', 'Sekolah & verifikasi guru', 'Pengguna & kelas', 'Batch Tryout']
           : [
               'Dashboard',
               'Sekolah & kelas (baca saja)',

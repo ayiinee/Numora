@@ -9,7 +9,7 @@ export async function setupStructures(page: Page) {
   const base = await setup(page);
   base.state.adminRole = 'CONTENT_DATA_MODERATION';
   const state = {
-    schools: Array.from({ length: 7 }, (_, n): AdminStructureSchoolDto => ({
+    schools: Array.from({ length: 12 }, (_, n): AdminStructureSchoolDto => ({
       id: id(101 + n),
       name:
         n === 0
@@ -27,11 +27,11 @@ export async function setupStructures(page: Page) {
       expiredCredentialCount: 3,
       revokedCredentialCount: 0,
     })),
-    classes: Array.from({ length: 8 }, (_, n): AdminStructureClassDto => ({
+    classes: Array.from({ length: 13 }, (_, n): AdminStructureClassDto => ({
       id: id(700 + n),
       name: `Kelas IX-${n + 1} Fixture`,
-      schoolId: id(n < 6 ? 101 : 102),
-      schoolName: n < 6 ? 'SMP Tunas Bangsa' : 'Sekolah Pendampingan Matematika',
+      schoolId: id(n < 11 ? 101 : 102),
+      schoolName: n < 11 ? 'SMP Tunas Bangsa' : 'Sekolah Pendampingan Matematika',
       studentCount: 10 + n,
       teacherActive: n % 2 === 0,
       createdAt: '2026-10-01T00:00:00Z',
@@ -71,8 +71,8 @@ export async function setupStructures(page: Page) {
     const offset = Number(url.searchParams.get('offset') ?? 0);
     return route.fulfill({
       json: {
-        items: items.slice(offset, offset + 5),
-        nextOffset: offset + 5 < items.length ? offset + 5 : null,
+        items: items.slice(offset, offset + 10),
+        nextOffset: offset + 10 < items.length ? offset + 10 : null,
       },
     });
   });

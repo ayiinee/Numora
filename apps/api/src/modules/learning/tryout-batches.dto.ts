@@ -45,10 +45,24 @@ export class SaveTryoutBatchDto {
 export class TryoutBatchRevisionDto {
   @ApiProperty() @IsInt() @Min(1) expectedRevision!: number;
 }
+export class UpdateTryoutDelegationsDto extends TryoutBatchRevisionDto {
+  @ApiPropertyOptional({ nullable: true, type: String }) @IsOptional() @IsUUID() mandiriPackageId?:
+    string | null;
+  @ApiProperty({ type: [TryoutDelegationInputDto] })
+  @IsArray()
+  @ArrayMaxSize(1000)
+  @ValidateNested({ each: true })
+  @Type(() => TryoutDelegationInputDto)
+  schools!: TryoutDelegationInputDto[];
+}
+export class ExtendTryoutBatchDto extends TryoutBatchRevisionDto {
+  @ApiProperty() @IsISO8601({ strict: true }) @Matches(/(?:Z|[+-]\d{2}:\d{2})$/) closesAt!: string;
+}
 export class CancelTryoutBatchDto extends TryoutBatchRevisionDto {
   @ApiProperty() @IsString() @Length(1, 1000) reason!: string;
 }
 export class TryoutBatchQueryDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 160) familyCode?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @Length(0, 160) search?: string;
   @ApiPropertyOptional({ default: 0 }) @IsOptional() @Type(() => Number) @IsInt() @Min(0) offset =
     0;
@@ -69,6 +83,10 @@ export class TryoutBatchPackageDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() packageVersion!: number;
+  @ApiProperty() familyCode!: string;
+  @ApiProperty() status!: string;
+  @ApiProperty() usedBatchCount!: number;
+  @ApiProperty() valid!: boolean;
 }
 export class TryoutBatchParticipantDto {
   @ApiProperty() packageId!: string;
@@ -85,6 +103,8 @@ export class TryoutBatchDto {
   @ApiProperty() revision!: number;
   @ApiProperty() state!: string;
   @ApiProperty() editable!: boolean;
+  @ApiProperty() delegationsEditable!: boolean;
+  @ApiProperty() extendable!: boolean;
   @ApiProperty({ nullable: true, type: String }) mandiriPackageId!: string | null;
   @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
   @ApiProperty({ type: [TryoutBatchSchoolDto] }) schools!: TryoutBatchSchoolDto[];

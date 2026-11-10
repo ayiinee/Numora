@@ -236,7 +236,9 @@ function IrtWorkspace({ token, url }: { token: string; url: ReturnType<typeof us
           <header className="irt-section-heading">
             <div>
               <h2 id="irt-batches-title">Batch & kesiapan publikasi</h2>
-              <p>Lima batch per halaman. Periksa kendala sebelum menyiapkan analisis.</p>
+              <p>
+                {ADMIN_PAGE_SIZE} batch per halaman. Periksa kendala sebelum menyiapkan analisis.
+              </p>
             </div>
             <Button variant="secondary" disabled={busy} onClick={batches.retry}>
               Perbarui batch
@@ -298,7 +300,10 @@ function IrtWorkspace({ token, url }: { token: string; url: ReturnType<typeof us
           <header className="irt-section-heading">
             <div>
               <h2 id="irt-requests-title">Request analisis</h2>
-              <p>Lima request per halaman. Detail menampilkan snapshot, evidence dan tindakan.</p>
+              <p>
+                {ADMIN_PAGE_SIZE} request per halaman. Detail menampilkan snapshot, evidence dan
+                tindakan.
+              </p>
             </div>
             <Button variant="secondary" disabled={busy} onClick={requests.retry}>
               Perbarui request
