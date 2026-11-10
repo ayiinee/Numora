@@ -17,6 +17,8 @@ import psycopg
 
 
 def main():
+    if os.environ.get('IRT_PRODUCTION_AUTHORIZATION_TEST')=='true' and os.environ.get('IRT_DELIVERY_APP_TEST')=='true':
+        raise ValueError('Run production authorization and application fixtures in separate disposable databases')
     profile = json.loads((delivery.AI / 'research/irt/policy-v1.json').read_text())
     with delivery.harness.local_database() as url, psycopg.connect(url, row_factory=dict_row) as db:
         actor = db.execute("INSERT INTO users(auth_user_id,role,admin_role,display_name,email) VALUES(%s,'ADMIN','CONTENT_DATA_MODERATION','SYNTHETIC','binding@example.test') RETURNING id", (uuid4(),)).fetchone()['id']

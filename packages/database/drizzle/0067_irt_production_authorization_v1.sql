@@ -28,7 +28,11 @@ CREATE FUNCTION public.irt_production_authorized_v1(context uuid, runtime jsonb,
  WHERE a.context_id=context AND a.database_oid=(SELECT oid FROM pg_database WHERE datname=current_database())
  AND a.database_name=current_database() AND a.revoked_at IS NULL
  AND a.approved_at<=statement_timestamp() AND a.expires_at>statement_timestamp()
- AND a.runtime_profile=runtime-'pseudonymKeyVersion' AND ($3 IS NULL OR a.resources=$3)
+ AND a.runtime_profile=runtime-'pseudonymKeyVersion'
+ AND (SELECT count(*) FROM jsonb_object_keys(a.resources))=5
+ AND a.resources ?& ARRAY['model','quality','eligibility','scoring','scoreMapping']
+ AND a.resources#>>'{eligibility,definition,purpose}'='PRODUCTION'
+ AND a.resources#>>'{scoring,definition,purpose}'='PRODUCTION' AND ($3 IS NULL OR a.resources=$3)
  AND pg_has_role(mr.oid,'numora_main_runtime','MEMBER') AND NOT pg_has_role(mr.oid,'numora_irt_runtime','MEMBER')
  AND pg_has_role(cr.oid,'numora_irt_runtime','MEMBER') AND NOT pg_has_role(cr.oid,'numora_main_runtime','MEMBER')
  AND NOT EXISTS(SELECT 1 FROM jsonb_each(a.resources) r
@@ -36,7 +40,9 @@ CREATE FUNCTION public.irt_production_authorized_v1(context uuid, runtime jsonb,
    WHERE p.id IS NULL OR p.revoked_at IS NOT NULL OR p.scope->>'purpose' IS DISTINCT FROM 'PRODUCTION'
    OR p.scope->>'contextId' IS DISTINCT FROM a.context_id::text OR p.scope->>'ecosystem' IS DISTINCT FROM 'TRYOUT'
    OR p.approved_digest IS DISTINCT FROM r.value#>>'{ref,digest}')
- AND EXISTS(SELECT 1 FROM public.configuration_approvals p WHERE p.id=a.release_approval_id AND p.revoked_at IS NULL
+ AND EXISTS(SELECT 1 FROM public.configuration_approvals p JOIN irt_compute.technical_policy_versions t ON t.id=p.technical_policy_version_id
+   WHERE p.id=a.release_approval_id AND p.revoked_at IS NULL AND t.kind='IRT_FALLBACK' AND t.status='SEALED'
+   AND t.definition->>'purpose'='PRODUCTION' AND p.approved_digest=t.digest AND t.digest=irt_compute.payload_digest(t.definition)
    AND p.scope->>'purpose'='PRODUCTION' AND p.scope->>'contextId'=a.context_id::text AND p.scope->>'ecosystem'='TRYOUT'))
 $$;
 REVOKE ALL ON FUNCTION public.irt_production_authorized_v1(uuid,jsonb,jsonb) FROM PUBLIC;
@@ -174,7 +180,7 @@ END $$;
 CREATE OR REPLACE FUNCTION public.irt_assert_release_authorization_v1(request_id uuid, approval_id uuid) RETURNS void LANGUAGE plpgsql AS $$
 DECLARE r record; a public.configuration_approvals; p irt_compute.technical_policy_versions;
 BEGIN
- 
+
  SELECT * INTO r FROM public.irt_calibration_inputs_v1 WHERE id=request_id;
  IF r.runtime_profile->>'purpose'='PRODUCTION' THEN
   PERFORM public.irt_assert_production_v1(r.context_id,r.runtime_profile,r.resources);
@@ -186,6 +192,7 @@ BEGIN
  IF r.id IS NULL OR r.cancelled OR NOT r.approvals_valid OR a.id IS NULL OR a.revoked_at IS NOT NULL
  OR p.kind IS DISTINCT FROM 'IRT_FALLBACK' OR p.status IS DISTINCT FROM 'SEALED' OR a.approved_digest IS DISTINCT FROM p.digest
  OR p.digest IS DISTINCT FROM irt_compute.payload_digest(p.definition)
+ OR p.definition->>'purpose' IS DISTINCT FROM r.runtime_profile->>'purpose'
  OR a.scope->>'purpose' IS DISTINCT FROM r.runtime_profile->>'purpose' OR a.scope->>'ecosystem' IS DISTINCT FROM 'TRYOUT'
  OR a.scope->>'contextId' IS DISTINCT FROM r.context_id::text THEN RAISE EXCEPTION 'IRT release approval invalid' USING ERRCODE='23514'; END IF;
 END $$;
@@ -212,7 +219,11 @@ DECLARE r public.irt_calibration_requests_v1; rid uuid;
 BEGIN
  IF TG_TABLE_NAME='calibration_artifacts_v1' THEN
   SELECT request_id INTO rid FROM irt_compute.calibration_jobs_v1 WHERE id=NEW.job_id;
- ELSE rid:=NEW.request_id; END IF;
+ ELSE
+  IF TG_TABLE_NAME='calibration_jobs_v1' THEN
+   IF NEW.status IN ('FAILED','EXPIRED') THEN RETURN NEW; END IF;
+  END IF;
+  rid:=NEW.request_id; END IF;
  SELECT * INTO r FROM public.irt_calibration_requests_v1 WHERE id=rid;
  IF r.runtime_profile->>'purpose'='PRODUCTION' THEN
   PERFORM public.irt_assert_production_v1(r.context_id,r.runtime_profile,r.resources);
@@ -260,3 +271,12 @@ DROP POLICY compute_access ON irt_compute.calibration_artifacts_v1;
 CREATE POLICY compute_access ON irt_compute.calibration_artifacts_v1 FOR ALL TO numora_irt_runtime
  USING(EXISTS(SELECT 1 FROM irt_compute.calibration_jobs_v1 j WHERE j.id=job_id))
  WITH CHECK(EXISTS(SELECT 1 FROM irt_compute.calibration_jobs_v1 j WHERE j.id=job_id));
+
+--> statement-breakpoint
+CREATE FUNCTION public.irt_compute_deployment_ready_v1(principal uuid) RETURNS boolean LANGUAGE sql STABLE
+ SECURITY DEFINER SET search_path=pg_catalog,public AS $$
+ SELECT EXISTS(SELECT 1 FROM public.irt_production_authorizations_v1 a
+ WHERE public.irt_compute_principal_authorized_v1(a.context_id,principal))
+$$;
+REVOKE ALL ON FUNCTION public.irt_compute_deployment_ready_v1(uuid) FROM PUBLIC;
+GRANT EXECUTE ON FUNCTION public.irt_compute_deployment_ready_v1(uuid) TO numora_irt_runtime;

@@ -15,10 +15,15 @@ def verify(owner,url,actor,batch,context,config,value):
         owner.execute(psycopg.sql.SQL('CREATE ROLE {} LOGIN NOSUPERUSER NOCREATEDB NOCREATEROLE NOBYPASSRLS INHERIT').format(psycopg.sql.Identifier(login)))
         owner.execute(psycopg.sql.SQL('GRANT {} TO {}').format(psycopg.sql.Identifier(role),psycopg.sql.Identifier(login)))
     for resource in config['resources'].values():
-        old=owner.execute('SELECT technical_policy_version_id,approved_digest FROM configuration_approvals WHERE id=%s',(resource['ref']['approvalId'],)).fetchone()
-        resource['ref']['approvalId']=str(owner.execute("INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id",(old['technical_policy_version_id'],old['approved_digest'],Jsonb({'purpose':'PRODUCTION','ecosystem':'TRYOUT','contextId':str(context)}),actor)).fetchone()['id'])
-    old=owner.execute('SELECT technical_policy_version_id,approved_digest FROM configuration_approvals WHERE id=%s',(config['releaseApprovalId'],)).fetchone()
-    config['releaseApprovalId']=str(owner.execute("INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id",(old['technical_policy_version_id'],old['approved_digest'],Jsonb({'purpose':'PRODUCTION','ecosystem':'TRYOUT','contextId':str(context)}),actor)).fetchone()['id'])
+        definition=deepcopy(resource['definition'])
+        if 'purpose' in definition:definition['purpose']='PRODUCTION'
+        policy=owner.execute("INSERT INTO irt_compute.technical_policy_versions(code,version,kind,definition,digest,status) VALUES(%s,1,%s,%s,irt_compute.payload_digest(%s),'SEALED') RETURNING id,digest",(uuid4().hex,resource['kind'],Jsonb(definition),Jsonb(definition))).fetchone()
+        approval=owner.execute("INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id",(policy['id'],policy['digest'],Jsonb({'purpose':'PRODUCTION','ecosystem':'TRYOUT','contextId':str(context)}),actor)).fetchone()['id']
+        resource.update(ref={'id':str(policy['id']),'version':1,'digest':policy['digest'],'approvalId':str(approval)},definition=definition)
+    definition=owner.execute('SELECT p.definition FROM configuration_approvals a JOIN irt_compute.technical_policy_versions p ON p.id=a.technical_policy_version_id WHERE a.id=%s',(config['releaseApprovalId'],)).fetchone()['definition']
+    definition['purpose']='PRODUCTION'
+    release=owner.execute("INSERT INTO irt_compute.technical_policy_versions(code,version,kind,definition,digest,status) VALUES(%s,1,'IRT_FALLBACK',%s,irt_compute.payload_digest(%s),'SEALED') RETURNING id,digest",(uuid4().hex,Jsonb(definition),Jsonb(definition))).fetchone()
+    config['releaseApprovalId']=str(owner.execute("INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id",(release['id'],release['digest'],Jsonb({'purpose':'PRODUCTION','ecosystem':'TRYOUT','contextId':str(context)}),actor)).fetchone()['id'])
     principal=owner.execute('INSERT INTO service_principals(code,enabled) VALUES(%s,true) RETURNING id',(uuid4().hex,)).fetchone()['id']
     owner.commit()
     p=urlparse(url);mainurl=urlunparse(p._replace(netloc=f'{main}@{p.hostname}:{p.port}'))
