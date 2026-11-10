@@ -269,6 +269,7 @@ async function fixtures(
         ],
         nextCursor: null,
       };
+    else if (path === '/tryout/batches') data = { routingActive: false, items: [] };
     else if (path === '/tryout/packages/current') data = { state: 'unavailable' };
     else if (path === '/pvp/availability')
       data = { available: false, reasonCode: 'PVP_POLICY_OPEN', message: 'PvP belum tersedia.' };
