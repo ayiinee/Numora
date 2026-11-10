@@ -1,6 +1,8 @@
 // Opt-in research adapter. No canonical grades, publication, XP or parameter adoption.
 import { createHmac } from 'node:crypto';
 import { isDeepStrictEqual } from 'node:util';
+import { readFile } from 'node:fs/promises';
+import { isAbsolute } from 'node:path';
 import { validateInput, validateResult } from '../../contracts/irt-calibration-v1/validate.mjs';
 
 const kinds = {
@@ -404,4 +406,133 @@ export async function verifyCalibrationResearchArtifact(sql, requestId) {
   if(!row||row.cancelled||!row.approvals_valid||!row.digest_valid)throw new Error('IRT_ARTIFACT_NOT_ACCEPTABLE');
   validateResult(row.payload,row.input,{executionId:row.execution_id,dispatchGeneration:row.generation});
   return {verified:true,result:row.payload,diagnostics:row.diagnostics,publication:false};
+}
+
+function deliveryEnabled() {
+  if(process.env.NUMORA_IRT_RESEARCH_ENABLED!=='true'||process.env.NUMORA_IRT_DELIVERY_ENABLED!=='true')
+    throw new Error('IRT_DELIVERY_DISABLED');
+}
+
+async function validateDeliveryRuntime(runtime) {
+  const path=process.env.NUMORA_IRT_DELIVERY_RUNTIME_PROFILE;
+  if(!path||!isAbsolute(path))throw new Error('IRT_DELIVERY_RUNTIME_NOT_CONFIGURED');
+  let trusted;
+  try{trusted=JSON.parse(await readFile(path,'utf8'));}catch{throw new Error('IRT_DELIVERY_RUNTIME_NOT_CONFIGURED');}
+  if(!isDeepStrictEqual(runtime,trusted))throw new Error('IRT_BINDING_RUNTIME_INVALID');
+}
+
+export async function saveCalibrationDeliveryBinding(sql,batchId,actorId,{expectedRevision,contextId,armSetId,batchRevision,configuration}) {
+  deliveryEnabled();
+  await validateDeliveryRuntime(configuration.runtime);
+  return sql.begin(async tx=>{
+    await tx`SELECT id FROM tryout_batches WHERE id=${batchId} FOR UPDATE`;
+    const [old]=await tx`SELECT revision FROM irt_delivery_bindings_v1 WHERE batch_id=${batchId}`;
+    if((old?.revision??0)!==expectedRevision)throw new Error('IRT_BINDING_REVISION_CONFLICT');
+    const [row]=old
+      ? await tx`UPDATE irt_delivery_bindings_v1 SET revision=revision+1,context_id=${contextId},arm_set_id=${armSetId},batch_revision=${batchRevision},configuration=${tx.json(configuration)}::jsonb,actor_user_id=${actorId} WHERE batch_id=${batchId} RETURNING revision,digest`
+      : await tx`INSERT INTO irt_delivery_bindings_v1(batch_id,context_id,arm_set_id,batch_revision,configuration,digest,actor_user_id) VALUES(${batchId},${contextId},${armSetId},${batchRevision},${tx.json(configuration)}::jsonb,'',${actorId}) RETURNING revision,digest`;
+    const release={approvalId:configuration.releaseApprovalId,purpose:'RESEARCH_ONLY'};
+    await tx`UPDATE tryout_batches SET release_policy=${tx.json(release)}::jsonb,release_policy_digest=irt_compute.payload_digest(${tx.json(release)}::jsonb) WHERE id=${batchId}`;
+    await tx`INSERT INTO audit_logs(actor_user_id,action,entity_type,entity_id)
+      VALUES(${actorId},'IRT_DELIVERY_BOUND','tryout_batch',${batchId})`;
+    return {batchId,...row};
+  });
+}
+
+// Build identities/manifests from authoritative rows; canonicalInput remains the only validator.
+async function deliveryDraft(tx,batchId) {
+  const [binding]=await tx`SELECT binding.*,c.revision AS context_revision,b.starts_at,b.cutoff_at,b.result_due_at,
+    b.config_revision,b.cancelled_at FROM irt_delivery_bindings_v1 binding JOIN tryout_batches b ON b.id=binding.batch_id
+    JOIN measurement_contexts c ON c.id=binding.context_id WHERE binding.batch_id=${batchId}`;
+  if(!binding)throw new Error('IRT_BINDING_MISSING');
+  if(binding.cancelled_at||binding.config_revision!==binding.batch_revision||binding.context_revision!==binding.configuration.contextRevision)
+    throw new Error('IRT_BINDING_STALE');
+  const config=binding.configuration;
+  await validateDeliveryRuntime(config.runtime);
+  const rows=await tx`SELECT a.id,a.student_id,a.package_id,a.finished_at,a.status,p.package_version,
+    ass.assigned_arm_id,r.arm_id,d.delivery_mode FROM assessment_attempts a
+    LEFT JOIN assessment_attempt_arm_deliveries d ON d.attempt_id=a.id
+    LEFT JOIN assessment_arm_assignments ass ON ass.id=d.assignment_id
+    LEFT JOIN assessment_arm_revisions r ON r.id=d.delivered_revision_id
+    JOIN assessment_packages p ON p.id=a.package_id
+    WHERE a.tryout_batch_id=${batchId} AND a.assessment_type='TRYOUT' AND a.status<>'CANCELLED' ORDER BY a.id`;
+  if(!rows.length)throw new Error('IRT_DELIVERY_EMPTY_ROSTER');
+  if(rows.some(r=>!r.assigned_arm_id||!r.arm_id))throw new Error('IRT_DELIVERY_PIN_MISSING');
+  if(rows.some(r=>r.status!=='GRADED'))throw new Error('IRT_CANONICAL_GRADE_NOT_FINAL');
+  const items=await tx`SELECT DISTINCT q.id AS "questionVersionId",v.question_id AS "familyId",
+    CASE WHEN v.kind='ORIGINAL' THEN q.id ELSE q.parent_original_question_version_id END AS "originalQuestionVersionId",
+    q.scoring_rubric_version_id AS "rubricVersionId",q.content_fingerprint AS "contentDigest",q.question_type AS "questionType",
+    CASE WHEN q.question_type='SINGLE_CHOICE' THEN '2PL' ELSE 'GPCM' END AS "modelFamily",
+    rubric.maximum_score_category AS "maximumScoreCategory",pi.max_points::text AS "maxPoints",q.validation_state AS "contentState"
+    FROM package_items pi JOIN question_versions q ON q.id=pi.question_version_id JOIN question_variants v ON v.id=q.variant_id
+    JOIN scoring_rubric_versions rubric ON rubric.id=q.scoring_rubric_version_id
+    WHERE pi.package_id=ANY(${config.packages.map(p=>p.packageId)}::uuid[]) ORDER BY q.id`;
+  const answers=await tx`SELECT i.id,i.attempt_id,i.question_version_id,i.rubric_version_id,ans.graded_at
+    FROM attempt_items i JOIN assessment_attempts a ON a.id=i.attempt_id LEFT JOIN attempt_answers ans ON ans.attempt_item_id=i.id
+    WHERE a.tryout_batch_id=${batchId} AND a.assessment_type='TRYOUT' AND a.status<>'CANCELLED' ORDER BY i.id`;
+  if(answers.some(r=>!r.graded_at))throw new Error('IRT_CANONICAL_GRADE_NOT_FINAL');
+  const gradeTime=new Date(Math.max(binding.cutoff_at.getTime(),...answers.map(r=>r.graded_at.getTime()))).toISOString();
+  const original=config.packages.find(p=>p.armKind==='ORIGINAL');
+  const input={contractVersion:'irt-calibration-v1',requestId:binding.request_id,snapshotId:binding.snapshot_id,
+    inputDigest:'0'.repeat(64),calibrationId:binding.calibration_id,ecosystem:'TRYOUT',
+    context:{contextId:binding.context_id,revision:binding.context_revision,scope:'TRYOUT_BATCH',scaleId:'T:'+batchId,chapterId:null,indicatorId:null,levelId:null,batchId},
+    window:{startsAt:binding.starts_at.toISOString(),collectionCutoffAt:binding.cutoff_at.toISOString(),gradingCutoffAt:gradeTime,resultDueAt:binding.result_due_at.toISOString()},
+    policies:{...Object.fromEntries(Object.entries(config.resources).map(([k,r])=>[k,r.ref])),comparison:null},
+    packages:config.packages.map(p=>({packageId:p.packageId,packageVersion:p.packageVersion,armId:p.armId,armKind:p.armKind,questionVersionIds:p.questionVersionIds})),items,
+    referencePackage:{packageId:original.packageId,packageVersion:original.packageVersion},referenceQuestionVersionIds:original.questionVersionIds,
+    anchorQuestionVersionIds:config.anchors,comparisons:[],
+    respondents:rows.map(r=>({respondentId:r.student_id,attemptId:r.id,packageId:r.package_id,packageVersion:r.package_version,batchId,
+      assignedArmId:r.assigned_arm_id,deliveredArmId:r.arm_id,deliveryMode:r.delivery_mode,attemptIndex:1,firstValidAttempt:false,
+      submittedAt:r.finished_at?.toISOString(),gradedAt:gradeTime})),
+    responses:answers.map(r=>({respondentId:rows.find(p=>p.id===r.attempt_id).student_id,attemptId:r.attempt_id,attemptItemId:r.id,
+      questionVersionId:r.question_version_id,rubricVersionId:r.rubric_version_id,responseState:'NOT_PRESENTED',scoreCategory:null,awardedPoints:null,
+      exposureState:'FRESH',priorExposureSources:[],includedInCalibration:false,eligibilityReasons:['NOT_PRESENTED']}))};
+  return {binding,input};
+}
+
+export async function inspectBoundCalibrationDelivery(sql,batchId,options) {
+  deliveryEnabled();
+  return sql.begin('isolation level repeatable read read only',async tx=>{
+    const report={batchId,dispatchReady:false,resultState:'BLOCKED',scientificGate:'NOT_EVALUATED',productionApproved:false,blockers:[]};
+    try {
+      const {binding,input}=await deliveryDraft(tx,batchId);
+      const canonical=await canonicalInput(tx,input,options);
+      await validateResources(tx,canonical,binding.configuration.resources);
+      report.dispatchReady=true;
+      const [finalization]=await tx`SELECT published_at FROM tryout_result_finalizations WHERE batch_id=${batchId}`;
+      const [progress]=await tx`SELECT request_id,blocker FROM irt_delivery_progress_v1 WHERE batch_id=${batchId}`;
+      report.resultState=finalization?(finalization.published_at?'PUBLISHED':'AWAITING_PUBLICATION'):progress?.request_id?'COMPUTING':'AWAITING_DISPATCH';
+      if(progress?.blocker)report.blockers.push(progress.blocker);
+    }catch(error){
+      if(!/^IRT_[A-Z0-9_]+$/.test(error.message))throw error;
+      report.blockers.push(error.message);
+    }
+    return report;
+  });
+}
+
+export async function freezeBoundCalibrationDelivery(sql,batchId,options) {
+  deliveryEnabled();
+  return sql.begin('isolation level repeatable read',async tx=>{
+    const [binding]=await tx`SELECT * FROM irt_delivery_bindings_v1 WHERE batch_id=${batchId} FOR UPDATE`;
+    if(!binding)throw new Error('IRT_BINDING_MISSING');
+    const [progress]=await tx`SELECT request_id FROM irt_delivery_progress_v1 WHERE batch_id=${batchId}`;
+    if(progress?.request_id){
+      const [source]=await tx`SELECT cancelled,approvals_valid FROM irt_calibration_inputs_v1 WHERE id=${progress.request_id}`;
+      if(!source||source.cancelled||!source.approvals_valid)throw new Error('IRT_DELIVERY_AUTHORIZATION_STALE');
+      return {requestId:progress.request_id,replayed:true};
+    }
+    await tx`UPDATE tryout_batches SET status='CLOSED' WHERE id=${batchId} AND cancelled_at IS NULL
+      AND cutoff_at<=clock_timestamp() AND status IN ('PLANNED','OPEN','PROCESSING')
+      AND NOT EXISTS(SELECT 1 FROM assessment_attempts WHERE tryout_batch_id=${batchId} AND status NOT IN ('GRADED','CANCELLED'))`;
+    const {input}=await deliveryDraft(tx,batchId);
+    const canonical=await canonicalInput(tx,input,options);
+    await validateResources(tx,canonical,binding.configuration.resources);
+    const result=await freezeValidated(tx,canonical,binding.configuration.resources,{...binding.configuration.runtime,pseudonymKeyVersion:options.keyVersion});
+    // Same transaction as freeze and progress; transport retries never allocate a generation.
+    await tx`INSERT INTO irt_calibration_dispatches_v1(request_id,generation,actor_user_id) VALUES(${result.requestId},1,${binding.actor_user_id})`;
+    await tx`INSERT INTO irt_delivery_progress_v1(batch_id,request_id) VALUES(${batchId},${result.requestId})
+      ON CONFLICT(batch_id) DO UPDATE SET request_id=excluded.request_id,blocker=NULL,updated_at=clock_timestamp()`;
+    return {...result,replayed:false};
+  });
 }

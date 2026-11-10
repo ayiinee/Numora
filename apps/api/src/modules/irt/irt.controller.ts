@@ -1,4 +1,8 @@
-import { PrepareIrtReleaseV1Dto, IrtReleaseV1Dto } from './irt-requests.dto';
+import {
+  IrtDeliveryBindingV1Dto,
+  PrepareIrtReleaseV1Dto,
+  IrtReleaseV1Dto,
+} from './irt-requests.dto';
 import { IrtOperationsService } from './irt-operations.service';
 import { IrtOperationalOptionsDto, IrtBatchHealthListDto } from './irt-operations.dto';
 import {
@@ -77,6 +81,21 @@ export class IrtController {
   @ApiOkResponse({ type: IrtOperationalOptionsDto })
   options() {
     return this.operations.options();
+  }
+  @Post('research/batches/:batchId/delivery-binding')
+  @HttpCode(200)
+  @ApiOkResponse({ type: Object })
+  bindDeliveryV1(
+    @Req() request: AdminRequest,
+    @Param('batchId', new ParseUUIDPipe()) batchId: string,
+    @Body() input: IrtDeliveryBindingV1Dto,
+  ) {
+    return this.requests.bindDeliveryV1(request.adminId, batchId, input);
+  }
+  @Get('research/batches/:batchId/delivery-readiness')
+  @ApiOkResponse({ type: Object })
+  deliveryReadinessV1(@Param('batchId', new ParseUUIDPipe()) batchId: string) {
+    return this.requests.deliveryReadinessV1(batchId);
   }
   @Get('batch-health')
   @ApiOkResponse({ type: IrtBatchHealthListDto })

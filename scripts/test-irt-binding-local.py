@@ -2,6 +2,7 @@
 import importlib.util
 import json
 import os
+import subprocess
 from copy import deepcopy
 from pathlib import Path
 from uuid import uuid4
@@ -27,7 +28,8 @@ def main():
         source = generate(1, arms=2, include_mcma=True)[0]
         source['respondents'] = []
         source['responses'] = []
-        value = delivery.build(db, actor, context, batch, 2, source=source)
+        application = os.environ.get('IRT_DELIVERY_APP_TEST') == 'true'
+        value = delivery.build(db, actor, context, batch, 2, source=source, application=application)
         db.execute("UPDATE tryout_batches SET status='PLANNED',starts_at=now()+interval '1 hour',closes_at=now()+interval '1 day',cutoff_at=now()+interval '1 day',result_due_at=now()+interval '4 days' WHERE id=%s", (batch,))
         resources = {}
         for key, kind, source_key in [('model','IRT_MODEL','engine'),('quality','QUALITY_GATE','quality'),('eligibility','IRT_ELIGIBILITY','eligibility'),('scoring','IRT_SCORING','scoring'),('scoreMapping','SCORE_MAPPING','mapping')]:
@@ -35,14 +37,16 @@ def main():
             p = db.execute("INSERT INTO irt_compute.technical_policy_versions(code,version,kind,definition,digest,status) VALUES(%s,1,%s,%s,irt_compute.payload_digest(%s),'SEALED') RETURNING id,digest", (uuid4().hex,kind,Jsonb(definition),Jsonb(definition))).fetchone()
             approval = db.execute('INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id',(p['id'],p['digest'],Jsonb({'ecosystem':'TRYOUT','contextId':str(context),'purpose':'RESEARCH_ONLY'}),actor)).fetchone()['id']
             resources[key] = {'kind':kind,'ref':{'id':str(p['id']),'version':1,'digest':p['digest'],'approvalId':str(approval)},'definition':definition}
-        release = db.execute("INSERT INTO irt_compute.technical_policy_versions(code,version,kind,definition,digest,status) VALUES(%s,1,'IRT_FALLBACK','{}',irt_compute.payload_digest('{}'),'SEALED') RETURNING id,digest",(uuid4().hex,)).fetchone()
+        release_definition={'purpose':'RESEARCH_ONLY','minimumValidItems':24,'rounding':'HALF_UP_2','weights':{'SINGLE_CHOICE':2,'MULTIPLE_CHOICE_MULTIPLE_ANSWER':3,'CATEGORY':3},'partialArm':'FALLBACK_WHOLE_ARM'}
+        release = db.execute("INSERT INTO irt_compute.technical_policy_versions(code,version,kind,definition,digest,status) VALUES(%s,1,'IRT_FALLBACK',%s,irt_compute.payload_digest(%s),'SEALED') RETURNING id,digest",(uuid4().hex,Jsonb(release_definition),Jsonb(release_definition))).fetchone()
         approval = db.execute('INSERT INTO configuration_approvals(technical_policy_version_id,approved_digest,scope,approved_by_user_id,approved_at) VALUES(%s,%s,%s,%s,now()) RETURNING id',(release['id'],release['digest'],Jsonb({'ecosystem':'TRYOUT','contextId':str(context),'purpose':'RESEARCH_ONLY'}),actor)).fetchone()['id']
         arm_set = db.execute('SELECT set_id FROM assessment_arms WHERE id=%s',(value['packages'][0]['armId'],)).fetchone()['set_id']
         pins = []
         for p in value['packages']:
             r = db.execute('SELECT id,manifest_digest FROM assessment_arm_revisions WHERE package_id=%s',(p['packageId'],)).fetchone()
             pins.append({**p,'revisionId':str(r['id']),'manifestDigest':r['manifest_digest']})
-        config = {'contextRevision':1,'anchors':value['anchorQuestionVersionIds'],'packages':pins,'resources':resources,'runtime':json.loads((delivery.AI/'research/irt-runtime-windows-v4.json').read_text()),'releaseApprovalId':str(approval)}
+        runtime_path=Path(os.environ.get('NUMORA_IRT_TEST_RUNTIME_PROFILE',str(delivery.AI/'research/irt-runtime-windows-v4.json'))).resolve()
+        config = {'contextRevision':1,'anchors':value['anchorQuestionVersionIds'],'packages':pins,'resources':resources,'runtime':json.loads(runtime_path.read_text()),'releaseApprovalId':str(approval)}
         def insert(c):
             return db.execute("INSERT INTO irt_delivery_bindings_v1(batch_id,context_id,arm_set_id,batch_revision,configuration,digest,actor_user_id) VALUES(%s,%s,%s,1,%s,'',%s) RETURNING digest",(batch,context,arm_set,Jsonb(c),actor)).fetchone()
         failures = 0
@@ -53,6 +57,30 @@ def main():
             except psycopg.Error: failures += 1
             else: raise AssertionError('Invalid binding accepted')
         assert insert(config)['digest']
+        if application:
+            db.commit()
+            env={**os.environ,'DATABASE_URL':url+'?sslmode=disable','NODE_ENV':'test','ALLOW_SYNTHETIC_CONTENT':'false','NUMORA_IRT_RESEARCH_ENABLED':'true','NUMORA_IRT_DELIVERY_ENABLED':'true','NUMORA_IRT_DELIVERY_RUNTIME_PROFILE':str(runtime_path)}
+            result=subprocess.run(['node','scripts/test-irt-app-delivery.mjs'],cwd=ROOT,input=json.dumps({'batchId':str(batch),'actorId':str(actor),'configuration':config,'contextId':str(context),'armSetId':str(arm_set)}),text=True,capture_output=True,timeout=120,env=env)
+            if result.returncode: raise RuntimeError(result.stderr[-2500:])
+            evidence=json.loads(result.stdout)
+            print(json.dumps({k:v for k,v in evidence.items() if k not in ('people','attemptIds')}),flush=True)
+            if os.environ.get('IRT_DELIVERY_PIPELINE_TEST')=='true':
+                from tests.service import test_irt_postgres as fixtures
+                from fastapi.testclient import TestClient
+                from numora_service.irt.api import create_app
+                from numora_service.irt.daemon import execute_once
+                fixtures.URL=url; fixtures.IrtPostgresTests.setUpClass()
+                fixture=fixtures.IrtPostgresTests(methodName='runTest')
+                notification={'contractVersion':3,'requestId':evidence['requestId'],'inputDigest':evidence['inputDigest'],'dispatchGeneration':1}
+                client=TestClient(create_app(fixture.settings,fixture.repo),raise_server_exceptions=False)
+                response=client.post('/api/v1/irt/compute/execute',headers={'Authorization':'Bearer '+fixture.settings.token},json=notification)
+                assert response.status_code==202,response.text
+                assert execute_once(fixture.repo)
+                release_env={**env,'NUMORA_IRT_RELEASE_ENABLED':'true','NUMORA_IRT_PUBLICATION_ENABLED':'true'}
+                result=subprocess.run(['node','scripts/test-irt-app-release.mjs'],cwd=ROOT,input=json.dumps({**evidence,'batchId':str(batch),'approvalId':str(approval)}),text=True,capture_output=True,timeout=120,env=release_env)
+                if result.returncode: raise RuntimeError(result.stderr[-2500:])
+                print(result.stdout,flush=True)
+            return
         student = db.execute("INSERT INTO users(auth_user_id,role,display_name,email) VALUES(%s,'STUDENT','SYNTHETIC','start@example.test') RETURNING id",(uuid4(),)).fetchone()['id']
         p = pins[0]
         attempt = db.execute("INSERT INTO assessment_attempts(student_id,package_id,assessment_type,tryout_batch_id) VALUES(%s,%s,'TRYOUT',%s) RETURNING id",(student,p['packageId'],batch)).fetchone()['id']
