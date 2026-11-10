@@ -54,6 +54,8 @@ vi.mock('./api', async (original) => ({
     startTryout: vi.fn(),
     chapter: vi.fn(),
     subchapter: vi.fn(),
+    pretestChapter: vi.fn(),
+    pretestResult: vi.fn(),
     start: vi.fn(),
   },
 }));
@@ -1105,6 +1107,66 @@ describe('subchapter level details', () => {
     await waitFor(() => expect(context.push).toHaveBeenCalledWith('/student/drill/resume-test'));
     expect(learningApi.start).toHaveBeenCalledExactlyOnceWith('test-token', 'open-test');
   });
+
+  it.each(['open', 'completed'] as const)(
+    'uses saved placement and yields to Drill progress when the placed level is %s',
+    async (status) => {
+      vi.mocked(learningApi.pretestChapter).mockResolvedValue({
+        chapterId: 'chapter-test',
+        chapterTitle: 'Bab fiktif',
+        attemptId: 'pretest-test',
+        state: 'completed',
+        canStart: false,
+        canSkip: false,
+        skipped: false,
+        isDemo: true,
+      });
+      vi.mocked(learningApi.pretestResult).mockResolvedValue({
+        attemptId: 'pretest-test',
+        chapterId: 'chapter-test',
+        chapterTitle: 'Bab fiktif',
+        initialLevel: 2,
+        mappingStatus: 'applied',
+        isDemo: true,
+        score: 55,
+        correctCount: 11,
+        questionCount: 20,
+        unlockedLevels: [{ id: 'level-2', title: 'Level 2' }],
+      });
+      vi.mocked(learningApi.subchapter).mockResolvedValue({
+        subchapter: { id: 'sub-test', chapterId: 'chapter-test', title: 'Subbab fiktif', order: 1 },
+        levels: [1, 2, 3].map((order) => ({
+          id: `level-${order}`,
+          title: `Level ${order}`,
+          order,
+          latestScore: null,
+          bestScore: null,
+          status: order === 2 ? status : order === 3 && status === 'open' ? 'locked' : 'open',
+        })),
+      });
+      renderStudent(<SubchapterScreen />);
+      const map = await screen.findByRole('list', { name: 'Peta level latihan' });
+      expect(within(map).getByRole('button', { name: 'Level 1, Terbuka' })).toBeTruthy();
+      if (status === 'completed') {
+        const next = await within(map).findByRole('button', {
+          name: 'Level 3, Terbuka',
+          current: 'step',
+        });
+        expect(next).toBeTruthy();
+        expect(within(map).queryByRole('button', { name: /Mulai di sini/ })).toBeNull();
+      } else {
+        const recommended = await within(map).findByRole('button', {
+          name: /^Level 2, Terbuka, Mulai di sini/,
+        });
+        expect(recommended.getAttribute('aria-current')).toBe('step');
+        fireEvent.click(recommended);
+        const detail = within(screen.getByRole('dialog', { name: 'Level 2' }));
+        expect(detail.getByText('Disarankan dari hasil pretest')).toBeTruthy();
+        expect(detail.getByRole('button', { name: 'Mulai Level 2' })).toBeTruthy();
+      }
+      expect(learningApi.start).not.toHaveBeenCalled();
+    },
+  );
 
   it('keeps the empty subchapter state outside the map', async () => {
     vi.mocked(learningApi.subchapter).mockResolvedValue({

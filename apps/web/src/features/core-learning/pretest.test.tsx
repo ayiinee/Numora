@@ -30,7 +30,7 @@ describe('Pretest chapter card', () => {
     enableDialogs();
     const start = vi.fn().mockResolvedValue(undefined);
     render(<PretestCard chapterTitle="Bilangan" state="skipped" onStart={start} onSkip={vi.fn()} />);
-    fireEvent.click(screen.getByRole('button', { name: 'Lihat informasi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cek kemampuanmu' }));
     expect(screen.getByText(/Skip tidak menghabiskan kesempatan/)).toBeTruthy();
     fireEvent.click(screen.getByRole('button', { name: 'Mulai Pretest' }));
     await waitFor(() => expect(start).toHaveBeenCalledOnce());
@@ -58,7 +58,7 @@ describe('Pretest chapter card', () => {
       <PretestCard chapterTitle="Bilangan" state="available" onStart={onStart} onSkip={onSkip} />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Lihat informasi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cek kemampuanmu' }));
     expect(await screen.findByRole('dialog', { name: 'Pretest Bilangan' })).toBeTruthy();
     expect(screen.getByText(/tidak dapat diulang/i)).toBeTruthy();
     expect(screen.getByText(/Level 1 pada semua subbab/i)).toBeTruthy();
@@ -79,7 +79,7 @@ describe('Pretest chapter card', () => {
       />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Lihat informasi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cek kemampuanmu' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Mulai Pretest' }));
 
     expect((await screen.findByRole('alert')).textContent).toContain('Paket belum tersedia');
@@ -92,7 +92,7 @@ describe('Pretest chapter card', () => {
       <PretestCard chapterTitle="Bilangan" state="available" onStart={vi.fn()} onSkip={onSkip} />,
     );
 
-    fireEvent.click(screen.getByRole('button', { name: 'Lihat informasi' }));
+    fireEvent.click(screen.getByRole('button', { name: 'Cek kemampuanmu' }));
     fireEvent.click(await screen.findByRole('button', { name: 'Skip Pretest' }));
 
     await waitFor(() => expect(onSkip).toHaveBeenCalledOnce());

@@ -8,3 +8,5 @@ export { contentFingerprint } from './generator-fingerprint.js';
 export type { Json as GeneratorJson } from './generator-fingerprint.js';
 export * from './finalization-v1.js';
 export * from './tryout-release-v1.js';
+export * from './delivery-v1.js';
+export * from './delivery-reconciler-v1.js';

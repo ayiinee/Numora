@@ -31,11 +31,17 @@ export function contentBlocks(text: string): ({ type: 'text'; text: string } | T
     if (marker) fence = fence?.[0] === marker[0] ? undefined : marker;
     const headers = !fence && !marker ? tableRow(line) : null;
     const separators = headers && tableRow(lines[index + 1] ?? '');
-    if (
-      !headers?.length ||
-      separators?.length !== headers.length ||
-      !separators.every((cell) => /^:?-{3,}:?$/.test(cell))
-    ) {
+    const markdown =
+      separators?.length === headers?.length &&
+      separators?.every((cell) => /^:?-{3,}:?$/.test(cell));
+    // Imported academic tables may omit the Markdown separator row.
+    // Require matching rows with at least three columns to avoid ordinary prose pipes.
+    const imported =
+      headers &&
+      headers.length >= 3 &&
+      separators?.length === headers.length &&
+      !separators.some((cell) => /^:?-+:?$/.test(cell));
+    if (!headers?.length || (!markdown && !imported)) {
       prose.push(line);
       continue;
     }
@@ -45,11 +51,12 @@ export function contentBlocks(text: string): ({ type: 'text'; text: string } | T
       type: 'table',
       headers,
       rows: [],
-      alignments: separators.map((cell) =>
-        cell.endsWith(':') ? (cell.startsWith(':') ? 'center' : 'right') : 'left',
-      ),
+      alignments: headers.map((_, column) => {
+        const cell = markdown ? separators![column]! : '';
+        return cell.endsWith(':') ? (cell.startsWith(':') ? 'center' : 'right') : 'left';
+      }),
     };
-    index++;
+    if (markdown) index++;
     while (index + 1 < lines.length) {
       const row = tableRow(lines[index + 1]!);
       if (row?.length !== headers.length) break;

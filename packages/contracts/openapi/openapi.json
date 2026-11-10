@@ -8050,6 +8050,86 @@
         ]
       }
     },
+    "/api/v1/admin/irt/research/batches/{batchId}/delivery-binding": {
+      "post": {
+        "operationId": "IrtController_bindDeliveryV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/IrtDeliveryBindingV1Dto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
+    "/api/v1/admin/irt/research/batches/{batchId}/delivery-readiness": {
+      "get": {
+        "operationId": "IrtController_deliveryReadinessV1",
+        "parameters": [
+          {
+            "name": "batchId",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "type": "object"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
     "/api/v1/admin/irt/batch-health": {
       "get": {
         "operationId": "IrtController_health",
@@ -18640,6 +18720,37 @@
         "required": [
           "enabled",
           "configurations"
+        ]
+      },
+      "IrtDeliveryBindingV1Dto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number",
+            "minimum": 0
+          },
+          "contextId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "armSetId": {
+            "type": "string",
+            "format": "uuid"
+          },
+          "batchRevision": {
+            "type": "number",
+            "minimum": 1
+          },
+          "configuration": {
+            "type": "object"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "contextId",
+          "armSetId",
+          "batchRevision",
+          "configuration"
         ]
       },
       "IrtBatchHealthDto": {
