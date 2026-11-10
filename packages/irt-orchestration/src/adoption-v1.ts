@@ -51,6 +51,7 @@ export async function loadVerifiedTryoutArtifactV1(tx: TransactionSql, requestId
 
 /** Main-only adoption: no publication, canonical respondent grades, or XP. */
 export async function adoptTryoutArtifactV1(client: Sql, requestId: string) {
+  if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') fail('IRT_V1_DISABLED');
   return client.begin(async (tx: TransactionSql) => {
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,53))`;
     await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,61))`;

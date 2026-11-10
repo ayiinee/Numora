@@ -33,6 +33,7 @@ Object.assign(process.env, {
 });
 const db = postgres(process.env.IRT_VERIFY_URL, { max: 4, onnotice: () => {} });
 const fixture = postgres(process.env.IRT_FIXTURE_URL, { max: 1, onnotice: () => {} });
+let currentBatch;
 const integrity = async () => {
   const result = {};
   for (const table of [
@@ -45,12 +46,17 @@ const integrity = async () => {
       await fixture`SELECT encode(sha256(convert_to(coalesce(string_agg(irt_compute.payload_digest(to_jsonb(t)),'' ORDER BY t.id),''),'UTF8')),'hex') AS digest FROM ${fixture(table)} t`;
     result[table] = r.digest;
   }
+  const [history] =
+    await fixture`SELECT encode(sha256(convert_to(coalesce(string_agg(irt_compute.payload_digest(to_jsonb(t)),'' ORDER BY t.id),''),'UTF8')),'hex') AS digest
+    FROM tryout_attempt_results t JOIN tryout_result_finalizations f ON f.id=t.finalization_id WHERE f.batch_id<>${currentBatch}`;
+  result.historicalResults = history.digest;
   return result;
 };
 try {
   const [r] = await fixture`SELECT * FROM irt_calibration_requests_v1 WHERE id=${requestId}`;
   assert.ok(r);
   const batchId = r.body.context.batchId;
+  currentBatch = batchId;
   const [actor] =
     await fixture`SELECT actor_user_id FROM irt_calibration_dispatches_v1 WHERE request_id=${requestId} LIMIT 1`;
   const body = fixture.json(RESEARCH_RELEASE_POLICY_V1);

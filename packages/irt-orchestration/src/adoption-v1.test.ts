@@ -1,7 +1,8 @@
 import { readFileSync } from 'node:fs';
 import { resolve } from 'node:path';
-import { describe, expect, it } from 'vitest';
-import { validateV1ArtifactShape } from './adoption-v1.js';
+import { describe, expect, it, vi } from 'vitest';
+import { validateV1ArtifactShape, adoptTryoutArtifactV1 } from './adoption-v1.js';
+import { finalizeTryoutArtifactV1 } from './finalization-v1.js';
 const example = (name: string) =>
   JSON.parse(
     readFileSync(
@@ -16,6 +17,15 @@ const execution = {
   dispatchGeneration: output.dispatchGeneration,
 };
 describe('v1 adoption real contract boundary', () => {
+  it('keeps research adoption and staging disabled before touching the database', async () => {
+    vi.stubEnv('NUMORA_IRT_RESEARCH_ENABLED', 'false');
+    try {
+      await expect(adoptTryoutArtifactV1(null as never, '')).rejects.toThrow('IRT_V1_DISABLED');
+      await expect(finalizeTryoutArtifactV1(null as never, '')).rejects.toThrow('IRT_V1_DISABLED');
+    } finally {
+      vi.unstubAllEnvs();
+    }
+  });
   it('accepts nested outcome and derives coverage', () =>
     expect(validateV1ArtifactShape(output, input, execution).attempts.size).toBe(
       input.respondents.length,
