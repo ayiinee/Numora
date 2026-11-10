@@ -1,0 +1,2704 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_BATCH04_30_REVIEW_AND_FIVE_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved the batch-4 report, five corrections and classifications with \"setuju\" in this chat. Three optional suggestions excluded.",
+  "scope": "Editorial correctness and classification of 12 EASY, 13 MEDIUM and 5 HARD; not empirical calibration, IRT approval or server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "items": [
+    {
+      "reviewId": "B4-01",
+      "familyId": "d8fccb46-1bd1-5b1f-b717-0cd00ce44b36",
+      "sourceVersionId": "28dc81a7-bb64-53b7-828e-fa928f595e03",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah koin dilempar satu kali. Peluang muncul sisi gambar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1/2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Ada 2 kemungkinan hasil, yaitu angka dan gambar. Hanya 1 yang sesuai, sehingga peluangnya 1/2."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah koin seimbang memiliki dua sisi, yaitu angka dan gambar, yang sama mungkin muncul. Koin tersebut dilempar satu kali. Peluang muncul sisi gambar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1/2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Koin seimbang memiliki dua hasil yang sama mungkin: angka dan gambar. Satu dari dua hasil tersebut adalah gambar, sehingga P(gambar)=1/2. Jawaban C."
+        }
+      },
+      "correctionReason": "Peluang1/2 memerlukan model dua sisi sama mungkin. Sumber hanya menyebut koin tanpa menyatakan seimbang; pembahasan menyimpulkan probabilitas dari jumlah kemungkinan saja.",
+      "independentSolution": "Untuk koin seimbang dengan dua hasil sama mungkin, P(gambar)=1/2. Banyaknya dua hasil saja tidak menjamin probabilitas sama tanpa asumsi seimbang.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-02",
+      "familyId": "5f2d3108-2a94-5bcd-bfff-b26082ece369",
+      "sourceVersionId": "2951f631-e83a-573c-8ff3-3d45bb7484c4",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Tiga orang siswa memeriksa jadwal penyemprotan disinfektan untuk tiga area ruang di sekolah:\nRuang Kelas: setiap 6 hari sekali\nRuang Laboratorium: setiap 8 hari sekali\nRuang Perpustakaan: setiap 12 hari sekali\nJika penyemprotan bersamaan pertama dilakukan pada tanggal 2 Mei, siswa menganalisis tanggal berapa penyemprotan bersamaan untuk ketiga kalinya akan dilakukan:\nAnalisis I: Penyemprotan ketiga terjadi 24 hari setelah 2 Mei, yaitu tanggal 26 Mei.\nAnalisis II: Penyemprotan ketiga terjadi $2×24=48$ hari setelah 2 Mei, yaitu tanggal 19 Juni (mengingat bulan Mei memiliki 31 hari).\nAnalisis III: Penyemprotan ketiga terjadi $2×24=48$ hari setelah 2 Mei, yaitu tanggal 18 Juni (menganggap bulan Mei memiliki 30 hari).\nAnalisis IV: Penyemprotan ketiga terjadi 72 hari setelah 2 Mei, yaitu tanggal 13 Juli.\nHasil analisis siapakah yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis KPK dari 6, 8, dan 12:\n$6=2×3$\n$8={2}^{3}$\n$12={2}^{2}×3$\n$KPK(6,8,12)={2}^{3}×3=24 hari$\nMenganalisis interval penyemprotan:\nBersamaan ke-1: Tanggal 2 Mei (detik/hari ke-0).\nBersamaan ke-2: $24$ hari setelah 2 Mei.\nBersamaan ke-3: $2×24=48$ hari setelah 2 Mei.\nMenganalisis penanggalan:\nBulan Mei memiliki $31$ hari. Sisa hari di bulan Mei setelah tanggal 2 Mei adalah $31-2=29$ hari.\nSisa hari yang dihitung di bulan Juni: $48-29=19$ hari.\nMaka, penyemprotan ketiga jatuh pada tanggal 19 Juni. Alasan ini memvalidasi Analisis II."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tiga orang siswa memeriksa jadwal penyemprotan disinfektan untuk tiga area ruang di sekolah:\nRuang Kelas: setiap 6 hari sekali\nRuang Laboratorium: setiap 8 hari sekali\nRuang Perpustakaan: setiap 12 hari sekali\nJika penyemprotan bersamaan pertama dilakukan pada tanggal 2 Mei, siswa menganalisis tanggal berapa penyemprotan bersamaan untuk ketiga kalinya akan dilakukan:\nAnalisis I: Penyemprotan ketiga terjadi 24 hari setelah 2 Mei, yaitu tanggal 26 Mei.\nAnalisis II: Penyemprotan ketiga terjadi $2×24=48$ hari setelah 2 Mei, yaitu tanggal 19 Juni (mengingat bulan Mei memiliki 31 hari).\nAnalisis III: Penyemprotan ketiga terjadi $2×24=48$ hari setelah 2 Mei, yaitu tanggal 18 Juni (menganggap bulan Mei memiliki 30 hari).\nAnalisis IV: Penyemprotan ketiga terjadi 72 hari setelah 2 Mei, yaitu tanggal 13 Juli.\nHasil analisis siapakah yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis KPK dari 6, 8, dan 12:\n$6=2×3$\n$8={2}^{3}$\n$12={2}^{2}×3$\n$KPK(6,8,12)={2}^{3}×3=24 hari$\nMenganalisis interval penyemprotan:\nBersamaan ke-1: Tanggal 2 Mei (detik/hari ke-0).\nBersamaan ke-2: $24$ hari setelah 2 Mei.\nBersamaan ke-3: $2×24=48$ hari setelah 2 Mei.\nMenganalisis penanggalan:\nBulan Mei memiliki $31$ hari. Sisa hari di bulan Mei setelah tanggal 2 Mei adalah $31-2=29$ hari.\nSisa hari yang dihitung di bulan Juni: $48-29=19$ hari.\nMaka, penyemprotan ketiga jatuh pada tanggal 19 Juni. Alasan ini memvalidasi Analisis II."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "KPK(6,8,12)=24 hari. Pertemuan pertama 2 Mei, ketiga setelah48 hari. 2 Mei+48 hari=19 Juni.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-03",
+      "familyId": "401346ad-5a2b-55d2-beb6-52d065a7fe3a",
+      "sourceVersionId": "2960053d-8bd4-545a-95f2-f9c411e3cd1f",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Diberikan dua buah bilangan asli P dan Q yang dinyatakan dalam bentuk pembuktian faktorisasi prima:\nP=2^(3)×3^(2)×5\nQ=2^(2)×3×7\nSeorang siswa menganalisis pembagi persekutuan terbesar yang dapat membagi habis kedua bilangan tersebut tanpa sisa. Bentuk faktorisasi prima dari FPB(P,Q) yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2^(3)×3^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2^(2)×3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2^(3)×3^(2)×5×7"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2^(2)×3^(2)×5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis penentuan FPB dari dua bilangan berpangkat faktorisasi prima:\nIdentifikasi faktor prima sekutu (faktor yang ada pada kedua bilangan), yaitu 2 dan 3.\nPilih pangkat terkecil untuk setiap faktor sekutu tersebut:\nUntuk faktor 2: pilih 2^(2) (karena 2^(2)<2^(3)).\nUntuk faktor 3: pilih 3^(1) (karena 3^(1)<3^(2)).\nMaka, FPB(P,Q)=2^(2)×3=12.\nKesalahan Umum yang Diantisipasi:\nSiswa keliru mengambil pangkat terbesar (konsep KPK) atau menyertakan faktor 5 dan 7 yang bukan merupakan faktor sekutu."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diberikan dua buah bilangan asli P dan Q yang dinyatakan dalam bentuk pembuktian faktorisasi prima:\nP=2^(3)×3^(2)×5\nQ=2^(2)×3×7\nSeorang siswa menganalisis pembagi persekutuan terbesar yang dapat membagi habis kedua bilangan tersebut tanpa sisa. Bentuk faktorisasi prima dari FPB(P,Q) yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2^(3)×3^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2^(2)×3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2^(3)×3^(2)×5×7"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2^(2)×3^(2)×5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis penentuan FPB dari dua bilangan berpangkat faktorisasi prima:\nIdentifikasi faktor prima sekutu (faktor yang ada pada kedua bilangan), yaitu 2 dan 3.\nPilih pangkat terkecil untuk setiap faktor sekutu tersebut:\nUntuk faktor 2: pilih 2^(2) (karena 2^(2)<2^(3)).\nUntuk faktor 3: pilih 3^(1) (karena 3^(1)<3^(2)).\nMaka, FPB(P,Q)=2^(2)×3=12.\nKesalahan Umum yang Diantisipasi:\nSiswa keliru mengambil pangkat terbesar (konsep KPK) atau menyertakan faktor 5 dan 7 yang bukan merupakan faktor sekutu."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Faktor prima sekutu2 dan3 diambil pangkat minimum:2²×3=12.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-04",
+      "familyId": "a109b8a2-615c-5565-9f4c-4fa57557e3be",
+      "sourceVersionId": "2a0b8f18-cc72-516e-a5b5-34ec4f55d774",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Dalam sebuah percobaan, sebuah koin seimbang dilempar 40 kali dan sisi gambar muncul 26 kali. Seorang siswa menyatakan bahwa peluang teoretis munculnya gambar adalah 0,65. Penilaian yang paling tepat terhadap pernyataan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena frekuensi relatif selalu sama dengan peluang teoretis."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena gambar muncul lebih dari setengah percobaan."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena peluang teoretis munculnya gambar pada koin seimbang adalah 0,5."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena peluang teoretis munculnya gambar adalah 1."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Tidak dapat dihitung frekuensi relatifnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nFrekuensi relatif munculnya gambar:\n26 ÷ 40 = 0,65\nNamun, peluang teoretis munculnya gambar pada koin seimbang adalah:\nP(gambar) = 1 ÷ 2 = 0,5\nJadi, pernyataan siswa tersebut salah, karena nilai 0,65 merupakan frekuensi relatif hasil percobaan, bukan peluang teoretis"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam sebuah percobaan, sebuah koin seimbang dilempar 40 kali dan sisi gambar muncul 26 kali. Seorang siswa menyatakan bahwa peluang teoretis munculnya gambar adalah 0,65. Penilaian yang paling tepat terhadap pernyataan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena frekuensi relatif selalu sama dengan peluang teoretis."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena gambar muncul lebih dari setengah percobaan."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena peluang teoretis munculnya gambar pada koin seimbang adalah 0,5."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Salah, karena peluang teoretis munculnya gambar adalah 1."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Tidak dapat dihitung frekuensi relatifnya."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nFrekuensi relatif munculnya gambar:\n26 ÷ 40 = 0,65\nNamun, peluang teoretis munculnya gambar pada koin seimbang adalah:\nP(gambar) = 1 ÷ 2 = 0,5\nJadi, pernyataan siswa tersebut salah, karena nilai 0,65 merupakan frekuensi relatif hasil percobaan, bukan peluang teoretis"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Frekuensi relatif26/40=0,65. Koin dinyatakan seimbang, jadi peluang teoretis tetap1/2=0,5.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-05",
+      "familyId": "2b34f042-efea-51b4-ab39-c3810802e849",
+      "sourceVersionId": "2bbeaf4a-e1b7-5c96-9656-859bdb1c2443",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Panitia pameran sains hendak membagikan $120$ modul praktikum dan $144$ pena sains ke dalam beberapa kantong bingkisan peserta dengan jumlah dan kombinasi isi yang sama tanpa ada sisa.\nDua anggota panitia mengajukan proposal analisis pembagian:\nProposal A: Dibuat $24$ kantong, masing-masing berisi $5$ modul praktikum dan $6$ pena sains.\nProposal B: Dibuat $48$ kantong, masing-masing berisi $2,5$ modul praktikum dan $3$ pena sains.\nManakah proposal analisis yang benar berdasarkan prinsip matematika dan keterbagian barang?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Proposal A, karena FPB dari $120$ dan $144$ adalah $24$ sehingga isi barang bernilai bilangan bulat utuh"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Proposal B, karena semakin banyak kantong membuat distribusi semakin merata"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Proposal A, karena jumlah pena sains harus lebih sedikit dari modul praktikum"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Proposal B, karena $48$ merupakan kelipatan dari $24$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis FPB dari $120$ dan $144$:\n$120={2}^{3}×3×5$\n$144={2}^{4}×{3}^{2}$\n$FPB(120,144)={2}^{3}×3=8×3=24$ kantong.\nMenganalisis pembagian barang per kantong:\nModul praktikum = $120÷24=5$ buah.\nPena sains = $144÷24=6$ buah. Proposal B tidak valid karena menghasilkan barang bernilai desimal ($2,5$ modul), yang tidak nyata dalam pengemasan barang utuh. Maka, Proposal A adalah yang benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia pameran sains hendak membagikan $120$ modul praktikum dan $144$ pena sains ke dalam beberapa kantong bingkisan peserta dengan jumlah dan kombinasi isi yang sama tanpa ada sisa.\nDua anggota panitia mengajukan proposal analisis pembagian:\nProposal A: Dibuat $24$ kantong, masing-masing berisi $5$ modul praktikum dan $6$ pena sains.\nProposal B: Dibuat $48$ kantong, masing-masing berisi $2,5$ modul praktikum dan $3$ pena sains.\nManakah proposal analisis yang benar berdasarkan prinsip matematika dan keterbagian barang?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Proposal A, karena FPB dari $120$ dan $144$ adalah $24$ sehingga isi barang bernilai bilangan bulat utuh"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Proposal B, karena semakin banyak kantong membuat distribusi semakin merata"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Proposal A, karena jumlah pena sains harus lebih sedikit dari modul praktikum"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Proposal B, karena $48$ merupakan kelipatan dari $24$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis FPB dari $120$ dan $144$:\n$120={2}^{3}×3×5$\n$144={2}^{4}×{3}^{2}$\n$FPB(120,144)={2}^{3}×3=8×3=24$ kantong.\nMenganalisis pembagian barang per kantong:\nModul praktikum = $120÷24=5$ buah.\nPena sains = $144÷24=6$ buah. Proposal B tidak valid karena menghasilkan barang bernilai desimal ($2,5$ modul), yang tidak nyata dalam pengemasan barang utuh. Maka, Proposal A adalah yang benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "FPB(120,144)=24; isi tiapkantong5 modul dan6 pena. ProposalB membagi modul menjadi2,5 sehingga gagal untuk barang utuh.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-06",
+      "familyId": "15f00775-da7d-5eec-ab8a-c110fc8a5929",
+      "sourceVersionId": "2c35c67b-dfc7-51c0-818f-dac28d9ec6e1",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Dalam suatu percobaan, sebuah dadu dilempar 50 kali dan angka genap muncul 28 kali. Frekuensi relatif muncul angka genap adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0,48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "0,56"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "0,60"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "0,72"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Frekuensi relatif = 28/50 = 0,56."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam suatu percobaan, sebuah dadu dilempar 50 kali dan angka genap muncul 28 kali. Frekuensi relatif muncul angka genap adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0,48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "0,56"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "0,60"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "0,72"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Frekuensi relatif = 28/50 = 0,56."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "28/50=0,56.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-07",
+      "familyId": "17878320-9fbb-571a-b5af-a13824cdd916",
+      "sourceVersionId": "2caff94d-eeb8-566c-81f6-50649926e7bb",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan komponen-komponen bangun datar penyusun jaring-jaring berikut:\n1. Dua buah bangun datar berbentuk lingkaran yang kongruen.\n2. Satu buah bangun datar berbentuk persegi panjang.\nJaring-jaring tersebut merupakan jaring-jaring dari bangun ruang..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kerucut"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Tabung"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Limas segi empat"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Prisma segitiga"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Jaring-jaring bangun ruang yang memiliki komponen:\n2 buah lingkaran kongruen, dan\n1 buah persegi panjang\nadalah jaring-jaring tabung.\nAlasannya:\n2 lingkaran kongruen tersebut merupakan alas dan tutup tabung.\nPersegi panjang tersebut merupakan selimut tabung. Jika tabung dibuka, selimutnya berbentuk persegi panjang yang panjangnya sama dengan keliling lingkaran alas dan lebarnya sama dengan tinggi tabung.\nCiri-ciri ini tidak dimiliki oleh:\nKerucut, karena hanya memiliki 1 lingkaran dan 1 selimut berbentuk juring lingkaran.\nLimas segi empat, karena tersusun dari bangun segi empat dan segitiga.\nPrisma segitiga, karena tersusun dari segitiga dan persegi panjang, tanpa lingkaran."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan komponen-komponen bangun datar penyusun jaring-jaring berikut:\n1. Dua buah bangun datar berbentuk lingkaran yang kongruen.\n2. Satu buah bangun datar berbentuk persegi panjang.\nJaring-jaring tersebut merupakan jaring-jaring dari bangun ruang..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kerucut"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Tabung"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Limas segi empat"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Prisma segitiga"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Jaring-jaring bangun ruang yang memiliki komponen:\n2 buah lingkaran kongruen, dan\n1 buah persegi panjang\nadalah jaring-jaring tabung.\nAlasannya:\n2 lingkaran kongruen tersebut merupakan alas dan tutup tabung.\nPersegi panjang tersebut merupakan selimut tabung. Jika tabung dibuka, selimutnya berbentuk persegi panjang yang panjangnya sama dengan keliling lingkaran alas dan lebarnya sama dengan tinggi tabung.\nCiri-ciri ini tidak dimiliki oleh:\nKerucut, karena hanya memiliki 1 lingkaran dan 1 selimut berbentuk juring lingkaran.\nLimas segi empat, karena tersusun dari bangun segi empat dan segitiga.\nPrisma segitiga, karena tersusun dari segitiga dan persegi panjang, tanpa lingkaran."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Dua lingkaran kongruen menjadi alas/tutup dan persegi panjang menjadi selimut tabung. Pada jaring-jaring yang dimaksud, dimensi sambungannya sesuai.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-08",
+      "familyId": "fb07e088-63a1-5244-b808-7c4e79509c25",
+      "sourceVersionId": "2d53b81b-33cd-5149-be17-5807c61ad9d9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah prisma segitiga memiliki alas berbentuk segitiga dengan panjang alas 8 cm dan tinggi 6 cm. Jika tinggi prisma tersebut adalah 12 cm, maka volume prisma tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "144 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "216 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "288 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "576 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas alas = 8 × 6/2 = 24 cm². Volume prisma = 24 × 12 = 288 cm³."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah prisma segitiga memiliki alas berbentuk segitiga dengan panjang alas 8 cm dan tinggi 6 cm. Jika tinggi prisma tersebut adalah 12 cm, maka volume prisma tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "144 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "216 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "288 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "576 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas alas = 8 × 6/2 = 24 cm². Volume prisma = 24 × 12 = 288 cm³."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Luasalas=(1/2)×8×6=24 cm²; volume24×12=288 cm³.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-09",
+      "familyId": "8d9b2e00-cfe2-5f5f-987e-e6a371ff31e8",
+      "sourceVersionId": "2e1f286f-d195-5dac-94f8-ea16ca7e74f6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua buah sampel jalur kawat penelitian laboratorium memiliki panjang sqrt(15) cm dan sqrt(16)cm. Seorang siswa menganalisis rentang nilai aproksimasi kedua kawat tersebut pada mistar yang memiliki ketelitian persepuluhan centimeter (0,1 cm).\nHasil analisis aproksimasi panjang kedua kawat berturut-turut ke persepuluhan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3,9cm dan 4,0 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3,8cm dan 4,0 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3,9cm dan 4,1 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3,5cm dan 4,0 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk sqrt(15):\n3,8^(2)=14,44\n3,9^(2)=15,21 (sangat dekat ke 15)\nJadi, sqrt(15)≈3,872...→ dibulatkan ke persepuluhan terdekat menjadi 3,9cm.\nUntuk sqrt(16):\nsqrt(16)=4,0 cm (merupakan bilangan rasional/bulat).\nMaka, pasangan aproksimasi yang benar adalah 3,9cm dan 4,0 cm.\nKesalahan Umum yang Diantisipasi:\nSiswa salah mengira sqrt(15)≈3,5 (titik tengah antara 3 dan 4) tanpa menguji nilai kuadrat desimalnya."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua buah sampel jalur kawat penelitian laboratorium memiliki panjang sqrt(15) cm dan sqrt(16)cm. Seorang siswa menganalisis rentang nilai aproksimasi kedua kawat tersebut pada mistar yang memiliki ketelitian persepuluhan centimeter (0,1 cm).\nHasil analisis aproksimasi panjang kedua kawat berturut-turut ke persepuluhan terdekat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3,9cm dan 4,0 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3,8cm dan 4,0 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3,9cm dan 4,1 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3,5cm dan 4,0 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk sqrt(15):\n3,8^(2)=14,44\n3,9^(2)=15,21 (sangat dekat ke 15)\nJadi, sqrt(15)≈3,872...→ dibulatkan ke persepuluhan terdekat menjadi 3,9cm.\nUntuk sqrt(16):\nsqrt(16)=4,0 cm (merupakan bilangan rasional/bulat).\nMaka, pasangan aproksimasi yang benar adalah 3,9cm dan 4,0 cm.\nKesalahan Umum yang Diantisipasi:\nSiswa salah mengira sqrt(15)≈3,5 (titik tengah antara 3 dan 4) tanpa menguji nilai kuadrat desimalnya."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√15≈3,872983… dibulatkan satu desimal menjadi3,9; √16=4 menjadi4,0.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-10",
+      "familyId": "8ca1d36b-9058-5e95-952b-b0f4ebbd4324",
+      "sourceVersionId": "2e5a00d2-7447-565a-8a24-165a1db6189e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua buah papan reklame kegiatan pameran seni diukur panjang diagonalnya:\nPapan X: diagonal =sqrt(38)meter\nPapan Y: diagonal =sqrt(83)meter\nSeorang teknisi membulatkan panjang diagonal kedua papan ke satuan terdekat untuk menganalisis selisih kebutuhan bingkai. Nilai estimasi selisih panjang diagonal Papan Y dan Papan X adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "4m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis dan membulatkan masing-masing komponen ke satuan terdekat:\nUntuk Papan X (sqrt(38)): sqrt(36)=6 dan sqrt(49)=7. Karena sqrt(38)≈6,164..., maka digit persepuluhan 1<5, sehingga dibulatkan ke satuan terdekat menjadi 6m.\nUntuk Papan Y (sqrt(83)): sqrt(81)=9 dan sqrt(100)=10. Karena sqrt(83)≈9,110..., maka digit persepuluhan 1<5, sehingga dibulatkan ke satuan terdekat menjadi 9m.\nMenganalisis estimasi selisih:\nSelisih=9-6=3m\nKesalahan Umum yang Diantisipasi:\nSiswa mengurangkan nilai di dalam akar terlebih dahulu (sqrt(83)-sqrt(38)=sqrt(45)≈6,7→7m) secara tidak sah, yang menghasilkan jawaban yang salah (7m)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua buah papan reklame kegiatan pameran seni diukur panjang diagonalnya:\nPapan X: diagonal =sqrt(38)meter\nPapan Y: diagonal =sqrt(83)meter\nSeorang teknisi membulatkan panjang diagonal kedua papan ke satuan terdekat untuk menganalisis selisih kebutuhan bingkai. Nilai estimasi selisih panjang diagonal Papan Y dan Papan X adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "4m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis dan membulatkan masing-masing komponen ke satuan terdekat:\nUntuk Papan X (sqrt(38)): sqrt(36)=6 dan sqrt(49)=7. Karena sqrt(38)≈6,164..., maka digit persepuluhan 1<5, sehingga dibulatkan ke satuan terdekat menjadi 6m.\nUntuk Papan Y (sqrt(83)): sqrt(81)=9 dan sqrt(100)=10. Karena sqrt(83)≈9,110..., maka digit persepuluhan 1<5, sehingga dibulatkan ke satuan terdekat menjadi 9m.\nMenganalisis estimasi selisih:\nSelisih=9-6=3m\nKesalahan Umum yang Diantisipasi:\nSiswa mengurangkan nilai di dalam akar terlebih dahulu (sqrt(83)-sqrt(38)=sqrt(45)≈6,7→7m) secara tidak sah, yang menghasilkan jawaban yang salah (7m)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "√38≈6,1644→6 dan√83≈9,1104→9; estimasi selisih9−6=3m.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-11",
+      "familyId": "d6d52c6a-2b26-5c0a-b618-1485c52bbfeb",
+      "sourceVersionId": "2e79ef38-d85c-5d2b-9ca5-51ef4c96894e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Jumlah bakteri dalam suatu cawan membentuk barisan geometri dengan rasio positif. Jumlah bakteri pada jam ke-2 adalah 12 dan pada jam ke-4 adalah 48. Jumlah bakteri pada jam ke-6 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "96"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "144"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "192"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "384"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "U_4 : U_2 = ar^(3) : ar = r^(2) = 48 : 12 = 4, sehingga r = 2 (rasio positif).\nU_6 = U_4 · r^(2) = 48 · 4 = 192. (Cek: a = U_2 : r = 6, U_6 = 6 · 2^(5) = 192.)"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Jumlah bakteri dalam suatu cawan membentuk barisan geometri dengan rasio positif. Jumlah bakteri pada jam ke-2 adalah 12 dan pada jam ke-4 adalah 48. Jumlah bakteri pada jam ke-6 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "96"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "144"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "192"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "384"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "U_4 : U_2 = ar^(3) : ar = r^(2) = 48 : 12 = 4, sehingga r = 2 (rasio positif).\nU_6 = U_4 · r^(2) = 48 · 4 = 192. (Cek: a = U_2 : r = 6, U_6 = 6 · 2^(5) = 192.)"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "U4/U2=r²=48/12=4. Rasio positif r=2; U6=U4×r²=48×4=192.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-12",
+      "familyId": "03148c9c-6041-5364-86ed-7c423df33b3b",
+      "sourceVersionId": "2ed06f06-e8c4-5370-8ba7-f31209d934b1",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Ali: ∠A3 dan ∠B2 dalam berseberangan. Budi: ∠A3 dan ∠B1 sehadap. Cici: ∠A1 dan ∠B4 luar berseberangan. Pernyataan yang benar adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hanya Ali"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hanya Budi dan Cici"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Ali dan Cici"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Ali dan Budi"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Ali benar: ∠A3 (dalam, kiri) dan ∠B2 (dalam, kanan).\nBudi salah: ∠A3 dan ∠B1 adalah sudut dalam sepihak.\nCici benar: ∠A1 dan ∠B4 sama-sama di luar dan berseberangan."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Ali: ∠A3 dan ∠B2 dalam berseberangan. Budi: ∠A3 dan ∠B1 sehadap. Cici: ∠A1 dan ∠B4 luar berseberangan. Pernyataan yang benar adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hanya Ali"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hanya Budi dan Cici"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Ali dan Cici"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Ali dan Budi"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Ali benar: ∠A3 (dalam, kiri) dan ∠B2 (dalam, kanan).\nBudi salah: ∠A3 dan ∠B1 adalah sudut dalam sepihak.\nCici benar: ∠A1 dan ∠B4 sama-sama di luar dan berseberangan."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "A3 danB2 dalam berseberangan; A3 danB1 dalam sepihak, bukan sehadap; A1 danB4 luar berseberangan. Ali danCici benar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-13",
+      "familyId": "6df89d79-e2cd-5a73-b9e8-a79779f3d271",
+      "sourceVersionId": "2fa3e6e9-8e3a-5ce9-9951-d92406aba6ac",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Volume sebuah bola adalah 288π cm³. Jika jari-jari bola tersebut diperbesar 2 kali, maka analisis volume bola yang baru adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "576π cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1.152π cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1.728π cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2.304π cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Volume sebanding r³. Faktor radius 2 menghasilkan volume baru 2.304π cm³."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Volume sebuah bola adalah 288π cm³. Jika jari-jari bola tersebut diperbesar 2 kali, maka analisis volume bola yang baru adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "576π cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "1.152π cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "1.728π cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2.304π cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Volume sebanding r³. Faktor radius 2 menghasilkan volume baru 2.304π cm³."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Volume berskala kubik:2³×288π=2.304π cm³.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-14",
+      "familyId": "416b1eaa-7947-51fa-9574-ea00321eb0c5",
+      "sourceVersionId": "311b5880-475a-539b-a0b4-d267f7da4c6f",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Dua armada bus sekolah menempuh rute yang dinyatakan oleh sistem persamaan linear dua variabel berikut:\nGaris 1: 2x-y=4\nGaris 2: 4x-2y=k\nAgar kedua bus menempuh rute yang sejajar dan tidak pernah saling berpotongan (sistem tidak memiliki penyelesaian), nilai konstanta k yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "k=8"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "k=4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "k≠8"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "k≠4"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSyarat Sistem Tidak Memiliki Penyelesaian (Garis Sejajar): Dua garis dengan persamaan a_1x+b_1y=c_1 dan a_2x+b_2y=c_2 dikatakan sejajar dan tidak pernah berpotongan jika memenuhi syarat: (a_1)/(a_2)=(b_1)/(b_2)≠(c_1)/(c_2)\nLangkah Perhitungan: Substitusikan koefisien dari kedua persamaan garis: (2)/(4)=(-1)/(-2)≠(4)/(k)\n(1)/(2)≠(4)/(k)\nk≠8\nAnalisis Nilai k:\nKasus 1 (k=8): Diperoleh $\\frac{1}{2} = \\frac{4}{8} \\implies \\frac{a_1}{a_2} = \\frac{b_1}{b_2} = \\frac{c_1}{c_2}$. Kedua garis berhimpit, sehingga memiliki tak hingga banyak penyelesaian (rute bus identik sepenuhnya).\nKasus 2 (k≠8): Diperoleh $\\frac{1}{2} \\neq \\frac{4}{k} \\implies \\frac{a_1}{a_2} = \\frac{b_1}{b_2} \\neq \\frac{c_1}{c_2}$. Kedua garis sejajar dan tidak berpotongan, sehingga tidak memiliki penyelesaian (bus berjalan sejajar tanpa pernah berpapasan).\nKesimpulan:\nAgar kedua bus tidak pernah berpotongan, nilai k harus memenuhi k≠8. Jawaban yang tepat adalah C."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui sistem persamaan garis 2 x−y=4 dan 4 x−2 y=k. Syarat lengkap yang mencakup seluruh nilai k agar kedua garis sejajar dan tidak berpotongan (sistem tidak memiliki penyelesaian) adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "k=8"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "k=4"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "k≠8"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "k≠4"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Kalikan persamaan pertama dengan 2 sehingga menjadi 4 x−2 y=8. Persamaan kedua memiliki ruas kiri sama, yaitu 4 x−2 y=k. Jika k=8, kedua garis berhimpit dan ada tak hingga banyak penyelesaian. Jika k≠8, ruas kiri yang sama dituntut bernilai dua konstanta berbeda, sehingga tidak ada penyelesaian. Jadi syarat lengkap adalah k≠8, jawaban C. Nilai k=4 hanyalah satu contoh anggota himpunan tersebut. Cara ini juga mencakup k=0 tanpa pembagian dengan nol."
+        }
+      },
+      "correctionReason": "Jawaban tidak tunggal pada redaksi nilai k yang tepat: k=4 (opsiB) dan k≠8 (opsiC) sama-sama memenuhi. Minta syarat lengkap/seluruh nilai k agar C unik. Ganti pembahasan pembagian4/k dengan perbandingan langsung agar kasus k=0 tidak dikecualikan tanpa alasan.",
+      "independentSolution": "Kalikan garis pertama dengan2:4x−2y=8. Maka sistem tidak memiliki solusi persis ketika k≠8. k=4 juga memenuhi syarat sejajar, sehingga opsiB danC sama-sama benar sebagai jawaban nilai k pada redaksi sumber. OpsiC adalah syarat lengkap yang dimaksud. Rumus4/k dalam sumber juga tidak berlaku untuk k=0, padahal0 termasuk nilai yang sah.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-15",
+      "familyId": "001435e8-a1ab-585a-b97c-f85508b724a4",
+      "sourceVersionId": "313ba29f-8a63-5521-8081-a593012283db",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Seorang petugas museum SMP mencatat jumlah pengunjung harian museum selama satu bulan sebanyak 37.685 orang. Untuk membuat laporan ringkas mingguan ke dinas pendidikan, petugas tersebut diminta melakukan pembulatan ke ribuan terdekat.\nHasil pembulatan jumlah pengunjung museum tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "37.000 orang"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "38.000 orang"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "37.700 orang"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "40.000 orang"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk membulatkan bilangan ke ribuan terdekat, perhatikan digit pada tempat ratusan (satu digit di kanan tempat ribuan):\nPada bilangan 37.685, digit ribuan adalah 7 dan digit ratusan adalah 6.\nKarena digit ratusan 6≥5, maka nilai ribuan dibulatkan ke atas (7+1=8).\nSehingga 37.685 dibulatkan ke ribuan terdekat menjadi 38.000 orang.\nKesalahan Umum yang Diantisipasi:\nSiswa melihat angka 3 di tempat puluhan ribu atau melihat digit ratusan tanpa aturan pembulatan ke atas, sehingga memilih 37.000 (dibulatkan ke bawah)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang petugas museum SMP mencatat jumlah pengunjung harian museum selama satu bulan sebanyak 37.685 orang. Untuk membuat laporan ringkas mingguan ke dinas pendidikan, petugas tersebut diminta melakukan pembulatan ke ribuan terdekat.\nHasil pembulatan jumlah pengunjung museum tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "37.000 orang"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "38.000 orang"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "37.700 orang"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "40.000 orang"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUntuk membulatkan bilangan ke ribuan terdekat, perhatikan digit pada tempat ratusan (satu digit di kanan tempat ribuan):\nPada bilangan 37.685, digit ribuan adalah 7 dan digit ratusan adalah 6.\nKarena digit ratusan 6≥5, maka nilai ribuan dibulatkan ke atas (7+1=8).\nSehingga 37.685 dibulatkan ke ribuan terdekat menjadi 38.000 orang.\nKesalahan Umum yang Diantisipasi:\nSiswa melihat angka 3 di tempat puluhan ribu atau melihat digit ratusan tanpa aturan pembulatan ke atas, sehingga memilih 37.000 (dibulatkan ke bawah)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "37.685 dibulatkan ke ribuan terdekat menjadi38.000 karena digit ratusan6.",
+      "optionalSuggestionNotApplied": "Saran redaksi: data dikatakan selama satu bulan, tetapi laporan disebut mingguan. Gunakan laporan ringkas bulan tersebut agar periode cerita konsisten; hasil pembulatan tetap38.000."
+    },
+    {
+      "reviewId": "B4-16",
+      "familyId": "05788eaa-45e4-5b88-b118-e439bdb39741",
+      "sourceVersionId": "317bec43-3ee6-55b3-abc6-4e93d116fd88",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa ingin mengetahui jenis olahraga yang paling disukai siswa kelas IX. Pertanyaan yang paling tepat untuk memperoleh data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Apakah olahraga penting bagi kesehatan?"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Jenis olahraga apa yang paling kamu sukai?"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mengapa olahraga harus dilakukan?"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Apakah kamu suka berolahraga setiap hari?"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Tujuan pengumpulan data adalah mengetahui jenis olahraga yang paling disukai. Oleh karena itu, pertanyaan yang paling sesuai adalah menanyakan secara langsung jenis olahraga yang disukai."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa ingin mengetahui jenis olahraga yang paling disukai siswa kelas IX. Pertanyaan yang paling tepat untuk memperoleh data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Apakah olahraga penting bagi kesehatan?"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Jenis olahraga apa yang paling kamu sukai?"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Mengapa olahraga harus dilakukan?"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Apakah kamu suka berolahraga setiap hari?"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan : Tujuan pengumpulan data adalah mengetahui jenis olahraga yang paling disukai. Oleh karena itu, pertanyaan yang paling sesuai adalah menanyakan secara langsung jenis olahraga yang disukai."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Pertanyaan harus memperoleh jenis olahraga favorit, bukan pendapat tentang manfaat/frekuensi olahraga.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-17",
+      "familyId": "1b4c1bcb-a502-521c-9836-d7984c9a8088",
+      "sourceVersionId": "32c2d7ca-a6f5-50f6-9a2e-f4fc53f2de44",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Hasil survei terhadap 200 siswa mengenai transportasi ke sekolah ditampilkan sebagai berikut.\nTransportasi | Persentase\nSepeda | 20%\nBus | 30%\nMotor | 40%\nJalan kaki | 10%\nBanyak siswa yang menggunakan motor adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "60 siswa"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "70 siswa"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80 siswa"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "90 siswa"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan :\n40% × 200 = 80 siswa."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Hasil survei terhadap 200 siswa mengenai transportasi ke sekolah ditampilkan sebagai berikut.\nTransportasi | Persentase\nSepeda | 20%\nBus | 30%\nMotor | 40%\nJalan kaki | 10%\nBanyak siswa yang menggunakan motor adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "60 siswa"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "70 siswa"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "80 siswa"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "90 siswa"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan :\n40% × 200 = 80 siswa."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "40%×200=80 siswa.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-18",
+      "familyId": "153057dc-2126-568b-97ad-2085687ddaaf",
+      "sourceVersionId": "341e4f1a-83f0-536c-9258-c2e3e112231e",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Dalam 200 kali pengambilan dengan pengembalian dari sebuah kantong, bola merah terambil 72 kali. Seorang siswa menyimpulkan bahwa peluang teoretis bola merah adalah 0,36. Pernyataan yang paling tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kesimpulan pasti benar karena percobaan dilakukan 200 kali."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kesimpulan pasti salah karena frekuensi relatif tidak berguna."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Nilai 0,36 adalah frekuensi relatif hasil percobaan, tetapi belum tentu sama dengan peluang teoretis."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang teoretis bola merah selalu 0,5."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Peluang teoretis bola merah adalah 72."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 72 ÷ 200 = 0,36. Peluang teoretis memerlukan informasi mengenai komposisi bola dalam kantong."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam 200 kali pengambilan dengan pengembalian dari sebuah kantong, bola merah terambil 72 kali. Seorang siswa menyimpulkan bahwa peluang teoretis bola merah adalah 0,36. Pernyataan yang paling tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kesimpulan pasti benar karena percobaan dilakukan 200 kali."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kesimpulan pasti salah karena frekuensi relatif tidak berguna."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Nilai 0,36 adalah frekuensi relatif hasil percobaan, tetapi belum tentu sama dengan peluang teoretis."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Peluang teoretis bola merah selalu 0,5."
+              }
+            },
+            {
+              "id": "E",
+              "content": {
+                "text": "Peluang teoretis bola merah adalah 72."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan: Frekuensi relatif = 72 ÷ 200 = 0,36. Peluang teoretis memerlukan informasi mengenai komposisi bola dalam kantong."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "72/200=0,36 frekuensi relatif. Tanpa informasi komposisi/model pengambilan tidak bisa memastikan peluang teoretis tepat0,36.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-19",
+      "familyId": "3b3e92db-a458-5d34-9037-ce2d13b7c9c0",
+      "sourceVersionId": "353ade98-a977-52fe-b16b-1b5ed04e930c",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Pada segitiga ABC siku-siku di A, titik D terletak pada BC sehingga AD tegak lurus BC. Jika AB = 15 cm dan AC = 20 cm, panjang BD adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "7,5 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "9 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "16 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "BC = √(15^(2) + 20^(2)) = √625 = 25 cm.\nSegitiga ABD dan segitiga CBA sebangun (keduanya siku-siku dan memiliki ∠B yang sama), sehingga BD/AB = AB/BC.\nBD = AB^(2) / BC = 225 / 25 = 9 cm."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pada segitiga ABC siku-siku di A, titik D terletak pada BC sehingga AD tegak lurus BC. Jika AB = 15 cm dan AC = 20 cm, panjang BD adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "7,5 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "9 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "16 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "BC = √(15^(2) + 20^(2)) = √625 = 25 cm.\nSegitiga ABD dan segitiga CBA sebangun (keduanya siku-siku dan memiliki ∠B yang sama), sehingga BD/AB = AB/BC.\nBD = AB^(2) / BC = 225 / 25 = 9 cm."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "BC=√(15²+20²)=25. Kesebangunan ABD dengan CBA memberi BD/AB=AB/BC; BD=225/25=9cm.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-20",
+      "familyId": "317f1f99-aa12-59bf-94c4-350b9b84be83",
+      "sourceVersionId": "36448da7-6d07-5eb6-b86a-2b3290ee53fd",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Sebuah taman kota berbentuk lingkaran dengan diameter 28 m. Di sekeliling luar taman tersebut akan dibuat jalan setapak dengan lebar 3,5 m. Jika biaya pembuatan jalan adalah Rp 100.000,00 per meter persegi, evaluasi total biaya yang dibutuhkan untuk membuat jalan setapak tersebut! (Gunakan π = $\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp 12.320.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp 61.600.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp 96.250.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp 34.650.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nJari-jari taman (dalam) = 14 m. Luas taman = $\\frac{22}{7}$ × 14² = 616 m².\nJari-jari taman + jalan (luar) = 14 + 3,5 = 17,5 m.\nLuas total = $\\frac{22}{7}$ × 17,5² = 962,5 m².\nLuas jalan setapak = Luas total - Luas taman = 962,5 - 616 = 346,5 m².\nTotal biaya = 346,5 × Rp 100.000,00 = Rp 34.650.000,00.\nJadi, biaya yang dibutuhkan adalah Rp 34.650.000,00."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah taman kota berbentuk lingkaran dengan diameter 28 m. Di sekeliling luar taman tersebut akan dibuat jalan setapak dengan lebar 3,5 m. Jika biaya pembuatan jalan adalah Rp 100.000,00 per meter persegi, evaluasi total biaya yang dibutuhkan untuk membuat jalan setapak tersebut! (Gunakan π = $\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp 12.320.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp 61.600.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp 96.250.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp 34.650.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nJari-jari taman (dalam) = 14 m. Luas taman = $\\frac{22}{7}$ × 14² = 616 m².\nJari-jari taman + jalan (luar) = 14 + 3,5 = 17,5 m.\nLuas total = $\\frac{22}{7}$ × 17,5² = 962,5 m².\nLuas jalan setapak = Luas total - Luas taman = 962,5 - 616 = 346,5 m².\nTotal biaya = 346,5 × Rp 100.000,00 = Rp 34.650.000,00.\nJadi, biaya yang dibutuhkan adalah Rp 34.650.000,00."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Radiusdalam14m; radiusluar17,5m. Luasjalan=(22/7)(17,5²−14²)=346,5m². Biaya346,5×100.000=Rp34.650.000.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-21",
+      "familyId": "ef31650b-dc9c-5041-8e6d-5cd9e0404d89",
+      "sourceVersionId": "364d264f-7cca-59f9-ac64-6e291664420e",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Taman tanaman obat di halaman sekolah berbentuk persegi panjang dengan luas (2x^2+7x-15)m^2. Berdasarkan hasil pengukuran tim lingkungan hidup, ukuran panjang taman tersebut adalah (2x-3)m. Bentuk aljabar yang menyatakan keliling taman sekolah tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3x+2m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "6x+2m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6x+4m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6x+8m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nFaktorkan bentuk kuadrat luas taman untuk menentukan ukuran lebar (l):\nLuas = p × l ⇒ 2x² + 7x − 15 = (2x − 3)(x + 5)\nMaka ukuran lebar taman adalah l=(x+5)m.\nHitung keliling persegi panjang (K):\nK=2(p+l)\nK=2((2x-3)+(x+5))\nK=2(3x+2)=6x+4m"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Taman tanaman obat di halaman sekolah berbentuk persegi panjang dengan luas (2x^2+7x-15)m^2. Berdasarkan hasil pengukuran tim lingkungan hidup, ukuran panjang taman tersebut adalah (2x-3)m. Bentuk aljabar yang menyatakan keliling taman sekolah tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3x+2m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "6x+2m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "6x+4m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "6x+8m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nFaktorkan bentuk kuadrat luas taman untuk menentukan ukuran lebar (l):\nLuas = p × l ⇒ 2x² + 7x − 15 = (2x − 3)(x + 5)\nMaka ukuran lebar taman adalah l=(x+5)m.\nHitung keliling persegi panjang (K):\nK=2(p+l)\nK=2((2x-3)+(x+5))\nK=2(3x+2)=6x+4m"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2x²+7x−15=(2x−3)(x+5), lebarx+5. K=2[(2x−3)+(x+5)]=(6x+4)m untuk x>1,5.",
+      "optionalSuggestionNotApplied": "Saran presisi: nyatakan x>1,5 dan tuliskan opsi dalam bentuk (6x+4) m, dengan tanda kurung untuk seluruh ekspresi. Faktor dan kunciC benar menurut konteks yang dimaksud."
+    },
+    {
+      "reviewId": "B4-22",
+      "familyId": "8eb99846-3d0a-5778-bbe0-177f4ef92eb9",
+      "sourceVersionId": "36865d4b-1736-5789-8ed6-e4459497fa0b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang pembina pramuka mengecek kewajaran anggaran belanja untuk 28 paket pasak tenda seharga Rp14.850,00 per paket. Pembina tersebut ingin menyusun estimasi batas atas (upper bound) anggaran yang aman agar dana tidak berisiko kurang, dengan ketentuan kedua komponen (banyak paket dan harga per paket) wajib dibulatkan ke atas masing-masing ke puluhan terdekat dan ke ribuan terdekat.\nModel matematika estimasi yang tepat sesuai ketentuan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20×10.000=200.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "25×14.000=350.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "30×15.000=450.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "30×14.000=420.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung total biaya riil sebagai bahan perbandingan:\nTotal Riil=28×Rp14.850,00=Rp415.800,00\nLakukan pembulatan ke atas (ceiling) pada masing-masing komponen sesuai instruksi stem:\nBanyak paket (28): Dibulatkan ke atas ke puluhan terdekat menjadi 30 paket.\nHarga per paket (Rp14.850,00): Dibulatkan ke atas ke ribuan terdekat menjadi Rp15.000,00.\nSusun model matematika estimasi batas atas yang aman:\nEstimasi Batas Atas=30×Rp15.000,00=Rp450.000,00\nAnalisis opsi pilihan jawaban:\nOpsi A (20×10.000=200.000): Salah, membulatkan kedua komponen ke bawah secara ekstrem sehingga jauh di bawah anggaran riil (berisiko kekurangan dana).\nOpsi B (25×14.000=350.000): Salah, membulatkan kedua komponen ke bawah sehingga nilainya di bawah total riil (Rp350.000<Rp415.800).\nOpsi C (30×15.000=450.000 - BENAR): Tepat dan konsisten mengikuti instruksi pembulatan ke atas pada kedua komponen, menghasilkan batas atas anggaran yang aman (Rp450.000>Rp415.800).\nOpsi D (30×14.000=420.000): Salah, membulatkan harga per paket ke bawah (Rp14.000,00), sehingga melanggar syarat pembulatan ke atas pada kedua komponen.\nKesalahan umum yang diantisipasi: Siswa sering keliru membulatkan salah satu atau kedua komponen ke bawah (seperti pada Opsi B atau D) tanpa menyadari bahwa pembulatan ke bawah pada perencanaan anggaran berisiko menyebabkan kekurangan dana (under-budget)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pembina pramuka mengecek kewajaran anggaran belanja untuk 28 paket pasak tenda seharga Rp14.850,00 per paket. Pembina tersebut ingin menyusun estimasi batas atas (upper bound) anggaran yang aman agar dana tidak berisiko kurang, dengan ketentuan kedua komponen (banyak paket dan harga per paket) wajib dibulatkan ke atas masing-masing ke puluhan terdekat dan ke ribuan terdekat.\nModel matematika estimasi yang tepat sesuai ketentuan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20×10.000=200.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "25×14.000=350.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "30×15.000=450.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "30×14.000=420.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung total biaya riil sebagai bahan perbandingan:\nTotal Riil=28×Rp14.850,00=Rp415.800,00\nLakukan pembulatan ke atas (ceiling) pada masing-masing komponen sesuai instruksi stem:\nBanyak paket (28): Dibulatkan ke atas ke puluhan terdekat menjadi 30 paket.\nHarga per paket (Rp14.850,00): Dibulatkan ke atas ke ribuan terdekat menjadi Rp15.000,00.\nSusun model matematika estimasi batas atas yang aman:\nEstimasi Batas Atas=30×Rp15.000,00=Rp450.000,00\nAnalisis opsi pilihan jawaban:\nOpsi A (20×10.000=200.000): Salah, membulatkan kedua komponen ke bawah secara ekstrem sehingga jauh di bawah anggaran riil (berisiko kekurangan dana).\nOpsi B (25×14.000=350.000): Salah, membulatkan kedua komponen ke bawah sehingga nilainya di bawah total riil (Rp350.000<Rp415.800).\nOpsi C (30×15.000=450.000 - BENAR): Tepat dan konsisten mengikuti instruksi pembulatan ke atas pada kedua komponen, menghasilkan batas atas anggaran yang aman (Rp450.000>Rp415.800).\nOpsi D (30×14.000=420.000): Salah, membulatkan harga per paket ke bawah (Rp14.000,00), sehingga melanggar syarat pembulatan ke atas pada kedua komponen.\nKesalahan umum yang diantisipasi: Siswa sering keliru membulatkan salah satu atau kedua komponen ke bawah (seperti pada Opsi B atau D) tanpa menyadari bahwa pembulatan ke bawah pada perencanaan anggaran berisiko menyebabkan kekurangan dana (under-budget)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Pembulatan keatas ke puluhan:28→30; keribuan:14.850→15.000; model30×15.000=450.000. Biayariil415.800. OpsiD420.000 memang cukup pada angka ini, tetapi gagal syarat kedua komponen dibulatkan keatas.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-23",
+      "familyId": "1b1e9e2a-596c-55e8-9bd8-7e9553d70c0b",
+      "sourceVersionId": "36fb7282-1344-51d2-89d8-f3d547d54e12",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah panitia kegiatan pentas seni sekolah menghitung total pengeluaran pembagian konsumsi untuk panitia dan pengisi acara. Pembelian dilakukan 2 kali pada hari yang sama.\nPembelian 1: 15 kotak nasi uduk seharga Rp18.000 per kotak dan 15 botol air mineral seharga Rp4.000 per botol.\nPanitia menghitung total biaya pembelian 1 dengan rumus: 15×(18.000+4.000).\nSifat operasi hitung bilangan real yang diterapkan oleh panitia dalam perhitungan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Sifat Komutatif"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Sifat Asosiatif"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Sifat Distributif"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Sifat Tertutup"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nPerhitungan total biaya secara langsung: (15×18.000)+(15×4.000).\nPanitia menyederhanakan perhitungan menjadi: 15×(18.000+4.000).\nBentuk matematika a×b+a×c=a×(b+c) merupakan definisi dari Sifat Distributif perkalian terhadap penjumlahan.\nKesalahan Umum yang Diantisipasi:\nSiswa sering keliru membedakan sifat pengelompokan (asosiatif: (a×b)×c=a×(b×c)) dengan sifat penyebaran/penggabungan faktor (distributif: a(b+c)=ab+ac)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah panitia kegiatan pentas seni sekolah menghitung total pengeluaran pembagian konsumsi untuk panitia dan pengisi acara. Pembelian dilakukan 2 kali pada hari yang sama.\nPembelian 1: 15 kotak nasi uduk seharga Rp18.000 per kotak dan 15 botol air mineral seharga Rp4.000 per botol.\nPanitia menghitung total biaya pembelian 1 dengan rumus: 15×(18.000+4.000).\nSifat operasi hitung bilangan real yang diterapkan oleh panitia dalam perhitungan tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Sifat Komutatif"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Sifat Asosiatif"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Sifat Distributif"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Sifat Tertutup"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nPerhitungan total biaya secara langsung: (15×18.000)+(15×4.000).\nPanitia menyederhanakan perhitungan menjadi: 15×(18.000+4.000).\nBentuk matematika a×b+a×c=a×(b+c) merupakan definisi dari Sifat Distributif perkalian terhadap penjumlahan.\nKesalahan Umum yang Diantisipasi:\nSiswa sering keliru membedakan sifat pengelompokan (asosiatif: (a×b)×c=a×(b×c)) dengan sifat penyebaran/penggabungan faktor (distributif: a(b+c)=ab+ac)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "15×18.000+15×4.000=15(18.000+4.000) menerapkan sifat distributif. Hasil330.000 bila dihitung.",
+      "optionalSuggestionNotApplied": "Saran redaksi: hapus kalimat pembelian dilakukan2 kali karena hanya Pembelian1 yang disajikan dan ditanyakan. Sifat distributif dan kunciC tetap benar."
+    },
+    {
+      "reviewId": "B4-24",
+      "familyId": "a9e87f80-0a5a-5de0-9123-6b18ff7e5bd8",
+      "sourceVersionId": "3745a766-5c75-5f8d-a05d-488be8be883d",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah dadu dilempar sebanyak 120 kali. Angka 6 muncul sebanyak 15 kali.\nPernyataan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Frekuensi relatif lebih besar daripada peluang teoretis"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif sama dengan peluang teoretis"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif lebih kecil daripada peluang teoretis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tidak dapat dibandingkan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan : Frekuensi relatif = 15/120 = 0,125. Peluang teoretis = 1/6 ≈ 0,167. Jadi frekuensi relatif lebih kecil."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah dadu seimbang dengan enam sisi bernomor 1 sampai 6 dilempar sebanyak 120 kali. Angka 6 muncul sebanyak 15 kali. Pernyataan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Frekuensi relatif lebih besar daripada peluang teoretis"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Frekuensi relatif sama dengan peluang teoretis"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Frekuensi relatif lebih kecil daripada peluang teoretis"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tidak dapat dibandingkan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Frekuensi relatif munculnya angka 6 adalah 15/120=1/8=0,125. Karena dadu seimbang dan memiliki enam sisi, peluang teoretis angka 6 adalah 1/6≈0,1667. Jadi frekuensi relatif hasil percobaan lebih kecil daripada peluang teoretis. Jawaban C."
+        }
+      },
+      "correctionReason": "Perbandingan dengan peluang teoretis1/6 mengasumsikan dadu seimbang bersisi6. Sumber belum menyatakan model itu; nyatakan eksplisit agar kunciC dapat dibuktikan.",
+      "independentSolution": "Frekuensi relatif15/120=1/8=0,125. Untuk dadu seimbang enam sisi, peluang teoretis1/6≈0,1667 sehingga frekuensi relatif lebih kecil. Model dadu seimbang belum dinyatakan pada sumber.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-25",
+      "familyId": "758443bd-b1e6-5b14-9296-65f131620e79",
+      "sourceVersionId": "37567bf3-e667-5d18-bd52-e1b1ccfa8872",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pengelola fasilitas sekolah membandingkan ukuran keliling dua area di lingkungan sekolah:\nArea Kebun TOGA (Persegi): Panjang sisi s=(3x-1)m\nArea Lapangan Olahraga (Persegi Panjang): Panjang p=(4x+1)m dan lebar l=(2x-3)m\nBerdasarkan analisis kesetaraan aljabar keliling kedua area tersebut untuk nilai x>1,5, kesimpulan yang BENAR adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kebun TOGA dan Lapangan Olahraga memiliki keliling yang selalu sama (ekuivalen) yaitu (12x-4)m untuk setiap nilai x"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kebun TOGA selalu memiliki keliling yang lebih panjang dari Lapangan Olahraga"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Lapangan Olahraga memiliki keliling yang lebih panjang sebesar 4meter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Keliling kedua area hanya sama jika nilai x=0"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nKeliling Kebun TOGA (K_1):\nK_1=4s=4(3x-1)=12x-4m\nKeliling Lapangan Olahraga (K_2):\nK_2=2(p+l)=2((4x+1)+(2x-3))=2(6x-2)=12x-4m\nHasil Analisis: Karena bentuk aljabar keliling K_1=12x-4 dan K_2=12x-4 identik/ekuivalen, maka kedua area tersebut selalu memiliki keliling yang sama besar untuk seluruh nilai variabel x yang memenuhi batasan domain."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pengelola fasilitas sekolah membandingkan ukuran keliling dua area di lingkungan sekolah:\nArea Kebun TOGA (Persegi): Panjang sisi s=(3x-1)m\nArea Lapangan Olahraga (Persegi Panjang): Panjang p=(4x+1)m dan lebar l=(2x-3)m\nBerdasarkan analisis kesetaraan aljabar keliling kedua area tersebut untuk nilai x>1,5, kesimpulan yang BENAR adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kebun TOGA dan Lapangan Olahraga memiliki keliling yang selalu sama (ekuivalen) yaitu (12x-4)m untuk setiap nilai x"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kebun TOGA selalu memiliki keliling yang lebih panjang dari Lapangan Olahraga"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Lapangan Olahraga memiliki keliling yang lebih panjang sebesar 4meter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Keliling kedua area hanya sama jika nilai x=0"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nKeliling Kebun TOGA (K_1):\nK_1=4s=4(3x-1)=12x-4m\nKeliling Lapangan Olahraga (K_2):\nK_2=2(p+l)=2((4x+1)+(2x-3))=2(6x-2)=12x-4m\nHasil Analisis: Karena bentuk aljabar keliling K_1=12x-4 dan K_2=12x-4 identik/ekuivalen, maka kedua area tersebut selalu memiliki keliling yang sama besar untuk seluruh nilai variabel x yang memenuhi batasan domain."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Persegi4(3x−1)=12x−4. Persegi panjang2[(4x+1)+(2x−3)]=12x−4; sama untuk semua x>1,5 yang membuat ukuran positif.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-26",
+      "familyId": "db9801c1-cbea-54a2-a5ef-5f816ae7411c",
+      "sourceVersionId": "3771f4c7-6f4b-5247-bf07-0ea380685a0f",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah mobil bak terbuka memiliki batas aman muatan. Batas beban maksimum dinyatakan oleh pertidaksamaan $30x+50≤500$, di mana $x$ adalah banyak karung beras. Seorang sopir membawa 16 karung beras dan menyatakan bahwa muatannya sudah melebihi batas aman. Evaluasi terhadap pernyataan sopir tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena beban 16 karung beras tepat sama dengan $500kg$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena untuk $x=16$, nilai $30(16)+50=530kg>500kg$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena kapasitas maksimum mobil bak tersebut adalah 18 karung beras"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena batas maksimal karung beras yang diperbolehkan adalah 12 karung"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan pertidaksamaan batas aman:\n$30x+50≤500$\n$$30x \\le 450 \\implies x \\le 15$$\nBatas maksimal karung beras yang aman adalah 15 karung.\nUji pernyataan sopir untuk $x=16$:\n$Bebantotal=30(16)+50=480+50=530kg$\nKarena $530kg>500kg$, muatan 16 karung beras memang telah melebihi batas aman. Maka, pernyataan sopir Benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah mobil bak terbuka memiliki batas aman muatan. Batas beban maksimum dinyatakan oleh pertidaksamaan $30x+50≤500$, di mana $x$ adalah banyak karung beras. Seorang sopir membawa 16 karung beras dan menyatakan bahwa muatannya sudah melebihi batas aman. Evaluasi terhadap pernyataan sopir tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena beban 16 karung beras tepat sama dengan $500kg$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Benar, karena untuk $x=16$, nilai $30(16)+50=530kg>500kg$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena kapasitas maksimum mobil bak tersebut adalah 18 karung beras"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena batas maksimal karung beras yang diperbolehkan adalah 12 karung"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan pertidaksamaan batas aman:\n$30x+50≤500$\n$$30x \\le 450 \\implies x \\le 15$$\nBatas maksimal karung beras yang aman adalah 15 karung.\nUji pernyataan sopir untuk $x=16$:\n$Bebantotal=30(16)+50=480+50=530kg$\nKarena $530kg>500kg$, muatan 16 karung beras memang telah melebihi batas aman. Maka, pernyataan sopir Benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "30x+50≤500 memberi x≤15; x=16 memberi530kg>500kg. Jadi alasanopsiB benar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-27",
+      "familyId": "216492b7-afb1-59bf-bc56-c55d9bbe4c3c",
+      "sourceVersionId": "379d50cf-50f9-5002-97f6-173b86add040",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Rina menabung selama 10 hari. Pada hari pertama ia menabung Rp2.000,00 dan setiap hari berikutnya tabungannya bertambah Rp1.000,00 dari hari sebelumnya. Rina menargetkan total tabungan Rp60.000,00. Kelebihan tabungan Rina dari target adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp3.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp5.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp6.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp65.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Barisan aritmetika dengan a=2000, b=1000, dan n=10.\nS_10=(10)/(2)(2×2000+9×1000)=5(13000)=65000.\nKelebihan dari target: 65000-60000=5000."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Rina menyetorkan uang ke tabungannya setiap hari selama 10 hari. Setoran pada hari pertama adalahRp 2.000,00 dan jumlah setoran harian bertambahRp 1.000,00 dari setoran hari sebelumnya. Rina menargetkan jumlah seluruh setoran selama 10 hari sebesarRp 60.000,00. Kelebihan jumlah setoran Rina dari target adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp3.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp5.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp6.500,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp65.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Setoran harian membentuk barisan aritmetika dengan suku pertamaRp 2.000, bedaRp 1.000, dan 10 suku. Setoran hari ke-10 adalah 2.000+9(1.000)=Rp 11.000. Jumlah seluruh setoran=10(2.000+11.000)/2=Rp 65.000. Kelebihan dari targetRp 60.000 adalahRp 5.000. Jawaban B."
+        }
+      },
+      "correctionReason": "Kata tabungannya bertambah dapat berarti saldo yang bertambah, bukan setoran harian. Hasil65.000 dan kunciB membutuhkan setoran harian yang bertambah1.000. Perjelas perbedaan setoran dan total tabungan.",
+      "independentSolution": "Jika yang meningkat adalah setoran harian, setoran2.000 sampai11.000 selama10hari berjumlah10(2.000+11.000)/2=65.000; kelebihan5.000. Jika tabungan berarti saldo yang naik1.000 perhari, saldoakhir11.000, sehingga sumber perlu memperjelas setoran versus saldo.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-28",
+      "familyId": "662af16b-e93f-5f9a-bd32-4c52facb8580",
+      "sourceVersionId": "37ce4cbb-8257-5484-bf6c-905f4728e4fc",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah kubus memiliki panjang rusuk 2 cm. Jika panjang rusuk kubus tersebut diperbesar menjadi 6 cm, maka analisis yang tepat mengenai perubahan luas permukaan kubus (dilihat dari jaring-jaringnya) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Luas permukaan menjadi 3 kali lipat"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Luas permukaan menjadi 6 kali lipat"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Luas permukaan menjadi 9 kali lipat"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Luas permukaan menjadi 27 kali lipat"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas berubah sebanding kuadrat faktor ukuran linear. Faktor skala 3 menghasilkan faktor luas 3² = 9."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kubus memiliki panjang rusuk 2 cm. Jika panjang rusuk kubus tersebut diperbesar menjadi 6 cm, maka analisis yang tepat mengenai perubahan luas permukaan kubus (dilihat dari jaring-jaringnya) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Luas permukaan menjadi 3 kali lipat"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Luas permukaan menjadi 6 kali lipat"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Luas permukaan menjadi 9 kali lipat"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Luas permukaan menjadi 27 kali lipat"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Luas berubah sebanding kuadrat faktor ukuran linear. Faktor skala 3 menghasilkan faktor luas 3² = 9."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rusuk berskala6/2=3; luas permukaan berskala3²=9. Cek6×2²=24 dan6×6²=216.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-29",
+      "familyId": "4cf5de81-1220-529d-bb81-5d39fdfa3ba4",
+      "sourceVersionId": "37e132c1-1b7f-52eb-904b-f945c823845e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah bangun ruang gabungan terdiri dari tabung dan kerucut yang saling menempel. Tabung memiliki jari-jari 7 cm dan tinggi 10 cm. Kerucut memiliki jari-jari 7 cm dan tinggi 6 cm (gunakan π = 22/7). Volume total bangun gabungan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1.848 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2.156 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2.464 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3.080 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Volume tabung = 1.540 cm³; kerucut = 308 cm³. Total = 1.848 cm³."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bangun ruang gabungan terdiri dari tabung dan kerucut yang saling menempel. Tabung memiliki jari-jari 7 cm dan tinggi 10 cm. Kerucut memiliki jari-jari 7 cm dan tinggi 6 cm (gunakan π = 22/7). Volume total bangun gabungan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1.848 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2.156 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2.464 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3.080 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Volume tabung = 1.540 cm³; kerucut = 308 cm³. Total = 1.848 cm³."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Tabung=(22/7)×7²×10=1.540. Kerucut=(1/3)(22/7)×7²×6=308. Total1.848cm³ untuk bangun yang hanya saling menempel.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B4-30",
+      "familyId": "f63fddba-6a42-53e3-9764-5aeb65c5993a",
+      "sourceVersionId": "380471c5-e90e-5bf4-a0fc-00f422a85126",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah kolam berbentuk balok berukuran panjang 4 meter, lebar 3 meter, dan tinggi 2 meter. Kolam tersebut akan diisi air menggunakan pompa dengan debit 200 liter/menit. Analisis waktu yang dibutuhkan untuk mengisi kolam hingga penuh adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "100 menit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "120 menit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "150 menit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "200 menit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Volume = 24.000 liter. Waktu = 24.000/200 = 120 menit."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kolam mula-mula kosong berbentuk balok berukuran panjang 4 meter, lebar 3 meter, dan tinggi 2 meter. Kolam tersebut diisi air menggunakan pompa dengan debit konstan 200 liter/menit. Waktu yang dibutuhkan untuk mengisi kolam hingga penuh adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "100 menit"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "120 menit"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "150 menit"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "200 menit"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Kolam mula-mula kosong sehingga volume air yang harus ditambahkan sama dengan kapasitasnya:4 × 3 × 2=24 m³=24.000 liter. Dengan debit konstan 200 liter/menit, waktu=24.000/200=120 menit. Jawaban B."
+        }
+      },
+      "correctionReason": "Kapasitas kolam diketahui tetapi volume air awal tidak disebut. Jawaban120menit memerlukan kolam mula-mula kosong. Nyatakan kondisi awal itu.",
+      "independentSolution": "Volume4×3×2=24m³=24.000L; waktu24.000/200=120menit jika kolam awalnya kosong. Jika sudah ada air, lama mengisi hingga penuh lebih singkat dan tidak ditentukan oleh sumber.",
+      "optionalSuggestionNotApplied": null
+    }
+  ]
+}

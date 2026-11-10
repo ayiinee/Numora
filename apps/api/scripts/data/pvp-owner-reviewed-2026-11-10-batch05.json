@@ -1,0 +1,2680 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_BATCH05_30_REVIEW_AND_EIGHT_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved the batch-5 report, eight corrections and classifications with \"setuju\" in this chat. Four optional suggestions excluded.",
+  "scope": "Editorial correctness and classification of 6 EASY, 17 MEDIUM and 7 HARD; not empirical calibration, IRT approval or server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "items": [
+    {
+      "reviewId": "B5-01",
+      "familyId": "bcc5b597-c3d5-5fcf-a586-e52c14b1fed3",
+      "sourceVersionId": "38ba9d11-7ca6-59e0-b0ec-3ba8248cd88c",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Panitia bazar makanan sekolah memesan 120 porsi konsumsi untuk panitia dan relawan yang diperkirakan habis dalam waktu 6 hari. Setelah berlangsung selama 2 hari, panitia mendapatkan tambahan 20 porsi konsumsi baru setiap hari dari sponsor. Namun, ada 10 relawan tambahan yang mulai bergabung pada hari ke-3 sehingga konsumsi harian meningkat. Jika setiap orang mengonsumsi porsi dengan laju yang tetap sama, persediaan konsumsi tersebut akan habis pada .... Setiap orang mengonsumsi 1 porsi per hari. Pasokan sponsor mulai diterima pada awal hari ke-3 sebelum konsumsi hari tersebut."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hari ke-5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hari ke-6"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Hari ke-10"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Hari ke-8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Konsumsi awal 20 porsi/hari. Sisa akhir hari kedua 80 porsi. Konsumsi mulai hari ketiga 30 porsi/hari dengan pasokan 20 porsi/hari. Sisa bertahan 8 hari; habis akhir hari ke-10. C benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Panitia bazar makanan sekolah memesan 120 porsi konsumsi untuk panitia dan relawan yang diperkirakan habis dalam waktu 6 hari. Setelah berlangsung selama 2 hari, panitia mendapatkan tambahan 20 porsi konsumsi baru setiap hari dari sponsor. Namun, ada 10 relawan tambahan yang mulai bergabung pada hari ke-3 sehingga konsumsi harian meningkat. Jika setiap orang mengonsumsi porsi dengan laju yang tetap sama, persediaan konsumsi tersebut akan habis pada .... Setiap orang mengonsumsi 1 porsi per hari. Pasokan sponsor mulai diterima pada awal hari ke-3 sebelum konsumsi hari tersebut."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Hari ke-5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Hari ke-6"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Hari ke-10"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Hari ke-8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Konsumsi awal 20 porsi/hari. Sisa akhir hari kedua 80 porsi. Konsumsi mulai hari ketiga 30 porsi/hari dengan pasokan 20 porsi/hari. Sisa bertahan 8 hari; habis akhir hari ke-10. C benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Konsumsi awal120/6=20 porsi/hari; setelah2 hari sisa80. Sepuluh relawan menambah konsumsi menjadi30/hari; sponsor memasok20/hari mulai awalhari3. Stok akhir berkurang10/hari, sehingga nol pada akhirhari10.",
+      "optionalSuggestionNotApplied": "Saran redaksi: gunakan akhirhari ke-10 dan jelaskan sponsor tetap memasok setiap hari. Sumber sudah menyebut pasokan awalhari3 dan20/hari sehingga perhitungan kunciC dapat ditentukan."
+    },
+    {
+      "reviewId": "B5-02",
+      "familyId": "a22243f2-f788-55af-8f1c-17f35132762a",
+      "sourceVersionId": "38d742d0-49e6-5774-be25-52eabc090258",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tiga buah lokasi titik elevasi pengerukan tanah taman sekolah diukur posisinya terhadap permukaan tanah netral ($0m$):\nTitik P: $-\\frac{5}{2}m$\nTitik Q: $-\\sqrt{6}m$\nTitik R: $-2,4m$\nSeorang siswa menilai kedudukan ketiga titik tersebut pada garis bilangan:\nPenilaian I: Titik R di antara Titik P dan Titik Q.\nPenilaian II: Titik P terletak di sebelah kanan Titik Q.\nPenilaian III: Titik Q terletak di antara Titik R ($-2,4m$) dan Titik P ($-2,5m$).\nPenilaian manakah yang benar berdasarkan analisis garis bilangan?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Penilaian I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Penilaian II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Penilaian III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penilaian I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUbah nilai ke bentuk desimal:\nTitik P: $-\\frac{5}{2}=-2,50m$\nTitik Q: $-\\sqrt{6}≈-2,449m$\nTitik R: $-2,40m$\nUrutkan pada garis bilangan dari terkecil ke terbesar:\n$-2,50< -2,449< -2,40 ⇒ Titik P <Titik Q<Titik R $\nMenganalisis posisi: Titik Q ($-2,449 m$) berada di antara Titik P ($-2,50 m$) dan Titik R ($-2,40 m$). Maka, Penilaian III adalah yang paling tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tiga buah lokasi titik elevasi pengerukan tanah taman sekolah diukur posisinya terhadap permukaan tanah netral ($0m$):\nTitik P: $-\\frac{5}{2}m$\nTitik Q: $-\\sqrt{6}m$\nTitik R: $-2,4m$\nSeorang siswa menilai kedudukan ketiga titik tersebut pada garis bilangan:\nPenilaian I: Titik R di antara Titik P dan Titik Q.\nPenilaian II: Titik P terletak di sebelah kanan Titik Q.\nPenilaian III: Titik Q terletak di antara Titik R ($-2,4m$) dan Titik P ($-2,5m$).\nPenilaian manakah yang benar berdasarkan analisis garis bilangan?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Penilaian I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Penilaian II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Penilaian III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penilaian I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUbah nilai ke bentuk desimal:\nTitik P: $-\\frac{5}{2}=-2,50m$\nTitik Q: $-\\sqrt{6}≈-2,449m$\nTitik R: $-2,40m$\nUrutkan pada garis bilangan dari terkecil ke terbesar:\n$-2,50< -2,449< -2,40 ⇒ Titik P <Titik Q<Titik R $\nMenganalisis posisi: Titik Q ($-2,449 m$) berada di antara Titik P ($-2,50 m$) dan Titik R ($-2,40 m$). Maka, Penilaian III adalah yang paling tepat."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "P=−2,5; Q=−√6≈−2,44949; R=−2,4. UrutanP<Q<R, jadiQ diantaraP danR.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-03",
+      "familyId": "955f4ea6-be37-5849-96ec-bd77237fb07b",
+      "sourceVersionId": "392a66cb-b1c6-5845-a935-864b5a7e9df5",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Diketahui barisan bilangan berhingga 81, 27, 9, 3, ... Pola yang berlaku pada barisan tersebut dan suku ke-6 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Geometri dengan r=3; U_6=243"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Geometri dengan r=(1)/(3); U_6=(1)/(3)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Aritmetika dengan b=-54; U_6=-189"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Geometri dengan r=(1)/(3); U_6=1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Perbandingan suku berurutan tetap: (27)/(81)=(9)/(27)=(3)/(9)=(1)/(3), sedangkan selisihnya tidak tetap (-54, -18, -6). Jadi barisan tersebut geometri dengan r=(1)/(3).\nU_5=3×(1)/(3)=1 dan U_6=1×(1)/(3)=(1)/(3).\nOpsi dengan U_6=1 keliru karena 1 adalah suku ke-5."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui barisan bilangan berhingga 81, 27, 9, 3, ... Pola yang berlaku pada barisan tersebut dan suku ke-6 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Geometri dengan r=3; U_6=243"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Geometri dengan r=(1)/(3); U_6=(1)/(3)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Aritmetika dengan b=-54; U_6=-189"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Geometri dengan r=(1)/(3); U_6=1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Perbandingan suku berurutan tetap: (27)/(81)=(9)/(27)=(3)/(9)=(1)/(3), sedangkan selisihnya tidak tetap (-54, -18, -6). Jadi barisan tersebut geometri dengan r=(1)/(3).\nU_5=3×(1)/(3)=1 dan U_6=1×(1)/(3)=(1)/(3).\nOpsi dengan U_6=1 keliru karena 1 adalah suku ke-5."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rasio1/3. Urutan81,27,9,3,1,1/3 sehinggaU6=1/3.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-04",
+      "familyId": "b3a233be-28f3-5174-8a95-ddaeb03d0707",
+      "sourceVersionId": "3938942e-7412-5d8e-9f6f-44c9a476b2b6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pak Roni (pembina OSIS) membeli 5 pack spidol papan tulis di koperasi sekolah untuk keperluan inventaris kelas dan mendapat potongan harga tunai sebesar Rp15.000. Total uang yang harus dibayar Pak Roni setelah potongan harga adalah Rp110.000. Jika x menyatakan harga 1 pack spidol sebelum potongan harga, model matematika dan harga 1 pack spidol tersebut berturut-turut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5x−15.000=110.000; Rp25.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5x+15.000=110.000; Rp19.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5(x−15.000)=110.000; Rp37.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "x−15.000=110.000; Rp125.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan harga 1 pack spidol sebelum potongan = x.\nTotal pembelian 5 pack spidol dengan potongan Rp15.000,00 sama dengan Rp110.000,00.\nModel Matematika: 5x−15.000=110.000\nMenyelesaikan PLSV menggunakan operasi invers: 5x=110.000+15.000 5x = 125.000 ⇒ x = 125.000 / 5 = 25.000\nJadi, model matematika adalah 5x−15.000=110.000 dan harga 1 pack spidol adalah Rp25.000,00.\nKesalahan Umum yang Diantisipasi:\nSiswa sering keliru memasukkan potongan harga ke dalam kurung pengali 5(x−15.000)=110.000, menganggap potongan harga berlaku untuk setiap pack spidol, padahal potongan diberikan sekali pada total transaksi."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pak Roni (pembina OSIS) membeli 5 pack spidol papan tulis di koperasi sekolah untuk keperluan inventaris kelas dan mendapat potongan harga tunai sebesar Rp15.000. Total uang yang harus dibayar Pak Roni setelah potongan harga adalah Rp110.000. Jika x menyatakan harga 1 pack spidol sebelum potongan harga, model matematika dan harga 1 pack spidol tersebut berturut-turut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5x−15.000=110.000; Rp25.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5x+15.000=110.000; Rp19.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5(x−15.000)=110.000; Rp37.000"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "x−15.000=110.000; Rp125.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan harga 1 pack spidol sebelum potongan = x.\nTotal pembelian 5 pack spidol dengan potongan Rp15.000,00 sama dengan Rp110.000,00.\nModel Matematika: 5x−15.000=110.000\nMenyelesaikan PLSV menggunakan operasi invers: 5x=110.000+15.000 5x = 125.000 ⇒ x = 125.000 / 5 = 25.000\nJadi, model matematika adalah 5x−15.000=110.000 dan harga 1 pack spidol adalah Rp25.000,00.\nKesalahan Umum yang Diantisipasi:\nSiswa sering keliru memasukkan potongan harga ke dalam kurung pengali 5(x−15.000)=110.000, menganggap potongan harga berlaku untuk setiap pack spidol, padahal potongan diberikan sekali pada total transaksi."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Diskon total sekali:5x−15.000=110.000;5x=125.000;x=25.000.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-05",
+      "familyId": "b6208db9-1887-53bd-bb81-222a20528e7e",
+      "sourceVersionId": "3a780a84-d0fe-59b1-999a-04212e3045f0",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tiga lokasi pos penataan taman sekolah diukur posisinya (dalam meter) terhadap tiang bendera utama (titik 0 meter):\n• Pos p=-(9)/(4)m\n• Pos q=-sqrt(5)m\n• Pos r=-2,35m\nBerdasarkan analisis kedudukan ketiga pos tersebut pada garis bilangan, manakah hubungan posisi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pos r berada paling kanan di antara semua pos"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pos q terletak di sebelah kiri Pos r"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pos p terletak di sebelah kiri Pos r"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pos p berada di antara Pos r dan Pos q pada garis bilangan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUbah nilai kedudukan ketiga pos ke dalam bentuk desimal pendekatan untuk membandingkan posisinya pada garis bilangan:\nPos p: -(9)/(4)m=-2,250m\nPos q: -sqrt(5)m≈-2,236m (karena sqrt(5)≈2,236)\nPos r: -2,35m=-2,350m\nUrutkan posisi ketiga pos pada garis bilangan dari kiri ke kanan (nilai terkecil ke terbesar):\n-2,350<-2,250<-2,236\n(Posr)<(Posp)<(Posq)\nAnalisis setiap opsi pilihan jawaban:\nOpsi A (SALAH): Pos r (-2,350m) nilainya paling kecil, sehingga posisinya berada di paling kiri, bukan paling kanan.\nOpsi B (SALAH): Pos q (-2,236m) nilainya lebih besar daripada Pos r (-2,350m), sehingga Pos q berada di sebelah kanan Pos r.\nOpsi C (SALAH): Nilai Pos p (-2,250m) lebih besar daripada Pos r (-2,350m), sehingga Pos p berada di sebelah kanan Pos r.\nOpsi D (BENAR): Nilai Pos p (-2,250m) berada di rentang antara -2,350m (Pos r) dan -2,236m (Pos q).\nKesalahan umum yang diantisipasi: Siswa sering keliru mengira sqrt(5)=2,5 (karena menganggap 5÷2), sehingga mendapatkan Pos q=-2,5m dan keliru dalam menyusun urutan posisi pada garis bilangan negatif."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tiga lokasi pos penataan taman sekolah diukur posisinya (dalam meter) terhadap tiang bendera utama (titik 0 meter):\n• Pos p=-(9)/(4)m\n• Pos q=-sqrt(5)m\n• Pos r=-2,35m\nBerdasarkan analisis kedudukan ketiga pos tersebut pada garis bilangan, manakah hubungan posisi yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Pos r berada paling kanan di antara semua pos"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Pos q terletak di sebelah kiri Pos r"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pos p terletak di sebelah kiri Pos r"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Pos p berada di antara Pos r dan Pos q pada garis bilangan"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nUbah nilai kedudukan ketiga pos ke dalam bentuk desimal pendekatan untuk membandingkan posisinya pada garis bilangan:\nPos p: -(9)/(4)m=-2,250m\nPos q: -sqrt(5)m≈-2,236m (karena sqrt(5)≈2,236)\nPos r: -2,35m=-2,350m\nUrutkan posisi ketiga pos pada garis bilangan dari kiri ke kanan (nilai terkecil ke terbesar):\n-2,350<-2,250<-2,236\n(Posr)<(Posp)<(Posq)\nAnalisis setiap opsi pilihan jawaban:\nOpsi A (SALAH): Pos r (-2,350m) nilainya paling kecil, sehingga posisinya berada di paling kiri, bukan paling kanan.\nOpsi B (SALAH): Pos q (-2,236m) nilainya lebih besar daripada Pos r (-2,350m), sehingga Pos q berada di sebelah kanan Pos r.\nOpsi C (SALAH): Nilai Pos p (-2,250m) lebih besar daripada Pos r (-2,350m), sehingga Pos p berada di sebelah kanan Pos r.\nOpsi D (BENAR): Nilai Pos p (-2,250m) berada di rentang antara -2,350m (Pos r) dan -2,236m (Pos q).\nKesalahan umum yang diantisipasi: Siswa sering keliru mengira sqrt(5)=2,5 (karena menganggap 5÷2), sehingga mendapatkan Pos q=-2,5m dan keliru dalam menyusun urutan posisi pada garis bilangan negatif."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "r=−2,35 < p=−9/4=−2,25 < q=−√5≈−2,23607. Posisi p diantara r danq.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-06",
+      "familyId": "a86a743f-a6d9-5c04-9d94-3720d0e9995d",
+      "sourceVersionId": "3a7d3cae-bbf1-5e26-ac37-c56e375f842d",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan data berikut.\n12, 15, 18, 20, 25, 30\nJangkauan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "18"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "20"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nRange = nilai terbesar − nilai terkecil.\n30 − 12 = 18."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan data berikut.\n12, 15, 18, 20, 25, 30\nJangkauan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "18"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "20"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "22"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "25"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan :\nRange = nilai terbesar − nilai terkecil.\n30 − 12 = 18."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jangkauan=30−12=18.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-07",
+      "familyId": "451096a9-052b-586a-9bc8-0e3d46d1e7bd",
+      "sourceVersionId": "3b633119-234e-5f23-94da-3d18938b2b80",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah bak mandi berbentuk balok (prisma segi empat) memiliki panjang 1 meter, lebar 0,5 meter, dan tinggi 0,8 meter. Volume air maksimal yang dapat ditampung bak mandi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "40 liter"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "400 liter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4.000 liter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "40.000 liter"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Volume = 1 × 0,5 × 0,8 m³; 1 m³ = 1.000 liter, sehingga kapasitas = 400 liter."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bak mandi berbentuk balok (prisma segi empat) memiliki panjang 1 meter, lebar 0,5 meter, dan tinggi 0,8 meter. Volume air maksimal yang dapat ditampung bak mandi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "40 liter"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "400 liter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4.000 liter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "40.000 liter"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Volume = 1 × 0,5 × 0,8 m³; 1 m³ = 1.000 liter, sehingga kapasitas = 400 liter."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Volume1×0,5×0,8=0,4m³=400liter.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-08",
+      "familyId": "4e1a4330-e191-5a67-9c31-5f97cc5cc8ff",
+      "sourceVersionId": "3b8ae523-8983-58e9-b88a-45f541530756",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Diketahui barisan bilangan berhingga 5, 9, 13, 17, ... Pola yang berlaku pada barisan tersebut dan dua suku berikutnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Geometri dengan rasio 4; dua suku berikutnya 68 dan 272"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Aritmetika dengan beda 4; dua suku berikutnya 21 dan 26"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Aritmetika dengan beda 4; dua suku berikutnya 21 dan 25"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Geometri dengan rasio 2; dua suku berikutnya 34 dan 68"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Selisih setiap dua suku berurutan tetap: 9-5=4, 13-9=4, 17-13=4. Jadi barisan tersebut adalah barisan aritmetika dengan beda 4 (bukan geometri, karena perbandingan antarsukunya tidak tetap).\nSuku berikutnya: 17+4=21 dan 21+4=25."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui barisan bilangan berhingga 5, 9, 13, 17, ... Pola yang berlaku pada barisan tersebut dan dua suku berikutnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Geometri dengan rasio 4; dua suku berikutnya 68 dan 272"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Aritmetika dengan beda 4; dua suku berikutnya 21 dan 26"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Aritmetika dengan beda 4; dua suku berikutnya 21 dan 25"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Geometri dengan rasio 2; dua suku berikutnya 34 dan 68"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Selisih setiap dua suku berurutan tetap: 9-5=4, 13-9=4, 17-13=4. Jadi barisan tersebut adalah barisan aritmetika dengan beda 4 (bukan geometri, karena perbandingan antarsukunya tidak tetap).\nSuku berikutnya: 17+4=21 dan 21+4=25."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Selisih4 tetap; dua suku berikut21 dan25.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-09",
+      "familyId": "b405e3fa-c734-568e-9476-2609666bb008",
+      "sourceVersionId": "3be021b2-1d88-5596-95a4-c7f5600ef712",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Titik C(4, 2) dirotasi sebesar 90° berlawanan arah jarum jam terhadap titik pusat (0,0). Koordinat bayangan titik C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(-2, 4)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(2, -4)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-4, -2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(4, -2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rotasi 90° berlawanan arah jarum jam terhadap (0,0) menggunakan (x,y) → (-y,x), menghasilkan (-2, 4)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Titik C(4, 2) dirotasi sebesar 90° berlawanan arah jarum jam terhadap titik pusat (0,0). Koordinat bayangan titik C adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(-2, 4)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(2, -4)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-4, -2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(4, -2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rotasi 90° berlawanan arah jarum jam terhadap (0,0) menggunakan (x,y) → (-y,x), menghasilkan (-2, 4)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rotasi90° berlawanan arah jarumjam: (4,2)→(−2,4).",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-10",
+      "familyId": "9d84c89a-3270-55e1-8c27-c26857b6eaab",
+      "sourceVersionId": "3c8caae4-998f-5760-9805-8a5a5a2fb5e0",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Dalam suatu percobaan, sebuah dadu dilempar 300 kali. Angka ganjil muncul 156 kali.\nFrekuensi relatif angka ganjil adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0,48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "0,50"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "0,54"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "0,52"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan : 156/300 = 0,52."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam suatu percobaan, sebuah dadu dilempar 300 kali. Angka ganjil muncul 156 kali.\nFrekuensi relatif angka ganjil adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "0,48"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "0,50"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "0,54"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "0,52"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan : 156/300 = 0,52."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "156/300=0,52.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-11",
+      "familyId": "30699421-b4bd-5a9e-9b5b-7184725f22d4",
+      "sourceVersionId": "3ce0e874-5715-5782-96ea-d877cd9698c5",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Sebuah kurir kargo mengantar paket menggunakan mobil boks dari Kota A ke Kota B dengan kecepatan rata-rata $60km/jam$ dan membutuhkan waktu $3jam30menit$. Pada perjalanan pulang dari Kota B ke Kota A, kurir tersebut melewati jalur yang sama namun lalu lintas cukup padat sehingga kecepatan rata-ratanya turun menjadi $45km/jam$. Selisih waktu perjalanan berangkat dan pulang kurir tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$30menit$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$40menit$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$50menit$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$70menit$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN \nWaktu berangkat (${t}_{1}$) $=3jam30menit=3,5jam$.\nJarak antar kota ($s$) $={v}_{1}×{t}_{1}=60km/jam×3,5jam=210km$.\nKecepatan pulang (${v}_{2}$) $=45km/jam$.\nKarena jarak tetap, hubungan kecepatan dan waktu adalah perbandingan berbalik nilai:\n${t}_{2}=\\frac{s}{{v}_{2}}=\\frac{210km}{45km/jam}=\\frac{14}{3}jam=4jam40menit$\nSelisih waktu perjalanan $={t}_{2}-{t}_{1}=4jam40menit-3jam30menit=40menit$."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kurir kargo mengantar paket menggunakan mobil boks dari Kota A ke Kota B dengan kecepatan rata-rata $60 km/jam$ dan membutuhkan waktu $3 jam 30 menit$. Pada perjalanan pulang dari Kota B ke Kota A, kurir tersebut melewati jalur yang sama namun lalu lintas cukup padat sehingga kecepatan rata-ratanya turun menjadi $45 km/jam$. Selisih waktu perjalanan berangkat dan pulang kurir tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "$30menit$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "$40menit$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "$50menit$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "$70menit$"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Waktu berangkat=3 jam 30 menit=3,5 jam. Jarak=60 × 3,5=210 km. Waktu pulang=210/45=14/3 jam=4 jam 40 menit. Dalam menit, waktu pulang 280 menit dan berangkat 210 menit. Selisih=280−210=70 menit. Jawaban D."
+        }
+      },
+      "correctionReason": "Pembahasan salah menghitung4jam40menit−3jam30menit menjadi40menit. Hasilnya70menit; kunciD sudah benar.",
+      "independentSolution": "Jarak60×3,5=210km. Pulang210/45=14/3jam=4jam40menit. Selisih280−210=70menit, bukan40. KunciD benar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-12",
+      "familyId": "36ac9e66-f6ae-58d2-87f1-0a75c861d18b",
+      "sourceVersionId": "3de83c65-c1c8-5b00-aea9-738bbdc91ddb",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Sebuah bola besi berjari-jari 6 cm dilebur dan dicetak ulang menjadi beberapa limas kecil yang alasnya berbentuk persegi dengan panjang sisi 12 cm dan tinggi $2π$ cm. Evaluasi pernyataan yang benar mengenai banyaknya limas yang dapat dibentuk secara utuh adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2 buah limas"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4 buah limas"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3 buah limas"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5 buah limas"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nVolume bola = $\\frac{4}{3}π{r}^{3}=\\frac{4}{3}π(6{)}^{3}=\\frac{4}{3}π(216)=288π$ cm³.\nVolume 1 limas = $\\frac{1}{3}×LuasAlas×tinggi=\\frac{1}{3}×(12×12)×2π=\\frac{1}{3}×144×2π=96π$ cm³.\nBanyak limas = $\\frac{VolumeBola}{VolumeLimas}=\\frac{288π}{96π}=3$.\nJadi, limas yang dapat dibentuk adalah 3 buah."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bola besi berjari-jari 6 cm dilebur dan dicetak ulang menjadi beberapa limas kecil yang alasnya berbentuk persegi dengan panjang sisi 12 cm dan tinggi $2π$ cm. Evaluasi pernyataan yang benar mengenai banyaknya limas yang dapat dibentuk secara utuh adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2 buah limas"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4 buah limas"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "3 buah limas"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5 buah limas"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nVolume bola = $\\frac{4}{3}π{r}^{3}=\\frac{4}{3}π(6{)}^{3}=\\frac{4}{3}π(216)=288π$ cm³.\nVolume 1 limas = $\\frac{1}{3}×LuasAlas×tinggi=\\frac{1}{3}×(12×12)×2π=\\frac{1}{3}×144×2π=96π$ cm³.\nBanyak limas = $\\frac{VolumeBola}{VolumeLimas}=\\frac{288π}{96π}=3$.\nJadi, limas yang dapat dibentuk adalah 3 buah."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Volume bola(4/3)π6³=288π. Volume limas(1/3)12²×2π=96π. Rasio3, dengan asumsi seluruh bahan dipakai tanpa susut.",
+      "optionalSuggestionNotApplied": "Saran model: nyatakan seluruh bahan hasil peleburan dipakai tanpa susut. Ini asumsi konservasi volume standar pada soal sejenis; kunciC sesuai model."
+    },
+    {
+      "reviewId": "B5-13",
+      "familyId": "ec341e02-8248-5154-acc2-a4d8342f8c1f",
+      "sourceVersionId": "3e4632c5-3033-5082-9bab-8f6ddf61cc80",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Denah panggung utama pertunjukan teater sekolah berbentuk persegi panjang dengan luas L(x)=(6x^2+11x-10)m^2. Tim dekorasi menganalisis bahwa panjang panggung adalah (2x+5)m dan lebarnya adalah (3x-2)m. Jika nilai variabel x bertambah sebesar 2 meter, analisis perubahan keliling panggung (ΔK) yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 20meter secara konstan tanpa terpengaruh nilai awal x"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 10meter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 12meter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Perubahan keliling panggung bergantung pada nilai x^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan bentuk aljabar keliling panggung (K):\nK=2(p+l)=2((2x+5)+(3x-2))\nK=2(5x+3)=10x+6meter\nAnalisis perubahan nilai x sebesar Δx=2:\nK_baru=10(x+2)+6=10x+20+6=10x+26\nΔK=K_baru-K=(10x+26)-(10x+6)=20meter\nHasil Analisis: Karena koefisien dari variabel x pada rumus keliling K=10x+6 adalah 10, maka setiap pertambahan 1 unit pada x menyebabkan keliling bertambah 10meter. Jika x bertambah 2 unit, keliling bertambah secara konstan sebesar 20meter tanpa tergantung nilai x awal."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Denah panggung berbentuk persegi panjang memiliki luas L(x)=(6 x²+11 x−10) m², panjang(2 x+5) m dan lebar(3 x−2) m. Variabel x adalah bilangan tanpa satuan dengan x>2/3. Jika nilai x bertambah 2 satuan, analisis perubahan keliling panggung (ΔK) yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 20meter secara konstan tanpa terpengaruh nilai awal x"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 10meter"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Keliling panggung bertambah sebesar 12meter"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Perubahan keliling panggung bergantung pada nilai x^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSelesaikan bentuk aljabar keliling panggung (K):\nK=2(p+l)=2((2 x+5)+(3 x-2))\nK=2(5 x+3)=10 x+6 meter\nAnalisis perubahan nilai x sebesar Δx=2:\nK_baru=10(x+2)+6=10 x+20+6=10 x+26\nΔK=K_baru-K=(10 x+26)-(10 x+6)=20 meter\nHasil Analisis: Karena koefisien dari variabel x pada rumus keliling K=10 x+6 adalah 10, maka setiap pertambahan 1 unit pada x menyebabkan keliling bertambah 10 meter. Jika x bertambah 2 unit, keliling bertambah secara konstan sebesar 20 meter tanpa tergantung nilai x awal."
+        }
+      },
+      "correctionReason": "Stem menyebut nilai x bertambah2meter, padahal ukuran ditulis (2x+5)m dan (3x−2)m sehingga x semestinya bilangan tanpa satuan. Ganti menjadi x bertambah2 satuan dan nyatakan domain yang membuat ukuran positif.",
+      "independentSolution": "(2x+5)(3x−2)=6x²+11x−10. K=2(5x+3)=(10x+6)m. Mengganti x dengan x+2 memberiΔK=20m. x perlu diperlakukan sebagai bilangan tanpa satuan pada rumus ukuran yang sudah diikuti satuan m.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-14",
+      "familyId": "bad3ed33-f8f8-5331-9fac-3989b721ae63",
+      "sourceVersionId": "3e7b575c-bd31-525c-874e-55e475ec0c2e",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah lahan berbentuk persegi panjang digambar pada peta berskala 1 : 250.000 dengan ukuran 4 cm × 2,5 cm. Luas lahan sebenarnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6,25 km^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "10 km^(2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25 km^(2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "62,5 km^(2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Panjang sebenarnya = 4 × 250.000 = 1.000.000 cm = 10 km.\nLebar sebenarnya = 2,5 × 250.000 = 625.000 cm = 6,25 km.\nLuas sebenarnya = 10 × 6,25 = 62,5 km^(2). Perbandingan luas adalah kuadrat dari skala, sehingga luas tidak cukup dihitung dengan mengalikan luas peta dengan 250.000."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah lahan berbentuk persegi panjang digambar pada peta berskala 1 : 250.000 dengan ukuran 4 cm × 2,5 cm. Luas lahan sebenarnya adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6,25 km^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "10 km^(2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "25 km^(2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "62,5 km^(2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Panjang sebenarnya = 4 × 250.000 = 1.000.000 cm = 10 km.\nLebar sebenarnya = 2,5 × 250.000 = 625.000 cm = 6,25 km.\nLuas sebenarnya = 10 × 6,25 = 62,5 km^(2). Perbandingan luas adalah kuadrat dari skala, sehingga luas tidak cukup dihitung dengan mengalikan luas peta dengan 250.000."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Panjang4×250.000cm=10km; lebar2,5×250.000cm=6,25km; luas62,5km².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-15",
+      "familyId": "9c542fbd-27be-58ef-bc5f-6a515ec66271",
+      "sourceVersionId": "3ee206bf-249d-5dcd-b929-1f880ca554ab",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dalam rangka kegiatan bakti sosial, pengurus OSIS membeli 19 paket sembako seharga Rp6.850,00 per paket. Bendahara OSIS ingin mengecek kewajaran total pengeluaran dengan mengestimasi hasil kali setelah membulatkan jumlah paket ke puluhan terdekat dan membulatkan harga per paket ke ribuan terdekat.\nEstimasi total biaya belanja sembako yang diperoleh bendahara OSIS adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp120.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp140.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp133.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp130.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLakukan pembulatan pada masing-masing operand (komponen bilangan) terlebih dahulu sesuai aturan pada stem:\nJumlah paket: 19 dibulatkan ke puluhan terdekat menjadi 20 paket.\nHarga per paket: Rp6.850,00 dibulatkan ke ribuan terdekat (karena angka ratusannya 8≥5) menjadi Rp7.000,00.\nHitung hasil perkalian dari operand yang telah dibulatkan:\nEstimasi Total Biaya=20×Rp7.000,00=Rp140.000,00\nAnalisis opsi pilihan jawaban:\nOpsi A (Rp120.000,00): Salah, muncul jika siswa keliru membulatkan kedua operand ke bawah (20×Rp6.000,00).\nOpsi B (Rp140.000,00 - BENAR): Hasil estimasi pembulatan operand yang konsisten dan tepat secara matematika (20×Rp7.000,00).\nOpsi C (Rp133.000,00): Salah, muncul jika siswa hanya membulatkan harga per paket tanpa membulatkan jumlah paket (19×Rp7.000,00).\nOpsi D (Rp130.000,00): Salah, merupakan nilai riil (19×Rp6.850,00=Rp130.150,00) yang baru dibulatkan di akhir, bukan hasil dari prosedur estimasi operand sebelum operasi perkalian.\nKesalahan umum yang diantisipasi: Siswa menghitung nilai persisnya terlebih dahulu baru membulatkannya di akhir, padahal konsep estimasi/penaksiran dalam aritmetika menuntut pembulatan pada tiap komponen bilangan dilakukan terlebih dahulu sebelum dioperasikan."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam rangka kegiatan bakti sosial, pengurus OSIS membeli 19 paket sembako seharga Rp 6.850,00 per paket. Bendahara OSIS ingin mengecek kewajaran total pengeluaran dengan mengestimasi hasil kali setelah membulatkan jumlah paket ke puluhan terdekat dan membulatkan harga per paket ke ribuan terdekat.\nEstimasi total biaya belanja sembako yang diperoleh bendahara OSIS adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp120.000,00"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp140.000,00"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp133.000,00"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp130.000,00"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Sesuai prosedur pada soal, jumlah paket 19 dibulatkan ke puluhan terdekat menjadi 20, dan hargaRp 6.850 dibulatkan ke ribuan terdekat menjadiRp 7.000. Estimasi=20 × 7.000=Rp 140.000; jawaban B. OpsiA memakai 20 × 6.000, yaitu jumlah paket dibulatkan keatas tetapi harga keliru dibulatkan kebawah. OpsiC memakai 19 × 7.000 sehingga jumlah paket belum dibulatkan. OpsiD, Rp 130.000, dapat berasal dari membulatkan totalriilRp 130.150 diakhir; itu berbeda dari prosedur pembulatan masing-masing komponen yang diminta soal ini. Metode estimasi lain dapat sah untuk tujuan lain."
+        }
+      },
+      "correctionReason": "Alasan opsiA mengklaim kedua operand dibulatkan kebawah, tetapi19→20 adalah keatas. Penutup juga menggeneralisasi semua estimasi harus membulatkan tiapkomponen sebelum operasi; itu ketentuan soal ini, bukan definisi universal estimasi.",
+      "independentSolution": "19→20 dan6.850→7.000 menurut pembulatan yang diminta. Estimasi140.000. Angka20 pada alasan opsiA adalah pembulatan jumlah keatas, bukan keduakomponen kebawah. Totalriil19×6.850=130.150;130.000 hasil pembulatan akhir, bukan prosedur stem.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-16",
+      "familyId": "30bebb80-d80e-5411-b409-0c1b9cc7f07e",
+      "sourceVersionId": "3f28194a-40f3-5dfc-85e0-7c680485f87b",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Sebuah spinner memiliki 8 bagian sama besar yang terdiri atas 3 bagian merah, 2 bagian biru, dan 3 bagian kuning.\nPeluang jarum berhenti pada warna kuning adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3/5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5/8"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3/8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan : Bagian kuning = 3 dari 8 bagian. Peluangnya = 3/8."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah spinner seimbang memiliki 8 bagian sama besar dan setiap bagian sama mungkin ditunjuk jarum setelah putaran. Terdapat 3 bagian merah,2 bagian biru, dan 3 bagian kuning. Peluang jarum berhenti pada warna kuning adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "1/4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3/5"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5/8"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "3/8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Terdapat 8 bagian yang sama mungkin ditunjuk jarum, dengan 3 bagian berwarna kuning. Jadi P(kuning)=3/8. Jawaban D."
+        }
+      },
+      "correctionReason": "Kunci3/8 memakai asumsi semua bagian sama mungkin. Nyatakan spinner seimbang/tiapbagian sama mungkin, bukan hanya luasbagian sama.",
+      "independentSolution": "Dengan model tiapbagian sama mungkin, peluangkuning3/8. Luasbagian sama belum menyatakan mekanisme jarum seimbang; model perlu eksplisit.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-17",
+      "familyId": "c827b457-7d63-5f80-b452-939bcab93cc7",
+      "sourceVersionId": "3f3c7e5b-363a-534a-904b-a06809305b18",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Data pendapatan harian dua kelompok pekerja dalam ribuan rupiah adalah sebagai berikut.\n\nKelompok A: 100, 110, 120, 130, 140\n\nKelompok B: 80, 100, 120, 140, 160\n\nKesimpulan yang paling tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kelompok A dan B memiliki rerata sama, tetapi kelompok B memiliki jangkauan lebih besar."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kelompok A memiliki rerata lebih besar daripada kelompok B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kelompok B memiliki median lebih tinggi daripada kelompok A."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kelompok A dan B memiliki jangkauan sama."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata A = 120 dan B = 120.\n\nMedian A = 120 dan B = 120.\n\nJangkauan A = 40.\n\nJangkauan B = 80.\n\nKeduanya memiliki ukuran pemusatan yang sama, tetapi penyebaran berbeda."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Data pendapatan harian dua kelompok pekerja dalam ribuan rupiah adalah sebagai berikut.\n\nKelompok A: 100, 110, 120, 130, 140\n\nKelompok B: 80, 100, 120, 140, 160\n\nKesimpulan yang paling tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kelompok A dan B memiliki rerata sama, tetapi kelompok B memiliki jangkauan lebih besar."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kelompok A memiliki rerata lebih besar daripada kelompok B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kelompok B memiliki median lebih tinggi daripada kelompok A."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kelompok A dan B memiliki jangkauan sama."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan: Rerata A = 120 dan B = 120.\n\nMedian A = 120 dan B = 120.\n\nJangkauan A = 40.\n\nJangkauan B = 80.\n\nKeduanya memiliki ukuran pemusatan yang sama, tetapi penyebaran berbeda."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah data tiapkelompok600, rerata120; median120. JangkauanA40, B80. SimpulanopsiA benar; semua nilai masing-masing muncul sekali sehingga tidak ada modus tunggal.",
+      "optionalSuggestionNotApplied": "Saran presisi: penutup pembahasan cukup menyebut rerata dan median sama, bukan ukuran pemusatan secara umum. Kedua data tidak memiliki modus tunggal."
+    },
+    {
+      "reviewId": "B5-18",
+      "familyId": "e683f08c-1cd3-5c32-a236-e7c106d0284e",
+      "sourceVersionId": "3f4f77fb-481d-5c76-9062-084586e657f7",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Titik B(-3, 5) dicerminkan terhadap sumbu X. Koordinat bayangan titik B adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(3, 5)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(3, -5)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-3, -5)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(-5, -3)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Refleksi terhadap sumbu X menggunakan aturan (x,y) → (x,-y). Titik (-3, 5) menjadi (-3, -5)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Titik B(-3, 5) dicerminkan terhadap sumbu X. Koordinat bayangan titik B adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "(3, 5)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "(3, -5)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "(-3, -5)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "(-5, -3)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Refleksi terhadap sumbu X menggunakan aturan (x,y) → (x,-y). Titik (-3, 5) menjadi (-3, -5)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Refleksi sumbuX: (−3,5)→(−3,−5).",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-19",
+      "familyId": "97a29e63-90b1-562d-bec3-819c9f8589d4",
+      "sourceVersionId": "3fe8102a-8874-5b58-86cc-3cfc2c9db7ca",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Pada suatu deret aritmetika diketahui U_5=19 dan S_5=55. Rumus jumlah n suku pertama deret tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "S_n=2n^(2)+3n"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "S_n=2n^(2)+n"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "S_n=4n^(2)-5n"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "S_n=n^(2)+10n"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "S_5=(5)/(2)(a+U_5)=55 sehingga a+19=22 dan a=3.\nBeda b=(19-3)/(4)=4.\nS_n=(n)/(2)(6+4(n-1))=(n)/(2)(4n+2)=2n^(2)+n.\nUji: S_5=2(25)+5=55 (sesuai)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pada suatu deret aritmetika diketahui U_5=19 dan S_5=55. Rumus jumlah n suku pertama deret tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "S_n=2n^(2)+3n"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "S_n=2n^(2)+n"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "S_n=4n^(2)-5n"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "S_n=n^(2)+10n"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "S_5=(5)/(2)(a+U_5)=55 sehingga a+19=22 dan a=3.\nBeda b=(19-3)/(4)=4.\nS_n=(n)/(2)(6+4(n-1))=(n)/(2)(4n+2)=2n^(2)+n.\nUji: S_5=2(25)+5=55 (sesuai)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "55=(5/2)(a+19)→a=3. Beda(19−3)/4=4. Sn=n(2a+(n−1)4)/2=2n²+n.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-20",
+      "familyId": "643f6d3d-7216-5bd5-b69b-cc7792e81c9f",
+      "sourceVersionId": "40aa0ca5-3189-5ced-b008-1d1774add49b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah layang-layang diterbangkan dengan benang lurus sepanjang 17 m. Jarak mendatar antara anak yang memegang benang dan titik yang tepat berada di bawah layang-layang adalah 8 m. Jika tangan anak memegang benang pada ketinggian 1,5 m dari tanah, tinggi layang-layang dari tanah adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "15 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "16,5 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "17 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18,5 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Benang (sisi miring), jarak mendatar, dan selisih tinggi membentuk segitiga siku-siku.\nSelisih tinggi = √(17^(2) - 8^(2)) = √(289 - 64) = √225 = 15 m.\nTinggi layang-layang dari tanah = 15 + 1,5 = 16,5 m."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah layang-layang diterbangkan dengan benang lurus sepanjang 17 m. Jarak mendatar antara anak yang memegang benang dan titik yang tepat berada di bawah layang-layang adalah 8 m. Jika tangan anak memegang benang pada ketinggian 1,5 m dari tanah, tinggi layang-layang dari tanah adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "15 m"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "16,5 m"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "17 m"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "18,5 m"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Benang (sisi miring), jarak mendatar, dan selisih tinggi membentuk segitiga siku-siku.\nSelisih tinggi = √(17^(2) - 8^(2)) = √(289 - 64) = √225 = 15 m.\nTinggi layang-layang dari tanah = 15 + 1,5 = 16,5 m."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Selisih ketinggian√(17²−8²)=15m. Ditambah tinggi tangan1,5m memberi16,5m pada model tanahdatar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-21",
+      "familyId": "8b376505-f31a-5f69-8a28-d9e89d062cf3",
+      "sourceVersionId": "40da8556-3f03-5045-a433-29c4c4ed1d46",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Perhatikan tiga relasi dari A={1,2,3} ke B={1,2,3,4} berikut.\n• R_1 (diagram panah): 1 → 2, 2 → 4, 3 → 4\n• R_2 (himpunan pasangan berurutan): {(1,1), (2,2), (2,3), (3,4)}\n• R_3 (grafik): titik-titik (1,3), (2,3), dan (3,3) pada bidang koordinat\nRelasi yang merupakan fungsi dari A ke B adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "R_1 dan R_3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "R_1 saja"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "R_1 dan R_2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "R_2 dan R_3"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Suatu relasi merupakan fungsi jika setiap anggota A dipasangkan dengan tepat satu anggota B (pada grafik: setiap garis tegak memotong grafik paling banyak di satu titik).\nR_1: setiap anggota A memiliki tepat satu anak panah, sehingga R_1 adalah fungsi (anggota 2 dan 3 menuju 4 diperbolehkan).\nR_2: anggota 2 berpasangan dengan 2 dan 3 (dua pasangan), sehingga R_2 bukan fungsi.\nR_3: untuk x=1, 2, 3 masing-masing hanya ada satu titik pada grafik (semua bernilai 3), sehingga R_3 adalah fungsi.\nJadi, relasi yang merupakan fungsi adalah R_1 dan R_3."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan tiga relasi dari A={1,2,3} ke B={1,2,3,4} berikut.\n• R_1 (diagram panah): 1 → 2, 2 → 4, 3 → 4\n• R_2 (himpunan pasangan berurutan): {(1,1), (2,2), (2,3), (3,4)}\n• R_3 (grafik): titik-titik (1,3), (2,3), dan (3,3) pada bidang koordinat\nRelasi yang merupakan fungsi dari A ke B adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "R_1 dan R_3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "R_1 saja"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "R_1 dan R_2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "R_2 dan R_3"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Suatu relasi merupakan fungsi jika setiap anggota A dipasangkan dengan tepat satu anggota B (pada grafik: setiap garis tegak memotong grafik paling banyak di satu titik).\nR_1: setiap anggota A memiliki tepat satu anak panah, sehingga R_1 adalah fungsi (anggota 2 dan 3 menuju 4 diperbolehkan).\nR_2: anggota 2 berpasangan dengan 2 dan 3 (dua pasangan), sehingga R_2 bukan fungsi.\nR_3: untuk x=1, 2, 3 masing-masing hanya ada satu titik pada grafik (semua bernilai 3), sehingga R_3 adalah fungsi.\nJadi, relasi yang merupakan fungsi adalah R_1 dan R_3."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "R1 danR3 memasangkan setiap anggotaA tepatsekali. R2 memasangkan2 dengan2 dan3 sehingga bukanfungsi.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-22",
+      "familyId": "08c7c0c4-b47b-57d5-b034-783efa47778a",
+      "sourceVersionId": "419d20ba-0fce-5b27-b3c9-c294494f5dd0",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Persamaan perancangan kas kelas dirumuskan oleh bendahara sebagai 4(x+2)-2x=2(x+k), di mana k adalah suatu konstanta. Pembina kelas menganalisis bahwa perancangan kas tersebut tidak akan pernah bisa seimbang (tidak memiliki penyelesaian/kontradiksi) jika nilai k memenuhi kondisi ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "k=4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "k=8"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "k≠4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "k≠8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nLangkah Penjabaran Aljabar: Jabarkan dan sederhanakan ruas kiri persamaan: 4(x+2)-2x=2(x+k)\n4x+8-2x=2x+2k\n2x+8=2x+2k\nKurangi kedua ruas dengan 2x:\n8=2katau2k=8\nAnalisis Nilai k dan Jenis Penyelesaian:\nKasus 1 (k=4): Jika k=4, maka 2(4)=8, sehingga diperoleh 8=8 (Pernyataan BENAR / Identitas). Artinya, persamaan memiliki tak hingga banyak penyelesaian (kas selalu seimbang untuk nilai x berapapun).\nKasus 2 (k≠4): Jika k≠4, maka 2k≠8 (misalkan k=1, diperoleh 8=2, yang merupakan Pernyataan SALAH / Kontradiksi). Artinya, tidak ada nilai x yang dapat memenuhi persamaan tersebut, sehingga persamaan tidak memiliki penyelesaian (kas tidak pernah bisa seimbang).\nKesimpulan:\nAgar persamaan tidak memiliki penyelesaian (kontradiksi), nilai k harus memenuhi k≠4. Jawaban yang tepat adalah C."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui persamaan 4(x+2)−2 x=2(x+k), dengan k konstanta real. Syarat lengkap yang mencakup seluruh nilai k agar persamaan tidak memiliki penyelesaian adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "k=4"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "k=8"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "k≠4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "k≠8"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Sederhanakan persamaan:4 x+8−2 x=2 x+2 k, sehingga 8=2 k. Jika k=4, persamaan menjadi identitas dan setiap nilai x memenuhi. Jika k≠4, persamaan menjadi pernyataan salah untuk semua x. Jadi syarat lengkap seluruh nilai k adalah k≠4, jawaban C. Nilai k=8 hanyalah satu contoh yang memenuhi syarat tersebut."
+        }
+      },
+      "correctionReason": "Pertanyaan kondisi k dapat dibaca memilih contoh k=8 (B) atau syaratlengkap k≠4 (C). Minta syaratlengkap seluruhnilai k agar jawaban C tunggal.",
+      "independentSolution": "4(x+2)−2x=2(x+k)→2x+8=2x+2k→8=2k. Tidakada solusi iff k≠4. k=8 padaopsiB juga contoh yang memenuhi, jadi minta syarat lengkap agarC tunggal.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-23",
+      "familyId": "9767bb4e-b0a4-547c-9709-2a4efbbd37a2",
+      "sourceVersionId": "41dc2ad9-7fe5-5865-92c0-65c2796ab4d9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah karton berbentuk persegi panjang berukuran 20 cm × 14 cm. Pada kedua sisi lebarnya, dipotong masing-masing setengah lingkaran dengan diameter 14 cm. Evaluasi luas sisa karton yang tidak terpotong adalah... (Gunakan π = $\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "154 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "203 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "126 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "77 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas persegi panjang awal = p × l = 20 × 14 = 280 cm².\nDua buah setengah lingkaran berdiameter 14 cm jika digabung akan membentuk satu lingkaran penuh dengan jari-jari r = 7 cm.\nLuas potongan = πr² = $\\frac{22}{7}$ × 7² = 154 cm².\nLuas sisa karton = Luas awal - Luas potongan = 280 - 154 = 126 cm².\nJadi, luas sisa karton adalah 126 cm²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah karton berbentuk persegi panjang berukuran 20 cm × 14 cm. Pada kedua sisi lebarnya, dipotong masing-masing setengah lingkaran dengan diameter 14 cm. Evaluasi luas sisa karton yang tidak terpotong adalah... (Gunakan π = $\\frac{22}{7}$)"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "154 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "203 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "126 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "77 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nLuas persegi panjang awal = p × l = 20 × 14 = 280 cm².\nDua buah setengah lingkaran berdiameter 14 cm jika digabung akan membentuk satu lingkaran penuh dengan jari-jari r = 7 cm.\nLuas potongan = πr² = $\\frac{22}{7}$ × 7² = 154 cm².\nLuas sisa karton = Luas awal - Luas potongan = 280 - 154 = 126 cm².\nJadi, luas sisa karton adalah 126 cm²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Karton280cm²; dua setengahlingkaran r7 luas154cm². Keduanya dipotong dari sisi berlawanan panjang14cm dan masingmasing menjorok7cm, total14<20 sehingga tidakberirisan. Sisa126cm².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-24",
+      "familyId": "890addb0-f74e-5bc8-80e9-885e21130c49",
+      "sourceVersionId": "427ab090-6c1c-5b28-bafe-ad628191d98a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tiga orang siswa mengevaluasi hasil pengukuran elevasi dasar saluran air di area kebun sekolah terhadap permukaan tanah netral ($0 m$):\nSaluran P: $-1,95 m$\nSaluran Q: $-\\sqrt{3 }m$\nSaluran R: $-\\frac{9}{5} m$\nKetiga siswa memberikan laporan evaluasi urutan kedalaman saluran dari yang paling dalam (paling kecil/paling kiri di garis bilangan) ke yang paling dangkal (paling besar):\nEvaluasi I: Saluran Q ($-\\sqrt{3} m$), Saluran R ($-\\frac{9}{5} m$), Saluran P ($-1,95 m$)\nEvaluasi II: Saluran P ($-1,95 m$), Saluran R ($-\\frac{9}{5} m$), Saluran Q ($-\\sqrt{3 }m$)\nEvaluasi III: Saluran R ($-\\frac{9}{5} m$), Saluran Q ($-\\sqrt{3} m$), Saluran P ($-1,95 m$)\nEvaluasi IV: Saluran P ($-1,95 m$), Saluran Q ($-\\sqrt{3 }m$), Saluran R ($-\\frac{9}{5} m$)\nHasil evaluasi manakah yang pasti benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan seluruh nilai elevasi ke desimal pendekatan:\nSaluran P: $-1,95 m$\nSaluran Q: $-\\sqrt{3}≈-1,732 m$\nSaluran R: $-\\frac{9}{5}=-1,80 m$\nMengevaluasi posisi pada garis bilangan (makin besar angka negatifnya, nilainya makin kecil/makin di kiri):\n$-1,95<-1,80<-1,732$\n$Saluran P→Saluran R→Saluran Q$\nMaka, urutan dari yang paling dalam (terkecil) ke paling dangkal (terbesar) adalah Saluran P, Saluran R, Saluran Q, yang divalidasi secara tepat oleh Evaluasi II."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tiga orang siswa mengevaluasi hasil pengukuran elevasi dasar saluran air di area kebun sekolah terhadap permukaan tanah netral ($0 m$):\nSaluran P: $-1,95 m$\nSaluran Q: $-\\sqrt{3 }m$\nSaluran R: $-\\frac{9}{5} m$\nKetiga siswa memberikan laporan evaluasi urutan kedalaman saluran dari yang paling dalam (paling kecil/paling kiri di garis bilangan) ke yang paling dangkal (paling besar):\nEvaluasi I: Saluran Q ($-\\sqrt{3} m$), Saluran R ($-\\frac{9}{5} m$), Saluran P ($-1,95 m$)\nEvaluasi II: Saluran P ($-1,95 m$), Saluran R ($-\\frac{9}{5} m$), Saluran Q ($-\\sqrt{3 }m$)\nEvaluasi III: Saluran R ($-\\frac{9}{5} m$), Saluran Q ($-\\sqrt{3} m$), Saluran P ($-1,95 m$)\nEvaluasi IV: Saluran P ($-1,95 m$), Saluran Q ($-\\sqrt{3 }m$), Saluran R ($-\\frac{9}{5} m$)\nHasil evaluasi manakah yang pasti benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan seluruh nilai elevasi ke desimal pendekatan:\nSaluran P: $-1,95 m$\nSaluran Q: $-\\sqrt{3}≈-1,732 m$\nSaluran R: $-\\frac{9}{5}=-1,80 m$\nMengevaluasi posisi pada garis bilangan (makin besar angka negatifnya, nilainya makin kecil/makin di kiri):\n$-1,95<-1,80<-1,732$\n$Saluran P→Saluran R→Saluran Q$\nMaka, urutan dari yang paling dalam (terkecil) ke paling dangkal (terbesar) adalah Saluran P, Saluran R, Saluran Q, yang divalidasi secara tepat oleh Evaluasi II."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "−1,95<−9/5=−1,8<−√3≈−1,73205. UrutanP,R,Q=EvaluasiII.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-25",
+      "familyId": "f08e8140-6c90-5cbb-bc4f-90a8f2a8412a",
+      "sourceVersionId": "42a06cdf-34c2-5722-8a6f-6ce31850d5bd",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa (Eko) melakukan penyederhanaan bentuk aljabar (12x^2-18xy)/(-6x)+2(x-3y) melalui langkah-langkah pengerjaan berikut:\nLangkah 1: Membagi pembilang dengan −6x:(12x² / −6x) − (18xy / −6x) = −2x − 3y\nLangkah 2: Menjabarkan suku kedua 2(x − 3y) = 2x − 6y\nLangkah 3: Menjumlahkan hasil (−2x − 3y) + (2x − 6y) = −9y\nBerdasarkan analisis pengerjaan di atas, pernyataan evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 1 karena pembagian (-18xy)/(-6x) seharusnya menghasilkan +3y, sehingga hasil akhir yang benar adalah -3y"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 2 karena penjabaran 2(x-3y) seharusnya 2x-3y"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pengerjaan Eko sudah tepat dari Langkah 1 hingga Langkah 3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 3 karena -2x+2x seharusnya 4x"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nEvaluasi Langkah 1:\n(12x^2-18xy)/(-6x)=(12x^2)/(-6x)+(-18xy)/(-6x)=-2x+3y\nEko membuat kesalahan tanda pada Langkah 1, menuliskan -3y bukannya +3y.\nPerbaikan Langkah 2 & 3:\n(-2x+3y)+(2x-6y)=(-2x+2x)+(3y-6y)=0x-3y=-3y\nHasil Analisis: Kesalahan Eko terletak pada pembagian tanda negatif di Langkah 1. Hasil penyederhanaan yang benar adalah -3y."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa (Eko) melakukan penyederhanaan bentuk aljabar (12x^2-18xy)/(-6x)+2(x-3y) melalui langkah-langkah pengerjaan berikut:\nLangkah 1: Membagi pembilang dengan −6x:(12x² / −6x) − (18xy / −6x) = −2x − 3y\nLangkah 2: Menjabarkan suku kedua 2(x − 3y) = 2x − 6y\nLangkah 3: Menjumlahkan hasil (−2x − 3y) + (2x − 6y) = −9y\nBerdasarkan analisis pengerjaan di atas, pernyataan evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 1 karena pembagian (-18xy)/(-6x) seharusnya menghasilkan +3y, sehingga hasil akhir yang benar adalah -3y"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 2 karena penjabaran 2(x-3y) seharusnya 2x-3y"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Pengerjaan Eko sudah tepat dari Langkah 1 hingga Langkah 3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kesalahan terjadi pada Langkah 3 karena -2x+2x seharusnya 4x"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nEvaluasi Langkah 1:\n(12x^2-18xy)/(-6x)=(12x^2)/(-6x)+(-18xy)/(-6x)=-2x+3y\nEko membuat kesalahan tanda pada Langkah 1, menuliskan -3y bukannya +3y.\nPerbaikan Langkah 2 & 3:\n(-2x+3y)+(2x-6y)=(-2x+2x)+(3y-6y)=0x-3y=-3y\nHasil Analisis: Kesalahan Eko terletak pada pembagian tanda negatif di Langkah 1. Hasil penyederhanaan yang benar adalah -3y."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Untuk x≠0, (12x²−18xy)/(−6x)=−2x+3y. Ditambah2x−6y menghasilkan−3y. Kesalahan pertama tanda padaLangkah1.",
+      "optionalSuggestionNotApplied": "Saran kelengkapan domain: nyatakan x≠0 sehingga pembagian oleh−6x terdefinisi. Identitas penyederhanaan hanya berlaku pada domain asal itu."
+    },
+    {
+      "reviewId": "B5-26",
+      "familyId": "b1715d13-8af8-52e5-ba4d-b91cecc46e73",
+      "sourceVersionId": "4338595e-4c2b-5b3f-969c-7cceff51cdac",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Empat buah jadwal pemeliharaan rutin pendingin ruangan di gedung sekolah dicatat sebagai berikut:\n• Ruang Laboratorium: setiap 12 hari sekali\n• Ruang Perpustakaan: setiap 15 hari sekali\n• Ruang Aula: setiap 20 hari sekali\nJika pada tanggal 1 Maret ketiga ruangan dibersihkan bersama-sama, empat orang siswa menganalisis waktu pemeliharaan bersama berikutnya sebagai berikut:\n• Analisis I: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 29 April.\n• Analisis II: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 1 Mei.\n• Analisis III: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 30 April (mengingat bulan Maret memiliki 31 hari).\n• Analisis IV: Pemeliharaan bersama berikutnya terjadi setelah 30 hari, yaitu pada tanggal 31 Maret.\nManakah analisis penanggalan yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung Kelipatan Persekutuan Terkecil (KPK) dari 12, 15, dan 20 untuk menentukan interval pemeliharaan bersama:\nFaktorisasi prima:\n12=2^2×3\n15=3×5\n20=2^2×5\nKPK(12,15,20)=2^2×3×5=60hari\nHitung penanggalan pemeliharaan bersama berikutnya (1Maret+60hari):\nBulan Maret memiliki 31 hari.\nSisa hari di bulan Maret setelah tanggal 1 Maret adalah 31-1=30hari.\nSisa hari yang harus dihitung pada bulan berikutnya (April): 60-30=30hari.\nMaka, 60 hari setelah tanggal 1 Maret jatuh tepat pada tanggal 30 April.\nAnalisis klaim siswa:\nAnalisis I (SALAH): Menyebutkan tanggal 29 April (salah hitung pengurangan hari di bulan Maret).\nAnalisis II (SALAH): Menyebutkan tanggal 1 Mei (mengasumsikan bulan Maret hanya memiliki 30 hari).\nAnalisis III (BENAR): Secara akurat memperhitungkan bahwa bulan Maret terdiri atas 31 hari sehingga 60 hari setelah 1 Maret adalah 30 April.\nAnalisis IV (SALAH): Salah menentukan nilai KPK (30hari bukan KPK dari 12, 15, dan 20).\nKesalahan umum yang diantisipasi: Siswa sering menganggap semua bulan memiliki 30 hari sehingga menghitung 1Maret+60hari=1Mei, atau keliru dalam mengoperasikan pembagian/pengurangan sisa hari kalender."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tiga buah jadwal pemeliharaan rutin pendingin ruangan di gedung sekolah dicatat sebagai berikut:\n• Ruang Laboratorium: setiap 12 hari sekali\n• Ruang Perpustakaan: setiap 15 hari sekali\n• Ruang Aula: setiap 20 hari sekali\nJika pada tanggal 1 Maret ketiga ruangan dibersihkan bersama-sama, empat orang siswa menganalisis waktu pemeliharaan bersama berikutnya sebagai berikut:\n• Analisis I: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 29 April.\n• Analisis II: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 1 Mei.\n• Analisis III: Pemeliharaan bersama berikutnya terjadi setelah 60 hari, yaitu pada tanggal 30 April (mengingat bulan Maret memiliki 31 hari).\n• Analisis IV: Pemeliharaan bersama berikutnya terjadi setelah 30 hari, yaitu pada tanggal 31 Maret.\nManakah analisis penanggalan yang pasti benar?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Analisis I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Analisis II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Analisis III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Analisis IV"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung Kelipatan Persekutuan Terkecil (KPK) dari 12, 15, dan 20 untuk menentukan interval pemeliharaan bersama:\nFaktorisasi prima:\n12=2^2 × 3\n15=3 × 5\n20=2^2 × 5\nKPK(12,15,20)=2^2 × 3 × 5=60 hari\nHitung penanggalan pemeliharaan bersama berikutnya (1 Maret+60 hari):\nBulan Maret memiliki 31 hari.\nSisa hari di bulan Maret setelah tanggal 1 Maret adalah 31-1=30 hari.\nSisa hari yang harus dihitung pada bulan berikutnya (April): 60-30=30 hari.\nMaka, 60 hari setelah tanggal 1 Maret jatuh tepat pada tanggal 30 April.\nAnalisis klaim siswa:\nAnalisis I (SALAH): Menyebutkan tanggal 29 April (salah hitung pengurangan hari di bulan Maret).\nAnalisis II (SALAH): Menyebutkan tanggal 1 Mei (mengasumsikan bulan Maret hanya memiliki 30 hari).\nAnalisis III (BENAR): Secara akurat memperhitungkan bahwa bulan Maret terdiri atas 31 hari sehingga 60 hari setelah 1 Maret adalah 30 April.\nAnalisis IV (SALAH): Salah menentukan nilai KPK (30 hari bukan KPK dari 12, 15, dan 20).\nKesalahan umum yang diantisipasi: Siswa sering menganggap semua bulan memiliki 30 hari sehingga menghitung 1 Maret+60 hari=1 Mei, atau keliru dalam mengoperasikan pembagian/pengurangan sisa hari kalender."
+        }
+      },
+      "correctionReason": "Pembuka menyebut empat jadwal tetapi daftar dan pertanyaan hanya memuat tiga ruangan. Ganti pembuka menjadi tiga jadwal; kunciC dan kalender tetap.",
+      "independentSolution": "KPK12,15,20=60. Tanggal1Maret+60hari=30April. Daftar hanya tiga jadwal meskipun pembuka menyebutempat.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-27",
+      "familyId": "0fe61ecd-cb1d-5c4c-be24-088eab186800",
+      "sourceVersionId": "436c68c6-ddf3-5f30-aafc-153dcb4c6c53",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah kolam berbentuk lingkaran memiliki diameter 20 meter. Di sekeliling kolam akan dibuat jalan setapak dengan lebar 1 meter (gunakan π = 22/7). Analisis luas jalan setapak tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "66 m²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "69 m²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "72 m²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "75 m²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Jari-jari dalam = 10 m, luar = 11 m. Luas jalan = π(R²−r²) = 66 m²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah kolam berbentuk lingkaran memiliki diameter 20 meter. Di sekeliling luar kolam dibuat jalan setapak dengan lebar seragam 1 meter. Gunakan π=22/7. Luas jalan setapak tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "66 m²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "69 m²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "72 m²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "75 m²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Jari-jari dalam = 10 m, luar = 11 m. Luas jalan = π(R²−r²) = 66 m²."
+        }
+      },
+      "correctionReason": "Jalan disebut sekeliling kolam tanpa eksplisit diluar. Jawaban66m² mengasumsikan annulus luar r10,R11. Nyatakan diluar dengan lebar seragam1meter.",
+      "independentSolution": "Jika jalan berada diluar kolam, r10 danR11: luasjalan=(22/7)(121−100)=66m². Redaksi perlu menegaskan letak jalan diluar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-28",
+      "familyId": "08390ea5-0268-5569-9d35-aaa7fa984e1a",
+      "sourceVersionId": "4370ccf1-5435-5167-b0c0-4bb875cd41af",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Pada suatu barisan aritmetika berhingga, suku ke-3 adalah 11 dan suku ke-7 adalah 27. Rumus suku ke-n barisan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "U_n=4n+3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "U_n=3n+2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "U_n=4n-3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "U_n=4n-1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Beda b=(27-11)/(7-3)=(16)/(4)=4.\nU_3=a+2b=11 sehingga a=11-8=3.\nU_n=3+(n-1)4=4n-1.\nUji: U_3=4(3)-1=11 dan U_7=4(7)-1=27 (sesuai)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Pada suatu barisan aritmetika berhingga, suku ke-3 adalah 11 dan suku ke-7 adalah 27. Rumus suku ke-n barisan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "U_n=4n+3"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "U_n=3n+2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "U_n=4n-3"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "U_n=4n-1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Beda b=(27-11)/(7-3)=(16)/(4)=4.\nU_3=a+2b=11 sehingga a=11-8=3.\nU_n=3+(n-1)4=4n-1.\nUji: U_3=4(3)-1=11 dan U_7=4(7)-1=27 (sesuai)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Beda(27−11)/(7−3)=4; a=11−8=3; Un=3+4(n−1)=4n−1.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-29",
+      "familyId": "4200ef5c-7ef5-5747-9f62-169777907fc8",
+      "sourceVersionId": "4385d004-458e-57c3-b869-0148678ac3e9",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Empat toko bahan kue menjual gandum dengan harga diskon yang menyebabkan perubahan harga dibanding harga standar harian. Persentase/proporsi perubahan harga di empat toko dicatat sebagai berikut:\nToko Merah: -(3)/(8)\nToko Biru: -0,35\nToko Hijau: - 36%\nToko Kuning: -0,38\nUrutan toko dari yang memberikan penurunan harga paling besar hingga paling kecil adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Toko Kuning, Toko Merah, Toko Hijau, Toko Biru"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Toko Merah, Toko Kuning, Toko Hijau, Toko Biru"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Toko Biru, Toko Hijau, Toko Merah, Toko Kuning"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Toko Kuning, Toko Hijau, Toko Biru, Toko Merah"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan semua bentuk bilangan ke desimal:\nToko Merah: -(3)/(8)=-0,375\nToko Biru: -0,35\nToko Hijau: - 36% = - 0,36\nToko Kuning: -0,38\nPenurunan harga paling besar artinya nilainya paling negatif (terkecil/paling jauh di sebelah kiri garis bilangan):\n-0,38<-0,375<-0,36<-0,35\n(Toko Kuning) → (Toko Merah) → (Toko Hijau) → (Toko Biru)\nKesalahan Umum yang Diantisipasi:\nSiswa sering tertukar antara arti \"penurunan terbesar\" dengan \"nilai desimal terbesar\". Penurunan terbesar menunjukkan pengurangan paling banyak, yang dinyatakan oleh bilangan dengan nilai paling negatif (-0,38)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Empat toko bahan kue menjual gandum dengan harga diskon yang menyebabkan perubahan harga dibanding harga standar harian. Persentase/proporsi perubahan harga di empat toko dicatat sebagai berikut:\nToko Merah: -(3)/(8)\nToko Biru: -0,35\nToko Hijau: - 36%\nToko Kuning: -0,38\nUrutan toko dari yang memberikan penurunan harga paling besar hingga paling kecil adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Toko Kuning, Toko Merah, Toko Hijau, Toko Biru"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Toko Merah, Toko Kuning, Toko Hijau, Toko Biru"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Toko Biru, Toko Hijau, Toko Merah, Toko Kuning"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Toko Kuning, Toko Hijau, Toko Biru, Toko Merah"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nKonversikan semua bentuk bilangan ke desimal:\nToko Merah: -(3)/(8)=-0,375\nToko Biru: -0,35\nToko Hijau: - 36% = - 0,36\nToko Kuning: -0,38\nPenurunan harga paling besar artinya nilainya paling negatif (terkecil/paling jauh di sebelah kiri garis bilangan):\n-0,38<-0,375<-0,36<-0,35\n(Toko Kuning) → (Toko Merah) → (Toko Hijau) → (Toko Biru)\nKesalahan Umum yang Diantisipasi:\nSiswa sering tertukar antara arti \"penurunan terbesar\" dengan \"nilai desimal terbesar\". Penurunan terbesar menunjukkan pengurangan paling banyak, yang dinyatakan oleh bilangan dengan nilai paling negatif (-0,38)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Besarpotongan:Kuning38%;Merah37,5%;Hijau36%;Biru35%. UrutanKuning,Merah,Hijau,Biru.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B5-30",
+      "familyId": "e3b93d6e-0aa7-5e6c-aa62-ff3e81c7f9df",
+      "sourceVersionId": "43943d67-77df-5b66-a4dd-69afaba21a6d",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Rina menyatakan bahwa relasi R = {(1, 2), (2, 4), (3, 4), (4, 6)} bukan fungsi karena bilangan 4 muncul dua kali sebagai pasangan. Penilaian yang tepat terhadap pernyataan Rina adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena satu anggota kodomain tidak boleh muncul dua kali"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena bilangan 4 hanya muncul satu kali sebagai anggota domain"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena R merupakan fungsi: setiap anggota domain (1, 2, 3, 4) memiliki tepat satu pasangan, dan anggota kodomain boleh muncul berulang"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tepat, karena fungsi harus memetakan anggota domain ke bayangan yang berbeda-beda"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Syarat fungsi: setiap anggota domain memiliki tepat satu pasangan, bukan sebaliknya.\nPada R, domain = {1, 2, 3, 4} dan masing-masing hanya muncul sekali sebagai komponen pertama.\nBilangan 4 muncul dua kali sebagai komponen kedua (dari 2 dan dari 3). Hal ini diperbolehkan (pemetaan banyak ke satu), sehingga R tetap fungsi dan pernyataan Rina kurang tepat."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui relasi R={(1,2),(2,4),(3,4),(4,6)} dengan domain{1,2,3,4}. Rina menyatakan bahwa R bukan fungsi karena 4 muncul dua kali sebagai komponen kedua. Pilih penilaian beserta alasan paling lengkap yang langsung menjawab keberatan Rina tentang pengulangan komponen kedua."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Tepat, karena satu anggota kodomain tidak boleh muncul dua kali"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kurang tepat, karena bilangan 4 hanya muncul satu kali sebagai anggota domain"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kurang tepat, karena R merupakan fungsi: setiap anggota domain (1, 2, 3, 4) memiliki tepat satu pasangan, dan anggota kodomain boleh muncul berulang"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Tepat, karena fungsi harus memetakan anggota domain ke bayangan yang berbeda-beda"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Syarat fungsi: setiap anggota domain memiliki tepat satu pasangan, bukan sebaliknya.\nPada R, domain = {1, 2, 3, 4} dan masing-masing hanya muncul sekali sebagai komponen pertama.\nBilangan 4 muncul dua kali sebagai komponen kedua (dari 2 dan dari 3). Hal ini diperbolehkan (pemetaan banyak ke satu), sehingga R tetap fungsi dan pernyataan Rina kurang tepat."
+        }
+      },
+      "correctionReason": "OpsiB adalah pernyataan benar tetapi tidak membahas pengulangan bayangan; pada pertanyaan penilaian yang tepat ia dapat diperdebatkan. Perjelas permintaan penilaian dengan alasan paling lengkap terhadap pengulangan komponen kedua; pertahankan opsiC sebagai jawaban.",
+      "independentSolution": "R punya setiap komponenpertama1,2,3,4 tepatsekali sehingga fungsi; bayangan4 dari2 dan3 diperbolehkan. OpsiB juga kalimat benar tentang frekuensi4 pada domain, tetapi tidak menjelaskan pokok klaim Rina tentang bayangan. Minta penilaian dengan alasan paling lengkap dan membahas komponen kedua agarC jelas.",
+      "optionalSuggestionNotApplied": null
+    }
+  ]
+}

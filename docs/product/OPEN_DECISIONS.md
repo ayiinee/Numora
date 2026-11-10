@@ -314,3 +314,21 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal tidak boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 10 menit dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** penetapan editorial 30 kandidat PG Drill untuk PvP dan tujuh koreksi disetujui, menggantikan marker sementara hanya bagi versi baru yang dirinci dalam [laporan](../development/PVP_OWNER_REVIEW_2026-11-10.md). Kalibrasi empiris, review sisa bank, serta rollout strict/official tetap terpisah; approval ini tidak menutup dependency ilmiah umum.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedua PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-2--persetujuan-pemilik) menyetujui 30 keluarga tambahan (7 EASY/23 MEDIUM) dan tujuh koreksi editorial. Dua klarifikasi opsional tetap saran; dependency empiris/IRT dan aktivasi official tidak ditutup oleh persetujuan ini.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketiga PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-3--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat berikutnya dan tiga koreksi; dua saran opsional tetap saran. Ini tidak menutup dependency kalibrasi empiris/IRT, sisa bank atau rollout official.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keempat PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-4--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan lima revisi. Tiga saran opsional tetap saran. Dependency kalibrasi empiris/IRT, sisa bank dan rollout official tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kelima PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-5--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan delapan revisi; empat saran tetap opsional. Dependency kalibrasi empiris/IRT, sisa bank dan rollout official tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keenam PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-6--persetujuan-pemilik) menutup persetujuan editorial 29 kandidat dan lima revisi; enam saran tetap opsional. **OPEN:** cakupan Curriculum invers matriks B6-17 belum dikonfirmasi dan soal itu tidak diterbitkan pada batch ini. Status sumber sementara tidak diubah; kalibrasi empiris/IRT dan rollout official tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketujuh PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-7--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan lima revisi; enam saran tetap opsional. HOLD Curriculum B6-17 tidak ditutup oleh persetujuan ini; kalibrasi empiris/IRT dan rollout official tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan tiga revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) menutup persetujuan editorial 30 kandidat dan empat revisi; lima saran tetap opsional. HOLD Curriculum B6-17, kalibrasi empiris/IRT dan rollout official tetap terpisah.

@@ -1,0 +1,2680 @@
+{
+  "reference": "PROJECT_OWNER_2026_11_10_PVP_BATCH03_30_REVIEW_AND_THREE_CORRECTIONS",
+  "approvedOn": "2026-11-10",
+  "approvalSource": "Owner approved the batch-3 report, three corrections and classifications with \"setuju\" in this chat. Two optional suggestions excluded.",
+  "scope": "Editorial correctness and classification of 7 EASY, 19 MEDIUM and 4 HARD; not empirical calibration, IRT approval or server-mode activation.",
+  "operatorId": "0ed807a0-3524-4deb-9aea-452f4a9ba400",
+  "operatorBasis": "Existing active Content/Data/Moderation operator for all 30 source versions and prior owner-approved original-content release. Execution on behalf of owner; assisted review, not a claim of a separate manual Admin review.",
+  "items": [
+    {
+      "reviewId": "B3-01",
+      "familyId": "a9f4216b-795f-51ec-8d14-bb5702051237",
+      "sourceVersionId": "1ca370de-b25d-5d95-8117-16ddfbb83c2a",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Titik C(2, 1) memiliki bayangan C'(-1, 2) setelah dirotasi terhadap titik pusat (0,0). Analisis sudut dan arah rotasi yang tepat untuk transformasi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "90° berlawanan arah jarum jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "90° searah jarum jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "180° berlawanan arah jarum jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "270° berlawanan arah jarum jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rotasi 90° berlawanan arah jarum jam memakai (-y,x); rotasi 180° memakai (-x,-y). Titik (2, 1) menjadi (-1, 2) melalui rotasi 90° berlawanan arah jarum jam."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Titik C(2, 1) memiliki bayangan C'(-1, 2) setelah dirotasi terhadap titik pusat (0,0). Analisis sudut dan arah rotasi yang tepat untuk transformasi tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "90° berlawanan arah jarum jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "90° searah jarum jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "180° berlawanan arah jarum jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "270° berlawanan arah jarum jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rotasi 90° berlawanan arah jarum jam memakai (-y,x); rotasi 180° memakai (-x,-y). Titik (2, 1) menjadi (-1, 2) melalui rotasi 90° berlawanan arah jarum jam."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rotasi 90° berlawanan arah jarum jam: (x,y)→(−y,x); (2,1)→(−1,2). Opsi lain menghasilkan titik berbeda.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-02",
+      "familyId": "dcdcf91f-526e-5723-a335-b9079e9eb85c",
+      "sourceVersionId": "1ccfc327-243e-5510-a0f6-1e7dae3bf69b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Taman sekolah berbentuk persegi panjang memiliki keliling 52 meter. Jika selisih antara ukuran panjang dan lebarnya adalah 6 meter, luas taman sekolah tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "140 m^2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "150 m^2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "160 m^2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "170 m^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan p = panjang, l = lebar.\nKeliling: 2(p+l)=52⟹p+l=26\nSelisih: p−l=6\nEliminasi dengan menjumlahkan kedua persamaan:\n2p=32⟹p=16 m\nSubstitusi nilai p:\n16+l=26⟹l=10 m\nLuas taman = p×l=16×10=160 m2."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Taman sekolah berbentuk persegi panjang memiliki keliling 52 meter. Jika selisih antara ukuran panjang dan lebarnya adalah 6 meter, luas taman sekolah tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "140 m^2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "150 m^2"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "160 m^2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "170 m^2"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nMisalkan p = panjang, l = lebar.\nKeliling: 2(p+l)=52⟹p+l=26\nSelisih: p−l=6\nEliminasi dengan menjumlahkan kedua persamaan:\n2p=32⟹p=16 m\nSubstitusi nilai p:\n16+l=26⟹l=10 m\nLuas taman = p×l=16×10=160 m2."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "p+l=26 dan p−l=6. Jumlah kedua persamaan memberi p=16; l=10. Luas=160 m².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-03",
+      "familyId": "370a2d51-ffda-5ea7-ad28-10a70f034f7d",
+      "sourceVersionId": "1d6e32a0-f6d8-537f-954d-45542f489804",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah prisma segitiga memiliki jaring-jaring yang terdiri dari 2 segitiga siku-siku dan 3 persegi panjang. Diketahui luas total kedua segitiga adalah 12 cm². Jika keliling alas segitiga adalah 12 cm dan tinggi prisma adalah 10 cm, maka analisis luas permukaan prisma tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "120 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "132 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "144 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Alas siku-siku dengan sisi 3, 4, 5 mempunyai keliling 12 cm. Dua alas memiliki luas 12 cm². Luas permukaan = 12 + 12 × 10 = 132 cm²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah prisma segitiga memiliki jaring-jaring yang terdiri dari 2 segitiga siku-siku dan 3 persegi panjang. Diketahui luas total kedua segitiga adalah 12 cm². Jika keliling alas segitiga adalah 12 cm dan tinggi prisma adalah 10 cm, maka analisis luas permukaan prisma tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "120 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "132 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "144 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Alas siku-siku dengan sisi 3, 4, 5 mempunyai keliling 12 cm. Dua alas memiliki luas 12 cm². Luas permukaan = 12 + 12 × 10 = 132 cm²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Luas dua alas=12 cm²; luas selimut=keliling alas×tinggi=12×10=120 cm². Total=132 cm². Contoh alas 3–4–5 dalam pembahasan konsisten dengan luas 6 dan keliling 12.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-04",
+      "familyId": "5b35fd40-e6d1-541c-bc3e-ea98db3ea56d",
+      "sourceVersionId": "1db389e2-a2eb-55c6-91c0-d02cac0c68a2",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Perhatikan data waktu tempuh siswa menuju sekolah dalam menit.\n\n10, 12, 15, 15, 18, 20, 25\n\nKesimpulan yang tepat berdasarkan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Modus = 15 menit dan jangkauan = 15 menit."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Modus = 18 menit dan jangkauan = 10 menit."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Median = 15 menit dan jangkauan = 20 menit."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rerata = 15 menit dan modus = 20 menit."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan: Nilai 15 muncul paling sering, sehingga modusnya 15. Jangkauan = 25 − 10 = 15 menit."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan data waktu tempuh siswa menuju sekolah dalam menit.\n\n10, 12, 15, 15, 18, 20, 25\n\nKesimpulan yang tepat berdasarkan data tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Modus = 15 menit dan jangkauan = 15 menit."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Modus = 18 menit dan jangkauan = 10 menit."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Median = 15 menit dan jangkauan = 20 menit."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rerata = 15 menit dan modus = 20 menit."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan: Nilai 15 muncul paling sering, sehingga modusnya 15. Jangkauan = 25 − 10 = 15 menit."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "15 muncul dua kali, terbanyak. Jangkauan=25−10=15 menit. Median juga 15, tetapi opsi C salah pada jangkauan.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-05",
+      "familyId": "75cb41fa-9f41-54d2-b541-7b0f1a3ea968",
+      "sourceVersionId": "1e0e589e-b278-56f5-9e54-1877ae44d3d2",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Diketahui fungsi f(x)=2x+3 dan g(x)=x-1. Nilai dari fungsi komposisi (f∘g)(3) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "7"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "9"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "11"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "(f∘g)(3)=f(g(3)).\nHitung g(3)=3-1=2.\nSubstitusikan ke f: f(2)=2(2)+3=4+3=7."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui fungsi f(x)=2x+3 dan g(x)=x-1. Nilai dari fungsi komposisi (f∘g)(3) adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "7"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "9"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "11"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "(f∘g)(3)=f(g(3)).\nHitung g(3)=3-1=2.\nSubstitusikan ke f: f(2)=2(2)+3=4+3=7."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "g(3)=2 lalu f(2)=2×2+3=7.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-06",
+      "familyId": "a306b6a6-1ff9-5488-9943-a69ca2932d03",
+      "sourceVersionId": "1e7678d4-7261-536e-85ae-d476eb973f2a",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah segitiga memiliki luas 15 cm². Segitiga tersebut didilatasi terhadap titik pusat (0,0) dengan faktor skala 3. Analisis luas bayangan segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "45 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "90 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "135 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Luas hasil dilatasi = luas awal × kuadrat faktor skala = 15 × 3² = 135 cm²."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah segitiga memiliki luas 15 cm². Segitiga tersebut didilatasi terhadap titik pusat (0,0) dengan faktor skala 3. Analisis luas bayangan segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "45 cm²"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "60 cm²"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "90 cm²"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "135 cm²"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Luas hasil dilatasi = luas awal × kuadrat faktor skala = 15 × 3² = 135 cm²."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Luas bayangan=k²×luas awal=3²×15=135 cm².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-07",
+      "familyId": "1d73dc1f-bc43-59e4-aabd-52a079bf3d82",
+      "sourceVersionId": "1f55023c-5826-5ec2-8bc0-428e3f849c9c",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah bola memiliki jari-jari 6 cm (gunakan π = 3,14). Volume bola tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "113,04 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "452,16 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "678,24 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "904,32 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Volume bola = 4 × 3,14 × 6³/3 = 904,32 cm³."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah bola memiliki jari-jari 6 cm (gunakan π = 3,14). Volume bola tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "113,04 cm³"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "452,16 cm³"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "678,24 cm³"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "904,32 cm³"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Volume bola = 4 × 3,14 × 6³/3 = 904,32 cm³."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "V=(4/3)πr³=(4/3)×3,14×216=904,32 cm³.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-08",
+      "familyId": "bf5479c2-08bc-5d1c-9c78-7ca35c8bba59",
+      "sourceVersionId": "1f5580ed-4400-5def-9a7c-4a5bad13dd1f",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Fungsi f dari A = {0, 1, 2, 3} dinyatakan dengan diagram panah: 0 dipetakan ke -1, 1 ke 1, 2 ke 3, dan 3 ke 5. Dua siswa menyatakan rumus fungsinya. Nia: f(x) = 2x - 1. Oki: f(x) = 2x + 1. Penilaian yang tepat terhadap kedua pernyataan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Nia benar karena f(x) = 2x - 1 memenuhi keempat pasangan pada diagram panah, sedangkan Oki salah karena f(0) = 1, bukan -1"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Oki benar karena f(1) = 3 sesuai dengan diagram panah"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Nia dan Oki sama-sama benar karena gradien kedua rumus sama, yaitu 2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Nia dan Oki sama-sama salah karena rumus fungsinya f(x) = x^(2) - 1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rumus yang benar harus memenuhi semua pasangan pada diagram panah.\nNia: f(0) = -1, f(1) = 1, f(2) = 3, f(3) = 5 (semuanya sesuai).\nOki: f(0) = 1 ≠ -1 sehingga salah. Gradien yang sama tidak menjamin rumus yang sama karena konstantanya berbeda.\nRumus f(x) = x^(2) - 1 juga salah: f(1) = 0, padahal pada diagram f(1) = 1."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Fungsi f dari A = {0, 1, 2, 3} dinyatakan dengan diagram panah: 0 dipetakan ke -1, 1 ke 1, 2 ke 3, dan 3 ke 5. Dua siswa menyatakan rumus fungsinya. Nia: f(x) = 2x - 1. Oki: f(x) = 2x + 1. Penilaian yang tepat terhadap kedua pernyataan tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Nia benar karena f(x) = 2x - 1 memenuhi keempat pasangan pada diagram panah, sedangkan Oki salah karena f(0) = 1, bukan -1"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Oki benar karena f(1) = 3 sesuai dengan diagram panah"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Nia dan Oki sama-sama benar karena gradien kedua rumus sama, yaitu 2"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Nia dan Oki sama-sama salah karena rumus fungsinya f(x) = x^(2) - 1"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Rumus yang benar harus memenuhi semua pasangan pada diagram panah.\nNia: f(0) = -1, f(1) = 1, f(2) = 3, f(3) = 5 (semuanya sesuai).\nOki: f(0) = 1 ≠ -1 sehingga salah. Gradien yang sama tidak menjamin rumus yang sama karena konstantanya berbeda.\nRumus f(x) = x^(2) - 1 juga salah: f(1) = 0, padahal pada diagram f(1) = 1."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2x−1 memberi −1,1,3,5 untuk x=0,1,2,3. Rumus Oki gagal sejak x=0; x²−1 juga gagal pada x=1.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-09",
+      "familyId": "b7576b9d-374f-596c-be27-c58e4093d112",
+      "sourceVersionId": "1f784aac-85ad-5460-a6db-1c220fa7359b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah lingkaran memiliki diameter 14 cm (gunakan π = 3,14). Panjang busur di hadapan sudut pusat 90° adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "21,98 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "43,96 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "10,99 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "87,92 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Panjang busur = 90/360 × πd = 90/360 × 3,14 × 14 = 10,99 cm."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah lingkaran memiliki diameter 14 cm (gunakan π = 3,14). Panjang busur di hadapan sudut pusat 90° adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "21,98 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "43,96 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "10,99 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "87,92 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Panjang busur = 90/360 × πd = 90/360 × 3,14 × 14 = 10,99 cm."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Busur=(90/360)πd=(1/4)×3,14×14=10,99 cm.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-10",
+      "familyId": "564bee71-3770-532c-a265-bd75640feac4",
+      "sourceVersionId": "20041dd5-52f8-5422-bada-bfcaa4b6bb86",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 = (4x - 5)° dan ∠B4 = (2x + 35)°. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "55°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "75°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠B4 adalah sudut luar berseberangan sehingga sama besar: 4x - 5 = 2x + 35 → x = 20.\n∠B4 = 2(20) + 35 = 75°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 = (4x - 5)° dan ∠B4 = (2x + 35)°. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "55°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "65°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "75°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "85°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠B4 adalah sudut luar berseberangan sehingga sama besar: 4x - 5 = 2x + 35 → x = 20.\n∠B4 = 2(20) + 35 = 75°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "A1 dan B4 sudut luar berseberangan: 4x−5=2x+35 → x=20 → B4=75°.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-11",
+      "familyId": "23097c59-c5ce-5754-9c0f-29f0af87861e",
+      "sourceVersionId": "206c2455-e764-5232-bf41-84626aae4207",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dalam suatu kegiatan kuis matematika kelompok, aturan penilaian ditentukan sebagai berikut:\n• Jawaban benar diberi nilai +4\n• Jawaban salah diberi nilai -2\n• Soal yang tidak dijawab diberi nilai -1\nDari total 25 soal yang diberikan, Kelompok A berhasil menjawab benar 16 soal, tidak menjawab 3 soal, dan sisanya dijawab salah. Menggunakan hirarki operasi hitung campuran, total nilai yang diperoleh Kelompok A adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "43"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "49"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "52"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "58"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung banyak soal yang dijawab salah:\nSoal Salah=Total Soal-(Benar+Tidak Dijawab)\nSoal Salah=25-(16+3)=25-19=6 soal\nTerapkan aturan penilaian menggunakan operasi hitung campuran:\nTotal Nilai=(16×4)+(6×(-2))+(3×(-1))\nTotal Nilai=64+(-12)+(-3)\nTotal Nilai=64-12-3=49\nAnalisis opsi pilihan jawaban:\nOpsi A (43): Salah, muncul jika siswa keliru menghitung poin soal tidak dijawab menjadi -3×3=-9 atau -3×2=-6.\nOpsi B (49 - BENAR): Hasil perhitungan yang tepat dan akurat (64-12-3=49).\nOpsi C (52): Salah, muncul jika siswa lupa memperhitungkan pengurangan untuk soal yang tidak dijawab (64-12=52).\nOpsi D (58): Salah, muncul jika siswa keliru menganggap soal salah diberi nilai -1 dan tidak dijawab diberi nilai 0 (64-6=58).\nKesalahan umum yang diantisipasi: Siswa sering lupa memperhitungkan poin negatif untuk soal yang \"tidak dijawab\" (-1) atau keliru dalam mengalikan/menjumlahkan tanda bilangan negatif."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dalam suatu kegiatan kuis matematika kelompok, aturan penilaian ditentukan sebagai berikut:\n• Jawaban benar diberi nilai +4\n• Jawaban salah diberi nilai -2\n• Soal yang tidak dijawab diberi nilai -1\nDari total 25 soal yang diberikan, Kelompok A berhasil menjawab benar 16 soal, tidak menjawab 3 soal, dan sisanya dijawab salah. Menggunakan hirarki operasi hitung campuran, total nilai yang diperoleh Kelompok A adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "43"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "49"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "52"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "58"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Banyak soal salah = 25−(16+3)=6. Nilai total = (16×4)+(6×(−2))+(3×(−1)) = 64−12−3=49. Jawaban B. Opsi A (43) dapat muncul jika siswa keliru memberi total penalti −9 untuk tiga soal kosong: 64−12−9=43. Opsi C (52) mengabaikan penalti tiga soal kosong: 64−12=52. Opsi D (58) dapat muncul jika siswa keliru memberi penalti −1 untuk soal salah dan nol untuk soal kosong: 64−6=58."
+        }
+      },
+      "correctionReason": "Alasan pengecoh A menyebut penalti −3×3=−9 atau −3×2=−6 sebagai penyebab nilai43. Hanya −9 yang memberi43; −6 justru memberi46. Hasil utama49 dan kunciB tetap benar.",
+      "independentSolution": "Salah=25−16−3=6. Nilai=16×4−6×2−3=49. Pengecoh A=43 bisa terjadi jika penalti tiga soal kosong salah menjadi −9; jika menjadi −6, hasilnya 46, bukan 43.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-12",
+      "familyId": "7a9f4a64-c308-5d84-98f1-d1d535058682",
+      "sourceVersionId": "21be3676-ddd8-5b5b-8769-dc30338a1dc0",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Tim OSIS SMP menyiapkan dua jenis minuman untuk disajikan dalam acara jalan sehat sekolah. Panitia mencampur 18 liter sirup rasa jeruk dengan 13,5 liter air mineral ke dalam wadah utama.\nRasio paling sederhana antara volume sirup rasa jeruk dan air mineral dalam campuran tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3:2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4:3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5:4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "8:5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTuliskan rasio awal antara volume sirup dan air mineral:\nRasio=18:13,5\nKalikan kedua ruas dengan 2 untuk menghilangkan pecahan desimal:\n18×2:13,5×2=36:27\nSederhanakan dengan membagi kedua ruas dengan FPB dari 36 dan 27, yaitu 9:\n(36)/(9):(27)/(9)=4:3\nJadi, rasio paling sederhana adalah 4:3.\nKesalahan Umum yang Diantisipasi:\nSiswa langsung membulatkan 13,5 menjadi 14 sehingga mendapatkan rasio salah 18:14=9:7, atau terbalik menaruh posisi air mineral terhadap sirup (3:4)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tim OSIS SMP menyiapkan dua jenis minuman untuk disajikan dalam acara jalan sehat sekolah. Panitia mencampur 18 liter sirup rasa jeruk dengan 13,5 liter air mineral ke dalam wadah utama.\nRasio paling sederhana antara volume sirup rasa jeruk dan air mineral dalam campuran tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "3:2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "4:3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "5:4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "8:5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTuliskan rasio awal antara volume sirup dan air mineral:\nRasio=18:13,5\nKalikan kedua ruas dengan 2 untuk menghilangkan pecahan desimal:\n18×2:13,5×2=36:27\nSederhanakan dengan membagi kedua ruas dengan FPB dari 36 dan 27, yaitu 9:\n(36)/(9):(27)/(9)=4:3\nJadi, rasio paling sederhana adalah 4:3.\nKesalahan Umum yang Diantisipasi:\nSiswa langsung membulatkan 13,5 menjadi 14 sehingga mendapatkan rasio salah 18:14=9:7, atau terbalik menaruh posisi air mineral terhadap sirup (3:4)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "18:13,5=36:27=4:3.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-13",
+      "familyId": "fdf208cc-99ae-592d-b1a4-857dcb540b4f",
+      "sourceVersionId": "21bf2202-30f2-5499-a681-12c6d62be173",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Diketahui fungsi f:A→B dengan f(x)=x^(2)-4x+3, A={0,1,2,3,4}, dan B himpunan bilangan bulat. Banyak anggota range fungsi f adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "f(0)=3\nf(1)=1-4+3=0\nf(2)=4-8+3=-1\nf(3)=9-12+3=0\nf(4)=16-16+3=3\nRange = {-1, 0, 3}. Nilai 0 dan 3 muncul dua kali tetapi dihitung satu kali, sehingga banyak anggota range adalah 3 (domain memiliki 5 anggota)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Diketahui fungsi f:A→B dengan f(x)=x^(2)-4x+3, A={0,1,2,3,4}, dan B himpunan bilangan bulat. Banyak anggota range fungsi f adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "3"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "5"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "f(0)=3\nf(1)=1-4+3=0\nf(2)=4-8+3=-1\nf(3)=9-12+3=0\nf(4)=16-16+3=3\nRange = {-1, 0, 3}. Nilai 0 dan 3 muncul dua kali tetapi dihitung satu kali, sehingga banyak anggota range adalah 3 (domain memiliki 5 anggota)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "f(0),f(1),f(2),f(3),f(4)=3,0,−1,0,3. Range={−1,0,3}, beranggota 3.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-14",
+      "familyId": "23ce2a7e-5783-56c1-9860-f310c73fed85",
+      "sourceVersionId": "2220c2bb-654f-5dbc-bd88-1a091f9e221c",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Perhatikan data jumlah buku yang dibaca siswa selama satu bulan.\nKelompok A: 2, 3, 3, 4, 8\nKelompok B: 3, 3, 4, 4, 6\nPernyataan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kedua kelompok memiliki median yang sama dan jangkauan yang sama."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kelompok A memiliki jangkauan lebih kecil daripada kelompok B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kelompok B memiliki median lebih rendah daripada kelompok A."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kelompok A dan B memiliki rerata yang sama."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMedian A = 3, sedangkan median B = 4.\nJangkauan A = 8 − 2 = 6.\nJangkauan B = 6 − 3 = 3.\nRerata A = (2 + 3 + 3 + 4 + 8) ÷ 5 = 20 ÷ 5 = 4.\nRerata B = (3 + 3 + 4 + 4 + 6) ÷ 5 = 20 ÷ 5 = 4.\nJadi, jawaban yang tepat adalah D, karena kedua kelompok memiliki rerata yang sama, yaitu 4 buku."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan data jumlah buku yang dibaca siswa selama satu bulan.\nKelompok A: 2, 3, 3, 4, 8\nKelompok B: 3, 3, 4, 4, 6\nPernyataan yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Kedua kelompok memiliki median yang sama dan jangkauan yang sama."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Kelompok A memiliki jangkauan lebih kecil daripada kelompok B."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kelompok B memiliki median lebih rendah daripada kelompok A."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kelompok A dan B memiliki rerata yang sama."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMedian A = 3, sedangkan median B = 4.\nJangkauan A = 8 − 2 = 6.\nJangkauan B = 6 − 3 = 3.\nRerata A = (2 + 3 + 3 + 4 + 8) ÷ 5 = 20 ÷ 5 = 4.\nRerata B = (3 + 3 + 4 + 4 + 6) ÷ 5 = 20 ÷ 5 = 4.\nJadi, jawaban yang tepat adalah D, karena kedua kelompok memiliki rerata yang sama, yaitu 4 buku."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Jumlah kedua data=20, rerata masing-masing 4. Median A=3, B=4; jangkauan A=6, B=3; hanya opsi D benar.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-15",
+      "familyId": "64de969d-0e00-5efd-b291-6bda81934907",
+      "sourceVersionId": "2300bceb-1658-5fb6-9f63-8ce026bfabb4",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Di antara kelompok tiga bilangan berikut, yang merupakan tripel Pythagoras adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6, 8, 12"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5, 10, 12"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "9, 12, 15"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "7, 9, 12"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Tiga bilangan a, b, c (c terbesar) merupakan tripel Pythagoras jika a^(2) + b^(2) = c^(2).\n9^(2) + 12^(2) = 81 + 144 = 225 = 15^(2), sehingga (9, 12, 15) adalah tripel Pythagoras.\nKelompok lain tidak memenuhi: 6^(2) + 8^(2) = 100 ≠ 12^(2); 5^(2) + 10^(2) = 125 ≠ 12^(2); 7^(2) + 9^(2) = 130 ≠ 12^(2)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Di antara kelompok tiga bilangan berikut, yang merupakan tripel Pythagoras adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "6, 8, 12"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "5, 10, 12"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "9, 12, 15"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "7, 9, 12"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Tiga bilangan a, b, c (c terbesar) merupakan tripel Pythagoras jika a^(2) + b^(2) = c^(2).\n9^(2) + 12^(2) = 81 + 144 = 225 = 15^(2), sehingga (9, 12, 15) adalah tripel Pythagoras.\nKelompok lain tidak memenuhi: 6^(2) + 8^(2) = 100 ≠ 12^(2); 5^(2) + 10^(2) = 125 ≠ 12^(2); 7^(2) + 9^(2) = 130 ≠ 12^(2)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "9²+12²=81+144=225=15². Opsi A:100≠144; B:125≠144; D:130≠144.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-16",
+      "familyId": "517b0adb-a152-5cf3-83ae-f7cd60c8f896",
+      "sourceVersionId": "23011b8d-6c9c-5f63-ae1d-ab9a793c50e6",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Seorang siswa mengevaluasi keakuratan penggambaran ulang denah panggung seni sekolah. Pada denah awal bertuliskan skala $1:400$, lebar panggung terukur $6cm$. Siswa tersebut membuat denah baru dengan lebar panggung menjadi $12cm$.\nTiga siswa memberikan penilaian mengenai nilai skala baru denah tersebut:\nEvaluasi I: \"Skala baru adalah $1:800$, karena nilai pembanding skala dikalikan dua ($400×2=800$).\"\nEvaluasi II: \"Skala baru tetap $1:400$, karena ukuran panggung sebenarnya tidak berubah.\"\nEvaluasi III: \"Skala baru adalah $1:200$, karena ukuran gambar yang diperbesar dua kali lipat membuat faktor pemecah skala berkurang menjadi setengahnya ($400÷2=200$).\"\nEvaluasi manakah yang benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung lebar panggung sebenarnya ($L$):\n$L=6 cm×400=2.400 cm=24 meter$\nMengevaluasi skala baru dengan lebar gambar $12cm$:\n$Skala Baru=\\frac{Lebar Gambar Baru}{Lebar Sebenarnya}=\\frac{12 cm}{2.400 cm}=\\frac{1}{200}$\nMaka, Evaluasi III divalidasi tepat secara kaidah perbandingan skala."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang siswa mengevaluasi keakuratan penggambaran ulang denah panggung seni sekolah. Pada denah awal bertuliskan skala $1:400$, lebar panggung terukur $6cm$. Siswa tersebut membuat denah baru dengan lebar panggung menjadi $12cm$.\nTiga siswa memberikan penilaian mengenai nilai skala baru denah tersebut:\nEvaluasi I: \"Skala baru adalah $1:800$, karena nilai pembanding skala dikalikan dua ($400×2=800$).\"\nEvaluasi II: \"Skala baru tetap $1:400$, karena ukuran panggung sebenarnya tidak berubah.\"\nEvaluasi III: \"Skala baru adalah $1:200$, karena ukuran gambar yang diperbesar dua kali lipat membuat faktor pemecah skala berkurang menjadi setengahnya ($400÷2=200$).\"\nEvaluasi manakah yang benar secara matematis?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Evaluasi I"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Evaluasi II"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Evaluasi III"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Evaluasi I dan II"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nHitung lebar panggung sebenarnya ($L$):\n$L=6 cm×400=2.400 cm=24 meter$\nMengevaluasi skala baru dengan lebar gambar $12cm$:\n$Skala Baru=\\frac{Lebar Gambar Baru}{Lebar Sebenarnya}=\\frac{12 cm}{2.400 cm}=\\frac{1}{200}$\nMaka, Evaluasi III divalidasi tepat secara kaidah perbandingan skala."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Lebar sebenarnya=6×400=2.400 cm. Skala baru=12:2.400=1:200.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-17",
+      "familyId": "2ccb9477-56d1-56ac-a985-1e275f4bd2df",
+      "sourceVersionId": "234c2a2d-c0c7-51ad-84e0-139315953e88",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah segitiga sama kaki memiliki panjang kaki 17 cm dan panjang alas 16 cm. Luas segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "100 cm^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "136 cm^(2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "120 cm^(2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm^(2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Garis tinggi ke alas membagi alas menjadi dua bagian sama panjang, masing-masing 8 cm.\nTinggi = √(17^(2) - 8^(2)) = √(289 - 64) = √225 = 15 cm.\nLuas = ½ × 16 × 15 = 120 cm^(2)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah segitiga sama kaki memiliki panjang kaki 17 cm dan panjang alas 16 cm. Luas segitiga tersebut adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "100 cm^(2)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "136 cm^(2)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "120 cm^(2)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "240 cm^(2)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Garis tinggi ke alas membagi alas menjadi dua bagian sama panjang, masing-masing 8 cm.\nTinggi = √(17^(2) - 8^(2)) = √(289 - 64) = √225 = 15 cm.\nLuas = ½ × 16 × 15 = 120 cm^(2)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Setengah alas=8. Tinggi=√(17²−8²)=15; luas=(1/2)×16×15=120 cm².",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-18",
+      "familyId": "73b5bd10-2811-5c21-9da3-1354d0efa3a1",
+      "sourceVersionId": "235ef0a6-9bff-5a90-a336-2f0cc30cbe17",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah sampel populasi perkembangbiakan mikroorganisme di laboratorium biologi SMP membelah diri menjadi 2 kali lipat setiap 30 menit. Mula-mula terdapat 2^(3) mikroorganisme. Banyaknya mikroorganisme setelah 2,5 jam dinyatakan dalam bentuk bilangan berpangkat (eksponen) sederhana adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2^(7)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2^(8)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2^(9)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2^(10)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nDurasi waktu = 2,5 jam = 150 menit.\nBanyak periode pembelahan (n) = 150÷30=5 kali pembelahan.\nSetiap pembelahan mengalikan jumlah dengan 2^(1). Maka faktor pengali setelah 5 kali pembelahan adalah 2^(5).\nGunakan sifat perkalian eksponen a^(m)×a^(n)=a^(m+n):\nJumlah Akhir=2^(3)×2^(5)=2^(3+5)=2^(8)bakteri\nKesalahan Umum yang Diantisipasi:\nSiswa sering mengalikan pangkatnya (3×5=15) sehingga mendapatkan 2^(15), alih-alih menjumlahkan pangkatnya (3+5=8)."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah sampel populasi perkembangbiakan mikroorganisme di laboratorium biologi SMP membelah diri menjadi 2 kali lipat setiap 30 menit. Mula-mula terdapat 2^(3) mikroorganisme. Banyaknya mikroorganisme setelah 2,5 jam dinyatakan dalam bentuk bilangan berpangkat (eksponen) sederhana adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "2^(7)"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "2^(8)"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "2^(9)"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "2^(10)"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nDurasi waktu = 2,5 jam = 150 menit.\nBanyak periode pembelahan (n) = 150÷30=5 kali pembelahan.\nSetiap pembelahan mengalikan jumlah dengan 2^(1). Maka faktor pengali setelah 5 kali pembelahan adalah 2^(5).\nGunakan sifat perkalian eksponen a^(m)×a^(n)=a^(m+n):\nJumlah Akhir=2^(3)×2^(5)=2^(3+5)=2^(8)bakteri\nKesalahan Umum yang Diantisipasi:\nSiswa sering mengalikan pangkatnya (3×5=15) sehingga mendapatkan 2^(15), alih-alih menjumlahkan pangkatnya (3+5=8)."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "2,5 jam=150 menit=5 periode. Jumlah akhir=2³×2⁵=2⁸.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-19",
+      "familyId": "3758bca5-a6d5-5d3f-b909-2c3e89ba08ba",
+      "sourceVersionId": "23766a6f-cb34-59e2-a5b1-cef94ff3c849",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Sebuah aula sekolah memiliki susunan kursi yang dinyatakan dalam ekspresi aljabar.\nBaris pertama memuat $2x+3$ kursi.\nSetiap baris berikutnya bertambah $x-1$ kursi dari baris sebelumnya.\nSeorang panitia mengevaluasi bahwa jumlah kursi pada baris ke-3 dapat dinyatakan oleh bentuk aljabar $4x+1$. Evaluasi yang tepat mengenai hasil analisis panitia tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena baris ke-3 $=(2x+3)+2(x-1)=2x+3+2x-2=4x+1$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena baris ke-3 seharusnya $3x+2$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena penambahan 2 kali beda seharusnya menghasilkan $4x+5$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena baris ke-3 dihitung dengan mengalikan baris pertama dengan 3"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nBaris ke-1 (${U}_{1}$) $=2x+3$\nBeda antarbaris ($b$) $=x-1$\nBerdasarkan pola barisan aritmetika, suku/baris ke-3 (${U}_{3}$) adalah:\n${U}_{3}={U}_{1}+2b$\n${U}_{3}=(2x+3)+2(x-1)$\nGunakan sifat distributif untuk menjabarkan $2(x-1)$:\n${U}_{3}=2x+3+2x-2$\nKelompokkan suku-suku sejenis:\n${U}_{3}=(2x+2x)+(3-2)=4x+1$\nJadi, evaluasi menunjukkan bahwa pernyataan panitia Benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Sebuah aula sekolah memiliki susunan kursi yang dinyatakan dalam ekspresi aljabar.\nBaris pertama memuat $2x+3$ kursi.\nSetiap baris berikutnya bertambah $x-1$ kursi dari baris sebelumnya.\nSeorang panitia mengevaluasi bahwa jumlah kursi pada baris ke-3 dapat dinyatakan oleh bentuk aljabar $4x+1$. Evaluasi yang tepat mengenai hasil analisis panitia tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Benar, karena baris ke-3 $=(2x+3)+2(x-1)=2x+3+2x-2=4x+1$"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena baris ke-3 seharusnya $3x+2$"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena penambahan 2 kali beda seharusnya menghasilkan $4x+5$"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena baris ke-3 dihitung dengan mengalikan baris pertama dengan 3"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nBaris ke-1 (${U}_{1}$) $=2x+3$\nBeda antarbaris ($b$) $=x-1$\nBerdasarkan pola barisan aritmetika, suku/baris ke-3 (${U}_{3}$) adalah:\n${U}_{3}={U}_{1}+2b$\n${U}_{3}=(2x+3)+2(x-1)$\nGunakan sifat distributif untuk menjabarkan $2(x-1)$:\n${U}_{3}=2x+3+2x-2$\nKelompokkan suku-suku sejenis:\n${U}_{3}=(2x+2x)+(3-2)=4x+1$\nJadi, evaluasi menunjukkan bahwa pernyataan panitia Benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "U3=(2x+3)+2(x−1)=4x+1. Untuk konteks kursi bertambah tiap baris, x bilangan bulat >1 merupakan domain yang sesuai.",
+      "optionalSuggestionNotApplied": "Saran kelengkapan konteks: nyatakan x bilangan bulat lebih dari1 agar jumlah kursi bulat dan tambahan x−1 positif. Identitas aljabar dan kunciA sudah benar."
+    },
+    {
+      "reviewId": "B3-20",
+      "familyId": "147e4787-a346-5b51-a06c-ac18f5ab3dc9",
+      "sourceVersionId": "23fdd177-e9c1-5606-acc2-c6d0e1e955cb",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Taman sekolah berbentuk persegi panjang. Siswa A menyatakan keliling taman 36 meter, sehingga $p+l=18$. Siswa B menyatakan selisih panjang dan lebar 4 meter, sehingga $p-l=4$. Pengelola menyatakan luas taman 80 meter persegi. Evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena luas taman yang benar adalah 72 meter persegi."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena panjang taman 10 meter dan lebar 8 meter."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena panjang 11 meter, lebar 7 meter, dan luas 77 meter persegi."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena panjang taman 12 meter dan lebar 6 meter."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "p+l=18 dan p-l=4 memberi p=11, l=7. Luas 77 meter persegi, bukan 80. C benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Taman sekolah berbentuk persegi panjang. Siswa A menyatakan keliling taman 36 meter, sehingga $p+l=18$. Siswa B menyatakan selisih panjang dan lebar 4 meter, sehingga $p-l=4$. Pengelola menyatakan luas taman 80 meter persegi. Evaluasi yang tepat adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Salah, karena luas taman yang benar adalah 72 meter persegi."
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Salah, karena panjang taman 10 meter dan lebar 8 meter."
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Salah, karena panjang 11 meter, lebar 7 meter, dan luas 77 meter persegi."
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Benar, karena panjang taman 12 meter dan lebar 6 meter."
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "p+l=18 dan p-l=4 memberi p=11, l=7. Luas 77 meter persegi, bukan 80. C benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "p+l=18 dan p−l=4 → p=11,l=7 → luas77, bukan80. Hanya opsi C cocok dengan kedua persamaan.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-21",
+      "familyId": "85ef9d08-f328-5c38-bdfb-c8b49443f270",
+      "sourceVersionId": "242bbbf9-a28d-539b-965a-16b8efc91d3b",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan proporsional antara waktu operasional mesin cetak offset dan jumlah lembar brosur pendaftaran sekolah yang berhasil dicetak:\nWaktu Cetak (menit) | \nJumlah Brosur (lembar)\n\n4 | \n160\n\n7 | \n280\n\n10 | \n400\n\nn | \n640\nSeorang siswa menganalisis waktu cetak n dan jumlah brosur jika mesin bekerja selama 6 menit. Banyaknya brosur yang dicetak mesin tersebut dalam waktu 6 menit adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "200 lembar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "240 lembar"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "260 lembar"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "300 lembar"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis laju pencetakan (konstanta proporsionalitas):\nLaju=(160)/(4)=(280)/(7)=(400)/(10)=40 lembar/menit\nHitung jumlah brosur untuk waktu 6 menit:\nJumlah Brosur=6 menit×40 lembar/menit=240 lembar\n(Catatan: Nilai n untuk 640 lembar adalah (640)/(40)=16 menit).\nKesalahan Umum yang Diantisipasi:\nSiswa salah memprediksi nilai rata-rata antara 4 dan 7 menit dengan mengambil titik tengah 220 lembar tanpa membedakan rasio linier per menitnya."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Tabel berikut menyajikan data hubungan proporsional antara waktu operasional mesin cetak offset dan jumlah lembar brosur pendaftaran sekolah yang berhasil dicetak:\nWaktu Cetak (menit) | \nJumlah Brosur (lembar)\n\n4 | \n160\n\n7 | \n280\n\n10 | \n400\n\nn | \n640\nSeorang siswa menganalisis waktu cetak n dan jumlah brosur jika mesin bekerja selama 6 menit. Banyaknya brosur yang dicetak mesin tersebut dalam waktu 6 menit adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "200 lembar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "240 lembar"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "260 lembar"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "300 lembar"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "B"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nMenganalisis laju pencetakan (konstanta proporsionalitas):\nLaju=(160)/(4)=(280)/(7)=(400)/(10)=40 lembar/menit\nHitung jumlah brosur untuk waktu 6 menit:\nJumlah Brosur=6 menit×40 lembar/menit=240 lembar\n(Catatan: Nilai n untuk 640 lembar adalah (640)/(40)=16 menit).\nKesalahan Umum yang Diantisipasi:\nSiswa salah memprediksi nilai rata-rata antara 4 dan 7 menit dengan mengambil titik tengah 220 lembar tanpa membedakan rasio linier per menitnya."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Laju=160/4=280/7=400/10=40 lembar/menit; pada6 menit=240 lembar. n=640/40=16 hanya informasi tambahan.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-22",
+      "familyId": "b93b0cdc-9020-5a86-b41e-c44ad87884c6",
+      "sourceVersionId": "247826ac-7b56-5e70-bcd2-fc00ed324411",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Barisan aritmetika dan barisan geometri sama-sama memiliki suku pertama 24. Beda barisan aritmetika adalah -4 dan rasio barisan geometri adalah (1)/(2). Perbandingan penurunan nilai suku-suku kedua barisan pada lima suku pertama yang tepat adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Penurunan barisan aritmetika selalu 4, sedangkan penurunan barisan geometri makin kecil: 12, 6, 3, 1,5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Penurunan kedua barisan sama-sama tetap"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Penurunan barisan geometri selalu 12, sedangkan penurunan barisan aritmetika makin kecil"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penurunan barisan aritmetika makin besar, sedangkan penurunan barisan geometri tetap"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Barisan aritmatika: 24, 20, 16, 12, 8. Selisih antarsuku selalu 4 (tetap).\nBarisan geometri: 24, 12, 6, 3, 1,5. Selisih antarsuku: 12, 6, 3, 1,5 (makin kecil, karena setiap suku dikalikan (1)/(2)).\nJadi, pada barisan aritmetika penurunan tetap, sedangkan pada barisan geometri penurunan semakin kecil."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Barisan aritmetika dan barisan geometri sama-sama memiliki suku pertama 24. Beda barisan aritmetika adalah -4 dan rasio barisan geometri adalah (1)/(2). Perbandingan penurunan nilai suku-suku kedua barisan pada lima suku pertama yang tepat adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Penurunan barisan aritmetika selalu 4, sedangkan penurunan barisan geometri makin kecil: 12, 6, 3, 1,5"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Penurunan kedua barisan sama-sama tetap"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Penurunan barisan geometri selalu 12, sedangkan penurunan barisan aritmetika makin kecil"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penurunan barisan aritmetika makin besar, sedangkan penurunan barisan geometri tetap"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Barisan aritmatika: 24, 20, 16, 12, 8. Selisih antarsuku selalu 4 (tetap).\nBarisan geometri: 24, 12, 6, 3, 1,5. Selisih antarsuku: 12, 6, 3, 1,5 (makin kecil, karena setiap suku dikalikan (1)/(2)).\nJadi, pada barisan aritmetika penurunan tetap, sedangkan pada barisan geometri penurunan semakin kecil."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Aritmetika:24,20,16,12,8, beda−4, besar penurunan4. Geometri:24,12,6,3,1,5, besar penurunan12;6;3;1,5.",
+      "optionalSuggestionNotApplied": "Saran istilah: gunakan besar penurunan antarsuku=4, bukan selisih antarsuku selalu4, agar tidak tertukar dengan beda aritmetika bertanda−4. Penjelasan konteks penurunan dan kunciA sudah benar."
+    },
+    {
+      "reviewId": "B3-23",
+      "familyId": "f2c046fc-c9bc-591a-9617-373839533a65",
+      "sourceVersionId": "24ef6828-3487-5914-a8aa-a15e06de7129",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Perhatikan dua kelompok berikut.\nKelompok A: 80, 80, 80, 80, 80\nKelompok B: 60, 70, 80, 90, 100\nKesimpulan yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean dan median sama, tetapi penyebaran B lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean B lebih besar daripada A"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Median B lebih besar daripada A"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penyebaran A lebih besar daripada B"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 80 dan B = 80. Median keduanya = 80. Jangkauan A = 0, sedangkan B = 40. Jadi B jauh lebih menyebar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Perhatikan dua kelompok berikut.\nKelompok A: 80, 80, 80, 80, 80\nKelompok B: 60, 70, 80, 90, 100\nKesimpulan yang benar adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Mean dan median sama, tetapi penyebaran B lebih besar"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Mean B lebih besar daripada A"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Median B lebih besar daripada A"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Penyebaran A lebih besar daripada B"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Pembahasan : Mean A = 80 dan B = 80. Median keduanya = 80. Jangkauan A = 0, sedangkan B = 40. Jadi B jauh lebih menyebar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Rerata dan median kedua kelompok80. A semua80, jangkauan0; B jangkauan40 dan varians populasi200. B lebih menyebar pada data ini.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-24",
+      "familyId": "d4d6db65-4aed-5154-b524-2565e7ff4666",
+      "sourceVersionId": "24f36207-767d-5381-8fb0-4b729ac58df7",
+      "difficulty": "MEDIUM",
+      "source": {
+        "stem": {
+          "text": "Dua orang siswa, Andi dan Budi, diminta menyederhanakan bentuk aljabar 5(2a-b)-3(a-2b).\nHasil Andi: 7a+b\nHasil Budi: 7a-11b\nPernyataan analisis kesetaraan (ekuivalensi) yang tepat mengenai pengerjaan kedua siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Andi benar, karena bentuk aljabar awal ekuivalen dengan 7a+b"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Budi benar, karena bentuk aljabar awal ekuivalen dengan 7a-11b"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua siswa salah, karena bentuk aljabar awal ekuivalen dengan 7a-b"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua siswa salah, karena bentuk aljabar awal ekuivalen dengan 13a-11b"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan bentuk aljabar menggunakan sifat distributif perkalian:\n5(2a-b)-3(a-2b)=10a-5b-3a+6b\nKelompokkan suku-suku sejenis:\n=(10a-3a)+(-5b+6b)\n=7a+b\nBentuk aljabar awal ekuivalen dengan 7a+b. Dengan demikian, pengerjaan Andi adalah BENAR."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua orang siswa, Andi dan Budi, diminta menyederhanakan bentuk aljabar 5(2a-b)-3(a-2b).\nHasil Andi: 7a+b\nHasil Budi: 7a-11b\nPernyataan analisis kesetaraan (ekuivalensi) yang tepat mengenai pengerjaan kedua siswa tersebut adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Andi benar, karena bentuk aljabar awal ekuivalen dengan 7a+b"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Budi benar, karena bentuk aljabar awal ekuivalen dengan 7a-11b"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Kedua siswa salah, karena bentuk aljabar awal ekuivalen dengan 7a-b"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Kedua siswa salah, karena bentuk aljabar awal ekuivalen dengan 13a-11b"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSederhanakan bentuk aljabar menggunakan sifat distributif perkalian:\n5(2a-b)-3(a-2b)=10a-5b-3a+6b\nKelompokkan suku-suku sejenis:\n=(10a-3a)+(-5b+6b)\n=7a+b\nBentuk aljabar awal ekuivalen dengan 7a+b. Dengan demikian, pengerjaan Andi adalah BENAR."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "5(2a−b)−3(a−2b)=10a−5b−3a+6b=7a+b.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-25",
+      "familyId": "b97292b2-e5b7-5f55-b52a-cc8af0aae3ef",
+      "sourceVersionId": "2577a8e1-0b62-59c2-9c66-697806a00e7b",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Rani mengendarai sepeda menuju sekolah yang berjarak 9km. Biasanya ia mengayuh dengan kecepatan rata-rata 18km/jam sehingga tiba tepat waktu. Suatu hari, setelah menempuh 3km pertama dengan kecepatan normalnya, rantai sepeda Rani putus sehingga ia harus berhenti selama 10menit untuk memperbaikinya. Kecepatan rata-rata minimal yang harus dikayuh Rani untuk sisa perjalanan agar ia tetap tiba di sekolah pada waktu yang sama seperti biasanya adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "24km/jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "28km/jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "32km/jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "36km/jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nWaktu Normal Perjalanan: t=(9km)/(18km/jam)=0,5jam=30menit.\nAnalisis Perjalanan yang Terjadi:\nWaktu tempuh 3km pertama = (3km)/(18km/jam)=(1)/(6)jam=10menit.\nWaktu berhenti menambal ban = 10menit.\nTotal waktu terpakai sejauh ini = 10+10=20menit.\nSisa Waktu dan Jarak:\nSisa waktu tersedia = 30-20=10menit=(1)/(6)jam.\nSisa jarak = 9-3=6km.\nKecepatan Baru yang Diperlukan:\nv=(6km)/((1)/(6)jam)=36km/jam\nKesalahan Umum yang Diantisipasi:\nSiswa lupa memperhitungkan durasi berhenti 10menit ke dalam total waktu yang terpakai, atau membagi sisa jarak 6km dengan sisa waktu dalam satuan menit tanpa mengonversinya ke jam."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Rani mengendarai sepeda menuju sekolah yang berjarak 9km. Biasanya ia mengayuh dengan kecepatan rata-rata 18km/jam sehingga tiba tepat waktu. Suatu hari, setelah menempuh 3km pertama dengan kecepatan normalnya, rantai sepeda Rani putus sehingga ia harus berhenti selama 10menit untuk memperbaikinya. Kecepatan rata-rata minimal yang harus dikayuh Rani untuk sisa perjalanan agar ia tetap tiba di sekolah pada waktu yang sama seperti biasanya adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "24km/jam"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "28km/jam"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "32km/jam"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "36km/jam"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nWaktu Normal Perjalanan: t=(9km)/(18km/jam)=0,5jam=30menit.\nAnalisis Perjalanan yang Terjadi:\nWaktu tempuh 3km pertama = (3km)/(18km/jam)=(1)/(6)jam=10menit.\nWaktu berhenti memperbaiki rantai sepeda = 10menit.\nTotal waktu terpakai sejauh ini = 10+10=20menit.\nSisa Waktu dan Jarak:\nSisa waktu tersedia = 30-20=10menit=(1)/(6)jam.\nSisa jarak = 9-3=6km.\nKecepatan Baru yang Diperlukan:\nv=(6km)/((1)/(6)jam)=36km/jam\nKesalahan Umum yang Diantisipasi:\nSiswa lupa memperhitungkan durasi berhenti 10menit ke dalam total waktu yang terpakai, atau membagi sisa jarak 6km dengan sisa waktu dalam satuan menit tanpa mengonversinya ke jam."
+        }
+      },
+      "correctionReason": "Konteks soal rantai sepeda putus, tetapi satu baris pembahasan menyebut berhenti menambal ban. Waktu dan jawaban36 km/jam benar; samakan konteks perbaikannya.",
+      "independentSolution": "Waktu normal9/18=0,5 jam=30 menit. Tiga km awal memakan10 menit; berhenti10 menit; sisa6 km harus ditempuh dalam10 menit=1/6 jam →36 km/jam.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-26",
+      "familyId": "733cbe84-a5ca-520a-a83a-85f6d5ab6b5c",
+      "sourceVersionId": "27453b25-9e8e-517b-b4d0-7c6d3751b016",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Seorang pengusaha konveksi seragam sekolah mengevaluasi hasil produksi dua kelompok penjahit. Kelompok X (4 orang) mampu menyelesaikan 120 potong pakaian dalam 5 hari. Kelompok Y (6 orang) mampu menyelesaikan 180 potong pakaian dalam 4 hari. Jika pengusaha ingin menyelesaikan pesanan 300 potong pakaian dalam waktu 4 hari, komposisi pekerja yang memenuhi target dengan jumlah pekerja paling sedikit adalah .... Penjahit tambahan dapat direkrut tanpa batas ketersediaan, dengan produktivitas sama seperti kelompok asalnya."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5 penjahit dari Kelompok X saja"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "8 penjahit dari Kelompok Y saja"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4 penjahit Kelompok X dan 3 penjahit Kelompok Y"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10 penjahit dari Kelompok Y saja"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Produktivitas X=120/(4*5)=6 dan Y=180/(6*4)=7,5 potong/orang/hari. Satu Y menghasilkan 30 potong dalam 4 hari. Minimum 300/30=10 pekerja Y; opsi lain tidak memenuhi target. D benar."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Seorang pengusaha konveksi seragam sekolah mengevaluasi hasil produksi dua kelompok penjahit. Kelompok X (4 orang) mampu menyelesaikan 120 potong pakaian dalam 5 hari. Kelompok Y (6 orang) mampu menyelesaikan 180 potong pakaian dalam 4 hari. Jika pengusaha ingin menyelesaikan pesanan 300 potong pakaian dalam waktu 4 hari, komposisi pekerja yang memenuhi target dengan jumlah pekerja paling sedikit adalah .... Penjahit tambahan dapat direkrut tanpa batas ketersediaan, dengan produktivitas sama seperti kelompok asalnya."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "5 penjahit dari Kelompok X saja"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "8 penjahit dari Kelompok Y saja"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "4 penjahit Kelompok X dan 3 penjahit Kelompok Y"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "10 penjahit dari Kelompok Y saja"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "D"
+        },
+        "explanation": {
+          "text": "Produktivitas X=120/(4*5)=6 dan Y=180/(6*4)=7,5 potong/orang/hari. Satu Y menghasilkan 30 potong dalam 4 hari. Minimum 300/30=10 pekerja Y; opsi lain tidak memenuhi target. D benar."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "X menghasilkan120/(4×5)=6 potong/orang/hari; Y=180/(6×4)=7,5. Dalam4 hari maksimum perorang30 potong (Y), sehingga sedikitnya300/30=10 orang. Sepuluh Y mencapai target; opsi A=120, B=240, C=186 potong.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-27",
+      "familyId": "34bbf6f4-d571-5899-96d6-f2f633dcd4b2",
+      "sourceVersionId": "2758469c-5931-5d2b-887e-876c71848f8d",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Koperasi sekolah menjual dua paket alat tulis sekolah:\nPaket Hemat A: berisi 6 buku latihan seharga Rp27.000\nPaket Hemat B: berisi 7 buku latihan seharga Rp31.500\nJika harga per unit buku pada Paket Hemat B bernilai ekuivalen (proporsional) dengan Paket Hemat A, berapakah harga yang harus dibayar siswa untuk membeli 7 buku latihan tersebut?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp28.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp30.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp31.500"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp35.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan harga satuan (laju perubahan harga per unit) pada Paket A:\nHarga Satuan=(Rp27.000)/(6 buku)=Rp4.500 per buku\nHitung harga untuk 7 buku latihan berdasarkan harga satuan yang ekuivalen:\nHarga 7 Buku=7×Rp4.500=Rp31.500\nKesalahan Umum yang Diantisipasi:\nSiswa keliru membagi Rp27.000 dengan 7 atau salah melakukan perkalian dasar 7×4.500."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Koperasi sekolah menjual dua paket buku latihan sejenis. Paket A berisi 6 buku seharga Rp27.000. Paket B berisi 7 buku dengan harga per buku yang sama seperti Paket A. Berapakah harga Paket B?"
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "Rp28.000"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "Rp30.000"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "Rp31.500"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "Rp35.000"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "Pembahasan:\nTentukan harga satuan (laju perubahan harga per unit) pada Paket A:\nHarga Satuan=(Rp27.000)/(6 buku)=Rp4.500 per buku\nHitung harga untuk 7 buku latihan berdasarkan harga satuan yang ekuivalen:\nHarga 7 Buku=7×Rp4.500=Rp31.500\nKesalahan Umum yang Diantisipasi:\nSiswa keliru membagi Rp27.000 dengan 7 atau salah melakukan perkalian dasar 7×4.500."
+        }
+      },
+      "correctionReason": "Stem sudah menyatakan Paket B berisi7 buku sehargaRp31.500, lalu menanyakan harga7 buku itu. Ini membocorkan jawaban yang dimaksud untuk dihitung dengan perbandingan. Hapus harga Paket B dari stem.",
+      "independentSolution": "Harga satuan27.000/6=4.500;7 buku=31.500. Jawaban tersebut sudah tertulis sebagai harga Paket B pada stem sehingga tidak perlu berhitung pada versi sumber.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-28",
+      "familyId": "37132cac-e3f2-5263-9134-6a75bcb73231",
+      "sourceVersionId": "27cb2e75-dd6d-5df8-9a85-67f16c81f85b",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Dua rute armada bus sekolah dianalisis melalui persamaan linier berikut:\nRute 1: 3x-ay=12\nRute 2: 6x+8y=b\nTim manajemen perjalanan menganalisis bahwa agar kedua bus berjalan pada rute yang persis sama dan saling berhimpit (sistem persamaan memiliki tak hingga banyak penyelesaian), nilai dari a+b yang memenuhi adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "28"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "-20"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "16"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSyarat dua garis berhimpit / memiliki tak hingga banyak penyelesaian:\n(a_1)/(a_2)=(b_1)/(b_2)=(c_1)/(c_2)\nBandingkan koefisien masing-masing variabel dan konstanta:\n(3)/(6)=(-a)/(8)=(12)/(b)\nSederhanakan perbandingan utama:\n(3)/(6)=(1)/(2)\nMencari nilai a: (−a / 8) = (1 / 2)\n⇒ −a × 2 = 8 × 1\n⇒ −2a = 8\n⇒ a = 8 / −2\n⇒ a = −4\nMencari nilai b: 12 / b = 1 / 2\n⇒ b = 12 × 2\n⇒ b = 24\nHitung nilai a+b:\na+b=-4+24=20"
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Dua rute armada bus sekolah dianalisis melalui persamaan linier berikut:\nRute 1: 3x-ay=12\nRute 2: 6x+8y=b\nTim manajemen perjalanan menganalisis bahwa agar kedua bus berjalan pada rute yang persis sama dan saling berhimpit (sistem persamaan memiliki tak hingga banyak penyelesaian), nilai dari a+b yang memenuhi adalah ...."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "20"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "28"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "-20"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "16"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "PEMBAHASAN\nSyarat dua garis berhimpit / memiliki tak hingga banyak penyelesaian:\n(a_1)/(a_2)=(b_1)/(b_2)=(c_1)/(c_2)\nBandingkan koefisien masing-masing variabel dan konstanta:\n(3)/(6)=(-a)/(8)=(12)/(b)\nSederhanakan perbandingan utama:\n(3)/(6)=(1)/(2)\nMencari nilai a: (−a / 8) = (1 / 2)\n⇒ −a × 2 = 8 × 1\n⇒ −2a = 8\n⇒ a = 8 / −2\n⇒ a = −4\nMencari nilai b: 12 / b = 1 / 2\n⇒ b = 12 × 2\n⇒ b = 24\nHitung nilai a+b:\na+b=-4+24=20"
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "Agar berhimpit, persamaan kedua harus dua kali pertama. Maka−2a=8 → a=−4 dan b=24; a+b=20.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-29",
+      "familyId": "73c7cfbc-d692-5920-9b07-a61ab2088b4e",
+      "sourceVersionId": "284f370c-2d8e-551c-829b-a046326ebc9c",
+      "difficulty": "EASY",
+      "source": {
+        "stem": {
+          "text": "Segitiga PQR siku-siku di Q dengan PQ = 15 cm dan PR = 17 cm. Panjang QR adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "8 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "16 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Sisi miring segitiga adalah PR (di hadapan sudut siku-siku di Q).\nQR^(2) = PR^(2) - PQ^(2) = 17^(2) - 15^(2) = 289 - 225 = 64.\nQR = √64 = 8 cm."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Segitiga PQR siku-siku di Q dengan PQ = 15 cm dan PR = 17 cm. Panjang QR adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "8 cm"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "12 cm"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "16 cm"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "32 cm"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "A"
+        },
+        "explanation": {
+          "text": "Sisi miring segitiga adalah PR (di hadapan sudut siku-siku di Q).\nQR^(2) = PR^(2) - PQ^(2) = 17^(2) - 15^(2) = 289 - 225 = 64.\nQR = √64 = 8 cm."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "PR sisi miring. QR=√(17²−15²)=√64=8 cm.",
+      "optionalSuggestionNotApplied": null
+    },
+    {
+      "reviewId": "B3-30",
+      "familyId": "8eaf70db-a6b9-5c59-af35-d71312735120",
+      "sourceVersionId": "28b571b7-5fc7-55c3-b263-06d71a8ed3d5",
+      "difficulty": "HARD",
+      "source": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 : ∠A2 = 7 : 5. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "95°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "105°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "115°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠A2 berpelurus: 7k + 5k = 180° → k = 15°. Maka ∠A1 = 105°.\n∠B4 dan ∠A1 adalah sudut luar berseberangan sehingga ∠B4 = 105°."
+        }
+      },
+      "replacement": {
+        "stem": {
+          "text": "Garis p ∥ q (p di atas q) dipotong garis transversal t di titik A (pada p) dan titik B (pada q). Pada tiap titik potong, sudut bernomor 1 = kiri-atas, 2 = kanan-atas, 3 = kiri-bawah, 4 = kanan-bawah (misalnya ∠A1 dan ∠B1). Diketahui ∠A1 : ∠A2 = 7 : 5. Besar ∠B4 adalah..."
+        },
+        "optionsOrStatements": {
+          "options": [
+            {
+              "id": "A",
+              "content": {
+                "text": "75°"
+              }
+            },
+            {
+              "id": "B",
+              "content": {
+                "text": "95°"
+              }
+            },
+            {
+              "id": "C",
+              "content": {
+                "text": "105°"
+              }
+            },
+            {
+              "id": "D",
+              "content": {
+                "text": "115°"
+              }
+            }
+          ],
+          "categories": []
+        },
+        "answerKey": {
+          "optionId": "C"
+        },
+        "explanation": {
+          "text": "∠A1 dan ∠A2 berpelurus: 7k + 5k = 180° → k = 15°. Maka ∠A1 = 105°.\n∠B4 dan ∠A1 adalah sudut luar berseberangan sehingga ∠B4 = 105°."
+        }
+      },
+      "correctionReason": null,
+      "independentSolution": "A1+A2=180° dan rasio7:5 →1 bagian15°; A1=105°. B4=A1 sebagai sudut luar berseberangan, jadi105°.",
+      "optionalSuggestionNotApplied": null
+    }
+  ]
+}

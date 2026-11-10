@@ -325,3 +325,21 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Perpanjangan batch berjalan - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** Content Admin dapat memperpanjang batch yang sedang OPEN dan belum berakhir/dibatalkan/difinalisasi. Waktu tutup baru wajib lebih akhir; jadwal tidak boleh overlap dengan batch terbit lain. Cutoff dan tenggat hasil (tutup baru +72 jam) berubah atomik memakai expectedRevision, advisory/row lock dan audit. Waktu mulai, versi paket, assignment, deadline attempt existing, hasil dan XP tidak berubah; durasi start baru tetap 10 menit dibatasi tutup baru. Batch yang telah berakhir tidak dapat dibuka kembali.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [review 30 soal PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md) memetakan persetujuan 10 EASY/10 MEDIUM/10 HARD dan tujuh koreksi ke versi PG Drill baru, provenance dan audit immutable. Operator terbatas `apps/api/scripts/release-owner-reviewed-pvp.mjs` mempertahankan pin paket/sesi lama. Pengalihan konfigurasi official dan kalibrasi empiris tidak termasuk persetujuan ini.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedua review PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-2--persetujuan-pemilik) memetakan 30 keluarga tambahan, 7 EASY/23 MEDIUM dan tujuh koreksi ke manifest immutable kedua. Operator rilis mendukung pilihan batch terbatas dengan digest persetujuan per batch; histori dan konfigurasi runtime tetap dipertahankan.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketiga PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-3--persetujuan-pemilik) memetakan 7 EASY/19 MEDIUM/4 HARD dan tiga koreksi ke 30 versi baru melalui manifest ketiga. Operator membatasi jumlah koreksi per batch sesuai persetujuan dan tetap mempertahankan histori/pin serta konfigurasi runtime.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keempat PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-4--persetujuan-pemilik) memetakan 12 EASY/13 MEDIUM/5 HARD dan lima revisi ke 30 versi baru melalui manifest keempat. Operator tetap membatasi digest/jumlah per batch, mempertahankan histori/pin dan tidak mengubah konfigurasi runtime.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kelima PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-5--persetujuan-pemilik) memetakan 6 EASY/17 MEDIUM/7 HARD serta delapan revisi ke manifest versi baru kelima. Histori/pin dan konfigurasi runtime tetap dipertahankan.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch keenam PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-6--persetujuan-pemilik) memetakan 9 EASY/19 MEDIUM/1 HARD dan lima revisi ke manifest 29 versi baru, dengan daftar HOLD terpisah untuk B6-17. Operator memeriksa jumlah dari klasifikasi yang dipin per batch dan menolak publikasi isi HOLD; histori/pin dan konfigurasi runtime tetap.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch ketujuh PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-7--persetujuan-pemilik) memetakan 11 EASY/14 MEDIUM/5 HARD dan lima revisi ke manifest 30 versi baru. Daftar HOLD tetap dipisahkan dan dicegah masuk rilis; histori/pin serta konfigurasi runtime tetap.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kedelapan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-8--persetujuan-pemilik) memetakan 10 EASY/16 MEDIUM/4 HARD dan tiga revisi ke manifest 30 versi baru; HOLD dipisahkan, histori/pin serta konfigurasi runtime tetap dipertahankan.
+
+**ENGINEERING DECISION — pemilik, 10 November 2026:** [batch kesembilan PvP](../development/PVP_OWNER_REVIEW_2026-11-10.md#batch-9--persetujuan-pemilik) memetakan 9 EASY/17 MEDIUM/4 HARD dan empat revisi ke manifest 30 versi baru; HOLD tetap dipisahkan, histori/pin dan konfigurasi runtime tetap.
