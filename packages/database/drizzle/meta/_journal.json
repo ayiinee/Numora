@@ -428,6 +428,13 @@
       "when": 1794286800000,
       "tag": "0060_irt_tryout_release_v1",
       "breakpoints": true
+    },
+    {
+      "idx": 61,
+      "version": "7",
+      "when": 1794290400000,
+      "tag": "0061_irt_release_cancellation_fence",
+      "breakpoints": true
     }
   ]
 }

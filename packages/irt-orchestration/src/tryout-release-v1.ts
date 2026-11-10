@@ -14,6 +14,7 @@ function enabled(publication = false) {
     throw new Error('IRT_RELEASE_DISABLED');
 }
 async function lockSource(tx: TransactionSql, batchId: string, requestId: string) {
+  await tx`SELECT pg_advisory_xact_lock(hashtextextended(${requestId}::text,53))`;
   const [host] = await tx`SELECT current_database() AS name`;
   if (!String(host?.name).startsWith('irt_research_test_'))
     throw new Error('IRT_RELEASE_DISPOSABLE_ONLY');

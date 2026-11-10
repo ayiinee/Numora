@@ -29,7 +29,7 @@ def main():
         verifier=importlib.util.module_from_spec(spec);spec.loader.exec_module(verifier)
         client=TestClient(create_app(fixture.settings,fixture.repo),raise_server_exceptions=False)
         headers={'Authorization':'Bearer '+fixture.settings.token}
-        for failure in (False,True):
+        for failure,block in ((False,''),(True,''),(False,'CANCEL'),(False,'REVOKE')):
             notification,_=verifier.canonical_fixture(ROOT,fixture,url,generate(2,20261119,arms=2,include_mcma=True)[0],profile())
             response=client.post('/api/v1/irt/compute/execute',headers=headers,json=notification)
             assert response.status_code==202,response.text
@@ -38,7 +38,7 @@ def main():
                     assert execute_once(fixture.repo)
             else:assert execute_once(fixture.repo)
             result=subprocess.run(['node','scripts/test-irt-release-cases.mjs',notification['requestId']],cwd=ROOT,
-                env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url,'IRT_RELEASE_EXPECT_FAILURE':str(failure).lower()},check=True,timeout=120)
+                env={**os.environ,'IRT_VERIFY_URL':cls.urls['main'],'IRT_FIXTURE_URL':url,'IRT_RELEASE_EXPECT_FAILURE':str(failure).lower(),'IRT_RELEASE_BLOCK':block},check=True,timeout=120)
             assert result.returncode==0
 
 if __name__=='__main__':main()
