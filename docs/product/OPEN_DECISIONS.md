@@ -297,3 +297,8 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Audit Tryout - 10 November 2026
 
 **ENGINEERING DECISION - perbaikan aturan existing:** Draft belum terbit dapat dijadwal ulang saat tanggal lewat; batch terbit tetap terkunci saat mulai. Sekolah delegasi divalidasi ulang saat publikasi. Operasional dapat membaca daftar/detail batch; options dan mutasi khusus Content/Super. [Temuan dan verifikasi](../development/TRYOUT_AUDIT_2026-11-10.md). **OPEN:** rilis hasil canonical multi-paket masih dependency delivery; guard tidak dibuka dan policy tidak dikarang.
+
+
+## Fallback paket utama - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.

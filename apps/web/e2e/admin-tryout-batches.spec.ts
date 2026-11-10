@@ -163,9 +163,7 @@ test('batch creation, school delegation and compact detail work across viewports
     .boundingBox();
   expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
   await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
-  await expect(
-    page.getByText(/Sekolah tanpa delegasi tidak otomatis mendapat paket utama/),
-  ).toBeVisible();
+  await expect(page.getByText(/Sekolah aktif tanpa delegasi memakai paket utama/)).toBeVisible();
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');
   await expect(page.getByLabel('Tutup (WIB)', { exact: true })).toHaveValue('2099-01-08T08:00');

@@ -20,3 +20,8 @@ Ini bukan penerimaan browser terhubung penuh atau persetujuan akademik.
 ## Aktivasi
 
 Lingkungan memerlukan migrasi `0055_tryout_batch_delegations.sql`, lalu build/restart API dan worker yang sesuai. Migrasi hanya diuji pada database lokal terisolasi; database cloud dan layanan API pengembangan yang memakai database tersebut tidak diubah. Tidak ada push/deploy. Review manusia dan penerimaan hasil multi-paket tetap diperlukan sebelum rilis penuh.
+
+
+## Fallback paket utama - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.

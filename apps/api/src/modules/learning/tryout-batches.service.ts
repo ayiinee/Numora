@@ -171,7 +171,10 @@ export class TryoutBatchesService {
         .from(tryoutBatchPackages)
         .innerJoin(assessmentPackages, eq(assessmentPackages.id, tryoutBatchPackages.packageId))
         .where(eq(tryoutBatchPackages.batchId, id))
-        .orderBy(asc(assessmentPackages.name));
+        .orderBy(
+          sql`case when ${assessmentPackages.id} = ${b.packageId} then 0 else 1 end`,
+          asc(assessmentPackages.name),
+        );
       const delegated = await tx
         .select({
           schoolId: schools.id,
@@ -263,12 +266,6 @@ export class TryoutBatchesService {
   }
   private async validatePublished(tx: AdminTransaction, id: string, body: SaveTryoutBatchDto) {
     await this.validateSchools(tx, body.schools);
-    const recipients = new Set([
-      ...body.schools.map((s) => s.packageId),
-      ...(body.mandiriPackageId ? [body.mandiriPackageId] : []),
-    ]);
-    if (!recipients.size || body.packageIds.some((p) => !recipients.has(p)))
-      throw new BadRequestException('Setiap paket harus memiliki penerima Mandiri atau sekolah.');
     const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     if (new Date(body.startsAt) <= new Date(clock!.now))
       throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
@@ -436,7 +433,12 @@ export class TryoutBatchesService {
   }
   async studentSchools(tx: AdminTransaction, studentId: string) {
     return tx
-      .selectDistinct({ schoolId: classes.schoolId, schoolName: schools.name, classId: classes.id })
+      .selectDistinct({
+        schoolId: classes.schoolId,
+        schoolName: schools.name,
+        classId: classes.id,
+        schoolActive: sql<boolean>`${schools.status} = 'ACTIVE'`.mapWith(Boolean),
+      })
       .from(classMemberships)
       .innerJoin(classes, eq(classes.id, classMemberships.classId))
       .innerJoin(schools, eq(schools.id, classes.schoolId))
@@ -475,22 +477,13 @@ export class TryoutBatchesService {
               eq(assessmentAttempts.studentId, studentId),
             ),
           );
-        const delegated = memberships.length
-          ? await tx
-              .select({ schoolId: schools.id, schoolName: schools.name })
-              .from(tryoutSchoolDelegations)
-              .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
-              .where(
-                and(
-                  eq(tryoutSchoolDelegations.batchId, b.id),
-                  inArray(
-                    tryoutSchoolDelegations.schoolId,
-                    memberships.map((m) => m.schoolId),
-                  ),
-                  eq(schools.status, 'ACTIVE'),
-                ),
-              )
-          : [];
+        const delegated = [
+          ...new Map(
+            memberships
+              .filter((m) => m.schoolActive)
+              .map((m) => [m.schoolId, { schoolId: m.schoolId, schoolName: m.schoolName }]),
+          ).values(),
+        ];
         const mandiri = !memberships.length && !!b.mandiriPackageId;
         if (!attempt && !mandiri && !delegated.length) continue;
         items.push({
@@ -549,31 +542,26 @@ export class TryoutBatchesService {
       if (schoolId) throw new BadRequestException('Sekolah tidak sesuai keanggotaan siswa.');
       packageId = b.mandiriPackageId;
     } else {
-      const delegated = await tx
+      const eligible = [
+        ...new Map(memberships.filter((m) => m.schoolActive).map((m) => [m.schoolId, m])).values(),
+      ];
+      const selected = schoolId
+        ? eligible.find((m) => m.schoolId === schoolId)
+        : eligible.length === 1
+          ? eligible[0]
+          : undefined;
+      if (!selected) throw new BadRequestException('Pilih sekolah sesuai keanggotaan aktif.');
+      const [delegation] = await tx
         .select()
         .from(tryoutSchoolDelegations)
-        .innerJoin(schools, eq(schools.id, tryoutSchoolDelegations.schoolId))
         .where(
           and(
             eq(tryoutSchoolDelegations.batchId, batchId),
-            inArray(
-              tryoutSchoolDelegations.schoolId,
-              memberships.map((m) => m.schoolId),
-            ),
-            eq(schools.status, 'ACTIVE'),
+            eq(tryoutSchoolDelegations.schoolId, selected.schoolId),
           ),
         );
-      const selected = schoolId
-        ? delegated.find((d) => d.schools.id === schoolId)
-        : delegated.length === 1
-          ? delegated[0]
-          : undefined;
-      if (!selected)
-        throw new BadRequestException(
-          'Pilih sekolah dengan delegasi yang sesuai keanggotaan aktif.',
-        );
-      packageId = selected.tryout_school_delegations.packageId;
-      contextSchool = selected.schools.id;
+      packageId = delegation?.packageId ?? b.packageId;
+      contextSchool = selected.schoolId;
     }
     if (!packageId) throw new BadRequestException('Batch tidak tersedia untuk kelompok siswa ini.');
     await this.ready(tx, [packageId]);

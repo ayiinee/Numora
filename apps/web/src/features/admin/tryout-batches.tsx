@@ -338,6 +338,10 @@ function BatchWorkspace({
                     </thead>
                     <tbody>
                       <tr>
+                        <td>Sekolah tanpa delegasi</td>
+                        <td>{detail.packages[0]?.name ?? 'Paket utama'}</td>
+                      </tr>
+                      <tr>
                         <td>Siswa Mandiri</td>
                         <td>
                           {detail.packages.find((p) => p.id === detail.mandiriPackageId)?.name ??
@@ -713,9 +717,8 @@ function BatchForm({
                 <h3 id="batch-recipients-title">Penerima Tryout</h3>
               </header>
               <p className="tryout-batch-recipient-info">
-                Sekolah tanpa delegasi tidak otomatis mendapat paket utama. Siswa sekolah hanya
-                dapat mengikuti batch melalui delegasi sekolah aktifnya. Akses siswa Mandiri diatur
-                terpisah di bawah.
+                Sekolah aktif tanpa delegasi memakai paket utama. Tambahkan delegasi untuk memilih
+                paket berbeda. Akses Mandiri diatur terpisah.
               </p>
               <div className="tryout-batch-recipient-controls">
                 <label>
