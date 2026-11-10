@@ -89,6 +89,7 @@ function BatchWorkspace({
   const [loading, setLoading] = useState(true);
   const [pending, setPending] = useState(false);
   const [editing, setEditing] = useState(false);
+  const [extending, setExtending] = useState(false);
   const [action, setAction] = useState<'publish' | 'cancel' | null>(null);
   const [reason, setReason] = useState('');
   const offset = adminOffset(url.params.get('offset'));
@@ -286,6 +287,15 @@ function BatchWorkspace({
                     >
                       {detail.editable ? 'Pengaturan' : 'Atur penerima'}
                     </Button>
+                    {detail.extendable && (
+                      <Button
+                        variant="secondary"
+                        disabled={pending}
+                        onClick={() => setExtending(true)}
+                      >
+                        Perpanjang Tryout
+                      </Button>
+                    )}
                     {detail.state === 'DRAFT' && (
                       <Button
                         disabled={!detail.editable || pending}
@@ -413,6 +423,27 @@ function BatchWorkspace({
                 )}
               </Card>
             </div>
+            <Dialog
+              open={extending}
+              onClose={() => setExtending(false)}
+              title="Perpanjang Tryout"
+              className="admin-management-dialog"
+              pending={pending}
+            >
+              {canManage && extending && (
+                <BatchExtensionForm
+                  key={detail.revision}
+                  batch={detail}
+                  token={token}
+                  onBusy={setPending}
+                  onCancel={() => setExtending(false)}
+                  onSaved={() => {
+                    setExtending(false);
+                    setVersion((v) => v + 1);
+                  }}
+                />
+              )}
+            </Dialog>
             <Dialog
               open={editing}
               onClose={() => setEditing(false)}
@@ -907,5 +938,80 @@ function BatchForm({
         </div>
       </Dialog>
     </div>
+  );
+}
+
+function BatchExtensionForm({
+  batch,
+  token,
+  onBusy,
+  onSaved,
+  onCancel,
+}: {
+  batch: TryoutBatchDto;
+  token: string;
+  onBusy: (busy: boolean) => void;
+  onSaved: () => void;
+  onCancel: () => void;
+}) {
+  const accessError = useAdminAccessError();
+  const [closesAt, setClosesAt] = useState(local(batch.closesAt));
+  const [error, setError] = useState('');
+  const [pending, setPending] = useState(false);
+  async function submit() {
+    setPending(true);
+    onBusy(true);
+    setError('');
+    try {
+      await apiRequest(`admin/tryout-batches/${batch.id}/extend`, token, {
+        method: 'POST',
+        body: JSON.stringify({
+          expectedRevision: batch.revision,
+          closesAt: `${closesAt}:00+07:00`,
+        }),
+      });
+      onSaved();
+    } catch (e) {
+      accessError(e);
+      setError(e instanceof Error ? e.message : 'Perpanjangan gagal disimpan.');
+    } finally {
+      setPending(false);
+      onBusy(false);
+    }
+  }
+  return (
+    <form
+      className="tryout-batch-form"
+      onSubmit={(e) => {
+        e.preventDefault();
+        void submit();
+      }}
+    >
+      <fieldset disabled={pending}>
+        <legend className="sr-only">Perpanjangan batch Tryout</legend>
+        <p>
+          Tutup saat ini: <strong>{wib(batch.closesAt)}</strong>
+        </p>
+        <label>
+          Tutup baru (WIB)
+          <input
+            required
+            type="datetime-local"
+            min={local(new Date(Date.parse(batch.closesAt) + 60000).toISOString())}
+            value={closesAt}
+            onChange={(e) => setClosesAt(e.target.value)}
+          />
+        </label>
+        <p>Durasi pengerjaan tetap 10 menit. Deadline siswa yang sudah mulai tidak berubah.</p>
+        <p>Batas penerbitan hasil mengikuti waktu tutup baru +72 jam.</p>
+        {error && <p role="alert">{error}</p>}
+        <div className="admin-content-actions">
+          <Button type="button" variant="secondary" onClick={onCancel}>
+            Batal
+          </Button>
+          <Button type="submit">{pending ? 'Menyimpan?' : 'Simpan perpanjangan'}</Button>
+        </div>
+      </fieldset>
+    </form>
   );
 }

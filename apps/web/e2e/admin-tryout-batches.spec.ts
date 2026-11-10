@@ -18,6 +18,7 @@ test('Operations can read batches but cannot open management controls (TEST ONLY
     state: 'DRAFT',
     editable: true,
     delegationsEditable: true,
+    extendable: false,
     mandiriPackageId: null,
     packages: [],
     schools: [],
@@ -85,6 +86,7 @@ test('batch creation, school delegation and compact detail work across viewports
         state: 'DRAFT',
         editable: true,
         delegationsEditable: true,
+        extendable: false,
         revision: 1,
         mandiriPackageId: b.mandiriPackageId ?? null,
         packages: packages.filter((p) => b.packageIds.includes(p.id)),
@@ -234,6 +236,7 @@ test('open batch can change recipients without editing frozen settings, and reta
     state: 'OPEN',
     editable: false,
     delegationsEditable: true,
+    extendable: false,
     mandiriPackageId: null,
     packages,
     schools: [],
@@ -298,4 +301,83 @@ test('open batch can change recipients without editing frozen settings, and reta
   await expect(dialog).toHaveCount(0);
   await expect(page.getByRole('cell', { name: 'TEST New School', exact: true })).toBeVisible();
   expect(writes).toHaveLength(2);
+});
+
+test('extend dialog preserves failed input, shows progress and updates closing time without reopening closed batches', async ({
+  page,
+}) => {
+  await setup(page);
+  let batch: TryoutBatchDto = {
+    id: id(9400),
+    title: 'TEST Extension',
+    startsAt: '2026-01-01T00:00:00Z',
+    closesAt: '2099-01-01T01:00:00Z',
+    resultDueAt: '2099-01-04T01:00:00Z',
+    revision: 4,
+    state: 'OPEN',
+    editable: false,
+    delegationsEditable: true,
+    extendable: true,
+    mandiriPackageId: null,
+    packages: [],
+    schools: [],
+    participants: [],
+    resultsState: 'BLOCKED',
+    resultBlockers: [],
+  };
+  let fail = true;
+  let release: (() => void) | undefined;
+  let writes = 0;
+  await page.route('**/api/v1/admin/tryout-batches**', async (route) => {
+    const req = route.request(),
+      url = new URL(req.url());
+    if (req.method() === 'POST') {
+      expect(url.pathname).toBe(`/api/v1/admin/tryout-batches/${batch.id}/extend`);
+      expect(req.postDataJSON()).toEqual({
+        expectedRevision: 4,
+        closesAt: '2099-01-03T08:00:00+07:00',
+      });
+      writes++;
+      if (fail) return route.fulfill({ status: 409, json: { detail: 'TEST Jadwal bertabrakan.' } });
+      await new Promise<void>((resolve) => {
+        release = resolve;
+      });
+      batch = {
+        ...batch,
+        revision: 5,
+        closesAt: '2099-01-03T01:00:00Z',
+        resultDueAt: '2099-01-06T01:00:00Z',
+      };
+      return route.fulfill({ json: { id: batch.id } });
+    }
+    expect(req.method()).toBe('GET');
+    return route.fulfill({ json: batch });
+  });
+  await page.goto(`/admin/tryout-batches/${batch.id}`);
+  await page.getByRole('button', { name: 'Perpanjang Tryout', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(dialog.getByRole('heading', { name: 'Perpanjang Tryout' })).toBeVisible();
+  const input = dialog.getByLabel('Tutup baru (WIB)', { exact: true });
+  await expect(input).toHaveAttribute('min', '2099-01-01T08:01');
+  await input.fill('2099-01-03T08:00');
+  await dialog.getByRole('button', { name: 'Simpan perpanjangan', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('TEST Jadwal bertabrakan.');
+  await expect(input).toHaveValue('2099-01-03T08:00');
+  fail = false;
+  await dialog.getByRole('button', { name: 'Simpan perpanjangan', exact: true }).click();
+  try {
+    await expect(dialog.getByRole('button', { name: 'Menyimpan?', exact: true })).toBeDisabled();
+    await expect(dialog.getByRole('button', { name: 'Tutup dialog', exact: true })).toBeDisabled();
+    await expect.poll(() => Boolean(release)).toBe(true);
+  } finally {
+    release?.();
+  }
+  await expect(dialog).toHaveCount(0);
+  await expect(
+    page.locator('.tryout-detail-schedule').getByText('3 Jan 2099, 08.00 WIB', { exact: true }),
+  ).toBeVisible();
+  expect(writes).toBe(2);
+  batch = { ...batch, state: 'CLOSED', delegationsEditable: false, extendable: false };
+  await page.reload();
+  await expect(page.getByRole('button', { name: 'Perpanjang Tryout', exact: true })).toHaveCount(0);
 });

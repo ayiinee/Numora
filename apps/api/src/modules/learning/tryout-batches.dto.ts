@@ -55,6 +55,9 @@ export class UpdateTryoutDelegationsDto extends TryoutBatchRevisionDto {
   @Type(() => TryoutDelegationInputDto)
   schools!: TryoutDelegationInputDto[];
 }
+export class ExtendTryoutBatchDto extends TryoutBatchRevisionDto {
+  @ApiProperty() @IsISO8601({ strict: true }) @Matches(/(?:Z|[+-]\d{2}:\d{2})$/) closesAt!: string;
+}
 export class CancelTryoutBatchDto extends TryoutBatchRevisionDto {
   @ApiProperty() @IsString() @Length(1, 1000) reason!: string;
 }
@@ -101,6 +104,7 @@ export class TryoutBatchDto {
   @ApiProperty() state!: string;
   @ApiProperty() editable!: boolean;
   @ApiProperty() delegationsEditable!: boolean;
+  @ApiProperty() extendable!: boolean;
   @ApiProperty({ nullable: true, type: String }) mandiriPackageId!: string | null;
   @ApiProperty({ type: [TryoutBatchPackageDto] }) packages!: TryoutBatchPackageDto[];
   @ApiProperty({ type: [TryoutBatchSchoolDto] }) schools!: TryoutBatchSchoolDto[];

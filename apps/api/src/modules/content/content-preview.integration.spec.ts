@@ -3235,10 +3235,85 @@ describe.skipIf(!testUrl)(
       };
       const next = await ok<{ id: string }>('admin/tryout-batches', 'POST', shared);
       await ok(`admin/tryout-batches/${next.id}/publish`, 'POST', { expectedRevision: 1 });
+      const extension = { expectedRevision: 4, closesAt: shared.closesAt };
+      const beforeExtension =
+        await owner`SELECT id,package_id,deadline_at,status FROM assessment_attempts WHERE tryout_batch_id=${activeId} ORDER BY id`;
+      expect(
+        (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension, 'operations'))
+          .status,
+      ).toBe(403);
+      expect(
+        (await request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension)).status,
+      ).toBe(409);
+      expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).revision).toBe(4);
+
       await ok(`admin/tryout-batches/${next.id}/cancel`, 'POST', {
         expectedRevision: 2,
         reason: 'TEST ONLY cancelled schedule',
       });
+      const extensionRace = await Promise.all([
+        request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension),
+        request(`admin/tryout-batches/${activeId}/extend`, 'POST', extension),
+      ]);
+      expect(extensionRace.map((r) => r.status).sort()).toEqual([201, 409]);
+      const extended = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
+      expect(extended.closesAt).toBe(extension.closesAt);
+      expect(extended.resultDueAt).toBe(
+        new Date(Date.parse(extension.closesAt) + 72 * 3600000).toISOString(),
+      );
+      expect(extended.revision).toBe(5);
+      expect(extended.extendable).toBe(true);
+      const afterExtension =
+        await owner`SELECT id,package_id,deadline_at,status FROM assessment_attempts WHERE tryout_batch_id=${activeId} ORDER BY id`;
+      expect(afterExtension).toEqual(beforeExtension);
+      expect(
+        await owner`SELECT id FROM audit_logs WHERE entity_id=${activeId} AND action='tryout_batch_extended'`,
+      ).toHaveLength(1);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}/extend`, 'POST', {
+            expectedRevision: 5,
+            closesAt: detail.closesAt,
+          })
+        ).status,
+      ).toBe(400);
+      expect(
+        (
+          await request(`admin/tryout-batches/${next.id}/extend`, 'POST', {
+            expectedRevision: 3,
+            closesAt: extension.closesAt,
+          })
+        ).status,
+      ).toBe(409);
+      await expect(
+        owner`UPDATE tryout_batches SET closes_at=closes_at-interval '1 minute',cutoff_at=closes_at-interval '1 minute',result_due_at=closes_at-interval '1 minute'+interval '72 hours' WHERE id=${activeId}`,
+      ).rejects.toThrow();
+      const terminal = await ok<{ id: string }>(
+        'admin/tryout-batches',
+        'POST',
+        makeInput('terminal fixture'),
+      );
+      // TEST ONLY atomically age an unpublished fixture, without waiting or disabling guards.
+      await owner`UPDATE tryout_batches SET admin_published_at=now()-interval '3 hours',starts_at=now()-interval '2 hours',closes_at=now()-interval '1 hour',cutoff_at=now()-interval '1 hour',result_due_at=now()-interval '1 hour'+interval '72 hours' WHERE id=${terminal.id}`;
+      expect(
+        (
+          await request(`admin/tryout-batches/${terminal.id}/extend`, 'POST', {
+            expectedRevision: 1,
+            closesAt: extension.closesAt,
+          })
+        ).status,
+      ).toBe(409);
+      expect(
+        (
+          await request(`admin/tryout-batches/${terminal.id}/delegations`, 'PATCH', {
+            expectedRevision: 1,
+            schools: [],
+          })
+        ).status,
+      ).toBe(409);
+      await expect(
+        owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
+      ).rejects.toThrow();
     }, 120000);
   },
 );

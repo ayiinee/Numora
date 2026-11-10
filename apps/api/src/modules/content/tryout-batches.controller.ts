@@ -24,6 +24,7 @@ import {
   TryoutBatchQueryDto,
   TryoutBatchRevisionDto,
   UpdateTryoutDelegationsDto,
+  ExtendTryoutBatchDto,
 } from '../learning/tryout-batches.dto';
 import { ContentMutationDto } from './content.dto';
 
@@ -70,6 +71,13 @@ export class AdminTryoutBatchesController {
     @Body() body: UpdateTryoutDelegationsDto,
   ) {
     return this.batches.updateDelegations(r.adminId, id, body);
+  }
+  @Post(':id/extend') @ApiCreatedResponse({ type: ContentMutationDto }) extend(
+    @Req() r: AdminRequest,
+    @Param('id', ParseUUIDPipe) id: string,
+    @Body() body: ExtendTryoutBatchDto,
+  ) {
+    return this.batches.extend(r.adminId, id, body);
   }
   @Post(':id/publish') @ApiCreatedResponse({ type: ContentMutationDto }) publish(
     @Req() r: AdminRequest,

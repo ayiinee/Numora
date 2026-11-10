@@ -24,6 +24,7 @@ import { scoringPolicyVersions } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import type {
   UpdateTryoutDelegationsDto,
+  ExtendTryoutBatchDto,
   SaveTryoutBatchDto,
   TryoutBatchDto,
   TryoutBatchQueryDto,
@@ -69,6 +70,19 @@ export function batchEditable(
   now: Date,
 ) {
   return !b.cancelledAt && (!b.adminPublishedAt || now < b.startsAt);
+}
+
+export function validateBatchExtension(
+  b: Parameters<typeof batchState>[0] & { status: string },
+  closesAt: string,
+  now: Date,
+) {
+  if (batchState(b, now) !== 'OPEN' || !['PLANNED', 'OPEN'].includes(b.status))
+    throw new ConflictException(
+      'Hanya batch yang sedang berjalan dan belum berakhir yang dapat diperpanjang.',
+    );
+  if (!Number.isFinite(Date.parse(closesAt)) || Date.parse(closesAt) <= b.closesAt.getTime())
+    throw new BadRequestException('Waktu tutup baru harus lebih akhir dari waktu tutup saat ini.');
 }
 
 @Injectable()
@@ -214,6 +228,7 @@ export class TryoutBatchesService {
         state: batchState(b, now),
         editable: batchEditable(b, now),
         delegationsEditable: ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
+        extendable: batchState(b, now) === 'OPEN' && ['PLANNED', 'OPEN'].includes(b.status),
         mandiriPackageId: b.mandiriPackageId,
         packages,
         schools: delegated,
@@ -275,20 +290,7 @@ export class TryoutBatchesService {
     const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
     if (new Date(body.startsAt) <= new Date(clock!.now))
       throw new BadRequestException('Waktu mulai batch harus di masa mendatang.');
-    const overlap = await tx
-      .select({ id: tryoutBatches.id })
-      .from(tryoutBatches)
-      .where(
-        and(
-          isNotNull(tryoutBatches.adminPublishedAt),
-          isNull(tryoutBatches.cancelledAt),
-          sql`${tryoutBatches.id} <> ${id}`,
-          sql`${tryoutBatches.startsAt} < ${body.closesAt}::timestamptz and ${tryoutBatches.closesAt} > ${body.startsAt}::timestamptz`,
-        ),
-      )
-      .limit(1);
-    if (overlap.length)
-      throw new ConflictException('Jadwal bertabrakan dengan batch yang sudah diterbitkan.');
+    await this.validateSchedule(tx, id, body.startsAt, body.closesAt);
     await this.ready(tx, body.packageIds);
     const selected = await tx
       .select({ familyCode: assessmentPackages.familyCode })
@@ -298,6 +300,56 @@ export class TryoutBatchesService {
       throw new BadRequestException(
         'Semua paket dalam batch harus memiliki parent code yang sama agar anchor IRT seimbang.',
       );
+  }
+  private async validateSchedule(
+    tx: AdminTransaction,
+    id: string,
+    startsAt: string,
+    closesAt: string,
+  ) {
+    const overlap = await tx
+      .select({ id: tryoutBatches.id })
+      .from(tryoutBatches)
+      .where(
+        and(
+          isNotNull(tryoutBatches.adminPublishedAt),
+          isNull(tryoutBatches.cancelledAt),
+          sql`${tryoutBatches.id} <> ${id}`,
+          sql`${tryoutBatches.startsAt} < ${closesAt}::timestamptz and ${tryoutBatches.closesAt} > ${startsAt}::timestamptz`,
+        ),
+      )
+      .limit(1);
+    if (overlap.length)
+      throw new ConflictException('Jadwal bertabrakan dengan batch yang sudah diterbitkan.');
+  }
+  extend(actor: string, id: string, body: ExtendTryoutBatchDto) {
+    const audit = { ...body, previousClosesAt: '' };
+    return adminMutation(
+      actor,
+      'tryout_batch_extended',
+      'tryout_batch',
+      async (tx) => {
+        await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+        const b = await this.batch(tx, id, true);
+        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+        if (body.expectedRevision !== b.configRevision)
+          throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
+        validateBatchExtension(b, body.closesAt, new Date(clock!.now));
+        await this.validateSchedule(tx, id, b.startsAt.toISOString(), body.closesAt);
+        audit.previousClosesAt = b.closesAt.toISOString();
+        await tx
+          .update(tryoutBatches)
+          .set({
+            closesAt: new Date(body.closesAt),
+            cutoffAt: new Date(body.closesAt),
+            resultDueAt: new Date(Date.parse(body.closesAt) + 72 * 3600000),
+            configRevision: b.configRevision + 1,
+          })
+          .where(eq(tryoutBatches.id, id));
+        return { id };
+      },
+      audit,
+    );
   }
   async save(actor: string, body: SaveTryoutBatchDto, id?: string) {
     validateBatchInput(body);

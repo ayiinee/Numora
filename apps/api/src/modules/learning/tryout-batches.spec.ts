@@ -1,5 +1,10 @@
 import { describe, expect, it } from 'vitest';
-import { batchEditable, batchState, validateBatchInput } from './tryout-batches.service';
+import {
+  batchEditable,
+  batchState,
+  validateBatchInput,
+  validateBatchExtension,
+} from './tryout-batches.service';
 import type { SaveTryoutBatchDto } from './tryout-batches.dto';
 
 describe('Tryout batch boundaries', () => {
@@ -55,5 +60,28 @@ describe('Tryout batch boundaries', () => {
     expect(batchEditable({ ...draft, adminPublishedAt: draft.startsAt }, now)).toBe(false);
     expect(batchEditable({ ...draft, adminPublishedAt: now }, draft.startsAt)).toBe(false);
     expect(batchEditable({ ...draft, cancelledAt: now }, now)).toBe(false);
+  });
+  it('extends only an open batch and never shortens or reopens a terminal window', () => {
+    const b = {
+      adminPublishedAt: new Date('2026-11-09T00:00:00Z'),
+      cancelledAt: null,
+      startsAt: new Date(input.startsAt),
+      closesAt: new Date(input.closesAt),
+      status: 'PLANNED',
+    };
+    const later = '2026-11-10T03:00:00Z';
+    expect(() => validateBatchExtension(b, later, b.startsAt)).not.toThrow();
+    for (const [changed, end, now] of [
+      [{}, input.closesAt, b.startsAt],
+      [{}, input.startsAt, b.startsAt],
+      [{}, 'invalid', b.startsAt],
+      [{}, later, new Date('2026-11-10T00:00:00Z')],
+      [{}, later, b.closesAt],
+      [{ cancelledAt: b.startsAt }, later, b.startsAt],
+      [{ adminPublishedAt: null }, later, b.startsAt],
+      [{ status: 'PROCESSING' }, later, b.startsAt],
+      [{ status: 'PUBLISHED' }, later, b.startsAt],
+    ] as const)
+      expect(() => validateBatchExtension({ ...b, ...changed }, end, now)).toThrow();
   });
 });

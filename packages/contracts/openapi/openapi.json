@@ -2293,6 +2293,51 @@
         ]
       }
     },
+    "/api/v1/admin/tryout-batches/{id}/extend": {
+      "post": {
+        "operationId": "AdminTryoutBatchesController_extend",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/ExtendTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "201": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
     "/api/v1/admin/tryout-batches/{id}/publish": {
       "post": {
         "operationId": "AdminTryoutBatchesController_publish",
@@ -12408,6 +12453,9 @@
           "delegationsEditable": {
             "type": "boolean"
           },
+          "extendable": {
+            "type": "boolean"
+          },
           "mandiriPackageId": {
             "type": "string",
             "nullable": true
@@ -12450,6 +12498,7 @@
           "state",
           "editable",
           "delegationsEditable",
+          "extendable",
           "mandiriPackageId",
           "packages",
           "schools",
@@ -12591,6 +12640,21 @@
         "required": [
           "expectedRevision",
           "schools"
+        ]
+      },
+      "ExtendTryoutBatchDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "closesAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "closesAt"
         ]
       },
       "TryoutBatchRevisionDto": {

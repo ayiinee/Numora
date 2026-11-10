@@ -470,6 +470,13 @@
       "when": 1794308400000,
       "tag": "0066_tryout_live_delegations",
       "breakpoints": true
+    },
+    {
+      "idx": 67,
+      "version": "7",
+      "when": 1794312000000,
+      "tag": "0067_tryout_extend_open_batch",
+      "breakpoints": true
     }
   ]
 }

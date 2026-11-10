@@ -134,6 +134,7 @@ const groups = [
       'TryoutBatchParticipantDto',
       'SaveTryoutBatchDto',
       'UpdateTryoutDelegationsDto',
+      'ExtendTryoutBatchDto',
       'TryoutDelegationInputDto',
       'TryoutBatchOptionsDto',
       'StudentTryoutSchoolDto',
