@@ -1,4 +1,4 @@
-import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
+import { cleanup, fireEvent, render, screen } from '@testing-library/react';
 import { afterEach, beforeEach, expect, it, vi } from 'vitest';
 import { ContentReviewScreen } from './content-review';
 import { ReportDetailScreen } from './report-detail';
@@ -26,6 +26,43 @@ beforeEach(() => {
   };
 });
 afterEach(cleanup);
+it('offers editable missing fields and automatic scoring preparation', async () => {
+  mock.api.mockResolvedValue({
+    id: 'v',
+    questionId: 'q',
+    usageType: 'PRETEST',
+    versionNumber: 1,
+    status: 'DRAFT',
+    sourceNamespace: 'TEST',
+    revisedFromId: null,
+    reviewedAt: null,
+    reviewedByUserId: null,
+    payload: {
+      type: 'SINGLE_CHOICE',
+      stem: { text: '' },
+      explanation: { text: '' },
+      options: [{ id: 'A', content: { text: 'Pilihan A' } }],
+      answer: { optionId: '' },
+    },
+    readiness: {
+      canReviewReady: false,
+      contentBlockers: ['CONTENT_EMPTY'],
+      publicationBlockers: ['APPROVED_PGK_RUBRIC_REQUIRED'],
+    },
+    reviews: [],
+  });
+  render(<ContentReviewScreen id="v" />);
+  await screen.findByText('Validasi soal');
+  const stem = screen.getByLabelText(/Teks soal/);
+  fireEvent.change(stem, { target: { value: 'Teks diperbaiki' } });
+  expect(
+    JSON.parse((screen.getByLabelText('Payload JSON') as HTMLTextAreaElement).value).stem.text,
+  ).toBe('Teks diperbaiki');
+  expect(screen.getByRole('button', { name: 'Validasi ulang soal' })).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Validasi dan simpan revisi' })).toBeTruthy();
+  expect(screen.getByText(/Kunci jawaban tidak perlu diubah/)).toBeTruthy();
+  expect(screen.getByRole('button', { name: 'Siapkan penilaian otomatis' })).toBeTruthy();
+});
 it('discards the previous report target when navigation to another report fails', async () => {
   mock.api.mockResolvedValueOnce({
     category: 'Old target',
@@ -70,6 +107,7 @@ it('separates rich review from approved rubric publication and clears payload af
   mock.api.mockResolvedValue({
     id: 'v2',
     questionId: 'q',
+    usageType: 'PRETEST',
     versionNumber: 2,
     status: 'DRAFT',
     revisedFromId: 'v1',
@@ -89,33 +127,15 @@ it('separates rich review from approved rubric publication and clears payload af
     reviews: [],
   });
   const view = render(<ContentReviewScreen id="v2" />);
-  await screen.findByText(/APPROVED_PGK_RUBRIC_REQUIRED/);
-  fireEvent.change(screen.getByLabelText('Alasan review'), {
-    target: { value: 'TEST validated key' },
-  });
-  mock.api.mockResolvedValueOnce({ id: 'v2' });
-  fireEvent.submit(screen.getByLabelText('Alasan review').closest('form')!);
-  await waitFor(() =>
-    expect(mock.api).toHaveBeenCalledWith(
-      'admin/content/versions/v2/review',
-      'TEST_ONLY',
-      expect.objectContaining({
-        method: 'POST',
-        body: JSON.stringify({
-          status: 'READY',
-          expectedStatus: 'DRAFT',
-          reason: 'TEST validated key',
-        }),
-      }),
-    ),
-  );
+  await screen.findByText('Aturan penilaian belum lengkap');
+  expect(screen.queryByRole('button', { name: 'Simpan review' })).toBeNull();
   mock.state = {
     status: 'ready',
     profile: { id: 'admin', role: 'ADMIN', adminRole: 'OPERATIONS', capabilities: [] },
     session: { access_token: 'TEST_ONLY' },
   };
   view.rerender(<ContentReviewScreen id="v2" />);
-  expect(screen.queryByText(/APPROVED_PGK_RUBRIC_REQUIRED/)).toBeNull();
+  expect(screen.queryByText('Aturan penilaian belum lengkap')).toBeNull();
 });
 it('opens the historical report target independently of loaded metadata or newer question versions', async () => {
   mock.api.mockResolvedValue({

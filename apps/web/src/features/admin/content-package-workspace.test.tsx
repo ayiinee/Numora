@@ -1,7 +1,11 @@
 import { afterEach, expect, it, vi } from 'vitest';
 import { cleanup, fireEvent, render, screen, waitFor } from '@testing-library/react';
 import { ContentPackageWorkspace } from './content-package-workspace';
-import { getContentPackage, listContentPackages } from './content-package-api';
+import {
+  getContentPackage,
+  listContentPackages,
+  preparePretestScoring,
+} from './content-package-api';
 import { createPreview, submitPreview } from './content-preview-api';
 import type { ContentPackageDetailDto, PreviewSessionDto } from './generated-types';
 
@@ -30,9 +34,106 @@ vi.mock('./content-package-api', () => ({
   createContentPackage: vi.fn(),
   updateContentPackage: vi.fn(),
   reviewImportedQuestion: vi.fn(),
+  preparePretestScoring: vi.fn(),
 }));
 vi.mock('./content-preview-api', () => ({ createPreview: vi.fn(), submitPreview: vi.fn() }));
 afterEach(cleanup);
+it('allows a valid Pretest draft to publish without manual review or approval inputs', async () => {
+  const pack = {
+    id: 'pretest-test',
+    name: 'Pretest valid',
+    familyCode: 'TEST',
+    packageVersion: 1,
+    contentRevision: 1,
+    assessmentType: 'PRETEST',
+    status: 'DRAFT',
+    isDemo: true,
+    source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
+    chapterId: null,
+    levelId: null,
+    chapterCode: null,
+    chapterName: null,
+    subchapterCode: null,
+    subchapterName: null,
+    levelNumber: null,
+    items: [],
+    distribution: [],
+    readiness: {
+      packageId: 'pretest-test',
+      contentRevision: 1,
+      canSaveDraft: true,
+      canPublish: true,
+      actualCount: 20,
+      expectedCount: 20,
+      checks: [],
+      blockers: [],
+      removedVersionIds: [],
+    },
+  } as ContentPackageDetailDto;
+  vi.mocked(getContentPackage).mockResolvedValue(pack);
+  render(
+    <ContentPackageWorkspace
+      token="TEST"
+      disabled={false}
+      onSelect={vi.fn()}
+      refreshKey={0}
+      mode="detail"
+      packageId={pack.id}
+      initialUsage="PRETEST"
+    />,
+  );
+  fireEvent.click(await screen.findByRole('button', { name: 'Penerbitan' }));
+  expect(screen.queryByText('Bukti persetujuan tim kurikulum')).toBeNull();
+  expect(screen.queryByText('Tinjau semua soal valid')).toBeNull();
+  expect(
+    (screen.getByRole('button', { name: 'Publikasikan paket' }) as HTMLButtonElement).disabled,
+  ).toBe(false);
+  expect(screen.getByText(/Yakin ingin menerbitkan paket/)).toBeTruthy();
+  cleanup();
+  vi.mocked(getContentPackage).mockResolvedValue({
+    ...pack,
+    items: [
+      {
+        questionVersionId: 'broken-version',
+        questionId: 'broken-question',
+        displayOrder: 7,
+        usageType: 'PRETEST',
+        contentStatus: 'DRAFT',
+        reviewedAt: null,
+        reviewedByUserId: null,
+        question: null,
+        validationIssues: ['Aturan penilaian belum terhubung.'],
+      },
+    ],
+    readiness: {
+      ...pack.readiness,
+      canPublish: false,
+      checks: [{ code: 'COUNT', passed: false, detail: '19/20 soal.' }],
+    },
+  });
+  render(
+    <ContentPackageWorkspace
+      token="TEST"
+      disabled={false}
+      onSelect={vi.fn()}
+      refreshKey={0}
+      mode="detail"
+      packageId={pack.id}
+      initialUsage="PRETEST"
+    />,
+  );
+  fireEvent.click(await screen.findByRole('button', { name: 'Penerbitan' }));
+  expect(screen.getAllByText('19/20 soal.').length).toBeGreaterThan(0);
+  expect(screen.getByRole('button', { name: 'Validasi ulang' })).toBeTruthy();
+  expect(screen.getAllByText('Aturan penilaian belum terhubung.').length).toBeGreaterThan(0);
+  expect(screen.getAllByRole('link', { name: /^Perbaiki$/ })[0]!.getAttribute('href')).toBe(
+    '/admin/content/versions/broken-version?package=pretest-test',
+  );
+  expect(screen.getAllByRole('link', { name: /^Perbaiki$/ })[1]!.getAttribute('href')).toBe(
+    '/admin/content/versions/broken-version?package=pretest-test',
+  );
+  expect(screen.queryByRole('button', { name: 'Publikasikan paket' })).toBeNull();
+});
 it('loads package choices five at a time and disables next on the final full page', async () => {
   const pack = {
     id: 'TEST',
@@ -193,11 +294,69 @@ it('uses unscored REVIEW media so imported explanation pictures are visible to t
       packageId={id}
     />,
   );
-  fireEvent.click(await screen.findByRole('button', { name: 'Tinjau', exact: true }));
+  fireEvent.click(await screen.findByRole('button', { name: /^Tinjau$/ }));
   fireEvent.click(await screen.findByRole('button', { name: 'Tampilkan gambar soal' }));
   expect(await screen.findByAltText('Diagram pembahasan')).toBeTruthy();
   expect(screen.getByAltText('Diagram soal')).toBeTruthy();
   expect(submitPreview).toHaveBeenCalledWith('TEST ONLY', id, expect.any(String));
   expect(pack.items[0]!.reviewedAt).toBeNull();
   expect(pack.readiness.canPublish).toBe(false);
+});
+
+it('prepares scoring with revision, shows progress and refreshes validation', async () => {
+  const pack = {
+    id: 'scoring-package',
+    name: 'TEST scoring',
+    familyCode: 'TEST',
+    packageVersion: 1,
+    contentRevision: 7,
+    assessmentType: 'PRETEST',
+    status: 'DRAFT',
+    isDemo: true,
+    source: { sourceNamespace: 'TEST', sourceName: 'TEST', sourceReference: 'TEST' },
+    items: [
+      {
+        questionVersionId: 'old',
+        questionId: 'q',
+        displayOrder: 1,
+        question: null,
+        usageType: 'PRETEST',
+        contentStatus: 'DRAFT',
+        reviewedAt: null,
+        reviewedByUserId: null,
+        scoringRepairRequired: true,
+        validationIssues: ['Aturan penilaian belum sesuai.'],
+      },
+    ],
+    distribution: [],
+    readiness: { actualCount: 20, expectedCount: 20, checks: [], blockers: [], canPublish: false },
+  } as unknown as ContentPackageDetailDto;
+  vi.mocked(getContentPackage).mockResolvedValue(pack);
+  let finish!: () => void;
+  vi.mocked(preparePretestScoring).mockImplementationOnce(
+    () =>
+      new Promise((resolve) => {
+        finish = () => resolve({ id: pack.id });
+      }),
+  );
+  render(
+    <ContentPackageWorkspace
+      token="TEST"
+      disabled={false}
+      onSelect={vi.fn()}
+      refreshKey={0}
+      mode="detail"
+      packageId={pack.id}
+      initialUsage="PRETEST"
+    />,
+  );
+  fireEvent.click(await screen.findByRole('button', { name: 'Siapkan penilaian otomatis' }));
+  expect(preparePretestScoring).toHaveBeenLastCalledWith('TEST', pack.id, 7);
+  expect(screen.getByText(/Memproses paket/)).toBeTruthy();
+  expect(screen.queryByRole('link', { name: 'Perbaiki' })).toBeNull();
+  vi.mocked(getContentPackage).mockResolvedValue({ ...pack, contentRevision: 8, items: [] });
+  finish();
+  await screen.findByText(/Penilaian otomatis siap/);
+  expect(screen.queryByText(/Memproses paket/)).toBeNull();
+  expect(screen.queryByText('Aturan penilaian belum sesuai.')).toBeNull();
 });

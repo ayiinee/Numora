@@ -78,3 +78,12 @@ Migrasi `0024_content_import_preview` menambah subrole nullable tanpa backfill, 
 **OPEN:** taxonomy, kode/urutan/indikator/blueprint/difficulty sampel belum approved Curriculum. Lima level dan sepuluh soal Drill per level tidak menyetujui master sandbox. Lifecycle editorial di atas tersedia; publikasi assessment masih memerlukan policy/rubric akademik yang sah. XP dan IRT tetap terpisah. Rumus XP TryOut section 12 x10 versus AC-15 x100 membutuhkan koreksi Product Owner.
 
 Lihat [runbook sandbox](../development/CONTENT_IMPORT_PREVIEW_RUNBOOK.md), [handoff bank soal](../data/QUESTION_BANK_BACKEND_HANDOFF.md) dan [upload media](CONTENT_MEDIA_UPLOADS.md). Approval Curriculum, engine Data, trial Google dan QA independen bukan hasil otomatis dari PASS engineering.
+
+## ENGINEERING DECISION — pemilik, 10 November 2026: publikasi Pretest sederhana
+
+Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetujuan Curriculum tambahan untuk paket Pretest. Sumber soal disiapkan Curriculum. Admin dapat langsung menerbitkan DRAFT yang lolos seluruh validasi server: jumlah 20, struktur/kunci/pembahasan, metadata/cakupan, provenance/media dan kompatibilitas scoring. Impor tetap menyimpan DRAFT, bukan publikasi otomatis. Masalah validasi tetap memblokir publikasi dan ditampilkan melalui checklist. Tidak mengubah aturan Drill/Tryout, penempatan Pretest, XP, paket terbit atau histori siswa. Snapshot/blueprint internal existing tetap dibuat secara transaksional saat publikasi; bukan langkah persetujuan manual baru.
+
+
+## Automatic Pretest rubric - 10 November 2026
+
+**ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.

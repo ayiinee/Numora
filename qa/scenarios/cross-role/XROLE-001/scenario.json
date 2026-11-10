@@ -1,0 +1,115 @@
+{
+  "schemaVersion": 1,
+  "id": "XROLE-001",
+  "role": "cross-role",
+  "title": "Admin menyiapkan Pretest hingga siswa menyelesaikan penilaian",
+  "priority": 1,
+  "sources": [
+    {
+      "id": "POLICY",
+      "path": "docs/product/PRODUCT_CONTEXT.md",
+      "section": "Pretest and owner-approved automatic rubric/publication decisions, 9-10 November 2026"
+    }
+  ],
+  "cases": [
+    {
+      "id": "TC-001",
+      "title": "Impor dan rubrik otomatis, perbaikan Draft atomik, validasi sesudah terbit",
+      "source": "POLICY",
+      "checks": [
+        "components",
+        "persistence"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-002",
+      "title": "Siswa mulai, simpan, lanjutkan, Skip dan submit tepat sekali",
+      "source": "POLICY",
+      "checks": [
+        "components",
+        "persistence",
+        "browser"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-003",
+      "title": "PG/majemuk/kategori, kosong nol, placement 8/19, tanpa XP",
+      "source": "POLICY",
+      "checks": [
+        "scoring",
+        "persistence"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-004",
+      "title": "Otorisasi, konflik revisi dan pelestarian hasil serta pin historis",
+      "source": "POLICY",
+      "checks": [
+        "persistence"
+      ],
+      "applicability": "required"
+    },
+    {
+      "id": "TC-005",
+      "title": "Soal bergambar memuat media terotorisasi pada sesi Pretest siswa",
+      "source": "POLICY",
+      "checks": [
+        "components",
+        "browser"
+      ],
+      "applicability": "required"
+    }
+  ],
+  "checks": [
+    {
+      "id": "scoring",
+      "adapter": "vitest-domain",
+      "profile": "quick",
+      "evidence": "isolated-unit",
+      "files": [
+        "packages/assessment-engine/src/pretest-partial.spec.ts"
+      ],
+      "minimumTests": 5
+    },
+    {
+      "id": "components",
+      "adapter": "vitest-web",
+      "profile": "quick",
+      "evidence": "component",
+      "files": [
+        "apps/web/src/features/admin/content-package-workspace.test.tsx",
+        "apps/web/src/features/admin/content-review.test.tsx",
+        "apps/web/src/features/admin/pretest.test.tsx",
+        "apps/web/src/features/core-learning/pretest.test.tsx",
+        "apps/web/src/features/core-learning/assessment-session.test.tsx",
+        "qa/scenarios/cross-role/XROLE-001/component/pretest-media.test.tsx"
+      ],
+      "minimumTests": 10
+    },
+    {
+      "id": "persistence",
+      "adapter": "vitest-api",
+      "profile": "standard",
+      "evidence": "real-database",
+      "files": [
+        "apps/api/src/modules/content/content-preview.integration.spec.ts",
+        "apps/api/src/modules/learning/pretest-tryout.integration.spec.ts",
+        "apps/api/src/modules/content/pretest-rubric.spec.ts"
+      ],
+      "minimumTests": 37
+    },
+    {
+      "id": "browser",
+      "adapter": "playwright",
+      "profile": "standard",
+      "evidence": "component",
+      "files": [
+        "apps/web/e2e/pretest-tryout.spec.ts"
+      ],
+      "minimumTests": 1
+    }
+  ]
+}
