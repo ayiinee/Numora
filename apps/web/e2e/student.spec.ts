@@ -1508,9 +1508,7 @@ test('Teacher profile owns logout and signed-out Teacher routes stay protected',
   await expect(page).toHaveURL(/\/teacher\/profile$/);
   await expect(page.getByRole('heading', { name: 'Profil', exact: true })).toBeVisible();
   await expect(page.getByText('Terverifikasi', { exact: true })).toBeVisible();
-  await expect(
-    page.locator('.student-profile-identity').getByText('Sekolah fixture', { exact: true }),
-  ).toBeVisible();
+  await expect(page.getByText('Sekolah fixture', { exact: true })).toBeVisible();
   await expect(page.getByRole('link', { name: /^Buka daftar kelas/ })).toHaveAttribute(
     'href',
     '/teacher',

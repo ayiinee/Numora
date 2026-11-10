@@ -341,6 +341,7 @@ test('Completion: Student manages multiple memberships and updates name and phot
   await page.getByRole('dialog').getByRole('button', { name: 'Konfirmasi keluar kelas' }).click();
   await expect(page.getByText('1/5 kelas aktif', { exact: true })).toBeVisible();
   await expect(page.getByLabel('Kode kelas')).toBeEnabled();
+  await page.getByRole('button', { name: 'Edit profil', exact: true }).click();
   await page.getByLabel('Nama tampilan').fill('  Kirino Baru  ');
   await page.getByRole('button', { name: 'Simpan nama' }).click();
   await expect(page.getByRole('heading', { name: 'Kirino Baru', exact: true })).toBeVisible();
