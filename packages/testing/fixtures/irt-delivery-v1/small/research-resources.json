@@ -1,0 +1,60 @@
+{
+  "approvalBinding": "DISPOSABLE_DATABASE_ONLY",
+  "definitions": {
+    "eligibility": {
+      "deliveryModes": [
+        "ASSIGNED"
+      ],
+      "ecosystem": "TRYOUT",
+      "exposureStates": [
+        "FRESH"
+      ],
+      "firstValidAttemptOnly": true,
+      "purpose": "RESEARCH_ONLY",
+      "responseStates": [
+        "RESPONDED",
+        "OMITTED"
+      ]
+    },
+    "model": {
+      "dimensions": 1,
+      "maxIterations": 1000,
+      "method": "EM",
+      "name": "mirt",
+      "quadrature": 61,
+      "seed": 20261109,
+      "threads": 1,
+      "tolerance": 0.0001,
+      "version": "1.48"
+    },
+    "quality": {
+      "anchorDifficultyTolerance": 0.3,
+      "anchorLogSlopeTolerance": 0.2,
+      "fitAlpha": 0.01,
+      "maximumAdjustedQ3": 0.2,
+      "maximumDifficultySE": 0.4,
+      "maximumDiscriminationSE": 0.3,
+      "minimumArmCount": 500,
+      "minimumCategoryCount": 20,
+      "minimumItemCount": 500
+    },
+    "scoreMapping": {
+      "decimalPlaces": 2,
+      "method": "FROZEN_REFERENCE_EXPECTED_POINTS",
+      "rounding": "HALF_UP"
+    },
+    "scoring": {
+      "categoryPoints": "PROPORTIONAL_TO_MAXIMUM",
+      "oneQuestionOneUnit": true,
+      "purpose": "RESEARCH_ONLY"
+    }
+  },
+  "fallback": {
+    "owner": "MAIN",
+    "policyRef": null,
+    "readiness": "BLOCKED_UNAPPROVED"
+  },
+  "inputDigestBinding": "POSTGRES_PG_JSONB_IRT_RESEARCH_V1_REQUIRED",
+  "productionApproved": false,
+  "purpose": "RESEARCH_ONLY"
+}
