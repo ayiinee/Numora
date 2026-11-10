@@ -31,9 +31,10 @@ test('production requires explicit mode, opt-in, database pin and matching runti
     await assert.rejects(assertIrtDatabase(db), /DATABASE_MISMATCH/);
     process.env.NUMORA_IRT_PRODUCTION_DATABASE = 'approved-db';
     await assertIrtDatabase(db);
-    delete process.env.NUMORA_IRT_PRODUCTION_ENABLED;
     process.env.NUMORA_IRT_MODE = 'RESEARCH';
     process.env.NUMORA_IRT_RESEARCH_ENABLED = 'true';
+    assert.throws(() => assertIrtEnabled(), /DISABLED/);
+    delete process.env.NUMORA_IRT_PRODUCTION_ENABLED;
     await assert.rejects(assertIrtDatabase(db), /DISPOSABLE_ONLY/);
   } finally {
     for (const n of names)

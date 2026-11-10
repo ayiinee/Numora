@@ -12,7 +12,11 @@ export function assertIrtEnabled(disabledCode = 'IRT_RESEARCH_DISABLED') {
       process.env.NUMORA_IRT_RESEARCH_ENABLED === 'true'
     )
       throw new Error('IRT_DELIVERY_PRODUCTION_DISABLED');
-  } else if (process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true') throw new Error(disabledCode);
+  } else if (
+    process.env.NUMORA_IRT_RESEARCH_ENABLED !== 'true' ||
+    process.env.NUMORA_IRT_PRODUCTION_ENABLED === 'true'
+  )
+    throw new Error(disabledCode);
   return purpose;
 }
 export function assertRuntimeMode(runtime) {
