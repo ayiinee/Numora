@@ -32,7 +32,8 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     const room = await engine.create(s(0), 'easy', randomUUID());
     await engine.join(s(1), room.roomCode);
     await engine.ready(s(0), room.matchId);
-    return engine.ready(s(1), room.matchId);
+    await engine.ready(s(1), room.matchId);
+    return engine.start(s(0), room.matchId);
   }
   it('serializes concurrent join and create retries, permits Mandiri, and enforces ownership', async () => {
     const key = randomUUID();
@@ -52,6 +53,25 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     const rejected = joined[0]!.status === 'rejected' ? s(1) : s(2);
     await expect(engine.snapshot(rejected, room.matchId)).rejects.toMatchObject({ status: 403 });
     expect(JSON.stringify(snapshot)).not.toMatch(/answerKey|correctOptionId|explanation|email/);
+    await engine.leave(s(0), room.matchId);
+  });
+  it('starts only from the host after both players are Ready and keeps Ready non-starting', async () => {
+    const room = await engine.create(s(0), 'easy', randomUUID());
+    await engine.ready(s(0), room.matchId);
+    await expect(engine.start(s(0), room.matchId)).rejects.toMatchObject({
+      response: { code: 'PVP_ROOM_INCOMPLETE' },
+    });
+    await engine.join(s(1), room.roomCode);
+    await expect(engine.start(s(1), room.matchId)).rejects.toMatchObject({ status: 403 });
+    await expect(engine.start(s(0), room.matchId)).rejects.toMatchObject({
+      response: { code: 'PVP_PLAYERS_NOT_READY' },
+    });
+    expect((await engine.snapshot(s(0), room.matchId)).status).toBe('WAITING');
+    await engine.ready(s(1), room.matchId);
+    const running = await engine.start(s(0), room.matchId);
+    expect(running.status).toBe('RUNNING');
+    expect(running.question!.order).toBe(1);
+    expect((await engine.start(s(0), room.matchId)).question!.id).toBe(running.question!.id);
     await engine.leave(s(0), room.matchId);
   });
   it('keeps answers immutable, rejects late answers, and advances only from server state', async () => {
@@ -215,6 +235,7 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     await approved.join(s(1), room.roomCode);
     await approved.ready(s(0), room.matchId);
     await approved.ready(s(1), room.matchId);
+    await approved.start(s(0), room.matchId);
     await approved.disconnect(s(1), room.matchId);
     now = new Date(now.getTime() + 20_000);
     expect((await approved.reconnect(s(1), room.matchId)).players[1]!.connectionStatus).toBe(
@@ -237,6 +258,7 @@ integration('PvP PostgreSQL engine with TEST ONLY policy', () => {
     await approved.join(s(1), tied.roomCode);
     await approved.ready(s(0), tied.matchId);
     await approved.ready(s(1), tied.matchId);
+    await approved.start(s(0), tied.matchId);
     await approved.disconnect(s(0), tied.matchId);
     await approved.disconnect(s(1), tied.matchId);
     now = new Date(now.getTime() + 20_001);

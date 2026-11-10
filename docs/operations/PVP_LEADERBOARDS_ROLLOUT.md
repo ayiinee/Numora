@@ -25,7 +25,7 @@ The schema is additive, but pre-increment API/worker versions do not understand 
 
 ## Acceptance scenarios
 
-- All difficulties: same ten question IDs/order for both players; simultaneous Ready; locked first answer; duplicate/late answer; fake score/time rejected; keys/explanations absent during arena.
+- All difficulties: same ten question IDs/order for both players; both Ready then host `match:start`; guest `match:start` rejected; locked first answer; duplicate/late answer; fake score/time rejected; keys/explanations absent during arena.
 - Waiting: guest leaves and is replaced, Ready resets, original expiry remains; host leave cancels; room/invite expiry; filling a room cancels other pending invites; accept rechecks recipient and active shared class; concurrent create/join from multiple tabs leaves one claim.
 - Recovery: reconnect through 20 seconds inclusive; later reconnect forfeits; earliest of two unequal deadlines loses; equal deadlines cancel; terminal retries/reconnect preserve final state. Redis loss, missing jobs and API restart cannot award forfeit/cancellation best records.
 - Activity: actual Drill/Tryout submit creates one ledger reward; class/global copy the stored decimal amount; zero XP, multiple classes, immediate ban/leave filtering and Top 10/self work. PvP and Pretest add no activity XP.

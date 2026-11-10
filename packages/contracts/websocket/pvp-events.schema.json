@@ -453,6 +453,46 @@
       "additionalProperties": false,
       "properties": {
         "event": {
+          "const": "match:start"
+        },
+        "eventVersion": {
+          "const": "1"
+        },
+        "requestId": {
+          "type": "string",
+          "format": "uuid"
+        },
+        "sentAt": {
+          "type": "string",
+          "format": "date-time"
+        },
+        "payload": {
+          "type": "object",
+          "additionalProperties": false,
+          "properties": {
+            "matchId": {
+              "type": "string",
+              "format": "uuid"
+            }
+          },
+          "required": [
+            "matchId"
+          ]
+        }
+      },
+      "required": [
+        "event",
+        "eventVersion",
+        "requestId",
+        "sentAt",
+        "payload"
+      ]
+    },
+    {
+      "type": "object",
+      "additionalProperties": false,
+      "properties": {
+        "event": {
           "const": "answer:submit"
         },
         "eventVersion": {

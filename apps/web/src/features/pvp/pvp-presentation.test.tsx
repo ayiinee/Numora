@@ -74,6 +74,7 @@ it('keeps cancellation and an unknown result distinct from a loss', () => {
 it('groups the timer, both players and ready action while awaiting server acknowledgement', () => {
   const state = snapshot();
   const onReady = vi.fn();
+  const onStart = vi.fn();
   const props = {
     snapshot: state,
     selfId: 'TEST-self',
@@ -82,6 +83,7 @@ it('groups the timer, both players and ready action while awaiting server acknow
     link: '/student/pvp?room=TEST842AB123',
     disabled: false,
     onReady,
+    onStart,
     onCopy: vi.fn(),
     onShare: vi.fn(),
     reconnectRemaining: {},
@@ -100,9 +102,20 @@ it('groups the timer, both players and ready action while awaiting server acknow
     (screen.getByRole('button', { name: 'Kamu sudah siap' }) as HTMLButtonElement).disabled,
   ).toBe(true);
   expect(screen.getByRole('status').textContent).toBe('Menunggu Lawan menekan Siap.');
+  const start = screen.getByRole('button', { name: 'Mulai duel' }) as HTMLButtonElement;
+  expect(start.disabled).toBe(true);
+  state.players[0]!.ready = true;
+  view.rerender(<WaitingRoom {...props} snapshot={{ ...state }} />);
+  const hostStart = screen.getByRole('button', { name: 'Mulai duel' }) as HTMLButtonElement;
+  expect(hostStart.disabled).toBe(false);
+  fireEvent.click(hostStart);
+  expect(onStart).toHaveBeenCalledOnce();
+  expect(screen.getByRole('status').textContent).toBe(
+    'Kalian sudah siap. Tekan Mulai duel untuk masuk arena.',
+  );
 });
 
-it('allows readiness before an opponent joins and keeps a missing deadline absent', () => {
+it('hides the host start action until an opponent joins and allows readiness before that', () => {
   const state = snapshot();
   state.players = [state.players[1]!];
   render(
@@ -114,6 +127,7 @@ it('allows readiness before an opponent joins and keeps a missing deadline absen
       link="/student/pvp?room=TEST842AB123"
       disabled={false}
       onReady={vi.fn()}
+      onStart={vi.fn()}
       onCopy={vi.fn()}
       onShare={vi.fn()}
       reconnectRemaining={{}}
@@ -123,6 +137,7 @@ it('allows readiness before an opponent joins and keeps a missing deadline absen
   expect((screen.getByRole('button', { name: 'Saya siap' }) as HTMLButtonElement).disabled).toBe(
     false,
   );
+  expect(screen.queryByRole('button', { name: 'Mulai duel' })).toBeNull();
   expect(screen.queryByRole('timer', { name: 'Sisa waktu room' })).toBeNull();
   expect(screen.getByRole('link', { name: '/student/pvp?room=TEST842AB123' })).toBeTruthy();
 });

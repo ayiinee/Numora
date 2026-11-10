@@ -1,5 +1,7 @@
 # Current source — PRD v0.6 with owner-approved variant/IRT v2 amendment
 
+**ENGINEERING DECISION - usulan Reyhan, disetujui pemilik Aini pada 10 November 2026.** Ruang tunggu PvP menambah satu langkah sadar sebelum arena: `player:ready` hanya menandai kesiapan, lalu `match:start` dari pembuat room memulai pertandingan setelah server memastikan dua pemain aktif, terhubung dan siap. Input kode gabung selalu ditampilkan uppercase. Aturan server tetap: 10 soal identik, timer/poin server-authoritative, reconnect 20 detik, satu room aktif. Aini mengonfirmasi "Setuju, host memulai duel" dalam review [PR #150](https://github.com/ayiinee/Numora/pull/150); ini merupakan amendemen yang disetujui untuk alur PRD v0.6 bagian 23.5 `Ready -> Arena`. [Kontrak event dan state](../architecture/REALTIME_PVP.md).
+
 **ENGINEERING DECISION — permintaan pemilik, 10 November 2026.** Login Admin dipindahkan ke `/admin-numora`, dengan pengalihan dari `/admin/login`. Tautan Admin dihapus dari modal landing dan halaman masuk Siswa/Guru. Identitas dan izin Admin diperiksa melalui alur autentikasi serta otorisasi existing.
 
 **ENGINEERING DECISION — Teacher presentation, 9 November 2026:** the owner-approved [UI alignment](../design/TEACHER_UI_ALIGNMENT_2026-11-09.md) maps existing class, roster, progress, history, feedback, invitation, profile and verification APIs to a class-centred blue interface. Legacy feedback URLs lead to contextual student notes. No product rule, API capability or academic metric is added.

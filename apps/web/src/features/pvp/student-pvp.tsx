@@ -52,7 +52,7 @@ export function PvpScreen() {
   useEffect(() => {
     const shared = new URLSearchParams(window.location.search).get('room');
     if (shared) {
-      setCode(shared);
+      setCode(shared.trim().toUpperCase());
       setTab('join');
     }
   }, []);
@@ -549,6 +549,7 @@ export function PvpMatchScreen() {
             link={link}
             disabled={disabled}
             onReady={() => void socket.command('player:ready', { matchId })}
+            onStart={() => void socket.command('match:start', { matchId })}
             onCopy={copy}
             onShare={() => void share()}
             peers={peerPanel}
