@@ -158,7 +158,6 @@
 .student-home-shell .sh-carousel__indicators {
   display: flex;
   align-items: center;
-  gap: 3px;
 }
 .student-home-shell .sh-carousel__indicators button {
   width: 44px;
@@ -173,8 +172,15 @@
   height: 9px;
   display: block;
   border-radius: var(--radius-full);
-  background: var(--numora-purple-100);
+  background: var(--numora-purple-400);
   transition: width var(--transition-base);
+}
+/* Bring the dots closer while leaving each 44px button in place. */
+.student-home-shell .sh-carousel__indicators button:first-child::before {
+  translate: 12px 0;
+}
+.student-home-shell .sh-carousel__indicators button:last-child::before {
+  translate: -12px 0;
 }
 .student-home-shell .sh-carousel__indicators button.is-active::before {
   width: 21px;
