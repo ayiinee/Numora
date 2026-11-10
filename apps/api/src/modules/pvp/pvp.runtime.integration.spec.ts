@@ -165,7 +165,8 @@ integration('runtime policy and READY Drill publication boundary', () => {
       );
       await engine.join(fixture.students[1]!.id, room.roomCode);
       await engine.ready(fixture.students[0]!.id, room.matchId);
-      const running = await engine.ready(fixture.students[1]!.id, room.matchId);
+      await engine.ready(fixture.students[1]!.id, room.matchId);
+      const running = await engine.start(fixture.students[0]!.id, room.matchId);
       expect(running.status).toBe('RUNNING');
       expect(
         (

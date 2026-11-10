@@ -4,7 +4,7 @@ ENGINEERING DECISION: research/synthetic only. Main baseline `ece946c` includes 
 
 ## Main setup
 
-1. Apply forward migrations through `0065_irt_delivery_binding_v1` only to an owned `irt_research_test_*` database. Fresh install and upgrade with nonempty history are covered by the disposable harness. Never rename a production database to bypass this guard.
+1. Apply forward migrations through `0066_irt_delivery_binding_v1` only to an owned `irt_research_test_*` database. Fresh install and upgrade with nonempty history are covered by the disposable harness. Never rename a production database to bypass this guard.
 2. Before batch start, create approved existing context/arm set/revisions and package memberships. School/Mandiri delegation still chooses the package; there is no randomization. Missing mappings/approvals are blockers, not synthesized defaults.
 3. Set server-side `NUMORA_IRT_DELIVERY_RUNTIME_PROFILE` to the absolute immutable runtime JSON file. Binding must equal that file. Configure private `NUMORA_IRT_PSEUDONYM_SECRET` (at least 32 bytes) and `NUMORA_IRT_PSEUDONYM_KEY_VERSION`. Keep secrets outside Git.
 4. Enable `NUMORA_IRT_RESEARCH_ENABLED` and `NUMORA_IRT_DELIVERY_ENABLED` only in the isolated test. All new flags default off.

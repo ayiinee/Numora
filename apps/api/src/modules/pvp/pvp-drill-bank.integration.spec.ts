@@ -402,7 +402,8 @@ integration(
           expect(new Set(saved.map((q) => q.questionVersionId))).toEqual(eligibleIds);
           await current.join(fixture.students[1]!.id, room.roomCode);
           await current.ready(host(), room.matchId);
-          const running = await current.ready(fixture.students[1]!.id, room.matchId);
+          await current.ready(fixture.students[1]!.id, room.matchId);
+          const running = await current.start(host(), room.matchId);
           expect(running.question!.durationSeconds).toBe(
             { easy: 30, medium: 45, hard: 60 }[difficulty],
           );
@@ -483,7 +484,8 @@ integration(
           expect(room.isDemo).toBe(mode === 'demo');
           await current.join(fixture.students[1]!.id, room.roomCode);
           await current.ready(host(), room.matchId);
-          const started = await current.ready(fixture.students[1]!.id, room.matchId);
+          await current.ready(fixture.students[1]!.id, room.matchId);
+          const started = await current.start(host(), room.matchId);
           expect((await current.snapshot(host(), room.matchId)).question!.id).toBe(
             started.question!.id,
           );

@@ -46,6 +46,8 @@ Submit commits grading, latest/best progress, immutable ledger and completion ou
 
 All endpoints use `/api/v1`, Supabase access token Bearer authentication, UUID identifiers, camelCase JSON, ISO-8601 UTC timestamps, and `application/problem+json` errors. NestJS authorizes the current Student, each attempt, and level access. No endpoint accepts a client-computed score, elapsed time, XP, or unlock state.
 
+**ENGINEERING IMPLEMENTATION — Drill A/B pilot.** `POST /assessments/drill/attempts` still takes `{ levelId }` and returns the existing attempt DTO. An active session resumes with its original snapshot. A new attempt uses the active revision for the student's assigned group. If a new attempt cannot start, the existing error UI handles `503 DRILL_PACKAGE_UNAVAILABLE`. Assignment and fallback metadata stay server-side. [Pilot configuration and rollout](../data/ASSESSMENT_ARMS_V2.md#pilot-routing-drill).
+
 | Operation                                                             | Expected request               | Minimum response                                                                                                                      |
 | --------------------------------------------------------------------- | ------------------------------ | ------------------------------------------------------------------------------------------------------------------------------------- |
 | `GET /chapters`                                                       | —                              | `{ chapters: { id, title, order }[] }`                                                                                                |

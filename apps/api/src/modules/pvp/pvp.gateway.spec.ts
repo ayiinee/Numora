@@ -34,3 +34,33 @@ it('acknowledges committed room state before a stalled transient scheduler', asy
   await new Promise<void>((resolve) => setImmediate(resolve));
   expect(scheduler.schedule).toHaveBeenCalledWith(state.matchId, 'student');
 });
+
+it('routes match:start to the engine without starting the match locally', async () => {
+  const state = { matchId: randomUUID(), status: 'RUNNING' };
+  const engine = { create: vi.fn(), start: vi.fn().mockResolvedValue(state) };
+  const scheduler = { schedule: vi.fn(() => new Promise<void>(() => {})) };
+  const gateway = new PvpGateway(
+    { student: vi.fn().mockResolvedValue({ id: 'host' }), engine } as never,
+    scheduler as never,
+  );
+  const socket = {
+    data: { authorization: 'Bearer TEST_ONLY', studentId: 'host' },
+    emit: vi.fn(),
+  };
+  const ack = vi.fn();
+  await gateway.start(
+    socket as never,
+    {
+      event: 'match:start',
+      eventVersion: '1',
+      requestId: randomUUID(),
+      sentAt: new Date().toISOString(),
+      payload: { matchId: state.matchId },
+    },
+    ack,
+  );
+  expect(engine.start).toHaveBeenCalledWith('host', state.matchId);
+  expect(ack).toHaveBeenCalledWith(
+    expect.objectContaining({ payload: { ok: true, state, response: null } }),
+  );
+});
