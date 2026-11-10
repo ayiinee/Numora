@@ -82,3 +82,16 @@ describe('Drill API boundary', () => {
     expect(history.mock.calls[2]?.[0]).toContain('?levelId=level%2F1');
   });
 });
+
+it('loads pretest work media through the authorized item endpoint', async () => {
+  const fetchMock = vi
+    .fn()
+    .mockResolvedValue(new Response(JSON.stringify({ media: [] }), { status: 200 }));
+  vi.stubGlobal('fetch', fetchMock);
+  await expect(learningApi.itemMedia('test-token', 'item/1', 'WORK')).resolves.toEqual({
+    media: [],
+  });
+  const [url, init] = fetchMock.mock.calls[0] as [string, RequestInit];
+  expect(url).toContain('/assessment-items/item%2F1/media?phase=WORK');
+  expect(init.headers).toMatchObject({ Authorization: 'Bearer test-token' });
+});

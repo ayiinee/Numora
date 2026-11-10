@@ -6,7 +6,7 @@ import { useParams, useRouter } from 'next/navigation';
 import Link from 'next/link';
 import { useRef, useState } from 'react';
 import { useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Button, Card } from '@tka/ui';
+import { Badge, Card, Icon } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
@@ -157,13 +157,6 @@ function PretestForm({
       attempt.questions.map((question) => [question.questionInstanceId, question.revision]),
     ),
   );
-  const skip = useMutation({
-    mutationFn: () => learningApi.skipPretest(token, attempt.chapterId),
-    onSuccess: async () => {
-      await invalidate();
-      router.push(`/student/learn/${attempt.chapterId}`);
-    },
-  });
   return (
     <AssessmentSession
       redesign
@@ -172,31 +165,8 @@ function PretestForm({
       questions={attempt.questions}
       headerExtra={<span>Tanpa batas waktu</span>}
       onReload={onReload}
-      loadMedia={async (questionId, phase, assetIds) =>
-        (await learningApi.media(token, attempt.id, questionId, phase, assetIds)).media
-      }
-      notice={
-        <Card>
-          <p>
-            20 soal · Opsional · Tanpa XP. Jawaban tersimpan dapat dilanjutkan sebelum Pretest
-            selesai.
-          </p>
-          <Button
-            variant="secondary"
-            disabled={skip.isPending || skip.isSuccess}
-            onClick={() => {
-              if (
-                window.confirm(
-                  'Skip untuk sekarang? Jawaban yang sudah tersimpan tetap dapat dilanjutkan. Perubahan yang belum tersimpan dapat hilang.',
-                )
-              )
-                skip.mutate();
-            }}
-          >
-            Skip untuk sekarang
-          </Button>
-          {skip.isError && <p role="alert">{skip.error.message}</p>}
-        </Card>
+      loadMedia={async (questionId, phase) =>
+        (await learningApi.itemMedia(token, questionId, phase)).media
       }
       submitLabel="Kirim Pretest"
       confirmMessage={(empty) =>
@@ -244,47 +214,89 @@ export function PretestResultScreen() {
   );
 }
 export function PretestResult({ result }: { result: PretestResultDto }) {
+  const placementReady = result.mappingStatus === 'applied' && result.initialLevel !== null;
   return (
     <Card fullWidth className="pretest-result">
-      <StudentMascot pose={result.initialLevel == null ? 'submitted' : 'placement'} />
-      <h1>Hasil Pretest {result.chapterTitle}</h1>
-      <p>
-        Pretest selesai. Bab ini tidak dapat di-pretest ulang. Tidak ada XP atau kontribusi
-        leaderboard.
-      </p>
-      <dl>
-        <dt>Nilai</dt>
-        <dd>{result.score ?? '—'}</dd>
-        <dt>Jawaban benar</dt>
-        <dd>
-          {result.correctCount ?? '—'} / {result.questionCount}
-        </dd>
-        <dt>Level awal</dt>
-        <dd>{result.initialLevel ?? 'Belum tersedia'}</dd>
-      </dl>
-      {result.mappingStatus === 'unavailable' && (
-        <p role="status">
-          Hasil tersimpan. Pemetaan level bab belum lengkap; level yang sudah terbuka tetap
-          dipertahankan.
+      <header className="pretest-result__hero">
+        <div className="pretest-result__art">
+          <StudentMascot pose={placementReady ? 'placement' : 'submitted'} />
+        </div>
+        <div>
+          <Badge variant="success">
+            <Icon name="check" width={14} height={14} />
+            Pretest selesai
+          </Badge>
+          {result.isDemo && <Badge variant="secondary">DEMO</Badge>}
+          <h2>Hasil Pretest {result.chapterTitle}</h2>
+          <p>Kenali titik awalmu. Lanjutkan belajar selangkah demi selangkah.</p>
+        </div>
+      </header>
+
+      <section className="pretest-result__placement" aria-label="Penempatan awal">
+        <span className="pretest-result__eyebrow">Level awalmu</span>
+        <strong>{placementReady ? `Level ${result.initialLevel}` : 'Hasil tersimpan'}</strong>
+        <p>
+          {placementReady
+            ? `Pilih subbab untuk berlatih. Tanda Mulai di sini menunjukkan level saran pretest saat kamu belum melampauinya.${
+                (result.initialLevel ?? 0) > 1
+                  ? ' Level sebelumnya tetap tersedia untuk latihan dasar.'
+                  : ''
+              }`
+            : 'Pemetaan level bab belum tersedia. Level yang sudah terbuka tetap dipertahankan.'}
         </p>
-      )}
+        <Link className="button-link" href={`/student/learn/${result.chapterId}`}>
+          Lanjut Drill <Icon name="chevron" width={18} height={18} />
+        </Link>
+      </section>
+
+      <dl className="pretest-result__stats">
+        <div>
+          <dt>Nilai pretest</dt>
+          <dd>
+            {result.score === null
+              ? 'Belum tersedia'
+              : result.score.toLocaleString('id-ID', { maximumFractionDigits: 6 })}
+          </dd>
+        </div>
+        <div>
+          <dt>Jawaban benar</dt>
+          <dd>
+            {result.correctCount ?? '—'} <span>/ {result.questionCount} soal</span>
+          </dd>
+        </div>
+      </dl>
+
       {result.unlockedLevels.length > 0 && (
-        <>
-          <h2>Level tersedia</h2>
+        <details className="pretest-result__levels">
+          <summary>
+            <span>
+              <strong>Level tersedia</strong>
+              <span>{result.unlockedLevels.length} level untuk dijelajahi</span>
+            </span>
+            <Icon name="chevron" width={18} height={18} />
+          </summary>
           <ul>
             {result.unlockedLevels.map((level) => (
-              <li key={level.id}>{level.title}</li>
+              <li key={level.id}>
+                <Icon name="check" width={16} height={16} />
+                <span>{level.title}</span>
+              </li>
             ))}
           </ul>
-        </>
+        </details>
       )}
-      <p>
-        Unlock Pretest tidak menandai level Drill sebagai selesai dan tidak mengurangi progres
-        sebelumnya.
-      </p>
-      <Link className="button-link" href={`/student/learn/${result.chapterId}`}>
-        Lanjut Drill
-      </Link>
+      <aside className="pretest-result__note" aria-label="Tentang hasil pretest">
+        <Icon name="info" width={18} height={18} />
+        <div>
+          <p>
+            Progres Drill sebelumnya tetap aman. Level yang terbuka belum dihitung sebagai latihan
+            selesai.
+          </p>
+          <p>
+            Pretest bab ini tidak dapat diulang dan tidak memberikan XP atau kontribusi leaderboard.
+          </p>
+        </div>
+      </aside>
     </Card>
   );
 }

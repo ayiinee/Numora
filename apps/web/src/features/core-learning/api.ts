@@ -133,6 +133,8 @@ export const learningApi = {
       `${kind === 'drill' ? '/assessment-attempts' : '/tryout/attempts'}/${id(attemptId)}/answers/${id(questionInstanceId)}`,
       { method: 'PATCH', body: JSON.stringify({ answer }) },
     ),
+  itemMedia: (token: string, instanceId: string, phase: 'WORK' | 'REVIEW') =>
+    request<MediaLinksDto>(token, `/assessment-items/${id(instanceId)}/media?phase=${phase}`),
   media: (
     token: string,
     attemptId: string,
