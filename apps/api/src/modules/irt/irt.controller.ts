@@ -90,6 +90,7 @@ export class IrtController {
   }
   @Post('research/finalize/:receiptId')
   @HttpCode(200)
+  @ApiOkResponse({ type: Object })
   finalizeResearchV1(@Param('receiptId', new ParseUUIDPipe()) receiptId: string) {
     return this.requests.finalizeResearchV1(receiptId);
   }
