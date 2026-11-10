@@ -38,6 +38,24 @@ try {
       ),
       /Partial adoption cannot commit/,
     );
+    await fixture`CREATE FUNCTION public.synthetic_adoption_corrupt() RETURNS trigger LANGUAGE plpgsql AS $$
+      BEGIN NEW.respondent_id:='SYNTHETIC_WRONG_' || NEW.attempt_id::text; RETURN NEW; END $$`;
+    await fixture`CREATE TRIGGER synthetic_adoption_corrupt BEFORE INSERT ON irt_artifact_adoption_attempts_v1
+      FOR EACH ROW EXECUTE FUNCTION public.synthetic_adoption_corrupt()`;
+    try {
+      await assert.rejects(
+        adoptTryoutArtifactV1(db, requestId),
+        /frozen identity|Adoption evidence/,
+      );
+    } finally {
+      await fixture`DROP TRIGGER synthetic_adoption_corrupt ON irt_artifact_adoption_attempts_v1`;
+      await fixture`DROP FUNCTION public.synthetic_adoption_corrupt()`;
+    }
+    assert.equal(
+      (await db`SELECT * FROM irt_artifact_adoption_receipts_v1 WHERE request_id=${requestId}`)
+        .length,
+      0,
+    );
     const adopted = await adoptTryoutArtifactV1(db, requestId);
     assert.equal(adopted.adopted, true);
     const replay = await Promise.all([
@@ -47,6 +65,25 @@ try {
     assert.ok(replay.every((x) => x.replay && x.receiptId === adopted.receiptId));
     const [receipt] =
       await db`SELECT * FROM irt_artifact_adoption_receipts_v1 WHERE id=${adopted.receiptId}`;
+    const [batch] = await db`SELECT * FROM irt_batches WHERE id=${receipt.batch_id}`;
+    assert.equal(batch.source_request_id, requestId);
+    assert.equal(batch.source_execution_id, receipt.execution_id);
+    assert.equal(batch.research_snapshot_id, r.snapshot_id);
+    assert.equal(batch.response_snapshot_id, null);
+    const itemResults = await db`SELECT * FROM irt_item_results WHERE batch_id=${batch.id}`;
+    assert.equal(itemResults.length, batch.output_snapshot.outcome.items.length);
+    for (const item of batch.output_snapshot.outcome.items) {
+      const canonical = itemResults.find((x) => x.question_version_id === item.questionVersionId);
+      assert.equal(canonical.eligible_respondent_count, item.eligibleRespondentCount);
+      assert.deepEqual(canonical.quality_evidence, item.quality);
+      const steps =
+        await db`SELECT step,value,standard_error FROM irt_item_step_parameters WHERE item_result_id=${canonical.id} ORDER BY step`;
+      assert.equal(steps.length, item.parameters?.steps?.length ?? 0);
+      for (const [i, step] of steps.entries()) {
+        assert.equal(Number(step.value), item.parameters.steps[i].value);
+        assert.equal(Number(step.standard_error), item.parameters.steps[i].standardError);
+      }
+    }
     const rows =
       await db`SELECT * FROM irt_artifact_adoption_attempts_v1 WHERE receipt_id=${receipt.id}`;
     assert.equal(rows.length, r.body.respondents.length);
@@ -62,6 +99,14 @@ try {
         }),
         /immutable|Receipt|receipt|evidence/,
       );
+    await reject(
+      (tx) =>
+        tx`UPDATE irt_batches SET source_calibration_artifact_id=NULL WHERE id=${receipt.batch_id}`,
+    );
+    await reject(
+      (tx) =>
+        tx`UPDATE irt_item_results SET model_family='LEGACY' WHERE batch_id=${receipt.batch_id}`,
+    );
     await reject(
       (tx) =>
         tx`UPDATE irt_artifact_adoption_receipts_v1 SET status='FAILED',failure_code='CONFLICT' WHERE id=${receipt.id}`,
@@ -107,12 +152,15 @@ try {
     console.log(
       JSON.stringify({
         canonicalArtifactAccepted: true,
+        researchForeignKeysAndSnapshot: true,
+        itemParametersAndSteps: true,
         attemptCount: rows.length,
         parallelReplay: true,
         receiptAndChildrenImmutable: true,
         failedUpsertPreservesReceipt: true,
         staleApprovalPreservesReceipt: true,
         partialCommitRejected: true,
+        wrongIdentityRollsBack: true,
         staging: true,
         historyAndXpUnchanged: true,
       }),
