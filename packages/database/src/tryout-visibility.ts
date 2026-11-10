@@ -182,7 +182,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
       score: tryoutAttemptResults.score,
       mode: sql<string>`coalesce(${tryoutAttemptResults.resultMode},${tryoutResultFinalizations.mode})`,
       resultReason: tryoutAttemptResults.resultReason,
-      policy: tryoutResultFinalizations.policySnapshot,
+      reasonCode: sql<string | null>`${tryoutResultFinalizations.policySnapshot}->>'reasonCode'`,
       version: tryoutResultFinalizations.version,
     })
     .from(tryoutAttemptResults)
@@ -214,11 +214,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
           : row.score !== null && Number.isFinite(Number(row.score)),
       )
       .map((row) => {
-        const policy =
-          row.policy && typeof row.policy === 'object' && !Array.isArray(row.policy)
-            ? (row.policy as Record<string, unknown>)
-            : {};
-        const code = typeof policy.reasonCode === 'string' ? policy.reasonCode : '';
+        const code = row.reasonCode ?? '';
         return [
           row.attemptId,
           {

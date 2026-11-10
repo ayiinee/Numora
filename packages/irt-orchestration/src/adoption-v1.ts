@@ -24,9 +24,10 @@ export function validateV1ArtifactShape(
 /** Re-check frozen identity, current fencing, approval and byte commitment before adoption. */
 export async function loadVerifiedTryoutArtifactV1(tx: TransactionSql, requestId: string) {
   const [source] = await tx<JsonObject[]>`
-    SELECT id::text,snapshot_id::text,input_digest,body,payload,cancelled,approvals_valid,current_generation
+    SELECT id::text,snapshot_id::text,input_digest,body,cancelled,approvals_valid,current_generation
     FROM public.irt_calibration_inputs_v1 WHERE id=${requestId}`;
   if (!source) throw new Error('IRT_V1_REQUEST_NOT_FOUND');
+  source.payload = { ...source.body, inputDigest: source.input_digest };
   if (source.cancelled || !source.approvals_valid) fail('IRT_V1_AUTHORIZATION_STALE');
   await tx`SELECT id FROM public.configuration_approvals WHERE id IN
     (SELECT (value#>>'{ref,approvalId}')::uuid FROM public.irt_calibration_requests_v1 r, jsonb_each(r.resources) WHERE r.id=${requestId}) FOR SHARE`;
