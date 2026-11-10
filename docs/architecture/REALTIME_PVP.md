@@ -145,7 +145,7 @@ Do not add horizontal WebSocket complexity before load tests justify it.
 
 Client events: `room:create`, `room:join`, `player:ready`, `match:start`, `answer:submit`, `match:reconnect`, `room:leave`, `room:cancel`, `invitation:send`, `invitation:respond`.
 
-**ENGINEERING DECISION — Reyhan request, 10 November 2026:** Ready no longer starts the duel. The second `player:ready` leaves the room in WAITING; only the room creator may send `match:start`, and the server still requires two active, connected, Ready players before it opens question 1. This adds a deliberate pre-arena step instead of the previous instantaneous auto-start and keeps match start server-authoritative. Product confirmation that PRD v0.6 §23.5's `Ready → Arena` flow allows this explicit start action is still pending.
+**ENGINEERING DECISION - requested by Reyhan and approved by owner Aini, 10 November 2026:** Ready no longer starts the duel. The second `player:ready` leaves the room in WAITING; only the room creator may send `match:start`, and the server still requires two active, connected, Ready players before it opens question 1. This adds a deliberate pre-arena step instead of the previous instantaneous auto-start and keeps match start server-authoritative. Aini explicitly confirmed "Setuju, host memulai duel" during the review of [PR #150](https://github.com/ayiinee/Numora/pull/150), approving this amendment to PRD v0.6 section 23.5's `Ready -> Arena` flow.
 
 Server state/transition events: `room:state`, `match:started`, `question:started`, `answer:acknowledged`, `question:resolved`, `player:disconnected`, `match:completed`, `match:forfeited`, `match:cancelled`, `invitation:received`. Callback envelopes use `command:acknowledged`; failures also emit `room:error`.
 
