@@ -1,6 +1,6 @@
 # NUMORA UI guidance
 
-**ENGINEERING DECISION — instruksi pemilik, 10 November 2026.** Edit nama dan foto pada Profil Siswa digabung ke kartu identitas pengguna melalui panel buka/tutup “Edit profil”. Kartu edit terpisah serta badge afiliasi dan status aktif di bagian atas kartu identitas dihapus. Tombol edit ringkas berada di kanan atas sejajar nama, dengan target sentuh 44 px. Kartu Gabung kelas berada tepat di bawah statistik Drill. Form tetap memakai API profil existing, validasi foto dan pembaruan identitas bersama.
+**ENGINEERING DECISION — instruksi pemilik, 10 November 2026.** Edit nama dan foto pada Profil Siswa digabung ke kartu identitas pengguna melalui panel buka/tutup “Edit profil”. Kartu edit terpisah serta badge afiliasi dan status aktif di bagian atas kartu identitas dihapus. Tombol edit ringkas berada di kanan atas sejajar nama, dengan target sentuh 44 px. Kartu Gabung kelas berada tepat di bawah statistik Drill. Form tetap memakai API profil existing, validasi foto dan pembaruan identitas bersama. [Bukti tampilan dengan data sintetis](screenshots/student-profile-2026-11-10/README.md).
 
 **ENGINEERING DECISION — owner-approved plan, 9 November 2026:** [Teacher UI alignment](TEACHER_UI_ALIGNMENT_2026-11-09.md) follows the current Student foundation with blue identity, class row cards, contextual Progres / Riwayat / Catatan tabs, create/invite flow and member-management dialog. This supersedes conflicting Teacher presentation from October; existing API/product rules remain authoritative.
 
