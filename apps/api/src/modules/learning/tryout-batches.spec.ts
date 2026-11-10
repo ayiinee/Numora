@@ -1,5 +1,5 @@
 import { describe, expect, it } from 'vitest';
-import { batchState, validateBatchInput } from './tryout-batches.service';
+import { batchEditable, batchState, validateBatchInput } from './tryout-batches.service';
 import type { SaveTryoutBatchDto } from './tryout-batches.dto';
 
 describe('Tryout batch boundaries', () => {
@@ -24,6 +24,11 @@ describe('Tryout batch boundaries', () => {
     expect(batchState({ ...batch, adminPublishedAt: null }, batch.startsAt)).toBe('DRAFT');
     expect(batchState({ ...batch, cancelledAt: batch.startsAt }, batch.startsAt)).toBe('CANCELLED');
   });
+  it('rejects a start at or before server time while allowing a custom closing date', () => {
+    expect(() => validateBatchInput(input, new Date(input.startsAt))).toThrow();
+    expect(() => validateBatchInput(input, new Date(input.closesAt))).toThrow();
+    expect(() => validateBatchInput(input, new Date('2026-11-09T00:00:00Z'))).not.toThrow();
+  });
   it('rejects invalid windows, blank titles, repeated schools and foreign package delegation', () => {
     for (const changed of [
       { title: ' ' },
@@ -42,5 +47,13 @@ describe('Tryout batch boundaries', () => {
         ],
       }),
     ).not.toThrow();
+  });
+  it('allows expired drafts to be rescheduled but freezes published and cancelled batches', () => {
+    const now = new Date(input.closesAt);
+    const draft = { adminPublishedAt: null, cancelledAt: null, startsAt: new Date(input.startsAt) };
+    expect(batchEditable(draft, now)).toBe(true);
+    expect(batchEditable({ ...draft, adminPublishedAt: draft.startsAt }, now)).toBe(false);
+    expect(batchEditable({ ...draft, adminPublishedAt: now }, draft.startsAt)).toBe(false);
+    expect(batchEditable({ ...draft, cancelledAt: now }, now)).toBe(false);
   });
 });

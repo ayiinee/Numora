@@ -32,3 +32,8 @@ Content audit stays scoped to content/moderation/IRT entities. Non-Admin actor i
 The Development fixture key `accounts.admin` maps to `CONTENT_DATA_MODERATION`; `accounts.adminOperations` maps to `OPERATIONS`; `accounts.adminSuper` maps to `SUPER_ADMIN`. Email or vault key never grants permission. The identity API and persisted assignment remain authoritative. Null/unknown assignment or disabled status grants no privileged access, including with an unchanged Auth token.
 
 Regression coverage: direct HTTP allow/deny matrix, forbidden mutations before service execution, unchanged-token assignment changes, disabled accounts, all-role rejection of Teacher ban/unban, exact limited-response fields and credential status counts in isolated PostgreSQL, Content navigation/read-only actions, direct-route denial and browser viewport checks. Real scientific publication, SMTP and media acceptance remain separate from this permission correction.
+
+
+## Tryout batch read boundary - 10 November 2026
+
+**ENGINEERING DECISION - implementation of Admin PRD section 6:** `GET /api/v1/admin/tryout-batches` and `GET /api/v1/admin/tryout-batches/{id}` require `OPERATIONS_LIMITED_READ` (Super, Operations, Content). Responses contain schedules, package/school identities, aggregate participation and release blockers; no individual student answers or scores. `GET .../options` and create/update/publish/cancel require `CONTENT_MANAGE`. Unassigned, disabled and non-Admin profiles remain denied. No API shape changes or new capability.

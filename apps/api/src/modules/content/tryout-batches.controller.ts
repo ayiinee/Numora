@@ -11,7 +11,8 @@ import {
   UseGuards,
 } from '@nestjs/common';
 import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
-import { ContentAdminGuard } from '../identity/content-admin.guard';
+import { AdminGuard } from '../identity/admin.guard';
+import { RequireAdminCapability } from '../identity/admin-capabilities';
 import type { AdminRequest } from '../identity/admin.guard';
 import { TryoutBatchesService } from '../learning/tryout-batches.service';
 import {
@@ -27,11 +28,15 @@ import { ContentMutationDto } from './content.dto';
 
 @ApiTags('admin-tryout-batches')
 @ApiBearerAuth()
-@UseGuards(ContentAdminGuard)
+@UseGuards(AdminGuard)
+@RequireAdminCapability('CONTENT_MANAGE')
 @Controller('admin/tryout-batches')
 export class AdminTryoutBatchesController {
   constructor(private readonly batches: TryoutBatchesService) {}
-  @Get() @ApiOkResponse({ type: TryoutBatchesDto }) list(@Query() query: TryoutBatchQueryDto) {
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
+  @Get()
+  @ApiOkResponse({ type: TryoutBatchesDto })
+  list(@Query() query: TryoutBatchQueryDto) {
     return this.batches.list(query);
   }
   @Get('options') @ApiOkResponse({ type: TryoutBatchOptionsDto }) options(
@@ -39,9 +44,10 @@ export class AdminTryoutBatchesController {
   ) {
     return this.batches.options(query);
   }
-  @Get(':id') @ApiOkResponse({ type: TryoutBatchDto }) detail(
-    @Param('id', ParseUUIDPipe) id: string,
-  ) {
+  @RequireAdminCapability('OPERATIONS_LIMITED_READ')
+  @Get(':id')
+  @ApiOkResponse({ type: TryoutBatchDto })
+  detail(@Param('id', ParseUUIDPipe) id: string) {
     return this.batches.detail(id);
   }
   @Post() @ApiCreatedResponse({ type: ContentMutationDto }) create(

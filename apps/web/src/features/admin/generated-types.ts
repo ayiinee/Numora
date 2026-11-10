@@ -7,7 +7,7 @@ export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; }
 
 export type TryoutBatchSchoolDto = { "schoolId": string; "schoolName": string; "packageId": string; };
 
-export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; };
+export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVersion": number; "familyCode": string; "status": string; "usedBatchCount": number; "valid": boolean; };
 
 export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
 

@@ -1,3 +1,4 @@
+import { Badge, Icon } from '@tka/ui';
 import type { ContentPackageDto } from './generated-types';
 import { snapshotTime } from './analytics-model';
 
@@ -41,40 +42,68 @@ const reasons: Record<string, string> = {
 };
 export function PackageAvailability({ detail }: { detail: ContentPackageDto }) {
   return (
-    <section className="content-import-card" aria-label="Ketersediaan untuk siswa">
+    <section className="package-availability" aria-label="Ketersediaan untuk siswa">
       <h3>Ketersediaan untuk siswa</h3>
-      <p role="status">
-        {detail.availability
-          ? labels[detail.availability.state]
-          : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
+      <p role="status" className="package-availability-status">
+        <Badge
+          variant={
+            detail.availability?.state === 'AVAILABLE' ||
+            detail.availability?.state === 'READY_FOR_BATCH'
+              ? 'success'
+              : 'default'
+          }
+        >
+          {detail.availability
+            ? packageAvailabilityLabel(detail.availability.state)
+            : 'Ketersediaan belum dapat diperiksa. Muat ulang paket.'}
+        </Badge>
       </p>
-      {detail.assessmentType !== 'TRYOUT' && detail.releaseAt && <p>Rilis: {snapshotTime(detail.releaseAt)}</p>}
-      {detail.assessmentType !== 'TRYOUT' && detail.closeAt && <p>Tutup: {snapshotTime(detail.closeAt)}</p>}
+      {detail.assessmentType !== 'TRYOUT' && detail.releaseAt && (
+        <p>Rilis: {snapshotTime(detail.releaseAt)}</p>
+      )}
+      {detail.assessmentType !== 'TRYOUT' && detail.closeAt && (
+        <p>Tutup: {snapshotTime(detail.closeAt)}</p>
+      )}
       {!!detail.availability?.blockers.length && (
-        <ul>
+        <ul className="package-availability-reasons">
           {detail.availability.blockers.map((code) => (
             <li key={code}>
-              {reasons[code] ??
-                'Ada syarat yang belum terpenuhi. Hubungi pengelola dengan kode: ' + code}
+              <Icon name="info" width={18} height={18} />
+              <span>
+                {code === 'PACKAGE_NOT_PUBLISHED' && detail.assessmentType === 'PRETEST'
+                  ? 'Paket masih berupa draf. Lengkapi soal dan selesaikan masalah validasi sebelum menerbitkannya.'
+                  : (reasons[code] ??
+                    'Ada syarat yang belum terpenuhi. Hubungi pengelola dengan kode: ' + code)}
+              </span>
             </li>
           ))}
         </ul>
       )}
       {detail.availability && (
-        <small>
-          Diperiksa {snapshotTime(detail.availability.checkedAt)}. Siswa tetap harus memenuhi syarat
-          pengerjaan, termasuk batas pengulangan, saat mulai.
-        </small>
+        <div className="package-availability-note">
+          <small>Diperiksa {snapshotTime(detail.availability.checkedAt)}.</small>
+          <p>Syarat pengerjaan siswa diperiksa kembali saat mulai.</p>
+        </div>
       )}
-      <details>
-        <summary>Informasi teknis versi paket</summary>
+      <details className="package-version-details">
+        <summary>
+          <Icon name="settings" width={16} height={16} />
+          Informasi teknis versi paket
+          <Icon name="chevron" width={16} height={16} />
+        </summary>
         <dl>
-          <dt>Acuan susunan soal</dt>
-          <dd>{detail.blueprintVersionId ?? 'Belum ditetapkan'}</dd>
-          <dt>Aturan penilaian</dt>
-          <dd>{detail.scoringPolicyVersionId ?? 'Belum ditetapkan'}</dd>
-          <dt>Salinan soal untuk siswa disimpan</dt>
-          <dd>{detail.frozenAt ? snapshotTime(detail.frozenAt) : 'Belum disimpan'}</dd>
+          <div>
+            <dt>Acuan susunan soal</dt>
+            <dd>{detail.blueprintVersionId ?? 'Belum ditetapkan'}</dd>
+          </div>
+          <div>
+            <dt>Aturan penilaian</dt>
+            <dd>{detail.scoringPolicyVersionId ?? 'Belum ditetapkan'}</dd>
+          </div>
+          <div>
+            <dt>Salinan soal untuk siswa disimpan</dt>
+            <dd>{detail.frozenAt ? snapshotTime(detail.frozenAt) : 'Belum disimpan'}</dd>
+          </div>
         </dl>
       </details>
     </section>

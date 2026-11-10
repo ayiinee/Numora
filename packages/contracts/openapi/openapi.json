@@ -2130,6 +2130,14 @@
                 }
               ]
             }
+          },
+          {
+            "name": "familyCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -12250,12 +12258,28 @@
           },
           "packageVersion": {
             "type": "number"
+          },
+          "familyCode": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string"
+          },
+          "usedBatchCount": {
+            "type": "number"
+          },
+          "valid": {
+            "type": "boolean"
           }
         },
         "required": [
           "id",
           "name",
-          "packageVersion"
+          "packageVersion",
+          "familyCode",
+          "status",
+          "usedBatchCount",
+          "valid"
         ]
       },
       "TryoutBatchSchoolDto": {

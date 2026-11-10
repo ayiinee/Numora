@@ -3,13 +3,59 @@ import AxeBuilder from '@axe-core/playwright';
 import { setup, id } from './fixtures/admin';
 import type { SaveTryoutBatchDto, TryoutBatchDto } from '../src/features/admin/generated-types';
 
+test('Operations can read batches but cannot open management controls (TEST ONLY)', async ({
+  page,
+}) => {
+  const { state } = await setup(page);
+  state.adminRole = 'OPERATIONS';
+  const batch: TryoutBatchDto = {
+    id: id(9400),
+    title: 'TEST ONLY operational schedule',
+    revision: 1,
+    startsAt: '2099-01-01T01:00:00Z',
+    closesAt: '2099-01-07T13:00:00Z',
+    resultDueAt: '2099-01-10T13:00:00Z',
+    state: 'DRAFT',
+    editable: true,
+    mandiriPackageId: null,
+    packages: [],
+    schools: [],
+    participants: [],
+    resultsState: 'BLOCKED',
+    resultBlockers: ['MULTI_PACKAGE_FINALIZATION_NOT_READY'],
+  };
+  await page.route('**/api/v1/admin/tryout-batches**', (route) => {
+    expect(route.request().method()).toBe('GET');
+    return route.fulfill({
+      json: new URL(route.request().url()).pathname.endsWith(batch.id)
+        ? batch
+        : { items: [batch], total: 1 },
+    });
+  });
+  await page.goto('/admin/tryout-batches');
+  await expect(
+    page.getByRole('link', { name: 'TEST ONLY operational schedule', exact: true }),
+  ).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Tambah batch', exact: true })).toHaveCount(0);
+  await page.getByRole('link', { name: 'Kelola', exact: true }).click();
+  await expect(page.getByRole('heading', { name: batch.title, exact: true })).toBeVisible();
+  for (const name of ['Pengaturan', 'Terbitkan batch', 'Batalkan batch'])
+    await expect(page.getByRole('button', { name, exact: true })).toHaveCount(0);
+  await page.goto('/admin/tryout-batches/new');
+  await expect(
+    page.getByText('Akses pengelolaan konten diperlukan.', { exact: true }),
+  ).toBeVisible();
+  await expect(page.getByLabel('Judul batch', { exact: true })).toHaveCount(0);
+});
+
 test('batch creation, school delegation and compact detail work across viewports (TEST ONLY)', async ({
   page,
 }) => {
   await setup(page);
+  const packageInfo = { familyCode: 'TEST', status: 'PUBLISHED', usedBatchCount: 2, valid: true };
   const packages = [
-    { id: id(9401), name: 'TEST Original', packageVersion: 1 },
-    { id: id(9402), name: 'TEST Variant', packageVersion: 1 },
+    { ...packageInfo, id: id(9401), name: 'TEST Original', packageVersion: 1 },
+    { ...packageInfo, id: id(9402), name: 'TEST Variant', packageVersion: 1 },
   ];
   const schools = [
     { schoolId: id(9501), schoolName: 'TEST School A' },
@@ -58,11 +104,72 @@ test('batch creation, school delegation and compact detail work across viewports
   });
   await page.goto('/admin/tryout-batches');
   await page.getByRole('link', { name: 'Tambah batch', exact: true }).click();
+  await expect(page.getByLabel('Judul batch', { exact: true })).toHaveCSS(
+    'border-top-width',
+    '1px',
+  );
+  await expect(page.getByLabel('Judul batch', { exact: true })).toHaveCSS(
+    'border-top-style',
+    'solid',
+  );
+  await expect(page.getByLabel('Judul batch', { exact: true })).toHaveCSS(
+    'background-color',
+    'rgb(255, 255, 255)',
+  );
+  for (const width of [320, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    await expect(page.getByRole('heading', { name: 'Nama dan jadwal', exact: true })).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  // Searching choices must work before required batch fields are filled.
+  const schedule = await page
+    .getByRole('region', { name: 'Nama dan jadwal', exact: true })
+    .boundingBox();
+  const packagesPanel = await page
+    .getByRole('region', { name: 'Paket soal', exact: true })
+    .boundingBox();
+  await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toHaveCount(0);
+  expect(packagesPanel!.x).toBeGreaterThan(schedule!.x + schedule!.width);
+  expect(packagesPanel!.y).toBe(schedule!.y);
+  await page.getByRole('button', { name: 'Pilih paket utama', exact: true }).click();
+  await page.getByRole('searchbox', { name: 'Cari paket', exact: true }).fill('TEST');
+  const searched = page.waitForRequest(
+    (r) =>
+      r.url().includes('/tryout-batches/options?') &&
+      new URL(r.url()).searchParams.get('search') === 'TEST',
+  );
+  await page.getByRole('button', { name: 'Cari', exact: true }).click();
+  await searched;
+  const familyRequest = page.waitForRequest(
+    (r) =>
+      r.url().includes('/tryout-batches/options?') &&
+      new URL(r.url()).searchParams.get('familyCode') === 'TEST',
+  );
+  for (const [index, p] of packages.entries()) {
+    if (index > 0)
+      await page.getByRole('button', { name: 'Tambah paket tambahan', exact: true }).click();
+    await page
+      .locator('.tryout-batch-package-row')
+      .filter({ hasText: p.name })
+      .getByRole('button', { name: 'Pilih', exact: true })
+      .click();
+    await expect(page.getByRole('dialog')).not.toBeVisible();
+  }
+  await familyRequest;
+  const selectedPanel = await page
+    .getByRole('region', { name: 'Paket soal', exact: true })
+    .boundingBox();
+  expect(selectedPanel!.height).toBeCloseTo(schedule!.height, 0);
+  await expect(page.getByRole('region', { name: 'Penerima Tryout', exact: true })).toBeVisible();
+  await expect(
+    page.getByText(/Sekolah tanpa delegasi tidak otomatis mendapat paket utama/),
+  ).toBeVisible();
   await page.getByLabel('Judul batch', { exact: true }).fill('TEST ONLY Minggu 1');
   await page.getByLabel('Mulai (WIB)', { exact: true }).fill('2099-01-01T08:00');
+  await expect(page.getByLabel('Tutup (WIB)', { exact: true })).toHaveValue('2099-01-08T08:00');
   await page.getByLabel('Tutup (WIB)', { exact: true }).fill('2099-01-07T20:00');
-  for (const p of packages)
-    await page.getByRole('combobox', { name: 'Tambahkan paket', exact: true }).selectOption(p.id);
   await page
     .getByRole('combobox', { name: 'Paket siswa Mandiri', exact: true })
     .selectOption(packages[0]!.id);
@@ -99,7 +206,7 @@ test('batch creation, school delegation and compact detail work across viewports
   await page.getByRole('button', { name: 'Konfirmasi', exact: true }).click();
   await expect(page.getByText('Terjadwal', { exact: true })).toBeVisible();
   await page.reload();
-  await page.getByRole('link', { name: 'Kembali ke daftar', exact: true }).click();
+  await page.goto('/admin/tryout-batches');
   await expect(page.getByRole('table')).toBeVisible();
   await expect(page.getByRole('link', { name: 'TEST ONLY Minggu 1', exact: true })).toBeVisible();
 });

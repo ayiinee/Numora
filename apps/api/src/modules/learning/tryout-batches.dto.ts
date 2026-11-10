@@ -49,6 +49,7 @@ export class CancelTryoutBatchDto extends TryoutBatchRevisionDto {
   @ApiProperty() @IsString() @Length(1, 1000) reason!: string;
 }
 export class TryoutBatchQueryDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() @Length(1, 160) familyCode?: string;
   @ApiPropertyOptional() @IsOptional() @IsString() @Length(0, 160) search?: string;
   @ApiPropertyOptional({ default: 0 }) @IsOptional() @Type(() => Number) @IsInt() @Min(0) offset =
     0;
@@ -69,6 +70,10 @@ export class TryoutBatchPackageDto {
   @ApiProperty() id!: string;
   @ApiProperty() name!: string;
   @ApiProperty() packageVersion!: number;
+  @ApiProperty() familyCode!: string;
+  @ApiProperty() status!: string;
+  @ApiProperty() usedBatchCount!: number;
+  @ApiProperty() valid!: boolean;
 }
 export class TryoutBatchParticipantDto {
   @ApiProperty() packageId!: string;

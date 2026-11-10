@@ -2934,7 +2934,73 @@ describe.skipIf(!testUrl)(
         'admin/tryout-batches/options?limit=100&search=TEST',
       );
       expect(options.schools.map((s) => s.schoolId)).toContain(schoolA);
+      const expired = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        ...makeInput('expired draft'),
+        startsAt: new Date(Date.now() - 7200000).toISOString(),
+        closesAt: new Date(Date.now() - 3600000).toISOString(),
+      });
+      expect((await ok<TryoutBatchDto>(`admin/tryout-batches/${expired.id}`)).editable).toBe(true);
+      expect(
+        (
+          await request(`admin/tryout-batches/${expired.id}/publish`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(400);
+      await ok(`admin/tryout-batches/${expired.id}`, 'PATCH', {
+        ...makeInput('rescheduled draft'),
+        expectedRevision: 1,
+      });
+      await ok(`admin/tryout-batches/${expired.id}/cancel`, 'POST', {
+        expectedRevision: 2,
+        reason: 'TEST ONLY draft cleanup',
+      });
+      const inactive = await ok<{ id: string }>(
+        'admin/tryout-batches',
+        'POST',
+        makeInput('inactive recipient'),
+      );
+      await owner`UPDATE schools SET status='INACTIVE' WHERE id=${schoolA}`;
+      expect(
+        (
+          await request(`admin/tryout-batches/${inactive.id}/publish`, 'POST', {
+            expectedRevision: 1,
+          })
+        ).status,
+      ).toBe(400);
+      const unchanged = await ok<TryoutBatchDto>(`admin/tryout-batches/${inactive.id}`);
+      expect(unchanged.state).toBe('DRAFT');
+      expect(unchanged.revision).toBe(1);
+      await owner`UPDATE schools SET status='ACTIVE' WHERE id=${schoolA}`;
+      await ok(`admin/tryout-batches/${inactive.id}/cancel`, 'POST', {
+        expectedRevision: 1,
+        reason: 'TEST ONLY inactive school cleanup',
+      });
       const created = await ok<{ id: string }>('admin/tryout-batches', 'POST', makeInput('one'));
+      expect((await request('admin/tryout-batches', 'GET', undefined, 'operations')).status).toBe(
+        200,
+      );
+      expect(
+        (await request(`admin/tryout-batches/${created.id}`, 'GET', undefined, 'operations'))
+          .status,
+      ).toBe(200);
+      expect(
+        (await request('admin/tryout-batches/options', 'GET', undefined, 'operations')).status,
+      ).toBe(403);
+      for (const [path, method, payload] of [
+        [
+          `admin/tryout-batches/${created.id}`,
+          'PATCH',
+          { ...makeInput('forbidden'), expectedRevision: 1 },
+        ],
+        [`admin/tryout-batches/${created.id}/publish`, 'POST', { expectedRevision: 1 }],
+        [
+          `admin/tryout-batches/${created.id}/cancel`,
+          'POST',
+          { expectedRevision: 1, reason: 'TEST ONLY forbidden' },
+        ],
+      ] as const)
+        expect((await request(path, method, payload, 'operations')).status).toBe(403);
       const duplicate = await request('admin/tryout-batches', 'POST', {
         ...makeInput('invalid'),
         schools: [

@@ -212,7 +212,7 @@ test('published packages expose archive only inside detail and Pretest has no fi
     publication.getByText('Paket diarsipkan. Histori pengerjaan tetap dipertahankan.'),
   ).toBeVisible();
   await publication.getByRole('button', { name: 'Tutup dialog' }).click();
-  await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
+  await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
   await expect(page.getByRole('status').filter({ hasText: 'Paket diarsipkan' })).toBeVisible();
 });
 
@@ -234,6 +234,15 @@ test('detail prioritizes questions and keeps release controls usable across view
   await page.getByRole('button', { name: 'Pengaturan', exact: true }).click();
   await expect(page.getByLabel('Nama paket', { exact: true })).toBeVisible();
   await page.getByRole('dialog').press('Escape');
+  await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
+  await page.getByText('Informasi teknis versi paket', { exact: true }).click();
+  await expect(page.getByRole('region', { name: 'Ketersediaan untuk siswa' })).toBeVisible();
+  await page.getByRole('dialog').press('Escape');
+  await expect(page.getByRole('button', { name: 'Akses siswa', exact: true })).toBeFocused();
+  await page.getByRole('button', { name: 'Syarat penerbitan', exact: true }).click();
+  await expect(page.getByRole('dialog', { name: 'Syarat penerbitan paket' })).toBeVisible();
+  await expect(page.locator('.assessment-publication-checks > li')).toHaveCount(1);
+  await page.getByRole('dialog').press('Escape');
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
@@ -246,7 +255,7 @@ test('detail prioritizes questions and keeps release controls usable across view
     await expect(
       page.getByRole('heading', { name: 'Lengkapi paket sebelum diterbitkan' }),
     ).toBeVisible();
-    await expect(page.getByText('0/20 soal.', { exact: true })).toBeVisible();
+    await expect(page.getByRole('dialog').getByText('0/20 soal.', { exact: true })).toBeVisible();
     await page.getByRole('dialog').press('Escape');
     await page.screenshot({
       path: test.info().outputPath('detail-' + width + '.png'),

@@ -295,3 +295,8 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Automatic Pretest rubric - 10 November 2026
 
 **ENGINEERING DECISION - owner-approved plan:** Pretest imports use SEALED `PRETEST_PGK_PARTIAL_V1` rubrics validated by the scoring engine. Unchanged content with an invalid rubric creates a new version. `POST /api/v1/admin/content/packages/{id}/prepare-scoring` accepts `expectedRevision`, requires Content Admin and a DRAFT Pretest package. One audited transaction replaces only affected question-version references, preserving content, answers, order and count. Repeats at the current revision create no versions; stale revisions are rejected. Published packages, attempts, results and historical policy pins remain unchanged. Preparation does not publish. Scoring problems link to preparation rather than content editing.
+
+
+## Audit Tryout - 10 November 2026
+
+**ENGINEERING DECISION - perbaikan aturan existing:** Draft belum terbit dapat dijadwal ulang saat tanggal lewat; batch terbit tetap terkunci saat mulai. Sekolah delegasi divalidasi ulang saat publikasi. Operasional dapat membaca daftar/detail batch; options dan mutasi khusus Content/Super. [Temuan dan verifikasi](../development/TRYOUT_AUDIT_2026-11-10.md). **OPEN:** rilis hasil canonical multi-paket masih dependency delivery; guard tidak dibuka dan policy tidak dikarang.

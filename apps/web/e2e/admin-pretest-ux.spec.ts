@@ -25,8 +25,9 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const)
     const publication = page.getByRole('dialog', { name: 'Penerbitan paket' });
     await expect(publication.getByRole('button', { name: 'Arsipkan paket' })).toBeVisible();
     await publication.getByRole('button', { name: 'Tutup dialog' }).click();
-    await page.getByText('Akses siswa dan informasi versi', { exact: true }).click();
+    await page.getByRole('button', { name: 'Akses siswa', exact: true }).click();
     await expect(page.getByRole('status').filter({ hasText: 'Bisa dikerjakan' })).toBeVisible();
+    await page.getByRole('dialog').press('Escape');
     expect(fixture.calls.filter((call) => call.path.endsWith('/publish'))).toHaveLength(1);
     expect(fixture.calls.find((call) => call.path.endsWith('/publish'))?.body).toEqual({
       expectedRevision: 1,

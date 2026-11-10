@@ -49,3 +49,20 @@ Editor PG dipertahankan dalam dialog native yang tetap terpasang saat ditutup; p
 | Batas sumber    | Semua empat pernyataan pada contoh dipertahankan, termasuk ekspresi yang perlu tinjauan akademik; penomoran mengikuti urutan sumber dan kunci tetap memetakan ID sumber          |
 
 Recheck akhir meloloskan 6 skenario visual/interaksi; dua state daftar dan satu pemeriksaan editor diulang setelah perbaikan fokus. Screenshot dan tes posisi memastikan pesan gagal tidak tertutup header sticky, ruang form terpakai dan tidak ada overflow horizontal. Lint repository (`--max-warnings=0`), TypeScript web, build produksi Next.js, Prettier untuk file perubahan dan `git diff --check` lulus. Tidak ada konflik Git atau perubahan dependency/schema. [Galeri portabel](screenshots/admin-assessment/README.md) memakai data sintetis lokal, termasuk contoh operasi bilangan yang mereproduksi masalah screenshot pemilik. Tidak ada mutasi cloud/database. CI, acceptance layanan nyata, validasi akademik Curriculum dan review manusia tetap bukti yang terpisah.
+
+
+## Panel akses dan kesiapan paket - 10 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** gunakan panel bersama yang ringkas untuk akses siswa, informasi versi dan syarat penerbitan pada Pretest, Drill, Tryout serta hasil impor. Header menampilkan ikon, status atau jumlah syarat terpenuhi; checklist memakai baris berstatus dan petunjuk, tanpa bullet kosong. Metadata teknis memakai disclosure dengan label dan nilai terpisah. Gunakan token, ikon, badge dan disclosure native existing; pertahankan keyboard, fokus dan tata letak ponsel. Tidak mengubah syarat server, otorisasi atau lifecycle publikasi. Teks draf Pretest mengikuti validasi otomatis existing, tanpa meminta persetujuan manual.
+
+**ENGINEERING DECISION - koreksi pemilik, 10 November 2026:** panel akses dan checklist ditampilkan selalu terbuka, berurutan vertikal dengan lebar penuh. Hindari dua dropdown berdampingan yang menghasilkan tinggi timpang; hanya informasi teknis versi tetap dapat dilipat.
+
+**ENGINEERING DECISION - instruksi terakhir pemilik, 10 November 2026:** ganti dua panel terbuka dengan tombol Akses siswa dan Syarat penerbitan. Setiap tombol membuka dialog existing yang terpisah; Escape menutup dan mengembalikan fokus. Berlaku pada workspace Pretest, Drill dan Tryout.
+
+
+## Tambah batch Tryout - 10 November 2026
+
+**ENGINEERING DECISION - permintaan pemilik:** formulir memakai tiga bagian bernomor: nama/jadwal WIB, paket soal, dan penerima. Pencarian pilihan berada di bagian paket dan memakai form HTML terpisah melalui atribut `form`, sehingga pencarian tidak memicu validasi/simpan batch. Ringkasan jumlah paket/sekolah serta aksi simpan berada di footer. Tampilan bertumpuk pada ponsel; pengaturan modal memakai formulir yang sama. Otorisasi, delegasi, jadwal, validasi server dan publikasi tidak berubah.
+
+
+**ENGINEERING DECISION - pembaruan pemilik:** pada layar mulai 1200 px, form Tambah Batch memakai dua kolom: nama/jadwal dan penerima di kiri, paket soal di kanan. Footer simpan dan pesan gagal melintasi kedua kolom. Layar lebih kecil serta dialog pengaturan tetap satu kolom. Header bagian berupa judul tanpa nomor, border, latar atau subteks. Panel dan input tetap memiliki border kontras.
