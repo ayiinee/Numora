@@ -239,7 +239,7 @@ describe('Student account and feedback', () => {
     await screen.findByText('Kode tidak valid.');
     expect((screen.getByLabelText(/Kode kelas/) as HTMLInputElement).value).toBe('BAD999');
     expect(auth.refresh).not.toHaveBeenCalled();
-    expect(screen.getByText('BELAJAR MANDIRI')).toBeTruthy();
+    expect(screen.getByText('User Mandiri')).toBeTruthy();
   });
   it('keeps the profile and retry available after logout fails', async () => {
     auth.logout.mockRejectedValueOnce(new Error('offline')).mockResolvedValueOnce(undefined);

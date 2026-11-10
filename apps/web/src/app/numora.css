@@ -6030,31 +6030,17 @@ a.settings-row:hover {
   color: var(--color-text-inverse);
   --card-shadow: var(--shadow-md);
 }
-.student-profile-identity__badges {
+.student-profile-identity__header {
   display: flex;
-  align-items: center;
-  justify-content: space-between;
-  gap: 8px;
-}
-.student-profile-identity__badges .numora-badge {
-  background: var(--pvp-glass);
-  color: var(--color-text-inverse);
-  border: 1px solid var(--pvp-glass-border);
-  font-size: 10px;
-}
-.student-profile-active {
-  background: var(--color-success);
-  border-radius: var(--radius-full);
-  font-size: 12px;
-  font-weight: 700;
-  padding: 2px 10px;
-  white-space: nowrap;
+  align-items: flex-start;
+  gap: var(--space-2);
+  margin-bottom: var(--space-4);
 }
 .student-profile-identity__person {
+  flex: 1;
   display: flex;
   align-items: center;
   gap: 12px;
-  margin: 16px 0 8px;
   min-width: 0;
 }
 .student-profile-identity__person > div:last-child {
@@ -6078,6 +6064,42 @@ a.settings-row:hover {
 }
 .student-profile-identity small {
   font-size: 12px;
+}
+.student-profile-identity__edit.numora-button {
+  flex-shrink: 0;
+  margin-top: -8px;
+  min-height: var(--touch-target-min);
+  padding: 0 var(--space-2);
+  gap: var(--space-1);
+  border: 0;
+  background: transparent;
+  color: var(--color-text-inverse);
+  font-size: var(--text-xs);
+  white-space: nowrap;
+  position: relative;
+  isolation: isolate;
+}
+.student-profile-identity__edit::before {
+  content: '';
+  position: absolute;
+  inset: 6px 0;
+  z-index: -1;
+  border: 1px solid var(--pvp-glass-border);
+  border-radius: var(--radius-sm);
+  background: var(--pvp-glass);
+}
+.student-profile-identity__edit:focus-visible {
+  outline: 2px solid var(--color-text-inverse);
+  outline-offset: 2px;
+}
+.student-profile-identity__edit:hover::before {
+  border-color: var(--color-text-inverse);
+}
+.student-profile-identity__edit svg {
+  transform: rotate(90deg);
+}
+.student-profile-identity__edit[aria-expanded='true'] svg {
+  transform: rotate(-90deg);
 }
 .student-profile-identity__progress {
   border-top: 1px solid var(--pvp-glass-border);
@@ -6490,8 +6512,8 @@ a.settings-row:hover {
   }
 }
 @media (max-width: 359px) {
-  .student-profile-identity__badges .numora-badge {
-    font-size: 9px;
+  .student-profile-identity__edit-label {
+    display: none;
   }
   .student-profile-identity.numora-card {
     --card-padding: 16px;

@@ -6,7 +6,7 @@ import { deleteProfilePhoto, updateProfileName, uploadProfilePhoto } from '@/lib
 import { useAuth } from './auth';
 import './profile-editor.css';
 
-export function ProfileEditor() {
+export function ProfileEditor({ embedded = false }: { embedded?: boolean }) {
   const { state, refresh } = useAuth();
   const cache = useQueryClient();
   const [name, setName] = useState(state.status === 'ready' ? state.profile.displayName : '');
@@ -37,12 +37,15 @@ export function ProfileEditor() {
     if (name.trim())
       void mutate(() => updateProfileName(token, name.trim()), 'Nama profil disimpan.');
   }
+  const Container = embedded ? 'div' : Card;
   return (
-    <Card className="profile-editor">
-      <SectionHeader
-        title="Edit profil"
-        subtitle="Email dan role akun tidak dapat diubah di sini."
-      />
+    <Container className={`profile-editor${embedded ? ' profile-editor--embedded' : ''}`}>
+      {!embedded && (
+        <SectionHeader
+          title="Edit profil"
+          subtitle="Email dan role akun tidak dapat diubah di sini."
+        />
+      )}
       <form onSubmit={rename}>
         <Input
           label="Nama tampilan"
@@ -113,6 +116,6 @@ export function ProfileEditor() {
         </p>
       )}
       {notice && <p role="status">{notice}</p>}
-    </Card>
+    </Container>
   );
 }

@@ -310,14 +310,18 @@ test.describe.serial('JOB-06 connected release chain', () => {
     await student.goto('/student/profile');
     await student.getByLabel(/^Kode kelas/).fill(cls.joinCode);
     await student.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
-    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student.locator('.student-profile-identity').getByText(school.name, { exact: true }),
+    ).toBeVisible();
     await expect(
       student
         .getByRole('region', { name: 'Profil dan progres' })
         .getByText(cls.name, { exact: true }),
     ).toBeVisible();
     await student.reload();
-    await expect(student.getByText('TERAFILIASI SEKOLAH', { exact: true })).toBeVisible();
+    await expect(
+      student.locator('.student-profile-identity').getByText(school.name, { exact: true }),
+    ).toBeVisible();
     await expect(
       student
         .getByRole('region', { name: 'Profil dan progres' })
@@ -1357,7 +1361,9 @@ test.describe.serial('JOB-06 connected release chain', () => {
     ).toBeVisible();
     await content.reload();
     await expect(content.getByText('Kelas dari sekolah terpilih', { exact: true })).toBeVisible();
-    await expect(content.getByRole('button', { name: /\b(?:terbitkan|cabut|ban)\b/i })).toHaveCount(0);
+    await expect(content.getByRole('button', { name: /\b(?:terbitkan|cabut|ban)\b/i })).toHaveCount(
+      0,
+    );
     for (const path of [
       'admin/users',
       'admin/accounts',
