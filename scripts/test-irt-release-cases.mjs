@@ -42,7 +42,7 @@ const integrity = async () => {
     'irt_compute.calibration_artifacts_v1',
   ]) {
     const [r] =
-      await fixture`SELECT irt_compute.payload_digest(coalesce(jsonb_agg(to_jsonb(t) ORDER BY t.id),'[]'::jsonb)) AS digest FROM ${fixture(table)} t`;
+      await fixture`SELECT encode(sha256(convert_to(coalesce(string_agg(irt_compute.payload_digest(to_jsonb(t)),'' ORDER BY t.id),''),'UTF8')),'hex') AS digest FROM ${fixture(table)} t`;
     result[table] = r.digest;
   }
   return result;
