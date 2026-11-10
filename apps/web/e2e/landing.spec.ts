@@ -36,11 +36,12 @@ test('public landing keeps the full section order and social links across deskto
   await expect(page).toHaveURL(/#cara-belajar$/);
 });
 
-test('landing account dialog returns focus and reaches the existing login with reduced motion', async ({
+test('landing account dialog returns focus and offers shared login controls with reduced motion', async ({
   page,
 }) => {
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/');
+  await expect(page.getByRole('form', { name: 'Login Siswa', includeHidden: true })).toHaveCount(0);
   const account = page.getByRole('button', { name: 'Sudah punya akun' });
   await account.focus();
   await page.keyboard.press('Enter');
@@ -57,10 +58,18 @@ test('landing account dialog returns focus and reaches the existing login with r
       .evaluate((image) => image.getAnimations({ subtree: true }).length),
   ).toBe(0);
   await page.keyboard.press('Enter');
-  await dialog.getByRole('link', { name: 'Buka halaman masuk' }).click();
-  await expect(page).toHaveURL(/\/login$/);
-  await expect(page.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
-  await expect(page.getByRole('form', { name: 'Login Siswa' })).toBeVisible();
+  await expect(dialog.getByRole('form', { name: 'Login Siswa' })).toBeVisible();
+  await expect(dialog.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeVisible();
+  await expect(dialog.getByRole('link', { name: 'Masuk Admin' })).toHaveCount(0);
+  await expect(page).toHaveURL('http://localhost:3300/');
+  const close = dialog.getByRole('button', { name: 'Tutup dialog' });
+  await close.focus();
+  await page.keyboard.press('Shift+Tab');
+  await expect(dialog.getByRole('button', { name: 'Lanjutkan dengan Google' })).toBeFocused();
+  await page.keyboard.press('Tab');
+  await expect(close).toBeFocused();
+  await close.click();
+  await expect(account).toBeFocused();
 });
 
 test('scrolled mobile header fits at 200% text size', async ({ page }) => {

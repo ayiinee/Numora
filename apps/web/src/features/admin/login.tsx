@@ -3,7 +3,8 @@
 import Link from 'next/link';
 import { useEffect, useRef, useState, type FormEvent } from 'react';
 import { useRouter } from 'next/navigation';
-import { Brand, Button } from '@tka/ui';
+import { Button, Input } from '@tka/ui';
+import { LoginLayout } from '@/features/onboarding/login-layout';
 import { getSupabase } from '@/lib/supabase';
 import { useAuth } from '@/features/onboarding/auth';
 import { destination } from '@/features/onboarding/destination';
@@ -62,94 +63,78 @@ export function AdminLoginScreen() {
 
   const formVisible = state.status === 'signed_out' || state.status === 'error';
   return (
-    <main className="onboarding-shell">
-      <div className="onboarding-frame">
-        <header className="brand">
-          <Link href="/" className="auth-home-link" aria-label="Kembali ke halaman utama NUMORA">
-            <Brand />
-          </Link>
-        </header>
-        <section className="panel form-panel" aria-label="Login internal Admin">
-          <span className="eyebrow">Ruang Admin</span>
-          <h1>Masuk Admin</h1>
-          <p>Gunakan akun internal yang sudah disediakan. Akses modul mengikuti assignment akun.</p>
-          {state.status === 'loading' ||
-          (state.status === 'ready' && state.profile.role === 'ADMIN') ? (
-            <p role="status">Memeriksa akun dan membuka portal…</p>
-          ) : state.status === 'ready' ? (
-            <div className="page-stack">
-              <p role="alert">Akun yang sedang digunakan bukan akun Admin.</p>
-              <Link href={destination(state.profile)}>Kembali ke halaman akun</Link>
-              <Button variant="secondary" loading={busy} onClick={() => void switchAccount()}>
-                Ganti akun
-              </Button>
-            </div>
-          ) : state.status === 'registration' || state.status === 'disabled' ? (
-            <div className="page-stack">
-              <p role="alert">
-                {state.status === 'disabled'
-                  ? 'Akun dinonaktifkan. Hubungi pengelola akun.'
-                  : 'Akun ini belum terdaftar sebagai Admin. Hubungi Super Admin.'}
-              </p>
-              <Button variant="secondary" loading={busy} onClick={() => void switchAccount()}>
-                Ganti akun
-              </Button>
-            </div>
-          ) : null}
-          {state.status === 'error' && (
-            <div className="page-stack">
-              <p role="alert">Akun belum dapat diperiksa. Periksa koneksi dan coba lagi.</p>
-              <Button variant="secondary" onClick={() => void refresh()}>
-                Periksa lagi
-              </Button>
-            </div>
-          )}
-          {formVisible && (
-            <form onSubmit={(event) => void submit(event)}>
-              <label className="field-label" htmlFor="admin-email">
-                Email Admin
-              </label>
-              <input
-                className="text-input"
-                id="admin-email"
-                type="email"
-                autoComplete="username"
-                value={email}
-                onChange={(event) => setEmail(event.target.value)}
-                required
-                disabled={busy}
-              />
-              <label className="field-label" htmlFor="admin-password">
-                Password
-              </label>
-              <input
-                className="text-input"
-                id="admin-password"
-                type="password"
-                autoComplete="current-password"
-                value={password}
-                onChange={(event) => setPassword(event.target.value)}
-                required
-                disabled={busy}
-              />
-              <Button className="primary-button" type="submit" fullWidth loading={busy}>
-                Masuk ke portal Admin
-              </Button>
-            </form>
-          )}
-          {error && (
-            <p className="form-error" role="alert">
-              {error}
+    <LoginLayout audience="admin">
+      <section className="login-card" aria-label="Login internal Admin">
+        <h1>Masuk Admin</h1>
+        <p className="login-description">Gunakan akun pengelola yang sudah disediakan untukmu.</p>
+        {state.status === 'loading' ||
+        (state.status === 'ready' && state.profile.role === 'ADMIN') ? (
+          <p role="status">Memeriksa akun dan membuka portal…</p>
+        ) : state.status === 'ready' ? (
+          <div className="page-stack">
+            <p role="alert">Akun yang sedang digunakan bukan akun Admin.</p>
+            <Link href={destination(state.profile)}>Kembali ke halaman akun</Link>
+            <Button variant="secondary" loading={busy} onClick={() => void switchAccount()}>
+              Ganti akun
+            </Button>
+          </div>
+        ) : state.status === 'registration' || state.status === 'disabled' ? (
+          <div className="page-stack">
+            <p role="alert">
+              {state.status === 'disabled'
+                ? 'Akun dinonaktifkan. Hubungi pengelola akun.'
+                : 'Akun ini belum terdaftar sebagai Admin. Hubungi Super Admin.'}
             </p>
-          )}
-          <p className="auth-account-note">
-            <Link href="/admin/recovery">Lupa password Admin</Link>
+            <Button variant="secondary" loading={busy} onClick={() => void switchAccount()}>
+              Ganti akun
+            </Button>
+          </div>
+        ) : null}
+        {state.status === 'error' && (
+          <div className="page-stack">
+            <p role="alert">Akun belum dapat diperiksa. Periksa koneksi dan coba lagi.</p>
+            <Button variant="secondary" onClick={() => void refresh()}>
+              Periksa lagi
+            </Button>
+          </div>
+        )}
+        {formVisible && (
+          <form onSubmit={(event) => void submit(event)}>
+            <Input
+              id="admin-email"
+              label="Email Admin"
+              type="email"
+              autoComplete="username"
+              value={email}
+              onChange={(event) => setEmail(event.target.value)}
+              required
+              disabled={busy}
+            />
+            <Input
+              id="admin-password"
+              label="Password"
+              type="password"
+              autoComplete="current-password"
+              value={password}
+              onChange={(event) => setPassword(event.target.value)}
+              required
+              disabled={busy}
+            />
+            <Button className="primary-button" type="submit" fullWidth loading={busy}>
+              Masuk ke portal Admin
+            </Button>
+          </form>
+        )}
+        {error && (
+          <p className="form-error" role="alert">
+            {error}
           </p>
-          <p className="auth-account-note">
-            <Link href="/login">Masuk sebagai Siswa atau Guru</Link>
-          </p>
-        </section>
-      </div>
-    </main>
+        )}
+        <div className="login-links">
+          <Link href="/admin/recovery">Lupa password Admin</Link>
+          <Link href="/login">Masuk sebagai Siswa atau Guru</Link>
+        </div>
+      </section>
+    </LoginLayout>
   );
 }

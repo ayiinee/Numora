@@ -11,6 +11,7 @@ import {
 } from 'react';
 import { Brand, Button, Dialog, Icon } from '@tka/ui';
 import styles from './landing.module.css';
+import { LoginScreen } from '@/features/onboarding/screens';
 
 const categories: readonly [
   label: string,
@@ -358,6 +359,15 @@ export function CategoryRail() {
 export function AccountDialog() {
   const [open, setOpen] = useState(false);
 
+  useEffect(() => {
+    if (!open) return;
+    const previous = document.body.style.overflow;
+    document.body.style.overflow = 'hidden';
+    return () => {
+      document.body.style.overflow = previous;
+    };
+  }, [open]);
+
   return (
     <>
       <Button
@@ -373,12 +383,11 @@ export function AccountDialog() {
         open={open}
         onClose={() => setOpen(false)}
         title="Masuk ke Numora"
-        description="Lanjutkan dengan Google atau gunakan akun Siswa yang sudah disiapkan."
+        description="Selamat datang kembali. Lanjutkan perjalanan belajarmu."
         className={styles.accountDialog ?? ''}
+        icon={<img src="/figma/numora-owl-source.png" alt="" width="32" height="45" />}
       >
-        <Link className={styles.primary} href="/login">
-          Buka halaman masuk
-        </Link>
+        {open && <LoginScreen embedded />}
       </Dialog>
     </>
   );

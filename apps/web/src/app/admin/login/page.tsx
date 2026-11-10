@@ -1,5 +1,5 @@
-import { AdminLoginScreen } from '@/features/admin/login';
+import { redirect } from 'next/navigation';
 
 export default function Page() {
-  return <AdminLoginScreen />;
+  redirect('/admin-numora');
 }

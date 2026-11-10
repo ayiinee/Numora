@@ -24,7 +24,7 @@ export function AdminEntryScreen() {
           : null;
 
   useEffect(() => {
-    if (state.status === 'signed_out') router.replace('/admin/login');
+    if (state.status === 'signed_out') router.replace('/admin-numora');
     if (state.status === 'ready' && state.profile.role !== 'ADMIN')
       router.replace(destination(state.profile));
     if (target) router.replace(target);
