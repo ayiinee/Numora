@@ -1,0 +1,102 @@
+/* Shared Admin surfaces; feature-specific layouts and semantic status colors stay local. */
+.admin-redesign-shell {
+  --color-bg: #f7f8fa;
+  --color-border-light: #dde1e8;
+  --color-surface-muted: #f8f7fc;
+}
+.admin-redesign-shell .app-content {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+.admin-redesign-shell
+  :is(.admin-redesign-frame, .admin-accounts-frame, .schools-frame, .people-frame) {
+  width: 100%;
+  max-width: none;
+  min-width: 0;
+}
+.admin-redesign-shell .app-content .numora-card {
+  --card-radius: 12px;
+  --card-border: 1px solid var(--color-border-light);
+  --card-shadow: 0 2px 6px rgb(30 32 40 / 3%);
+  min-width: 0;
+}
+.admin-redesign-shell .app-content :is(.admin-page-header, .assessment-page-heading) {
+  background: transparent;
+  color: var(--color-text);
+  box-shadow: none;
+  padding: 0;
+  border: 0;
+  margin-bottom: 24px;
+}
+.admin-redesign-shell .app-content .admin-page-header p {
+  color: var(--color-text-muted);
+}
+.admin-redesign-shell
+  .app-content
+  :is(
+    input:not([type='checkbox']):not([type='radio']):not([type='file']):not([type='range']):not(
+        [type='hidden']
+      ),
+    select,
+    textarea
+  ),
+.admin-management-dialog
+  :is(input:not([type='checkbox']):not([type='radio']):not([type='file']), select, textarea) {
+  border-width: 1px;
+  border-style: solid;
+  border-color: #8b8199;
+  border-radius: 8px;
+  background-color: #fff;
+  color: var(--color-text);
+  min-height: 44px;
+  max-width: 100%;
+}
+.admin-redesign-shell .app-content :is(input, select, textarea):disabled {
+  background-color: #eef0f4;
+  color: var(--color-text-muted);
+  cursor: not-allowed;
+}
+.admin-redesign-shell .app-content :is(input, select, textarea):focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+  border-color: var(--color-primary);
+}
+.admin-redesign-shell .app-content :is(input, select, textarea)[aria-invalid='true'] {
+  border-color: var(--color-danger, #b42318);
+}
+.admin-redesign-shell .app-content table {
+  width: 100%;
+  border-collapse: collapse;
+}
+.admin-redesign-shell .app-content thead th {
+  background: var(--color-surface-muted);
+  color: var(--color-text-muted);
+  font-size: 12px;
+  font-weight: 650;
+  text-align: left;
+  line-height: 1.5;
+}
+.admin-redesign-shell .app-content tbody td {
+  vertical-align: middle;
+  line-height: 1.6;
+}
+.admin-redesign-shell .app-content :is(.admin-content-actions, .accounts-row-actions) {
+  gap: 8px;
+}
+@media (max-width: 767px) {
+  .admin-redesign-shell .app-content {
+    padding-inline: 16px;
+  }
+}
+@media (max-width: 600px) {
+  .admin-redesign-shell .app-topbar .mobile-brand {
+    display: none;
+  }
+  .admin-redesign-shell .app-topbar .numora-top-bar__leading {
+    min-width: 0;
+  }
+  .admin-redesign-shell .admin-navbar-breadcrumb {
+    overflow-wrap: anywhere;
+  }
+}

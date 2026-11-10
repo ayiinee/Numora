@@ -145,3 +145,5 @@ Materi accordion and durable Student notifications: [5 October handoff](MATERIAL
 ## UI feedback revision — 5 October 2026
 
 **ENGINEERING DECISION — owner approved:** follow the [UI feedback revision](UI_FEEDBACK_REVISION_2026-10-05.md). Teacher navigation becomes Kelas / Profil, feedback requires an explicitly selected owned-Class student, and Teacher read-receipt presentation is hidden while Student unread/read behavior remains. Student Pretest loses only its unavailable Home shortcut. No API, database, academic policy or OPEN decision is resolved by this UI revision.
+
+**ENGINEERING DECISION � instruksi pemilik, 10 November 2026:** [audit tampilan Admin](ADMIN_VISUAL_AUDIT_2026-11-10.md) menyatukan lebar frame, card, border field 1px, tabel dan header berdasarkan pola batch Tryout. Aturan bisnis serta status tetap mengikuti modul existing.
