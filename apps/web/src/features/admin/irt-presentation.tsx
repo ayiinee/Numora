@@ -1,4 +1,5 @@
 import { Button } from '@tka/ui';
+import Link from 'next/link';
 import type { IrtBatchHealthDto, IrtRequestDto } from './generated-types';
 import { irtReason, irtReference, irtStatus, irtTime } from './irt-model';
 
@@ -62,6 +63,22 @@ export function IrtBatchCard({
         </Button>
       </header>
       <dl className="irt-batch-facts">
+        <div>
+          <dt>Akses pengerjaan paket</dt>
+          <dd>
+            <Link href={`/admin/assessments/tryout/${encodeURIComponent(batch.packageId)}`}>
+              Periksa jadwal dan pilihan paket siswa
+            </Link>
+          </dd>
+        </div>
+        <div>
+          <dt>Akses hasil peserta</dt>
+          <dd>
+            {batch.publishedAt
+              ? 'Nilai dan pembahasan terbit bersama'
+              : 'Nilai dan pembahasan belum dirilis'}
+          </dd>
+        </div>
         <div>
           <dt>Jadwal tutup</dt>
           <dd>

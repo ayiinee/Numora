@@ -2,7 +2,7 @@ import { assessmentAttempts, assessmentPackages, getDatabase } from '@tka/databa
 import { finalizeTryout } from '@tka/assessment-engine';
 import { and, asc, eq, sql } from 'drizzle-orm';
 
-const deadline = sql`least(${assessmentAttempts.deadlineAt}, ${assessmentPackages.closeAt})`;
+const deadline = sql`case when ${assessmentAttempts.tryoutBatchId} is not null then ${assessmentAttempts.deadlineAt} else least(${assessmentAttempts.deadlineAt}, ${assessmentPackages.closeAt}) end`;
 const overdue = and(
   eq(assessmentAttempts.assessmentType, 'TRYOUT'),
   eq(assessmentAttempts.status, 'IN_PROGRESS'),
@@ -72,8 +72,9 @@ export async function advanceTryoutBatches() {
     const batches = await tx<{ id: string; package_id: string; next_status: string }[]>`
       SELECT b.id,b.package_id,CASE WHEN b.cutoff_at<=clock_timestamp() THEN 'CLOSED' ELSE 'OPEN' END AS next_status
       FROM tryout_batches b WHERE b.status IN ('PLANNED','OPEN') AND b.starts_at<=clock_timestamp()
+      AND (b.admin_title IS NULL OR (b.admin_published_at IS NOT NULL AND b.cancelled_at IS NULL))
       AND (b.status='PLANNED' OR b.cutoff_at<=clock_timestamp())
-      AND (b.cutoff_at>clock_timestamp() OR NOT EXISTS(SELECT 1 FROM assessment_attempts a WHERE a.package_id=b.package_id AND a.purpose='REGULAR' AND a.status IN ('IN_PROGRESS','SUBMITTED')))
+      AND (b.cutoff_at>clock_timestamp() OR NOT EXISTS(SELECT 1 FROM assessment_attempts a WHERE ((b.admin_title IS NULL AND a.package_id=b.package_id AND a.status IN ('IN_PROGRESS','SUBMITTED')) OR (b.admin_title IS NOT NULL AND a.tryout_batch_id=b.id AND a.status='IN_PROGRESS')) AND a.purpose='REGULAR'))
       ORDER BY b.cutoff_at,b.id LIMIT 100 FOR UPDATE OF b SKIP LOCKED`;
     for (const batch of batches) {
       await tx`UPDATE tryout_batches SET status=${batch.next_status} WHERE id=${batch.id}`;

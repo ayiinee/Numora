@@ -19,3 +19,4 @@ export * from './generator-packages.js';
 export * from './assessment-arms.js';
 export * from './generator-stock-media.js';
 export * from './calibration-research.js';
+export * from './tryout-delegations.js';

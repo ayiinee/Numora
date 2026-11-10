@@ -68,6 +68,7 @@ export class PublishContentPackageDto {
   @ApiPropertyOptional({ format: 'date-time' }) @IsOptional() @IsISO8601() releaseAt?: string;
 }
 export class ContentPackageQueryDto {
+  @ApiPropertyOptional() @IsOptional() @IsString() @MaxLength(160) search?: string;
   @ApiPropertyOptional({ enum: usages }) @IsOptional() @IsIn(usages) usageType?: QuestionUsage;
   @ApiPropertyOptional()
   @IsOptional()
@@ -93,11 +94,34 @@ export class ContentPackageQueryDto {
 export class ArchiveContentPackageDto {
   @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
 }
+export class PrepareLegacyPretestDto {
+  @ApiProperty() @IsInt() @Min(0) @Max(2147483647) expectedRevision!: number;
+  @ApiProperty({ type: PackageSourceDto })
+  @IsDefined()
+  @ValidateNested()
+  @Type(() => PackageSourceDto)
+  source!: PackageSourceDto;
+}
+export class PackageAvailabilityDto {
+  @ApiProperty({ enum: ['DRAFT', 'BLOCKED', 'SCHEDULED', 'AVAILABLE', 'READY_FOR_BATCH', 'CLOSED', 'ARCHIVED'] })
+  state!: 'DRAFT' | 'BLOCKED' | 'SCHEDULED' | 'AVAILABLE' | 'READY_FOR_BATCH' | 'CLOSED' | 'ARCHIVED';
+  @ApiProperty({ type: [String] }) blockers!: string[];
+  @ApiProperty({ format: 'date-time' }) checkedAt!: string;
+}
 export class PackageApprovalDto {
   @ApiProperty() reference!: string;
   @ApiProperty({ format: 'date-time' }) approvedAt!: string;
 }
 export class ContentPackageDto {
+  @ApiPropertyOptional({ type: String, nullable: true }) blueprintVersionId?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) scoringPolicyVersionId?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) frozenAt?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) releaseAt?: string | null;
+  @ApiPropertyOptional({ type: String, nullable: true }) closeAt?: string | null;
+  @ApiPropertyOptional({ type: PackageAvailabilityDto }) availability?: PackageAvailabilityDto;
+  @ApiPropertyOptional({ enum: ['IMPORT', 'LEGACY_MANUAL'] }) origin?: 'IMPORT' | 'LEGACY_MANUAL';
+  @ApiPropertyOptional({ enum: ['CONTINUE_IMPORT', 'NEW_VERSION'], nullable: true })
+  legacyPreparation?: 'CONTINUE_IMPORT' | 'NEW_VERSION' | null;
   @ApiPropertyOptional({ type: PackageApprovalDto, nullable: true })
   curriculumApproval?: PackageApprovalDto | null;
   @ApiProperty() id!: string;

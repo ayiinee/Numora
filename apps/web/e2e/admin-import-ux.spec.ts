@@ -49,7 +49,7 @@ for (const role of ['SUPER_ADMIN', 'CONTENT_DATA_MODERATION'] as const) {
   test(`Import visual and accessibility audit ${role}`, async ({ page }) => {
     const { imports, errors, generator } = await setupImports(page, role);
     await page.goto('/admin/content/imports');
-    await expect(page.getByRole('heading', { name: 'Impor soal', exact: true })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Tambah konten', exact: true })).toBeVisible();
     await screenshot(page, 'excel-source');
     expect(
       (

@@ -1,8 +1,20 @@
 # Analytics Admin — UI-04
 
+**ENGINEERING DECISION ? 9 November 2026, rencana pemilik disetujui:** [Penataan Admin dan akses asesmen](../development/ADMIN_ASSESSMENT_REWORK.md) menggantikan bagian historis tentang menu Pretest terpisah, blocker consumer permanen, dan Analytics khusus Super. Paket memakai `/admin/assessments` dengan pipeline umum; Analytics tersedia sesuai scope ketiga subrole. Histori, izin server dan dependency Data/AI tetap berlaku.
+
 **ENGINEERING IMPLEMENTATION — 30 Oktober 2026.** Branch `feat/admin-analytics-dashboard`, berdasarkan UI-03 `45bf3d8`. Status: **IMPLEMENTED — review pending**. Instruksi pemilik: rombak Analytics menjadi dashboard ringkas, mudah dipindai dan menjadi menu/halaman pertama. Fondasi visual Akun Admin tetap dipakai.
 
-## Keputusan dan batas cakupan
+## Dashboard ringkas — keputusan pemilik, 9 November 2026
+
+**ENGINEERING DECISION:** menu dan nama tampilan Analytics menjadi **Dashboard**. Halaman tetap memakai `/admin/analytics`, endpoint, agregat scoped dan tujuan awal subrole existing. Perubahan ini merapikan halaman yang sama, bukan mengembalikan halaman Ringkasan.
+
+Area konten langsung dimulai dari waktu pembaruan ringkas, tombol Perbarui dan metrik. Breadcrumb kedua, judul besar dan paragraf pengantar dihilangkan khusus halaman ini; judul semantik tetap tersedia bagi pembaca layar. Judul panel, label angka dan tindakan tetap terlihat. Deskripsi kartu, paragraf penjelasan panel dan catatan interpretasi dipindah ke **Info metrik** yang tertutup secara default dan dapat dibuka dengan keyboard. Pesan loading/error/empty, data sebelumnya, nilai tidak tersedia dan cakupan tidak konsisten tetap ditampilkan saat relevan.
+
+Tidak mengubah API, formula, permission, data historis, isi halaman Admin lain atau konfigurasi lingkungan. Verifikasi memakai tes model/akses/navigasi existing serta regresi browser Dashboard dan sidebar dengan fixture lokal.
+
+Verifikasi implementasi Dashboard pada branch `feat/admin-assessment-rework`: **68 unit test dalam 4 file lulus**, lint repository, TypeScript web dan build produksi web lulus. Regresi browser produksi lokal meliputi **13 Dashboard, 16 sidebar dan 23 IRT**. Run gabungan menghasilkan 51 lulus dan satu kegagalan ekspektasi judul IRT lama; setelah assertion diselaraskan dengan judul existing, skenario visual IRT lulus pada retest terpisah. Seluruh 22 metrik dipertahankan; audit visual mencakup 320/390/768/1024/1440 px, keyboard dan pemeriksaan Axe. Bukti memakai fixture **TEST ONLY** localhost, bukan penerimaan data lingkungan nyata. Tidak mengubah `.env`, backend atau database cloud dalam perubahan Dashboard ini.
+
+## Keputusan dan batas cakupan (historis; nama tampilan mengikuti keputusan terbaru)
 
 - Analytics menjadi menu pertama serta tujuan `/admin` untuk Super Admin aktif dengan capability `ANALYTICS_CONTENT` atau `ANALYTICS_OPERATIONS`. Super tanpa capability tersebut tetap memakai fallback sekolah. Operations tetap ke sekolah; Content/Data/Moderation tetap ke konten. Assignment kosong tidak memperoleh akses. Ini keputusan presentasi, bukan perubahan otorisasi NestJS.
 - Ringkasan tetap dihapus. Tujuan awal Super Admin pada keputusan 27 Oktober digantikan oleh instruksi ini; tidak dibuat halaman Ringkasan kedua.

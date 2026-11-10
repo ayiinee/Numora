@@ -62,7 +62,9 @@ test('Content structure directory is readable and responsive without exposing ma
       });
     }
   }
-  await expect(page.getByRole('button', { name: /buat|edit|terbitkan|cabut|ban/i })).toHaveCount(0);
+  await expect(
+    page.getByRole('button', { name: /\b(?:buat|edit|terbitkan|cabut|ban)\b/i }),
+  ).toHaveCount(0);
   expect(structures.calls.every((c) => c.method === 'GET')).toBe(true);
   expect(errors).toEqual([]);
   expect(

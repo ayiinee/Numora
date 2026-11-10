@@ -1,6 +1,7 @@
 # Admin IRT operations, publication readers and aggregate analytics
 
 **ENGINEERING DECISION — owner-approved target, 8 November 2026:** [v2 context](../AI_IRT_V2_CONTEXT.md) defines Level/Indicator/Chapter analysis, multi-arm Tryout, per-arm fallback within 72 hours and no student Tryout score ranking. API readers and diagnostics below describe existing code, not acceptance of those new flows. Unavailable scientific metrics must remain unavailable rather than inferred from counts. Contract/schema changes for new participant results, contexts and release remain future work; activity XP leaderboards and historical pins remain intact.
+**ENGINEERING DECISION ? 9 November 2026, rencana pemilik disetujui:** [Penataan Admin dan akses asesmen](../development/ADMIN_ASSESSMENT_REWORK.md) menggantikan bagian historis tentang menu Pretest terpisah, blocker consumer permanen, dan Analytics khusus Super. Paket memakai `/admin/assessments` dengan pipeline umum; Analytics tersedia sesuai scope ketiga subrole. Histori, izin server dan dependency Data/AI tetap berlaku.
 
 **PRD RULE:** v0.6 requires weekly Tryout result/explanation publication together within 72 hours, immutable historical results and server authority. Admin cannot edit scientific/product formulas.
 

@@ -8,6 +8,7 @@ Mulai dari [Product Context](product/PRODUCT_CONTEXT.md), [Open Decisions](produ
 
 ## Product
 
+- [PRD Admin v1.0](product/ADMIN_PRD.md) — kebutuhan, workflow, izin, 81 acceptance criteria dan dependency substantif; atribut memakai sistem existing. [Arsip discovery](product/ADMIN_REQUIREMENTS_DISCOVERY.md) menyimpan ADM-DEC-001–076.
 - `AI_IRT_V2_CONTEXT.md` — amendemen pemilik untuk varian/IRT v2, keputusan, OPEN dan audit implementasi kedua service.
 - [Runtime IRT riset lokal](IRT_RESEARCH_RUNTIME.md) ? pipeline snapshot/transport/kalibrasi; [bukti dan acceptance yang belum tuntas](IRT_RESEARCH_ACCEPTANCE_V1.json). Nonaktif secara default dan belum disetujui untuk produksi.
 - `product/PRODUCT_CONTEXT.md` — baseline PRD v0.6 dan amendemen pemilik terbaru.
@@ -19,6 +20,7 @@ Mulai dari [Product Context](product/PRODUCT_CONTEXT.md), [Open Decisions](produ
 
 ## Architecture
 
+- [Spesifikasi Teknis Admin](architecture/ADMIN_TECHNICAL_SPEC.md) — route/API/field existing, state, versi data, transaksi, error, migrasi, gap implementasi dan rencana verifikasi.
 - `architecture/ARCHITECTURE.md` — system architecture and responsibilities.
 - `architecture/SYSTEM_CONTEXT.md` — external actors/systems and system boundaries.
 - `architecture/MODULE_BOUNDARIES.md` — module decomposition and dependency rules.

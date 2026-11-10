@@ -1,5 +1,7 @@
 # Pretest Authoring: audit dan perombakan UI/UX
 
+**ENGINEERING DECISION ? 9 November 2026, rencana pemilik disetujui:** [Penataan Admin dan akses asesmen](../development/ADMIN_ASSESSMENT_REWORK.md) menggantikan bagian historis tentang menu Pretest terpisah, blocker consumer permanen, dan Analytics khusus Super. Paket memakai `/admin/assessments` dengan pipeline umum; Analytics tersedia sesuai scope ketiga subrole. Histori, izin server dan dependency Data/AI tetap berlaku.
+
 **ENGINEERING DECISION - instruksi pemilik, 27 Oktober 2026:** lanjutkan arah Admin yang telah disetujui untuk halaman Pretest Authoring. Layout, komponen dan tipografi harus ringkas, mudah dilihat dan tidak membingungkan; tetap memakai kontrak, izin dan aturan akademik existing.
 
 ## Audit dan rencana

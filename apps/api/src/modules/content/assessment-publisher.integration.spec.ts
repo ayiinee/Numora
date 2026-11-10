@@ -161,7 +161,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
       ).json(),
     ).toMatchObject({ score: 100, stars: 3 });
   });
-  it('reviews exactly twenty same-chapter items, retains revisions and blocks production Pretest', async () => {
+  it('retains legacy Pretest review pins and directs publication to canonical intake', async () => {
     const ids = await bank(),
       { db } = getDatabase();
     const [pinnedChapter] = await db
@@ -207,7 +207,7 @@ databaseSuite('Admin publisher and engine gates (TEST ONLY approval)', () => {
     ).toBe(200);
     const detail = await (await fixture.request(`admin/content/pretest-packages/${p.id}`)).json();
     expect(detail).toMatchObject({ state: 'REVIEWED', reviewBlockers: [] });
-    expect(detail.publicationBlockers).toContain('SHARED_PACKAGE_PUBLISHER_REQUIRED');
+    expect(detail.publicationBlockers).toContain('PRETEST_CANONICAL_INTAKE_REQUIRED');
     expect(
       (await fixture.request(`admin/content/pretest-packages/${p.id}/publish`, 'POST')).status,
     ).toBe(409);
