@@ -75,6 +75,12 @@ Tambahkan lifecycle rule khusus prefix **`question-media/_pending/`** untuk meng
 
 Tidak ada signed GET endpoint dalam PR ini. Untuk preview/penyajian soal, backend berikutnya harus memeriksa hak akses soal lalu menandatangani GET key VERIFIED dan menyertakan URL sementara dalam respons. Pembahasan/kunci tidak boleh bocor lewat endpoint media. Gambar private belum bisa ditampilkan hanya dengan mengubah objectKey menjadi URL publik.
 
+## Memindahkan media ke bucket baru
+
+**ENGINEERING IMPLEMENTATION:** `R2_LEGACY_READ_BUCKET` memetakan satu nama bucket lama pada referensi media ke `R2_BUCKET` saat API membuat signed GET. Object key tetap sama. Reservasi dan penyelesaian upload tetap terikat ke bucket aktif, dan nama bucket lain ditolak. Referensi media pada versi soal serta bukti upload tetap menggunakan nama yang tercatat.
+
+Jeda upload selama cutover, selesaikan reservasi yang masih diperlukan, lalu salin objek dan verifikasi key serta byte di bucket tujuan. Terapkan CORS pada bucket tujuan dan siapkan kredensial runtime khusus bucket itu. Deploy API yang mendukung pemetaan sebelum mengubah konfigurasi runtime. Misalnya, set `R2_BUCKET=numora-prod` dan `R2_LEGACY_READ_BUCKET=numora-bucket`, lalu restart API. Uji pembacaan gambar soal lama dan upload media baru sebelum membuka kembali upload. Buat reservasi baru untuk upload yang belum selesai saat bucket diganti.
+
 ## Migrasi database
 
 Drizzle menghasilkan **`0021_content_media_uploads.sql`**, menambah satu tabel reservasi `content_media_uploads` beserta FK user, uniqueness actor/idempotency, indeks, constraint ukuran/hash/status/expiry, dan RLS aktif tanpa policy browser. Operasi melalui NestJS memakai koneksi database server yang sudah digunakan repo. Pastikan role server mempunyai hak yang diperlukan; jangan memberi akses Supabase Data API pada Student untuk tabel ini.

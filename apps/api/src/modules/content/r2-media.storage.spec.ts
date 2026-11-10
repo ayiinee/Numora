@@ -10,13 +10,14 @@ const png = Buffer.from(
   'iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR42mP8/x8AAwMCAO+aB6sAAAAASUVORK5CYII=',
   'base64',
 );
-const config = () =>
+const config = (overrides: Record<string, string> = {}) =>
   new ConfigService({
     R2_MEDIA_UPLOADS_ENABLED: 'true',
     R2_ACCOUNT_ID: 'a'.repeat(32),
     R2_ACCESS_KEY_ID: 'TEST_ONLY',
     R2_SECRET_ACCESS_KEY: 'TEST_ONLY',
     R2_BUCKET: 'numora-bucket',
+    ...overrides,
   });
 const row = (): MediaUpload => ({
   id: randomUUID(),
@@ -93,6 +94,33 @@ describe('R2 media storage (SDK network mocked)', () => {
     } finally {
       process.env.NODE_ENV = previous;
     }
+  });
+  it('signs copied legacy media against the active bucket while keeping uploads scoped to it', async () => {
+    const item = row();
+    const settings = {
+      R2_BUCKET: 'numora-prod',
+      R2_TEST_ENDPOINT: '',
+      R2_LEGACY_READ_BUCKET: '',
+    };
+    const bucketChanged = { response: { code: 'R2_BUCKET_CHANGED' } };
+
+    const withoutAlias = new R2MediaStorage(config(settings));
+    await expect(withoutAlias.readLink(item.bucket, item.objectKey)).rejects.toMatchObject(
+      bucketChanged,
+    );
+    const storage = new R2MediaStorage(config({ ...settings, R2_LEGACY_READ_BUCKET: item.bucket }));
+
+    for (const bucket of [item.bucket, 'numora-prod']) {
+      const link = await storage.readLink(bucket, item.objectKey);
+      expect(new URL(link.url).pathname).toBe(`/numora-prod/${item.objectKey}`);
+    }
+    await expect(storage.readLink('unrelated-bucket', item.objectKey)).rejects.toMatchObject(
+      bucketChanged,
+    );
+    await expect(storage.presign(item)).rejects.toMatchObject(bucketChanged);
+    await expect(storage.verifyAndPublish(item)).rejects.toMatchObject(bucketChanged);
+    const uploadUrl = await storage.presign({ ...item, bucket: 'numora-prod' });
+    expect(new URL(uploadUrl).pathname).toBe(`/numora-prod/${item.pendingObjectKey}`);
   });
   it('publishes only the actual verified bytes to a separate final key', async () => {
     const item = row();

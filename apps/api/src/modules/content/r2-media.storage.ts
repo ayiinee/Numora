@@ -96,12 +96,21 @@ export class R2MediaStorage {
   }
 
   async readLink(bucket: string, key: string) {
-    const client = this.client(bucket, true);
+    const legacyBucket = this.config.get<string>('R2_LEGACY_READ_BUCKET');
+    const readBucket =
+      legacyBucket && bucket === legacyBucket
+        ? (this.config.get<string>('R2_BUCKET') ?? '')
+        : bucket;
+    const client = this.client(readBucket, true);
     const ttl = 900;
     try {
-      const url = await getSignedUrl(client, new GetObjectCommand({ Bucket: bucket, Key: key }), {
-        expiresIn: ttl,
-      });
+      const url = await getSignedUrl(
+        client,
+        new GetObjectCommand({ Bucket: readBucket, Key: key }),
+        {
+          expiresIn: ttl,
+        },
+      );
       return { url, expiresAt: new Date(Date.now() + ttl * 1000).toISOString() };
     } catch {
       throw new ServiceUnavailableException({
