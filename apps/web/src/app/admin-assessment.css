@@ -2867,9 +2867,9 @@
   align-items: start;
   gap: 16px;
 }
-.tryout-detail-delegations { grid-column: 1 / -1; }
-.tryout-detail-participants { grid-column: 1; }
-.tryout-detail-results { grid-column: 2; grid-row: 2; }
+.tryout-detail-delegations { grid-column: 1; }
+.tryout-detail-participants { grid-column: 1 / -1; grid-row: 2; }
+.tryout-detail-results { grid-column: 2; grid-row: 1; }
 .tryout-detail-grid > * { min-width: 0; }
 .tryout-detail-grid h3 { margin-bottom: 16px; }
 .tryout-detail-results > p { font-size: 14px; line-height: 1.7; color: var(--color-text-muted); }
