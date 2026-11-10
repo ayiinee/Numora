@@ -47,6 +47,56 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     }
   }
 
+  for (const baseline of [65, 72])
+    it.each(['LF', 'CRLF'] as const)(
+      `reconciles the renamed Tryout guard from baseline ${baseline} (%s) without replay or history loss`,
+      async (lineEnding) => {
+        await fixture(baseline, async (client, folder) => {
+          const migrations = readMigrationFiles({ migrationsFolder: folder });
+          const manifest = JSON.parse(
+            await readFile(
+              resolve('staging/fixtures/development-20261029/provenance.json'),
+              'utf8',
+            ),
+          ) as { history: { hash: string; created_at: string }[] };
+          // TEST ONLY: reproduce the already-adopted Development prefix on a disposable DB.
+          await client`DELETE FROM drizzle.__drizzle_migrations`;
+          for (const row of manifest.history)
+            await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${row.hash},${row.created_at})`;
+          for (const [index, entry] of migrations.slice(0, baseline).entries()) {
+            if (index < 3 || index === 69) continue;
+            await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+          }
+          const source = (
+            await readFile(join(folder, '0069_tryout_draft_schedule_guard.sql'), 'utf8')
+          ).replaceAll('\r\n', '\n');
+          if (baseline === 65) await client.unsafe(source);
+          const hash = createHash('sha256')
+            .update(lineEnding === 'CRLF' ? source.replaceAll('\n', '\r\n') : source)
+            .digest('hex');
+          await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${hash},1794304800000)`;
+          const before =
+            await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+          await migrateIntegratedDatabase(client, folder);
+          const after =
+            await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+          expect(after.slice(0, before.length)).toEqual([...before]);
+          const [guard] =
+            await client`SELECT prosrc FROM pg_proc WHERE oid='public.tryout_admin_config_guard()'::regprocedure`;
+          expect(guard!.prosrc).toContain('Only an open batch may extend its closing time');
+          expect(
+            (
+              await client`SELECT to_regclass('public.irt_production_authorizations_v1') AS relation`
+            )[0]!.relation,
+          ).not.toBeNull();
+          await migrateIntegratedDatabase(client, folder);
+          expect(
+            await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+          ).toEqual(after);
+        });
+      },
+    );
+
   it.each([28, 31])(
     'upgrades an Admin fork from main baseline %i without replay or history loss',
     async (baseline) => {

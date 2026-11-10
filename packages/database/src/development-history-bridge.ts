@@ -80,6 +80,19 @@ export async function reconcileDevelopmentHistory(
     throw new Error('Canonical SQL differs from the audited Development adoption plan.');
   const applied = new Set(history.map((row) => pair(row.hash, row.created_at)));
   const allowed = new Set(migrations.map((entry) => pair(entry.hash, entry.folderMillis)));
+  // PR #160 moved the unchanged draft guard from 0065 to 0069 after IRT migrations.
+  const draftHashes = [
+    'b0309f7883f96117e51df07fe2a0124c437d97a6f3d1b77f4253e28b70e931d3',
+    'f914d3c5ed44545370998a8b95337bd8c5073418e20e492cb6c8664471377fd8',
+  ];
+  const draftAliases =
+    migrations[69]?.hash === draftHashes[0] && migrations[69]?.folderMillis === 1794304800003
+      ? draftHashes.map((hash) => pair(hash, 1794304800000))
+      : [];
+  for (const alias of draftAliases) allowed.add(alias);
+  const draftAlreadyApplied = history.some((row) =>
+    draftAliases.includes(pair(row.hash, row.created_at)),
+  );
   if (
     !history
       .slice(manifest.history.length)
@@ -163,7 +176,7 @@ export async function reconcileDevelopmentHistory(
   for (const [index, entry] of migrations.entries()) {
     if (index < 3 || applied.has(pair(entry.hash, entry.folderMillis))) continue;
     if (index >= 48) {
-      for (const statement of entry.sql) {
+      for (const statement of index === 69 && draftAlreadyApplied ? [] : entry.sql) {
         if (!statement.trim()) continue;
         // The exact existing trigger was inspected; replace its function, never recreate it.
         if (
