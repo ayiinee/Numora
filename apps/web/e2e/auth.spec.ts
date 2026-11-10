@@ -1,6 +1,7 @@
 import { expect, test, type Page } from '@playwright/test';
 import { mkdir, writeFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { analyticsSnapshot } from './fixtures/admin-analytics';
 
 // Synthetic browser fixtures only: exercise the real SDK/AuthProvider without cloud writes.
 const userId = '11111111-1111-4111-8111-111111111111';
@@ -115,7 +116,10 @@ async function setup(page: Page, signedIn = false) {
         id: userId,
         role: state.role,
         ...(state.role === 'ADMIN'
-          ? { adminRole: 'SUPER_ADMIN', capabilities: ['OPERATIONS_MANAGE'] }
+          ? {
+              adminRole: 'SUPER_ADMIN',
+              capabilities: ['OPERATIONS_MANAGE', 'ANALYTICS_OPERATIONS'],
+            }
           : {}),
         status: 'ACTIVE',
         displayName: 'Kirino S.',
@@ -123,7 +127,8 @@ async function setup(page: Page, signedIn = false) {
         teacherVerified: state.role === 'TEACHER' ? state.verified : null,
         studentAffiliation: state.role === 'STUDENT' ? 'MANDIRI' : null,
       };
-    } else if (path === '/admin/schools') data = { items: [], nextOffset: null };
+    } else if (path === '/admin/analytics') data = analyticsSnapshot();
+    else if (path === '/admin/schools') data = { items: [], nextOffset: null };
     else if (path === '/students/me/dashboard')
       data = {
         displayName: 'Kirino S.',
@@ -657,8 +662,8 @@ for (const width of [390, 1280]) {
     await expect(page).toHaveURL(/\/admin-numora$/);
     state.failPassword = false;
     await page.getByRole('button', { name: 'Masuk ke portal Admin' }).click();
-    await expect(page).toHaveURL(/\/admin\/schools$/);
-    await expect(page.getByRole('heading', { name: 'Belum ada sekolah.' })).toBeVisible();
+    await expect(page).toHaveURL(/\/admin\/analytics$/);
+    await expect(page.getByRole('main')).toContainText('Sekolah tercatat');
     await expect(page.getByRole('link', { name: 'Ringkasan', exact: true })).toHaveCount(0);
     expect(state.passwords).toHaveLength(2);
     expect(state.posts).toEqual([]);
@@ -697,7 +702,7 @@ for (const [role, verified, path] of [
   ['STUDENT', false, '/student'],
   ['TEACHER', false, '/teacher/verification-required'],
   ['TEACHER', true, '/teacher'],
-  ['ADMIN', false, '/admin/schools'],
+  ['ADMIN', false, '/admin/analytics'],
 ] as const) {
   test(`Existing ${role} ${verified ? 'verified' : 'default'} identity leaves login for ${path}`, async ({
     page,

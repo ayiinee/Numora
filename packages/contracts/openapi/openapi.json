@@ -4175,6 +4175,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "VIDEO_SUBCHAPTER_ACTIVE_LIMIT ketika tiga slot terisi."
           }
         },
         "security": [
@@ -4220,6 +4223,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Batas VIDEO_SUBCHAPTER_ACTIVE_LIMIT atau konflik pemetaan."
           }
         },
         "security": [
@@ -6482,6 +6488,9 @@
                 }
               }
             }
+          },
+          "409": {
+            "description": "Token sumber tidak memenuhi syarat atau sudah diterbitkan ulang."
           }
         },
         "security": [
@@ -15104,7 +15113,9 @@
             "format": "uuid"
           },
           "recommendationOrder": {
-            "type": "number"
+            "type": "number",
+            "deprecated": true,
+            "description": "Diterima untuk kompatibilitas. Server menetapkan urutan otomatis."
           },
           "status": {
             "type": "string",
@@ -15120,8 +15131,7 @@
           "title",
           "url",
           "source",
-          "subchapterId",
-          "recommendationOrder"
+          "subchapterId"
         ]
       },
       "UpdateVideoDto": {
@@ -15141,7 +15151,9 @@
             "format": "uuid"
           },
           "recommendationOrder": {
-            "type": "number"
+            "type": "number",
+            "deprecated": true,
+            "description": "Diterima untuk kompatibilitas. Server menetapkan urutan otomatis."
           },
           "status": {
             "type": "string",

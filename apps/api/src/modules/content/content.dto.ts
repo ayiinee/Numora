@@ -206,7 +206,17 @@ export class CreateVideoDto {
   url!: string;
   @ApiProperty() @IsString() @MinLength(1) @MaxLength(160) @Matches(/\S/) source!: string;
   @ApiProperty({ format: 'uuid' }) @IsUUID() subchapterId!: string;
-  @ApiProperty() @Type(() => Number) @IsInt() @Min(1) @Max(100_000) recommendationOrder!: number;
+  @ApiPropertyOptional({
+    deprecated: true,
+    type: Number,
+    description: 'Diterima untuk kompatibilitas. Server menetapkan urutan otomatis.',
+  })
+  @ValidateIf((_o, v) => v !== undefined)
+  @Type(() => Number)
+  @IsInt()
+  @Min(1)
+  @Max(100_000)
+  recommendationOrder?: number;
   @ApiPropertyOptional({ enum: videoStatuses })
   @ValidateIf((_o, v) => v !== undefined)
   @IsIn(videoStatuses)

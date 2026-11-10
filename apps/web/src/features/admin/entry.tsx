@@ -14,14 +14,13 @@ export function AdminEntryScreen() {
     state.status === 'ready' && state.profile.role === 'ADMIN' && state.profile.status === 'ACTIVE'
       ? state.profile
       : null;
-  const target =
-    profile?.adminRole === 'SUPER_ADMIN' && adminCanReadAnalytics(profile)
-      ? '/admin/analytics'
-      : profile?.adminRole === 'CONTENT_DATA_MODERATION'
-        ? '/admin/content'
-        : profile?.adminRole === 'SUPER_ADMIN' || profile?.adminRole === 'OPERATIONS'
-          ? '/admin/schools'
-          : null;
+  const target = adminCanReadAnalytics(profile)
+    ? '/admin/analytics'
+    : profile?.adminRole === 'CONTENT_DATA_MODERATION'
+      ? '/admin/content'
+      : profile?.adminRole === 'SUPER_ADMIN' || profile?.adminRole === 'OPERATIONS'
+        ? '/admin/schools'
+        : null;
 
   useEffect(() => {
     if (state.status === 'signed_out') router.replace('/admin-numora');

@@ -13,7 +13,13 @@ import {
   Req,
   UseGuards,
 } from '@nestjs/common';
-import { ApiBearerAuth, ApiCreatedResponse, ApiOkResponse, ApiTags } from '@nestjs/swagger';
+import {
+  ApiBearerAuth,
+  ApiConflictResponse,
+  ApiCreatedResponse,
+  ApiOkResponse,
+  ApiTags,
+} from '@nestjs/swagger';
 import type { AdminRequest } from '../identity/admin.guard';
 import { ContentAdminGuard } from '../identity/content-admin.guard';
 import { ContentService } from './content.service';
@@ -170,11 +176,15 @@ export class ContentController {
   }
   @Post('videos')
   @ApiCreatedResponse({ type: ContentMutationDto })
+  @ApiConflictResponse({ description: 'VIDEO_SUBCHAPTER_ACTIVE_LIMIT ketika tiga slot terisi.' })
   video(@Req() r: AdminRequest, @Body() b: CreateVideoDto) {
     return this.content.createVideo(r.adminId, b);
   }
   @Patch('videos/:id')
   @ApiOkResponse({ type: ContentMutationDto })
+  @ApiConflictResponse({
+    description: 'Batas VIDEO_SUBCHAPTER_ACTIVE_LIMIT atau konflik pemetaan.',
+  })
   patchVideo(
     @Req() r: AdminRequest,
     @Param('id', ParseUUIDPipe) id: string,

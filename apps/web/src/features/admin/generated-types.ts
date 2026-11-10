@@ -247,7 +247,7 @@ export type CreateQuestionDto = { "stem": string; "options": (ContentOptionDto)[
 
 export type CreateVariantDto = { "stem": string; "options": (ContentOptionDto)[]; "answerOptionId": string; "explanation": string; "difficulty": string; "originalVariantId": string; "variantCode": string; };
 
-export type CreateVideoDto = { "title": string; "url": string; "source": string; "subchapterId": string; "recommendationOrder": number; "status"?: "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
+export type CreateVideoDto = { "title": string; "url": string; "source": string; "subchapterId": string; "recommendationOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
 
 export type UpdateVideoDto = { "title"?: string; "url"?: string; "source"?: string; "subchapterId"?: string; "recommendationOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
 

@@ -169,7 +169,6 @@ export function Videos({ data, token, busy, run, error }: EditorProps) {
         url: field(f, 'url'),
         source: field(f, 'source'),
         subchapterId: field(f, 'subchapter'),
-        recommendationOrder: Number(field(f, 'order')),
       }),
     );
     if (result) form.reset();
@@ -201,9 +200,7 @@ export function Videos({ data, token, busy, run, error }: EditorProps) {
                 ))}
             </select>
           </Field>
-          <Field label="Urutan rekomendasi" name="order">
-            <input name="order" type="number" min={1} max={100000} required />
-          </Field>
+          <p>Maksimal tiga video aktif per subbab. Urutan mengikuti waktu penambahan.</p>
           <Button type="submit" disabled={busy}>
             Simpan draf video
           </Button>
@@ -221,9 +218,7 @@ export function Videos({ data, token, busy, run, error }: EditorProps) {
             ) : (
               <p>URL lama perlu diperbarui ke HTTPS.</p>
             )}
-            <p>
-              Urutan {v.recommendationOrder} · {v.status}
-            </p>
+            <p>{v.status}</p>
             <div className="admin-content-actions">
               <ContentTextEdit
                 trigger="Ubah URL"
