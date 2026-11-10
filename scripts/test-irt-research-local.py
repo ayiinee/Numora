@@ -22,7 +22,7 @@ def local_database():
         ctl=str(BIN/('pg_ctl'+suffix))
         with socket.socket() as s:s.bind(('127.0.0.1',0));port=s.getsockname()[1]
         subprocess.run([str(BIN/('initdb'+suffix)),'-D',str(cluster),'-U','fixture','-A','trust','--no-locale','-E','UTF8'],check=True,stdout=subprocess.DEVNULL)
-        subprocess.run([ctl,'-D',str(cluster),'-l',str(target/'postgres.log'),'-o',f'-h 127.0.0.1 -p {port}','-w','start'],check=True,stdout=subprocess.DEVNULL)
+        subprocess.run([ctl,'-D',str(cluster),'-l',str(target/'postgres.log'),'-o',f'-h 127.0.0.1 -p {port} -c max_locks_per_transaction=1024','-w','start'],check=True,stdout=subprocess.DEVNULL)
         try:
             import psycopg
             name='irt_research_test_'+uuid4().hex
