@@ -9,7 +9,7 @@ const base = {
   snapshotId: 'snapshot-1',
   items: [{ questionVersionId: 'q1', rubricVersionId: 'r1' }],
   packages: [{ packageId: 'p1', packageVersion: 1, armId: 'a1', armKind: 'ORIGINAL' }],
-  respondents: [{ attemptId: 'attempt-1', respondentId: 'respondent-1', batchId: 'batch-1', status: 'SCORED' }],
+  respondents: [{ attemptId: 'attempt-1', respondentId: 'respondent-1', batchId: 'batch-1', packageId: 'p1', packageVersion: 1, assignedArmId: 'a1', deliveredArmId: 'a1', status: 'SCORED' }],
 };
 
 describe('v1 adoption artifact boundary', () => {

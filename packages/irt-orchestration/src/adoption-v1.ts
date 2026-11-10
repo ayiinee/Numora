@@ -13,7 +13,9 @@ export function validateV1ArtifactShape(payload: JsonObject, input: JsonObject, 
     payload.inputDigest !== input.input_digest ||
     payload.snapshotId !== input.snapshot_id ||
     !Array.isArray(payload.items) ||
+    !payload.items.length ||
     !Array.isArray(payload.packages) ||
+    !payload.packages.length ||
     !Array.isArray(payload.respondents) ||
     payload.respondents.some((r: JsonObject) => !r.attemptId || !r.respondentId || !r.batchId)
   )
@@ -25,12 +27,18 @@ export function validateV1ArtifactShape(payload: JsonObject, input: JsonObject, 
       fail('IRT_V1_ARTIFACT_DUPLICATE_RESPONDENT');
     attempts.add(row.attemptId);
     respondents.add(row.respondentId);
-    if (!['SCORED', 'INSUFFICIENT', 'NOT_COMPARABLE', 'UNSCORABLE'].includes(row.status))
+    if (
+      !row.packageId ||
+      !row.packageVersion ||
+      !row.assignedArmId ||
+      !row.deliveredArmId ||
+      !['SCORED', 'INSUFFICIENT', 'NOT_COMPARABLE', 'UNSCORABLE'].includes(row.status)
+    )
       fail('IRT_V1_ARTIFACT_RESULT_STATUS_INVALID');
   }
   if (payload.items.some((item: JsonObject) => !item.questionVersionId || !item.rubricVersionId))
     fail('IRT_V1_ARTIFACT_ITEM_INVALID');
-  if (payload.packages.some((pkg: JsonObject) => !pkg.packageId || !pkg.packageVersion || !pkg.armId))
+  if (payload.packages.some((pkg: JsonObject) => !pkg.packageId || !pkg.packageVersion || !pkg.armId || !['ORIGINAL', 'VARIANT'].includes(pkg.armKind)))
     fail('IRT_V1_ARTIFACT_PACKAGE_INVALID');
   return { attempts, respondents, artifactDigest };
 }
