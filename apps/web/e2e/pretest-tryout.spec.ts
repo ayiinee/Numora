@@ -339,17 +339,47 @@ test('delegated Tryout asks multi-school students to choose one school before st
     });
   });
   await page.goto('/student/tryout');
+  await expect(page.getByRole('tab', { name: 'Berlangsung' })).toHaveAttribute(
+    'aria-selected',
+    'true',
+  );
+  await page.getByRole('tab', { name: 'Terlewat' }).click();
+  await expect(page.getByText('Belum ada riwayat batch')).toBeVisible();
+  await page.getByRole('tab', { name: 'Berlangsung' }).click();
   await expect(page.getByRole('heading', { name: 'TEST ONLY delegated batch' })).toBeVisible();
-  await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
-  await expect(page.getByRole('button', { name: 'Mulai Tryout', exact: true })).toBeDisabled();
-  await page.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' }).selectOption(sub);
+  await expect(page.getByRole('button', { name: 'Muat ulang', exact: true })).toHaveCount(0);
+  await expect(page.getByText('Satu kesempatan, hasil setelah rilis')).toHaveCount(0);
+  const openRules = page.getByRole('button', { name: 'Mulai Tryout', exact: true });
+  await expect(
+    page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }),
+  ).toHaveCount(0);
+  await openRules.click();
+  const rules = page.getByRole('dialog', { name: 'Aturan pengerjaan Tryout' });
+  await expect(rules).toBeVisible();
+  const closeBox = await rules.getByRole('button', { name: 'Tutup dialog' }).boundingBox();
+  const dialogBox = await rules.boundingBox();
+  expect(closeBox!.x - dialogBox!.x).toBeLessThan(24);
+  expect(closeBox!.y - dialogBox!.y).toBeLessThan(24);
+  await expect(rules.locator('.numora-dialog__actions button')).toHaveText([
+    'Mulai pengerjaan',
+    'Batal',
+  ]);
+  await rules.getByRole('button', { name: 'Batal' }).click();
+  await expect(rules).toBeHidden();
+  await expect(openRules).toBeFocused();
+  expect(selected).toBeUndefined();
+  await openRules.click();
+  const confirm = rules.getByRole('button', { name: 'Mulai pengerjaan' });
+  await rules.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
+  await expect(confirm).toBeDisabled();
+  await rules.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' }).selectOption(sub);
   for (const width of [320, 390, 768, 1440]) {
     await page.setViewportSize({ width, height: 900 });
     expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
       true,
     );
   }
-  await page.getByRole('button', { name: 'Mulai Tryout', exact: true }).click();
+  await confirm.click();
   await expect(
     page.getByRole('alert').filter({ hasText: 'TEST ONLY batch closed while starting' }),
   ).toContainText('TEST ONLY batch closed while starting');

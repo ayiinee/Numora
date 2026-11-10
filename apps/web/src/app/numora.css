@@ -4011,21 +4011,6 @@ a.settings-row:hover {
   padding: 10px;
   border-radius: 12px;
 }
-.tryout-catalog-info {
-  display: flex;
-  gap: 12px;
-  margin-top: 20px;
-  --card-padding: 16px;
-}
-.tryout-catalog-info > svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
-.tryout-catalog-info h2 {
-  font-size: 14px;
-  font-weight: 700;
-}
-.tryout-catalog-info p,
 .tryout-history-note {
   font-size: 12px;
   line-height: 1.6;
@@ -4532,10 +4517,6 @@ a.settings-row:hover {
   }
   .tryout-catalog-content .numora-tabs__list {
     justify-content: center;
-  }
-  .tryout-catalog-info {
-    max-width: 660px;
-    margin: 20px auto 0;
   }
   .tryout-detail-screen {
     max-width: 980px;
@@ -8513,4 +8494,64 @@ a.settings-row:hover {
 }
 @media (max-height: 700px) {
   .pretest-intro-dialog .numora-dialog__icon img { width: 100px; }
+}
+
+.tryout-student-batch-list {
+  display: grid;
+  gap: 16px;
+}
+.tryout-student-batch__heading {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+}
+.tryout-student-batch__heading img {
+  flex: 0 0 56px;
+  margin-inline: 0;
+}
+.tryout-student-batch__actions {
+  display: grid;
+  gap: 12px;
+  padding: 16px;
+  border-top: 1px dashed var(--color-border);
+  font-size: 13px;
+  line-height: 1.55;
+}
+.tryout-student-batch__rules {
+  display: grid;
+  gap: 12px;
+}
+.tryout-student-batch__school {
+  display: grid;
+  gap: 6px;
+}
+.tryout-student-batch__school select {
+  min-height: 44px;
+  width: 100%;
+  padding: 8px 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface);
+}
+.tryout-student-batch__consent {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  cursor: pointer;
+}
+.tryout-student-batch__consent input {
+  width: 18px;
+  height: 18px;
+  flex-shrink: 0;
+  accent-color: var(--color-primary);
+}
+.tryout-student-batch__actions .button-link {
+  justify-self: start;
+}
+.tryout-student-rules-dialog .numora-dialog__header > button {
+  position: absolute;
+  inset-block-start: 12px;
+  inset-inline-start: 12px;
 }
