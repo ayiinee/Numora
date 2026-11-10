@@ -144,6 +144,7 @@ describe.skipIf(!testUrl)(
         ['student', 'STUDENT', null],
         ['otherStudent', 'STUDENT', null],
         ['unallocatedStudent', 'STUDENT', null],
+        ['lateStudent', 'STUDENT', null],
         ['teacher', 'TEACHER', null],
       ];
       const ids: string[] = [];
@@ -3132,6 +3133,65 @@ describe.skipIf(!testUrl)(
       const [independentAssignment] =
         await owner`SELECT package_id FROM tryout_student_assignments WHERE attempt_id=${independent.id}`;
       expect(independentAssignment!.package_id).toBe(packageIds[0]);
+      const recipients = {
+        expectedRevision: 3,
+        mandiriPackageId: packageIds[0],
+        schools: [
+          { schoolId: schoolA, packageId: packageIds[1] },
+          { schoolId: schoolB, packageId: packageIds[0] },
+          { schoolId: schoolC, packageId: packageIds[1] },
+        ],
+      };
+      expect(
+        (
+          await request(
+            `admin/tryout-batches/${activeId}/delegations`,
+            'PATCH',
+            recipients,
+            'operations',
+          )
+        ).status,
+      ).toBe(403);
+      expect(
+        (
+          await request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', {
+            ...recipients,
+            schools: [{ schoolId: schoolC, packageId: randomUUID() }],
+          })
+        ).status,
+      ).toBe(400);
+      const recipientRace = await Promise.all([
+        request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', recipients),
+        request(`admin/tryout-batches/${activeId}/delegations`, 'PATCH', recipients),
+      ]);
+      expect(recipientRace.map((r) => r.status).sort()).toEqual([200, 409]);
+      expect(
+        await owner`SELECT id FROM audit_logs WHERE entity_id=${activeId} AND action='tryout_batch_delegations_updated'`,
+      ).toHaveLength(1);
+      await expect(
+        owner`UPDATE tryout_batches SET package_id=${packageIds[1]} WHERE id=${activeId}`,
+      ).rejects.toThrow();
+      await expect(
+        owner`DELETE FROM tryout_batch_packages WHERE batch_id=${activeId}`,
+      ).rejects.toThrow();
+      const [late] = await owner`SELECT id FROM users WHERE display_name='lateStudent'`;
+      await owner`INSERT INTO class_memberships(class_id,student_user_id) VALUES(${classC},${late!.id})`;
+      const lateAttempt = await ok<TryoutAttemptDto>(
+        `tryout/batches/${activeId}/attempts`,
+        'POST',
+        {},
+        'lateStudent',
+      );
+      expect(lateAttempt.packageId).toBe(packageIds[1]);
+      expect((await tryout.startBatch('Bearer unallocatedStudent', activeId)).packageId).toBe(
+        packageIds[0],
+      );
+      expect((await tryout.startBatch('Bearer student', activeId)).packageId).toBe(
+        attempts[0].packageId,
+      );
+      expect(
+        (await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`)).delegationsEditable,
+      ).toBe(true);
       await owner`UPDATE class_memberships SET left_at=now(),end_reason='LEFT' WHERE student_user_id=${student!.id}`;
       expect((await tryout.startBatch('Bearer student', activeId)).id).toBe(attempts[0].id);
       expect(
@@ -3160,7 +3220,7 @@ describe.skipIf(!testUrl)(
       await expect(tryout.result('Bearer student', attempts[0].id)).rejects.toThrow();
       const detail = await ok<TryoutBatchDto>(`admin/tryout-batches/${activeId}`);
       expect(detail.resultBlockers).toContain('MULTI_PACKAGE_FINALIZATION_NOT_READY');
-      expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(3);
+      expect(detail.participants.reduce((sum, p) => sum + p.assigned, 0)).toBe(4);
       // Distinct recipients may share the same package; a following non-overlapping batch is valid.
       const shared = {
         ...makeInput('shared'),

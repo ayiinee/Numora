@@ -17,6 +17,7 @@ test('Operations can read batches but cannot open management controls (TEST ONLY
     resultDueAt: '2099-01-10T13:00:00Z',
     state: 'DRAFT',
     editable: true,
+    delegationsEditable: true,
     mandiriPackageId: null,
     packages: [],
     schools: [],
@@ -83,6 +84,7 @@ test('batch creation, school delegation and compact detail work across viewports
         resultDueAt: new Date(Date.parse(b.closesAt) + 72 * 3600000).toISOString(),
         state: 'DRAFT',
         editable: true,
+        delegationsEditable: true,
         revision: 1,
         mandiriPackageId: b.mandiriPackageId ?? null,
         packages: packages.filter((p) => b.packageIds.includes(p.id)),
@@ -207,4 +209,93 @@ test('batch creation, school delegation and compact detail work across viewports
   await page.goto('/admin/tryout-batches');
   await expect(page.getByRole('table')).toBeVisible();
   await expect(page.getByRole('link', { name: 'TEST ONLY Minggu 1', exact: true })).toBeVisible();
+});
+
+test('open batch can change recipients without editing frozen settings, and retains failed changes', async ({
+  page,
+}) => {
+  await setup(page);
+  const packages = [1, 2].map((n) => ({
+    id: id(9400 + n),
+    name: `TEST Package ${n}`,
+    packageVersion: n,
+    familyCode: 'TEST',
+    status: 'PUBLISHED',
+    usedBatchCount: 1,
+    valid: true,
+  }));
+  let batch: TryoutBatchDto = {
+    id: id(9400),
+    title: 'TEST OPEN',
+    startsAt: '2026-01-01T00:00:00Z',
+    closesAt: '2099-01-01T00:00:00Z',
+    resultDueAt: '2099-01-04T00:00:00Z',
+    revision: 3,
+    state: 'OPEN',
+    editable: false,
+    delegationsEditable: true,
+    mandiriPackageId: null,
+    packages,
+    schools: [],
+    participants: [],
+    resultsState: 'BLOCKED',
+    resultBlockers: [],
+  };
+  let fail = true;
+  const writes: unknown[] = [];
+  await page.route('**/api/v1/admin/tryout-batches**', async (route) => {
+    const req = route.request(),
+      url = new URL(req.url());
+    if (url.pathname.endsWith('/options'))
+      return route.fulfill({
+        json: {
+          packages,
+          schools: [{ schoolId: id(9501), schoolName: 'TEST New School' }],
+          schoolTotal: 1,
+          packageTotal: 2,
+        },
+      });
+    if (req.method() === 'PATCH') {
+      expect(url.pathname).toBe(`/api/v1/admin/tryout-batches/${batch.id}/delegations`);
+      const body = req.postDataJSON();
+      writes.push(body);
+      expect(body).toEqual({
+        expectedRevision: 3,
+        mandiriPackageId: null,
+        schools: [{ schoolId: id(9501), packageId: packages[1]!.id }],
+      });
+      if (fail)
+        return route.fulfill({ status: 409, json: { detail: 'TEST conflict. Coba lagi.' } });
+      batch = {
+        ...batch,
+        revision: 4,
+        schools: [{ ...body.schools[0], schoolName: 'TEST New School' }],
+      };
+      return route.fulfill({ json: { id: batch.id } });
+    }
+    expect(req.method()).toBe('GET');
+    return route.fulfill({ json: batch });
+  });
+  await page.goto(`/admin/tryout-batches/${batch.id}`);
+  await page.getByRole('button', { name: 'Atur penerima', exact: true }).click();
+  const dialog = page.getByRole('dialog');
+  await expect(
+    dialog.getByRole('heading', { name: 'Pengaturan batch', exact: true }),
+  ).toBeVisible();
+  await expect(dialog.getByLabel('Judul batch', { exact: true })).toHaveCount(0);
+  await expect(dialog.getByRole('button', { name: 'Tambah paket tambahan' })).toHaveCount(0);
+  await dialog
+    .getByRole('combobox', { name: 'Tambahkan sekolah', exact: true })
+    .selectOption(id(9501));
+  await dialog.getByLabel('Paket TEST New School', { exact: true }).selectOption(packages[1]!.id);
+  await dialog.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
+  await expect(dialog.getByRole('alert')).toContainText('TEST conflict');
+  await expect(dialog.getByLabel('Paket TEST New School', { exact: true })).toHaveValue(
+    packages[1]!.id,
+  );
+  fail = false;
+  await dialog.getByRole('button', { name: 'Simpan perubahan', exact: true }).click();
+  await expect(dialog).toHaveCount(0);
+  await expect(page.getByRole('cell', { name: 'TEST New School', exact: true })).toBeVisible();
+  expect(writes).toHaveLength(2);
 });

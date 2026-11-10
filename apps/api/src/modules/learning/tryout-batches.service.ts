@@ -22,7 +22,12 @@ import {
 import { readApprovedPolicy } from '@tka/assessment-engine';
 import { scoringPolicyVersions } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
-import type { SaveTryoutBatchDto, TryoutBatchDto, TryoutBatchQueryDto } from './tryout-batches.dto';
+import type {
+  UpdateTryoutDelegationsDto,
+  SaveTryoutBatchDto,
+  TryoutBatchDto,
+  TryoutBatchQueryDto,
+} from './tryout-batches.dto';
 
 export function batchState(
   b: { adminPublishedAt: Date | null; cancelledAt: Date | null; startsAt: Date; closesAt: Date },
@@ -208,6 +213,7 @@ export class TryoutBatchesService {
         revision: b.configRevision,
         state: batchState(b, now),
         editable: batchEditable(b, now),
+        delegationsEditable: ['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, now)),
         mandiriPackageId: b.mandiriPackageId,
         packages,
         schools: delegated,
@@ -349,6 +355,47 @@ export class TryoutBatchesService {
         return { id: batchId };
       },
       { configuration: body, allocationMethod: 'ADMIN_DELEGATION' },
+    );
+  }
+  updateDelegations(actor: string, id: string, body: UpdateTryoutDelegationsDto) {
+    return adminMutation(
+      actor,
+      'tryout_batch_delegations_updated',
+      'tryout_batch',
+      async (tx) => {
+        const b = await this.batch(tx, id, true);
+        const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+        if (!['DRAFT', 'SCHEDULED', 'OPEN'].includes(batchState(b, new Date(clock!.now))))
+          throw new ConflictException('Penerima hanya dapat diubah sebelum batch berakhir.');
+        if (body.expectedRevision !== b.configRevision)
+          throw new ConflictException('Batch berubah. Muat ulang sebelum menyimpan.');
+        const packages = await tx
+          .select()
+          .from(tryoutBatchPackages)
+          .where(eq(tryoutBatchPackages.batchId, id));
+        validateBatchInput({
+          title: b.adminTitle!,
+          startsAt: b.startsAt.toISOString(),
+          closesAt: b.closesAt.toISOString(),
+          packageIds: packages.map((p) => p.packageId),
+          ...body,
+        });
+        await this.validateSchools(tx, body.schools);
+        await tx.delete(tryoutSchoolDelegations).where(eq(tryoutSchoolDelegations.batchId, id));
+        if (body.schools.length)
+          await tx
+            .insert(tryoutSchoolDelegations)
+            .values(body.schools.map((s) => ({ ...s, batchId: id })));
+        await tx
+          .update(tryoutBatches)
+          .set({
+            mandiriPackageId: body.mandiriPackageId ?? null,
+            configRevision: b.configRevision + 1,
+          })
+          .where(eq(tryoutBatches.id, id));
+        return { id };
+      },
+      { configuration: body, appliesTo: 'NEW_STARTS_ONLY' },
     );
   }
   private async validateSchools(tx: AdminTransaction, delegated: SaveTryoutBatchDto['schools']) {

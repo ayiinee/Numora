@@ -2003,6 +2003,14 @@
         "operationId": "AdminTryoutBatchesController_list",
         "parameters": [
           {
+            "name": "familyCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -2098,6 +2106,14 @@
         "operationId": "AdminTryoutBatchesController_options",
         "parameters": [
           {
+            "name": "familyCode",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "type": "string"
+            }
+          },
+          {
             "name": "search",
             "required": false,
             "in": "query",
@@ -2129,14 +2145,6 @@
                   "$ref": "#/components/schemas/Object"
                 }
               ]
-            }
-          },
-          {
-            "name": "familyCode",
-            "required": false,
-            "in": "query",
-            "schema": {
-              "type": "string"
             }
           }
         ],
@@ -2214,6 +2222,51 @@
             "application/json": {
               "schema": {
                 "$ref": "#/components/schemas/SaveTryoutBatchDto"
+              }
+            }
+          }
+        },
+        "responses": {
+          "200": {
+            "description": "",
+            "content": {
+              "application/json": {
+                "schema": {
+                  "$ref": "#/components/schemas/ContentMutationDto"
+                }
+              }
+            }
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-tryout-batches"
+        ]
+      }
+    },
+    "/api/v1/admin/tryout-batches/{id}/delegations": {
+      "patch": {
+        "operationId": "AdminTryoutBatchesController_delegations",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "requestBody": {
+          "required": true,
+          "content": {
+            "application/json": {
+              "schema": {
+                "$ref": "#/components/schemas/UpdateTryoutDelegationsDto"
               }
             }
           }
@@ -12352,6 +12405,9 @@
           "editable": {
             "type": "boolean"
           },
+          "delegationsEditable": {
+            "type": "boolean"
+          },
           "mandiriPackageId": {
             "type": "string",
             "nullable": true
@@ -12393,6 +12449,7 @@
           "revision",
           "state",
           "editable",
+          "delegationsEditable",
           "mandiriPackageId",
           "packages",
           "schools",
@@ -12512,6 +12569,28 @@
         },
         "required": [
           "id"
+        ]
+      },
+      "UpdateTryoutDelegationsDto": {
+        "type": "object",
+        "properties": {
+          "expectedRevision": {
+            "type": "number"
+          },
+          "mandiriPackageId": {
+            "type": "string",
+            "nullable": true
+          },
+          "schools": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/TryoutDelegationInputDto"
+            }
+          }
+        },
+        "required": [
+          "expectedRevision",
+          "schools"
         ]
       },
       "TryoutBatchRevisionDto": {

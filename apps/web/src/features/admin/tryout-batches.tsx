@@ -281,10 +281,10 @@ function BatchWorkspace({
                   <div className="admin-content-actions">
                     <Button
                       variant="secondary"
-                      disabled={!detail.editable || pending}
+                      disabled={!(detail.editable || detail.delegationsEditable) || pending}
                       onClick={() => setEditing(true)}
                     >
-                      Pengaturan
+                      {detail.editable ? 'Pengaturan' : 'Atur penerima'}
                     </Button>
                     {detail.state === 'DRAFT' && (
                       <Button
@@ -425,6 +425,7 @@ function BatchWorkspace({
                   key={detail.revision}
                   token={token}
                   batch={detail}
+                  recipientsOnly={!detail.editable}
                   onBusy={setPending}
                   onSaved={() => {
                     setEditing(false);
@@ -499,9 +500,11 @@ function BatchForm({
   onSaved,
   onCancel,
   onBusy,
+  recipientsOnly = false,
 }: {
   token: string;
   batch?: TryoutBatchDto;
+  recipientsOnly?: boolean;
   onSaved: (id: string) => void;
   onCancel: () => void;
   onBusy?: (busy: boolean) => void;
@@ -576,15 +579,23 @@ function BatchForm({
     setError('');
     try {
       const saved = await apiRequest<{ id: string }>(
-        `admin/tryout-batches${batch ? '/' + batch.id : ''}`,
+        `admin/tryout-batches${batch ? '/' + batch.id : ''}${recipientsOnly ? '/delegations' : ''}`,
         token,
         {
           method: batch ? 'PATCH' : 'POST',
-          body: JSON.stringify({
-            ...form,
-            startsAt: `${form.startsAt}:00+07:00`,
-            closesAt: `${form.closesAt}:00+07:00`,
-          }),
+          body: JSON.stringify(
+            recipientsOnly
+              ? {
+                  schools: form.schools,
+                  mandiriPackageId: form.mandiriPackageId,
+                  expectedRevision: form.expectedRevision,
+                }
+              : {
+                  ...form,
+                  startsAt: `${form.startsAt}:00+07:00`,
+                  closesAt: `${form.closesAt}:00+07:00`,
+                },
+          ),
         },
       );
       onSaved(saved.id);
@@ -606,76 +617,80 @@ function BatchForm({
       >
         <fieldset disabled={pending}>
           <legend className="sr-only">Pengaturan batch Tryout</legend>
-          <section className="tryout-batch-section" aria-labelledby="batch-schedule-title">
-            <header className="tryout-batch-section-header">
-              <h3 id="batch-schedule-title">Nama dan jadwal</h3>
-            </header>
-            <label>
-              Judul batch
-              <input
-                required
-                maxLength={160}
-                placeholder="Contoh: Tryout TKA - November 2026"
-                value={form.title}
-                onChange={(e) => setForm({ ...form, title: e.target.value })}
-              />
-            </label>
-            <div className="tryout-batch-dates">
+          {!recipientsOnly && (
+            <section className="tryout-batch-section" aria-labelledby="batch-schedule-title">
+              <header className="tryout-batch-section-header">
+                <h3 id="batch-schedule-title">Nama dan jadwal</h3>
+              </header>
               <label>
-                Mulai (WIB)
+                Judul batch
                 <input
                   required
-                  type="datetime-local"
-                  min={local(new Date(Date.now() + 60000).toISOString())}
-                  value={form.startsAt}
-                  onChange={(e) => {
-                    const startsAt = e.target.value;
-                    setForm({
-                      ...form,
-                      startsAt,
-                      closesAt: startsAt
+                  maxLength={160}
+                  placeholder="Contoh: Tryout TKA - November 2026"
+                  value={form.title}
+                  onChange={(e) => setForm({ ...form, title: e.target.value })}
+                />
+              </label>
+              <div className="tryout-batch-dates">
+                <label>
+                  Mulai (WIB)
+                  <input
+                    required
+                    type="datetime-local"
+                    min={local(new Date(Date.now() + 60000).toISOString())}
+                    value={form.startsAt}
+                    onChange={(e) => {
+                      const startsAt = e.target.value;
+                      setForm({
+                        ...form,
+                        startsAt,
+                        closesAt: startsAt
+                          ? local(
+                              new Date(
+                                Date.parse(`${startsAt}:00+07:00`) + 7 * 86400000,
+                              ).toISOString(),
+                            )
+                          : '',
+                      });
+                    }}
+                  />
+                </label>
+                <label>
+                  Tutup (WIB)
+                  <input
+                    required
+                    type="datetime-local"
+                    min={
+                      form.startsAt
                         ? local(
-                            new Date(
-                              Date.parse(`${startsAt}:00+07:00`) + 7 * 86400000,
-                            ).toISOString(),
+                            new Date(Date.parse(`${form.startsAt}:00+07:00`) + 60000).toISOString(),
                           )
-                        : '',
-                    });
-                  }}
-                />
-              </label>
-              <label>
-                Tutup (WIB)
-                <input
-                  required
-                  type="datetime-local"
-                  min={
-                    form.startsAt
-                      ? local(
-                          new Date(Date.parse(`${form.startsAt}:00+07:00`) + 60000).toISOString(),
-                        )
-                      : undefined
-                  }
-                  value={form.closesAt}
-                  onChange={(e) => setForm({ ...form, closesAt: e.target.value })}
-                />
-              </label>
-            </div>
-          </section>
+                        : undefined
+                    }
+                    value={form.closesAt}
+                    onChange={(e) => setForm({ ...form, closesAt: e.target.value })}
+                  />
+                </label>
+              </div>
+            </section>
+          )}
           <section className="tryout-batch-section" aria-labelledby="batch-packages-title">
             <header className="tryout-batch-section-header">
               <h3 id="batch-packages-title">Paket soal</h3>
               <Badge>{form.packageIds.length} dipilih</Badge>
-              <Button
-                type="button"
-                variant="secondary"
-                onClick={() => {
-                  setSearch('');
-                  setPackageModalOpen(true);
-                }}
-              >
-                {primaryPackage ? 'Tambah paket tambahan' : 'Pilih paket utama'}
-              </Button>
+              {!recipientsOnly && (
+                <Button
+                  type="button"
+                  variant="secondary"
+                  onClick={() => {
+                    setSearch('');
+                    setPackageModalOpen(true);
+                  }}
+                >
+                  {primaryPackage ? 'Tambah paket tambahan' : 'Pilih paket utama'}
+                </Button>
+              )}
             </header>
             <div
               className="tryout-batch-selected-packages"
@@ -693,20 +708,25 @@ function BatchForm({
                   <Link href={`/admin/assessments/tryout/${p.id}`}>
                     {p.name} · Versi {p.packageVersion}
                   </Link>
-                  <Button
-                    type="button"
-                    variant="secondary"
-                    disabled={
-                      (p.id === form.packageIds[0] && form.packageIds.length > 1) ||
-                      form.schools.some((s) => s.packageId === p.id) ||
-                      form.mandiriPackageId === p.id
-                    }
-                    onClick={() =>
-                      setForm({ ...form, packageIds: form.packageIds.filter((id) => id !== p.id) })
-                    }
-                  >
-                    Keluarkan dari batch
-                  </Button>
+                  {!recipientsOnly && (
+                    <Button
+                      type="button"
+                      variant="secondary"
+                      disabled={
+                        (p.id === form.packageIds[0] && form.packageIds.length > 1) ||
+                        form.schools.some((s) => s.packageId === p.id) ||
+                        form.mandiriPackageId === p.id
+                      }
+                      onClick={() =>
+                        setForm({
+                          ...form,
+                          packageIds: form.packageIds.filter((id) => id !== p.id),
+                        })
+                      }
+                    >
+                      Keluarkan dari batch
+                    </Button>
+                  )}
                 </div>
               ))}
             </div>
@@ -810,9 +830,11 @@ function BatchForm({
                 {form.packageIds.length} paket / {form.schools.length} sekolah
               </strong>
               <p>
-                {batch && batch.state !== 'DRAFT'
-                  ? 'Pengaturan dapat diubah sebelum batch dimulai.'
-                  : 'Disimpan sebagai draft. Terbitkan setelah pengaturan selesai.'}
+                {recipientsOnly
+                  ? 'Perubahan berlaku untuk siswa yang belum mulai. Attempt yang sudah dimulai tetap memakai paket awal.'
+                  : batch && batch.state !== 'DRAFT'
+                    ? 'Pengaturan umum dapat diubah sebelum batch dimulai.'
+                    : 'Disimpan sebagai draft. Terbitkan setelah pengaturan selesai.'}
               </p>
             </div>
             <div className="admin-content-actions">

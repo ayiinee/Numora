@@ -233,3 +233,8 @@ Instruksi pemilik menggantikan kewajiban review per soal dan input bukti persetu
 ## Fallback paket utama - keputusan pemilik, 11 November 2026
 
 **ENGINEERING DECISION - instruksi pemilik:** sekolah aktif tanpa delegasi eksplisit memakai paket utama batch. Delegasi sekolah menggantikan pilihan default tersebut. Akses Mandiri tetap diatur terpisah; sekolah nonaktif tidak memperoleh fallback. Paket tambahan boleh belum memiliki penerima. Assignment dan attempt existing tetap dipin; multisekolah memilih sekolah sah. Ini menggantikan aturan sebelumnya yang menolak sekolah tanpa delegasi.
+
+
+## Delegasi batch terbit - keputusan pemilik, 11 November 2026
+
+**ENGINEERING DECISION - instruksi pemilik:** penerima sekolah/Mandiri dapat diubah selama batch belum berakhir atau dibatalkan, termasuk saat berjalan. Perubahan hanya memengaruhi start baru. Daftar versi paket, paket utama, isi, jadwal mulai dan attempt existing tetap dipin. Mutasi khusus penerima memakai Content capability, expectedRevision, row lock, transaksi dan audit; batch tutup/batal ditolak.

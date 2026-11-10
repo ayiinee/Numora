@@ -1,7 +1,7 @@
 // Generated from packages/contracts/openapi/openapi.json. Do not edit by hand.
 // Run pnpm contracts:types after changing NestJS DTOs.
 
-export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
+export type TryoutBatchDto = { "id": string; "title": string; "startsAt": string; "closesAt": string; "resultDueAt": string; "revision": number; "state": string; "editable": boolean; "delegationsEditable": boolean; "mandiriPackageId": string | null; "packages": (TryoutBatchPackageDto)[]; "schools": (TryoutBatchSchoolDto)[]; "participants": (TryoutBatchParticipantDto)[]; "resultsState": string; "resultBlockers": (string)[]; };
 
 export type TryoutBatchesDto = { "items": (TryoutBatchDto)[]; "total": number; };
 
@@ -12,6 +12,8 @@ export type TryoutBatchPackageDto = { "id": string; "name": string; "packageVers
 export type TryoutBatchParticipantDto = { "packageId": string; "schoolId": string | null; "assigned": number; "completed": number; };
 
 export type SaveTryoutBatchDto = { "title": string; "startsAt": string; "closesAt": string; "packageIds": (string)[]; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; "expectedRevision"?: number; };
+
+export type UpdateTryoutDelegationsDto = { "expectedRevision": number; "mandiriPackageId"?: string | null; "schools": (TryoutDelegationInputDto)[]; };
 
 export type TryoutDelegationInputDto = { "schoolId": string; "packageId": string; };
 

@@ -463,6 +463,13 @@
       "when": 1794304800000,
       "tag": "0065_tryout_draft_schedule_guard",
       "breakpoints": true
+    },
+    {
+      "idx": 66,
+      "version": "7",
+      "when": 1794308400000,
+      "tag": "0066_tryout_live_delegations",
+      "breakpoints": true
     }
   ]
 }
