@@ -556,7 +556,7 @@ export const analysisRequestDispatches = pgTable(
   'analysis_request_dispatches',
   {
     id: id(),
-    requestId: ref('request_id', () => analysisRequests.id).notNull(),
+    requestId: uuid('request_id').notNull(),
     generation: integer('generation').notNull(),
     operationKey: text('operation_key').notNull(),
     operationFingerprint: text('operation_fingerprint').notNull(),

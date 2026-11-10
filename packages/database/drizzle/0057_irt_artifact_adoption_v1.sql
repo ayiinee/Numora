@@ -2,7 +2,7 @@
 -- Keeps legacy v3 adoption untouched and does not publish grades or XP.
 CREATE TABLE public.irt_artifact_adoption_receipts_v1 (
   id uuid PRIMARY KEY DEFAULT gen_random_uuid(),
-  request_id uuid NOT NULL UNIQUE REFERENCES public.analysis_requests(id) ON DELETE RESTRICT,
+  request_id uuid NOT NULL UNIQUE REFERENCES public.irt_calibration_requests_v1(id) ON DELETE RESTRICT,
   execution_id uuid NOT NULL REFERENCES irt_compute.compute_executions(id) ON DELETE RESTRICT,
   artifact_id uuid NOT NULL UNIQUE REFERENCES irt_compute.calibration_artifacts_v1(id) ON DELETE RESTRICT,
   artifact_digest text NOT NULL,
