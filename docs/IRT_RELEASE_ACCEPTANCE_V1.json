@@ -1,0 +1,473 @@
+{
+  "version": "irt-tryout-release-acceptance-v1",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "mainCodeCommit": "c36ec29126bc5e46009741c82819d18039b5b272",
+  "mainPr": "https://github.com/ayiinee/Numora/pull/149",
+  "dependsOnPr": 147,
+  "aiCommit": "74ab2cfa4799aa8d6798490257d52a83bed79ab8",
+  "scientificSourceCommit": "7d5e136fb2b16fb2bd398178877a6ba1c05bad42",
+  "runtime": {
+    "purpose": "RESEARCH_ONLY",
+    "productionApproved": false,
+    "producerImage": "sha256:071d5aeba5894563bfae9b262f866270a3459f8bf57409a8c724f2544fa957f7",
+    "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+    "profile": "research/irt-runtime-linux-v1.json",
+    "profileSha256": "f9724f7eece5676f1b1e917b3bc291be4720b6db2de56e6112554409fa46ab1d",
+    "sourceSha256": {
+      "Dockerfile.irt-producer": "209fda791c48cd45fa23a34040a6df16906e6d693c7718bc50738d3bf12404c7",
+      "research/irt-python-linux.lock": "523b529216beaa5ba8319980298192cd2e4f5594aee84e743f70ea911412fe10"
+    },
+    "version": "irt-linux-image-manifest-v2",
+    "profileHashRecipe": "SHA256_EXACT_UTF8_LF_BYTES",
+    "supersedes": "research/irt-linux-image-v1.json",
+    "revisionReason": "Freeze Git LF profile bytes; JSON runtime definition and image pins unchanged. Historical CRLF evidence remains in v1."
+  },
+  "pins": {
+    "research/irt/policy-v1.json": "6379b4245c724e04a9de436f049ef87da2c1688790e908f4f36d6d54e243a29d",
+    "research/irt-runtime-linux-v1.json": "f9724f7eece5676f1b1e917b3bc291be4720b6db2de56e6112554409fa46ab1d"
+  },
+  "contractByteParity": {
+    "trackedFiles": 30,
+    "mismatches": 0
+  },
+  "fixtureSeeds": [
+    20261119,
+    20261120
+  ],
+  "checks": [
+    {
+      "name": "Orchestration unit",
+      "actual": "PASS",
+      "tests": 31
+    },
+    {
+      "name": "Web review UI",
+      "actual": "PASS",
+      "tests": 10
+    },
+    {
+      "name": "Mobile/desktop release browser",
+      "actual": "PASS",
+      "widths": [
+        390,
+        1280
+      ],
+      "tests": 2,
+      "evidenceKind": "MOCKED_READER_CONTRACT"
+    },
+    {
+      "name": "AI math/contracts/fixture/runtime",
+      "actual": "PASS",
+      "tests": 15
+    },
+    {
+      "name": "AI Linux harness guards",
+      "actual": "PASS",
+      "tests": 5
+    },
+    {
+      "name": "PostgreSQL HTTP/worker faults",
+      "actual": "PASS",
+      "passed": 17,
+      "skipped": 1,
+      "skipReason": "Real R covered separately in Linux delivery harness"
+    },
+    {
+      "name": "Root script checks",
+      "actual": "PASS",
+      "tests": 95
+    },
+    {
+      "name": "Contractual engine-double publication",
+      "actual": "PASS",
+      "attemptCount": 1000,
+      "mode": "IRT",
+      "evidenceKind": "ENGINE_DOUBLE_NOT_SCIENTIFIC_RECOVERY"
+    },
+    {
+      "name": "Fresh migrations and historical upgrade",
+      "actual": "PASS",
+      "nonemptyHistoryAndXp": true
+    },
+    {
+      "name": "Lint/typecheck/OpenAPI/contracts",
+      "actual": "PASS"
+    }
+  ],
+  "localCases": {
+    "purpose": "RESEARCH_ONLY",
+    "engineDouble": false,
+    "productionApproved": false,
+    "cases": [
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "FALLBACK",
+            "count": 4
+          }
+        ],
+        "technicalFailure": false,
+        "adoptionReplay": true,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "FALLBACK",
+            "count": 4
+          }
+        ],
+        "technicalFailure": true,
+        "adoptionReplay": false,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "CANCEL",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "REVOKE",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "canonicalPublication": true,
+        "attemptCount": 4,
+        "modes": [
+          {
+            "result_mode": "UNSCORABLE",
+            "count": 4
+          }
+        ],
+        "technicalFailure": false,
+        "adoptionReplay": true,
+        "publicationReplay": true,
+        "readerGate": true,
+        "exactHistoryPreserved": true,
+        "rollbackFlagsPreservePublishedResults": true
+      },
+      {
+        "purpose": "RESEARCH_ONLY",
+        "blocked": "COVERAGE",
+        "canonicalPublication": false,
+        "readerLocked": true,
+        "exactHistoryPreserved": true
+      }
+    ],
+    "status": "PASSED"
+  },
+  "initialFailures": [
+    {
+      "stage": "Real Linux 2000-participant adoption",
+      "cause": "Legacy GPCM step path",
+      "fix": "0062_irt_research_gpcm_steps"
+    },
+    {
+      "stage": "Real two-arm reader/adoption",
+      "cause": "Entire batch policy snapshot transferred once per result, causing quadratic allocation/transfer and process/backend memory failure",
+      "fix": "3cc41ff selects scalar reasonCode and reads frozen input once; bounded full-row hashes also reduce integrity-check memory",
+      "retest": "PASS on the exact sealed 2000-participant checkpoint"
+    },
+    {
+      "stage": "Three-arm initial host",
+      "cause": "Docker engine unavailable; canonical freeze exceeded 180 seconds; cleanup error log directory absent",
+      "fix": "Authorized temporary host increase/restart; create missing diagnostic directory; five harness tests pass",
+      "retest": "Real three-arm PASS with NOT_COMPARABLE/INSUFFICIENT preserved; all 2100 fallback published"
+    }
+  ],
+  "linuxFinal": {
+    "twoArm": {
+      "status": "PASS",
+      "evidenceKind": "REAL_R_SEALED_CHECKPOINT_RESTORED_NATIVE_PG",
+      "scientificOutcome": {
+        "artifactDigest": "f2e0e41a3094870c8ad3b8c12d29329c5b158c6f4a8b60b83253a2ad2241dac2",
+        "inputDigest": "bc932e30c319422600208232e9bfe7c51662ac310492c7b60125b92f3842a5e6",
+        "measurementState": "CALIBRATED",
+        "packages": [
+          {
+            "quality": {
+              "gate": "PASSED",
+              "checks": [
+                {
+                  "code": "MINIMUM_ARM_COUNT",
+                  "status": "PASS",
+                  "statistic": 1000,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_RESPONSE_COVERAGE",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_CALIBRATION",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_SENSITIVITY",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "VALID_ITEM_COVERAGE",
+                  "status": "PASS",
+                  "statistic": 30,
+                  "standardError": null
+                }
+              ]
+            },
+            "packageId": "30143c14-0483-47a4-9c04-60799e00c3c2",
+            "reasonCodes": [],
+            "packageVersion": 1,
+            "measurementState": "CALIBRATED"
+          },
+          {
+            "quality": {
+              "gate": "PASSED",
+              "checks": [
+                {
+                  "code": "MINIMUM_ARM_COUNT",
+                  "status": "PASS",
+                  "statistic": 1000,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_RESPONSE_COVERAGE",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_CALIBRATION",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "ANCHOR_SENSITIVITY",
+                  "status": "PASS",
+                  "statistic": null,
+                  "standardError": null
+                },
+                {
+                  "code": "VALID_ITEM_COVERAGE",
+                  "status": "PASS",
+                  "statistic": 30,
+                  "standardError": null
+                }
+              ]
+            },
+            "packageId": "b369169c-b562-45f5-ac0f-00fc3626e8a2",
+            "reasonCodes": [],
+            "packageVersion": 1,
+            "measurementState": "CALIBRATED"
+          }
+        ],
+        "participantStatuses": {
+          "SCORED": 2000
+        }
+      },
+      "release": {
+        "purpose": "RESEARCH_ONLY",
+        "source": "RESTORED_IMMUTABLE_SYNTHETIC_CHECKPOINT",
+        "checkpointSha256": "9bfb3e57d1186ad27bfb07c39a5a69fbe95ab9016352770f6d61d7d237ef8729",
+        "inputCommitmentsVerified": true,
+        "release": {
+          "purpose": "RESEARCH_ONLY",
+          "canonicalPublication": true,
+          "attemptCount": 2000,
+          "modes": [
+            {
+              "result_mode": "IRT",
+              "count": 2000
+            }
+          ],
+          "technicalFailure": false,
+          "adoptionReplay": true,
+          "publicationReplay": true,
+          "readerGate": true,
+          "exactHistoryPreserved": true,
+          "rollbackFlagsPreservePublishedResults": true
+        }
+      }
+    },
+    "threeArm": {
+      "status": "LOCAL_LINUX_VERIFIED",
+      "host": {
+        "dockerCPUs": 2,
+        "dockerMemoryBytes": 4107378688
+      },
+      "capacityEvidence": "SAMPLED_LOCAL_CORRECTNESS_NOT_SLO",
+      "cases": [
+        {
+          "label": "DELIVERY_PARTIAL",
+          "respondents": 2100,
+          "arms": 3,
+          "ackSeconds": 0.1870000000053551,
+          "elapsedSeconds": 197.2970000000205,
+          "executionStatus": "SUCCEEDED",
+          "measurementState": "NOT_COMPARABLE",
+          "participantStatuses": {
+            "NOT_COMPARABLE": 2000,
+            "INSUFFICIENT": 100
+          },
+          "canonicalSnapshot": true,
+          "mainVerified": true,
+          "selection": {
+            "fittedPerArm": {
+              "545dceed-384a-4beb-b4a2-066ded68373e": 1000,
+              "7f469492-6ce9-460a-ad5d-3560e6711865": 0,
+              "aa23d402-75d9-45dd-aced-9d932d586210": 1000
+            },
+            "eligiblePerArm": {
+              "545dceed-384a-4beb-b4a2-066ded68373e": 1000,
+              "7f469492-6ce9-460a-ad5d-3560e6711865": 100,
+              "aa23d402-75d9-45dd-aced-9d932d586210": 1000
+            }
+          },
+          "failure": null,
+          "artifactDigest": "3cab079a33db75b82ce7588426f05d393bec3f4c187d2c6f0c4384310c79693a",
+          "sameArtifactOnReplay": true
+        }
+      ],
+      "releaseChecks": [
+        {
+          "purpose": "RESEARCH_ONLY",
+          "canonicalPublication": true,
+          "attemptCount": 2100,
+          "modes": [
+            {
+              "result_mode": "FALLBACK",
+              "count": 2100
+            }
+          ],
+          "technicalFailure": false,
+          "adoptionReplay": true,
+          "publicationReplay": true,
+          "readerGate": true,
+          "exactHistoryPreserved": true,
+          "rollbackFlagsPreservePublishedResults": true,
+          "checkerSha256": "4059d56e49768b2d32a2bcf4016cc98a74177158e5f2d81ac37169fea4a605f1"
+        }
+      ],
+      "sampledMetrics": {
+        "producer": {
+          "sampledPeakWorkingSetMiB": 291.5,
+          "sampledPeakCPUPercent": 100.21,
+          "samples": 96
+        },
+        "api": {
+          "sampledPeakWorkingSetMiB": 62.98,
+          "sampledPeakCPUPercent": 3.48,
+          "samples": 96
+        },
+        "R": {
+          "sampledPeakWorkingSetMiB": 420.4,
+          "sampledPeakCPUPercent": 99.18,
+          "samples": 9
+        }
+      },
+      "ownedResourcesRemoved": true,
+      "evidenceKind": "REAL_R_HTTP_WORKER_ARTIFACT_ADOPTION_PUBLICATION"
+    },
+    "rOracle": {
+      "status": "PASS",
+      "tests": 1,
+      "seconds": 4.332,
+      "probabilityAbsoluteTolerance": 1e-08,
+      "eapAndPredictionAbsoluteTolerance": 0.0001
+    }
+  },
+  "ci": {
+    "status": "REQUIRED_EXTERNAL_CHECKS",
+    "url": "https://github.com/ayiinee/Numora/pull/149/checks",
+    "note": "Consult latest head checks; this report does not claim a pending check passed."
+  },
+  "decisions": {
+    "localIntegration": "EVIDENCE_PASSED_PENDING_FINAL_CI",
+    "productionActivation": "NO_GO"
+  },
+  "productionBlockers": [
+    {
+      "id": "DELIVERY_AUTHORITATIVE",
+      "owner": "TBD",
+      "requirement": "Frozen authoritative delivery handoff and coverage from delivery team"
+    },
+    {
+      "id": "PRODUCT_POLICY_APPROVAL",
+      "owner": "TBD",
+      "requirement": "Production fallback/exclusion/scoring and scope approvals; fixture is research only"
+    },
+    {
+      "id": "SCIENTIFIC_VALIDITY",
+      "owner": "TBD",
+      "requirement": "Empirical multidomain model/linking validity and accepted scientific gates; no threshold relaxation"
+    },
+    {
+      "id": "TARGET_HOST_CAPACITY",
+      "owner": "TBD",
+      "requirement": "Measured target deployment capacity; sampled local run is not an SLO"
+    },
+    {
+      "id": "OPERATIONS",
+      "owner": "TBD",
+      "requirement": "Private configuration, named on-call and incident monitoring"
+    }
+  ],
+  "excluded": [
+    "Shared DB writes",
+    "Real participants",
+    "Deployment",
+    "Comparison",
+    "Self-adjustment",
+    "Anchor experiments",
+    "Historical score or XP recomputation"
+  ],
+  "localBlockers": [
+    {
+      "id": "FINAL_CI",
+      "requirement": "Required checks on final delivered head must pass; consult PR check URL."
+    }
+  ],
+  "testBudget": {
+    "maximumSeconds": 10800,
+    "ledgerPath": ".tmp/irt-release-acceptance/ledger.json",
+    "recordedCompletedWallSecondsAtCheckpoint": 4451.939,
+    "priorUnmeteredReserveSeconds": 925,
+    "note": "Includes union of local checks and GitHub CI intervals plus conservative 925-second unmetered reserve. Final-head CI continues to accrue; no budget reset."
+  },
+  "hostChange": {
+    "authorizedTemporaryProfile": {
+      "cpu": 2,
+      "memoryGiB": 4,
+      "swapGiB": 2
+    },
+    "originalConfigurationRestored": true,
+    "restorationEffective": "NEXT_WSL_RESTART",
+    "runningHostStillUsesTemporaryResources": true,
+    "unrelatedTulungrejoContainersRunning": true
+  }
+}

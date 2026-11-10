@@ -407,6 +407,42 @@ async function screenshot(page: Page, name: string) {
 }
 
 for (const width of [390, 1280]) {
+  test(`Research Tryout keeps release locked and null score readable at ${width}px`, async ({
+    page,
+  }) => {
+    await page.setViewportSize({ width, height: 850 });
+    await fixture(page);
+    await page.goto(`/student/tryout/${attempt}/result`);
+    await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Lihat pembahasan' })).toHaveCount(0);
+    // Contractual reader fixture; backend publication is verified by the disposable pipeline.
+    await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attempt}/result`, (route) =>
+      route.fulfill({
+        json: {
+          attemptId: attempt,
+          packageTitle: 'SYNTHETIC release',
+          score: null,
+          mode: 'UNSCORABLE',
+          publicationVersion: 1,
+          resultMethod: null,
+          resultMethodReason: null,
+          xp: 0,
+          correctCount: 0,
+          questionCount: 30,
+          explanation: [],
+        },
+      }),
+    );
+    await page.reload();
+    await expect(page.locator('.tryout-result-score')).toHaveText('—');
+    await expect(
+      page.getByText('Nilai tidak tersedia karena tidak ada poin maksimum valid.'),
+    ).toBeVisible();
+    await expect(page.getByRole('link', { name: 'Lihat pembahasan' })).toBeVisible();
+    expect(
+      await page.evaluate(() => document.documentElement.scrollWidth <= window.innerWidth),
+    ).toBe(true);
+  });
   test(`Pretest Skip/start/save/reload/resume/submit at ${width}px`, async ({ page }) => {
     await page.setViewportSize({ width, height: 850 });
     await fixture(page);

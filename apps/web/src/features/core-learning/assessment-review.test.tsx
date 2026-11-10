@@ -8,6 +8,24 @@ import { RecentActivity } from './recent-activity';
 import type { ReviewedQuestionDto } from './generated-types';
 
 afterEach(cleanup);
+it('keeps unscorable result distinct from a zero score', () => {
+  const view = render(
+    <TryoutReleasedResult
+      result={{
+        attemptId: 'a',
+        packageTitle: 'SYNTHETIC',
+        score: null,
+        mode: 'UNSCORABLE',
+        correctCount: 0,
+        questionCount: 30,
+        explanation: [],
+      }}
+    />,
+  );
+  expect(view.container.querySelector('.tryout-result-score')?.textContent).toBe('—');
+  expect(screen.getByText('Status: tidak dapat diberi nilai.')).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Lihat pembahasan' })).toBeTruthy();
+});
 const question: ReviewedQuestionDto = {
   questionInstanceId: 'TEST ONLY q',
   type: 'MULTIPLE_CHOICE_MULTIPLE_ANSWER',

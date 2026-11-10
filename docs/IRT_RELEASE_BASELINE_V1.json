@@ -1,0 +1,18 @@
+{
+  "purpose": "RESEARCH_ONLY",
+  "mainBase": "90cff003cc01ab528847df250189011ffb74ce99",
+  "dependencyPr": 147,
+  "aiCommit": "b98648eea93166f15d3254f971c1c15d2806b383",
+  "aiRemoteMain": "7d5e136fb2b16fb2bd398178877a6ba1c05bad42",
+  "aiDirtyExperimentsExcluded": true,
+  "contract": "irt-calibration-v1",
+  "transport": "irt-calibration-service-v1",
+  "policy": "research/irt/policy-v1.json",
+  "runtimeManifest": "research/irt-linux-image-v2.json",
+  "fixtureSeeds": [
+    20261119,
+    20261120
+  ],
+  "testBudgetSeconds": 10800,
+  "productionApproved": false
+}
