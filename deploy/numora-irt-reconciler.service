@@ -1,0 +1,22 @@
+[Unit]
+Description=Numora IRT delivery reconciler (explicit production opt-in)
+After=network-online.target numora-api.service
+Wants=network-online.target
+
+[Service]
+Type=simple
+User=admin-numora
+WorkingDirectory=/opt/numora
+EnvironmentFile=/etc/numora-irt/main-production.env
+ExecStart=/home/admin-numora/.nvm/versions/node/v24.22.1/bin/node /opt/numora/scripts/run-irt-delivery-reconciler.mjs
+Restart=on-failure
+RestartSec=15
+TimeoutStopSec=90
+NoNewPrivileges=true
+PrivateTmp=true
+ProtectSystem=strict
+ProtectHome=read-only
+UMask=0077
+
+[Install]
+WantedBy=multi-user.target
