@@ -1,27 +1,23 @@
+import { readFileSync } from 'node:fs';
 import { describe, expect, it } from 'vitest';
 import { validateV1ArtifactShape } from './adoption-v1.js';
-
-const input = { id: 'request-1', snapshot_id: 'snapshot-1', input_digest: 'digest-1' };
-const base = {
-  contractVersion: 'irt-calibration-v1',
-  requestId: 'request-1',
-  inputDigest: 'digest-1',
-  snapshotId: 'snapshot-1',
-  items: [{ questionVersionId: 'q1', rubricVersionId: 'r1' }],
-  packages: [{ packageId: 'p1', packageVersion: 1, armId: 'a1', armKind: 'ORIGINAL' }],
-  respondents: [{ attemptId: 'attempt-1', respondentId: 'respondent-1', batchId: 'batch-1', packageId: 'p1', packageVersion: 1, assignedArmId: 'a1', deliveredArmId: 'a1', status: 'SCORED' }],
-};
-
-describe('v1 adoption artifact boundary', () => {
-  it('accepts complete identity and status shape', () => {
-    expect(validateV1ArtifactShape(base, input, 'artifact-1').attempts).toEqual(new Set(['attempt-1']));
+const example = (name: string) => JSON.parse(readFileSync(`packages/contracts/irt-calibration-v1/examples/${name}.json`, 'utf8'));
+const input = example('tryout-input');
+const output = example('tryout-result');
+const execution = { executionId: output.executionId, dispatchGeneration: output.dispatchGeneration };
+describe('v1 adoption real contract boundary', () => {
+  it('accepts nested outcome and derives coverage', () => expect(validateV1ArtifactShape(output, input, execution).attempts.size).toBe(input.respondents.length));
+  it('rejects duplicate output attempts', () => {
+    const bad = structuredClone(output); bad.outcome.respondents.push(bad.outcome.respondents[0]);
+    expect(() => validateV1ArtifactShape(bad, input, execution)).toThrow('IRT_DUPLICATE_ID');
   });
-
-  it('rejects duplicate attempts and respondents', () => {
-    expect(() => validateV1ArtifactShape({ ...base, respondents: [...base.respondents, { ...base.respondents[0] }] }, input)).toThrow('DUPLICATE');
+  it('rejects changed identity, stale execution, missing outcome and invented fields', () => {
+    expect(() => validateV1ArtifactShape({...output, inputDigest: 'b'.repeat(64)}, input, execution)).toThrow('IRT_INPUT_MISMATCH');
+    expect(() => validateV1ArtifactShape(output, input, {...execution, dispatchGeneration: 2})).toThrow('IRT_STALE_EXECUTION');
+    expect(() => validateV1ArtifactShape({...output, outcome: null}, input, execution)).toThrow();
+    expect(() => validateV1ArtifactShape({...output, respondents: []}, input, execution)).toThrow('IRT_SCHEMA_INVALID');
   });
-
-  it('rejects unsupported participant status', () => {
-    expect(() => validateV1ArtifactShape({ ...base, respondents: [{ ...base.respondents[0], status: 'PASS' }] }, input)).toThrow('RESULT_STATUS');
+  it('retains scientific insufficient and not comparable results', () => {
+    for (const name of ['tryout-insufficient','tryout-not-comparable']) expect(validateV1ArtifactShape(example(name), input, execution).attempts.size).toBe(input.respondents.length);
   });
 });
