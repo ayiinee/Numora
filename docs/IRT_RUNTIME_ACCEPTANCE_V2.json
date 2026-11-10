@@ -1,0 +1,217 @@
+{
+  "version": "irt-runtime-acceptance-v2",
+  "date": "2026-11-10",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "status": "LOCAL_LINUX_VERIFIED",
+  "payloadContract": "irt-calibration-v1",
+  "transportContract": "irt-calibration-service-v1",
+  "modelPolicy": "research/irt/policy-v1.json",
+  "modelOrThresholdChanged": false,
+  "mainSourceCommit": "24e400447fb7edc045908dcb64511cee1839b42d",
+  "aiSourceCommit": "6db0d7e89ab80cb9534fd923d82fcb89774aa7eb",
+  "manifest": {
+    "purpose": "RESEARCH_ONLY",
+    "productionApproved": false,
+    "producerImage": "sha256:071d5aeba5894563bfae9b262f866270a3459f8bf57409a8c724f2544fa957f7",
+    "rImage": "sha256:80e667703c19b364a1b8770342a97350f817ab85e1a2092b2f68958b38253036",
+    "profile": "research/irt-runtime-linux-v1.json",
+    "profileSha256": "f9724f7eece5676f1b1e917b3bc291be4720b6db2de56e6112554409fa46ab1d",
+    "sourceSha256": {
+      "Dockerfile.irt-producer": "209fda791c48cd45fa23a34040a6df16906e6d693c7718bc50738d3bf12404c7",
+      "research/irt-python-linux.lock": "523b529216beaa5ba8319980298192cd2e4f5594aee84e743f70ea911412fe10"
+    },
+    "version": "irt-linux-image-manifest-v2",
+    "profileHashRecipe": "SHA256_EXACT_UTF8_LF_BYTES",
+    "supersedes": "research/irt-linux-image-v1.json",
+    "revisionReason": "Freeze Git LF profile bytes; JSON runtime definition and image pins unchanged. Historical CRLF evidence remains in v1."
+  },
+  "fixtureRecipeSha256": "cf91cd1df87d2310e3cadfbf72b9af60cbc4eb900fb4e3bbd110787d4696a775",
+  "harnessSha256": "0d6e722be83a1978c500522f33dfd39902569a706ecb708bc30c28f30713bc31",
+  "rawLocalReportSha256": "8176ebd01dac129e24563b5d7c92dd5869f5d356f5e8bad34bd819c05c52da18",
+  "host": {
+    "dockerCPUs": 1,
+    "dockerMemoryBytes": 1950724096
+  },
+  "containers": {
+    "api": {
+      "memoryLimitBytes": 268435456,
+      "cpuQuota": 2.0,
+      "oomKilled": false,
+      "readOnlyRoot": true
+    },
+    "producer": {
+      "memoryLimitBytes": 1073741824,
+      "cpuQuota": 2.0,
+      "oomKilled": false,
+      "readOnlyRoot": true
+    }
+  },
+  "cases": [
+    {
+      "label": "INSUFFICIENT",
+      "respondents": 4,
+      "arms": 2,
+      "ackSeconds": 0.046999999991385266,
+      "elapsedSeconds": 1.4539999999979045,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "INSUFFICIENT",
+      "participantStatuses": {
+        "INSUFFICIENT": 4
+      },
+      "canonicalSnapshot": true,
+      "mainVerified": true,
+      "failure": null,
+      "artifactDigest": "a584be3de1ad534733ef713a0057b8fee42ca14fba9493146904ed493afdd3d0",
+      "sameArtifactOnReplay": true,
+      "eligiblePerArm": [
+        2,
+        2
+      ],
+      "fittedPerArm": [
+        0,
+        0
+      ]
+    },
+    {
+      "label": "DELIVERY_TWO_ARM",
+      "respondents": 2000,
+      "arms": 2,
+      "ackSeconds": 0.1870000000053551,
+      "elapsedSeconds": 152.23399999999674,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "CALIBRATED",
+      "participantStatuses": {
+        "SCORED": 2000
+      },
+      "canonicalSnapshot": true,
+      "mainVerified": true,
+      "failure": null,
+      "artifactDigest": "f20f378906eced5861214e41c53fee7c96f4b441e45a675d298a2f1f3a317354",
+      "sameArtifactOnReplay": true,
+      "eligiblePerArm": [
+        1000,
+        1000
+      ],
+      "fittedPerArm": [
+        1000,
+        1000
+      ]
+    },
+    {
+      "label": "DELIVERY_PARTIAL",
+      "respondents": 2100,
+      "arms": 3,
+      "ackSeconds": 0.32800000000861473,
+      "elapsedSeconds": 162.35899999999674,
+      "executionStatus": "SUCCEEDED",
+      "measurementState": "NOT_COMPARABLE",
+      "participantStatuses": {
+        "NOT_COMPARABLE": 2000,
+        "INSUFFICIENT": 100
+      },
+      "canonicalSnapshot": true,
+      "mainVerified": true,
+      "failure": null,
+      "artifactDigest": "f08597b6e24c0d5c912f95223917dbcbe45c72653b320b7577a70be2a8792857",
+      "sameArtifactOnReplay": true,
+      "eligiblePerArm": [
+        1000,
+        1000,
+        100
+      ],
+      "fittedPerArm": [
+        1000,
+        1000,
+        0
+      ]
+    }
+  ],
+  "sampledMetrics": {
+    "producer": {
+      "sampledPeakWorkingSetMiB": 278.5,
+      "sampledPeakCPUPercent": 96.02,
+      "samples": 163
+    },
+    "api": {
+      "sampledPeakWorkingSetMiB": 61.09,
+      "sampledPeakCPUPercent": 3.15,
+      "samples": 163
+    },
+    "R": {
+      "sampledPeakWorkingSetMiB": 420.1,
+      "sampledPeakCPUPercent": 99.02,
+      "samples": 23
+    }
+  },
+  "metricSampleErrors": 1,
+  "canonicalPublication": false,
+  "sharedDatabaseTouched": false,
+  "ownedResourcesRemoved": true,
+  "tests": {
+    "exactProfilePins": {
+      "passed": 3
+    },
+    "focusedRuntimeTransportFixtures": {
+      "passed": 16
+    },
+    "mathAndProducer": {
+      "passed": 15
+    },
+    "mainFixtureAndAdapter": {
+      "passed": 7
+    },
+    "canonicalFreezeCases": {
+      "passed": 38,
+      "upgradeHistoryAndXpPreserved": true
+    },
+    "forwardGuardCases": {
+      "passed": 5
+    },
+    "linuxRunnerFaults": "PASSED",
+    "postgresSuite": {
+      "passed": 17,
+      "skipped": 1,
+      "seconds": 280.933,
+      "outerWatchdogSeconds": 600,
+      "upgradeHistoryAndXpPreserved": true,
+      "skipReason": "Pinned R test omitted in native suite; real R exercised separately by three-case Linux acceptance."
+    },
+    "unscorableHttpArtifact": {
+      "passed": 1,
+      "RInvoked": false
+    }
+  },
+  "supersededFailures": [
+    {
+      "reason": "CRLF versus LF profile commitment",
+      "resolution": "Versioned exact LF manifest; old manifest retained"
+    },
+    {
+      "reason": "Disposable seed transaction exhausted shared locks",
+      "resolution": "Owned PostgreSQL max_locks_per_transaction=1024; pipelined fixture inserts"
+    },
+    {
+      "reason": "Heartbeat trigger materialized scientific payload and hit 5s query timeout",
+      "resolution": "Forward migration 0056 projects authorization fields; 5s statement timeout and 60s lease unchanged"
+    },
+    {
+      "reason": "Combined native suite exceeded 300s outer harness deadline",
+      "resolution": "One six-scenario test alone measured 298.308s; suite outer watchdog 600s, per-execution deadline still 900s"
+    }
+  ],
+  "limits": [
+    "Timings are notification-to-replay-and-Main-verification observations; seed/freeze excluded.",
+    "One CPU/about 1.8GiB Docker host; no production capacity or SLO certification.",
+    "Three-arm linking held; no scientific gate or score was forced.",
+    "Five anchors and this bounded acceptance do not establish model suitability, DIF freedom or production policy approval.",
+    "Test suites overlap and must not be summed as independent experiments.",
+    "Canonical adoption, fallback, release, XP and production activation remain out of scope."
+  ],
+  "mainTestSourceSha256": {
+    "scripts/irt_delivery_seed.py": "a36edd90ec1877fbb5a6c7cb0b25a26b06c81257560e6a520563079e900709e9",
+    "scripts/freeze-irt-delivery-local.mjs": "6263c478dd9519d8ae39de0960fa71d5aff3168c1e0dd5cc2c21e43d5067cf73",
+    "scripts/test-irt-research-local.py": "33eae7e6e633ade4b876fd80204deb6aaf4f193555962bb48ae4186a6784ad68",
+    "packages/database/drizzle/0056_irt_calibration_guard_projection.sql": "938b89ad63a45ea08a17a230be2291f463ca63b48ea9f1aade9966423b497c6b"
+  }
+}

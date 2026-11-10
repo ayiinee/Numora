@@ -57,6 +57,15 @@ hanya melalui otorisasi Main, dengan input/policy/seed/runtime yang sama.
 Cancel, lease hilang, generation stale dan approval revoke menahan penyegelan.
 Artifact sealed immutable dan diverifikasi Main tanpa adopsi nilai canonical.
 
+## Guard database forward
+
+Main memiliki migrasi `0056_irt_calibration_guard_projection.sql`. Trigger job
+hanya membaca ID, cancellation, approval dan generation; trigger artifact tidak
+membentuk ulang payload input yang tidak dipakainya. Predikat otorisasi, lease,
+fencing, immutability dan digest tetap sama. Migrasi lama tidak diedit.
+Perbaikan menghindari timeout query heartbeat akibat materialisasi respons besar;
+statement timeout, lease dan timeout R tidak dinaikkan untuk meluluskan tes.
+
 ## Penerimaan dan rollback
 
 Laporan acceptance agregat mencatat pin, skenario, duration, eligible/fitted,
@@ -72,3 +81,29 @@ Tidak ada deployment atau migrasi shared database pada prioritas ini.
 Adopter/finalizer Main, approval akademik/policy produksi, delivery authoritative,
 kapasitas host tujuan dan keputusan aktivasi tetap dependency tahap berikutnya.
 Comparison, self-adjustment, anchor-v2 dan IRT Drill berada di luar cakupan.
+
+## Hasil run canonical
+
+Laporan agregat: AI `research/irt/runtime-acceptance-v2.json`, mirror Main
+`docs/IRT_RUNTIME_ACCEPTANCE_V2.json`. Artifact tidak menjadi nilai canonical.
+
+| Fixture | Hasil peserta | Notification sampai replay/verifikasi Main |
+| --- | --- | --- |
+| Small 2+2 | 4 INSUFFICIENT | 1,45 detik |
+| Dua arm 1000+1000 | 2000 SCORED, CALIBRATED | 152,23 detik |
+| Tiga arm 1000+1000+100 | 2000 NOT_COMPARABLE, 100 INSUFFICIENT | 162,36 detik |
+
+Arm kecil tetap eligible 100 dan fitted 0; dua arm lain masing-masing fitted
+1000. Linking pada kasus tiga arm tertahan oleh gate existing. Ini sukses
+transport/penyegelan dengan penahanan sesuai policy existing, bukan kelulusan
+linking atau bukti varian mengalami DIF. Gate konservatif tetap memiliki batas
+validitas yang dicatat pada benchmark historis.
+Main nanti menentukan fallback per arm melalui policy yang sah.
+
+Semua artifact diverifikasi Main dan replay memakai artifact yang sama.
+Container/volume milik run dibersihkan; container proyek lain tetap sehat.
+Batas kapasitas host dan kegagalan sebelum perbaikan dicatat dalam laporan.
+
+Suite PostgreSQL upgrade gabungan: 17 lulus, satu R-case skip, 280,933 detik.
+R nyata diuji terpisah pada jalur Linux di atas. Watchdog seluruh suite lokal
+600 detik; timeout per compute tetap 900 detik. Histori dan XP nonkosong utuh.
