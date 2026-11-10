@@ -49,6 +49,7 @@ function LevelStars({ stars, size = 15 }: { stars: number; size?: number }) {
 export function LevelPath({
   data,
   chapterLabel,
+  placementLevelId,
   pending,
   requestedLevelId,
   startError,
@@ -56,6 +57,7 @@ export function LevelPath({
 }: {
   data: SubchapterDetail;
   chapterLabel: string;
+  placementLevelId?: string | undefined;
   pending: boolean;
   requestedLevelId: string | undefined;
   startError: string | undefined;
@@ -65,11 +67,24 @@ export function LevelPath({
   const [dialogOpen, setDialogOpen] = useState(false);
   const initialMarker = useRef<HTMLLIElement>(null);
   const dock = useRef<HTMLDivElement>(null);
-  const positioned = useRef(false);
+  const positioned = useRef<string>(undefined);
+  const interacted = useRef(false);
   const levels = [...data.levels].sort((a, b) => a.order - b.order);
   const completed = levels.filter((level) => level.status === 'completed');
+  const placementLevel = levels.find((level) => level.id === placementLevelId);
+  const nextOpen =
+    placementLevel &&
+    levels.find((level) => level.order > placementLevel.order && level.status === 'open');
+  const higherProgress =
+    placementLevel &&
+    levels.some((level) => level.order > placementLevel.order && level.status !== 'locked');
+  const recommended =
+    placementLevel?.status === 'open' && !higherProgress ? placementLevel : undefined;
+  const recommendedLevelId = recommended?.id;
   const current =
     levels.find((level) => level.status === 'inProgress') ??
+    recommended ??
+    nextOpen ??
     levels.find((level) => level.status === 'open');
   const initialLevel = current ?? completed.at(-1) ?? levels[0];
   const selected =
@@ -77,11 +92,12 @@ export function LevelPath({
   const sectionCount = Math.ceil(levels.length / stations.length);
 
   useEffect(() => {
-    if (positioned.current) return;
+    if (interacted.current || positioned.current === initialLevel?.id) return;
     const frame = window.requestAnimationFrame(() => {
       const marker = initialMarker.current;
       if (!marker) return;
-      positioned.current = true;
+      if (interacted.current) return;
+      positioned.current = initialLevel?.id;
       revealMarker(marker, dock.current);
     });
     return () => window.cancelAnimationFrame(frame);
@@ -90,12 +106,13 @@ export function LevelPath({
   if (!selected) return null;
 
   const openDetail = (level: Level, trigger: HTMLButtonElement) => {
-    positioned.current = true;
+    interacted.current = true;
     setSelectedId(level.id);
     trigger.focus({ preventScroll: true });
     setDialogOpen(true);
   };
 
+  const isRecommended = selected.id === recommendedLevelId;
   const statusLabel = levelStatus[selected.status];
   const selectedLevel = `Level ${selected.order}`;
   const latestStars = selected.latestStars;
@@ -110,6 +127,11 @@ export function LevelPath({
         <p>Nilai minimal 80 pada level sebelumnya.</p>
       ) : (
         <>
+          {isRecommended && (
+            <p className="level-path__recommendation">
+              <Icon name="target" width={16} height={16} /> Disarankan dari hasil pretest
+            </p>
+          )}
           <p className="level-path__meta">10 soal</p>
           <div
             className="level-path__rating"
@@ -148,7 +170,9 @@ export function LevelPath({
           <Button fullWidth disabled={pending} onClick={() => onStart(selected.id)}>
             {pending && requestedLevelId === selected.id
               ? 'Membuka latihan…'
-              : levelAction[selected.status]}
+              : isRecommended
+                ? `Mulai ${selectedLevel}`
+                : levelAction[selected.status]}
             <Icon name="arrow" width={18} height={18} />
           </Button>
         </>
@@ -177,6 +201,7 @@ export function LevelPath({
           );
           const [x, y] = stations[station]!;
           const active = level.id === current?.id;
+          const recommended = level.id === recommendedLevelId;
           const isSelected = level.id === selected.id;
           const levelName = `Level ${level.order}`;
           const stars = level.status === 'locked' ? null : level.latestStars;
@@ -184,6 +209,7 @@ export function LevelPath({
             levelName,
             level.title === levelName ? null : level.title,
             levelStatus[level.status],
+            recommended ? 'Mulai di sini, disarankan dari hasil pretest' : null,
             stars == null ? null : `${stars} dari 3 bintang terakhir`,
           ]
             .filter(Boolean)
@@ -193,6 +219,9 @@ export function LevelPath({
               <span>{level.order}</span>
               {level.status === 'locked' && (
                 <Icon className="level-path__lock" name="lock" width={14} height={14} />
+              )}
+              {level.status === 'completed' && stars == null && (
+                <Icon className="level-path__lock" name="check" width={14} height={14} />
               )}
             </span>
           );
@@ -206,10 +235,16 @@ export function LevelPath({
                 top: `${((sectionCount - section - 1) * 100 + y) / sectionCount}%`,
               }}
             >
-              {active && (
-                <span className="level-path__here" aria-hidden="true">
-                  Kamu di sini
+              {recommended ? (
+                <span className="level-path__here level-path__here--placement" aria-hidden="true">
+                  <Icon name="target" width={14} height={14} /> Mulai di sini
                 </span>
+              ) : (
+                active && (
+                  <span className="level-path__here" aria-hidden="true">
+                    Kamu di sini
+                  </span>
+                )
               )}
               {stars != null && (
                 <span className="level-path__map-stars">
@@ -232,7 +267,7 @@ export function LevelPath({
                   onFocus={(event) => {
                     const node = event.currentTarget;
                     if (node.matches(':focus-visible')) {
-                      positioned.current = true;
+                      interacted.current = true;
                       revealMarker(node, dock.current);
                     }
                   }}
