@@ -8092,6 +8092,34 @@
         ]
       }
     },
+    "/api/v1/admin/irt/research/requests/{id}/adopt": {
+      "post": {
+        "operationId": "IrtController_adoptResearchV1",
+        "parameters": [
+          {
+            "name": "id",
+            "required": true,
+            "in": "path",
+            "schema": {
+              "type": "string"
+            }
+          }
+        ],
+        "responses": {
+          "200": {
+            "description": ""
+          }
+        },
+        "security": [
+          {
+            "bearer": []
+          }
+        ],
+        "tags": [
+          "admin-irt"
+        ]
+      }
+    },
     "/api/v1/admin/irt/requests": {
       "post": {
         "operationId": "IrtController_prepare",
@@ -9009,62 +9037,6 @@
         ],
         "tags": [
           "notifications"
-        ]
-      }
-    },
-    "/api/v1/admin/irt/research/requests/{id}/adopt": {
-      "post": {
-        "operationId": "IrtController_adoptResearchV1",
-        "parameters": [
-          {
-            "name": "id",
-            "required": true,
-            "in": "path",
-            "schema": {
-              "type": "string"
-            }
-          }
-        ],
-        "responses": {
-          "200": {
-            "description": "",
-            "content": {
-              "application/json": {
-                "schema": {
-                  "type": "object",
-                  "properties": {
-                    "requestId": {
-                      "type": "string"
-                    },
-                    "adopted": {
-                      "type": "boolean"
-                    },
-                    "receiptId": {
-                      "type": "string"
-                    },
-                    "batchId": {
-                      "type": "string"
-                    },
-                    "attemptCount": {
-                      "type": "integer"
-                    }
-                  },
-                  "required": [
-                    "requestId",
-                    "adopted"
-                  ]
-                }
-              }
-            }
-          }
-        },
-        "security": [
-          {
-            "bearer": []
-          }
-        ],
-        "tags": [
-          "admin-irt"
         ]
       }
     }
