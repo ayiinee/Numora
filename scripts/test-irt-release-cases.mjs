@@ -38,7 +38,9 @@ const integrity = async () => {
   const result = {};
   for (const table of [
     'assessment_attempts',
+    'attempt_items',
     'attempt_answers',
+    'student_item_exposures',
     'xp_ledger',
     'irt_compute.calibration_artifacts_v1',
   ]) {
