@@ -853,6 +853,7 @@ describe('responsive learning composition', () => {
     expect(learningApi.startTryout).toHaveBeenCalledTimes(2);
   });
   it('loads additional history pages when the first page contains no Tryout and retries pagination', async () => {
+    vi.mocked(request).mockResolvedValue({ routingActive: false, items: [] });
     vi.mocked(learningApi.assessmentHistory)
       .mockResolvedValueOnce({
         records: [
@@ -885,9 +886,8 @@ describe('responsive learning composition', () => {
         nextCursor: null,
       });
     renderStudent(<TryoutScreen />);
-    expect(document.querySelector('.app-mobile-header .materials-header')?.textContent).toBe(
-      'Tryout TKA',
-    );
+    await screen.findByRole('tab', { name: 'Riwayat' });
+    expect(screen.getAllByRole('heading', { name: 'Tryout TKA' }).length).toBeGreaterThan(0);
     expect(screen.queryByRole('button', { name: 'Tryout Saya' })).toBeNull();
     expect(screen.getByRole('tab', { name: 'Terlewat' })).toBeTruthy();
     fireEvent.click(screen.getByRole('tab', { name: 'Riwayat' }));

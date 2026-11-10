@@ -1,4 +1,5 @@
 import { getDatabase } from './client.js';
+import type { AssessmentReader } from './pretest-visibility.js';
 import { tryoutDistributionEligibility, packageRuntimeEligibility } from './package-runtime.js';
 import {
   irtBatches,
@@ -9,7 +10,7 @@ import {
   tryoutResultFinalizations,
   tryoutAttemptResults,
 } from './schema/index.js';
-import { and, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
+import { and, isNull, eq, inArray, isNotNull, lte, desc, sql } from 'drizzle-orm';
 /** Batch window: seven days minus one minute from the effective release. */
 export function tryoutBatchCloseAt(releaseAt: Date) {
   return new Date(releaseAt.getTime() + (7 * 24 * 60 * 60 - 60) * 1000);
@@ -108,8 +109,7 @@ export async function releasedTryoutPackageIds(
   return new Set((await releasedTryoutPackageTimes(packageIds, now)).keys());
 }
 
-export async function currentTryoutPackage() {
-  const { db } = getDatabase();
+export async function currentTryoutPackage(db: AssessmentReader = getDatabase().db) {
   const [clock] = await db.execute<{ now: string }>(sql`select clock_timestamp() as now`);
   const now = new Date(clock!.now);
   const [row] = await db
@@ -171,6 +171,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
       and(
         inArray(tryoutAttemptResults.attemptId, attemptIds),
         eq(tryoutBatches.status, 'PUBLISHED'),
+        isNull(tryoutBatches.adminTitle),
         isNotNull(tryoutResultFinalizations.publishedAt),
         lte(tryoutResultFinalizations.publishedAt, now),
         inArray(tryoutResultFinalizations.mode, ['IRT', 'FALLBACK']),

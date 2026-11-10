@@ -4,6 +4,7 @@ import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/commo
 import {
   assessmentAttempts,
   assessmentPackages,
+  tryoutBatches,
   chapters,
   getDatabase,
   levels,
@@ -76,7 +77,7 @@ export class AssessmentHistoryService {
         id: assessmentAttempts.id,
         assessmentType: assessmentAttempts.assessmentType,
         packageId: assessmentAttempts.packageId,
-        title: assessmentPackages.name,
+        title: sql<string>`coalesce(${tryoutBatches.adminTitle}, ${assessmentPackages.name})`,
         isDemo: assessmentPackages.isDemo,
         finishedAt: assessmentAttempts.finishedAt,
         score: assessmentAttempts.score0To100,
@@ -96,6 +97,7 @@ export class AssessmentHistoryService {
       })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
+      .leftJoin(tryoutBatches, eq(tryoutBatches.id, assessmentAttempts.tryoutBatchId))
       .leftJoin(xpLedger, eq(xpLedger.attemptId, assessmentAttempts.id))
       .leftJoin(chapters, eq(chapters.id, assessmentAttempts.chapterIdAtStart))
       .leftJoin(levels, eq(levels.id, assessmentAttempts.levelIdAtStart))

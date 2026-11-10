@@ -1,38 +1,28 @@
 'use client';
 
 import Link from 'next/link';
+import { useId } from 'react';
 import { Icon } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
-import { adminRoleLabel, type AdminNavigationItem } from '@/features/admin/navigation';
-
-const sections = [
-  { key: 'overview', label: null },
-  { key: 'administration', label: 'Administrasi' },
-  { key: 'content', label: 'Konten & publikasi' },
-] as const;
-
-function sectionFor(href: string) {
-  if (href === '/admin/analytics') return 'overview';
-  return href.startsWith('/admin/content') || href === '/admin/irt' ? 'content' : 'administration';
-}
+import { adminRoleLabel, type AdminNavigationGroup } from '@/features/admin/navigation';
 
 /** Present the already-authorized links; capability decisions stay in adminNavigation. */
 export function AdminNavigation({
   items,
   activeHref,
+  openIds,
+  onToggle,
   onNavigate,
   mobile = false,
 }: {
-  items: AdminNavigationItem[];
+  items: AdminNavigationGroup[];
   activeHref: string | undefined;
+  openIds: string[];
+  onToggle: (id: string) => void;
   onNavigate: () => void;
   mobile?: boolean;
 }) {
-  const orderedSections = [...sections].sort(
-    (a, b) =>
-      items.findIndex((item) => sectionFor(item.href) === a.key) -
-      items.findIndex((item) => sectionFor(item.href) === b.key),
-  );
+  const id = useId();
   return (
     <nav
       id={mobile ? 'mobile-menu' : undefined}
@@ -42,28 +32,61 @@ export function AdminNavigation({
       {items.length === 0 && (
         <p className="admin-navigation-empty">Belum ada menu yang tersedia.</p>
       )}
-      {orderedSections.map((section) => {
-        const links = items.filter((item) => sectionFor(item.href) === section.key);
-        if (links.length === 0) return null;
+      {items.map((section) => {
         return (
           <div
-            key={section.key}
+            key={section.id}
             className="admin-navigation-group"
             role="group"
-            aria-label={section.label ?? 'Pemantauan'}
+            aria-label={section.label}
           >
             {section.label && <p className="admin-navigation-heading">{section.label}</p>}
-            {links.map((item) => (
-              <Link
-                key={item.href}
-                href={item.href}
-                aria-current={item.href === activeHref ? 'page' : undefined}
-                onClick={onNavigate}
-              >
-                <Icon name={item.icon} />
-                <span>{item.label}</span>
-              </Link>
-            ))}
+            {section.items.map((item) =>
+              item.children ? (
+                <div key={item.id} className="admin-navigation-branch">
+                  <button
+                    type="button"
+                    className="admin-navigation-parent"
+                    aria-expanded={openIds.includes(item.id)}
+                    aria-controls={`${id}-${item.id}`}
+                    data-active={
+                      item.children.some((child) => child.href === activeHref) || undefined
+                    }
+                    onClick={() => onToggle(item.id)}
+                  >
+                    <Icon name={item.icon} />
+                    <span>{item.label}</span>
+                    <Icon name="chevron" className="admin-navigation-chevron" />
+                  </button>
+                  <div
+                    id={`${id}-${item.id}`}
+                    className="admin-navigation-submenu"
+                    hidden={!openIds.includes(item.id)}
+                  >
+                    {item.children.map((child) => (
+                      <Link
+                        key={child.href}
+                        href={child.href}
+                        aria-current={child.href === activeHref ? 'page' : undefined}
+                        onClick={onNavigate}
+                      >
+                        <span>{child.label}</span>
+                      </Link>
+                    ))}
+                  </div>
+                </div>
+              ) : (
+                <Link
+                  key={item.href}
+                  href={item.href}
+                  aria-current={item.href === activeHref ? 'page' : undefined}
+                  onClick={onNavigate}
+                >
+                  <Icon name={item.icon} />
+                  <span>{item.label}</span>
+                </Link>
+              ),
+            )}
           </div>
         );
       })}

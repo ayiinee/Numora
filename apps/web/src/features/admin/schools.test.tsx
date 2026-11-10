@@ -14,6 +14,7 @@ import {
 } from '@/lib/api';
 const auth = vi.hoisted(() => ({ state: {} as Record<string, unknown>, refresh: vi.fn() }));
 vi.mock('next/navigation', () => ({
+  useSearchParams: () => new URLSearchParams(window.location.search),
   usePathname: () => '/admin/schools',
   useRouter: () => ({ replace: vi.fn() }),
 }));

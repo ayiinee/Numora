@@ -1,5 +1,13 @@
 # Admin assessment publisher — PRD v0.6
 
+## Package directory — 9 November 2026
+
+**ENGINEERING DECISION — approved owner plan:** separate list/new/detail routes per assessment type follow [the directory specification](../design/ADMIN_ASSESSMENT_DIRECTORY_2026-11-09.md). `GET /api/v1/admin/content/packages` accepts optional `search` (string, maximum 160 characters), matching a literal case-insensitive substring of package name or family code. Search combines with existing type/status/chapter/source filters; rows and total share one predicate. Ordering remains version descending, family code ascending, then ID ascending for stable pagination. No database migration or permission change.
+
+The existing PATCH contract also supports draft renaming: sending the unchanged ordered question-version IDs preserves durable package-item IDs, order and point values. Revision checks and publication/history guards remain authoritative. This does not add historical editing or permanent deletion.
+
+**ENGINEERING DECISION ? 9 November 2026, rencana pemilik disetujui:** [Penataan Admin dan akses asesmen](../development/ADMIN_ASSESSMENT_REWORK.md) menggantikan bagian historis tentang menu Pretest terpisah, blocker consumer permanen, dan Analytics khusus Super. Paket memakai `/admin/assessments` dengan pipeline umum; Analytics tersedia sesuai scope ketiga subrole. Histori, izin server dan dependency Data/AI tetap berlaku.
+
 **ENGINEERING CORRECTION — 26 October 2026:** the owner-approved 7 October `TRYOUT_PGK_PARTIAL_V1` pin supersedes the older ceiling rule below for that policy only. XP uses `round(sum(awarded_points / max_points) × 10, 6)` from persisted two-decimal item points. Finalizer and forward migration `0048` enforce the same value; historical/non-partial pins and posted ledger rows remain unchanged. See [integration evidence](../development/FERDI_ADMIN_INTEGRATION_2026-10-26.md).
 
 **PRD RULE:** Drill has ten items per level, one active MVP variant, unlimited retry, irreversible mastery unlock at >=80%, and latest-attempt stars (zero=0, 10–50=1, 51–99=2, 100=3). Tryout has thirty items, one attempt per package, the same package for its Monday–Sunday Jakarta batch, and a deadline at the earlier of duration and batch close. XP finalization is independent of IRT publication. Pretest authoring uses twenty items; its Student consumer is a separate backlog.

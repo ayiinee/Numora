@@ -180,6 +180,7 @@ async function fixture(page: Page, mixedTryout = false) {
       };
     else if (path === 'students/me/learning-interactions') json = { state: 'policyPending' };
     else if (path === 'students/me/assessment-results') json = { records: [], nextCursor: null };
+    else if (path === 'tryout/batches') json = { routingActive: false, items: [] };
     else if (path === 'tryout/packages/current')
       json = mixedTryout
         ? {
@@ -302,6 +303,59 @@ async function fixture(page: Page, mixedTryout = false) {
   });
   return rawTryoutAnswers;
 }
+
+test('delegated Tryout asks multi-school students to choose one school before starting', async ({
+  page,
+}) => {
+  await fixture(page);
+  const schools = [
+    { schoolId: chapter, schoolName: 'TEST School A' },
+    { schoolId: sub, schoolName: 'TEST School B' },
+  ];
+  const batches = {
+    routingActive: true,
+    items: [
+      {
+        id: past,
+        title: 'TEST ONLY delegated batch',
+        startsAt: '2026-01-01T00:00:00Z',
+        closesAt: '2099-01-01T00:00:00Z',
+        resultDueAt: '2099-01-04T00:00:00Z',
+        state: 'OPEN',
+        schools,
+        mandiri: false,
+        attemptId: null,
+        attemptStatus: null,
+      },
+    ],
+  };
+  await page.route('**/api/v1/tryout/batches', (route) => route.fulfill({ json: batches }));
+  let selected: unknown;
+  await page.route(`**/api/v1/tryout/batches/${past}/attempts`, (route) => {
+    selected = route.request().postDataJSON();
+    return route.fulfill({
+      status: 409,
+      json: { detail: 'TEST ONLY batch closed while starting' },
+    });
+  });
+  await page.goto('/student/tryout');
+  await expect(page.getByRole('heading', { name: 'TEST ONLY delegated batch' })).toBeVisible();
+  await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
+  await expect(page.getByRole('button', { name: 'Mulai Tryout', exact: true })).toBeDisabled();
+  await page.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' }).selectOption(sub);
+  for (const width of [320, 390, 768, 1440]) {
+    await page.setViewportSize({ width, height: 900 });
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
+  await page.getByRole('button', { name: 'Mulai Tryout', exact: true }).click();
+  await expect(
+    page.getByRole('alert').filter({ hasText: 'TEST ONLY batch closed while starting' }),
+  ).toContainText('TEST ONLY batch closed while starting');
+  expect(selected).toEqual({ schoolId: sub });
+  await expect(page.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' })).toHaveValue(sub);
+});
 
 test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 850 });

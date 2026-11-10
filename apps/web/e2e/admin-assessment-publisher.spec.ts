@@ -1,3 +1,4 @@
+import { setupAssessments } from './fixtures/admin-assessments';
 import { expect, test, type Page } from '@playwright/test';
 const userId = 'aaaaaaaa-aaaa-4aaa-8aaa-aaaaaaaaaaaa';
 async function fixture(page: Page, role: 'ADMIN' | 'STUDENT' = 'ADMIN') {
@@ -151,30 +152,14 @@ async function fixture(page: Page, role: 'ADMIN' | 'STUDENT' = 'ADMIN') {
   });
   return saves;
 }
-test('Pretest editorial review preserves a concrete production blocker at mobile and desktop', async ({
-  page,
-}) => {
-  await fixture(page);
-  await page.goto('/admin/content/pretest?legacy=1');
-  await expect(page.getByText('TEST Pretest', { exact: true })).toBeVisible();
-  await page.getByRole('button', { name: 'Lihat detail', exact: true }).click();
-  await page.getByRole('button', { name: 'Review paket', exact: true }).click();
-  await page.getByLabel('Alasan review').fill('TEST editorial review');
-  await page.getByRole('button', { name: 'Sahkan review editorial' }).click();
-  await expect(page.getByRole('button', { name: 'Buat versi baru' })).toBeVisible();
-  await expect(page.getByText(/SHARED_PACKAGE_PUBLISHER_REQUIRED/)).toBeVisible();
-  await expect(page.getByRole('button', { name: /Publish|Publikasikan/i })).toHaveCount(0);
-  for (const width of [320, 1440]) {
-    await page.setViewportSize({ width, height: 900 });
-    expect(
-      await page.evaluate(() =>
-        Array.from(document.querySelectorAll('*'))
-          .filter((e) => e.getBoundingClientRect().right > window.innerWidth + 1)
-          .map((e) => [e.tagName, e.className, e.getBoundingClientRect().right]),
-      ),
-    ).toEqual([]);
-  }
+test('Legacy Pretest links open the canonical package workspace', async ({ page }) => {
+  await setupAssessments(page);
+  await page.goto('/admin/content/pretest?packageId=00000000-0000-4000-8000-000000009000');
+  await expect(page.locator('.assessment-page-heading,.admin-breadcrumb')).toHaveCount(0);
+  await expect(page.getByRole('heading', { name: /Pretest TEST 1/ })).toBeVisible();
+  await expect(page.getByText('PRETEST_STUDENT_CONSUMER_REQUIRED')).toHaveCount(0);
 });
+
 test('Student saves MCMA and Category using versioned server acknowledgements', async ({
   page,
 }) => {

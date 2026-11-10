@@ -114,12 +114,8 @@ test('all ten sections remain reachable and preserve deep links and read-only br
   const panels = [
     ['Materi', 'curriculum'],
     ['Video', 'videos'],
-    ['Paket & Pretest', 'directedPackages'],
-    ['Draf Tryout', 'packages'],
-    ['Paket Drill', 'drillPackages'],
     ['Verifikasi & riwayat', 'verification'],
     ['Laporan', 'reports'],
-    ['IRT', 'irt'],
     ['Audit', 'audit'],
     ['Soal', 'questions'],
   ];
@@ -145,6 +141,21 @@ test('all ten sections remain reachable and preserve deep links and read-only br
   await expect(page.getByRole('combobox', { name: 'Bagian konten', exact: true })).toHaveValue(
     'audit',
   );
+  for (const [view, destination] of [
+    ['directedPackages', '/admin/assessments/pretest'],
+    ['packages', '/admin/assessments/tryout'],
+    ['drillPackages', '/admin/assessments/drill'],
+    ['irt', '/admin/irt'],
+  ] as const) {
+    await page.goto(`/admin/content?view=${view}`);
+    await expect(page).toHaveURL(new RegExp(`${destination}$`));
+    if (view === 'irt')
+      await expect(page.getByRole('heading', { name: 'Batch & kesiapan publikasi' })).toBeVisible();
+    else await expect(page.getByRole('table')).toBeVisible();
+    expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(
+      true,
+    );
+  }
   expect(assessment.calls.every((call) => call.method === 'GET')).toBe(true);
   expect(errors).toEqual([]);
 });
@@ -310,9 +321,7 @@ test('question reading and navigation remain usable at short 320px and 125 perce
   await page.setViewportSize({ width: 320, height: 568 });
   await page.emulateMedia({ reducedMotion: 'reduce' });
   await page.goto('/admin/content');
-  await expect(
-    page.getByRole('heading', { name: 'Konten & assessment', exact: true }),
-  ).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Bank konten', exact: true })).toBeVisible();
   const first = page.locator('.assessment-question-reader').first();
   await first.locator('summary').focus();
   await page.keyboard.press('Enter');
