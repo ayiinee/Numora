@@ -372,7 +372,13 @@ integration(
       try {
         const current = new PvpEngineService({ ...fixture.policy, mode: 'demo' });
         current.setSchedulerReady(true);
-        expect((await current.availability()).difficulties.every((d) => !d.available)).toBe(true);
+        const families = vi.spyOn(PvpDrillBank.prototype, 'families');
+        try {
+          expect((await current.availability()).difficulties.every((d) => !d.available)).toBe(true);
+          expect(families).toHaveBeenCalledTimes(1);
+        } finally {
+          families.mockRestore();
+        }
         const before = await counts();
         await expect(current.create(host(), 'easy', randomUUID())).rejects.toMatchObject({
           response: { code: 'PVP_CONTENT_UNAVAILABLE' },
