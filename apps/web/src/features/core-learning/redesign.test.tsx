@@ -418,6 +418,8 @@ describe('assessment history states', () => {
     expect(banner?.querySelector('.materials-header__copy p')?.textContent).toBe(
       'Lihat kemajuanmu, satu latihan pada satu waktu.',
     );
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/student');
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe('Kembali ke Belajar');
     expect(document.querySelector('.student-desktop-heading')).toBeNull();
   });
   it('names the level and offers a way back on the level history deep link', async () => {

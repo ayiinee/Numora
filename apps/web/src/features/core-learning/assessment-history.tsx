@@ -38,6 +38,7 @@ function AssessmentFrame({ token }: { token: string }) {
           <StudentSectionHeader
             title="Progres & riwayat"
             subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
+            back={{ href: '/student', label: 'Kembali ke Belajar' }}
           />
         )
       }
