@@ -562,16 +562,6 @@ export function PvpMatchScreen() {
             reconnectRemaining={reconnectRemaining}
           />
         )}
-        {!closed && (
-          <Button
-            variant="ghost"
-            className="pvp-leave-action"
-            disabled={disabled}
-            onClick={() => setConfirmLeave(true)}
-          >
-            Keluar pertandingan
-          </Button>
-        )}
         {socket.error && (
           <p role="alert" className="pvp-command-error">
             {socket.error}

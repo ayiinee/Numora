@@ -428,6 +428,20 @@ it('replaces failed QR loading with a truthful code/link fallback', async () => 
   );
 });
 
+it.each(['WAITING', 'RUNNING'] as const)(
+  'keeps one exit control in the %s room',
+  async (status) => {
+    serveMatch(matchSnapshot(status));
+    render(
+      <StudentAccess>
+        <PvpMatchScreen />
+      </StudentAccess>,
+    );
+    await screen.findByRole('button', { name: status === 'WAITING' ? 'Keluar' : 'Menyerah' });
+    expect(screen.queryByRole('button', { name: 'Keluar pertandingan' })).toBeNull();
+  },
+);
+
 it('shows a single exit path once the server says the student left the room', async () => {
   serveMatch({ ...matchSnapshot('WAITING'), participantActive: false, players: [] });
   render(
