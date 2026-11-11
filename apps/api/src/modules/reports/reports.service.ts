@@ -271,8 +271,23 @@ export class ReportsService {
               detail: 'Mulai tinjauan sebelum menutup kasus.',
             });
           const revisionId = body.revisionQuestionVersionId;
+          if (closing && body.contentCorrected === undefined)
+            throw new BadRequestException({
+              code: 'REPORT_CORRECTION_DECISION_REQUIRED',
+              detail: 'Pilih apakah soal diperbaiki sebelum menutup kasus.',
+            });
+          if (!closing && (body.contentCorrected !== undefined || revisionId))
+            throw new BadRequestException('Catat perubahan soal saat menutup kasus.');
+          if (body.contentCorrected && !revisionId)
+            throw new BadRequestException({
+              code: 'REPORT_REVISION_REQUIRED',
+              detail: 'Hubungkan versi revisi sebelum menutup kasus soal yang diperbaiki.',
+            });
           if (revisionId) {
-            if (!closing) throw new BadRequestException('Hubungkan revisi saat menutup kasus.');
+            if (!body.contentCorrected)
+              throw new BadRequestException(
+                'Pilih Soal sudah diperbaiki untuk menghubungkan revisi.',
+              );
             const lineage = await tx.execute<{ linked: boolean }>(sql`
             with recursive lineage as (
               select id, revised_from_question_version_id, array[id] path from question_versions where id = ${revisionId}::uuid
@@ -303,13 +318,16 @@ export class ReportsService {
         {
           status: body.status,
           reason: followUp,
+          ...(body.contentCorrected !== undefined
+            ? { contentCorrected: body.contentCorrected }
+            : {}),
           ...(body.revisionQuestionVersionId
             ? { revisionQuestionVersionId: body.revisionQuestionVersionId }
             : {}),
         },
       );
     }
-    if (body.revisionQuestionVersionId)
+    if (body.revisionQuestionVersionId || body.contentCorrected !== undefined)
       throw new BadRequestException('Revisi soal hanya dapat dihubungkan ke laporan soal.');
     if (!followUp) throw new BadRequestException('Isi catatan tindak lanjut laporan.');
     return adminMutation(

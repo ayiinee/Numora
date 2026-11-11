@@ -182,12 +182,16 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                       if (busy) return;
                       const f = new FormData(e.currentTarget);
                       const revisionId = String(f.get('revisionId') ?? '').trim();
+                      const contentCorrected = f.get('contentCorrected');
                       const followUp = String(f.get('followUp') ?? '').trim();
                       const body: ResolveReportDto = {
                         status: String(f.get('status')) as ResolveReportDto['status'],
                         ...(followUp ? { followUp } : {}),
                         ...(data.caseRevision !== null
                           ? { expectedRevision: data.caseRevision }
+                          : {}),
+                        ...(contentCorrected !== null
+                          ? { contentCorrected: contentCorrected === 'true' }
                           : {}),
                         ...(revisionId ? { revisionQuestionVersionId: revisionId } : {}),
                       };
@@ -239,14 +243,7 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                       />
                     </label>
                     {kind === 'QUESTION' && data.status === 'IN_REVIEW' && (
-                      <label>
-                        ID versi revisi jika soal diperbaiki
-                        <input
-                          name="revisionId"
-                          defaultValue={data.revisionQuestionVersionId ?? ''}
-                          disabled={busy}
-                        />
-                      </label>
+                      <QuestionClosureFields busy={busy} />
                     )}
                     <Button disabled={busy}>
                       {kind === 'QUESTION' && data.status === 'OPEN'
@@ -261,5 +258,35 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
         </>
       )}
     </AdminFrame>
+  );
+}
+
+function QuestionClosureFields({ busy }: { busy: boolean }) {
+  const [corrected, setCorrected] = useState('');
+  return (
+    <>
+      <label>
+        Perubahan soal
+        <select
+          name="contentCorrected"
+          value={corrected}
+          onChange={(event) => setCorrected(event.target.value)}
+          required
+          disabled={busy}
+        >
+          <option value="" disabled>
+            Pilih hasil penanganan
+          </option>
+          <option value="true">Soal sudah diperbaiki</option>
+          <option value="false">Tanpa perubahan soal</option>
+        </select>
+      </label>
+      {corrected === 'true' && (
+        <label>
+          ID versi revisi
+          <input name="revisionId" required disabled={busy} />
+        </label>
+      )}
+    </>
   );
 }

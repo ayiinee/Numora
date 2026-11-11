@@ -263,7 +263,7 @@ export type AdminReportDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "refe
 
 export type AdminReportsDto = { "total": number; "items": (AdminReportDto)[]; "nextOffset": number | null; };
 
-export type ResolveReportDto = { "expectedRevision"?: number; "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp"?: string; };
+export type ResolveReportDto = { "expectedRevision"?: number; "contentCorrected"?: boolean; "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp"?: string; };
 
 export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "STUDENTS" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
 

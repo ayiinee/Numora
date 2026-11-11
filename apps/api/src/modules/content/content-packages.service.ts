@@ -13,7 +13,7 @@ import {
   Injectable,
   NotFoundException,
 } from '@nestjs/common';
-import { and, asc, count, desc, eq, inArray, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNotNull, isNull, sql } from 'drizzle-orm';
 import {
   allowSyntheticContent,
   assessmentPackages,
@@ -33,12 +33,15 @@ import {
   questionVariants,
   questionVersions,
   subchapters,
+  tryoutBatches,
+  tryoutBatchPackages,
   tryoutBatchCloseAt,
   type ImportQuestion,
 } from '@tka/database';
 import { adminMutation, type AdminTransaction } from '../audit/admin-mutation';
 import { decodeAssessmentContent, databaseTime } from '@tka/assessment-engine';
 import { decodeSingleChoiceVersion } from '../learning/drill.policy';
+import { lockTryoutBatchSchedule } from '../learning/tryout-batches.service';
 import { ContentImportService } from './content-import.service';
 import {
   assertDraftRevision,
@@ -1063,6 +1066,8 @@ export class ContentPackagesService {
   archive(actor: string, id: string, revision: number) {
     this.importer.enabled();
     return adminMutation(actor, 'content_package_archived', 'assessment_package', async (tx) => {
+      // Batch publication takes the schedule lock before locking packages.
+      await lockTryoutBatchSchedule(tx);
       const p = await packageContext(tx, id, true);
       if (p.status === 'ARCHIVED') return { id };
       if (p.contentRevision !== revision || !['PUBLISHED', 'CLOSED'].includes(p.status))
@@ -1070,6 +1075,28 @@ export class ContentPackagesService {
           code: 'PACKAGE_ARCHIVE_CONFLICT',
           detail: 'Muat ulang paket terbit sebelum mengarsipkannya.',
         });
+      if (p.assessmentType === 'TRYOUT') {
+        const [batch] = await tx
+          .select({ title: tryoutBatches.adminTitle })
+          .from(tryoutBatchPackages)
+          .innerJoin(tryoutBatches, eq(tryoutBatches.id, tryoutBatchPackages.batchId))
+          .where(
+            and(
+              eq(tryoutBatchPackages.packageId, id),
+              isNotNull(tryoutBatches.adminTitle),
+              isNotNull(tryoutBatches.adminPublishedAt),
+              isNull(tryoutBatches.cancelledAt),
+              sql`${tryoutBatches.closesAt} > clock_timestamp()`,
+            ),
+          )
+          .orderBy(asc(tryoutBatches.startsAt))
+          .limit(1);
+        if (batch)
+          throw new ConflictException({
+            code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH',
+            detail: `Paket masih dipakai batch Tryout “${batch.title}”. Arsipkan paket setelah batch berakhir atau dibatalkan.`,
+          });
+      }
       await tx
         .update(assessmentPackages)
         .set({ status: 'ARCHIVED' })

@@ -100,17 +100,35 @@ databaseSuite('Admin historical moderation through HTTP/PostgreSQL', () => {
         })
       ).status,
     ).toBe(200);
+    const missingRevision = await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
+      ...closeBody,
+      contentCorrected: true,
+      expectedRevision: 1,
+    });
+    expect(missingRevision.status).toBe(400);
+    expect(await missingRevision.json()).toMatchObject({ code: 'REPORT_REVISION_REQUIRED' });
+    const missingDecision = await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
+      ...closeBody,
+      expectedRevision: 1,
+    });
+    expect(missingDecision.status).toBe(400);
+    expect(await missingDecision.json()).toMatchObject({
+      code: 'REPORT_CORRECTION_DECISION_REQUIRED',
+    });
     const mismatch = await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
       status: 'RESOLVED',
+      contentCorrected: true,
       expectedRevision: 1,
       followUp: 'TEST wrong lineage',
       revisionQuestionVersionId: fixture.versionIds[1],
     });
     expect(mismatch.status).toBe(400);
+    expect(await mismatch.json()).toMatchObject({ code: 'REPORT_REVISION_LINEAGE_MISMATCH' });
     expect(
       (
         await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
           ...closeBody,
+          contentCorrected: true,
           expectedRevision: 1,
           revisionQuestionVersionId: next.id,
         })
@@ -124,7 +142,11 @@ databaseSuite('Admin historical moderation through HTTP/PostgreSQL', () => {
     expect(
       (await db.select().from(auditLogs).where(eq(auditLogs.entityId, id))).map((r) => r.metadata),
     ).toContainEqual(
-      expect.objectContaining({ status: 'RESOLVED', reason: 'TEST fixed in revision' }),
+      expect.objectContaining({
+        status: 'RESOLVED',
+        reason: 'TEST fixed in revision',
+        contentCorrected: true,
+      }),
     );
     expect(
       (
@@ -208,13 +230,43 @@ databaseSuite('Admin historical moderation through HTTP/PostgreSQL', () => {
         },
         'student',
       ),
-      request(`admin/reports/QUESTION/${id}`, 'PATCH', { ...closeBody, expectedRevision: 5 }),
+      request(`admin/reports/QUESTION/${id}`, 'PATCH', {
+        status: 'REJECTED',
+        followUp: 'TEST no change needed',
+        contentCorrected: false,
+        expectedRevision: 5,
+      }),
     ]);
     expect(newReport.status).toBe(201);
     expect([200, 409]).toContain(close.status);
-    expect(await (await request(`admin/reports/QUESTION/${id}`)).json()).toMatchObject({
+    const afterRace = await (await request(`admin/reports/QUESTION/${id}`)).json();
+    expect(afterRace).toMatchObject({
       status: close.status === 200 ? 'OPEN' : 'IN_REVIEW',
       reportCount: 4,
+    });
+    if (afterRace.status === 'OPEN')
+      expect(
+        (
+          await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
+            status: 'IN_REVIEW',
+            expectedRevision: afterRace.caseRevision,
+          })
+        ).status,
+      ).toBe(200);
+    const beforeClose = await (await request(`admin/reports/QUESTION/${id}`)).json();
+    expect(
+      (
+        await request(`admin/reports/QUESTION/${id}`, 'PATCH', {
+          status: 'REJECTED',
+          followUp: 'TEST no correction',
+          contentCorrected: false,
+          expectedRevision: beforeClose.caseRevision,
+        })
+      ).status,
+    ).toBe(200);
+    expect(await (await request(`admin/reports/QUESTION/${id}`)).json()).toMatchObject({
+      status: 'REJECTED',
+      revisionQuestionVersionId: null,
     });
   });
   it('opens snapshot video targets outside the current metadata page and preserves report context', async () => {

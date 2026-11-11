@@ -10,6 +10,8 @@ import {
   IsISO8601,
   IsInt,
   Min,
+  IsBoolean,
+  ValidateIf,
 } from 'class-validator';
 import { ContentPageDto } from '../content/content.dto';
 import { ContentVersionDetailDto } from '../content/content-lifecycle.dto';
@@ -35,6 +37,10 @@ export class ResolveReportDto {
   @IsInt()
   @Min(0)
   expectedRevision?: number;
+  @ApiPropertyOptional({ description: 'Required when closing a question report case.' })
+  @ValidateIf((_body, value) => value !== undefined)
+  @IsBoolean()
+  contentCorrected?: boolean;
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
   @IsUUID()

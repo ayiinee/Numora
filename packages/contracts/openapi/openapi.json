@@ -18972,6 +18972,10 @@
             "minimum": 0,
             "description": "Required when updating a question report case."
           },
+          "contentCorrected": {
+            "type": "boolean",
+            "description": "Required when closing a question report case."
+          },
           "revisionQuestionVersionId": {
             "type": "string",
             "format": "uuid"
