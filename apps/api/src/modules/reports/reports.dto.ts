@@ -8,6 +8,8 @@ import {
   IsOptional,
   IsUUID,
   IsISO8601,
+  IsInt,
+  Min,
 } from 'class-validator';
 import { ContentPageDto } from '../content/content.dto';
 import { ContentVersionDetailDto } from '../content/content-lifecycle.dto';
@@ -25,6 +27,14 @@ export class AdminReportQueryDto extends ContentPageDto {
   @ApiPropertyOptional({ format: 'date-time' }) @IsOptional() @IsISO8601() to?: string;
 }
 export class ResolveReportDto {
+  @ApiPropertyOptional({
+    minimum: 0,
+    description: 'Required when updating a question report case.',
+  })
+  @IsOptional()
+  @IsInt()
+  @Min(0)
+  expectedRevision?: number;
   @ApiPropertyOptional({ format: 'uuid' })
   @IsOptional()
   @IsUUID()
@@ -32,7 +42,13 @@ export class ResolveReportDto {
   @ApiProperty({ enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] })
   @IsIn(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'])
   status!: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED';
-  @ApiProperty() @IsString() @MinLength(1) @MaxLength(2000) @Matches(/\S/) followUp!: string;
+  @ApiPropertyOptional()
+  @IsOptional()
+  @IsString()
+  @MinLength(1)
+  @MaxLength(2000)
+  @Matches(/\S/)
+  followUp?: string;
 }
 export class AdminReportDto {
   @ApiProperty() id!: string;
@@ -43,6 +59,7 @@ export class AdminReportDto {
   @ApiProperty({ enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] }) status!: string;
   @ApiProperty({ type: String, nullable: true }) followUp!: string | null;
   @ApiProperty() reportedAt!: string;
+  @ApiProperty() reportCount!: number;
 }
 export class AdminReportsDto {
   @ApiProperty() total!: number;
@@ -59,10 +76,28 @@ export class AdminVideoReportTargetDto {
   @ApiProperty({ enum: ['REPORT_SNAPSHOT', 'CURRENT_METADATA'] }) evidence!:
     'REPORT_SNAPSHOT' | 'CURRENT_METADATA';
 }
+export class AdminQuestionReportSourceDto {
+  @ApiProperty() id!: string;
+  @ApiProperty() category!: string;
+  @ApiProperty({ type: String, nullable: true }) details!: string | null;
+  @ApiProperty() reportedAt!: string;
+  @ApiProperty({ type: String, nullable: true }) legacyFollowUp!: string | null;
+}
+export class AdminQuestionReportHistoryDto {
+  @ApiProperty() id!: string;
+  @ApiProperty({ enum: ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] }) status!: string;
+  @ApiProperty({ type: String, nullable: true }) reason!: string | null;
+  @ApiProperty({ type: String, nullable: true }) revisionQuestionVersionId!: string | null;
+  @ApiProperty() recordedAt!: string;
+}
 export class AdminReportDetailDto extends AdminReportDto {
   @ApiProperty({ type: ContentVersionDetailDto, nullable: true })
   question!: ContentVersionDetailDto | null;
   @ApiProperty({ type: AdminVideoReportTargetDto, nullable: true })
   video!: AdminVideoReportTargetDto | null;
   @ApiProperty({ type: String, nullable: true }) revisionQuestionVersionId!: string | null;
+  @ApiProperty({ type: Number, nullable: true }) caseRevision!: number | null;
+  @ApiProperty({ type: [AdminQuestionReportSourceDto] })
+  sourceReports!: AdminQuestionReportSourceDto[];
+  @ApiProperty({ type: [AdminQuestionReportHistoryDto] }) history!: AdminQuestionReportHistoryDto[];
 }

@@ -129,7 +129,11 @@ export type PublishTryoutPackageDto = { "curriculumApprovalReference"?: string; 
 
 export type ReviewContentDto = { "status": "READY" | "REVISION" | "ARCHIVED"; "expectedStatus": "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; "reason": string; };
 
-export type AdminReportDetailDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; "question": ContentVersionDetailDto | null; "video": AdminVideoReportTargetDto | null; "revisionQuestionVersionId": string | null; };
+export type AdminReportDetailDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; "reportCount": number; "question": ContentVersionDetailDto | null; "video": AdminVideoReportTargetDto | null; "revisionQuestionVersionId": string | null; "caseRevision": number | null; "sourceReports": (AdminQuestionReportSourceDto)[]; "history": (AdminQuestionReportHistoryDto)[]; };
+
+export type AdminQuestionReportSourceDto = { "id": string; "category": string; "details": string | null; "reportedAt": string; "legacyFollowUp": string | null; };
+
+export type AdminQuestionReportHistoryDto = { "id": string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "reason": string | null; "revisionQuestionVersionId": string | null; "recordedAt": string; };
 
 export type AdminVideoReportTargetDto = { "title": string; "url": string; "source": string; "videoId": string; "subchapterId": string; "recommendationOrder": number; "evidence": "REPORT_SNAPSHOT" | "CURRENT_METADATA"; };
 
@@ -255,11 +259,11 @@ export type CreateVideoDto = { "title": string; "url": string; "source": string;
 
 export type UpdateVideoDto = { "title"?: string; "url"?: string; "source"?: string; "subchapterId"?: string; "recommendationOrder"?: number; "status"?: "DRAFT" | "READY" | "ARCHIVED" | "REVISION"; };
 
-export type AdminReportDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; };
+export type AdminReportDto = { "id": string; "kind": "QUESTION" | "VIDEO"; "referenceId": string; "category": string; "details": string | null; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string | null; "reportedAt": string; "reportCount": number; };
 
 export type AdminReportsDto = { "total": number; "items": (AdminReportDto)[]; "nextOffset": number | null; };
 
-export type ResolveReportDto = { "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp": string; };
+export type ResolveReportDto = { "expectedRevision"?: number; "revisionQuestionVersionId"?: string; "status": "OPEN" | "IN_REVIEW" | "RESOLVED" | "REJECTED"; "followUp"?: string; };
 
 export type AdminAnalyticsMetricDto = { "key": string; "label": string; "domain": "STRUCTURE" | "STUDENTS" | "OPERATIONS" | "CONTENT" | "RELEASE"; "value": number | null; "unavailableReason": string | null; };
 

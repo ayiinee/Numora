@@ -156,13 +156,14 @@ function workbench(): Awaited<ReturnType<typeof loadAdminWorkbench>> {
       items: [
         {
           id: id(15),
-          kind: 'QUESTION',
+          kind: 'VIDEO',
           referenceId: id(10),
           category: 'EXPLANATION',
           details: 'DEMO: Mohon periksa urutan langkah pada pembahasan.',
           status: 'OPEN',
           followUp: null,
           reportedAt: '2026-10-04T02:30:00Z',
+          reportCount: 1,
         },
       ],
     },

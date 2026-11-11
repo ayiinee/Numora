@@ -10,6 +10,14 @@ import { resolveReport } from './content-api';
 import { reportStatusLabel } from './content-report-panels';
 import { ContentPayload } from './content-payload';
 import type { AdminReportDetailDto, ResolveReportDto } from './generated-types';
+
+const videoStatuses = ['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const;
+const reviewStatus = ['IN_REVIEW'] as const;
+const closingStatuses = ['RESOLVED', 'REJECTED'] as const;
+
+function formatDate(value: string) {
+  return `${new Date(value).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })} WIB`;
+}
 export function ReportDetailScreen({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
   const { state } = useAuth();
   return (
@@ -86,12 +94,13 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
           ) : (
             data && (
               <Card className="content-import-card">
-                <h2>{data.category}</h2>
-                <p>{data.details || 'Tanpa rincian tambahan.'}</p>
+                <h2>{kind === 'QUESTION' ? 'Kasus laporan soal' : data.category}</h2>
+                {kind === 'VIDEO' && <p>{data.details || 'Tanpa rincian tambahan.'}</p>}
                 <p>
-                  {reportStatusLabel(data.status)} ·{' '}
-                  {new Date(data.reportedAt).toLocaleString('id-ID', { timeZone: 'Asia/Jakarta' })}{' '}
-                  WIB
+                  {reportStatusLabel(data.status, kind)} ·{' '}
+                  {kind === 'QUESTION'
+                    ? `${data.reportCount} laporan`
+                    : formatDate(data.reportedAt)}
                 </p>
                 {data.question && (
                   <>
@@ -126,67 +135,126 @@ function Detail({ kind, id }: { kind: 'QUESTION' | 'VIDEO'; id: string }) {
                     Revisi penyelesaian
                   </Link>
                 )}
-                <form
-                  onSubmit={(e) => {
-                    e.preventDefault();
-                    if (busy) return;
-                    const f = new FormData(e.currentTarget);
-                    const revisionId = String(f.get('revisionId') ?? '').trim();
-                    const body: ResolveReportDto = {
-                      status: String(f.get('status')) as ResolveReportDto['status'],
-                      followUp: String(f.get('followUp')).trim(),
-                      ...(revisionId ? { revisionQuestionVersionId: revisionId } : {}),
-                    };
-                    setBusy(true);
-                    setError('');
-                    resolveReport(token, kind, id, body)
-                      .then(
-                        () => setRevision((r) => r + 1),
-                        (e: unknown) => {
-                          if (adminAccessDenied(e)) setData(null);
-                          setError(e instanceof Error ? e.message : 'Permintaan gagal.');
-                        },
-                      )
-                      .finally(() => setBusy(false));
-                  }}
-                >
-                  <h3>Tindak lanjut laporan</h3>
-                  <p>
-                    Catat pemeriksaan dan keputusan. Jika soal diperbaiki, hubungkan versi revisinya
-                    agar penyelesaian dapat ditelusuri.
-                  </p>
-                  <label>
-                    Status tindak lanjut
-                    <select name="status" defaultValue={data.status}>
-                      {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((s) => (
-                        <option key={s} value={s}>
-                          {reportStatusLabel(s)}
-                        </option>
-                      ))}
-                    </select>
-                  </label>
-                  <label>
-                    Catatan tindak lanjut
-                    <textarea
-                      name="followUp"
-                      required
-                      maxLength={2000}
-                      defaultValue={data.followUp ?? ''}
-                      disabled={busy}
-                    />
-                  </label>
-                  {data.question && (
+                {kind === 'QUESTION' && (
+                  <>
+                    <section aria-label="Laporan yang masuk">
+                      <h3>Laporan yang masuk</h3>
+                      <ul className="monitoring-list">
+                        {data.sourceReports.map((report) => (
+                          <li className="monitoring-notice admin-content-row" key={report.id}>
+                            <strong>{report.category}</strong>
+                            <p>{report.details || 'Tanpa rincian tambahan.'}</p>
+                            <small>{formatDate(report.reportedAt)}</small>
+                            {report.legacyFollowUp && (
+                              <p>Catatan sebelumnya · {report.legacyFollowUp}</p>
+                            )}
+                          </li>
+                        ))}
+                      </ul>
+                    </section>
+                    {data.history.length > 0 && (
+                      <section aria-label="Riwayat penanganan">
+                        <h3>Riwayat penanganan</h3>
+                        <ul className="monitoring-list">
+                          {data.history.map((entry) => (
+                            <li className="monitoring-notice admin-content-row" key={entry.id}>
+                              <strong>{reportStatusLabel(entry.status, kind)}</strong>
+                              {entry.reason && <p>{entry.reason}</p>}
+                              {entry.revisionQuestionVersionId && (
+                                <Link
+                                  href={`/admin/content/versions/${entry.revisionQuestionVersionId}`}
+                                >
+                                  Lihat versi revisi
+                                </Link>
+                              )}
+                              <small>{formatDate(entry.recordedAt)}</small>
+                            </li>
+                          ))}
+                        </ul>
+                      </section>
+                    )}
+                  </>
+                )}
+                {(kind === 'VIDEO' || data.status === 'OPEN' || data.status === 'IN_REVIEW') && (
+                  <form
+                    onSubmit={(e) => {
+                      e.preventDefault();
+                      if (busy) return;
+                      const f = new FormData(e.currentTarget);
+                      const revisionId = String(f.get('revisionId') ?? '').trim();
+                      const followUp = String(f.get('followUp') ?? '').trim();
+                      const body: ResolveReportDto = {
+                        status: String(f.get('status')) as ResolveReportDto['status'],
+                        ...(followUp ? { followUp } : {}),
+                        ...(data.caseRevision !== null
+                          ? { expectedRevision: data.caseRevision }
+                          : {}),
+                        ...(revisionId ? { revisionQuestionVersionId: revisionId } : {}),
+                      };
+                      setBusy(true);
+                      setError('');
+                      resolveReport(token, kind, id, body)
+                        .then(
+                          () => setRevision((r) => r + 1),
+                          (e: unknown) => {
+                            if (adminAccessDenied(e)) setData(null);
+                            setError(e instanceof Error ? e.message : 'Permintaan gagal.');
+                          },
+                        )
+                        .finally(() => setBusy(false));
+                    }}
+                  >
+                    <h3>Tindak lanjut laporan</h3>
+                    <p>
+                      Catat pemeriksaan dan keputusan. Jika soal diperbaiki, hubungkan versi
+                      revisinya agar penyelesaian dapat ditelusuri.
+                    </p>
                     <label>
-                      ID versi revisi terkait
-                      <input
-                        name="revisionId"
-                        defaultValue={data.revisionQuestionVersionId ?? ''}
+                      Status tindak lanjut
+                      <select
+                        name="status"
+                        disabled={busy}
+                        defaultValue={kind === 'VIDEO' ? data.status : undefined}
+                      >
+                        {(kind === 'VIDEO'
+                          ? videoStatuses
+                          : data.status === 'OPEN'
+                            ? reviewStatus
+                            : closingStatuses
+                        ).map((s) => (
+                          <option key={s} value={s}>
+                            {reportStatusLabel(s, kind)}
+                          </option>
+                        ))}
+                      </select>
+                    </label>
+                    <label>
+                      Catatan tindak lanjut
+                      <textarea
+                        name="followUp"
+                        required={kind === 'VIDEO' || data.status === 'IN_REVIEW'}
+                        maxLength={2000}
+                        defaultValue={kind === 'VIDEO' ? (data.followUp ?? '') : ''}
                         disabled={busy}
                       />
                     </label>
-                  )}
-                  <Button disabled={busy}>Simpan tindak lanjut</Button>
-                </form>
+                    {kind === 'QUESTION' && data.status === 'IN_REVIEW' && (
+                      <label>
+                        ID versi revisi jika soal diperbaiki
+                        <input
+                          name="revisionId"
+                          defaultValue={data.revisionQuestionVersionId ?? ''}
+                          disabled={busy}
+                        />
+                      </label>
+                    )}
+                    <Button disabled={busy}>
+                      {kind === 'QUESTION' && data.status === 'OPEN'
+                        ? 'Mulai tinjauan'
+                        : 'Simpan tindak lanjut'}
+                    </Button>
+                  </form>
+                )}
               </Card>
             )
           )}
