@@ -72,29 +72,39 @@ export class PvpEngineService {
     return process.env.PVP_NEW_MATCHES_ENABLED !== 'false';
   }
   async availability(studentId?: string) {
+    const checkReason = async (check: () => Promise<void>) => {
+      try {
+        await check();
+        return null;
+      } catch (error) {
+        if (!(error instanceof ConflictException || error instanceof ServiceUnavailableException))
+          throw error;
+        return (error.getResponse() as { code?: string }).code ?? 'PVP_CONTENT_UNAVAILABLE';
+      }
+    };
+    const checkBank = async (difficulty: Difficulty) => {
+      if ((await this.drillBank.families(getDatabase().db, difficulty)).length < 10)
+        throw unavailableDrillBank();
+    };
+    const temporary = this.drillBank.contentMode === 'temporary-owner-accepted';
+    const guardReason = !this.policy
+      ? 'PVP_POLICY_OPEN'
+      : !this.newRoomsEnabled
+        ? 'PVP_NEW_MATCHES_DISABLED'
+        : !this.transportReady
+          ? 'PVP_SCHEDULER_UNAVAILABLE'
+          : null;
+    const sharedReason =
+      guardReason ??
+      (await checkReason(async () => {
+        await this.scoringVersion(getDatabase().db);
+        // All three timer choices use the same bank in temporary mode.
+        if (temporary) await checkBank('easy');
+      }));
     const difficulties = await Promise.all(
       (['easy', 'medium', 'hard'] as const).map(async (difficulty) => {
-        let reasonCode: string | null = !this.policy
-          ? 'PVP_POLICY_OPEN'
-          : !this.newRoomsEnabled
-            ? 'PVP_NEW_MATCHES_DISABLED'
-            : !this.transportReady
-              ? 'PVP_SCHEDULER_UNAVAILABLE'
-              : null;
-        if (!reasonCode) {
-          try {
-            await this.scoringVersion(getDatabase().db);
-            if ((await this.drillBank.families(getDatabase().db, difficulty)).length < 10)
-              throw unavailableDrillBank();
-          } catch (error) {
-            if (!(
-              error instanceof ConflictException || error instanceof ServiceUnavailableException
-            ))
-              throw error;
-            reasonCode =
-              (error.getResponse() as { code?: string }).code ?? 'PVP_CONTENT_UNAVAILABLE';
-          }
-        }
+        const reasonCode =
+          sharedReason ?? (temporary ? null : await checkReason(() => checkBank(difficulty)));
         return { difficulty, available: reasonCode === null, reasonCode };
       }),
     );
@@ -108,9 +118,7 @@ export class PvpEngineService {
           : 'PvP tersedia.'
         : 'PvP belum tersedia.',
       dataMode: this.dataMode,
-      ...(this.drillBank.contentMode === 'temporary-owner-accepted'
-        ? { contentNotice: TEMPORARY_PVP_CONTENT_NOTICE }
-        : {}),
+      ...(temporary ? { contentNotice: TEMPORARY_PVP_CONTENT_NOTICE } : {}),
       difficulties,
       activeMatchId: studentId ? await this.activeRoom(studentId) : null,
     };

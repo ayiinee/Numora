@@ -15,6 +15,8 @@
 
 Availability uses the same eligibility checks, counts families and writes nothing. Fewer than ten valid families returns `PVP_CONTENT_UNAVAILABLE`. Create checks idempotency first, selects/locks/revalidates candidates, then inserts a DRAFT internal PvP package, its items, the frozen manifest, room, players and question references in one transaction. The database's existing freeze trigger generates the canonical digest. One internal package belongs to one room; no Admin publication step is needed.
 
+**ENGINEERING IMPLEMENTATION — availability reads.** An availability request checks the published scoring policy once. Temporary mode reads the shared bank once for all three timer choices. Strict mode checks each difficulty's bank. The browser refreshes availability after room entry, exit, or completion, including a terminal server snapshot. An ordinary answer acknowledgement leaves the availability query alone.
+
 Both players and reconnects use saved version IDs/order. Retry returns the existing room without sampling again. Published scoring-policy validation, timing, answers, reconnects, XP separation and outbox remain server-authoritative. Existing packages/rooms continue to be read by their original references. No schema migration, automatic seed, READY promotion or history rewrite is required.
 
 ## QA and rollout
