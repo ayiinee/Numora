@@ -427,3 +427,22 @@ it('replaces failed QR loading with a truthful code/link fallback', async () => 
     'NMR842ABC123',
   );
 });
+
+it('shows a single exit path once the server says the student left the room', async () => {
+  serveMatch({ ...matchSnapshot('WAITING'), participantActive: false, players: [] });
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  await screen.findByText('Kamu sudah keluar dari room');
+  expect(document.querySelector('.pvp-header h1')?.textContent).toBe('Duel PvP');
+  expect(screen.queryByText('Terhubung')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Keluar' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Saya siap' })).toBeNull();
+  expect(
+    screen
+      .getAllByRole('link', { name: 'Kembali ke PvP' })
+      .every((link) => link.getAttribute('href') === '/student/pvp'),
+  ).toBe(true);
+});
