@@ -1,5 +1,5 @@
 'use client';
-import { ManagedTryouts } from './tryout-batches';
+import { TryoutBatchList } from './tryout-batches';
 import { request } from './api';
 import type { StudentTryoutBatchesDto } from './generated-types';
 
@@ -46,7 +46,10 @@ function TryoutEntry({ token }: { token: string }) {
       </LearningFrame>
     );
   return query.data.routingActive ? (
-    <ManagedTryouts token={token} data={query.data} refresh={() => void query.refetch()} />
+    <CurrentTryout
+      token={token}
+      batches={query.data.items}
+    />
   ) : (
     <CurrentTryout token={token} />
   );
@@ -57,7 +60,15 @@ export function LegacyTryoutHistoryScreen() {
   );
 }
 
-function CurrentTryout({ token, initialTab = 'current' }: { token: string; initialTab?: string }) {
+function CurrentTryout({
+  token,
+  initialTab = 'current',
+  batches,
+}: {
+  token: string;
+  initialTab?: string;
+  batches?: StudentTryoutBatchesDto['items'];
+}) {
   const router = useRouter();
   const [details, setDetails] = useState(false);
   const [rulesAccepted, setRulesAccepted] = useState<string | null>(null);
@@ -69,6 +80,7 @@ function CurrentTryout({ token, initialTab = 'current' }: { token: string; initi
   const query = useQuery({
     queryKey: ['current-tryout'],
     queryFn: () => learningApi.currentTryout(token),
+    enabled: !batches,
   });
   const history = useAssessmentHistory(token, tab === 'history');
   const start = useMutation({
@@ -135,43 +147,55 @@ function CurrentTryout({ token, initialTab = 'current' }: { token: string; initi
                   {
                     value: 'current',
                     label: 'Berlangsung',
-                    content:
-                      query.isPending || query.isError ? (
-                        <DataState
-                          pending={query.isPending}
-                          error={query.error}
-                          retry={() => void query.refetch()}
-                        />
-                      ) : available ? (
-                        <TryoutPackageCard
-                          detailsButtonRef={detailsButton}
-                          current={current}
-                          onDetails={() => {
-                            setDetails(true);
-                            requestAnimationFrame(() => detailTitle.current?.focus());
-                            window.scrollTo(0, 0);
-                          }}
-                        />
-                      ) : (
-                        <Status
-                          title="Paket belum tersedia"
-                          illustration={<StudentMascot pose="calendar" />}
-                        >
-                          <p>
-                            Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia
-                            akan muncul di sini.
-                          </p>
-                          <a className="button-link" href="/student/learn">
-                            Latihan dulu
-                            <Icon name="arrow" width={18} height={18} />
-                          </a>
-                        </Status>
-                      ),
+                    content: batches ? (
+                      <TryoutBatchList
+                        token={token}
+                        batches={batches}
+                      />
+                    ) : query.isPending || query.isError ? (
+                      <DataState
+                        pending={query.isPending}
+                        error={query.error}
+                        retry={() => void query.refetch()}
+                      />
+                    ) : available ? (
+                      <TryoutPackageCard
+                        detailsButtonRef={detailsButton}
+                        current={current}
+                        onDetails={() => {
+                          setDetails(true);
+                          requestAnimationFrame(() => detailTitle.current?.focus());
+                          window.scrollTo(0, 0);
+                        }}
+                      />
+                    ) : (
+                      <Status
+                        title="Paket belum tersedia"
+                        illustration={<StudentMascot pose="calendar" />}
+                      >
+                        <p>
+                          Paket Tryout yang dapat dikerjakan belum diterbitkan. Paket tersedia akan
+                          muncul di sini.
+                        </p>
+                        <a className="button-link" href="/student/learn">
+                          Latihan dulu
+                          <Icon name="arrow" width={18} height={18} />
+                        </a>
+                      </Status>
+                    ),
                   },
                   {
                     value: 'past',
                     label: 'Terlewat',
-                    content: <PastTryoutPackages enabled={tab === 'past'} />,
+                    content: batches ? (
+                      <TryoutBatchList
+                        token={token}
+                        batches={batches}
+                        history
+                      />
+                    ) : (
+                      <PastTryoutPackages enabled={tab === 'past'} />
+                    ),
                   },
                   {
                     value: 'history',
@@ -227,16 +251,6 @@ function CurrentTryout({ token, initialTab = 'current' }: { token: string; initi
                   },
                 ]}
               />
-              <Card fullWidth className="tryout-catalog-info">
-                <Icon name="info" />
-                <div>
-                  <h2>Satu kesempatan, hasil setelah rilis</h2>
-                  <p>
-                    Paket dan waktu pengerjaan mengikuti server. Nilai serta pembahasan menunggu
-                    rilis IRT.
-                  </p>
-                </div>
-              </Card>
             </div>
           </>
         )}
