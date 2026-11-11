@@ -425,13 +425,29 @@ describe('assessment history states', () => {
   it('names the level and offers a way back on the level history deep link', async () => {
     context.levelFilter = 'level-test';
     vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
-      records: [{ ...record, levelId: 'level-test' }],
+      records: [
+        { ...record, levelId: 'level-test', chapterId: 'chapter-test', subchapterId: 'sub-test' },
+      ],
       nextCursor: null,
     });
     renderStudent(<AssessmentScreen />);
     await screen.findByText('Riwayat level');
     const banner = document.querySelector('.app-mobile-header .materials-header');
     expect(banner?.querySelector('h1')?.textContent).toBe('Riwayat Level 1');
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe(
+      '/student/learn/chapter-test/sub-test',
+    );
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe('Kembali ke level');
+  });
+  it('falls back to the activity history while a level page is unknown', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [{ ...record, levelId: 'level-test' }],
+      nextCursor: null,
+    });
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Riwayat level');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
     expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/student/assessment');
     expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe(
       'Kembali ke riwayat aktivitas',

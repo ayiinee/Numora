@@ -21,9 +21,17 @@ export function AssessmentScreen() {
 function AssessmentFrame({ token }: { token: string }) {
   const levelId = useSearchParams().get('levelId') ?? undefined;
   const history = useAssessmentHistory(token, true, levelId);
-  const levelTitle = history.data?.pages
+  const record = history.data?.pages
     .flatMap((page) => page.records)
-    .find((item) => item.levelId === levelId)?.levelTitle;
+    .find((item) => item.levelId === levelId);
+  // The level history deep link is opened from a level page, so its way back is that page.
+  const levelBack =
+    record?.chapterId && record.subchapterId
+      ? {
+          href: `/student/learn/${record.chapterId}/${record.subchapterId}`,
+          label: 'Kembali ke level',
+        }
+      : { href: '/student/assessment', label: 'Kembali ke riwayat aktivitas' };
   return (
     <StudentLayout
       title="Progres & riwayat"
@@ -31,8 +39,8 @@ function AssessmentFrame({ token }: { token: string }) {
       mobileHeader={
         levelId ? (
           <StudentSectionHeader
-            title={levelTitle ? `Riwayat ${levelTitle}` : 'Riwayat level'}
-            back={{ href: '/student/assessment', label: 'Kembali ke riwayat aktivitas' }}
+            title={record?.levelTitle ? `Riwayat ${record.levelTitle}` : 'Riwayat level'}
+            back={levelBack}
           />
         ) : (
           <StudentSectionHeader
@@ -47,13 +55,7 @@ function AssessmentFrame({ token }: { token: string }) {
     </StudentLayout>
   );
 }
-function AssessmentContent({
-  token,
-  levelId,
-}: {
-  token: string;
-  levelId?: string | undefined;
-}) {
+function AssessmentContent({ token, levelId }: { token: string; levelId?: string | undefined }) {
   const progress = useQuery({
     queryKey: ['student-progress'],
     queryFn: () => learningApi.progress(token),
