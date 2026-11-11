@@ -12,6 +12,7 @@ import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
 import { PretestCard, type PretestChapterState } from './pretest';
 import { AssessmentSession } from './assessment-session';
+import { StudentSectionHeader } from './student-section-header';
 import type { PretestAttemptDto, PretestResultDto } from './generated-types';
 
 function useInvalidatePretest(chapterId: string) {
@@ -200,7 +201,11 @@ export function PretestResultScreen() {
     queryFn: () => learningApi.pretestResult(token, attemptId),
   });
   return (
-    <LearningFrame title="Hasil Pretest">
+    <LearningFrame
+      title="Hasil Pretest"
+      className="pretest-result-shell"
+      mobileHeader={<StudentSectionHeader title="Hasil Pretest" />}
+    >
       {!query.data ? (
         <DataState
           pending={query.isPending}

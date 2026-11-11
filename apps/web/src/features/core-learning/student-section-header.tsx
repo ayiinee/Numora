@@ -3,9 +3,11 @@ import { Icon } from '@tka/ui';
 
 export function StudentSectionHeader({
   title,
+  subtitle,
   back,
 }: {
   title: string;
+  subtitle?: string;
   back?: { href: string; label: string };
 }) {
   return (
@@ -15,7 +17,10 @@ export function StudentSectionHeader({
           <Icon name="back" />
         </Link>
       )}
-      <h1>{title}</h1>
+      <div className="materials-header__copy">
+        <h1>{title}</h1>
+        {subtitle && <p>{subtitle}</p>}
+      </div>
     </div>
   );
 }

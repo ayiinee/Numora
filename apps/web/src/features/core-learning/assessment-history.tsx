@@ -12,13 +12,19 @@ import { ActivityRow, ProgressSummary } from './cards';
 import { useAssessmentHistory } from './assessment-queries';
 import { activityChapterImage } from './chapter-art';
 import { studentMaterialsQuery } from './materials-query';
+import { StudentSectionHeader } from './student-section-header';
 
 export function AssessmentScreen() {
   return (
     <StudentLayout
       title="Progres & riwayat"
-      subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
       className="assessment-history-shell"
+      mobileHeader={
+        <StudentSectionHeader
+          title="Progres & riwayat"
+          subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
+        />
+      }
     >
       <StudentGate>{(token) => <AssessmentContent token={token} />}</StudentGate>
     </StudentLayout>

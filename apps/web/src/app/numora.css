@@ -8042,6 +8042,17 @@ a.settings-row:hover {
   font-size: 19px;
   font-weight: 800;
 }
+.materials-header__copy {
+  display: grid;
+  gap: 4px;
+  justify-items: center;
+}
+.materials-header__copy p {
+  margin: 0;
+  color: rgb(255 255 255 / 82%);
+  font-size: 12px;
+  font-weight: 650;
+}
 .materials-header--with-back {
   display: grid;
   grid-template-columns: 44px minmax(0, 1fr) 44px;
@@ -8424,6 +8435,11 @@ a.settings-row:hover {
 }
 
 .materials-shell .page-heading {
+  display: none;
+}
+/* Progres & riwayat and Hasil Pretest carry their title in the section banner. */
+.assessment-history-shell .page-heading,
+.pretest-result-shell .page-heading {
   display: none;
 }
 

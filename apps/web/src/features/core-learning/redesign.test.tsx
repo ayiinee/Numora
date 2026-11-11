@@ -7,6 +7,7 @@ import { NewStudentDashboard } from './dashboard-new';
 import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
 import { TryoutWaiting, TryoutReleasedResult } from './tryout-presentation';
+import { PretestResultScreen } from './pretest-screens';
 import { SubchapterScreen } from './catalog';
 import { AssessmentScreen } from './assessment-history';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
@@ -409,8 +410,27 @@ describe('assessment history states', () => {
     await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/login'));
     expect(learningApi.assessmentHistory).not.toHaveBeenCalled();
   });
+  it('carries the page title in the Student section banner', async () => {
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Belum ada aktivitas');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
+    expect(banner?.textContent).toContain('Progres & riwayat');
+    expect(banner?.querySelector('.materials-header__copy p')?.textContent).toBe(
+      'Lihat kemajuanmu, satu latihan pada satu waktu.',
+    );
+    expect(document.querySelector('.student-desktop-heading')).toBeNull();
+  });
 });
 describe('responsive learning composition', () => {
+  it('carries the Pretest result title in the Student section banner', async () => {
+    renderStudent(<PretestResultScreen />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .materials-header h1')?.textContent).toBe(
+        'Hasil Pretest',
+      ),
+    );
+    expect(document.querySelector('.student-desktop-heading')).toBeNull();
+  });
   it('shows persisted TryOut XP while IRT is pending, including zero', () => {
     const view = render(<TryoutWaiting xp={245} />);
     expect(screen.getByText('245 XP')).toBeTruthy();
