@@ -110,6 +110,26 @@ export function StudentHomeIdentityHeader({
   );
 }
 
+/* Keeps the Beranda bar in place while the dashboard loads, so it does not swap. */
+export function StudentHomeIdentityHeaderSkeleton() {
+  return (
+    <div className="sh-identity sh-identity--pending">
+      <div className="sh-identity__top">
+        <span className="sh-identity__avatar">
+          <Skeleton variant="circular" width={32} height={32} />
+        </span>
+        <div className="sh-identity__greeting">
+          <Skeleton width={120} height={12} />
+          <Skeleton width={80} height={10} />
+        </div>
+        <Skeleton width={70} height={44} borderRadius="var(--radius-full)" />
+        <Skeleton width={44} height={44} borderRadius="var(--radius-full)" />
+      </div>
+      <Skeleton height={30} borderRadius="var(--radius-md)" />
+    </div>
+  );
+}
+
 /* The existing compact identity is also used by Materi. Keep that presentation unchanged. */
 export function StudentIdentityHeader({
   data,

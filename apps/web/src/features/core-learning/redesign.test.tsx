@@ -431,6 +431,23 @@ describe('responsive learning composition', () => {
     );
     expect(document.querySelector('.student-desktop-heading')).toBeNull();
   });
+  it('keeps the Tryout banner while the batch list loads', async () => {
+    vi.mocked(request).mockImplementationOnce(() => new Promise(() => {}));
+    renderStudent(<TryoutScreen />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .materials-header h1')?.textContent).toBe(
+        'Tryout TKA',
+      ),
+    );
+  });
+  it('keeps the Beranda header shape while the dashboard loads', async () => {
+    vi.mocked(learningApi.dashboard).mockImplementationOnce(() => new Promise(() => {}));
+    renderStudent(<NewStudentDashboard />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .sh-identity--pending')).toBeTruthy(),
+    );
+    expect(document.querySelector('.app-topbar--custom-mobile')).toBeTruthy();
+  });
   it('shows persisted TryOut XP while IRT is pending, including zero', () => {
     const view = render(<TryoutWaiting xp={245} />);
     expect(screen.getByText('245 XP')).toBeTruthy();

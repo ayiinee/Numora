@@ -13,7 +13,11 @@ import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
 import { FeedbackOverview } from './feedback-overview';
 import { HomeClassPodium } from './home-class-podium';
-import { HomeFeatures, StudentHomeIdentityHeader } from './dashboard-presentation';
+import {
+  HomeFeatures,
+  StudentHomeIdentityHeader,
+  StudentHomeIdentityHeaderSkeleton,
+} from './dashboard-presentation';
 import { RecentActivity } from './recent-activity';
 import { StudentHomeCarousel } from './student-home-carousel';
 import './student-home.css';
@@ -30,7 +34,11 @@ function DashboardContent({ token }: { token: string }) {
   const catalog = useQuery({ queryKey: ['chapters'], queryFn: () => learningApi.catalog(token) });
   if (dashboard.isPending || dashboard.isError)
     return (
-      <AppShell className="student-home-shell" showTopbarProfile={false}>
+      <AppShell
+        className="student-home-shell"
+        mobileHeader={<StudentHomeIdentityHeaderSkeleton />}
+        showTopbarProfile={false}
+      >
         <DataState
           pending={dashboard.isPending}
           error={dashboard.error}
