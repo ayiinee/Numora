@@ -154,6 +154,15 @@ integration(
           variantId: variant!.id,
           versionNumber: 1,
         });
+      const superseded = await addQuestion();
+      await db()
+        .insert(questionVersions)
+        .values({
+          ...superseded.version,
+          id: randomUUID(),
+          versionNumber: 2,
+          optionsOrStatements: { options: 'invalid' },
+        });
       expect(await bank.families(db(), 'easy')).toHaveLength(9);
       const before = await counts();
       expect((await engine.availability()).available).toBe(false);
@@ -359,6 +368,7 @@ integration(
         await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { contentStatus: 'DRAFT' }),
         await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { questionType: 'CATEGORY' }),
         await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { answerKey: { optionId: 'Z' } }),
+        await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { explanation: { text: ' ' } }),
         await addQuestion('OWNER_ACCEPTED_UNCALIBRATED', { media: [{ url: '/TEST.png' }] }),
         await addQuestion('UNKNOWN_DIFFICULTY'),
       ];
@@ -372,12 +382,15 @@ integration(
       try {
         const current = new PvpEngineService({ ...fixture.policy, mode: 'demo' });
         current.setSchedulerReady(true);
-        const families = vi.spyOn(PvpDrillBank.prototype, 'families');
+        const availability = vi.spyOn(PvpDrillBank.prototype, 'hasEnoughFamilies');
+        const fullFamilies = vi.spyOn(PvpDrillBank.prototype, 'families');
         try {
           expect((await current.availability()).difficulties.every((d) => !d.available)).toBe(true);
-          expect(families).toHaveBeenCalledTimes(1);
+          expect(availability).toHaveBeenCalledTimes(1);
+          expect(fullFamilies).not.toHaveBeenCalled();
         } finally {
-          families.mockRestore();
+          availability.mockRestore();
+          fullFamilies.mockRestore();
         }
         const before = await counts();
         await expect(current.create(host(), 'easy', randomUUID())).rejects.toMatchObject({
@@ -437,6 +450,11 @@ integration(
         }
         expect(await current.availability()).toMatchObject({
           available: true,
+          difficulties: [
+            { difficulty: 'easy', available: true, reasonCode: null },
+            { difficulty: 'medium', available: true, reasonCode: null },
+            { difficulty: 'hard', available: true, reasonCode: null },
+          ],
           dataMode: 'demo',
           contentNotice: expect.stringContaining('30, 45, dan 60'),
         });

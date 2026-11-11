@@ -83,7 +83,7 @@ export class PvpEngineService {
       }
     };
     const checkBank = async (difficulty: Difficulty) => {
-      if ((await this.drillBank.families(getDatabase().db, difficulty)).length < 10)
+      if (!(await this.drillBank.hasEnoughFamilies(getDatabase().db, difficulty)))
         throw unavailableDrillBank();
     };
     const temporary = this.drillBank.contentMode === 'temporary-owner-accepted';
