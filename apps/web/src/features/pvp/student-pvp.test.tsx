@@ -442,6 +442,29 @@ it.each(['WAITING', 'RUNNING'] as const)(
   },
 );
 
+it('reports a rejected join directly under the room code form', async () => {
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  fireEvent.click(await screen.findByRole('tab', { name: /Gabung via Kode/ }));
+  fireEvent.change(await screen.findByLabelText(/Kode room/), {
+    target: { value: 'NMRABCDEFG12' },
+  });
+  mocks.emit.mockResolvedValue({
+    payload: { ok: false, error: { detail: 'Room sudah berisi dua pemain.' } },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Gabung room' }));
+  const alert = await screen.findByRole('alert');
+  expect(alert.textContent).toBe('Room sudah berisi dua pemain.');
+  expect(document.querySelector('.pvp-lobby-main')?.contains(alert)).toBe(true);
+  expect(
+    alert.compareDocumentPosition(document.querySelector('.pvp-lobby-context')!) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
 it('shows a single exit path once the server says the student left the room', async () => {
   serveMatch({ ...matchSnapshot('WAITING'), participantActive: false, players: [] });
   render(

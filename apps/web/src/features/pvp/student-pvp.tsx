@@ -173,6 +173,20 @@ export function PvpScreen() {
                   },
                 ]}
               />
+              {socket.error && (
+                <p role="alert" className="pvp-command-error">
+                  {socket.error}
+                </p>
+              )}
+              {socket.uncertain && (
+                <Button
+                  variant="secondary"
+                  disabled={socket.busy || !socket.connected}
+                  onClick={socket.retry}
+                >
+                  Periksa permintaan sebelumnya
+                </Button>
+              )}
             </>
           )}
           <Link
@@ -281,20 +295,6 @@ export function PvpScreen() {
           )}
         </aside>
       </div>
-      {socket.error && (
-        <p role="alert" className="pvp-command-error">
-          {socket.error}
-        </p>
-      )}
-      {socket.uncertain && (
-        <Button
-          variant="secondary"
-          disabled={socket.busy || !socket.connected}
-          onClick={socket.retry}
-        >
-          Periksa permintaan sebelumnya
-        </Button>
-      )}
     </AppShell>
   );
 }
