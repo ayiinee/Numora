@@ -420,6 +420,21 @@ describe('assessment history states', () => {
     );
     expect(document.querySelector('.student-desktop-heading')).toBeNull();
   });
+  it('names the level and offers a way back on the level history deep link', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [{ ...record, levelId: 'level-test' }],
+      nextCursor: null,
+    });
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Riwayat level');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
+    expect(banner?.querySelector('h1')?.textContent).toBe('Riwayat Level 1');
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/student/assessment');
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe(
+      'Kembali ke riwayat aktivitas',
+    );
+  });
 });
 describe('responsive learning composition', () => {
   it('carries the Pretest result title in the Student section banner', async () => {

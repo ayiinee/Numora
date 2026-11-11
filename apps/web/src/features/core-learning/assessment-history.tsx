@@ -15,23 +15,44 @@ import { studentMaterialsQuery } from './materials-query';
 import { StudentSectionHeader } from './student-section-header';
 
 export function AssessmentScreen() {
+  return <StudentGate>{(token) => <AssessmentFrame token={token} />}</StudentGate>;
+}
+
+function AssessmentFrame({ token }: { token: string }) {
+  const levelId = useSearchParams().get('levelId') ?? undefined;
+  const history = useAssessmentHistory(token, true, levelId);
+  const levelTitle = history.data?.pages
+    .flatMap((page) => page.records)
+    .find((item) => item.levelId === levelId)?.levelTitle;
   return (
     <StudentLayout
       title="Progres & riwayat"
       className="assessment-history-shell"
       mobileHeader={
-        <StudentSectionHeader
-          title="Progres & riwayat"
-          subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
-        />
+        levelId ? (
+          <StudentSectionHeader
+            title={levelTitle ? `Riwayat ${levelTitle}` : 'Riwayat level'}
+            back={{ href: '/student/assessment', label: 'Kembali ke riwayat aktivitas' }}
+          />
+        ) : (
+          <StudentSectionHeader
+            title="Progres & riwayat"
+            subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
+          />
+        )
       }
     >
-      <StudentGate>{(token) => <AssessmentContent token={token} />}</StudentGate>
+      <AssessmentContent token={token} levelId={levelId} />
     </StudentLayout>
   );
 }
-function AssessmentContent({ token }: { token: string }) {
-  const levelId = useSearchParams().get('levelId') ?? undefined;
+function AssessmentContent({
+  token,
+  levelId,
+}: {
+  token: string;
+  levelId?: string | undefined;
+}) {
   const progress = useQuery({
     queryKey: ['student-progress'],
     queryFn: () => learningApi.progress(token),
