@@ -17,6 +17,8 @@ Availability uses the same eligibility checks, counts families and writes nothin
 
 **ENGINEERING IMPLEMENTATION — availability reads.** An availability request checks the published scoring policy once. Temporary mode reads the shared bank once for all three timer choices. Strict mode checks each difficulty's bank. The browser refreshes availability after room entry, exit, or completion, including a terminal server snapshot. An ordinary answer acknowledgement leaves the availability query alone.
 
+Availability selects the family ID and the question fields used by the single-choice and media validators. It shares the SQL eligibility filters and application validator with room creation. Room creation reads full version rows for selection and transactional revalidation.
+
 Both players and reconnects use saved version IDs/order. Retry returns the existing room without sampling again. Published scoring-policy validation, timing, answers, reconnects, XP separation and outbox remain server-authoritative. Existing packages/rooms continue to be read by their original references. No schema migration, automatic seed, READY promotion or history rewrite is required.
 
 ## QA and rollout

@@ -12,7 +12,7 @@ import {
   subchapters,
 } from '@tka/database';
 import { and, asc, eq, gt, inArray, isNotNull, isNull, notExists, or, sql } from 'drizzle-orm';
-import { alias } from 'drizzle-orm/pg-core';
+import { alias, type PgSelect, type SelectedFields } from 'drizzle-orm/pg-core';
 import { decodeSingleChoice } from '../learning/single-choice.policy';
 import { pvpContentMode, type Difficulty, type PvpContentMode } from './pvp.policy';
 
@@ -22,6 +22,11 @@ export type DrillCandidate = {
   questionId: string;
   version: typeof questionVersions.$inferSelect;
 };
+type EligibilityCandidate = {
+  questionId: string;
+  version: Parameters<typeof decodeSingleChoice>[0] & Pick<DrillCandidate['version'], 'media'>;
+};
+const requiredFamilies = 10;
 
 export const unavailableDrillBank = () =>
   new ServiceUnavailableException({
@@ -39,8 +44,10 @@ export function decodePvpSingleChoice(row: Parameters<typeof decodeSingleChoice>
   return decodeSingleChoice({ ...row, optionsOrStatements: options });
 }
 
-export function groupDrillCandidates(candidates: DrillCandidate[]) {
-  const families = new Map<string, DrillCandidate[]>();
+export function groupDrillCandidates<Candidate extends EligibilityCandidate>(
+  candidates: Candidate[],
+) {
+  const families = new Map<string, Candidate[]>();
   for (const candidate of candidates) {
     const media = candidate.version.media;
     // Some imported text-only versions store an empty JSON object instead of an empty array.
@@ -72,9 +79,9 @@ export function sampleDrillFamilies(
   families: DrillCandidate[][],
   nextInt: (max: number) => number = randomInt,
 ) {
-  if (families.length < 10) throw unavailableDrillBank();
+  if (families.length < requiredFamilies) throw unavailableDrillBank();
   const selected = shuffle(families, nextInt)
-    .slice(0, 10)
+    .slice(0, requiredFamilies)
     .map((family) => family[nextInt(family.length)]!);
   return shuffle(selected, nextInt);
 }
@@ -82,11 +89,14 @@ export function sampleDrillFamilies(
 /** Shared eligibility for read-only availability and transactional room creation. */
 export class PvpDrillBank {
   constructor(readonly contentMode: PvpContentMode = pvpContentMode()) {}
-  private query(db: Database | Transaction, difficulty: Difficulty, ids?: string[]) {
+  private withEligibility<Selection extends SelectedFields>(
+    db: Database | Transaction,
+    difficulty: Difficulty,
+    query: PgSelect<'question_versions', Selection, 'partial', { question_versions: 'not-null' }>,
+    ids?: string[],
+  ) {
     const newer = alias(questionVersions, 'newer_ready_drill_version');
-    return db
-      .select({ questionId: questions.id, version: questionVersions })
-      .from(questionVersions)
+    return query
       .innerJoin(questionVariants, eq(questionVariants.id, questionVersions.variantId))
       .innerJoin(questions, eq(questions.id, questionVariants.questionId))
       .innerJoin(competencies, eq(competencies.id, questions.primaryCompetencyId))
@@ -138,8 +148,35 @@ export class PvpDrillBank {
       .orderBy(asc(questionVersions.id));
   }
 
+  private fullQuery(db: Database | Transaction, difficulty: Difficulty, ids?: string[]) {
+    const query = db
+      .select({ questionId: questions.id, version: questionVersions })
+      .from(questionVersions)
+      .$dynamic();
+    return this.withEligibility(db, difficulty, query, ids);
+  }
+
   async families(db: Database | Transaction, difficulty: Difficulty) {
-    return groupDrillCandidates(await this.query(db, difficulty));
+    return groupDrillCandidates(await this.fullQuery(db, difficulty));
+  }
+
+  async hasEnoughFamilies(db: Database, difficulty: Difficulty) {
+    const query = db
+      .select({
+        questionId: questions.id,
+        version: {
+          questionType: questionVersions.questionType,
+          stem: questionVersions.stem,
+          optionsOrStatements: questionVersions.optionsOrStatements,
+          answerKey: questionVersions.answerKey,
+          explanation: questionVersions.explanation,
+          media: questionVersions.media,
+        },
+      })
+      .from(questionVersions)
+      .$dynamic();
+    const candidates = await this.withEligibility(db, difficulty, query);
+    return groupDrillCandidates(candidates).length >= requiredFamilies;
   }
 
   async lockSelection(tx: Transaction, difficulty: Difficulty, selected: DrillCandidate[]) {
@@ -168,7 +205,7 @@ export class PvpDrillBank {
         .where(inArray(contentValidationDecisions.id, decisionIds))
         .orderBy(asc(contentValidationDecisions.id))
         .for('share');
-    const rows = await this.query(
+    const rows = await this.fullQuery(
       tx,
       difficulty,
       selected.map((c) => c.version.id),
@@ -176,7 +213,10 @@ export class PvpDrillBank {
       of: [questionVersions, questionVariants, questions, competencies, subchapters, chapters],
     });
     const valid = groupDrillCandidates(rows).flat();
-    if (valid.length !== 10 || new Set(valid.map((c) => c.questionId)).size !== 10)
+    if (
+      valid.length !== requiredFamilies ||
+      new Set(valid.map((c) => c.questionId)).size !== requiredFamilies
+    )
       throw unavailableDrillBank();
     const byId = new Map(valid.map((c) => [c.version.id, c]));
     return selected.map((c) => byId.get(c.version.id)!);
