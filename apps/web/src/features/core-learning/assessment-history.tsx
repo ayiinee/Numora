@@ -40,6 +40,7 @@ function AssessmentFrame({ token }: { token: string }) {
         levelId ? (
           <StudentSectionHeader
             title={record?.levelTitle ? `Riwayat ${record.levelTitle}` : 'Riwayat level'}
+            subtitle="Hasil terbaru tampil paling atas."
             back={levelBack}
           />
         ) : (
@@ -80,10 +81,9 @@ function AssessmentContent({ token, levelId }: { token: string; levelId?: string
         )}
       </aside>
       <section className="assessment-history-records">
-        <SectionHeader
-          title={levelId ? 'Riwayat level' : 'Riwayat aktivitas'}
-          subtitle="Hasil terbaru tampil paling atas."
-        />
+        {!levelId && (
+          <SectionHeader title="Riwayat aktivitas" subtitle="Hasil terbaru tampil paling atas." />
+        )}
         {levelId && <Link href="/student/assessment">Lihat seluruh aktivitas</Link>}
         {query.isPending || (query.isError && !query.data) ? (
           <DataState

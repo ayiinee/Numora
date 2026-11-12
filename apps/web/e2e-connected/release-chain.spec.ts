@@ -505,9 +505,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     expect(persistedReward.policy_version).toBe(2);
     expect(Number(persistedReward.xp_amount)).toBe(result.reward!.totalXp);
     await resumed.goto(`/student/assessment?levelId=${levelOne}`);
-    await expect(
-      resumed.getByRole('heading', { name: 'Riwayat level', exact: true }),
-    ).toBeVisible();
+    // The section banner is the only heading on a level history page, whichever title it resolves to.
+    const levelHistoryTitle = resumed.locator('.app-mobile-header .materials-header h1');
+    await expect(levelHistoryTitle).toBeVisible();
+    await expect(levelHistoryTitle).toHaveText(/^Riwayat /);
+    await expect(resumed.locator('.numora-section-header')).toHaveCount(0);
     await expect(resumed.locator('.activity-row')).toHaveCount(2);
     await expect(resumed.getByText(`${result.reward!.totalXp} XP`, { exact: true })).toBeVisible();
     expect(
