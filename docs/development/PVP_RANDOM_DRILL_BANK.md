@@ -19,7 +19,13 @@ Availability uses the same eligibility checks, counts families and writes nothin
 
 Availability selects the family ID and the question fields used by the single-choice and media validators. It shares the SQL eligibility filters and application validator with room creation. Room creation reads full version rows for selection and transactional revalidation.
 
-Both players and reconnects use saved version IDs/order. Retry returns the existing room without sampling again. Published scoring-policy validation, timing, answers, reconnects, XP separation and outbox remain server-authoritative. Existing packages/rooms continue to be read by their original references. No schema migration, automatic seed, READY promotion or history rewrite is required.
+**ENGINEERING DECISION — cache implementation, 13 November 2026.** Availability shares validated content booleans through Redis with a 60-second TTL. Keys include a database connection hash, deployment prefix, content mode, difficulty (one shared pool for temporary mode), decoder revision and PostgreSQL content revision. A small revision read on each request detects committed mutations to versions, variants, families, review decisions and READY hierarchy, including direct SQL. Migration 0072 updates the revision within the content transaction. Content mutations take a shared revision-row lock and therefore serialize briefly. A rollback preserves the previous revision.
+
+Concurrent misses within one API process share one validation. API replicas share Redis entries; a simultaneous cold miss on different replicas may validate once per replica. Redis errors fall back to validation, with a 250-ms connection/command timeout and no offline command queue. Policy, runtime guards and active rooms are checked per request. Cache entries contain only booleans. Create continues to select, lock and revalidate authoritative content in its transaction.
+
+Apply migration 0072 before restarting the API. Existing Redis configuration is reused. Drain active rooms according to the restart runbook. Database restores must invalidate this Redis namespace if revision values are restored. The TTL and timeout are implementation choices and can be adjusted after measurement.
+
+Both players and reconnects use saved version IDs/order. Retry returns the existing room without sampling again. Published scoring-policy validation, timing, answers, reconnects, XP separation and outbox remain server-authoritative. Existing packages/rooms continue to be read by their original references. The cache revision uses migration 0072.
 
 ## QA and rollout
 

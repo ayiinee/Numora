@@ -23,6 +23,8 @@ import {
 import { asc, eq, inArray, sql } from 'drizzle-orm';
 import { PvpEngineService } from './pvp-engine.service';
 import { PvpDrillBank } from './pvp-drill-bank';
+import { PvpAvailabilityCache } from './pvp-availability-cache';
+import { Redis } from 'ioredis';
 import { pvpFixture } from './pvp.test-fixture';
 
 const integration = process.env.TEST_DATABASE_URL ? describe : describe.skip;
@@ -589,5 +591,110 @@ integration(
         }
       }
     });
+
+    it.skipIf(!process.env.TEST_REDIS_URL)(
+      'shares warm content eligibility across instances and invalidates committed changes',
+      async () => {
+        vi.stubEnv('REDIS_URL', process.env.TEST_REDIS_URL!);
+        vi.stubEnv('BULLMQ_PREFIX', `numora:test:pvp-cache:${randomUUID()}`);
+        const first = new PvpAvailabilityCache();
+        const second = new PvpAvailabilityCache();
+        const redis = new Redis(process.env.TEST_REDIS_URL!);
+        const reads = vi.spyOn(bank, 'hasEnoughFamilies');
+        try {
+          const revision = await first.revision();
+          const results = await Promise.all(
+            Array.from({ length: 20 }, () => first.hasEnoughFamilies(bank, 'easy', revision)),
+          );
+          expect(results).toEqual(Array(20).fill(true));
+          expect(reads).toHaveBeenCalledTimes(1);
+          expect(first.metrics.coalesced).toBe(19);
+          expect(await second.hasEnoughFamilies(bank, 'easy', revision)).toBe(true);
+          expect(reads).toHaveBeenCalledTimes(1);
+          expect(second.metrics.hits).toBe(1);
+
+          for (const relation of [
+            'question_versions',
+            'question_variants',
+            'questions',
+            'content_validation_decisions',
+            'chapters',
+            'subchapters',
+            'competencies',
+            'levels',
+          ]) {
+            const before = await first.revision();
+            await db().execute(sql.raw(`update public.${relation} set id = id where false`));
+            expect(await first.revision()).not.toBe(before);
+          }
+          const beforeRollback = await first.revision();
+          await expect(
+            db().transaction(async (tx) => {
+              await tx
+                .update(questions)
+                .set({ status: 'REVISION' })
+                .where(eq(questions.id, easy[0]!.question.id));
+              throw new Error('TEST rollback');
+            }),
+          ).rejects.toThrow('TEST rollback');
+          expect(await first.revision()).toBe(beforeRollback);
+
+          await db().update(questions).set({ status: 'ARCHIVED' });
+          const changedRevision = await first.revision();
+          expect(await first.hasEnoughFamilies(bank, 'easy', changedRevision)).toBe(false);
+          expect(reads).toHaveBeenCalledTimes(2);
+          expect(await second.hasEnoughFamilies(bank, 'easy', changedRevision)).toBe(false);
+          expect(reads).toHaveBeenCalledTimes(2);
+          // A cache value that expires (or is evicted) is validated again.
+          const keys = await redis.keys(`${process.env.BULLMQ_PREFIX}:pvp-eligibility:*`);
+          expect(keys.length).toBeGreaterThan(0);
+          expect(await redis.ttl(keys[0]!)).toBeGreaterThan(0);
+          for (const key of keys) await redis.del(key);
+          expect(await first.hasEnoughFamilies(bank, 'easy', changedRevision)).toBe(false);
+          expect(reads).toHaveBeenCalledTimes(3);
+          expect(
+            await redis.mget(
+              ...(await redis.keys(`${process.env.BULLMQ_PREFIX}:pvp-eligibility:*`)),
+            ),
+          ).toEqual(['false']);
+          const unavailable = new PvpAvailabilityCache();
+          vi.stubEnv('REDIS_URL', 'redis://127.0.0.1:1');
+          try {
+            expect(await unavailable.hasEnoughFamilies(bank, 'easy', changedRevision)).toBe(false);
+            expect(unavailable.metrics.redisErrors).toBe(1);
+          } finally {
+            unavailable.close();
+            vi.stubEnv('REDIS_URL', process.env.TEST_REDIS_URL!);
+          }
+          await db().transaction(async (tx) => {
+            await tx.execute(sql`set local role numora_main_runtime`);
+            expect(
+              await tx.execute(sql`select revision from public.pvp_content_revision`),
+            ).toHaveLength(1);
+            const [permissions] = await tx.execute<{ can_write: boolean }>(
+              sql`select has_table_privilege(current_user, 'public.pvp_content_revision', 'UPDATE') as can_write`,
+            );
+            expect(permissions!.can_write).toBe(false);
+          });
+
+          // A warm cache cannot bypass live runtime guards.
+          const current = new PvpEngineService({ ...fixture.policy, mode: 'demo' });
+          current.setSchedulerReady(true);
+          vi.stubEnv('PVP_NEW_MATCHES_ENABLED', 'false');
+          expect(await current.availability(host())).toMatchObject({
+            available: false,
+            reasonCode: 'PVP_NEW_MATCHES_DISABLED',
+            activeMatchId: null,
+          });
+          current.onModuleDestroy();
+        } finally {
+          reads.mockRestore();
+          first.close();
+          second.close();
+          redis.disconnect();
+          vi.unstubAllEnvs();
+        }
+      },
+    );
   },
 );

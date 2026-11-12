@@ -505,6 +505,13 @@
       "when": 1794312000000,
       "tag": "0071_tryout_extend_open_batch",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794312000001,
+      "tag": "0072_pvp_content_cache_revision",
+      "breakpoints": true
     }
   ]
 }
