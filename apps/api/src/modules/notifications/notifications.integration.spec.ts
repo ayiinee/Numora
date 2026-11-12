@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto';
-import { afterAll, beforeAll, describe, expect, it } from 'vitest';
+import { afterAll, beforeAll, describe, expect, it, vi } from 'vitest';
 import { and, eq, inArray, sql } from 'drizzle-orm';
 import {
   getDatabase,
@@ -18,6 +18,9 @@ import {
   packageItems,
   irtBatches,
   irtItemResults,
+  classMemberships,
+  pvpMatches,
+  pvpInvites,
 } from '@tka/database';
 import { IdentityService } from '../identity/identity.service';
 import { PvpService } from '../pvp/pvp.service';
@@ -55,7 +58,7 @@ const url = process.env.TEST_DATABASE_URL;
       },
     } as unknown as IdentityService;
     service = new NotificationsService(identity, {
-      availability: async () => ({ available: true }),
+      engine: { availability: async () => ({ available: true }) },
     } as unknown as PvpService);
     const module = await Test.createTestingModule({
       controllers: [NotificationsController],
@@ -416,4 +419,132 @@ const url = process.env.TEST_DATABASE_URL;
     expect(await db().select().from(notifications).where(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${historical!.id}`))).toHaveLength(0);
     expect(await db().select().from(notifications).where(eq(notifications.sourceKey, `TRYOUT_RESULT_READY:${recent!.id}`))).toHaveLength(1);
   });
+
+    it.each([0, 1, 20])(
+    'batches %i invitation actions with one identity check and bounded lookups',
+    async (count) => {
+      const f = await pvpFixture(0);
+      const recipient = f.students[1]!.id;
+      const profile = vi.fn().mockResolvedValue({ id: recipient, role: 'STUDENT', status: 'ACTIVE' });
+      const availability = vi.fn().mockResolvedValue({ available: true, message: 'PvP tersedia.' });
+      const pvp = new PvpService(
+        { me: profile } as unknown as IdentityService,
+        { availability } as unknown as PvpEngineService,
+      );
+      const reader = new NotificationsService({ me: profile } as unknown as IdentityService, pvp);
+      const invites: (typeof pvpInvites.$inferSelect)[] = [];
+      for (let index = 0; index < count; index++) {
+        const [sender] = await db()
+          .insert(users)
+          .values({
+            authUserId: randomUUID(),
+            role: 'STUDENT',
+            displayName: 'TEST sender',
+            email: `${randomUUID()}@example.test`,
+          })
+          .returning();
+        await db().insert(classMemberships).values({
+          classId: f.schoolClass.id,
+          studentUserId: sender!.id,
+        });
+        const [room] = await db()
+          .insert(pvpMatches)
+          .values({
+            roomCode: randomUUID(),
+            packageId: f.pack.id,
+            creatorStudentId: sender!.id,
+            difficulty: 'easy',
+          })
+          .returning();
+        const [invite] = await db()
+          .insert(pvpInvites)
+          .values({
+            matchId: room!.id,
+            classIdAtInvite: f.schoolClass.id,
+            senderStudentId: sender!.id,
+            recipientStudentId: recipient,
+            createdAt: new Date(Date.now() - 60_000),
+            expiresAt: new Date(Date.now() + 300_000),
+          })
+          .returning();
+        invites.push(invite!);
+        await db()
+          .insert(notifications)
+          .values({
+            recipientId: recipient,
+            sourceKey: `PVP_INVITED:${invite!.id}`,
+            kind: 'PVP_INVITED',
+            title: 'TEST invitation',
+            body: 'TEST body',
+            context: { inviteId: invite!.id },
+            occurredAt: new Date(),
+          });
+      }
+      const selects = vi.spyOn(db(), 'select');
+      try {
+        const page = await reader.list('TEST auth', { filter: 'class' });
+        expect(page.items).toHaveLength(count);
+        expect(page.items.every((item) => item.action.enabled)).toBe(true);
+        expect(profile).toHaveBeenCalledTimes(1);
+        expect(availability).toHaveBeenCalledTimes(count ? 1 : 0);
+        expect(selects).toHaveBeenCalledTimes(count ? 2 : 1);
+        if (count !== 20) return;
+        await db()
+          .update(pvpInvites)
+          .set({ expiresAt: new Date(Date.now() - 1000) })
+          .where(eq(pvpInvites.id, invites[0]!.id));
+        await db()
+          .update(users)
+          .set({ status: 'DISABLED' })
+          .where(eq(users.id, invites[1]!.senderStudentId));
+        await db()
+          .update(classMemberships)
+          .set({ leftAt: new Date() })
+          .where(
+            and(
+              eq(classMemberships.studentUserId, invites[2]!.senderStudentId),
+              eq(classMemberships.classId, f.schoolClass.id),
+            ),
+          );
+        await db()
+          .update(pvpInvites)
+          .set({ status: 'DECLINED' })
+          .where(eq(pvpInvites.id, invites[3]!.id));
+        await db()
+          .update(pvpMatches)
+          .set({ status: 'CANCELLED', endReason: 'HOST_LEFT', endedAt: new Date() })
+          .where(eq(pvpMatches.id, invites[4]!.matchId));
+        await db()
+          .update(pvpInvites)
+          .set({ recipientStudentId: f.students[2]!.id })
+          .where(eq(pvpInvites.id, invites[5]!.id));
+        const mixed = await reader.list('TEST auth', { filter: 'class' });
+        expect(mixed.items.filter((item) => item.action.enabled)).toHaveLength(14);
+        availability.mockResolvedValue({ available: false, message: 'TEST runtime disabled' });
+        const disabled = await reader.list('TEST auth', { filter: 'class' });
+        expect(disabled.items.every((item) => !item.action.enabled)).toBe(true);
+        expect(
+          disabled.items.filter((item) => item.action.status === 'TEST runtime disabled'),
+        ).toHaveLength(14);
+        await db()
+          .update(pvpInvites)
+          .set({ status: 'DECLINED' })
+          .where(
+            inArray(
+              pvpInvites.id,
+              invites.map((invite) => invite.id),
+            ),
+          );
+        availability.mockClear();
+        expect(
+          (await reader.list('TEST auth', { filter: 'class' })).items.every(
+            (item) => !item.action.enabled,
+          ),
+        ).toBe(true);
+        expect(availability).not.toHaveBeenCalled();
+      } finally {
+        selects.mockRestore();
+      }
+    },
+  );
 });

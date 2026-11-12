@@ -65,7 +65,9 @@ export class NotificationsService {
       [cursor] = await db
         .select()
         .from(notifications)
-        .where(and(eq(notifications.recipientId, id), eq(notifications.id, query.cursor), kindScope));
+        .where(
+          and(eq(notifications.recipientId, id), eq(notifications.id, query.cursor), kindScope),
+        );
       if (!cursor)
         throw new BadRequestException('Cursor notifikasi tidak berlaku untuk filter ini.');
     }
@@ -77,112 +79,135 @@ export class NotificationsService {
           scope,
           query.filter === 'unread' ? isNull(notifications.readAt) : undefined,
           cursor
-            // Keep PostgreSQL microseconds; a JavaScript Date truncates them.
-            ? sql`(${notifications.occurredAt}, ${notifications.id}) <
+            ? // Keep PostgreSQL microseconds; a JavaScript Date truncates them.
+              sql`(${notifications.occurredAt}, ${notifications.id}) <
                 (select occurred_at, id from public.notifications where id = ${cursor.id}::uuid)`
             : undefined,
         ),
       )
       .orderBy(desc(notifications.occurredAt), desc(notifications.id))
       .limit(21);
-    const items = await Promise.all(
-      rows
-        .slice(0, 20)
-        .map(async (row) => ({
-          id: row.id,
-          kind: row.kind,
-          title: row.title,
-          body: row.body,
-          occurredAt: row.occurredAt.toISOString(),
-          readAt: row.readAt?.toISOString() ?? null,
-          archived: query.filter === 'archive',
-          action: await this.action(row, id, auth),
-        })),
-    );
+    const page = rows.slice(0, 20);
+    const actions = await this.actions(page, id);
+    const items = page.map((row, index) => ({
+      id: row.id,
+      kind: row.kind,
+      title: row.title,
+      body: row.body,
+      occurredAt: row.occurredAt.toISOString(),
+      readAt: row.readAt?.toISOString() ?? null,
+      archived: query.filter === 'archive',
+      action: actions[index]!,
+    }));
     return { items, nextCursor: rows.length > 20 ? rows[19]!.id : null };
   }
-  private async action(
-    row: typeof notifications.$inferSelect,
+  private async actions(
+    rows: (typeof notifications.$inferSelect)[],
     studentId: string,
-    auth?: string,
-  ): Promise<NotificationActionDto> {
-    const ctx = row.context;
-    if (row.kind === 'PVP_INVITED' && ctx.inviteId) {
-      const { db } = getDatabase();
-      const [invite] = await db
-        .select({ invite: pvpInvites, match: pvpMatches, senderStatus: users.status })
-        .from(pvpInvites)
-        .innerJoin(pvpMatches, eq(pvpMatches.id, pvpInvites.matchId))
-        .innerJoin(users, eq(users.id, pvpInvites.senderStudentId))
-        .where(and(eq(pvpInvites.id, ctx.inviteId), eq(pvpInvites.recipientStudentId, studentId)));
-      if (invite) {
-        const members = await db
-          .select({ id: classMemberships.studentUserId })
-          .from(classMemberships)
+  ): Promise<NotificationActionDto[]> {
+    const { db } = getDatabase();
+    const inviteIds = rows.flatMap((row) =>
+      row.kind === 'PVP_INVITED' && row.context.inviteId ? [row.context.inviteId] : [],
+    );
+    const invites = inviteIds.length
+      ? await db
+          .select({
+            id: pvpInvites.id,
+            matchId: pvpMatches.id,
+            status: pvpInvites.status,
+            expiresAt: pvpInvites.expiresAt,
+            roomStatus: pvpMatches.status,
+            senderStatus: users.status,
+            members: sql<number>`(
+          select count(*)::integer from ${classMemberships}
+          where ${classMemberships.classId} = ${pvpInvites.classIdAtInvite}
+            and ${classMemberships.studentUserId} in (${studentId}::uuid, ${pvpInvites.senderStudentId})
+            and ${classMemberships.leftAt} is null
+        )`,
+          })
+          .from(pvpInvites)
+          .innerJoin(pvpMatches, eq(pvpMatches.id, pvpInvites.matchId))
+          .innerJoin(users, eq(users.id, pvpInvites.senderStudentId))
           .where(
-            and(
-              eq(classMemberships.classId, invite.invite.classIdAtInvite),
-              inArray(classMemberships.studentUserId, [studentId, invite.invite.senderStudentId]),
-              isNull(classMemberships.leftAt),
-            ),
-          );
-        const policy = await this.pvp.availability(auth);
-        const pending =
-          invite.invite.status === 'PENDING' &&
-          invite.match.status === 'WAITING' &&
-          !!invite.invite.expiresAt &&
-          invite.invite.expiresAt > new Date() &&
-          members.length === 2 &&
-          invite.senderStatus === 'ACTIVE';
-        const labels = {
-          ACCEPTED: 'Diterima',
-          DECLINED: 'Ditolak',
-          CANCELLED: 'Dibatalkan',
-          EXPIRED: 'Kedaluwarsa',
-          PENDING: 'Undangan tidak tersedia',
-        };
+            and(inArray(pvpInvites.id, inviteIds), eq(pvpInvites.recipientStudentId, studentId)),
+          )
+      : [];
+    const byInvite = new Map(invites.map((invite) => [invite.id, invite]));
+    const pending = (invite: (typeof invites)[number]) =>
+      invite.status === 'PENDING' &&
+      invite.roomStatus === 'WAITING' &&
+      !!invite.expiresAt &&
+      invite.expiresAt > new Date() &&
+      invite.members === 2 &&
+      invite.senderStatus === 'ACTIVE';
+    const resultPackages = rows.flatMap((row) =>
+      row.kind === 'TRYOUT_RESULT_READY' && row.context.packageId && row.context.attemptId
+        ? [row.context.packageId]
+        : [],
+    );
+    const [policy, current, released] = await Promise.all([
+      // list() already authenticated this active Student. Only content/runtime state is needed here.
+      invites.some(pending) ? this.pvp.engine.availability() : null,
+      rows.some((row) => row.kind === 'TRYOUT_OPENED' && row.context.packageId)
+        ? currentTryoutPackage()
+        : null,
+      resultPackages.length ? releasedTryoutPackageIds(resultPackages) : new Set<string>(),
+    ]);
+    return rows.map((row): NotificationActionDto => {
+      const ctx = row.context;
+      if (row.kind === 'PVP_INVITED' && ctx.inviteId) {
+        const invite = byInvite.get(ctx.inviteId);
+        if (invite) {
+          const actionable = pending(invite);
+          const labels = {
+            ACCEPTED: 'Diterima',
+            DECLINED: 'Ditolak',
+            CANCELLED: 'Dibatalkan',
+            EXPIRED: 'Kedaluwarsa',
+            PENDING: 'Undangan tidak tersedia',
+          };
+          return {
+            type: 'pvp',
+            inviteId: ctx.inviteId,
+            matchId: invite.matchId,
+            enabled: actionable && policy?.available === true,
+            status: actionable
+              ? policy?.available
+                ? null
+                : (policy?.message ?? 'PvP belum tersedia.')
+              : labels[invite.status],
+          };
+        }
+      }
+      if (row.kind === 'FEEDBACK_RECEIVED' && ctx.feedbackId)
+        return { type: 'feedback', feedbackId: ctx.feedbackId, enabled: true, status: null };
+      if (row.kind === 'LEVEL_UNLOCKED' && ctx.chapterId && ctx.subchapterId)
         return {
-          type: 'pvp',
-          inviteId: ctx.inviteId,
-          matchId: invite.match.id,
-          enabled: pending && policy.available,
-          status: pending
-            ? policy.available
-              ? null
-              : policy.message
-            : labels[invite.invite.status],
+          type: 'roadmap',
+          chapterId: ctx.chapterId,
+          subchapterId: ctx.subchapterId,
+          enabled: true,
+          status: null,
+        };
+      if (row.kind === 'TRYOUT_OPENED' && ctx.packageId) {
+        return {
+          type: 'tryout',
+          packageId: ctx.packageId,
+          enabled: current?.id === ctx.packageId,
+          status: current?.id === ctx.packageId ? null : 'Paket tidak lagi terbuka',
         };
       }
-    }
-    if (row.kind === 'FEEDBACK_RECEIVED' && ctx.feedbackId)
-      return { type: 'feedback', feedbackId: ctx.feedbackId, enabled: true, status: null };
-    if (row.kind === 'LEVEL_UNLOCKED' && ctx.chapterId && ctx.subchapterId)
-      return {
-        type: 'roadmap',
-        chapterId: ctx.chapterId,
-        subchapterId: ctx.subchapterId,
-        enabled: true,
-        status: null,
-      };
-    if (row.kind === 'TRYOUT_OPENED' && ctx.packageId) {
-      const current = await currentTryoutPackage();
-      return {
-        type: 'tryout',
-        packageId: ctx.packageId,
-        enabled: current?.id === ctx.packageId,
-        status: current?.id === ctx.packageId ? null : 'Paket tidak lagi terbuka',
-      };
-    }
-    if (row.kind === 'TRYOUT_RESULT_READY' && ctx.packageId && ctx.attemptId) {
-      const ready = (await releasedTryoutPackageIds([ctx.packageId])).has(ctx.packageId);
-      return {
-        type: 'result',
-        attemptId: ctx.attemptId,
-        enabled: ready,
-        status: ready ? null : 'Hasil belum tersedia',
-      };
-    }
-    return { type: 'unavailable', enabled: false, status: 'Konten tidak tersedia' };
+      if (row.kind === 'TRYOUT_RESULT_READY' && ctx.packageId && ctx.attemptId) {
+        const ready = released.has(ctx.packageId);
+        return {
+          type: 'result',
+          attemptId: ctx.attemptId,
+          enabled: ready,
+          status: ready ? null : 'Hasil belum tersedia',
+        };
+      }
+      return { type: 'unavailable', enabled: false, status: 'Konten tidak tersedia' };
+    });
   }
   async read(auth: string | undefined, id: string) {
     const studentId = await this.student(auth);
