@@ -588,9 +588,9 @@ export class ContentImportService {
         });
         continue;
       }
-      let identity = r.identity;
+      let identityId = r.identity?.id;
       let variantId = r.latest?.version.variantId;
-      if (!identity) {
+      if (!identityId) {
         const [family] = await tx
           .insert(questions)
           .values({
@@ -603,7 +603,7 @@ export class ContentImportService {
             sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
             status: 'DRAFT',
           })
-          .returning();
+          .returning({ id: questions.id });
         const [variant] = await tx
           .insert(questionVariants)
           .values({
@@ -612,7 +612,7 @@ export class ContentImportService {
             kind: 'ORIGINAL',
             origin: 'JSON_IMPORT_V2',
           })
-          .returning();
+          .returning({ id: questionVariants.id });
         variantId = variant!.id;
         const [createdIdentity] = await tx
           .insert(contentImportIdentities)
@@ -621,8 +621,8 @@ export class ContentImportService {
             externalId: r.q.externalId,
             questionId: family!.id,
           })
-          .returning();
-        identity = createdIdentity!;
+          .returning({ id: contentImportIdentities.id });
+        identityId = createdIdentity!.id;
       }
       let rubricId =
         typeof r.q.metadata.scoringRubricVersionId === 'string'
@@ -686,10 +686,10 @@ export class ContentImportService {
           validationState: 'DRAFT',
           revisedFromQuestionVersionId: r.latest?.version!.id,
         })
-        .returning();
+        .returning({ id: questionVersions.id });
       await tx.insert(contentImportVersions).values({
         questionVersionId: version!.id,
-        identityId: identity!.id,
+        identityId: identityId!,
         importId: id,
         contentHash: r.hash,
         provenance: {

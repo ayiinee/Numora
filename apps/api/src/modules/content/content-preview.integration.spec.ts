@@ -1,6 +1,7 @@
 import { randomUUID, createHash } from 'node:crypto';
 import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
+import { createServer, connect, type Socket } from 'node:net';
 import postgres from 'postgres';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
@@ -21,6 +22,7 @@ import { IdentityService } from '../identity/identity.service';
 import { IdentityModule } from '../identity/identity.module';
 import { configureApplication } from '../../bootstrap';
 import { R2MediaStorage, matchesImageSignature } from './r2-media.storage';
+import { ContentUploadsService } from './content-uploads.service';
 import type { MediaUpload } from './media-uploads.repository';
 import type { ImportReportDto, PreviewSessionDto, PreviewAckDto } from './content-preview.dto';
 import type { ContentPackageDetailDto, CreateContentPackageDto } from './content-packages.dto';
@@ -114,6 +116,52 @@ describe.skipIf(!testUrl)(
       sourceNamespace: namespace,
       questions,
     });
+    async function measureTransfer<T>(run: () => Promise<T>) {
+      await closeDatabaseConnection();
+      const runtimeUrl = process.env.DATABASE_URL!;
+      const upstreamUrl = new URL(runtimeUrl);
+      const upstreamHost = upstreamUrl.hostname;
+      const upstreamPort = Number(upstreamUrl.port || 5432);
+      const sockets = new Set<Socket>();
+      let responseBytes = 0;
+      const proxy = createServer((downstream) => {
+        const upstream = connect(upstreamPort, upstreamHost);
+        for (const socket of [upstream, downstream]) {
+          sockets.add(socket);
+          socket.on('close', () => sockets.delete(socket));
+          socket.on('error', () => {
+            upstream.destroy();
+            downstream.destroy();
+          });
+        }
+        upstream.on('data', (chunk) => {
+          responseBytes += chunk.length;
+        });
+        upstream.pipe(downstream);
+        downstream.pipe(upstream);
+      });
+      try {
+        await new Promise<void>((done, fail) =>
+          proxy.once('error', fail).listen(0, '127.0.0.1', done),
+        );
+        const address = proxy.address();
+        if (!address || typeof address === 'string')
+          throw new Error('TEST ONLY proxy missing port');
+        upstreamUrl.hostname = '127.0.0.1';
+        upstreamUrl.port = String(address.port);
+        process.env.DATABASE_URL = upstreamUrl.toString();
+        // Exclude connection/authentication setup; measure PostgreSQL → API bytes only.
+        await getDatabase().client`select 1`;
+        responseBytes = 0;
+        const value = await run();
+        return { value, responseBytes };
+      } finally {
+        await closeDatabaseConnection();
+        process.env.DATABASE_URL = runtimeUrl;
+        for (const socket of sockets) socket.destroy();
+        await new Promise<void>((done) => proxy.close(() => done()));
+      }
+    }
     beforeAll(async () => {
       if (
         process.env.NODE_ENV !== 'test' ||
@@ -259,6 +307,149 @@ describe.skipIf(!testUrl)(
       expect((await request('admin/content/curriculum', 'GET', undefined, 'other')).status).toBe(
         200,
       );
+    });
+    it('preserves upload summary counts, validation precedence, filters and pagination without full JSON', async () => {
+      const prefix = `TEST SUMMARY ${suffix}`;
+      const question = structuredClone(samples[0]!);
+      const preview = {
+        intakeVersion: 1,
+        questions: [question],
+        selectedIds: ['TEST selected'],
+        issues: [],
+        destination: {
+          title: prefix + ' destination',
+          assessmentType: 'TRYOUT',
+          chapterId: null,
+          subchapterId: null,
+          levelId: null,
+        },
+      };
+      const report = { items: [{}, {}], canImportDraft: true };
+      const cases = [
+        { preview: null, report: null, count: 0, validation: 'Belum divalidasi' },
+        { preview: null, report, count: 2, validation: 'Isi valid' },
+        { preview: { ...preview, selectedIds: [] }, report, count: 0, validation: 'Isi valid' },
+        {
+          preview: { ...preview, issues: [{}, {}] },
+          report,
+          count: 1,
+          validation: '2 masalah parsing',
+        },
+        {
+          preview: { ...preview, validationCounts: { content: 2, mapping: 3 }, issues: [{}] },
+          report,
+          count: 1,
+          validation: 'Konten: 2 masalah; pemetaan: 3 belum selesai',
+        },
+        {
+          preview: { ...preview, validationCounts: { content: 0, mapping: 0 } },
+          report: { ...report, canImportDraft: false },
+          count: 1,
+          validation: 'Pemetaan/validasi belum lengkap',
+        },
+        {
+          preview: { ...preview, validationCounts: { content: 2, mapping: 0 } },
+          report,
+          error: 'TEST source error',
+          count: 1,
+          validation: 'TEST source error',
+        },
+        { preview, report: null, count: 1, validation: 'Belum divalidasi' },
+        {
+          preview: {
+            ...preview,
+            destination: { ...preview.destination, assessmentType: 'PRETEST' },
+          },
+          report,
+          count: 1,
+          validation: 'Isi valid',
+          packageName: prefix + ' package',
+        },
+      ];
+      const ids: string[] = [];
+      for (const [index, item] of cases.entries()) {
+        let packageId: string | null = null;
+        if ('packageName' in item) {
+          const [pack] =
+            await owner`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type) VALUES(${randomUUID()},1,${item.packageName},'TRYOUT') RETURNING id`;
+          packageId = pack!.id;
+        }
+        const [row] =
+          await owner`INSERT INTO content_upload_sessions(actor_user_id,idempotency_key,file_name,file_sha256,byte_length,state,preview,report,error,created_at,package_id) VALUES(${actor},${randomUUID()},${prefix + ' ' + index},'TEST checksum',1,'PREVIEW',${JSON.stringify(item.preview)}::jsonb,${JSON.stringify(item.report)}::jsonb,${'error' in item ? item.error : null},${new Date(Date.UTC(2026, 0, 1, 0, 0, index)).toISOString()},${packageId}) RETURNING id`;
+        ids.push(row!.id);
+      }
+      // SQL NULL and JSON null must behave identically after projection.
+      await owner`UPDATE content_upload_sessions SET preview=null,report=null WHERE id=${ids[0]!}`;
+      const list = await ok<UploadListDto>(
+        `admin/content/uploads?search=${encodeURIComponent(prefix)}&limit=100`,
+      );
+      expect(list.total).toBe(cases.length);
+      expect(list.items.map((item) => item.id)).toEqual([...ids].reverse());
+      for (const [index, item] of cases.entries()) {
+        const actual = list.items.find((row) => row.id === ids[index])!;
+        expect(actual).toMatchObject({
+          questionCount: item.count,
+          validationResult: item.validation,
+          title:
+            'packageName' in item ? item.packageName : (item.preview?.destination?.title ?? null),
+          assessmentType:
+            'packageName' in item ? 'TRYOUT' : (item.preview?.destination?.assessmentType ?? null),
+        });
+        const detail = await ok<UploadDetailDto>(`admin/content/uploads/${actual.id}`);
+        expect(detail).toMatchObject({
+          validationResult: actual.validationResult,
+          title: actual.title,
+          assessmentType: actual.assessmentType,
+        });
+        expect(Object.keys(actual).sort()).toEqual([
+          'actorName',
+          'assessmentType',
+          'createdAt',
+          'error',
+          'fileName',
+          'id',
+          'packageId',
+          'questionCount',
+          'revision',
+          'state',
+          'status',
+          'title',
+          'validationResult',
+        ]);
+      }
+      const page = await ok<UploadListDto>(
+        `admin/content/uploads?search=${encodeURIComponent(prefix)}&limit=2&offset=1`,
+      );
+      expect(page.total).toBe(cases.length);
+      expect(page.items).toEqual(list.items.slice(1, 3));
+      const filtered = await ok<UploadListDto>(
+        `admin/content/uploads?search=${encodeURIComponent(prefix)}&assessmentType=TRYOUT&status=PREVIEW&limit=100`,
+      );
+      expect(filtered.items.map((item) => item.id)).toEqual(
+        list.items
+          .filter((item) => item.assessmentType === 'TRYOUT' && item.status === 'PREVIEW')
+          .map((item) => item.id),
+      );
+      expect(filtered.total).toBe(6);
+      const drafts = await ok<UploadListDto>(
+        `admin/content/uploads?search=${encodeURIComponent(prefix)}&assessmentType=TRYOUT&status=DRAFT&limit=100`,
+      );
+      expect(drafts.total).toBe(1);
+      expect(drafts.items[0]!.id).toBe(ids[8]);
+      const byTitle = await ok<UploadListDto>(
+        `admin/content/uploads?search=${encodeURIComponent(prefix + ' destination')}&limit=100`,
+      );
+      expect(byTitle.total).toBe(6);
+      for (const token of ['', 'operations', 'unassigned', 'student', 'teacher'])
+        expect((await request('admin/content/uploads', 'GET', undefined, token)).status).toBe(
+          token ? 403 : 401,
+        );
+      enabled = false;
+      try {
+        expect((await request('admin/content/uploads')).status).toBe(503);
+      } finally {
+        enabled = true;
+      }
     });
     it('prepares real legacy intake idempotently, rejects stale revisions and preserves reviewed packages', async () => {
       const [chapter] = await owner`SELECT id FROM chapters ORDER BY id LIMIT 1`;
@@ -3356,5 +3547,59 @@ describe.skipIf(!testUrl)(
         owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
       ).rejects.toThrow();
     }, 120000);
+    it('bounds upload list and fresh import database response bytes', async () => {
+      const prefix = `TEST BYTES ${suffix}`;
+      const question = structuredClone(samples[0]!);
+      question.stem = { ...question.stem, text: 'TEST ONLY stem '.repeat(3000) };
+      question.explanation = {
+        ...question.explanation,
+        text: 'TEST ONLY explanation '.repeat(3000),
+      };
+      const preview = {
+        intakeVersion: 1,
+        questions: [question],
+        selectedIds: ['TEST selected'],
+        issues: [],
+      };
+      const report = {
+        items: [{ provenance: 'TEST ONLY large provenance '.repeat(2000) }],
+        canImportDraft: true,
+      };
+      for (let index = 0; index < 20; index++)
+        await owner`INSERT INTO content_upload_sessions(actor_user_id,idempotency_key,file_name,file_sha256,byte_length,state,preview,report) VALUES(${actor},${randomUUID()},${prefix + index},'TEST checksum',1,'PREVIEW',${JSON.stringify(preview)}::jsonb,${JSON.stringify(report)}::jsonb)`;
+      const list = await measureTransfer(() =>
+        app.get(ContentUploadsService).list({ search: prefix, limit: 20, offset: 0 }),
+      );
+      expect(list.value.total).toBe(20);
+      expect(list.value.items).toHaveLength(20);
+      expect(
+        list.value.items.every(
+          (item) => item.questionCount === 1 && item.validationResult === 'Isi valid',
+        ),
+      ).toBe(true);
+      const input = { sourceNamespace: `BYTES_${suffix}`, questions: [question] };
+      const imported = await measureTransfer(() =>
+        app.get(ContentImportService).import(actor, randomUUID(), input),
+      );
+      expect(imported.value.items[0]!.outcome).toBe('CREATED');
+      const [stored] =
+        await owner`SELECT stem,explanation FROM question_versions WHERE id=${imported.value.items[0]!.questionVersionId!}`;
+      const digest = (value: unknown) =>
+        createHash('sha256').update(JSON.stringify(value)).digest('hex');
+      expect(digest(stored!.stem)).toBe(digest({ text: question.stem.text }));
+      expect(digest(stored!.explanation)).toBe(digest({ text: question.explanation.text }));
+      console.info(
+        JSON.stringify({
+          measurement: 'content_query_response_bytes',
+          uploads: 20,
+          questionsImported: 1,
+          listResponseBytes: list.responseBytes,
+          importResponseBytes: imported.responseBytes,
+        }),
+      );
+      // Generous bounds on deliberately large fixtures, not production performance targets.
+      expect(list.responseBytes).toBeLessThan(20000);
+      expect(imported.responseBytes).toBeLessThan(20000);
+    });
   },
 );

@@ -40,6 +40,19 @@ import type {
 } from './content-uploads.dto';
 import type { AdminTransaction } from '../audit/admin-mutation';
 
+type UploadSummaryRow = Pick<
+  typeof contentUploadSessions.$inferSelect,
+  'id' | 'fileName' | 'createdAt' | 'revision' | 'state' | 'packageId' | 'error'
+> & {
+  questionCount: number;
+  previewTitle: string | null;
+  previewType: string | null;
+  contentIssues: number;
+  mappingIssues: number;
+  parsingIssues: number;
+  hasReport: boolean;
+  canImportDraft: boolean;
+};
 const sessionNamespace = (id: string) => `UPLOAD_${id.replaceAll('-', '')}`;
 @Injectable()
 export class ContentUploadsService {
@@ -580,7 +593,27 @@ export class ContentUploadsService {
     );
     const rows = await getDatabase()
       .db.select({
-        upload: contentUploadSessions,
+        upload: {
+          id: contentUploadSessions.id,
+          fileName: contentUploadSessions.fileName,
+          createdAt: contentUploadSessions.createdAt,
+          revision: contentUploadSessions.revision,
+          state: contentUploadSessions.state,
+          packageId: contentUploadSessions.packageId,
+          error: contentUploadSessions.error,
+          questionCount: sql<number>`coalesce(jsonb_array_length(${contentUploadSessions.preview}->'selectedIds'),jsonb_array_length(${contentUploadSessions.report}->'items'),0)`,
+          previewTitle: sql<
+            string | null
+          >`${contentUploadSessions.preview}->'destination'->>'title'`,
+          previewType: sql<
+            string | null
+          >`${contentUploadSessions.preview}->'destination'->>'assessmentType'`,
+          contentIssues: sql<number>`coalesce((${contentUploadSessions.preview}->'validationCounts'->>'content')::int,0)`,
+          mappingIssues: sql<number>`coalesce((${contentUploadSessions.preview}->'validationCounts'->>'mapping')::int,0)`,
+          parsingIssues: sql<number>`coalesce(jsonb_array_length(${contentUploadSessions.preview}->'issues'),0)`,
+          hasReport: sql<boolean>`${contentUploadSessions.report} is not null and ${contentUploadSessions.report}<>'null'::jsonb`,
+          canImportDraft: sql<boolean>`coalesce((${contentUploadSessions.report}->>'canImportDraft')::boolean,false)`,
+        },
         actorName: users.displayName,
         title: assessmentPackages.name,
         type: assessmentPackages.assessmentType,
@@ -604,7 +637,7 @@ export class ContentUploadsService {
     };
   }
   private summary(
-    row: typeof contentUploadSessions.$inferSelect,
+    row: UploadSummaryRow,
     actorName: string,
     title: string | null,
     type: string | null,
@@ -618,23 +651,19 @@ export class ContentUploadsService {
       revision: row.revision,
       state: row.state,
       status,
-      questionCount:
-        row.preview?.selectedIds.length ??
-        (row.report as ImportReportDto | null)?.items.length ??
-        0,
-      title: title ?? row.preview?.destination?.title ?? null,
-      assessmentType: type ?? row.preview?.destination?.assessmentType ?? null,
+      questionCount: row.questionCount,
+      title: title ?? row.previewTitle,
+      assessmentType: type ?? row.previewType,
       packageId: row.packageId,
       error: row.error,
       validationResult:
         row.error ??
-        (row.preview?.validationCounts &&
-        (row.preview.validationCounts.content || row.preview.validationCounts.mapping)
-          ? `Konten: ${row.preview.validationCounts.content} masalah; pemetaan: ${row.preview.validationCounts.mapping} belum selesai`
-          : row.preview?.issues.length
-            ? `${row.preview.issues.length} masalah parsing`
-            : row.report
-              ? (row.report as ImportReportDto).canImportDraft
+        (row.contentIssues || row.mappingIssues
+          ? `Konten: ${row.contentIssues} masalah; pemetaan: ${row.mappingIssues} belum selesai`
+          : row.parsingIssues
+            ? `${row.parsingIssues} masalah parsing`
+            : row.hasReport
+              ? row.canImportDraft
                 ? 'Isi valid'
                 : 'Pemetaan/validasi belum lengkap'
               : 'Belum divalidasi'),
@@ -747,7 +776,20 @@ export class ContentUploadsService {
             });
     return {
       ...this.summary(
-        row,
+        {
+          ...row,
+          questionCount:
+            row.preview?.selectedIds.length ??
+            (row.report as ImportReportDto | null)?.items.length ??
+            0,
+          previewTitle: row.preview?.destination?.title ?? null,
+          previewType: row.preview?.destination?.assessmentType ?? null,
+          contentIssues: row.preview?.validationCounts?.content ?? 0,
+          mappingIssues: row.preview?.validationCounts?.mapping ?? 0,
+          parsingIssues: row.preview?.issues.length ?? 0,
+          hasReport: !!row.report,
+          canImportDraft: !!(row.report as ImportReportDto | null)?.canImportDraft,
+        },
         actorName,
         p?.name ?? null,
         p?.assessmentType ?? null,
