@@ -342,9 +342,7 @@ export function validateResult(output, input, expectedDispatch) {
     new Map(input.comparisons.map((c) => [c.comparisonId, c])),
     'comparisonId',
   );
-  const people = new Map(
-    (input.ecosystem === 'TRYOUT' ? input.respondents : []).map((r) => [r.attemptId, r]),
-  );
+  const people = new Map(input.respondents.map((r) => [r.attemptId, r]));
   exactCoverage(o.respondents, people, 'attemptId');
   unique(o.respondents, 'respondentId');
   const counts = new Map(input.items.map((i) => [i.questionVersionId, 0]));
@@ -417,7 +415,19 @@ export function validateResult(output, input, expectedDispatch) {
       ),
       'IRT_IDENTITY_MISMATCH',
     );
-    if (row.status === 'SCORED') {
+    if (row.status === 'SCORED' && input.ecosystem === 'DRILL') {
+      assert(
+        row.theta !== null &&
+          row.standardError !== null &&
+          row.score === null &&
+          row.scoreMapping === null &&
+          row.referencePackage === null &&
+          row.usedQuestionVersionIds.length > 0 &&
+          row.reasonCodes.length === 0 &&
+          packageResults.get(pk(row)).measurementState === 'CALIBRATED',
+        'IRT_RESULT_STATE_INVALID',
+      );
+    } else if (row.status === 'SCORED') {
       assert(
         input.policies.scoreMapping !== null &&
           same(row.scoreMapping, input.policies.scoreMapping) &&
