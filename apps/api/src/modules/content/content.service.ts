@@ -138,8 +138,8 @@ export class ContentService {
     @Inject(AssessmentPoliciesService) private readonly policies: AssessmentPoliciesService,
     @Inject(AssessmentReadinessService) private readonly readiness: AssessmentReadinessService,
   ) {}
-  async curriculum(): Promise<AdminCurriculumDto> {
-    const { db } = getDatabase();
+  async curriculum(tx?: AdminTransaction): Promise<AdminCurriculumDto> {
+    const db = tx ?? getDatabase().db;
     const [chapterRows, subRows, competencyRows, levelRows] = await Promise.all([
       db.select().from(chapters).orderBy(asc(chapters.displayOrder)),
       db.select().from(subchapters).orderBy(asc(subchapters.displayOrder)),
