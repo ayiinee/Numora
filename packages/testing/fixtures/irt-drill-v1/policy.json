@@ -1,0 +1,12 @@
+﻿{
+  "version": "irt-drill-research-policy-v1",
+  "purpose": "RESEARCH_ONLY",
+  "productionApproved": false,
+  "scope": {"ecosystem":"DRILL", "dimension":"LEVEL"},
+  "minimumValidItems": 0,
+  "comparisons": [],
+  "fallback": null,
+  "firstValidEvidence": true,
+  "crossFeatureExposure": "RECORDED_NOT_AUTOMATICALLY_EXCLUDED",
+  "notes": ["Engine and scientific thresholds are deferred to sprint step 5.", "No participant score mapping or Drill fallback is defined."]
+}

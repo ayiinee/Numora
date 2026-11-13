@@ -1,0 +1,11 @@
+﻿{
+  "version": "irt-drill-fixtures-v1",
+  "purpose": "SYNTHETIC_ONLY",
+  "canonicalOwner": "Numora",
+  "context": "DRILL/LEVEL",
+  "seed": 20261121,
+  "perArm": [500,500],
+  "anchors": 3,
+  "focal": 7,
+  "source": "existing research.irt.synthetic.generate"
+}
