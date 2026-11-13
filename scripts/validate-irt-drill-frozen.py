@@ -13,7 +13,10 @@ def check(folder):
  for x in packages: assert len(x['questionVersionIds'])==len(set(x['questionVersionIds']))
  assert len(p['items'])==len(set(i['questionVersionId'] for i in p['items']))
  assert all('studentId' not in r and 'email' not in r for r in p['respondents'])
- return digest(p)
+ recorded=json.loads((folder/'manifest.json').read_text(encoding='utf-8'))
+ actual=digest(p)
+ assert recorded['sha256']==actual, 'DRILL_INPUT_DIGEST_MISMATCH'
+ return actual
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('folders',nargs='+');a=ap.parse_args(); values=[check(Path(x)) for x in a.folders]; assert values[0]==check(Path(a.folders[0])); print(json.dumps({'status':'PASS','digests':values}))
 if __name__=='__main__':main()
