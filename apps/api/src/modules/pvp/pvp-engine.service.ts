@@ -5,6 +5,7 @@ import {
   Injectable,
   NotFoundException,
   ServiceUnavailableException,
+  type OnModuleDestroy,
 } from '@nestjs/common';
 import { randomBytes, randomUUID } from 'node:crypto';
 import {
@@ -42,6 +43,7 @@ import {
   unavailableDrillBank,
   decodePvpSingleChoice as decodeSingleChoice,
 } from './pvp-drill-bank';
+import { PvpAvailabilityCache } from './pvp-availability-cache';
 
 type Database = ReturnType<typeof getDatabase>['db'];
 type Transaction = Parameters<Parameters<Database['transaction']>[0]>[0];
@@ -49,11 +51,12 @@ type Match = typeof pvpMatches.$inferSelect;
 const failure = (code: string, detail: string) => new ConflictException({ code, detail });
 
 @Injectable()
-export class PvpEngineService {
+export class PvpEngineService implements OnModuleDestroy {
   /** Injectable clock is supplied directly by fixture tests, never from a request. */
   readonly now: () => Date = () => new Date();
   private schedulerReady = false;
   private readonly drillBank = new PvpDrillBank();
+  private readonly contentCache = new PvpAvailabilityCache();
   constructor(@Inject(PVP_POLICY) private readonly policy: PvpPolicy | null) {
     if (this.drillBank.contentMode === 'temporary-owner-accepted' && policy?.mode !== 'demo')
       throw new Error('Temporary PvP content requires a DEMO policy.');
@@ -72,6 +75,7 @@ export class PvpEngineService {
     return process.env.PVP_NEW_MATCHES_ENABLED !== 'false';
   }
   async availability(studentId?: string) {
+    let contentRevision: string;
     const checkReason = async (check: () => Promise<void>) => {
       try {
         await check();
@@ -83,7 +87,7 @@ export class PvpEngineService {
       }
     };
     const checkBank = async (difficulty: Difficulty) => {
-      if (!(await this.drillBank.hasEnoughFamilies(getDatabase().db, difficulty)))
+      if (!(await this.contentCache.hasEnoughFamilies(this.drillBank, difficulty, contentRevision)))
         throw unavailableDrillBank();
     };
     const temporary = this.drillBank.contentMode === 'temporary-owner-accepted';
@@ -98,6 +102,7 @@ export class PvpEngineService {
       guardReason ??
       (await checkReason(async () => {
         await this.scoringVersion(getDatabase().db);
+        contentRevision = await this.contentCache.revision();
         // All three timer choices use the same bank in temporary mode.
         if (temporary) await checkBank('easy');
       }));
@@ -122,6 +127,10 @@ export class PvpEngineService {
       difficulties,
       activeMatchId: studentId ? await this.activeRoom(studentId) : null,
     };
+  }
+
+  onModuleDestroy() {
+    this.contentCache.close();
   }
 
   async activeRoom(studentId: string) {

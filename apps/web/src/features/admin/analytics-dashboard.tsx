@@ -62,8 +62,8 @@ const primary = [
 const attention = [
   {
     key: 'openReports',
-    label: 'Laporan terbuka',
-    description: 'Laporan soal dan video berstatus terbuka atau dalam review.',
+    label: 'Kasus soal dan laporan video terbuka',
+    description: 'Kasus soal dan laporan video yang terbuka atau sedang ditinjau.',
     href: '/admin/content?view=reports',
     action: 'Tinjau laporan',
   },

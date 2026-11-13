@@ -522,7 +522,46 @@
         "reasonCodes": []
       }
     ],
-    "respondents": [],
+    "respondents": [
+      {
+        "respondentId": "10000000-0000-4000-8000-00000000001e",
+        "attemptId": "10000000-0000-4000-8000-000000000028",
+        "packageId": "10000000-0000-4000-8000-00000000000a",
+        "packageVersion": 1,
+        "batchId": null,
+        "status": "SCORED",
+        "theta": 0.4,
+        "standardError": 0.3,
+        "score": null,
+        "scoreMapping": null,
+        "referencePackage": null,
+        "usedQuestionVersionIds": [
+          "10000000-0000-4000-8000-000000000064",
+          "10000000-0000-4000-8000-000000000065",
+          "10000000-0000-4000-8000-000000000066"
+        ],
+        "reasonCodes": []
+      },
+      {
+        "respondentId": "10000000-0000-4000-8000-00000000001f",
+        "attemptId": "10000000-0000-4000-8000-000000000029",
+        "packageId": "10000000-0000-4000-8000-00000000000b",
+        "packageVersion": 2,
+        "batchId": null,
+        "status": "SCORED",
+        "theta": 0.4,
+        "standardError": 0.3,
+        "score": null,
+        "scoreMapping": null,
+        "referencePackage": null,
+        "usedQuestionVersionIds": [
+          "10000000-0000-4000-8000-000000000064",
+          "10000000-0000-4000-8000-000000000065",
+          "10000000-0000-4000-8000-000000000066"
+        ],
+        "reasonCodes": []
+      }
+    ],
     "comparisons": [
       {
         "comparisonId": "10000000-0000-4000-8000-000000000190",

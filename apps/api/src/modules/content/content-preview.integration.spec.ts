@@ -2847,7 +2847,7 @@ describe.skipIf(!testUrl)(
       const correctOptionId = q.answer.optionId;
       const packageIds: string[] = [];
       let questionIds: string[] = [];
-      for (let n = 0; n < 2; n++) {
+      for (let n = 0; n < 3; n++) {
         const p = await ok<{ id: string }>('admin/content/packages', 'POST', {
           familyCode: `BATCH-${suffix}`,
           packageVersion: n + 1,
@@ -2927,6 +2927,31 @@ describe.skipIf(!testUrl)(
           { schoolId: schoolB, packageId: packageIds[1]! },
         ],
       });
+      const sparePackageId = packageIds.pop()!;
+      const sparePath = `admin/content/packages/${sparePackageId}`;
+      const spare = await ok<ContentPackageDetailDto>(sparePath);
+      const spareBatch = await ok<{ id: string }>('admin/tryout-batches', 'POST', {
+        ...makeInput('archive race'),
+        packageIds: [sparePackageId],
+        schools: [],
+      });
+      const [archive, publish] = await Promise.all([
+        request(`${sparePath}/archive`, 'POST', { expectedRevision: spare.contentRevision }),
+        request(`admin/tryout-batches/${spareBatch.id}/publish`, 'POST', { expectedRevision: 1 }),
+      ]);
+      if (publish.ok) {
+        expect(archive.status).toBe(409);
+        expect(await archive.json()).toMatchObject({ code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH' });
+        await ok(`admin/tryout-batches/${spareBatch.id}/cancel`, 'POST', {
+          expectedRevision: 2,
+          reason: 'TEST ONLY archive after cancellation',
+        });
+        await ok(`${sparePath}/archive`, 'POST', { expectedRevision: spare.contentRevision });
+      } else {
+        expect(archive.status).toBe(201);
+        expect(publish.status).toBe(400);
+      }
+      expect((await ok<ContentPackageDetailDto>(sparePath)).status).toBe('ARCHIVED');
       for (const role of ['operations', 'unassigned', 'student', 'teacher', ''])
         expect(
           (await request('admin/tryout-batches', 'POST', makeInput('denied'), role)).status,
@@ -3034,6 +3059,20 @@ describe.skipIf(!testUrl)(
       );
       expect(races.map((r) => r.status).sort()).toEqual([201, 409]);
       const activeId = races[0]!.ok ? created.id : competing.id;
+      async function expectArchiveBlocked(packageId: string) {
+        const path = `admin/content/packages/${packageId}`;
+        const pack = await ok<ContentPackageDetailDto>(path);
+        const response = await request(`${path}/archive`, 'POST', {
+          expectedRevision: pack.contentRevision,
+        });
+        expect(response.status).toBe(409);
+        expect(await response.json()).toMatchObject({
+          code: 'TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH',
+        });
+        expect((await ok<ContentPackageDetailDto>(path)).status).toBe('PUBLISHED');
+      }
+      await expectArchiveBlocked(packageIds[0]!);
+      await expectArchiveBlocked(packageIds[1]!);
       const service = app.get(TryoutBatchesService);
       const tryout = app.get(TryoutService);
       expect(
@@ -3049,6 +3088,8 @@ describe.skipIf(!testUrl)(
       await expect(tryout.startBatch('Bearer student', activeId, schoolA)).rejects.toThrow();
       // TEST ONLY advance fixture schedule, without waiting an hour. Runtime uses database time.
       await owner`UPDATE tryout_batches SET starts_at=now()-interval '1 minute' WHERE id=${activeId}`;
+      await expectArchiveBlocked(packageIds[0]!);
+      await expectArchiveBlocked(packageIds[1]!);
       const visible = await service.studentList(student!.id as string);
       expect(visible.routingActive).toBe(true);
       expect(visible.items.find((b) => b.id === activeId)!.schools).toHaveLength(2);

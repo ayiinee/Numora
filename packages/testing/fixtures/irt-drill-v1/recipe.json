@@ -1,0 +1,17 @@
+{
+  "version": "irt-drill-fixtures-v1",
+  "purpose": "SYNTHETIC_ONLY",
+  "canonicalOwner": "Numora",
+  "context": "DRILL/LEVEL",
+  "seed": 20261121,
+  "perArm": [
+    500,
+    500
+  ],
+  "anchors": 3,
+  "focal": 7,
+  "source": "existing research.irt.synthetic.generate",
+  "sourceSha256": {
+    "research/irt/synthetic.py": "a39c03520f8b80d2c73e23369f8e54be81f247db22a158932e84085e5560084f"
+  }
+}

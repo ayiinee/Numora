@@ -6,6 +6,7 @@ import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import type postgres from 'postgres';
 import { reconcileDevelopmentHistory } from './development-history-bridge.js';
+import { appliedPvpCacheAlias, pvpCacheLegacyAliases } from './pvp-cache-migration-alias.js';
 
 /** Preserve published fork hashes while recovering only their known skipped DDL. */
 export async function migrateIntegratedDatabase(
@@ -22,6 +23,30 @@ export async function migrateIntegratedDatabase(
       const history = await tx<{ hash: string; created_at: string }[]>`
         SELECT hash, created_at::text FROM drizzle.__drizzle_migrations ORDER BY id`;
       if (await reconcileDevelopmentHistory(tx, migrations, migrationsFolder, history)) return true;
+      const cacheAlias = appliedPvpCacheAlias(migrations, history);
+      if (cacheAlias) {
+        const pair = (hash: string, cursor: string | number) => `${hash}:${cursor}`;
+        const applied = new Set(history.map((row) => pair(row.hash, row.created_at)));
+        const allowed = new Set([
+          ...migrations.map((entry) => pair(entry.hash, entry.folderMillis)),
+          ...pvpCacheLegacyAliases.map((row) => pair(row.hash, row.created_at)),
+        ]);
+        if (
+          !migrations
+            .slice(0, 72)
+            .every((entry) => applied.has(pair(entry.hash, entry.folderMillis))) ||
+          !history.every((row) => allowed.has(pair(row.hash, row.created_at)))
+        )
+          throw new Error('Unknown PvP cache migration history requires explicit reconciliation.');
+        for (const entry of migrations) {
+          if (applied.has(pair(entry.hash, entry.folderMillis))) continue;
+          if (entry !== cacheAlias)
+            for (const statement of entry.sql) if (statement.trim()) await tx.unsafe(statement);
+          await tx`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+            VALUES(${entry.hash},${entry.folderMillis})`;
+        }
+        return true;
+      }
       const hashes = new Set(history.map((row) => row.hash));
       const cursor = Math.max(0, ...history.map((row) => Number(row.created_at)));
       // Canonical main retains Admin 0039-0048; only the original PvP trigger moves to 0049.

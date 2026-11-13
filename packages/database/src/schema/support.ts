@@ -104,7 +104,29 @@ export const questionReports = pgTable(
     ),
     reportedAt: timestamp('reported_at', { withTimezone: true }).notNull().defaultNow(),
   },
-  (table) => [index('question_reports_status_time_idx').on(table.status, table.reportedAt)],
+  (table) => [
+    index('question_reports_status_time_idx').on(table.status, table.reportedAt),
+    index('question_reports_answer_idx').on(table.attemptAnswerId),
+  ],
+).enableRLS();
+
+export const questionReportCases = pgTable(
+  'question_report_cases',
+  {
+    id: uuid('id').primaryKey().references(() => questionReports.id, { onDelete: 'restrict' }),
+    questionVersionId: uuid('question_version_id')
+      .notNull()
+      .unique('question_report_cases_version_uq')
+      .references(() => questionVersions.id, { onDelete: 'restrict' }),
+    status: reportStatus('status').notNull(),
+    followUp: text('follow_up'),
+    revisionQuestionVersionId: uuid('revision_question_version_id').references(
+      () => questionVersions.id,
+      { onDelete: 'restrict' },
+    ),
+    revision: integer('revision').notNull().default(0),
+  },
+  (table) => [check('question_report_cases_revision_ck', sql`${table.revision} >= 0`)],
 ).enableRLS();
 
 export const videoReports = pgTable(

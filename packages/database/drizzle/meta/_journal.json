@@ -505,6 +505,27 @@
       "when": 1794312000000,
       "tag": "0071_tryout_extend_open_batch",
       "breakpoints": true
+    },
+    {
+      "idx": 72,
+      "version": "7",
+      "when": 1794315600000,
+      "tag": "0072_question_report_cases",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1794315600001,
+      "tag": "0073_curriculum_archive_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794315600002,
+      "tag": "0074_pvp_content_cache_revision",
+      "breakpoints": true
     }
   ]
 }

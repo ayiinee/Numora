@@ -6,7 +6,7 @@ import {
   getDatabase,
   questions,
   questionVersions,
-  questionReports,
+  questionReportCases,
   videoReports,
   schools,
 } from '@tka/database';
@@ -32,8 +32,8 @@ export class AdminService {
       content
         ? db
             .select({ count: count() })
-            .from(questionReports)
-            .where(inArray(questionReports.status, ['OPEN', 'IN_REVIEW']))
+            .from(questionReportCases)
+            .where(inArray(questionReportCases.status, ['OPEN', 'IN_REVIEW']))
         : empty,
       content
         ? db
@@ -95,6 +95,7 @@ export class AdminService {
                         'drill_package',
                         'tryout_package',
                         'question_report',
+                        'question_report_case',
                         'video_report',
                         'video',
                         'video_mapping',

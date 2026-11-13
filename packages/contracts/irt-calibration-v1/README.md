@@ -81,7 +81,7 @@ UUID pada wire harus lowercase dengan tanda hubung standar. Adapter menormalisas
 
 ## Output parameter, perbandingan dan hasil peserta
 
-`executionStatus` dan `measurementState` berbeda. Sukses transport/eksekusi tidak berarti model atau item layak. Result SUCCEEDED membawa outcome lengkap: tepat satu hasil per item, paket dan perbandingan input, serta **tepat satu hasil untuk setiap attempt Tryout**. Drill mengirim respondents kosong karena kontrak ini tidak menerbitkan theta/nilai personal Drill.
+`executionStatus` dan `measurementState` berbeda. Sukses transport/eksekusi tidak berarti model atau item layak. Result SUCCEEDED membawa outcome lengkap: tepat satu hasil per item, paket dan perbandingan input, serta tepat satu hasil untuk setiap attempt Tryout atau respondent Drill. Drill rows hanya diagnostik riset: `batchId` null, score/fallback/mapping/reference null, dan tidak boleh dipublikasikan sebagai nilai siswa.
 
 Item CALIBRATED membawa discrimination a dan SE, serta bukti gate. 2PL menggunakan logistic `1/(1+exp(-a*(theta-b)))`, D=1 dan tanpa guessing parameter; b/SE wajib, steps kosong. GPCM memakai `P(X=k|theta) ∝ exp(sum(s=1..k, a*(theta-d_s)))`: `steps.value` adalah **absolute step difficulty d_s** pada scale context, bukan deviasi step ditambah b. Oleh karena itu GPCM mengirim b/SE null dan tepat maximumScoreCategory steps bernomor 1..m. Step tidak dipaksa terurut karena diagnosis kategori/fit ditangani model/gate. State selain CALIBRATED mengirim parameters null dan reasonCodes, bukan parameter tebakan.
 
@@ -97,6 +97,8 @@ Untuk peserta Tryout:
 - Semua arm merujuk `referencePackage` yang sama serta **mask acuan `referenceQuestionVersionIds` frozen dalam input**. Mask harus subset valid original acuan, dan seluruh item acuan yang digunakan harus calibrated sebelum score IRT diterima. Formula prediksi/estimator/prior dan rounding ada pada mapping policy. Benar semua tidak otomatis 100; tidak ada min–max atau percentile/rank dalam output.
 - **INSUFFICIENT / NOT_COMPARABLE:** theta/SE/score/mapping/reference null, used items kosong dan alasan wajib. Main menghitung fallback rubrik dari grades canonical, bukan AI menyisipkan raw score berlabel IRT.
 - **UNSCORABLE:** tidak ada item/observasi valid untuk menilai peserta; field nilai null, bukan nol. Cakupan minimum dan insiden tetap ditentukan policy main/Curriculum. Menyatakan semua salah/kosong bukan alasan UNSCORABLE jika respons/item valid.
+
+Untuk peserta Drill, `SCORED` membawa theta dan standard error diagnostik tanpa score; `INSUFFICIENT`, `NOT_COMPARABLE`, `UNSCORABLE`, dan `NOT_EVALUATED` membawa theta/SE null serta reason code. Drill tidak memiliki fallback nilai atau score mapping.
 
 ## Kegagalan, retry dan publikasi
 
