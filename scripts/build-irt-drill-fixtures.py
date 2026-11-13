@@ -9,7 +9,9 @@ NAMESPACE=UUID('cdf3ce53-66fe-4e61-ab6e-b2c0cbb69fb1')
 def digest(v): return hashlib.sha256((json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
 def build(ai, small=False):
  sys.path.insert(0,str(ai)); from research.irt.synthetic import generate
- recipe=json.loads((FIX/'recipe.json').read_text(encoding='utf-8-sig'))\n for name,pin in recipe['sourceSha256'].items():\n  if hashlib.sha256((ai/name).read_bytes().replace(b'\\r\\n',b'\\n')).hexdigest()!=pin: raise ValueError('DRILL_SOURCE_PIN_MISMATCH: '+name)
+ recipe=json.loads((FIX/'recipe.json').read_text(encoding='utf-8-sig'))
+ for name,pin in recipe['sourceSha256'].items():
+  if hashlib.sha256((ai/name).read_bytes().replace(b'\r\n',b'\n')).hexdigest()!=pin: raise ValueError('DRILL_SOURCE_PIN_MISMATCH: '+name)
  value, truth=generate(recipe['perArm'][0],recipe['seed'],'MIXED',2,include_mcma=True)
  packages=[]; allowed=set()
  common=value['packages'][0]['questionVersionIds'][:recipe['anchors']]
