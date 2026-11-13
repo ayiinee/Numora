@@ -45,6 +45,16 @@ Laporan soal mencari item canonical milik Student dan answer tersimpan, lalu men
 
 Kedua POST menerima clientRequestId UUID opsional. Primary key/advisory lock menjaga replay actor/referensi/category/details sama; ID reuse berbeda 409. Video report baru mengikat attemptContext (attempt/level/subchapter/video) melalui migrasi 0011; replay attempt berbeda ditolak. Laporan lama tetap context null karena original attempt tidak diketahui, tetapi ownership diperiksa pada retry, termasuk setelah mapping diarsipkan. Form mempertahankan UUID untuk isi sama dan membuat UUID baru setelah perubahan. Client lama tanpa ID tetap diterima tetapi retry-nya belum idempotent.
 
+**ENGINEERING IMPLEMENTATION — moderasi versi soal.** `GET /admin/reports` menampilkan satu entri per versi soal dengan `reportCount`. Filter status berlaku pada kasus. Filter kategori dan tanggal memilih kasus yang memiliki laporan sumber yang cocok. `GET /admin/reports/QUESTION/{id}` menerima ID kasus atau ID laporan sumber lama dan mengembalikan seluruh laporan terkait, riwayat penanganan, serta `caseRevision`. Respons tidak memuat identitas pelapor atau jawaban siswa.
+
+`PATCH /admin/reports/QUESTION/{id}` memerlukan `expectedRevision` dari detail kasus. Kasus bergerak dari `OPEN` ke `IN_REVIEW`, lalu ke `RESOLVED` atau `REJECTED` dengan alasan dan pilihan `contentCorrected`. Jika `true`, `revisionQuestionVersionId` wajib menunjuk turunan versi soal yang dilaporkan. Jika `false`, alasan penutupan cukup. Laporan baru menaikkan revisi kasus dan membuka kembali kasus terminal. Revisi yang tertinggal menghasilkan `409 REPORT_CASE_CHANGED`. Riwayat keputusan tetap bisa dibaca. Laporan video tetap ditangani per laporan.
+
+**ENGINEERING IMPLEMENTATION — arsip materi.** PATCH `chapters`, `subchapters`, `competencies` atau `levels` dengan `status: ARCHIVED` mengembalikan `409 CURRICULUM_USED_BY_ACTIVE_PACKAGES` ketika materi menjadi cakupan paket Pretest, Drill, atau Tryout berstatus `PUBLISHED` atau dipakai oleh soal di dalamnya. Pesan menyebut hingga lima paket penghalang. Publikasi dan arsip mengambil kunci yang bertentangan pada materi yang sama, sehingga paket baru tidak bisa terbit bersamaan dengan pengarsipan materi yang dipakainya.
+
+`POST /admin/content/packages/{id}/archive` mengembalikan `409 TRYOUT_PACKAGE_USED_BY_ACTIVE_BATCH` jika paket dipakai batch Tryout Admin yang sudah terbit, belum dibatalkan, dan belum mencapai waktu tutup. Pemeriksaan mencakup batch terjadwal dan berjalan. Arsip, publikasi, dan perpanjangan jadwal memakai kunci transaksi yang sama.
+
+Terapkan migrasi `0072` dan `0073` melalui migrator resmi sebelum merilis API dan web versi ini. Jadwalkan pergantian bersama agar moderator memakai API kasus dan kontrak `expectedRevision` yang sama.
+
 ## Integrasi IRT — #9
 
 `IrtModule` mengekspor `IrtIntegrationService` untuk orchestrator/worker Qurotul. Tidak ada endpoint publik untuk menyuntikkan statistik.

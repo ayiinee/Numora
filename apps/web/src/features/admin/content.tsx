@@ -428,7 +428,7 @@ function AdminContentScreenContent({ initialView }: { initialView: View }) {
                   <strong>{current.dashboard.readyVersions?.toLocaleString('id-ID') ?? '—'}</strong>
                 </span>
                 <span>
-                  Laporan terbuka{' '}
+                  Kasus soal dan laporan video terbuka{' '}
                   <strong>{current.dashboard.openReports?.toLocaleString('id-ID') ?? '—'}</strong>
                 </span>
               </div>

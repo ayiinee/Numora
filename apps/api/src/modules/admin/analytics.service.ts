@@ -83,14 +83,14 @@ export class AdminAnalyticsService {
           ['readyVersions', 'Versi soal READY'],
           ['levelsWithPublishedDrill', 'Level dengan paket Drill aktif'],
           ['totalLevels', 'Level tercatat'],
-          ['openReports', 'Laporan terbuka'],
+          ['openReports', 'Kasus soal dan laporan video terbuka'],
         ],
         () => client`
         SELECT (SELECT count(*) FROM question_versions) AS versions,
         (SELECT count(*) FROM question_versions WHERE content_status='READY') AS "readyVersions",
         (SELECT count(DISTINCT level_id) FROM assessment_packages WHERE assessment_type='DRILL' AND purpose='REGULAR' AND status='PUBLISHED' AND NOT is_demo) AS "levelsWithPublishedDrill",
         (SELECT count(*) FROM levels) AS "totalLevels",
-        (SELECT count(*) FROM question_reports WHERE status IN ('OPEN','IN_REVIEW')) + (SELECT count(*) FROM video_reports WHERE status IN ('OPEN','IN_REVIEW')) AS "openReports"`,
+        (SELECT count(*) FROM question_report_cases WHERE status IN ('OPEN','IN_REVIEW')) + (SELECT count(*) FROM video_reports WHERE status IN ('OPEN','IN_REVIEW')) AS "openReports"`,
       );
     }
     if (capabilities.includes('ANALYTICS_CONTENT') || capabilities.includes('ANALYTICS_OPERATIONS'))

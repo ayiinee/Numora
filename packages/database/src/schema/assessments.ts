@@ -354,6 +354,7 @@ export const attemptItems = pgTable(
   },
   (table) => [
     uniqueIndex('attempt_items_attempt_order_uq').on(table.attemptId, table.displayOrder),
+    index('attempt_items_question_version_idx').on(table.questionVersionId),
     uniqueIndex('attempt_items_attempt_package_item_uq').on(table.attemptId, table.packageItemId),
     foreignKey({
       name: 'attempt_items_attempt_package_fk',

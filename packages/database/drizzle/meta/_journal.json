@@ -509,8 +509,22 @@
     {
       "idx": 72,
       "version": "7",
-      "when": 1794312000001,
-      "tag": "0072_pvp_content_cache_revision",
+      "when": 1794315600000,
+      "tag": "0072_question_report_cases",
+      "breakpoints": true
+    },
+    {
+      "idx": 73,
+      "version": "7",
+      "when": 1794315600001,
+      "tag": "0073_curriculum_archive_guard",
+      "breakpoints": true
+    },
+    {
+      "idx": 74,
+      "version": "7",
+      "when": 1794315600002,
+      "tag": "0074_pvp_content_cache_revision",
       "breakpoints": true
     }
   ]

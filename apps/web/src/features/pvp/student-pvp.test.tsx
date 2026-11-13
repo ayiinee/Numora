@@ -466,3 +466,59 @@ it('replaces failed QR loading with a truthful code/link fallback', async () => 
     'NMR842ABC123',
   );
 });
+
+it.each(['WAITING', 'RUNNING'] as const)(
+  'keeps one exit control in the %s room',
+  async (status) => {
+    serveMatch(matchSnapshot(status));
+    render(
+      <StudentAccess>
+        <PvpMatchScreen />
+      </StudentAccess>,
+    );
+    await screen.findByRole('button', { name: status === 'WAITING' ? 'Keluar' : 'Menyerah' });
+    expect(screen.queryByRole('button', { name: 'Keluar pertandingan' })).toBeNull();
+  },
+);
+
+it('reports a rejected join directly under the room code form', async () => {
+  render(
+    <StudentAccess>
+      <PvpScreen />
+    </StudentAccess>,
+  );
+  fireEvent.click(await screen.findByRole('tab', { name: /Gabung via Kode/ }));
+  fireEvent.change(await screen.findByLabelText(/Kode room/), {
+    target: { value: 'NMRABCDEFG12' },
+  });
+  mocks.emit.mockResolvedValue({
+    payload: { ok: false, error: { detail: 'Room sudah berisi dua pemain.' } },
+  });
+  fireEvent.click(screen.getByRole('button', { name: 'Gabung room' }));
+  const alert = await screen.findByRole('alert');
+  expect(alert.textContent).toBe('Room sudah berisi dua pemain.');
+  expect(document.querySelector('.pvp-lobby-main')?.contains(alert)).toBe(true);
+  expect(
+    alert.compareDocumentPosition(document.querySelector('.pvp-lobby-context')!) &
+      Node.DOCUMENT_POSITION_FOLLOWING,
+  ).toBeTruthy();
+});
+
+it('shows a single exit path once the server says the student left the room', async () => {
+  serveMatch({ ...matchSnapshot('WAITING'), participantActive: false, players: [] });
+  render(
+    <StudentAccess>
+      <PvpMatchScreen />
+    </StudentAccess>,
+  );
+  await screen.findByText('Kamu sudah keluar dari room');
+  expect(document.querySelector('.pvp-header h1')?.textContent).toBe('Duel PvP');
+  expect(screen.queryByText('Terhubung')).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Keluar' })).toBeNull();
+  expect(screen.queryByRole('button', { name: 'Saya siap' })).toBeNull();
+  expect(
+    screen
+      .getAllByRole('link', { name: 'Kembali ke PvP' })
+      .every((link) => link.getAttribute('href') === '/student/pvp'),
+  ).toBe(true);
+});

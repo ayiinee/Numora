@@ -31,6 +31,10 @@ import type {
   TryoutBatchQueryDto,
 } from './tryout-batches.dto';
 
+export function lockTryoutBatchSchedule(tx: AdminTransaction) {
+  return tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+}
+
 export function batchState(
   b: { adminPublishedAt: Date | null; cancelledAt: Date | null; startsAt: Date; closesAt: Date },
   now: Date,
@@ -336,7 +340,7 @@ export class TryoutBatchesService {
       'tryout_batch_extended',
       'tryout_batch',
       async (tx) => {
-        await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+        await lockTryoutBatchSchedule(tx);
         const b = await this.batch(tx, id, true);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
         if (body.expectedRevision !== b.configRevision)
@@ -365,7 +369,7 @@ export class TryoutBatchesService {
       id ? 'tryout_batch_updated' : 'tryout_batch_created',
       'tryout_batch',
       async (tx) => {
-        await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+        await lockTryoutBatchSchedule(tx);
         const old = id ? await this.batch(tx, id, true) : null;
         if (old) await this.mutable(tx, old, body.expectedRevision);
         const [clock] = await tx.execute<{ now: string }>(sql`select clock_timestamp() as now`);
@@ -488,7 +492,7 @@ export class TryoutBatchesService {
   }
   publish(actor: string, id: string, revision: number) {
     return adminMutation(actor, 'tryout_batch_published', 'tryout_batch', async (tx) => {
-      await tx.execute(sql`select pg_advisory_xact_lock(hashtext('tryout-admin-batches'))`);
+      await lockTryoutBatchSchedule(tx);
       const b = await this.batch(tx, id, true);
       await this.mutable(tx, b, revision);
       if (b.adminPublishedAt) return { id };
