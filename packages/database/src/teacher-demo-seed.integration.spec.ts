@@ -109,7 +109,20 @@ describe.skipIf(!testUrl)('Teacher DEMO SQL on an isolated restored database', (
             }),
           ).rejects.toThrow(/collision or modified history/);
           expect(await verify(tx, config)).toEqual(first);
-          expect(await fingerprint(tx)).toEqual(before);
+          const duringSeed = await fingerprint(tx);
+          const cacheBefore = before.data.find((row) => row.table === 'pvp_content_revision');
+          const cacheDuring = duringSeed.data.find((row) => row.table === 'pvp_content_revision');
+          if (cacheBefore) {
+            // Content statements invalidate the cache even when the seed is replayed.
+            expect(cacheDuring?.count).toBe(cacheBefore.count);
+            expect(cacheDuring?.digest).not.toBe(cacheBefore.digest);
+          }
+          expect({
+            ...duringSeed,
+            data: duringSeed.data.map((row) =>
+              row.table === 'pvp_content_revision' && cacheBefore ? cacheBefore : row,
+            ),
+          }).toEqual(before);
           throw new Error('INTENTIONAL_TEST_ROLLBACK');
         });
       } catch (error) {
