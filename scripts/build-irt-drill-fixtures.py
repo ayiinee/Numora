@@ -9,7 +9,7 @@ NAMESPACE=UUID('cdf3ce53-66fe-4e61-ab6e-b2c0cbb69fb1')
 def digest(v): return hashlib.sha256((json.dumps(v,ensure_ascii=False,sort_keys=True,separators=(',',':'))+'\n').encode()).hexdigest()
 def build(ai, small=False):
  sys.path.insert(0,str(ai)); from research.irt.synthetic import generate
- recipe=json.loads((FIX/'recipe.json').read_text(encoding='utf-8-sig'))
+ recipe=json.loads((FIX/'recipe.json').read_text(encoding='utf-8-sig'))\n for name,pin in recipe['sourceSha256'].items():\n  if hashlib.sha256((ai/name).read_bytes().replace(b'\\r\\n',b'\\n')).hexdigest()!=pin: raise ValueError('DRILL_SOURCE_PIN_MISMATCH: '+name)
  value, truth=generate(recipe['perArm'][0],recipe['seed'],'MIXED',2,include_mcma=True)
  packages=[]; allowed=set()
  common=value['packages'][0]['questionVersionIds'][:recipe['anchors']]
@@ -33,4 +33,5 @@ def build(ai, small=False):
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--ai-repo',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--small',action='store_true');a=ap.parse_args(); payload=build(a.ai_repo.resolve(),a.small); a.output.mkdir(parents=True,exist_ok=True); (a.output/'drill-level-input.json').write_text(json.dumps(payload,ensure_ascii=False,sort_keys=True,indent=2)+'\n'); (a.output/'manifest.json').write_text(json.dumps({'version':'irt-drill-frozen-input-v1','sha256':digest(payload),'respondents':payload['manifest']['respondentCount'],'itemsPerArm':10,'anchorsPerArm':3,'focalPerArm':7,'productionApproved':False},indent=2)+'\n'); print(json.dumps({'sha256':digest(payload),'respondents':payload['manifest']['respondentCount'],'small':a.small}))
 if __name__=='__main__': main()
+
 
