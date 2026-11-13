@@ -15,7 +15,7 @@ export class MonitoringService {
   constructor(private readonly classes: ClassesService) {}
 
   async studentProgress(authorization: string | undefined, classId: string, studentId: string) {
-    const owned = await this.classes.students(authorization, classId);
+    const owned = await this.classes.students(authorization, classId, studentId);
     const student = owned.items.find((item) => item.id === studentId);
     if (!student)
       throw new NotFoundException({
@@ -45,35 +45,45 @@ export class MonitoringService {
       )
       .orderBy(asc(chapters.displayOrder), asc(subchapters.displayOrder), asc(levels.levelNumber));
     const states = await db
-      .select()
+      .select({
+        levelId: levelProgress.levelId,
+        unlockedAt: levelProgress.unlockedAt,
+        latestScore: levelProgress.latestScore,
+        bestScore: levelProgress.bestScore,
+      })
       .from(levelProgress)
       .where(eq(levelProgress.studentId, studentId));
     const active = await db
       .select({ levelId: assessmentAttempts.levelIdAtStart })
       .from(assessmentAttempts)
-      .where(and(
-        eq(assessmentAttempts.studentId, studentId),
-        eq(assessmentAttempts.assessmentType, 'DRILL'),
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.assessmentType, 'DRILL'),
           eq(assessmentAttempts.purpose, 'REGULAR'),
-        eq(assessmentAttempts.status, 'IN_PROGRESS'),
-      ));
+          eq(assessmentAttempts.status, 'IN_PROGRESS'),
+        ),
+      );
     const progressByLevel = new Map(states.map((row) => [row.levelId, row]));
-    const activeLevelIds = new Set(active.flatMap((row) => row.levelId ? [row.levelId] : []));
+    const activeLevelIds = new Set(active.flatMap((row) => (row.levelId ? [row.levelId] : [])));
     const [latest] = await db
       .select({ score: assessmentAttempts.score0To100 })
       .from(assessmentAttempts)
-      .where(and(
-        eq(assessmentAttempts.studentId, studentId),
-        eq(assessmentAttempts.assessmentType, 'DRILL'),
+      .where(
+        and(
+          eq(assessmentAttempts.studentId, studentId),
+          eq(assessmentAttempts.assessmentType, 'DRILL'),
           eq(assessmentAttempts.purpose, 'REGULAR'),
-        eq(assessmentAttempts.status, 'GRADED'),
-      ))
+          eq(assessmentAttempts.status, 'GRADED'),
+        ),
+      )
       .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
       .limit(1);
     return {
       class: owned.class,
       student,
-      latestDrillScore: latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
+      latestDrillScore:
+        latest?.score === null || latest?.score === undefined ? null : Number(latest.score),
       levels: published.map((level) => {
         const state = progressByLevel.get(level.levelId);
         return {
