@@ -12,20 +12,51 @@ import { ActivityRow, ProgressSummary } from './cards';
 import { useAssessmentHistory } from './assessment-queries';
 import { activityChapterImage } from './chapter-art';
 import { studentMaterialsQuery } from './materials-query';
+import { StudentSectionHeader } from './student-section-header';
 
 export function AssessmentScreen() {
+  return <StudentGate>{(token) => <AssessmentFrame token={token} />}</StudentGate>;
+}
+
+function AssessmentFrame({ token }: { token: string }) {
+  const levelId = useSearchParams().get('levelId') ?? undefined;
+  const history = useAssessmentHistory(token, true, levelId);
+  const record = history.data?.pages
+    .flatMap((page) => page.records)
+    .find((item) => item.levelId === levelId);
+  // The level history deep link is opened from a level page, so its way back is that page.
+  const levelBack =
+    record?.chapterId && record.subchapterId
+      ? {
+          href: `/student/learn/${record.chapterId}/${record.subchapterId}`,
+          label: 'Kembali ke level',
+        }
+      : { href: '/student/assessment', label: 'Kembali ke riwayat aktivitas' };
   return (
     <StudentLayout
       title="Progres & riwayat"
-      subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
       className="assessment-history-shell"
+      mobileHeader={
+        levelId ? (
+          <StudentSectionHeader
+            title={record?.levelTitle ? `Riwayat ${record.levelTitle}` : 'Riwayat level'}
+            subtitle="Hasil terbaru tampil paling atas."
+            back={levelBack}
+          />
+        ) : (
+          <StudentSectionHeader
+            title="Progres & riwayat"
+            subtitle="Lihat kemajuanmu, satu latihan pada satu waktu."
+            back={{ href: '/student', label: 'Kembali ke Belajar' }}
+          />
+        )
+      }
     >
-      <StudentGate>{(token) => <AssessmentContent token={token} />}</StudentGate>
+      <AssessmentContent token={token} levelId={levelId} />
     </StudentLayout>
   );
 }
-function AssessmentContent({ token }: { token: string }) {
-  const levelId = useSearchParams().get('levelId') ?? undefined;
+function AssessmentContent({ token, levelId }: { token: string; levelId?: string | undefined }) {
   const progress = useQuery({
     queryKey: ['student-progress'],
     queryFn: () => learningApi.progress(token),
@@ -50,10 +81,9 @@ function AssessmentContent({ token }: { token: string }) {
         )}
       </aside>
       <section className="assessment-history-records">
-        <SectionHeader
-          title={levelId ? 'Riwayat level' : 'Riwayat aktivitas'}
-          subtitle="Hasil terbaru tampil paling atas."
-        />
+        {!levelId && (
+          <SectionHeader title="Riwayat aktivitas" subtitle="Hasil terbaru tampil paling atas." />
+        )}
         {levelId && <Link href="/student/assessment">Lihat seluruh aktivitas</Link>}
         {query.isPending || (query.isError && !query.data) ? (
           <DataState

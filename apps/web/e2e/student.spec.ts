@@ -794,11 +794,14 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
       await expect(header).toHaveCSS('background-image', pattern);
       await expect(page.getByRole('heading', { name: 'Latihan Soal', exact: true })).toHaveCount(1);
       await page.goto('/student/assessment');
-      const progressHeader = page.locator('.app-topbar');
+      const progressHeader = page.locator('.app-mobile-header .materials-header');
       await expect(
         progressHeader.getByRole('heading', { name: 'Progres & riwayat' }),
       ).toBeVisible();
       await expect(progressHeader).toHaveCSS('background-image', pattern);
+      await expect(
+        page.getByRole('heading', { name: 'Progres & riwayat', exact: true }),
+      ).toHaveCount(1);
       await expect(progressHeader.locator('.desktop-context')).toHaveCount(0);
     }
     expect(mutations).toEqual([]);

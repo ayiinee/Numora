@@ -37,7 +37,11 @@ function TryoutEntry({ token }: { token: string }) {
   });
   if (!query.data)
     return (
-      <LearningFrame title="Tryout">
+      <LearningFrame
+        title="Tryout TKA"
+        className="tryout-shell tryout-shell--catalog"
+        mobileHeader={<StudentSectionHeader title="Tryout TKA" />}
+      >
         <DataState
           pending={query.isPending}
           error={query.error}

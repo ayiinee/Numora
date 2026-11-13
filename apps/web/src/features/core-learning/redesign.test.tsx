@@ -7,6 +7,7 @@ import { NewStudentDashboard } from './dashboard-new';
 import { ProfileScreen } from './profile';
 import { TryoutScreen } from './tryout';
 import { TryoutWaiting, TryoutReleasedResult } from './tryout-presentation';
+import { PretestResultScreen } from './pretest-screens';
 import { SubchapterScreen } from './catalog';
 import { AssessmentScreen } from './assessment-history';
 import { TeacherDashboardScreen } from '@/features/monitoring/teacher-screens';
@@ -292,7 +293,8 @@ describe('assessment history states', () => {
       undefined,
       'level-test',
     );
-    expect(screen.getByRole('heading', { name: 'Riwayat level' })).toBeTruthy();
+    expect(screen.getByRole('heading', { name: 'Riwayat Level 1' })).toBeTruthy();
+    expect(screen.queryAllByRole('heading', { name: 'Riwayat level' })).toHaveLength(0);
   });
   it('shows loading without claiming an empty history', async () => {
     vi.mocked(learningApi.assessmentHistory).mockImplementation(() => new Promise(() => {}));
@@ -409,8 +411,94 @@ describe('assessment history states', () => {
     await waitFor(() => expect(context.replace).toHaveBeenCalledWith('/login'));
     expect(learningApi.assessmentHistory).not.toHaveBeenCalled();
   });
+  it('carries the page title in the Student section banner', async () => {
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Belum ada aktivitas');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
+    expect(banner?.textContent).toContain('Progres & riwayat');
+    expect(banner?.querySelector('.materials-header__copy p')?.textContent).toBe(
+      'Lihat kemajuanmu, satu latihan pada satu waktu.',
+    );
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/student');
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe('Kembali ke Belajar');
+    expect(document.querySelector('.student-desktop-heading')).toBeNull();
+  });
+  it('names the level and offers a way back on the level history deep link', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [
+        { ...record, levelId: 'level-test', chapterId: 'chapter-test', subchapterId: 'sub-test' },
+      ],
+      nextCursor: null,
+    });
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Riwayat Level 1');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
+    expect(banner?.querySelector('h1')?.textContent).toBe('Riwayat Level 1');
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe(
+      '/student/learn/chapter-test/sub-test',
+    );
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe('Kembali ke level');
+    expect(banner?.querySelector('.materials-header__copy p')?.textContent).toBe(
+      'Hasil terbaru tampil paling atas.',
+    );
+    expect(screen.getAllByRole('heading', { name: 'Riwayat Level 1' })).toHaveLength(1);
+    expect(screen.queryAllByRole('heading', { name: 'Riwayat level' })).toHaveLength(0);
+    expect(document.querySelector('.numora-section-header')).toBeNull();
+  });
+  it('falls back to the activity history while a level page is unknown', async () => {
+    context.levelFilter = 'level-test';
+    vi.mocked(learningApi.assessmentHistory).mockResolvedValue({
+      records: [
+        {
+          ...record,
+          levelId: 'level-test',
+          chapterId: null,
+          subchapterId: null,
+          levelTitle: null,
+        },
+      ],
+      nextCursor: null,
+    });
+    renderStudent(<AssessmentScreen />);
+    await screen.findByText('Riwayat fixture');
+    const banner = document.querySelector('.app-mobile-header .materials-header');
+    expect(banner?.querySelector('h1')?.textContent).toBe('Riwayat level');
+    expect(banner?.querySelector('a')?.getAttribute('href')).toBe('/student/assessment');
+    expect(banner?.querySelector('a')?.getAttribute('aria-label')).toBe(
+      'Kembali ke riwayat aktivitas',
+    );
+    // The banner is the only element titled Riwayat level, so a heading query stays unambiguous.
+    expect(screen.getAllByRole('heading', { name: 'Riwayat level' })).toHaveLength(1);
+  });
 });
 describe('responsive learning composition', () => {
+  it('carries the Pretest result title in the Student section banner', async () => {
+    renderStudent(<PretestResultScreen />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .materials-header h1')?.textContent).toBe(
+        'Hasil Pretest',
+      ),
+    );
+    expect(document.querySelector('.student-desktop-heading')).toBeNull();
+  });
+  it('keeps the Tryout banner while the batch list loads', async () => {
+    vi.mocked(request).mockImplementationOnce(() => new Promise(() => {}));
+    renderStudent(<TryoutScreen />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .materials-header h1')?.textContent).toBe(
+        'Tryout TKA',
+      ),
+    );
+  });
+  it('keeps the Beranda header shape while the dashboard loads', async () => {
+    vi.mocked(learningApi.dashboard).mockImplementationOnce(() => new Promise(() => {}));
+    renderStudent(<NewStudentDashboard />);
+    await waitFor(() =>
+      expect(document.querySelector('.app-mobile-header .sh-identity--pending')).toBeTruthy(),
+    );
+    expect(document.querySelector('.app-topbar--custom-mobile')).toBeTruthy();
+  });
   it('shows persisted TryOut XP while IRT is pending, including zero', () => {
     const view = render(<TryoutWaiting xp={245} />);
     expect(screen.getByText('245 XP')).toBeTruthy();
