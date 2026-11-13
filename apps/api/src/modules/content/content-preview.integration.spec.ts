@@ -7,7 +7,12 @@ import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import { eq } from 'drizzle-orm';
 import { Test } from '@nestjs/testing';
 import { ConfigService } from '@nestjs/config';
-import { UnauthorizedException, type INestApplication } from '@nestjs/common';
+import {
+  Logger,
+  ServiceUnavailableException,
+  UnauthorizedException,
+  type INestApplication,
+} from '@nestjs/common';
 import { beforeAll, afterAll, describe, it, expect, vi } from 'vitest';
 import { getDatabase, closeDatabaseConnection, users, type ImportQuestion } from '@tka/database';
 import { ContentModule } from './content.module';
@@ -25,7 +30,7 @@ import type { MediaUpload } from './media-uploads.repository';
 import type { ImportReportDto, PreviewSessionDto, PreviewAckDto } from './content-preview.dto';
 import type { ContentPackageDetailDto, CreateContentPackageDto } from './content-packages.dto';
 import { ContentImportService } from './content-import.service';
-import type { UploadDetailDto, UploadListDto } from './content-uploads.dto';
+import type { UploadDetailDto, UploadListDto, UpdateUploadPreviewDto } from './content-uploads.dto';
 import type { ExcelParseDto } from './excel-import.dto';
 import { DrillAssessmentService } from '../learning/drill-assessment.service';
 import { PretestService } from '../learning/pretest.service';
@@ -109,6 +114,54 @@ describe.skipIf(!testUrl)(
       const value = await response.json();
       expect(response.ok, JSON.stringify(value)).toBe(true);
       return value as T;
+    }
+    async function transactionUpload() {
+      const ExcelJS = (await import('exceljs')).default;
+      const book = new ExcelJS.Workbook();
+      const template = await request('admin/content/upload-template');
+      expect(template.ok).toBe(true);
+      await book.xlsx.load(
+        Buffer.from(await template.arrayBuffer()) as unknown as import('exceljs').Buffer,
+      );
+      const sheet = book.getWorksheet('PG')!;
+      const values: Record<string, string> = {
+        Soal: 'TEST ONLY upload transaction',
+        opt_A: '2',
+        opt_B: '3',
+        Kunci: 'A',
+        Pembahasan: 'TEST ONLY explanation',
+        Kesulitan: 'Mudah',
+      };
+      sheet.getRow(1).eachCell((cell, column) => {
+        sheet.getCell(2, column).value = values[cell.text] ?? '';
+      });
+      const form = new FormData();
+      form.append(
+        'file',
+        new Blob([new Uint8Array(await book.xlsx.writeBuffer())]),
+        'TEST transaction.xlsx',
+      );
+      const response = await fetch(base + '/admin/content/uploads', {
+        method: 'POST',
+        headers: { Authorization: 'Bearer admin', 'Idempotency-Key': randomUUID() },
+        body: form,
+      });
+      const upload = (await response.json()) as UploadDetailDto;
+      expect(response.ok).toBe(true);
+      expect(upload.excel!.envelope.questions).toHaveLength(1);
+      const preview: UpdateUploadPreviewDto = {
+        expectedRevision: upload.revision,
+        questions: upload.excel!.envelope.questions,
+        selectedIds: upload.selectedIds,
+        destination: {
+          assessmentType: 'TRYOUT',
+          title: 'TEST transaction ' + upload.id,
+          chapterId: null,
+          subchapterId: null,
+          levelId: null,
+        },
+      };
+      return { upload, preview };
     }
     const body = (questions: ImportQuestion[] = samples) => ({
       sourceNamespace: namespace,
@@ -1997,6 +2050,205 @@ describe.skipIf(!testUrl)(
           })
         ).status,
       ).toBe(409);
+    });
+    it('validates and saves uploads with one pool connection, concurrent replay and complete rollback', async () => {
+      const poolMax = process.env.DB_POOL_MAX;
+      const metrics = vi.spyOn(Logger.prototype, 'debug').mockImplementation(() => {});
+      await closeDatabaseConnection();
+      process.env.DB_POOL_MAX = '1';
+      try {
+        const { upload, preview } = await transactionUpload();
+        const checked = await ok<UploadDetailDto>(
+          `admin/content/uploads/${upload.id}/preview`,
+          'PATCH',
+          preview,
+        );
+        expect(checked.state).toBe('VALIDATED');
+        const key = randomUUID();
+        const input = {
+          expectedRevision: checked.revision,
+          assessmentType: 'TRYOUT',
+          title: preview.destination!.title,
+        };
+        const importer = app.get(ContentImportService);
+        const importWithin = importer.importWithin.bind(importer);
+        const failAfterWrite = vi
+          .spyOn(importer, 'importWithin')
+          .mockImplementationOnce(async (...args) => {
+            await importWithin(...args);
+            throw new Error('TEST ONLY failure after import writes');
+          });
+        try {
+          expect(
+            (await request(`admin/content/uploads/${upload.id}/draft`, 'POST', input, 'admin', key))
+              .status,
+          ).toBe(500);
+        } finally {
+          failAfterWrite.mockRestore();
+        }
+        const [unchanged] =
+          await owner`SELECT revision,package_id,import_id FROM content_upload_sessions WHERE id=${upload.id}`;
+        expect(unchanged).toMatchObject({
+          revision: checked.revision,
+          package_id: null,
+          import_id: null,
+        });
+        expect(
+          await owner`SELECT id FROM content_imports WHERE actor_user_id=${actor} AND idempotency_key=${key}`,
+        ).toHaveLength(0);
+        expect(
+          await owner`SELECT id FROM assessment_packages WHERE name=${input.title}`,
+        ).toHaveLength(0);
+        expect(
+          await owner`SELECT id FROM content_import_identities WHERE source_namespace=${`UPLOAD_${upload.id.replaceAll('-', '')}`}`,
+        ).toHaveLength(0);
+        const results = await Promise.all(
+          [0, 1].map(() =>
+            ok<UploadDetailDto>(
+              `admin/content/uploads/${upload.id}/draft`,
+              'POST',
+              input,
+              'admin',
+              key,
+            ),
+          ),
+        );
+        expect(results[0]!.packageId).toBeTruthy();
+        expect(results[0]!.packageId).toBe(results[1]!.packageId);
+        expect(results[0]!.revision).toBe(checked.revision + 1);
+        expect(
+          await owner`SELECT id FROM content_imports WHERE actor_user_id=${actor} AND idempotency_key=${key}`,
+        ).toHaveLength(1);
+        expect(
+          await owner`SELECT id FROM audit_logs WHERE action='content_upload_draft_saved' AND entity_id=${upload.id}`,
+        ).toHaveLength(1);
+        expect(
+          (await request(`admin/content/uploads/${upload.id}/preview`, 'PATCH', preview)).status,
+        ).toBe(409);
+        const events = metrics.mock.calls
+          .map(([event]) => event)
+          .filter((event) => event?.event === 'content_upload_transaction');
+        expect(events).toEqual(
+          expect.arrayContaining([
+            expect.objectContaining({
+              operation: 'validate',
+              outcome: 'success',
+              acquireMs: expect.any(Number),
+              transactionMs: expect.any(Number),
+            }),
+            expect.objectContaining({ operation: 'save', outcome: 'error' }),
+            expect.objectContaining({ operation: 'save', outcome: 'success' }),
+          ]),
+        );
+        for (const event of events)
+          expect(Object.keys(event).sort()).toEqual([
+            'acquireMs',
+            'event',
+            'operation',
+            'outcome',
+            'transactionMs',
+          ]);
+      } finally {
+        metrics.mockRestore();
+        await closeDatabaseConnection();
+        if (poolMax === undefined) delete process.env.DB_POOL_MAX;
+        else process.env.DB_POOL_MAX = poolMax;
+      }
+    });
+    it('restores legacy workbooks without holding an upload lock and rejects concurrent changes', async () => {
+      for (const change of ['none', 'revision', 'source', 'package', 'storage'] as const) {
+        const { upload, preview } = await transactionUpload();
+        const legacy = { questions: [], selectedIds: [], issues: [] };
+        await owner`UPDATE content_upload_sessions SET preview=${JSON.stringify(legacy)}::jsonb WHERE id=${upload.id}`;
+        if (change === 'package') {
+          const [pack] =
+            await owner`INSERT INTO assessment_packages(family_code,package_version,name,assessment_type,status) VALUES(${`TEST_TX_${upload.id}`},1,'TEST ONLY legacy','TRYOUT','DRAFT') RETURNING id`;
+          await owner`UPDATE content_upload_sessions SET package_id=${pack!.id} WHERE id=${upload.id}`;
+        }
+        const gate = () => {
+          let resolve!: () => void;
+          const promise = new Promise<void>((done) => {
+            resolve = done;
+          });
+          return { promise, resolve };
+        };
+        const entered = gate();
+        const release = gate();
+        const read = vi.spyOn(storage, 'readWorkbook').mockImplementationOnce(async (id) => {
+          entered.resolve();
+          await release.promise;
+          if (change === 'storage')
+            throw new ServiceUnavailableException({ code: 'UPLOAD_SOURCE_UNAVAILABLE' });
+          return workbooks.get(id)!;
+        });
+        const pending = request(`admin/content/uploads/${upload.id}/preview`, 'PATCH', preview);
+        let response: Response;
+        let blocked = false;
+        let probeMs = 0;
+        const started = performance.now();
+        try {
+          await Promise.race([
+            entered.promise,
+            pending.then(() => {
+              throw new Error('Workbook preparation was not reached.');
+            }),
+          ]);
+          const probeStarted = performance.now();
+          try {
+            await owner.begin(async (tx) => {
+              await tx`SET LOCAL lock_timeout='300ms'`;
+              await tx`SELECT id FROM content_upload_sessions WHERE id=${upload.id} FOR UPDATE`;
+              if (change === 'revision')
+                await tx`UPDATE content_upload_sessions SET revision=revision+1 WHERE id=${upload.id}`;
+              if (change === 'source')
+                await tx`UPDATE content_upload_sessions SET preview=${JSON.stringify({ ...legacy, selectedIds: ['TEST changed source'] })}::jsonb WHERE id=${upload.id}`;
+              if (change === 'package')
+                await tx`UPDATE assessment_packages SET status='ARCHIVED' WHERE id=(SELECT package_id FROM content_upload_sessions WHERE id=${upload.id})`;
+            });
+          } catch (error) {
+            if ((error as { code?: string }).code !== '55P03') throw error;
+            blocked = true;
+          } finally {
+            probeMs = Math.round(performance.now() - probeStarted);
+          }
+        } finally {
+          release.resolve();
+          response = await pending;
+          read.mockRestore();
+        }
+        console.info(
+          JSON.stringify({
+            measurement: 'upload_legacy_lock_probe',
+            change,
+            blocked,
+            probeMs,
+            durationMs: Math.round(performance.now() - started),
+          }),
+        );
+        expect(blocked).toBe(false);
+        const result = await response.json();
+        if (change === 'none') {
+          expect(response.status, JSON.stringify(result)).toBe(200);
+          const [row] =
+            await owner`SELECT preview,revision FROM content_upload_sessions WHERE id=${upload.id}`;
+          expect(row!.preview.intakeVersion).toBe(1);
+          expect(row!.preview.questions).toHaveLength(1);
+          expect(row!.revision).toBe(upload.revision + 1);
+        } else {
+          expect(response.status).toBe(change === 'storage' ? 503 : 409);
+          expect(result.code).toBe(
+            change === 'storage'
+              ? 'UPLOAD_SOURCE_UNAVAILABLE'
+              : change === 'package'
+                ? 'PACKAGE_IMMUTABLE'
+                : 'UPLOAD_REVISION_CONFLICT',
+          );
+          const [row] =
+            await owner`SELECT preview,revision FROM content_upload_sessions WHERE id=${upload.id}`;
+          expect(row!.preview.intakeVersion).toBeUndefined();
+          expect(row!.revision).toBe(upload.revision + (change === 'revision' ? 1 : 0));
+        }
+      }
     });
     it('tracks upload-first intake, source recovery, draft edits, idempotency and one-confirmation publication', async () => {
       const ExcelJS = (await import('exceljs')).default;
