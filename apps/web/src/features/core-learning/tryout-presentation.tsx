@@ -15,10 +15,44 @@ const stateLabels = {
   waitingIrt: 'Menunggu IRT',
   resultReady: 'Hasil dirilis',
 };
-function releaseDate(value?: string) {
+export function releaseDate(value?: string | null) {
   return value
     ? `${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(value))} WIB`
     : 'Jadwal belum tersedia';
+}
+
+export function TryoutStartRules({
+  questionCount,
+  durationSeconds,
+  closeAt,
+  batch,
+}: {
+  questionCount?: number | null | undefined;
+  durationSeconds?: number | null | undefined;
+  closeAt?: string | null | undefined;
+  batch?: boolean;
+}) {
+  return (
+    <ul className="tryout-start-rules">
+      <li>
+        {questionCount == null ? 'Jumlah soal belum tersedia' : `${questionCount} soal`} ·{' '}
+        {durationSeconds == null
+          ? 'Durasi belum tersedia'
+          : `${Math.ceil(durationSeconds / 60)} menit`}
+      </li>
+      <li>Satu kesempatan per {batch ? 'batch' : 'paket'}.</li>
+      <li>
+        <strong>
+          {closeAt ? `Ditutup ${releaseDate(closeAt)}` : 'Waktu tutup belum tersedia'}.
+        </strong>{' '}
+        Waktu pengerjaan bisa lebih singkat jika jadwal segera berakhir.
+      </li>
+      <li>
+        Timer tetap berjalan saat kamu keluar. Saat waktu habis, jawaban yang tersimpan dikirim
+        otomatis.
+      </li>
+    </ul>
+  );
 }
 
 export function TryoutPackageCard({
@@ -190,59 +224,51 @@ export function TryoutDetail({
               <Icon name="clipboard" width={20} height={20} />
               Aturan Tryout
             </h2>
+            <TryoutStartRules
+              questionCount={current.questionCount}
+              durationSeconds={current.durationSeconds}
+              closeAt={current.closeAt}
+            />
             <ul>
-              <li>
-                <strong>Satu kesempatan:</strong> paket yang sudah dikerjakan tidak dapat diulang.
-              </li>
-              <li>
-                <strong>Timer otomatis:</strong> waktu tidak dapat dijeda. Batas waktu mengikuti
-                server.
-              </li>
-              <li>
-                <strong>Batch mingguan:</strong> Senin 00:00 hingga Minggu 23:59:00 WIB. Pengiriman
-                otomatis saat countdown habis atau batch ditutup, mana yang lebih dahulu.
-                {current.closeAt && <> Paket ini ditutup {releaseDate(current.closeAt)}.</>}
-              </li>
               <li>
                 <strong>Penyimpanan:</strong> hanya jawaban yang diterima server tersimpan. Refresh
                 atau keluar dapat menghilangkan perubahan yang belum tersimpan.
               </li>
               <li>
-                <strong>Hasil simulasi:</strong> menunggu rilis IRT; nilai ini bukan nilai TKA
-                resmi.{' '}
+                <strong>Hasil simulasi:</strong> nilai dan pembahasan tersedia bersama setelah dirilis.{' '}
                 {current.resultPendingReason
                   ? 'Konten atau penilaian belum siap; jadwal hasil belum tersedia.'
-                  : 'Nilai dan pembahasan tersedia bersama maksimal 72 jam setelah batch ditutup.'}
+                  : 'Tenggat rilis maksimal 72 jam setelah jadwal pengerjaan ditutup.'}
                 {current.resultDueAt && (
                   <> Batas ketersediaan: {releaseDate(current.resultDueAt)}.</>
                 )}
               </li>
             </ul>
-            {current.state === 'open' && current.eligible && (
-              <label>
-                <input
-                  type="checkbox"
-                  checked={accepted}
-                  onChange={(e) => onAccepted(e.target.checked)}
-                  disabled={pending}
-                />
-                Saya memahami aturan pengerjaan.
-              </label>
-            )}
           </Card>
         </aside>
       </div>
-      <div className="tryout-detail-footer">
+      <div className="tryout-detail-footer tryout-detail-footer--inline">
         {error && (
           <p className="form-error" role="alert">
             {error}
           </p>
         )}
         {current.state === 'open' && current.eligible ? (
-          <Button fullWidth disabled={pending || !accepted} onClick={onStart}>
-            {pending ? 'Memulai…' : 'Mulai TryOut'}
-            <Icon name="arrow" width={18} height={18} />
-          </Button>
+          <>
+            <label className="tryout-student-batch__consent">
+              <input
+                type="checkbox"
+                checked={accepted}
+                disabled={pending}
+                onChange={(event) => onAccepted(event.target.checked)}
+              />
+              Saya memahami aturan pengerjaan.
+            </label>
+            <Button fullWidth disabled={pending || !accepted} onClick={onStart}>
+              {pending ? 'Memulai…' : 'Mulai pengerjaan'}
+              <Icon name="arrow" width={18} height={18} />
+            </Button>
+          </>
         ) : current.state === 'inProgress' && current.attemptId ? (
           <Link className="button-link" href={`/student/tryout/${current.attemptId}`}>
             Lanjutkan TryOut
@@ -274,6 +300,7 @@ export function TryoutWaiting({
   closeAt,
   resultDueAt,
   resultPendingReason,
+  waitState,
 }: {
   submitted?: boolean;
   fetching?: boolean;
@@ -282,32 +309,34 @@ export function TryoutWaiting({
   closeAt?: string | null | undefined;
   resultDueAt?: string | null | undefined;
   resultPendingReason?: 'CONTENT_PENDING' | 'SCORING_PENDING' | null | undefined;
+  waitState?: 'waiting' | 'overdue' | null | undefined;
 }) {
   return (
     <Card fullWidth className="tryout-waiting">
       <StudentMascot pose="submitted" />
       <Badge variant="success">Jawaban tersimpan</Badge>
-      <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil IRT'}</h2>
+      <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil'}</h2>
 
       {xp != null && (
         <p>
           <strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.
         </p>
       )}
-      <p>
-        Jawaban sudah terkirim. Nilai dan pembahasan tersedia setelah hasil dirilis. Proses IRT
-        selesai belum berarti hasil telah dirilis.
-      </p>
-      {resultPendingReason ? (
+      {waitState === 'overdue' ? (
+        <p role="status">
+          Hasil belum tersedia dan melewati tenggat
+          {resultDueAt ? ` (${releaseDate(resultDueAt)})` : ''}. Periksa kembali status hasil.
+        </p>
+      ) : resultPendingReason ? (
         <p>
           Jawaban tersimpan di server. Penilaian belum tersedia; hasil dan pembahasan menunggu
           kesiapan konten serta penilaian.
         </p>
       ) : (
         <p>
-          Nilai dan pembahasan dirilis bersama maksimal 72 jam setelah batch ditutup.
+          Nilai dan pembahasan tersedia bersama setelah dirilis.
           {closeAt && <> Penutupan batch: {releaseDate(closeAt)}.</>}
-          {resultDueAt && <> Batas ketersediaan: {releaseDate(resultDueAt)}.</>}
+          {resultDueAt && <> Tenggat rilis {releaseDate(resultDueAt)}.</>}
         </p>
       )}
       <ol>
@@ -332,8 +361,8 @@ export function TryoutWaiting({
       <Link className="button-link button-link--secondary" href="/student/tryout">
         Lihat status paket
       </Link>
-      <Link className="tryout-text-link" href="/student/assessment">
-        Lihat riwayat aktivitas
+      <Link className="tryout-text-link" href="/student/tryout/history">
+        Lihat riwayat Tryout
       </Link>
     </Card>
   );

@@ -8,7 +8,7 @@ const attempt = '33333333-3333-4333-8333-333333333333';
 const past = '44444444-4444-4444-8444-444444444444';
 const sub = '55555555-5555-4555-8555-555555555555';
 
-async function fixture(page: Page, mixedTryout = false) {
+async function fixture(page: Page, mixedTryout = false, alreadySubmitted = false, longStem = false) {
   const jwt = [
     Buffer.from('{"alg":"HS256"}').toString('base64url'),
     Buffer.from(
@@ -48,7 +48,7 @@ async function fixture(page: Page, mixedTryout = false) {
   let skipped = false,
     started = false,
     completed = false;
-  let tryoutSubmitted = false;
+  let tryoutSubmitted = alreadySubmitted;
   const rawTryoutAnswers = new Map<string, unknown>();
   const tryoutDeadline = new Date(Date.now() + 600_000).toISOString();
   const tryoutQuestions = () =>
@@ -62,7 +62,7 @@ async function fixture(page: Page, mixedTryout = false) {
             : 'SINGLE_CHOICE',
       stem:
         index === 0
-          ? 'Pilih bilangan genap yang tidak melebihi sqrt(16).'
+          ? `${longStem ? 'Sebuah kelas mengelompokkan bilangan berdasarkan aturan yang digunakan dalam simulasi ini. '.repeat(4) : ''}Pilih bilangan genap yang tidak melebihi sqrt(16).`
           : index === 1
             ? 'kategori bilangan'
             : '1 + 1?',
@@ -339,13 +339,13 @@ test('delegated Tryout asks multi-school students to choose one school before st
     });
   });
   await page.goto('/student/tryout');
-  await expect(page.getByRole('tab', { name: 'Berlangsung' })).toHaveAttribute(
+  await expect(page.getByRole('tab', { name: 'Jadwal' })).toHaveAttribute(
     'aria-selected',
     'true',
   );
   await page.getByRole('tab', { name: 'Terlewat' }).click();
-  await expect(page.getByText('Belum ada riwayat batch')).toBeVisible();
-  await page.getByRole('tab', { name: 'Berlangsung' }).click();
+  await expect(page.getByText('Belum ada Tryout terlewat')).toBeVisible();
+  await page.getByRole('tab', { name: 'Jadwal' }).click();
   await expect(page.getByRole('heading', { name: 'TEST ONLY delegated batch' })).toBeVisible();
   await expect(page.getByRole('button', { name: 'Muat ulang', exact: true })).toHaveCount(0);
   await expect(page.getByText('Satu kesempatan, hasil setelah rilis')).toHaveCount(0);
@@ -387,13 +387,48 @@ test('delegated Tryout asks multi-school students to choose one school before st
   await expect(page.getByRole('combobox', { name: 'Sekolah untuk Tryout ini' })).toHaveValue(sub);
 });
 
+test('Tryout keeps completed batches in Riwayat and shows delayed results consistently', async ({ page }) => {
+  await fixture(page, false, true);
+  const batch = {
+    id: past, title: 'Tryout sudah dikirim', state: 'CLOSED', mandiri: true, schools: [],
+    startsAt: '2026-10-01T00:00:00Z', closesAt: '2026-10-08T00:00:00Z',
+    resultDueAt: '2026-10-11T00:00:00Z', attemptId: attempt, attemptStatus: 'GRADED',
+    resultState: 'overdue',
+  };
+  await page.route('**/api/v1/tryout/batches', (route) => route.fulfill({
+    json: { routingActive: true, items: [batch, {
+      ...batch, id: chapter, title: 'Tryout belum dikerjakan', attemptId: null,
+      attemptStatus: null, resultState: null,
+    }] },
+  }));
+  await page.route('**/api/v1/students/me/assessment-results?activity=tryout', (route) => route.fulfill({
+    json: { records: [{
+      attemptId: attempt, activity: 'tryout', title: batch.title,
+      resultState: 'waitingIrt', score: null, submittedAt: batch.closesAt,
+    }], nextCursor: null },
+  }));
+  await page.route(`**/api/v1/tryout/attempts/${attempt}`, (route) => route.fulfill({
+    json: { id: attempt, packageTitle: batch.title, status: 'submitted', questions: [],
+      resultDueAt: batch.resultDueAt, resultWaitState: 'overdue', deadlineAt: null },
+  }));
+  await page.goto('/student/tryout');
+  await page.getByRole('tab', { name: 'Terlewat' }).click();
+  await expect(page.getByRole('heading', { name: 'Tryout belum dikerjakan' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: batch.title })).toHaveCount(0);
+  await page.goto('/student/tryout/history');
+  await expect(page.getByRole('tab', { name: 'Riwayat' })).toHaveAttribute('aria-selected', 'true');
+  await page.getByRole('link', { name: /Tryout sudah dikirim.*Lihat status hasil/ }).click();
+  await expect(page.getByText(/Hasil belum tersedia dan melewati tenggat/)).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lihat pembahasan' })).toHaveCount(0);
+});
+
 test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', async ({ page }) => {
   await page.setViewportSize({ width: 390, height: 850 });
   const raw = await fixture(page, true);
   await page.goto('/student/tryout');
   await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
   await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
-  await page.getByRole('button', { name: 'Mulai TryOut', exact: true }).click();
+  await page.getByRole('button', { name: 'Mulai pengerjaan', exact: true }).click();
   await expect(page.getByText('Soal 1 dari 30', { exact: true })).toBeVisible();
   await expect(page.locator('.practice-stem .katex-html')).toBeVisible();
   await expect(page.locator('.practice-stem math msqrt')).toHaveText('16');
@@ -411,22 +446,81 @@ test('Tryout delivers 30 items, resumes PGK raw answers and waits for rubric', a
     .getByRole('radio', { name: 'Genap' })
     .check();
   await expect.poll(() => raw.get('1')).toEqual({ categoryByStatementId: { s1: 'even' } });
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await page.getByLabel('Tandai Ragu-ragu').check();
   await page.reload();
-  await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
+  await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
+  await expect(page.getByLabel('Tandai Ragu-ragu')).toBeChecked();
   await expect(
     page.getByRole('group', { name: 'Dua', exact: true }).getByRole('radio', { name: 'Genap' }),
   ).toBeChecked();
   await screenshot(page, 'tryout-pgk-category-390');
-  await page.getByRole('button', { name: 'Soal 30, kosong', exact: true }).click();
-  await page.getByRole('button', { name: 'Kirim TryOut', exact: true }).click();
+  const allQuestions = page.getByRole('button', { name: 'Semua Soal', exact: true });
+  await allQuestions.click();
+  const map = page.getByRole('dialog', { name: 'Semua Soal' });
+  await expect(map.getByRole('navigation').getByRole('button')).toHaveCount(30);
+  await expect(map.getByRole('button', { name: 'Soal 2, kategori belum lengkap, ragu-ragu' })).toBeVisible();
+  await map.getByRole('button', { name: 'Soal 30, kosong', exact: true }).click();
+  await expect(page.getByText('Soal 30 dari 30', { exact: true })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await allQuestions.click();
+  await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
+  await page.getByRole('button', { name: 'Ke soal belum lengkap' }).click();
+  await expect(page.locator('.practice-stem')).toBeFocused();
+  await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
+  await allQuestions.click();
+  await map.getByRole('button', { name: 'Kumpulkan jawaban', exact: true }).click();
   await page.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
   await expect(
-    page.getByRole('heading', { name: 'Menunggu hasil IRT', exact: true }),
+    page.getByRole('heading', { name: 'Menunggu hasil', exact: true }),
   ).toBeVisible();
   await expect(page.getByText(/hasil dan pembahasan menunggu/)).toBeVisible();
   await expect(page.getByText(/XP sudah tercatat/)).toHaveCount(0);
   await screenshot(page, 'tryout-pgk-waiting-390');
 });
+
+test('Tryout keeps a failed answer visible across questions and confirms exit after recovery', async ({ page }) => {
+  await page.setViewportSize({ width: 320, height: 640 });
+  await fixture(page, true, false, true);
+  const attemptUrl = `/student/tryout/${attempt}`;
+  await page.route('**/api/v1/tryout/attempts/*/answers/*', (route) => route.fulfill({
+    status: 503, json: { detail: 'Koneksi terputus.' },
+  }), { times: 1 });
+  await page.goto('/student/tryout');
+  await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
+  await page.getByRole('checkbox', { name: 'Saya memahami aturan pengerjaan.' }).check();
+  await page.getByRole('button', { name: 'Mulai pengerjaan' }).click();
+  await page.getByRole('checkbox', { name: /^A\s*\./ }).check();
+  const progress = page.getByRole('progressbar', { name: 'Jawaban tersimpan' });
+  await expect(page.getByText('Jawaban soal 1 belum tersimpan')).toBeInViewport();
+  await expect(progress).toHaveAttribute('aria-valuenow', '0');
+  const allQuestions = page.getByRole('button', { name: 'Semua Soal' });
+  await allQuestions.click();
+  const map = page.getByRole('dialog', { name: 'Semua Soal' });
+  await expect(map.getByRole('button', { name: 'Soal 1, gagal simpan' })).toBeVisible();
+  const firstTarget = await map.getByRole('button', { name: 'Soal 1, gagal simpan' }).boundingBox();
+  expect(firstTarget?.width).toBeGreaterThanOrEqual(44);
+  expect(firstTarget?.height).toBeGreaterThanOrEqual(44);
+  expect(await page.evaluate(() => document.documentElement.scrollWidth <= innerWidth)).toBe(true);
+  await expect(map.getByRole('button', { name: 'Kumpulkan jawaban' })).toBeDisabled();
+  await page.keyboard.press('Escape');
+  await expect(allQuestions).toBeFocused();
+  await page.getByRole('button', { name: 'Berikutnya' }).click();
+  await expect(page.getByText('Soal 2 dari 30', { exact: true })).toBeVisible();
+  await expect(page.getByRole('button', { name: 'Coba simpan lagi' })).toBeInViewport();
+  await page.getByRole('button', { name: 'Coba simpan lagi' }).click();
+  await expect(progress).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
+  await page.getByRole('link', { name: 'Kembali ke Tryout' }).click();
+  const exit = page.getByRole('dialog', { name: 'Keluar dari sesi?' });
+  await expect(exit.getByText(/Waktu tetap berjalan/)).toBeVisible();
+  await exit.getByRole('button', { name: 'Lanjut mengerjakan' }).click();
+  await expect(page).toHaveURL(attemptUrl);
+  await page.evaluate(() => history.back());
+  await expect(exit).toBeVisible();
+  await exit.getByRole('button', { name: 'Ya, keluar dulu' }).click();
+  await expect(page).toHaveURL('/student/tryout');
+});
+
 async function screenshot(page: Page, name: string) {
   const folder = resolve('../../.tmp/pretest-tryout-evidence');
   await mkdir(folder, { recursive: true });
@@ -441,9 +535,9 @@ for (const width of [390, 1280]) {
     page,
   }) => {
     await page.setViewportSize({ width, height: 850 });
-    await fixture(page);
+    await fixture(page, false, true);
     await page.goto(`/student/tryout/${attempt}/result`);
-    await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Menunggu hasil' })).toBeVisible();
     await expect(page.getByRole('link', { name: 'Lihat pembahasan' })).toHaveCount(0);
     // Contractual reader fixture; backend publication is verified by the disposable pipeline.
     await page.route(`http://localhost:3301/api/v1/tryout/attempts/${attempt}/result`, (route) =>

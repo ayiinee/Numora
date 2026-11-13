@@ -1060,21 +1060,19 @@ test('Mandiri Tryout starts and resumes without a class, then waits for released
   await expect(page.getByText('Gratis', { exact: true })).toBeVisible();
   await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
   await page.getByLabel('Saya memahami aturan pengerjaan.').check();
-  await page.getByRole('button', { name: 'Mulai TryOut' }).click();
+  await page.getByRole('button', { name: 'Mulai pengerjaan' }).click();
   await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
   await expect(page.getByText('Fixture: 1 + 1?', { exact: true })).toBeVisible();
   await page.goto('/student/tryout');
   await expect(page.getByRole('link', { name: 'Lanjutkan TryOut' })).toBeVisible();
-  await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toHaveCount(0);
+  await expect(page.getByRole('button', { name: 'Mulai pengerjaan' })).toHaveCount(0);
   state = 'waitingIrt';
   await page.reload();
-  await expect(
-    page.getByRole('status').filter({ hasText: 'pembahasan belum tersedia' }),
-  ).toBeVisible();
-  await expect(page.getByRole('link', { name: 'Lihat hasil simulasi' })).toHaveCount(0);
+  await expect(page.getByRole('link', { name: 'Lihat status hasil' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lihat hasil', exact: true })).toHaveCount(0);
   state = 'resultReady';
   await page.reload();
-  await page.getByRole('link', { name: 'Lihat hasil simulasi' }).click();
+  await page.getByRole('link', { name: 'Lihat hasil', exact: true }).click();
   await expect(page).toHaveURL(`/student/tryout/${attemptId}/result`);
   await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
   await expect(page).toHaveURL(`/student/tryout/${attemptId}/explanation`);
@@ -1863,7 +1861,7 @@ test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and re
     page.getByRole('navigation', { name: 'Navigasi soal' }).getByRole('button'),
   ).toHaveCount(30);
   await page.getByRole('radio').first().check();
-  await expect(page.getByText('Tersimpan', { exact: true })).toBeVisible();
+  await expect(page.getByRole('progressbar', { name: 'Jawaban tersimpan' })).toHaveAttribute('aria-valuetext', '1 dari 30 soal terisi lengkap dan tersimpan');
   const before = (await page.getByRole('timer').innerText()).split(':').map(Number);
   const beforeSeconds = before[0]! * 60 + before[1]!;
   await page.reload();
@@ -1876,7 +1874,7 @@ test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and re
   expect(submits).toBe(1);
   expect(dialogs).toBe(0);
   await page.goto(`/student/tryout/${attemptId}/result`);
-  await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Menunggu hasil' })).toBeVisible();
   await expect(page.getByText('80', { exact: true })).toHaveCount(0);
 });
 
@@ -2520,7 +2518,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
             id: attemptId,
             packageId: chapterId,
             packageTitle: title,
-            status: 'inProgress',
+            status: submits ? 'submitted' : 'inProgress',
             serverTime: new Date(serverNow).toISOString(),
             deadlineAt: new Date(serverNow + 4800_000).toISOString(),
             questions: questions.map((question) => ({
@@ -2602,12 +2600,12 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await capture('catalog');
     await page.getByRole('tab', { name: 'Riwayat', exact: true }).click();
     await expect(page.getByRole('link', { name: /Tryout Mingguan #03/ })).toBeVisible();
-    await expect(page.getByRole('link', { name: /Tryout Mingguan #04/ })).toHaveCount(0);
+    await expect(page.getByRole('link', { name: /Tryout Mingguan #04/ })).toBeVisible();
     await expect(page.getByText('Faktorisasi Aljabar Kuadrat', { exact: true })).toHaveCount(0);
     await capture('tryout-history');
-    await page.getByRole('tab', { name: 'Berlangsung' }).click();
+    await page.getByRole('tab', { name: 'Jadwal' }).click();
     await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
-    await expect(page.getByRole('button', { name: 'Mulai TryOut' })).toBeDisabled();
+    await expect(page.getByRole('button', { name: 'Mulai pengerjaan' })).toBeDisabled();
     await expect(page.getByText('30 butir', { exact: true })).toBeVisible();
     await expect(page.getByText('80 menit', { exact: true })).toBeVisible();
     await page.getByLabel('Saya memahami aturan pengerjaan.').check();
@@ -2617,22 +2615,25 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await page.getByRole('button', { name: 'Detail dan aturan paket' }).click();
     await expect(page.getByLabel('Saya memahami aturan pengerjaan.')).not.toBeChecked();
     await page.getByLabel('Saya memahami aturan pengerjaan.').check();
-    await page.getByRole('button', { name: 'Mulai TryOut' }).click();
+    await page.getByRole('button', { name: 'Mulai pengerjaan' }).click();
     await expect(page).toHaveURL(`/student/tryout/${attemptId}`);
     expect(starts).toBe(1);
+    const allQuestions = page.getByRole('button', { name: 'Semua Soal', exact: true });
+    if (width < 960) await allQuestions.click();
+    else await expect(allQuestions).toBeHidden();
     const navigator = page.getByRole('navigation', { name: 'Navigasi soal' });
     await expect(navigator.getByRole('button')).toHaveCount(30);
     await navigator.getByRole('button', { name: /^Soal 3,/ }).click();
     await expect(page.getByRole('timer')).toBeVisible();
     await capture('attempt');
-    await navigator.getByRole('button', { name: /^Soal 30,/ }).click();
-    await page.getByRole('button', { name: 'Kirim TryOut' }).click();
+    if (width < 960) await allQuestions.click();
+    await page.getByRole('button', { name: 'Kumpulkan jawaban' }).click();
     const dialog = page.getByRole('dialog', { name: 'Kumpulkan Tryout Sekarang?' });
     await expect(dialog).toBeVisible();
     expect(submits).toBe(0);
     await capture('submit-dialog');
     await dialog.getByRole('button', { name: 'Ya, Kumpulkan Jawaban' }).click();
-    await expect(page.getByRole('heading', { name: 'Menunggu hasil IRT' })).toBeVisible();
+    await expect(page.getByRole('heading', { name: 'Menunggu hasil' })).toBeVisible();
     expect(submits).toBe(1);
     await expect(page.getByText('85', { exact: true })).toHaveCount(0);
     await expect(page.getByText('Jawaban benar:', { exact: false })).toHaveCount(0);

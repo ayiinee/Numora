@@ -65,11 +65,17 @@ export function ProgressSummary({ progress }: { progress: StudentProgress }) {
 export function ActivityRow({
   item,
   chapterImage,
+  tryoutStatusAction = false,
+  tryoutStatus,
 }: {
   item: AssessmentRecord;
   chapterImage?: string | undefined;
+  tryoutStatusAction?: boolean;
+  tryoutStatus?: 'waiting' | 'overdue' | 'ready' | null | undefined;
 }) {
   const drill = item.activity === 'drill';
+  const tryout = tryoutStatusAction && item.activity === 'tryout';
+  const ready = item.resultState === 'ready' && (!tryoutStatus || tryoutStatus === 'ready');
   const content = (
     <>
       <span className={`icon-tile ${drill ? 'accent-0' : 'accent-1'}`}>
@@ -114,9 +120,11 @@ export function ActivityRow({
         )}
       </div>
       <div className="activity-score">
-        {item.resultState === 'waitingIrt' ? (
+        {!ready && tryoutStatus === 'ready' ? (
+          <Badge variant="success">Hasil tersedia</Badge>
+        ) : !ready ? (
           <Badge variant="warning" style={{ whiteSpace: 'normal' }}>
-            Menunggu hasil
+            {tryoutStatus === 'overdue' ? 'Hasil belum tersedia dan melewati tenggat' : 'Menunggu hasil'}
           </Badge>
         ) : (
           <>
@@ -124,11 +132,12 @@ export function ActivityRow({
             <small>Nilai</small>
           </>
         )}
+        {tryout && <small>{ready || tryoutStatus === 'ready' ? 'Lihat hasil' : 'Lihat status hasil'}</small>}
       </div>
-      {item.resultState === 'ready' && <Icon name="chevron" width={18} height={18} />}
+      {(ready || tryout) && <Icon name="chevron" width={18} height={18} />}
     </>
   );
-  return item.resultState !== 'ready' ? (
+  return !ready && !tryout ? (
     <div className="activity-row">{content}</div>
   ) : (
     <Link

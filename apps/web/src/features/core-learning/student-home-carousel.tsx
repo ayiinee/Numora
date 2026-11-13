@@ -3,7 +3,8 @@
 import { useLayoutEffect, useRef, useState } from 'react';
 import Link from 'next/link';
 import { Icon } from '@tka/ui';
-import type { CurrentTryoutDto, DashboardDrillDto } from './generated-types';
+import type { DashboardDrillDto } from './generated-types';
+import type { TryoutSummary } from './tryout-queries';
 import { HomeTryoutHero, HomeTryoutSkeleton } from './dashboard-presentation';
 import { StudentIllustratedHero } from './student-illustrated-hero';
 import { DataState } from './ui';
@@ -51,7 +52,7 @@ function TryoutHero({
   tryoutError,
   retryTryout,
 }: {
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: TryoutSummary | undefined;
   tryoutPending: boolean;
   tryoutError: Error | null;
   retryTryout: () => void;
@@ -79,7 +80,7 @@ export function StudentHomeCarousel({
   retryTryout,
 }: {
   activeDrill: DashboardDrillDto | null;
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: TryoutSummary | undefined;
   tryoutPending: boolean;
   tryoutError: Error | null;
   retryTryout: () => void;

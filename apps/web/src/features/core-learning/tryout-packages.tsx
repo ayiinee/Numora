@@ -2,19 +2,14 @@
 
 import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
-import { useState } from 'react';
-import { useInfiniteQuery, useMutation, useQuery } from '@tanstack/react-query';
+import { useRef, useState } from 'react';
+import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
 import { Badge, Button, Card, Icon } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
-import { TryoutDetail } from './tryout-presentation';
-
-function wib(value: string | null | undefined) {
-  return value
-    ? `${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(value))} WIB`
-    : 'Jadwal belum tersedia';
-}
+import { releaseDate, TryoutDetail } from './tryout-presentation';
+import { refreshTryoutStatus } from './tryout-queries';
 export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
   const token = useStudentToken();
   const query = useInfiniteQuery({
@@ -27,7 +22,7 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
   const packages =
     query.data?.pages
       .flatMap((page) => page.packages)
-      .filter((pack) => pack.periodState === 'past') ?? [];
+      .filter((pack) => pack.periodState === 'past' && !pack.attemptId) ?? [];
   if (!query.data)
     return (
       <DataState pending={query.isPending} error={query.error} retry={() => void query.refetch()} />
@@ -36,9 +31,9 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
     <section className="tryout-past" aria-label="Paket Tryout terlewat">
       <header>
         <h2>Paket terlewat</h2>
-        <p>Paket sudah ditutup. Jika sudah mengerjakan, cek hasil dan pembahasan setelah rilis.</p>
+        <p>Paket yang sudah ditutup dan belum kamu kerjakan.</p>
       </header>
-      {!packages.length && (
+      {!packages.length && !query.hasNextPage && (
         <Status title="Belum ada paket terlewat">
           Paket yang telah ditutup akan muncul di sini.
         </Status>
@@ -48,16 +43,10 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
           <Card key={pack.id} fullWidth className="tryout-past-card">
             <div className="tryout-past-card__summary">
               <span className="tryout-past-card__icon">
-                <Icon name={pack.attemptId ? 'clipboard' : 'lock'} width={20} height={20} />
+                <Icon name="lock" width={20} height={20} />
               </span>
               <div>
-                <Badge size="sm" variant={pack.state === 'resultReady' ? 'success' : 'secondary'}>
-                  {pack.attemptId
-                    ? pack.state === 'resultReady'
-                      ? 'Hasil dirilis'
-                      : 'Menunggu hasil'
-                    : 'Terkunci · Belum dikerjakan'}
-                </Badge>
+                <Badge size="sm" variant="secondary">Terkunci · Belum dikerjakan</Badge>
                 <h3>{pack.title}</h3>
                 <p>
                   {pack.questionCount ?? '—'} soal ·{' '}
@@ -67,30 +56,16 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
                 </p>
               </div>
             </div>
-            {pack.attemptId && pack.state !== 'resultReady' && (
-              <p className="tryout-past-card__notice">
-                {pack.resultDueAt
-                  ? `Hasil dan pembahasan dirilis paling lambat ${wib(pack.resultDueAt)}.`
-                  : 'Hasil dan pembahasan dirilis maksimal 72 jam setelah paket ditutup.'}
-              </p>
-            )}
             <footer className="tryout-past-card__footer">
               <p>
                 <Icon name="clock" width={16} height={16} />
-                <span>Ditutup {wib(pack.closeAt)}</span>
+                <span>Ditutup {releaseDate(pack.closeAt)}</span>
               </p>
               <div className="tryout-past-card__actions">
                 <Link className="section-link" href={`/student/tryout/packages/${pack.id}`}>
                   Lihat detail paket
                   <Icon name="chevron" width={16} height={16} />
                 </Link>
-                {pack.attemptId && (
-                  <Link className="button-link" href={`/student/tryout/${pack.attemptId}/result`}>
-                    {pack.state === 'resultReady'
-                      ? 'Lihat hasil dan pembahasan'
-                      : 'Lihat status hasil'}
-                  </Link>
-                )}
               </div>
             </footer>
           </Card>
@@ -122,6 +97,8 @@ export function TryoutPackageScreen() {
   const { packageId } = useParams<{ packageId: string }>();
   const token = useStudentToken();
   const router = useRouter();
+  const client = useQueryClient();
+  const starting = useRef(false);
   const [accepted, setAccepted] = useState(false);
   const query = useQuery({
     queryKey: ['tryout-package', packageId],
@@ -129,7 +106,13 @@ export function TryoutPackageScreen() {
   });
   const start = useMutation({
     mutationFn: () => learningApi.startTryout(token, packageId),
-    onSuccess: (attempt) => router.push(`/student/tryout/${attempt.id}`),
+    onSuccess: (attempt) => {
+      refreshTryoutStatus(client);
+      router.push(`/student/tryout/${attempt.id}`);
+    },
+    onError: () => {
+      starting.current = false;
+    },
   });
   return (
     <LearningFrame title="Detail paket Tryout" className="tryout-shell tryout-shell--detail">
@@ -142,8 +125,8 @@ export function TryoutPackageScreen() {
       ) : (
         <>
           {query.data.periodState === 'past' && (
-            <Status title="Paket terlewat">
-              Paket ditutup {wib(query.data.closeAt)}. Pengerjaan paket terlewat terkunci.
+            <Status title={query.data.attemptId ? 'Paket sudah dikerjakan' : 'Paket terlewat'}>
+              Paket ditutup {releaseDate(query.data.closeAt)}.
               {query.data.attemptId && (
                 <Link
                   className="button-link"
@@ -162,8 +145,10 @@ export function TryoutPackageScreen() {
             pending={start.isPending || start.isSuccess}
             error={start.isError ? start.error.message : undefined}
             onStart={() => {
-              if (accepted && query.data?.eligible && !start.isPending && !start.isSuccess)
+              if (accepted && query.data?.eligible && !starting.current) {
+                starting.current = true;
                 start.mutate();
+              }
             }}
           />
         </>

@@ -1,5 +1,4 @@
 import { presentFixtureText } from '@tka/database';
-import { publishedTryoutAttemptResults } from '@tka/database';
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import {
   assessmentAttempts,
@@ -13,7 +12,7 @@ import {
 } from '@tka/database';
 import { and, desc, eq, inArray, isNotNull, lt, or, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
-import { TryoutReleaseService } from './tryout-release.service';
+import { TryoutReleaseService, tryoutResultState } from './tryout-release.service';
 
 const problem = (code: string, detail: string) => ({ code, detail });
 const PAGE_SIZE = 20;
@@ -22,6 +21,7 @@ interface AssessmentHistoryFilters {
   cursor?: string | undefined;
   classId?: string | undefined;
   levelId?: string | undefined;
+  activity?: 'tryout' | undefined;
 }
 
 @Injectable()
@@ -31,15 +31,15 @@ export class AssessmentHistoryService {
     private readonly releases: TryoutReleaseService,
   ) {}
 
-  async list(authorization: string | undefined, cursor?: string, levelId?: string) {
+  async list(authorization: string | undefined, cursor?: string, levelId?: string, activity?: 'tryout') {
     const user = await this.identity.me(authorization);
     if (user.role !== 'STUDENT')
       throw new ForbiddenException(problem('STUDENT_REQUIRED', 'Akses Student diperlukan.'));
-    return this.listForStudent(user.id, { cursor, levelId });
+    return this.listForStudent(user.id, { cursor, levelId, activity });
   }
 
   async listForStudent(studentId: string, filters: AssessmentHistoryFilters = {}) {
-    const { cursor, classId, levelId } = filters;
+    const { cursor, classId, levelId, activity } = filters;
     const { db } = getDatabase();
     // A cursor must belong to the same visible result set as the requested page.
     const visible = and(
@@ -56,6 +56,7 @@ export class AssessmentHistoryService {
       ),
       classId ? eq(assessmentAttempts.classIdAtStart, classId) : undefined,
       levelId ? eq(assessmentAttempts.levelIdAtStart, levelId) : undefined,
+      activity === 'tryout' ? eq(assessmentAttempts.assessmentType, 'TRYOUT') : undefined,
     );
     const [position] = cursor
       ? await db
@@ -86,6 +87,8 @@ export class AssessmentHistoryService {
         xp: xpLedger.xpAmount,
         tryoutXpPolicyVersion: assessmentAttempts.tryoutXpPolicyVersion,
         status: assessmentAttempts.status,
+        resultDueAt: sql<Date | null>`coalesce(${tryoutBatches.resultDueAt}, ${assessmentPackages.closeAt} + interval '72 hours')`.mapWith(
+          (value) => value == null ? null : new Date(value)),
         chapterId: assessmentAttempts.chapterIdAtStart,
         chapterTitle: chapters.name,
         levelId: assessmentAttempts.levelIdAtStart,
@@ -119,19 +122,14 @@ export class AssessmentHistoryService {
       .orderBy(desc(assessmentAttempts.finishedAt), desc(assessmentAttempts.id))
       .limit(PAGE_SIZE + 1);
     const page = rows.slice(0, PAGE_SIZE);
-    const tryoutIds = [
-      ...new Set(page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.packageId)),
-    ];
-    const releasedPackages = await this.releases.releasedPackageIds(tryoutIds);
-    const published = await publishedTryoutAttemptResults(
-      page.filter((row) => row.assessmentType === 'TRYOUT').map((row) => row.id),
-    );
+    const [clock] = await db.execute<{ now: string }>(sql`select clock_timestamp() as now`);
+    const now = new Date(clock!.now);
+    const { ready: publishedIds, canonical: published } = await this.releases.studentPublications(
+      page.filter((row) => row.assessmentType === 'TRYOUT'), now);
     return {
       records: page.map((row) => {
-        const ready =
-          row.assessmentType !== 'TRYOUT' ||
-          (row.status === 'GRADED' &&
-            (row.isDemo ? releasedPackages.has(row.packageId) : published.has(row.id)));
+        const ready = row.assessmentType !== 'TRYOUT' || publishedIds.has(row.id);
+        const publication = published.get(row.id);
         return {
           attemptId: row.id,
           activity: row.assessmentType.toLowerCase() as 'drill' | 'pretest' | 'tryout',
@@ -163,10 +161,13 @@ export class AssessmentHistoryService {
           tryoutXpPolicyVersion: row.tryoutXpPolicyVersion,
           submittedAt: row.finishedAt!.toISOString(),
           resultState: ready ? ('ready' as const) : ('waitingIrt' as const),
+          ...(row.assessmentType === 'TRYOUT' && {
+            tryoutResultState: tryoutResultState(row.status, ready, row.resultDueAt, now) ?? 'waiting',
+          }),
           score: ready
             ? row.assessmentType === 'TRYOUT'
-              ? (published.get(row.id)?.score ??
-                (row.isDemo && row.score !== null ? Number(row.score) : null))
+              ? publication ? publication.score
+                : row.isDemo && row.score !== null ? Number(row.score) : null
               : row.score !== null
                 ? Number(row.score)
                 : null

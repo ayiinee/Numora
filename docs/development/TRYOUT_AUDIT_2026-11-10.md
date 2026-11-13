@@ -46,3 +46,13 @@ Tidak ada perubahan DB cloud, hasil historis, policy approval, publikasi otomati
 ## Jadwal form batch
 
 ENGINEERING DECISION � instruksi pemilik, 10 November 2026: waktu mulai wajib di masa depan, termasuk saat menyimpan Draft. Picker memakai WIB; server memvalidasi terhadap waktu database. Mengubah waktu mulai mengisi ulang waktu tutup menjadi tujuh hari setelahnya sebagai default formulir, bukan durasi wajib; admin tetap dapat mengubah waktu tutup selama sesudah mulai. Draft lama dapat dijadwalkan ulang tanpa mengubah attempt atau hasil historis.
+
+## Tindak lanjut UI Siswa — 13 November 2026
+
+**ENGINEERING DECISION — perbaikan UX Siswa:** Jadwal memuat sesi aktif, batch terbuka, dan jadwal mendatang. Terlewat berisi paket tertutup tanpa sesi siswa. Riwayat memuat Tryout yang sudah dikirim dan menyediakan akses ke status rilis. Progres menghitung soal terisi lengkap yang sudah diterima server. Posisi dan tanda ragu dipulihkan di browser yang sama per akun dan sesi.
+
+Daftar batch, Riwayat, dan halaman hasil memakai pemeriksaan publikasi yang sama. Kontrak daftar batch menambahkan status hasil dan kemampuan melanjutkan sesi. Riwayat siswa menerima filter opsional `activity=tryout` sebelum paginasi. Status keterlambatan memakai tenggat dan waktu server. Batas rilis 72 jam tetap berlaku, dengan akses pembahasan setelah publikasi.
+
+Verifikasi lokal tindak lanjut: 103 tes frontend, 18 skenario Chromium pada build produksi lokal, dan 17 tes API pada PostgreSQL disposable. Chromium mencakup 320, 390, 768, 1280, serta 1440 px, termasuk layar pendek 320 × 640, simpan ulang, Back, PGK, dan pengiriman otomatis. Kontrak, lint, typecheck, dan build Web/API lulus. Pengujian memakai data sintetis dan tidak menguji publikasi IRT produksi.
+
+Audit ulang P1: polling setelah waktu habis mempertahankan status kedaluwarsa dan tidak memicu kirim ulang otomatis. Form ditutup jika server menyatakan sesi batal atau akses hilang, sedangkan gangguan sementara mempertahankan jawaban lokal. Daftar batch memakai koneksi transaksi yang sama untuk memeriksa publikasi. Tes delegasi batch lulus dengan pool satu koneksi, bersama 105 tes frontend, 18 skenario Chromium sintetis, dan 17 tes API pendukung.

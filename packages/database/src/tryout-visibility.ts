@@ -20,9 +20,10 @@ export function tryoutBatchCloseAt(releaseAt: Date) {
 export async function releasedTryoutPackageTimes(
   packageIds: string[],
   now = new Date(),
+  reader?: AssessmentReader,
 ): Promise<Map<string, Date>> {
   if (!packageIds.length) return new Map();
-  const { db } = getDatabase();
+  const db = reader ?? getDatabase().db;
   const canonical = await db
     .select({
       packageId: tryoutBatches.packageId,
@@ -128,8 +129,10 @@ export async function releasedTryoutPackageTimes(
 export async function releasedTryoutPackageIds(
   packageIds: string[],
   now = new Date(),
+  db?: AssessmentReader,
 ): Promise<Set<string>> {
-  return new Set((await releasedTryoutPackageTimes(packageIds, now)).keys());
+  if (!packageIds.length) return new Set();
+  return new Set((await releasedTryoutPackageTimes(packageIds, now, db)).keys());
 }
 
 export async function currentTryoutPackage(db: AssessmentReader = getDatabase().db) {
@@ -163,7 +166,11 @@ export async function currentTryoutPackage(db: AssessmentReader = getDatabase().
 }
 
 /** Published immutable academic results only. No release, mapping or fallback decisions here. */
-export async function publishedTryoutAttemptResults(attemptIds: string[], now = new Date()) {
+export async function publishedTryoutAttemptResults(
+  attemptIds: string[],
+  now = new Date(),
+  reader?: AssessmentReader,
+) {
   if (!attemptIds.length)
     return new Map<
       string,
@@ -175,7 +182,7 @@ export async function publishedTryoutAttemptResults(attemptIds: string[], now = 
         version: number;
       }
     >();
-  const { db } = getDatabase();
+  const db = reader ?? getDatabase().db;
   const rows = await db
     .select({
       attemptId: tryoutAttemptResults.attemptId,

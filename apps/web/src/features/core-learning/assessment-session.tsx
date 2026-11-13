@@ -1,7 +1,7 @@
 'use client';
 
 import { useMutation, useQuery } from '@tanstack/react-query';
-import { Button, Card, Icon, ProgressBar } from '@tka/ui';
+import { Button, Card, Dialog, Icon, ProgressBar } from '@tka/ui';
 import { useEffect, useRef, useState, type ReactNode } from 'react';
 import type { DrillQuestion } from './types';
 import { Panel, PrimaryButton, Status } from './ui';
@@ -14,6 +14,8 @@ import {
   SubmitConfirmation,
 } from './assessment-presentation';
 import { QuestionChoices } from './question-choices';
+import { TryoutQuestionMap, type TryoutQuestionState } from './tryout-question-map';
+import { readTryoutResume, writeTryoutResume } from './tryout-resume';
 
 import { ContentRichText } from '@/components/content-rich-text';
 import type { SavedAnswerDto, PreviewMediaDto } from './generated-types';
@@ -47,6 +49,7 @@ export function AssessmentSession({
   serverTime,
   onFinalizationCheck,
   onReload,
+  resumeKey,
   redesign = false,
   sessionKind = 'drill',
 }: {
@@ -66,10 +69,51 @@ export function AssessmentSession({
   serverTime?: string | undefined;
   onFinalizationCheck?: () => void;
   onReload?: () => void;
+  resumeKey?: string | undefined;
   redesign?: boolean;
   sessionKind?: 'drill' | 'tryout' | 'pretest';
 }) {
-  const [index, setIndex] = useState(0);
+  const isTryout = sessionKind === 'tryout';
+  const [resume] = useState(() =>
+    resumeKey
+      ? readTryoutResume(
+          resumeKey,
+          questions.map((item) => item.questionInstanceId),
+          !!deadlineAt && Date.parse(deadlineAt) <= Date.parse(serverTime ?? ''),
+        )
+      : undefined,
+  );
+  const [index, setIndex] = useState(() =>
+    Math.max(
+      0,
+      questions.findIndex((item) => item.questionInstanceId === resume?.questionId),
+    ),
+  );
+  const questionHeading = useRef<HTMLHeadingElement>(null);
+  const [mapOpen, setMapOpen] = useState(false);
+  const [mapSubmitOpen, setMapSubmitOpen] = useState(false);
+  const sessionRef = useRef<HTMLDivElement>(null);
+  const feedbackRef = useRef<HTMLDivElement>(null);
+  useEffect(() => {
+    if (!isTryout) return;
+    const session = sessionRef.current;
+    const header = session?.querySelector('.practice-header');
+    const feedback = feedbackRef.current;
+    if (!session || !header || !feedback || typeof ResizeObserver === 'undefined') return;
+    const observer = new ResizeObserver(() => {
+      session.style.setProperty(
+        '--tryout-session-header-height',
+        `${header.getBoundingClientRect().height}px`,
+      );
+      session.style.setProperty(
+        '--tryout-session-feedback-height',
+        `${feedback.getBoundingClientRect().height}px`,
+      );
+    });
+    observer.observe(header);
+    observer.observe(feedback);
+    return () => observer.disconnect();
+  }, [isTryout]);
   const navigator = useRef<HTMLElement>(null);
   useEffect(() => {
     const nav = navigator.current;
@@ -82,7 +126,9 @@ export function AssessmentSession({
     }
   }, [index]);
   const [confirmationOpen, setConfirmationOpen] = useState(false);
-  const [flags, setFlags] = useState<Record<string, boolean>>({});
+  const [flags, setFlags] = useState<Record<string, boolean>>(() =>
+    Object.fromEntries((resume?.flagged ?? []).map((id) => [id, true])),
+  );
   const [answers, setAnswers] = useState<Record<string, AssessmentAnswer>>(() =>
     Object.fromEntries(
       questions.map((question) => [question.questionInstanceId, answerOf(question)]),
@@ -108,8 +154,12 @@ export function AssessmentSession({
   });
   const finalizing = useRef(false);
   const submit = useMutation({
+    ...(isTryout && { networkMode: 'always' as const }),
     mutationFn: onSubmit,
-    onSuccess: onSubmitted,
+    onSuccess: () => {
+      if (resumeKey) writeTryoutResume(resumeKey);
+      onSubmitted();
+    },
     onError: () => onFinalizationCheck?.(),
   });
   function finalize() {
@@ -123,15 +173,26 @@ export function AssessmentSession({
   }
   const deadline = useAssessmentDeadline(deadlineAt, finalize, serverTime);
   const question = questions[index];
+  useEffect(() => {
+    if (!resumeKey || !question || submit.isSuccess || deadline.expired) return;
+    writeTryoutResume(resumeKey, {
+      questionId: question.questionInstanceId,
+      flagged: Object.keys(flags).filter((id) => flags[id]),
+    });
+  }, [resumeKey, question, flags, submit.isSuccess, deadline.expired]);
   const exitDialog = useUnsavedWarning(
     !submit.isSuccess && unsaved !== null,
     sessionKind === 'drill' && !submit.isSuccess,
     sessionKind === 'drill' && !submit.isSuccess ? onExitConfirmed : undefined,
-    { customDialog: true },
+    {
+      customDialog: true,
+      confirmNavigation: isTryout && !deadline.expired && !submit.isPending && !submit.isSuccess,
+      ...(isTryout && {
+        message: `Waktu tetap berjalan. Kamu bisa melanjutkan jawaban yang sudah tersimpan selama sesi masih aktif.${unsaved ? ' Perubahan terakhir belum tersimpan dan dapat hilang.' : ''}`,
+      }),
+    },
   );
 
-  if (!question)
-    return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
   const emptyCount = questions.filter((item) =>
     emptyAnswer(answers[item.questionInstanceId] ?? null),
   ).length;
@@ -152,6 +213,8 @@ export function AssessmentSession({
     queryFn: () => loadMedia!(question!.questionInstanceId, 'WORK', assetIds),
     retry: false,
   });
+  if (!question)
+    return <Status title="Soal belum tersedia">Paket soal belum siap. Coba lagi nanti.</Status>;
   const renderContent = (text: string) => (
     <ContentRichText
       text={text}
@@ -190,8 +253,11 @@ export function AssessmentSession({
         }
       }
     } catch (error) {
-      if (error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT')
+      if (onReload && error instanceof LearningApiError && error.code === 'ANSWER_REVISION_CONFLICT')
         setSaveConflict(true);
+      if (isTryout && error instanceof LearningApiError &&
+        (error.code === 'TRYOUT_DEADLINE_PASSED' || error.code === 'ATTEMPT_COMPLETED'))
+        onFinalizationCheck?.();
       setSaveError(error instanceof Error ? error.message : 'Jawaban belum tersimpan.');
     } finally {
       saving.current = false;
@@ -202,6 +268,25 @@ export function AssessmentSession({
     if (deadline.expired || unsaved || saving.current || finalizing.current) return;
     if (redesign) setConfirmationOpen(true);
     else if (window.confirm(confirmMessage(emptyCount))) finalize();
+  }
+
+  function goToTryoutQuestion(position: number) {
+    setIndex(position);
+    setMapOpen(false);
+    setMapSubmitOpen(false);
+    setConfirmationOpen(false);
+    requestAnimationFrame(() => questionHeading.current?.focus());
+  }
+
+  function retrySave() {
+    if (
+      saveConflict &&
+      window.confirm(
+        'Muat jawaban terbaru dari server? Perubahan lokal yang belum tersimpan akan diganti.',
+      )
+    )
+      onReload?.();
+    else if (!saveConflict && unsaved) void choose(unsaved.questionId, unsaved.answer);
   }
 
   if (redesign) {
@@ -220,8 +305,35 @@ export function AssessmentSession({
     const flagged = questions.flatMap((item, position) =>
       flags[item.questionInstanceId] ? [position + 1] : [],
     );
+    const questionStates = questions.map((item): TryoutQuestionState => {
+      if (item.questionInstanceId === unsaved?.questionId) return saveError ? 'failed' : 'saving';
+      const answer = answers[item.questionInstanceId] ?? null;
+      if (emptyAnswer(answer)) return 'empty';
+      return incompleteCategory(item, answer) ? 'incomplete' : 'saved';
+    });
+    const savedCount = questionStates.filter((state) => state === 'saved').length;
+    const unsavedPosition =
+      questions.findIndex((item) => item.questionInstanceId === unsaved?.questionId) + 1;
+    const warning =
+      deadline.remaining !== null && deadline.remaining > 0 && deadline.remaining <= 60;
+    const canSubmit = !deadline.expired && !unsaved && !submit.isPending && !submit.isSuccess;
+    const renderMap = (fromDialog: boolean) => (
+      <TryoutQuestionMap
+        items={questionStates.map((state, position) => ({
+          state,
+          flagged: !!flags[questions[position]!.questionInstanceId],
+        }))}
+        current={index}
+        onSelect={goToTryoutQuestion}
+        canSubmit={canSubmit}
+        onSubmit={() => {
+          setMapSubmitOpen(fromDialog);
+          confirmSubmit();
+        }}
+      />
+    );
     return (
-      <div className="practice-session" data-session-kind={sessionKind}>
+      <div ref={sessionRef} className="practice-session" data-session-kind={sessionKind}>
         <AssessmentHeader
           title={
             sessionKind === 'pretest'
@@ -232,22 +344,28 @@ export function AssessmentSession({
           }
           exitHref={sessionKind === 'tryout' ? '/student/tryout' : '/student/learn'}
           status={
-            <span role="status">
-              {saveError
-                ? 'Belum tersimpan'
-                : save.isPending || unsaved
-                  ? 'Menyimpan…'
-                  : 'Tersimpan'}
-            </span>
+            isTryout ? (
+              <p className="tryout-question-position">Soal {index + 1} dari {questions.length}</p>
+            ) : (
+              <span role="status">
+                {saveError
+                  ? 'Belum tersimpan'
+                  : save.isPending || unsaved
+                    ? 'Menyimpan…'
+                    : 'Tersimpan'}
+              </span>
+            )
           }
           timer={
             sessionKind === 'tryout' ? (
               deadline.remaining !== null ? (
-                <span role="timer" aria-label="Sisa waktu Tryout">
-                  <Icon name="clock" width={14} height={14} />
-                  {String(Math.floor(deadline.remaining / 60)).padStart(2, '0')}:
-                  {String(deadline.remaining % 60).padStart(2, '0')}
-                </span>
+                <div className="tryout-countdown" data-warning={warning}>
+                  <span>Sisa waktu</span>
+                  <strong role="timer" aria-label="Sisa waktu Tryout">
+                    {String(Math.floor(deadline.remaining / 60)).padStart(2, '0')}:
+                    {String(deadline.remaining % 60).padStart(2, '0')}
+                  </strong>
+                </div>
               ) : (
                 <span>Timer belum tersedia</span>
               )
@@ -255,9 +373,45 @@ export function AssessmentSession({
               headerExtra
             )
           }
-          progress={(100 * (index + 1)) / questions.length}
+          progress={(100 * (isTryout ? savedCount : index + 1)) / questions.length}
+          progressLabel={isTryout ? 'Jawaban tersimpan' : 'Posisi soal'}
+          progressText={
+            isTryout
+              ? `${savedCount} dari ${questions.length} soal terisi lengkap dan tersimpan`
+              : undefined
+          }
           exitDisabled={submit.isPending}
         />
+        {isTryout && (
+          <div ref={feedbackRef} className="tryout-session-feedback">
+            <div role="status" className={warning ? undefined : 'sr-only'}>
+              {warning && <strong>Waktu hampir habis</strong>}
+            </div>
+            {unsaved && !deadline.expired && !submit.isSuccess && (
+              <div className="tryout-session-feedback__save">
+                <div role={saveError ? 'alert' : 'status'}>
+                  {saveError ? (
+                    <>
+                      <strong>Jawaban soal {unsavedPosition} belum tersimpan</strong>
+                      <p>{saveError}</p>
+                    </>
+                  ) : (
+                    `Menyimpan jawaban soal ${unsavedPosition}…`
+                  )}
+                </div>
+                {saveError && (
+                  <Button
+                    variant="secondary"
+                    disabled={save.isPending || submit.isPending || submit.isSuccess}
+                    onClick={retrySave}
+                  >
+                    {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
+                  </Button>
+                )}
+              </div>
+            )}
+          </div>
+        )}
         {submit.isPending && (
           <p role="status" className="practice-finalization-status">
             Mengirim jawaban…
@@ -273,19 +427,33 @@ export function AssessmentSession({
             {notice}
             <div className="practice-breadcrumb">
               <span>{title}</span>
-              <a href="#practice-navigator">
-                <Icon name="menu" width={16} height={16} />
-                Semua Soal
-              </a>
+              {isTryout ? (
+                <div className="tryout-mobile-map">
+                  <Button variant="secondary" aria-haspopup="dialog" onClick={() => setMapOpen(true)}>
+                    <Icon name="menu" width={16} height={16} /> Semua Soal
+                  </Button>
+                </div>
+              ) : (
+                <a href="#practice-navigator">
+                  <Icon name="menu" width={16} height={16} />
+                  Semua Soal
+                </a>
+              )}
             </div>
             <Card className="practice-question">
               <div className="practice-question__tags">
-                <span>
-                  Soal {index + 1} dari {questions.length}
-                </span>
+                {!isTryout && (
+                  <span>
+                    Soal {index + 1} dari {questions.length}
+                  </span>
+                )}
                 <span>{questionTypeLabels[question.type ?? 'SINGLE_CHOICE']}</span>
               </div>
-              <h2 className="practice-stem">
+              <h2
+                className="practice-stem"
+                ref={questionHeading}
+                tabIndex={isTryout ? -1 : undefined}
+              >
                 {renderContent(question.richStem?.text ?? question.stem)}
               </h2>
               <QuestionChoices
@@ -326,22 +494,13 @@ export function AssessmentSession({
                 )}
               </div>
             </Card>
-            {saveError && !deadline.expired && (
+            {!isTryout && saveError && !deadline.expired && (
               <Status title="Jawaban belum tersimpan">
                 <p role="alert">{saveError}</p>
                 <Button
                   variant="secondary"
                   disabled={save.isPending || submit.isPending || submit.isSuccess}
-                  onClick={() => {
-                    if (saveConflict) {
-                      if (
-                        window.confirm(
-                          'Muat jawaban terbaru dari server? Perubahan lokal yang belum tersimpan akan diganti.',
-                        )
-                      )
-                        onReload?.();
-                    } else if (unsaved) void choose(unsaved.questionId, unsaved.answer);
-                  }}
+                  onClick={retrySave}
                 >
                   {saveConflict ? 'Muat ulang sesi' : 'Coba simpan lagi'}
                 </Button>
@@ -361,30 +520,39 @@ export function AssessmentSession({
             )}
           </div>
           <aside className="practice-toolbar" id="practice-navigator">
-            <nav ref={navigator} aria-label="Navigasi soal" className="practice-numbers">
-              {questions.map((item, position) => (
-                <button
-                  key={item.questionInstanceId}
-                  aria-current={index === position ? 'step' : undefined}
-                  aria-label={`Soal ${position + 1}${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? ', belum lengkap' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? ', terjawab' : ', kosong'}${flags[item.questionInstanceId] ? ', ragu' : ''}`}
-                  className={`${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? 'is-incomplete' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? 'is-answered' : ''} ${flags[item.questionInstanceId] ? 'is-flagged' : ''}`}
-                  onClick={() => setIndex(position)}
-                >
-                  {position + 1}
-                </button>
-              ))}
-            </nav>
+            {isTryout ? (
+              <div className="tryout-desktop-map">
+                <h2>Peta soal</h2>
+                {renderMap(false)}
+              </div>
+            ) : (
+              <nav ref={navigator} aria-label="Navigasi soal" className="practice-numbers">
+                {questions.map((item, position) => (
+                  <button
+                    key={item.questionInstanceId}
+                    aria-current={index === position ? 'step' : undefined}
+                    aria-label={`Soal ${position + 1}${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? ', belum lengkap' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? ', terjawab' : ', kosong'}${flags[item.questionInstanceId] ? ', ragu' : ''}`}
+                    className={`${incompleteCategory(item, answers[item.questionInstanceId] ?? null) ? 'is-incomplete' : !emptyAnswer(answers[item.questionInstanceId] ?? null) ? 'is-answered' : ''} ${flags[item.questionInstanceId] ? 'is-flagged' : ''}`}
+                    onClick={() => setIndex(position)}
+                  >
+                    {position + 1}
+                  </button>
+                ))}
+              </nav>
+            )}
             <div className="practice-actions">
               <Button
                 variant="secondary"
                 disabled={index === 0}
-                onClick={() => setIndex(index - 1)}
+                onClick={() => (isTryout ? goToTryoutQuestion(index - 1) : setIndex(index - 1))}
               >
                 <Icon name="back" width={16} height={16} />
                 Sebelumnya
               </Button>
               {index < questions.length - 1 ? (
-                <Button onClick={() => setIndex(index + 1)}>
+                <Button
+                  onClick={() => (isTryout ? goToTryoutQuestion(index + 1) : setIndex(index + 1))}
+                >
                   Berikutnya
                   <Icon name="chevron" width={16} height={16} />
                 </Button>
@@ -405,6 +573,16 @@ export function AssessmentSession({
             </div>
           </aside>
         </div>
+        {isTryout && (
+          <Dialog
+            className="tryout-map-dialog"
+            open={mapOpen && !confirmationOpen && !deadline.expired}
+            title="Semua Soal"
+            onClose={() => setMapOpen(false)}
+          >
+            {renderMap(true)}
+          </Dialog>
+        )}
         <SubmitConfirmation
           open={confirmationOpen && !submit.isSuccess && !deadline.expired}
           title={
@@ -414,7 +592,11 @@ export function AssessmentSession({
                 ? 'Kumpulkan Tryout Sekarang?'
                 : 'Kumpulkan Latihan Sekarang?'
           }
-          onClose={() => setConfirmationOpen(false)}
+          onClose={() => {
+            setConfirmationOpen(false);
+            setMapOpen(mapSubmitOpen);
+            setMapSubmitOpen(false);
+          }}
           onConfirm={() => {
             if (!pendingAnswer.current && !saving.current) finalize();
           }}
@@ -425,6 +607,7 @@ export function AssessmentSession({
           description={confirmMessage(emptyCount)}
           pending={submit.isPending}
           error={submit.isError ? submit.error.message : undefined}
+          onReviewQuestion={isTryout ? goToTryoutQuestion : undefined}
         />
         <AssessmentExitDialog {...exitDialog} />
       </div>

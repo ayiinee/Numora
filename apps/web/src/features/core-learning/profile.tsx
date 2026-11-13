@@ -4,6 +4,7 @@ import { useState, type FormEvent } from 'react';
 import Link from 'next/link';
 import { useRouter } from 'next/navigation';
 import { useQuery, useQueryClient } from '@tanstack/react-query';
+import { useTryoutSummary } from './tryout-queries';
 import { Button, Card, Dialog, Icon, Input, Skeleton } from '@tka/ui';
 import { useAuth } from '@/features/onboarding/auth';
 import { AppShell } from '@/components/shell';
@@ -39,10 +40,7 @@ function ProfileContent({ token }: { token: string }) {
     queryKey: ['student-dashboard'],
     queryFn: () => learningApi.dashboard(token),
   });
-  const tryout = useQuery({
-    queryKey: ['current-tryout'],
-    queryFn: () => learningApi.currentTryout(token),
-  });
+  const tryout = useTryoutSummary(token);
   if (state.status !== 'ready') return null;
   const profile = state.profile;
   const classes = dashboard.data?.classes ?? (dashboard.data?.class ? [dashboard.data.class] : []);
@@ -187,7 +185,7 @@ function ProfileContent({ token }: { token: string }) {
             <Card>
               <DataState pending={false} error={tryout.error} retry={() => void tryout.refetch()} />
             </Card>
-          ) : (
+          ) : tryout.data && (
             <ProfileTryout data={tryout.data} />
           )}
           <Link className="button-link student-profile-report" href="/student/assessment">
