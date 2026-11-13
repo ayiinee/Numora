@@ -21,18 +21,39 @@ export class MaterialsService {
     const { db } = getDatabase();
     const [chapterRows, subRows, levelRows, recent, graded] = await Promise.all([
       db
-        .select()
+        .select({
+          id: chapters.id,
+          name: chapters.name,
+          displayOrder: chapters.displayOrder,
+          materialCategory: chapters.materialCategory,
+        })
         .from(chapters)
         .where(eq(chapters.status, 'READY'))
         .orderBy(asc(chapters.displayOrder)),
       db
-        .select({ sub: subchapters })
+        .select({
+          sub: {
+            id: subchapters.id,
+            chapterId: subchapters.chapterId,
+            name: subchapters.name,
+            displayOrder: subchapters.displayOrder,
+          },
+        })
         .from(subchapters)
         .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))
         .where(and(eq(subchapters.status, 'READY'), eq(chapters.status, 'READY')))
         .orderBy(asc(subchapters.displayOrder)),
       db
-        .select({ level: levels, progress: levelProgress })
+        .select({
+          level: { subchapterId: levels.subchapterId, levelNumber: levels.levelNumber },
+          progress: {
+            // A non-null key keeps left-join null mapping accurate for nullable progress fields.
+            levelId: levelProgress.levelId,
+            bestScore: levelProgress.bestScore,
+            completedAt: levelProgress.completedAt,
+            unlockedAt: levelProgress.unlockedAt,
+          },
+        })
         .from(levels)
         .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
         .innerJoin(chapters, eq(chapters.id, subchapters.chapterId))

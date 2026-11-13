@@ -6,7 +6,7 @@ import {
   NotFoundException,
   ServiceUnavailableException,
 } from '@nestjs/common';
-import { and, asc, desc, eq, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, sql } from 'drizzle-orm';
 import {
   analyticsOutbox,
   assessmentAttempts,
@@ -634,6 +634,10 @@ export class PretestService {
     if (!['GRADED', 'SUBMITTED'].includes(row.attempt.status))
       throw new ConflictException(problem('PRETEST_RESULT_PENDING', 'Pretest belum dikumpulkan.'));
     const result = row.attempt.pretestResult;
+    const [items] = await getDatabase()
+      .db.select({ count: count() })
+      .from(attemptItems)
+      .where(eq(attemptItems.attemptId, attemptId));
     return {
       attemptId,
       chapterId: row.attempt.chapterIdAtStart!,
@@ -641,7 +645,7 @@ export class PretestService {
       isDemo: row.isDemo,
       score: row.attempt.score0To100 === null ? null : Number(row.attempt.score0To100),
       correctCount: result?.correctCount ?? null,
-      questionCount: (await this.rows(attemptId)).length,
+      questionCount: items?.count ?? 0,
       initialLevel: result?.initialLevel ?? null,
       mappingStatus: result?.mappingStatus ?? 'unavailable',
       unlockedLevels: result?.unlockedLevels ?? [],
