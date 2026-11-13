@@ -218,7 +218,7 @@ def validate_result(output, value, expected_dispatch):
     results = exact_coverage(outcome['items'], items, 'questionVersionId')
     package_results = exact_coverage(outcome['packages'], packages, pk)
     comparisons = exact_coverage(outcome['comparisons'], {c['comparisonId']: c for c in value['comparisons']}, 'comparisonId')
-    people = {r['attemptId']: r for r in value['respondents']} if value['ecosystem'] == 'TRYOUT' else {}
+    people = {r['attemptId']: r for r in value['respondents']}
     exact_coverage(outcome['respondents'], people, 'attemptId')
     unique(outcome['respondents'], 'respondentId')
     counts = {identifier: 0 for identifier in items}
