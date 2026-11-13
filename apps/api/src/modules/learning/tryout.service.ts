@@ -48,12 +48,27 @@ import {
   presentAssessmentReview,
   TRYOUT_XP_POLICY,
 } from '@tka/assessment-engine';
-import { and, asc, desc, eq, isNull, sql } from 'drizzle-orm';
+import { and, asc, count, desc, eq, inArray, isNull, sql } from 'drizzle-orm';
 import { IdentityService } from '../identity/identity.service';
 import { TryoutReleaseService } from './tryout-release.service';
 import { tryoutAttemptDeadline } from './tryout.policy';
 
 const problem = (code: string, detail: string) => ({ code, detail });
+type PendingReason = 'CONTENT_PENDING' | 'SCORING_PENDING' | null;
+type PackageItemStats = { total: number; versions: number; ready: number; nonSingle: number };
+const packageMetadataFields = {
+  id: assessmentPackages.id,
+  name: assessmentPackages.name,
+  releaseAt: assessmentPackages.releaseAt,
+  closeAt: assessmentPackages.closeAt,
+  status: assessmentPackages.status,
+  durationSeconds: assessmentPackages.durationSeconds,
+  isDemo: assessmentPackages.isDemo,
+};
+type PackageMetadataRow = Pick<
+  typeof assessmentPackages.$inferSelect,
+  keyof typeof packageMetadataFields
+>;
 
 @Injectable()
 export class TryoutService {
@@ -70,42 +85,88 @@ export class TryoutService {
     return user.id;
   }
 
-  private async pendingReason(
-    packageId: string,
-  ): Promise<'CONTENT_PENDING' | 'SCORING_PENDING' | null> {
-    const db = getDatabase().db;
-    const [pack] = await db
-      .select()
-      .from(assessmentPackages)
-      .where(eq(assessmentPackages.id, packageId));
-    if (
-      !pack?.curriculumApproval ||
-      !pack.blueprintVersionId ||
-      !pack.frozenAt ||
-      pack.curriculumApproval.manifestDigest !== pack.manifestDigest
-    )
-      return 'CONTENT_PENDING';
-    const rows = await db
-      .select({ type: questionVersions.questionType, status: questionVersions.contentStatus })
+  private async pendingReason(packageId: string): Promise<PendingReason> {
+    const reason = (await this.pendingReasons([packageId])).get(packageId);
+    return reason === undefined ? 'CONTENT_PENDING' : reason;
+  }
+
+  private async itemStatistics(packageIds: string[]): Promise<Map<string, PackageItemStats>> {
+    if (!packageIds.length) return new Map();
+    const rows = await getDatabase()
+      .db.select({
+        packageId: packageItems.packageId,
+        total: count(packageItems.id),
+        versions: count(questionVersions.id),
+        ready: sql<number>`count(*) filter (where ${questionVersions.contentStatus}='READY')::integer`,
+        nonSingle: sql<number>`count(*) filter (where ${questionVersions.questionType}<>'SINGLE_CHOICE')::integer`,
+      })
       .from(packageItems)
-      .innerJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
-      .where(eq(packageItems.packageId, packageId));
-    if (rows.length !== 30 || rows.some((row) => row.status !== 'READY')) return 'CONTENT_PENDING';
-    const [policy] = pack.scoringPolicyVersionId
+      .leftJoin(questionVersions, eq(questionVersions.id, packageItems.questionVersionId))
+      .where(inArray(packageItems.packageId, packageIds))
+      .groupBy(packageItems.packageId);
+    return new Map(rows.map((row) => [row.packageId, row]));
+  }
+
+  private async pendingReasons(
+    packageIds: string[],
+    statistics?: ReadonlyMap<string, PackageItemStats>,
+  ) {
+    const reasons = new Map<string, PendingReason>(packageIds.map((id) => [id, 'CONTENT_PENDING']));
+    if (!packageIds.length) return reasons;
+    const db = getDatabase().db;
+    const packs = await db
+      .select({
+        id: assessmentPackages.id,
+        curriculumApproval: assessmentPackages.curriculumApproval,
+        blueprintVersionId: assessmentPackages.blueprintVersionId,
+        frozenAt: assessmentPackages.frozenAt,
+        manifestDigest: assessmentPackages.manifestDigest,
+        scoringPolicyVersionId: assessmentPackages.scoringPolicyVersionId,
+      })
+      .from(assessmentPackages)
+      .where(inArray(assessmentPackages.id, packageIds));
+    const eligible = packs.filter(
+      (pack) =>
+        pack.curriculumApproval &&
+        pack.blueprintVersionId &&
+        pack.frozenAt &&
+        pack.curriculumApproval.manifestDigest === pack.manifestDigest,
+    );
+    const stats = statistics ?? (await this.itemStatistics(eligible.map((pack) => pack.id)));
+    const ready = eligible.filter(
+      (pack) => stats.get(pack.id)?.versions === 30 && stats.get(pack.id)?.ready === 30,
+    );
+    const policyIds = [
+      ...new Set(
+        ready.flatMap((pack) => (pack.scoringPolicyVersionId ? [pack.scoringPolicyVersionId] : [])),
+      ),
+    ];
+    const policies = policyIds.length
       ? await db
           .select()
           .from(scoringPolicyVersions)
-          .where(eq(scoringPolicyVersions.id, pack.scoringPolicyVersionId))
+          .where(inArray(scoringPolicyVersions.id, policyIds))
       : [];
-    try {
-      if (!policy) return 'SCORING_PENDING';
-      const approved = readApprovedPolicy(policy, 'TRYOUT');
-      return approved.canonicalPgOnly && rows.some((row) => row.type !== 'SINGLE_CHOICE')
-        ? 'SCORING_PENDING'
-        : null;
-    } catch {
-      return 'SCORING_PENDING';
+    const byPolicy = new Map(policies.map((policy) => [policy.id, policy]));
+    for (const pack of ready) {
+      try {
+        const policy = pack.scoringPolicyVersionId
+          ? byPolicy.get(pack.scoringPolicyVersionId)
+          : undefined;
+        if (!policy) {
+          reasons.set(pack.id, 'SCORING_PENDING');
+          continue;
+        }
+        const approved = readApprovedPolicy(policy, 'TRYOUT');
+        reasons.set(
+          pack.id,
+          approved.canonicalPgOnly && stats.get(pack.id)!.nonSingle > 0 ? 'SCORING_PENDING' : null,
+        );
+      } catch {
+        reasons.set(pack.id, 'SCORING_PENDING');
+      }
     }
+    return reasons;
   }
 
   private currentPackage() {
@@ -166,71 +227,116 @@ export class TryoutService {
     };
   }
 
-  private async packageMetadata(studentId: string, pack: typeof assessmentPackages.$inferSelect) {
+  private async packageMetadata(studentId: string, pack: PackageMetadataRow) {
+    return (await this.packagesMetadata(studentId, [pack]))[0]!;
+  }
+
+  private async packagesMetadata(studentId: string, packs: PackageMetadataRow[], clock?: Date) {
+    if (!packs.length) return [];
     const db = getDatabase().db;
-    const now = await databaseTime(db);
+    const now = clock ?? (await databaseTime(db));
     const current = await this.currentPackage();
-    let [attempt] = await db
-      .select()
+    const packageIds = packs.map((pack) => pack.id);
+    const attemptFields = {
+      id: assessmentAttempts.id,
+      packageId: assessmentAttempts.packageId,
+      status: assessmentAttempts.status,
+    };
+    // Keep the existing per-package LIMIT 1, including managed-batch histories.
+    const selectedAttempt = db
+      .select(attemptFields)
       .from(assessmentAttempts)
       .where(
         and(
           eq(assessmentAttempts.studentId, studentId),
-          eq(assessmentAttempts.packageId, pack.id),
+          eq(assessmentAttempts.packageId, assessmentPackages.id),
           eq(assessmentAttempts.assessmentType, 'TRYOUT'),
         ),
       )
-      .limit(1);
-    if (attempt?.status === 'IN_PROGRESS') {
-      await this.finalizeForStudent(studentId, attempt.id, 'automatic');
-      [attempt] = await db
-        .select()
+      .limit(1)
+      .as('metadata_attempt');
+    const attempts = await db
+      .select({
+        id: selectedAttempt.id,
+        packageId: selectedAttempt.packageId,
+        status: selectedAttempt.status,
+      })
+      .from(assessmentPackages)
+      .innerJoinLateral(selectedAttempt, sql`true`)
+      .where(inArray(assessmentPackages.id, packageIds));
+    const byPackage = new Map(attempts.map((attempt) => [attempt.packageId, attempt]));
+    const pending = attempts.filter((attempt) => attempt.status === 'IN_PROGRESS');
+    if (pending.length) {
+      await Promise.all(
+        pending.map((attempt) => this.finalizeForStudent(studentId, attempt.id, 'automatic')),
+      );
+      const refreshed = await db
+        .select(attemptFields)
         .from(assessmentAttempts)
-        .where(eq(assessmentAttempts.id, attempt.id));
+        .where(
+          and(
+            eq(assessmentAttempts.studentId, studentId),
+            inArray(
+              assessmentAttempts.id,
+              pending.map((attempt) => attempt.id),
+            ),
+          ),
+        );
+      for (const attempt of pending) byPackage.delete(attempt.packageId);
+      for (const attempt of refreshed) byPackage.set(attempt.packageId, attempt);
     }
-    const past =
-      pack.status === 'CLOSED' ||
-      pack.status === 'ARCHIVED' ||
-      (pack.closeAt ?? tryoutBatchCloseAt(pack.releaseAt!)) <= now;
-    const ongoing = !past && current?.id === pack.id;
-    const released =
-      attempt?.status === 'GRADED' &&
-      (await this.releases.releasedPackageIds([pack.id])).has(pack.id);
-    const [count] = await db
-      .select({ total: sql<number>`count(*)::integer` })
-      .from(packageItems)
-      .where(eq(packageItems.packageId, pack.id));
-    const pendingReason = released ? null : await this.pendingReason(pack.id);
-    return {
-      id: pack.id,
-      title: presentFixtureText(pack.id, 'name', pack.name),
-      releaseAt: pack.releaseAt!.toISOString(),
-      closeAt: pack.closeAt?.toISOString() ?? null,
-      resultDueAt:
-        !pendingReason && pack.closeAt
-          ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
-          : null,
-      questionCount: count?.total ?? 0,
-      durationSeconds: pack.durationSeconds,
-      isDemo: pack.isDemo,
-      resultPendingReason: pendingReason,
-      attemptId: attempt?.id ?? null,
-      periodState: past
-        ? ('past' as const)
-        : ongoing
-          ? ('ongoing' as const)
-          : ('unavailable' as const),
-      state: attempt
-        ? attempt.status === 'IN_PROGRESS' && ongoing
-          ? ('inProgress' as const)
-          : released
-            ? ('resultReady' as const)
-            : ('waitingIrt' as const)
-        : ongoing
-          ? ('open' as const)
-          : ('unavailable' as const),
-      eligible: ongoing && !attempt,
-    };
+    const gradedIds = [...byPackage.values()]
+      .filter((attempt) => attempt.status === 'GRADED')
+      .map((attempt) => attempt.packageId);
+    const releasedIds = gradedIds.length
+      ? await this.releases.releasedPackageIds(gradedIds)
+      : new Set<string>();
+    const statistics = await this.itemStatistics(packageIds);
+    const reasons = await this.pendingReasons(
+      packageIds.filter((id) => !releasedIds.has(id)),
+      statistics,
+    );
+    return packs.map((pack) => {
+      const attempt = byPackage.get(pack.id);
+      const past =
+        pack.status === 'CLOSED' ||
+        pack.status === 'ARCHIVED' ||
+        (pack.closeAt ?? tryoutBatchCloseAt(pack.releaseAt!)) <= now;
+      const ongoing = !past && current?.id === pack.id;
+      const released = attempt?.status === 'GRADED' && releasedIds.has(pack.id);
+      const reason = reasons.get(pack.id);
+      const pendingReason = released ? null : reason === undefined ? 'CONTENT_PENDING' : reason;
+      return {
+        id: pack.id,
+        title: presentFixtureText(pack.id, 'name', pack.name),
+        releaseAt: pack.releaseAt!.toISOString(),
+        closeAt: pack.closeAt?.toISOString() ?? null,
+        resultDueAt:
+          !pendingReason && pack.closeAt
+            ? new Date(pack.closeAt.getTime() + 72 * 3600 * 1000).toISOString()
+            : null,
+        questionCount: statistics.get(pack.id)?.total ?? 0,
+        durationSeconds: pack.durationSeconds,
+        isDemo: pack.isDemo,
+        resultPendingReason: pendingReason,
+        attemptId: attempt?.id ?? null,
+        periodState: past
+          ? ('past' as const)
+          : ongoing
+            ? ('ongoing' as const)
+            : ('unavailable' as const),
+        state: attempt
+          ? attempt.status === 'IN_PROGRESS' && ongoing
+            ? ('inProgress' as const)
+            : released
+              ? ('resultReady' as const)
+              : ('waitingIrt' as const)
+          : ongoing
+            ? ('open' as const)
+            : ('unavailable' as const),
+        eligible: ongoing && !attempt,
+      };
+    });
   }
   async packages(authorization?: string, cursor?: string) {
     const studentId = await this.student(authorization);
@@ -258,7 +364,7 @@ export class TryoutService {
       cursorClause = sql`(${assessmentPackages.releaseAt}, ${assessmentPackages.id}) < (${anchor.releaseAt.toISOString()}::timestamptz, ${anchor.id}::uuid)`;
     }
     const rows = await db
-      .select()
+      .select(packageMetadataFields)
       .from(assessmentPackages)
       .where(
         and(
@@ -274,7 +380,7 @@ export class TryoutService {
       .limit(21);
     const page = rows.slice(0, 20);
     return {
-      packages: await Promise.all(page.map((row) => this.packageMetadata(studentId, row))),
+      packages: await this.packagesMetadata(studentId, page, now),
       nextCursor: rows.length > 20 ? page.at(-1)!.id : null,
     };
   }
@@ -283,7 +389,7 @@ export class TryoutService {
     const db = getDatabase().db;
     const now = await databaseTime(db);
     const [pack] = await db
-      .select()
+      .select(packageMetadataFields)
       .from(assessmentPackages)
       .where(
         and(
