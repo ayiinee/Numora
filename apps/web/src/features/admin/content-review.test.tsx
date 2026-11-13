@@ -74,6 +74,10 @@ it('discards the previous report target when navigation to another report fails'
     followUp: null,
     question: null,
     video: null,
+    reportCount: 1,
+    caseRevision: 0,
+    sourceReports: [{ id: 'source', category: 'Old target', reportedAt: '2026-10-05T00:00:00Z' }],
+    history: [],
   });
   const view = render(<ReportDetailScreen kind="QUESTION" id="old" />);
   await screen.findByText('Old target');
@@ -92,17 +96,26 @@ it('clears a loaded report and its mutation form when server access is revoked',
     followUp: null,
     question: null,
     video: null,
+    reportCount: 1,
+    caseRevision: 1,
+    sourceReports: [
+      { id: 'source', category: 'Protected target', reportedAt: '2026-10-05T00:00:00Z' },
+    ],
+    history: [],
   });
   render(<ReportDetailScreen kind="QUESTION" id="report" />);
   await screen.findByText('Protected target');
   fireEvent.change(screen.getByLabelText('Status tindak lanjut'), {
     target: { value: 'IN_REVIEW' },
   });
-  expect(screen.getByRole('option', { name: 'Sedang ditinjau' })).toBeTruthy();
+  expect(screen.getByRole('option', { name: 'Ditinjau' })).toBeTruthy();
   mock.api.mockRejectedValueOnce(new ApiProblem(403, 'FORBIDDEN', 'Role revoked'));
-  fireEvent.submit(screen.getByRole('button', { name: 'Simpan tindak lanjut' }).closest('form')!);
+  fireEvent.submit(screen.getByRole('button', { name: 'Mulai tinjauan' }).closest('form')!);
   await screen.findByText('Role revoked');
-  expect(JSON.parse(mock.api.mock.calls.at(-1)![2].body)).toMatchObject({ status: 'IN_REVIEW' });
+  expect(JSON.parse(mock.api.mock.calls.at(-1)![2].body)).toMatchObject({
+    status: 'IN_REVIEW',
+    expectedRevision: 1,
+  });
   expect(screen.queryByText('Protected target')).toBeNull();
 });
 it('separates rich review from approved rubric publication and clears payload after revocation', async () => {
@@ -156,6 +169,17 @@ it('opens the historical report target independently of loaded metadata or newer
     },
     video: null,
     revisionQuestionVersionId: null,
+    reportCount: 1,
+    caseRevision: 0,
+    sourceReports: [
+      {
+        id: 'report',
+        category: 'ANSWER_KEY',
+        details: 'TEST issue',
+        reportedAt: '2026-10-05T00:00:00Z',
+      },
+    ],
+    history: [],
   });
   render(<ReportDetailScreen kind="QUESTION" id="report" />);
   const link = await screen.findByRole('link', { name: /Buka versi yang dilaporkan/ });

@@ -101,6 +101,31 @@ async function fixture(page: Page) {
           question: { ...detail, status: 'ARCHIVED', versionNumber: 1 },
           video: null,
           revisionQuestionVersionId: null,
+          reportCount: 2,
+          caseRevision: 4,
+          sourceReports: [
+            {
+              id: userId,
+              category: 'ANSWER_KEY',
+              details: 'TEST laporan versi lama',
+              reportedAt: '2026-10-05T00:00:00Z',
+            },
+            {
+              id: versionId,
+              category: 'OPTION',
+              details: 'TEST laporan lain untuk versi yang sama',
+              reportedAt: '2026-10-06T00:00:00Z',
+            },
+          ],
+          history: [
+            {
+              id: 'prior-closure',
+              status: 'RESOLVED',
+              reason: 'TEST penyelesaian lama',
+              revisionQuestionVersionId: null,
+              recordedAt: '2026-10-05T10:00:00Z',
+            },
+          ],
         },
       });
     return route.fulfill({ status: 404, json: { detail: 'TEST fixture route missing' } });
@@ -150,6 +175,8 @@ test('moderation opens the archived target directly without fetching current ban
     await page.goto(`/admin/reports/QUESTION/${userId}`);
     // Auth hydration remounts this detail; wait for its payload before measuring the heading.
     await expect(page.getByText('TEST laporan versi lama')).toBeVisible();
+    await expect(page.getByText('TEST laporan lain untuk versi yang sama')).toBeVisible();
+    await expect(page.getByText('TEST penyelesaian lama')).toBeVisible();
     const reportHeading = page.getByRole('heading', { name: 'Detail laporan', exact: true });
     await expect(reportHeading).toBeVisible();
     expect((await reportHeading.boundingBox())!.height).toBeGreaterThan(20);

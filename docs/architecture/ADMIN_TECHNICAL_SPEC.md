@@ -206,7 +206,7 @@ Request sukses, artefak diadopsi, participant coverage lengkap dan hasil terbit 
 
 ### 7.6 Laporan dan video
 
-**PROPOSED — kasus laporan:** gunakan key unik soal-version untuk satu kasus dan kaitkan record laporan sumber secara transaksional. Saat laporan baru tiba, insert laporan + upsert kasus; bila terminal, ubah ke OPEN dan append transition record. Race reopen versus penutupan menggunakan row lock/revision guard agar laporan baru tidak hilang dalam penutupan lama. Reopen tidak menghapus followUp/riwayat sebelumnya.
+**ENGINEERING IMPLEMENTATION — kasus laporan:** `question_report_cases` unik per versi soal yang dipin pada item attempt. Trigger insert laporan mengunci kasus, menaikkan revisi, dan membuka ulang kasus terminal dalam transaksi yang sama. Admin menulis dengan revisi yang dibaca pada detail dan audit transisi disimpan dalam transaksi yang sama. Migrasi mempertahankan semua laporan sumber dan audit lama. Jika ada laporan lama yang belum ditutup, kasus gabungan memakai status terbuka yang masih perlu ditangani. Jika seluruhnya sudah ditutup, keputusan terakhir yang tercatat menjadi status kasus.
 
 Reader kasus menyajikan jumlah laporan sumber, status kasus, isi versi terkait, followUp dan tautan revisi tanpa PII pelapor. Closing memerlukan alasan; jika konten diperbaiki, revisi harus target sah. Perbaikan konten tidak otomatis menyelesaikan kasus. Laporan video memakai target/lifecycle existing; tidak otomatis mengikuti penggabungan soal-version.
 

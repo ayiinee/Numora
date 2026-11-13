@@ -1998,23 +1998,64 @@ for (const width of [390, 1440]) {
         status: 'OPEN',
         followUp: null as string | null,
         reportedAt: '2026-10-03T00:00:00Z',
+        reportCount: 1,
       };
+      const contentCorrected = width === 390;
+      const revisionQuestionVersionId = adminFixtureId(88);
+      let caseRevision = 0;
       await page.route('**/api/v1/admin/reports**', (route) => {
-        if (route.request().method() === 'GET') return route.fulfill({ json: { items: [report] } });
+        const path = new URL(route.request().url()).pathname;
+        if (route.request().method() === 'GET') {
+          return route.fulfill({
+            json: path.endsWith(report.id)
+              ? { ...report, caseRevision, sourceReports: [report], history: [] }
+              : { items: [report], total: 1, nextOffset: null },
+          });
+        }
         const body = route.request().postDataJSON();
-        expect(body).toMatchObject({ status: 'RESOLVED', followUp: 'Tindak lanjut fixture' });
+        expect(body).toMatchObject(
+          caseRevision === 0
+            ? { status: 'IN_REVIEW', expectedRevision: 0 }
+            : {
+                status: 'RESOLVED',
+                followUp: 'Tindak lanjut fixture',
+                expectedRevision: 1,
+                contentCorrected,
+                ...(contentCorrected ? { revisionQuestionVersionId } : {}),
+              },
+        );
+        caseRevision++;
         Object.assign(report, body);
         return route.fulfill({ json: { id: report.id } });
       });
       await page.goto('/admin/content');
       await selectContentSection(page, 'Laporan');
+      await page.getByRole('link', { name: 'Buka kasus', exact: true }).click();
+      await page.getByRole('button', { name: 'Mulai tinjauan', exact: true }).click();
+      await expect(
+        page.getByRole('button', { name: 'Simpan tindak lanjut', exact: true }),
+      ).toBeVisible();
       await page
         .getByRole('combobox', { name: 'Status tindak lanjut', exact: true })
         .selectOption('RESOLVED');
       await page.getByLabel('Catatan tindak lanjut', { exact: true }).fill('Tindak lanjut fixture');
       await page
-        .getByRole('button', { name: 'Simpan status dan tindak lanjut', exact: true })
-        .click();
+        .getByRole('combobox', { name: 'Perubahan soal', exact: true })
+        .selectOption(String(contentCorrected));
+      const revisionInput = page.getByLabel('ID versi revisi', { exact: true });
+      if (contentCorrected) {
+        await expect(revisionInput).toHaveAttribute('required', '');
+        await revisionInput.fill(revisionQuestionVersionId);
+      } else {
+        await expect(revisionInput).toHaveCount(0);
+      }
+      await page.getByRole('button', { name: 'Simpan tindak lanjut', exact: true }).click();
+      await expect(page.getByText('Selesai · 1 laporan', { exact: true })).toBeVisible();
+      if (contentCorrected)
+        await expect(
+          page.getByRole('link', { name: 'Revisi penyelesaian', exact: true }),
+        ).toHaveAttribute('href', `/admin/content/versions/${revisionQuestionVersionId}`);
+      await page.getByRole('link', { name: 'Kembali ke daftar laporan', exact: true }).click();
       await expect(page.getByText('Tindak lanjut tersimpan:', { exact: true })).toBeVisible();
       await page.route('**/api/v1/admin/irt/batch-health?*', (route) =>
         route.fulfill({

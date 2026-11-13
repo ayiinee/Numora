@@ -195,6 +195,7 @@ export function installFerdiFixture() {
           if (
             ![
               'Bearer admin',
+              'Bearer operations',
               'Bearer student',
               'Bearer other',
               'Bearer teacher',
@@ -205,19 +206,20 @@ export function installFerdiFixture() {
           if (authorization === 'Bearer disabled') throw new ForbiddenException();
           return {
             id:
-              authorization === 'Bearer admin'
+              authorization === 'Bearer admin' || authorization === 'Bearer operations'
                 ? admin
                 : authorization === 'Bearer other'
                   ? other
                   : student,
             role:
-              authorization === 'Bearer admin'
+              authorization === 'Bearer admin' || authorization === 'Bearer operations'
                 ? 'ADMIN'
                 : authorization === 'Bearer teacher'
                   ? 'TEACHER'
                   : 'STUDENT',
             status: 'ACTIVE',
-            adminRole: 'CONTENT_DATA_MODERATION',
+            adminRole:
+              authorization === 'Bearer operations' ? 'OPERATIONS' : 'CONTENT_DATA_MODERATION',
           };
         },
       })
