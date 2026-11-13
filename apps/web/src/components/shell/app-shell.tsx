@@ -25,7 +25,7 @@ const navigation: Record<Area, NavigationItem[]> = {
   student: [
     ...studentPrimaryNavigation,
     { href: '/student/assessment', label: 'Progres', icon: 'chart' },
-    { href: '/student/leaderboards', label: 'Peringkat', icon: 'chart' },
+    { href: '/student/leaderboards', label: 'Peringkat', icon: 'trophy' },
     { href: '/student/notifications', label: 'Notifikasi', icon: 'bell' },
     { href: '/student/feedback', label: 'Feedback dari Guru', icon: 'chat' },
     studentProfile,

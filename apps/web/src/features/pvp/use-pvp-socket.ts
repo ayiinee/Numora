@@ -1,13 +1,14 @@
 'use client';
-import { useEffect, useRef, useState } from 'react';
+import { useCallback, useEffect, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useQueryClient } from '@tanstack/react-query';
 import { io, type Socket } from 'socket.io-client';
 import { useStudentToken } from '@/features/core-learning/student-session';
-import type { PvpSnapshotDto } from '@/features/core-learning/generated-types';
+import type { PvpAvailabilityDto, PvpSnapshotDto } from '@/features/core-learning/generated-types';
 import type { Acknowledgement, PvpEnvelope } from './generated-protocol';
 type Command = Extract<PvpEnvelope, { requestId: string }>['event'];
 type Ack = { payload: Acknowledgement };
+const availabilityKey = ['pvp-availability'] as const;
 export function usePvpSocket(enabled: boolean, matchId?: string) {
   const token = useStudentToken();
   const router = useRouter();
@@ -25,6 +26,31 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
   } | null>(null);
   const [uncertain, setUncertain] = useState(false);
   const pendingMatch = useRef(matchId);
+  const observedRoom = useRef<{ matchId: string; active: boolean } | null>(null);
+  const receiveSnapshot = useCallback(
+    (snapshot: PvpSnapshotDto, membershipCommand = false) => {
+      setState(snapshot);
+      const active =
+        snapshot.participantActive !== false &&
+        snapshot.status !== 'FINISHED' &&
+        snapshot.status !== 'CANCELLED';
+      const previous = observedRoom.current;
+      observedRoom.current = { matchId: snapshot.matchId, active };
+
+      if (active) {
+        if (!membershipCommand) return;
+      } else if (previous?.matchId === snapshot.matchId) {
+        if (!previous.active) return; // A terminal ACK can be followed by the same broadcast.
+      } else if (
+        !membershipCommand &&
+        client.getQueryData<PvpAvailabilityDto>(availabilityKey)?.activeMatchId !== snapshot.matchId
+      ) {
+        return;
+      }
+      void client.invalidateQueries({ queryKey: availabilityKey });
+    },
+    [client],
+  );
   useEffect(() => {
     // Token renewal keeps the request ID; changing matches or disabling PvP clears it.
     if (!enabled || pendingMatch.current !== matchId) pending.current = null;
@@ -64,7 +90,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
             if (err) setError('Snapshot pertandingan belum diterima. Coba sambungkan lagi.');
             else if (!ack.payload.ok)
               setError(ack.payload.error?.detail ?? 'Pertandingan belum dapat dilanjutkan.');
-            else if (ack.payload.state?.matchId === matchId) setState(ack.payload.state);
+            else if (ack.payload.state?.matchId === matchId) receiveSnapshot(ack.payload.state);
           },
         );
     });
@@ -78,7 +104,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
     );
     s.on('room:state', (event: { payload: PvpSnapshotDto }) => {
       if (socket.current === s && (!matchId || event.payload.matchId === matchId))
-        setState(event.payload);
+        receiveSnapshot(event.payload);
     });
     s.on(
       'invitation:received',
@@ -90,7 +116,7 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       s.removeAllListeners();
       s.disconnect();
     };
-  }, [enabled, matchId, token, client]);
+  }, [enabled, matchId, token, client, receiveSnapshot]);
   async function command(event: Command, payload: Record<string, unknown>) {
     if (sending.current) return;
     if (!socket.current?.connected) {
@@ -131,11 +157,16 @@ export function usePvpSocket(enabled: boolean, matchId?: string) {
       setUncertain(false);
       if (ack.payload.state) {
         if (matchId && ack.payload.state.matchId !== matchId) return;
-        setState(ack.payload.state);
+        const membershipCommand =
+          event === 'room:create' ||
+          event === 'room:join' ||
+          event === 'room:leave' ||
+          event === 'room:cancel' ||
+          event === 'invitation:respond';
+        receiveSnapshot(ack.payload.state, membershipCommand);
         if (!matchId) router.push(`/student/pvp/${ack.payload.state.matchId}`);
       }
       await client.invalidateQueries({ queryKey: ['pvp-invitations'] });
-      await client.invalidateQueries({ queryKey: ['pvp-availability'] });
       await client.invalidateQueries({ queryKey: ['student-notifications'] });
     } catch {
       if (socket.current !== currentSocket) return;
