@@ -3,6 +3,7 @@ import { readFile } from 'node:fs/promises';
 import { resolve } from 'node:path';
 import type { MigrationMeta } from 'drizzle-orm/migrator';
 import type { TransactionSql } from 'postgres';
+import { appliedPvpCacheAlias, pvpCacheLegacyAliases } from './pvp-cache-migration-alias.js';
 
 type History = { hash: string; created_at: string }[];
 type Manifest = {
@@ -80,6 +81,9 @@ export async function reconcileDevelopmentHistory(
     throw new Error('Canonical SQL differs from the audited Development adoption plan.');
   const applied = new Set(history.map((row) => pair(row.hash, row.created_at)));
   const allowed = new Set(migrations.map((entry) => pair(entry.hash, entry.folderMillis)));
+  const cacheAlias = appliedPvpCacheAlias(migrations, history);
+  if (cacheAlias)
+    for (const alias of pvpCacheLegacyAliases) allowed.add(pair(alias.hash, alias.created_at));
   // PR #160 moved the unchanged draft guard from 0065 to 0069 after IRT migrations.
   const draftHashes = [
     'b0309f7883f96117e51df07fe2a0124c437d97a6f3d1b77f4253e28b70e931d3',
@@ -176,7 +180,8 @@ export async function reconcileDevelopmentHistory(
   for (const [index, entry] of migrations.entries()) {
     if (index < 3 || applied.has(pair(entry.hash, entry.folderMillis))) continue;
     if (index >= 48) {
-      for (const statement of index === 69 && draftAlreadyApplied ? [] : entry.sql) {
+      const alreadyApplied = (index === 69 && draftAlreadyApplied) || entry === cacheAlias;
+      for (const statement of alreadyApplied ? [] : entry.sql) {
         if (!statement.trim()) continue;
         // The exact existing trigger was inspected; replace its function, never recreate it.
         if (

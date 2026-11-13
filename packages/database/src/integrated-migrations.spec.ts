@@ -47,6 +47,107 @@ describe.skipIf(!testUrl)('integrated migration histories', { timeout: 120000 },
     }
   }
 
+  it.each(['LF', 'CRLF'] as const)(
+    'preserves an applied PR172 cache migration while adding PR167 (%s)',
+    async (lineEnding) => {
+      await fixture(72, async (client, folder) => {
+        const migrations = readMigrationFiles({ migrationsFolder: folder });
+        const cache = migrations[74]!;
+        const source = (
+          await readFile(join(folder, '0074_pvp_content_cache_revision.sql'), 'utf8')
+        ).replaceAll('\r\n', '\n');
+        for (const statement of cache.sql) if (statement.trim()) await client.unsafe(statement);
+        const hash = createHash('sha256')
+          .update(lineEnding === 'CRLF' ? source.replaceAll('\n', '\r\n') : source)
+          .digest('hex');
+        await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+          VALUES(${hash},1794312000001)`;
+        const before =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        const [revision] = await client`SELECT revision FROM public.pvp_content_revision`;
+        await migrateIntegratedDatabase(client, folder);
+        const after =
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+        expect(after.slice(0, before.length)).toEqual([...before]);
+        expect(after).toHaveLength(before.length + 3);
+        expect((await client`SELECT revision FROM public.pvp_content_revision`)[0]).toEqual(
+          revision,
+        );
+        expect(
+          (await client`SELECT to_regclass('public.question_report_cases') AS relation`)[0]!
+            .relation,
+        ).not.toBeNull();
+        await migrateIntegratedDatabase(client, folder);
+        expect(
+          await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+        ).toEqual(after);
+      });
+    },
+  );
+
+  it('upgrades PR167 to the new cache migration and replays safely', async () => {
+    await fixture(74, async (client, folder) => {
+      const before =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await migrateIntegratedDatabase(client, folder);
+      const after =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      expect(after.slice(0, before.length)).toEqual([...before]);
+      expect(after).toHaveLength(before.length + 1);
+      expect(await client`SELECT revision FROM public.pvp_content_revision`).toHaveLength(1);
+      await migrateIntegratedDatabase(client, folder);
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(after);
+    });
+  });
+
+  it('reconciles the old cache cursor on an adopted Development history', async () => {
+    await fixture(72, async (client, folder) => {
+      const migrations = readMigrationFiles({ migrationsFolder: folder });
+      const manifest = JSON.parse(
+        await readFile(resolve('staging/fixtures/development-20261029/provenance.json'), 'utf8'),
+      ) as { history: { hash: string; created_at: string }[] };
+      await client`DELETE FROM drizzle.__drizzle_migrations`;
+      for (const row of manifest.history)
+        await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${row.hash},${row.created_at})`;
+      for (const entry of migrations.slice(3, 72))
+        await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${entry.hash},${entry.folderMillis})`;
+      const cache = migrations[74]!;
+      for (const statement of cache.sql) if (statement.trim()) await client.unsafe(statement);
+      await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at) VALUES(${cache.hash},1794312000001)`;
+      const before =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await migrateIntegratedDatabase(client, folder);
+      const after =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      expect(after.slice(0, before.length)).toEqual([...before]);
+      expect(after).toHaveLength(before.length + 3);
+      await migrateIntegratedDatabase(client, folder);
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(after);
+    });
+  });
+
+  it('refuses unknown PvP cache history before applying any missing DDL', async () => {
+    await fixture(72, async (client, folder) => {
+      const cache = readMigrationFiles({ migrationsFolder: folder })[74]!;
+      for (const statement of cache.sql) if (statement.trim()) await client.unsafe(statement);
+      await client`INSERT INTO drizzle.__drizzle_migrations(hash,created_at)
+        VALUES(${cache.hash},1794312000001),('unknown-cache-history',1794312000002)`;
+      const before =
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`;
+      await expect(migrateIntegratedDatabase(client, folder)).rejects.toThrow('Unknown PvP cache');
+      expect(
+        await client`SELECT hash,created_at FROM drizzle.__drizzle_migrations ORDER BY id`,
+      ).toEqual(before);
+      expect(
+        (await client`SELECT to_regclass('public.question_report_cases') AS relation`)[0]!.relation,
+      ).toBeNull();
+    });
+  });
+
   for (const baseline of [65, 72])
     it.each(['LF', 'CRLF'] as const)(
       `reconciles the renamed Tryout guard from baseline ${baseline} (%s) without replay or history loss`,
