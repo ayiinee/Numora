@@ -277,7 +277,7 @@
                     "anyOf": [{"$ref": "urn:numora:irt-calibration-v1:common#/$defs/uuid"}, {"type": "null"}]
                   },
                   "status": {
-                    "enum": ["SCORED", "INSUFFICIENT", "NOT_COMPARABLE", "UNSCORABLE"]
+                    "enum": ["SCORED", "INSUFFICIENT", "NOT_COMPARABLE", "UNSCORABLE", "NOT_EVALUATED"]
                   },
                   "theta": {
                     "anyOf": [

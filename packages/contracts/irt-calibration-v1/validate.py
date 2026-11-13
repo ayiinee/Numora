@@ -1,5 +1,6 @@
 """Independent Python boundary validation; no calibration, database access or publication."""
 import json
+import math
 from datetime import datetime
 from decimal import Decimal
 from math import isfinite
@@ -255,7 +256,19 @@ def validate_result(output, value, expected_dispatch):
         person = people[row['attemptId']]
         ensure(all(row[k] == person[k] for k in ('respondentId', 'attemptId', 'packageId', 'packageVersion', 'batchId')),
                'IRT_IDENTITY_MISMATCH')
-        if row['status'] == 'SCORED':
+        if row['status'] == 'SCORED' and value['ecosystem'] == 'DRILL':
+            ensure(math.isfinite(row['theta']) and math.isfinite(row['standardError'])
+                   and row['score'] is None and row['scoreMapping'] is None
+                   and row['referencePackage'] is None
+                   and len(row['usedQuestionVersionIds']) > 0
+                   and len(row['reasonCodes']) == 0
+                   and package_results[pk(row)]['measurementState'] == 'CALIBRATED',
+                   'IRT_RESULT_STATE_INVALID')
+            delivered = packages[pk(row)]['questionVersionIds']
+            ensure(all(k in delivered and results[k]['measurementState'] == 'CALIBRATED'
+                       and response_by_item.get((row['attemptId'], k), {}).get('responseState') in ('RESPONDED','OMITTED')
+                       for k in row['usedQuestionVersionIds']), 'IRT_INVALID_REFERENCE')
+        elif row['status'] == 'SCORED':
             ensure(value['policies']['scoreMapping'] is not None and row['scoreMapping'] == value['policies']['scoreMapping']
                    and row['referencePackage'] == value['referencePackage'], 'IRT_POLICY_MISMATCH')
             ensure(all(row[k] is not None for k in ('theta', 'standardError', 'score'))

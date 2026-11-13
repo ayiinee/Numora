@@ -417,8 +417,8 @@ export function validateResult(output, input, expectedDispatch) {
     );
     if (row.status === 'SCORED' && input.ecosystem === 'DRILL') {
       assert(
-        row.theta !== null &&
-          row.standardError !== null &&
+        Number.isFinite(row.theta) &&
+          Number.isFinite(row.standardError) &&
           row.score === null &&
           row.scoreMapping === null &&
           row.referencePackage === null &&
@@ -435,8 +435,8 @@ export function validateResult(output, input, expectedDispatch) {
         'IRT_POLICY_MISMATCH',
       );
       assert(
-        row.theta !== null &&
-          row.standardError !== null &&
+          Number.isFinite(row.theta) &&
+          Number.isFinite(row.standardError) &&
           row.score !== null &&
           row.usedQuestionVersionIds.length > 0 &&
           row.reasonCodes.length === 0 &&
