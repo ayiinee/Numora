@@ -319,7 +319,7 @@
         "referencePackage": null,
         "usedQuestionVersionIds": [],
         "reasonCodes": [
-          "INSUFFICIENT_EVIDENCE"
+          "RESPONDENT_PRECISION_INSUFFICIENT"
         ]
       },
       {
@@ -336,7 +336,7 @@
         "referencePackage": null,
         "usedQuestionVersionIds": [],
         "reasonCodes": [
-          "INSUFFICIENT_EVIDENCE"
+          "RESPONDENT_PRECISION_INSUFFICIENT"
         ]
       }
     ],
@@ -399,4 +399,4 @@
       }
     ]
   }
-}\n
+}
