@@ -1,6 +1,6 @@
 'use client';
 import { TryoutBatchList } from './tryout-batches';
-import { request } from './api';
+import { useTryoutBatches } from './tryout-queries';
 import type { StudentTryoutBatchesDto } from './generated-types';
 
 import { Button, Card, EmptyState, Icon, Tabs } from '@tka/ui';
@@ -30,11 +30,7 @@ export function TryoutScreen() {
 }
 
 function TryoutEntry({ token }: { token: string }) {
-  const query = useQuery({
-    queryKey: ['tryout-batches'],
-    queryFn: () => request<StudentTryoutBatchesDto>(token, '/tryout/batches'),
-    refetchInterval: 30000,
-  });
+  const query = useTryoutBatches(token);
   if (!query.data)
     return (
       <LearningFrame
@@ -50,10 +46,7 @@ function TryoutEntry({ token }: { token: string }) {
       </LearningFrame>
     );
   return query.data.routingActive ? (
-    <CurrentTryout
-      token={token}
-      batches={query.data.items}
-    />
+    <CurrentTryout token={token} batches={query.data.items} />
   ) : (
     <CurrentTryout token={token} />
   );
@@ -152,10 +145,7 @@ function CurrentTryout({
                     value: 'current',
                     label: 'Berlangsung',
                     content: batches ? (
-                      <TryoutBatchList
-                        token={token}
-                        batches={batches}
-                      />
+                      <TryoutBatchList token={token} batches={batches} />
                     ) : query.isPending || query.isError ? (
                       <DataState
                         pending={query.isPending}
@@ -192,11 +182,7 @@ function CurrentTryout({
                     value: 'past',
                     label: 'Terlewat',
                     content: batches ? (
-                      <TryoutBatchList
-                        token={token}
-                        batches={batches}
-                        history
-                      />
+                      <TryoutBatchList token={token} batches={batches} history />
                     ) : (
                       <PastTryoutPackages enabled={tab === 'past'} />
                     ),
@@ -208,8 +194,8 @@ function CurrentTryout({
                       <section aria-label="Riwayat Tryout">
                         <h2>Riwayat Tryout</h2>
                         <p className="tryout-history-note">
-                          Paket yang sudah dikerjakan tidak dapat diulang. Riwayat mengikuti
-                          aktivitas yang sudah dimuat.
+                          Tryout yang sudah dikerjakan tidak dapat diulang. Buka riwayat untuk
+                          melihat status dan hasilnya.
                         </p>
                         {history.isPending || (history.isError && !history.data) ? (
                           <DataState
@@ -308,7 +294,7 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
   return (
     <>
       {query.isError && (
-        <Status title="Status server belum dapat diperbarui">
+        <Status title="Status pengerjaan belum dapat diperbarui">
           Jawaban lokal tetap ditampilkan. Periksa koneksi dan status pengiriman sebelum keluar.
           <Button variant="secondary" onClick={() => void query.refetch()}>
             Periksa status sesi
@@ -345,7 +331,7 @@ function TryoutForm({
         questions={attempt.questions}
         notice={
           attempt.resultPendingReason ? (
-            <Card fullWidth>Penilaian belum tersedia. Jawaban tetap disimpan di server.</Card>
+            <Card fullWidth>Penilaian belum tersedia. Jawaban yang tersimpan tetap aman.</Card>
           ) : undefined
         }
         deadlineAt={attempt.deadlineAt}
@@ -363,7 +349,12 @@ function TryoutForm({
         }
         onSubmit={() => learningApi.submitTryout(token, attempt.id)}
         onSubmitted={() => {
-          for (const key of ['tryout-batches', 'current-tryout', 'student-dashboard', 'assessment-history'])
+          for (const key of [
+            'tryout-batches',
+            'current-tryout',
+            'student-dashboard',
+            'assessment-history',
+          ])
             void client.invalidateQueries({ queryKey: [key] });
           router.push(`/student/tryout/${attempt.id}/result`);
         }}
@@ -382,7 +373,7 @@ export function TryoutResultScreen() {
     >
       <AssessmentHeader
         title="Hasil Tryout"
-        status="Status hasil dari server"
+        status="Status hasil Tryout"
         progress={100}
         progressLabel="Pengerjaan selesai"
         exitHref="/student/tryout"

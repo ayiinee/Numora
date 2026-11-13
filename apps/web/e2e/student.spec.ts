@@ -1708,12 +1708,12 @@ test('Drill timer waits for explicit resume and pauses on confirmed exit', async
   expect(pauseCount).toBe(0);
   await page.setViewportSize({ width: 1280, height: 900 });
   await expect(page.locator('.practice-stem')).toHaveCSS('font-size', '17px');
-  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
   await expect(exitDialog).toBeVisible();
   await page.keyboard.press('Escape');
   await expect(exitDialog).toBeHidden();
-  await expect(page.getByRole('link', { name: 'Kembali ke materi' })).toBeFocused();
-  await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+  await expect(page.getByRole('link', { name: 'Kembali ke latihan' })).toBeFocused();
+  await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
   await page.screenshot({ path: testInfo.outputPath('drill-exit-1280.png') });
   await exitDialog.getByRole('button', { name: 'Ya, keluar dulu' }).click();
   await expect(page).toHaveURL('/student/learn');

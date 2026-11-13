@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 
 import { StudentMascot } from '@/components/student-mascot';
 
@@ -346,7 +347,9 @@ export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
         <Card fullWidth className="tryout-released-summary">
           <Badge variant="success">Hasil dirilis</Badge>
           <h2>{result.packageTitle}</h2>
-          <strong className="tryout-result-score">{result.score ?? '—'}</strong>
+          <strong className="tryout-result-score">
+            {result.score == null ? '—' : formatStudentNumber(result.score)}
+          </strong>
           {result.mode === 'UNSCORABLE' && (
             <p>Nilai tidak tersedia karena tidak ada poin maksimum valid.</p>
           )}

@@ -34,10 +34,10 @@ export function TryoutBatchList({
     <Card fullWidth>
       <EmptyState
         icon={<StudentMascot pose={history ? 'history' : 'calendar'} />}
-        title={history ? 'Belum ada riwayat batch' : 'Belum ada Tryout tersedia'}
+        title={history ? 'Belum ada Tryout terlewat' : 'Belum ada Tryout tersedia'}
         description={
           history
-            ? 'Batch yang sudah ditutup akan muncul di sini.'
+            ? 'Tryout yang jadwalnya sudah berakhir akan muncul di sini.'
             : 'Jadwal Tryout yang tersedia untukmu akan muncul di sini.'
         }
       />
@@ -86,7 +86,7 @@ function StudentBatch({ batch: b, token }: { batch: StudentTryoutBatchDto; token
           <p>
             {wib(b.startsAt)} — {wib(b.closesAt)}
           </p>
-          <span>30 soal · 10 menit · Satu kesempatan per batch</span>
+          <span>30 soal · 10 menit · Satu kesempatan per jadwal Tryout</span>
         </div>
       </div>
       <div className="tryout-student-batch__actions">
@@ -100,7 +100,7 @@ function StudentBatch({ batch: b, token }: { batch: StudentTryoutBatchDto; token
         ) : b.state === 'SCHEDULED' ? (
           <p>Belum dimulai.</p>
         ) : b.state === 'CLOSED' ? (
-          <p>Batch sudah ditutup.</p>
+          <p>Jadwal Tryout sudah berakhir.</p>
         ) : (
           <>
             <Button
@@ -143,7 +143,11 @@ function StudentBatch({ batch: b, token }: { batch: StudentTryoutBatchDto; token
                 {b.schools.length > 1 ? (
                   <label className="tryout-student-batch__school">
                     Sekolah untuk Tryout ini
-                    <select value={school} onChange={(e) => setSchool(e.target.value)}>
+                    <select
+                      value={school}
+                      disabled={starting}
+                      onChange={(e) => setSchool(e.target.value)}
+                    >
                       <option value="">Pilih sekolah</option>
                       {b.schools.map((s) => (
                         <option key={s.schoolId} value={s.schoolId}>
@@ -155,14 +159,28 @@ function StudentBatch({ batch: b, token }: { batch: StudentTryoutBatchDto; token
                 ) : (
                   <p>{b.mandiri ? 'Peserta Mandiri' : b.schools[0]?.schoolName}</p>
                 )}
+                <p className="tryout-rules-facts">
+                  30 soal · Maksimal 10 menit, dibatasi akhir jadwal
+                </p>
                 <p>
-                  Pilihan sekolah dan paket dikunci setelah mulai. Waktu pengerjaan berakhir paling
-                  lambat saat batch ditutup.
+                  Pilihan sekolah dan paket dikunci setelah mulai. Kamu memiliki satu kesempatan
+                  pada jadwal Tryout ini. Timer tidak dapat dijeda saat kamu keluar atau memuat
+                  ulang halaman. Jawaban dikirim otomatis ketika waktu habis atau jadwal berakhir,
+                  mana yang lebih dahulu.
+                </p>
+                <p>
+                  Hanya jawaban yang sudah tersimpan yang ikut dikumpulkan. Perhatikan status
+                  penyimpanan sebelum berpindah atau keluar.
+                </p>
+                <p>
+                  Batas akhir pengerjaan: {wib(b.closesAt)}. Hasil dan pembahasan tersedia paling
+                  lambat {wib(b.resultDueAt)}.
                 </p>
                 <label className="tryout-student-batch__consent">
                   <input
                     type="checkbox"
                     checked={accepted}
+                    disabled={starting}
                     onChange={(e) => setAccepted(e.target.checked)}
                   />
                   Saya memahami aturan pengerjaan.

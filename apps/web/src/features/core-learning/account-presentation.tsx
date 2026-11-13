@@ -1,10 +1,12 @@
 'use client';
+import { formatStudentNumber } from './student-format';
+import type { StudentTryoutSummary } from './tryout-queries';
 
 import Link from 'next/link';
 import { useId, useState, type ReactNode } from 'react';
 import { Avatar, Badge, Button, Card, Icon, ListRow, ProgressBar, type IconName } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
-import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
+import type { StudentDashboardDto } from './generated-types';
 
 export function AccountHeader({ title, backHref }: { title: string; backHref?: string }) {
   return (
@@ -65,7 +67,7 @@ export function ProfileIdentity({
                 ? classCount > 1
                   ? 'Siswa sekolah'
                   : (data?.class?.schoolName ?? 'Siswa sekolah')
-                : 'User Mandiri'}
+                : 'Siswa mandiri'}
             </p>
             <small>
               {school
@@ -82,14 +84,12 @@ export function ProfileIdentity({
             variant="ghost"
             size="sm"
             className="student-profile-identity__edit"
-            aria-label="Edit profil"
+            aria-label={editing ? 'Tutup editor profil' : 'Edit profil'}
             aria-expanded={editing}
             aria-controls={editorId}
             onClick={() => setEditing((open) => !open)}
           >
-            <span>
-              Edit<span className="student-profile-identity__edit-label"> profil</span>
-            </span>
+            <span>{editing ? 'Tutup editor' : 'Edit profil'}</span>
             <Icon name="chevron" width={12} height={12} />
           </Button>
         )}
@@ -141,7 +141,9 @@ export function ProfileStats({ data }: { data: StudentDashboardDto }) {
           <Icon name="chart" width={14} height={14} /> Nilai Drill terakhir
         </h3>
         <p>
-          <strong>{data.latestDrillScore ?? '—'}</strong>
+          <strong>
+            {data.latestDrillScore == null ? '—' : formatStudentNumber(data.latestDrillScore)}
+          </strong>
           <small>{data.latestDrillScore === null ? 'Belum ada hasil' : '/ 100'}</small>
         </p>
         {data.latestDrillScore !== null && (
@@ -175,16 +177,16 @@ export function ProfileStats({ data }: { data: StudentDashboardDto }) {
   );
 }
 
-const tryoutState: Record<CurrentTryoutDto['state'], string> = {
+const tryoutState: Record<StudentTryoutSummary['state'], string> = {
   unavailable: 'Belum tersedia',
   open: 'Telah dibuka',
   inProgress: 'Sedang dikerjakan',
-  waitingIrt: 'Menunggu hasil IRT',
+  waitingIrt: 'Menunggu hasil',
   resultReady: 'Hasil tersedia',
 };
-export function ProfileTryout({ data }: { data: CurrentTryoutDto }) {
+export function ProfileTryout({ data }: { data: StudentTryoutSummary }) {
   const href =
-    data.attemptId && data.state === 'resultReady'
+    data.attemptId && (data.state === 'resultReady' || data.batchSubmission)
       ? `/student/tryout/${data.attemptId}/result`
       : data.attemptId && data.state === 'inProgress'
         ? `/student/tryout/${data.attemptId}`
@@ -198,12 +200,16 @@ export function ProfileTryout({ data }: { data: CurrentTryoutDto }) {
         <strong>{data.title ?? 'Tryout Matematika'}</strong>
         <small>
           {data.state === 'waitingIrt'
-            ? 'Hasil dibuka setelah dirilis oleh server.'
+            ? 'Buka status untuk melihat ketersediaan hasil dan pembahasan.'
             : 'Tryout gratis untuk seluruh siswa.'}
         </small>
       </span>
       <Badge size="sm" variant={data.state === 'resultReady' ? 'success' : 'secondary'}>
-        {tryoutState[data.state]}
+        {data.batchState === 'SCHEDULED'
+          ? 'Terjadwal'
+          : data.batchSubmission
+            ? 'Jawaban terkirim'
+            : tryoutState[data.state]}
       </Badge>
     </Link>
   );

@@ -1,4 +1,5 @@
 'use client';
+import { formatStudentNumber } from './student-format';
 import { Card, Icon } from '@tka/ui';
 import type { AssessmentXpDetailDto, DrillRewardDto } from './generated-types';
 
@@ -22,11 +23,11 @@ export function RewardSummary({
       </h2>
       {xp !== null ? (
         <>
-          <strong className="reward-summary__total">{xp} XP</strong>
+          <strong className="reward-summary__total">{formatStudentNumber(xp)} XP</strong>
           <p>
             {kind === 'tryout'
               ? 'Sudah tercatat sejak pengiriman jawaban. Tanpa bonus waktu.'
-              : 'Reward tersimpan untuk attempt ini.'}
+              : 'XP tersimpan untuk latihan ini.'}
           </p>
           <details className="learning-detail">
             <summary>Lihat rincian XP</summary>
@@ -78,7 +79,7 @@ export function RewardSummary({
           </details>
         </>
       ) : (
-        <p>XP tidak tercatat pada kebijakan attempt lama; nilai akademik tetap tersimpan.</p>
+        <p>XP tidak tercatat pada hasil latihan versi lama; nilai akademik tetap tersimpan.</p>
       )}
     </Card>
   );
