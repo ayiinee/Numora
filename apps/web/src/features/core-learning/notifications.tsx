@@ -99,7 +99,7 @@ export function NotificationsScreen() {
   const header = (
     <div className="notification-header">
       <Link href="/student" className="notification-header__back">
-        <Icon name="back" /> Keluar
+        <Icon name="back" /> Kembali
       </Link>
       <h1>Notifikasi</h1>
       <Link
@@ -114,7 +114,6 @@ export function NotificationsScreen() {
   return (
     <AppShell
       title="Notifikasi"
-      focus
       backHref="/student"
       mobileHeader={header}
       className="notifications-shell"

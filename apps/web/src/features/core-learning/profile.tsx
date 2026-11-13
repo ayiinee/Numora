@@ -13,6 +13,7 @@ import { ProfileEditor } from '@/features/onboarding/profile-editor';
 import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { DataState, StudentGate } from './ui';
 import { learningApi } from './api';
+import { useTryoutSummary } from './tryout-queries';
 import {
   ProfileIdentity,
   ProfileStats,
@@ -39,10 +40,7 @@ function ProfileContent({ token }: { token: string }) {
     queryKey: ['student-dashboard'],
     queryFn: () => learningApi.dashboard(token),
   });
-  const tryout = useQuery({
-    queryKey: ['current-tryout'],
-    queryFn: () => learningApi.currentTryout(token),
-  });
+  const tryout = useTryoutSummary(token);
   if (state.status !== 'ready') return null;
   const profile = state.profile;
   const classes = dashboard.data?.classes ?? (dashboard.data?.class ? [dashboard.data.class] : []);
@@ -187,11 +185,11 @@ function ProfileContent({ token }: { token: string }) {
             <Card>
               <DataState pending={false} error={tryout.error} retry={() => void tryout.refetch()} />
             </Card>
-          ) : (
+          ) : tryout.data ? (
             <ProfileTryout data={tryout.data} />
-          )}
+          ) : null}
           <Link className="button-link student-profile-report" href="/student/assessment">
-            Lihat Rapor & Statistik Lengkap <Icon name="arrow" width={18} height={18} />
+            Lihat progres & riwayat <Icon name="arrow" width={18} height={18} />
           </Link>
         </section>
         <div className="student-profile-account">
@@ -255,18 +253,6 @@ function ProfileContent({ token }: { token: string }) {
                 <p>Belajar mandiri. Gabung kelas bersifat opsional.</p>
               )}
             </ProfileSetting>
-            <ProfileSetting
-              icon="clock"
-              title="Riwayat Drill & Pembahasan"
-              description="Lihat hasil dan riwayat latihanmu."
-              href="/student/assessment"
-            />
-            <ProfileSetting
-              icon="clipboard"
-              title="Tryout & Hasil IRT"
-              description="Paket dan hasil mengikuti rilis server."
-              href="/student/tryout"
-            />
             <ProfileSetting
               icon="chat"
               title="Feedback dari Guru"

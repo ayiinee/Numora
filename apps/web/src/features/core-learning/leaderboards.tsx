@@ -75,6 +75,7 @@ export function LeaderboardsScreen() {
   const query = useQuery({
     queryKey: ['student-leaderboard', tab, difficulty, selectedClass, periodId],
     queryFn: () => request<LeaderboardDto>(token, `/leaderboards/${tab}?${params}`),
+    enabled: tab !== 'class' || (dashboard.isSuccess && !!selectedClass),
   });
   return (
     <LearningFrame
@@ -83,12 +84,14 @@ export function LeaderboardsScreen() {
     >
       <PvpHeader
         showProfile={false}
+        backHref="/student"
+        backLabel="Kembali ke beranda"
         title={
           tab === 'class'
-            ? 'Leaderboard Kelas'
+            ? 'Peringkat Kelas'
             : tab === 'activity'
-              ? 'Leaderboard Aktivitas'
-              : 'Leaderboard PvP'
+              ? 'Peringkat Aktivitas'
+              : 'Peringkat PvP'
         }
       />
       <div className="pvp-ranking-content">
@@ -205,7 +208,20 @@ export function LeaderboardsScreen() {
             description="Rekor poin terbaik dari duelmu minggu ini."
           />
         )}
-        {query.isPending || query.isError ? (
+        {tab === 'class' && dashboard.isError ? (
+          <DataState
+            pending={false}
+            error={dashboard.error}
+            retry={() => void dashboard.refetch()}
+          />
+        ) : tab === 'class' && dashboard.isSuccess && !selectedClass ? (
+          <Status title="Gabung kelas untuk melihat peringkat">
+            <p>Peringkat kelas tersedia setelah kamu bergabung dengan kelas dari guru.</p>
+            <Link className="button-link" href="/student/profile#gabung-kelas">
+              Gabung kelas
+            </Link>
+          </Status>
+        ) : query.isPending || query.isError ? (
           <DataState
             pending={query.isPending}
             error={query.error}
@@ -238,6 +254,15 @@ function RankingData({
   fetching: boolean;
   onRefresh: () => void;
 }) {
+  if (data.available === false && !data.policyPending)
+    return (
+      <Status title="Peringkat sedang diperbarui">
+        <p>Data periode ini sedang disiapkan. Rekormu akan tampil setelah pembaruan selesai.</p>
+        <Button variant="secondary" disabled={fetching} onClick={onRefresh}>
+          {fetching ? 'Memperbarui…' : 'Perbarui peringkat'}
+        </Button>
+      </Status>
+    );
   const own = data.ownEntry;
   const unit = data.unit === 'xp' ? 'XP' : 'PTS';
   const tied = hasLeaderboardPodiumTie(data.entries);
@@ -259,11 +284,6 @@ function RankingData({
         </Status>
       )}
 
-      {data.available === false && !data.policyPending && (
-        <Status title="Menunggu pembaruan peringkat">
-          Proyeksi periode ini belum tersedia. Coba perbarui setelah worker selesai.
-        </Status>
-      )}
       {data.stale && data.updatedAt && (
         <Status title="Data belum diperbarui">
           Peringkat menampilkan pembaruan terakhir yang berhasil.

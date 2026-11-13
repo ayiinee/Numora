@@ -59,7 +59,7 @@ it('preserves an unsaved answer and the form when a background attempt fetch fai
   await act(async () => {
     await client.refetchQueries({ queryKey: ['tryout-attempt', 'test-attempt'] });
   });
-  await screen.findByText('Status server belum dapat diperbarui');
+  await screen.findByText('Status pengerjaan belum dapat diperbarui');
   expect((screen.getByRole('radio', { name: /^A\./ }) as HTMLInputElement).checked).toBe(true);
   expect(screen.getByText('TEST save failed')).toBeTruthy();
   expect(screen.getByRole('timer')).toBeTruthy();

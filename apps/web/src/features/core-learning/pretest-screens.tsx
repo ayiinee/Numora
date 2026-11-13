@@ -264,13 +264,18 @@ export function PretestResult({ result }: { result: PretestResultDto }) {
           </dd>
         </div>
         <div>
-          <dt>Jawaban benar</dt>
+          <dt>Soal benar seluruhnya</dt>
           <dd>
             {result.correctCount ?? '—'} <span>/ {result.questionCount} soal</span>
           </dd>
         </div>
       </dl>
 
+      <p className="pretest-result__scoring-note">
+        Jumlah soal benar seluruhnya berbeda dari nilai. Jika paketmu memakai penilaian sebagian,
+        jawaban yang sebagian benar juga menyumbang nilai dan penempatan awal. Hasil mengikuti
+        aturan penilaian saat pretest dikerjakan.
+      </p>
       {result.unlockedLevels.length > 0 && (
         <details className="pretest-result__levels">
           <summary>

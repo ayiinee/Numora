@@ -8,6 +8,7 @@ import { AppShell } from '@/components/shell';
 import { useAuth } from '@/features/onboarding/auth';
 import { useProfilePhoto } from '@/features/onboarding/user-avatar';
 import { learningApi } from './api';
+import { useTryoutSummary } from './tryout-queries';
 import { DataState, StudentGate } from './ui';
 import type { StudentDashboardDto } from './generated-types';
 import type { Catalog } from './types';
@@ -62,10 +63,7 @@ function DashboardReady({
   const photo = useProfilePhoto(state.status === 'ready' ? state.profile.id : undefined);
   const avatarUrl = photo.data?.url ?? undefined;
   const recent = data.activities[0];
-  const tryout = useQuery({
-    queryKey: ['current-tryout'],
-    queryFn: () => learningApi.currentTryout(token),
-  });
+  const tryout = useTryoutSummary(token);
   const header = (
     <StudentHomeIdentityHeader data={data} avatarUrl={avatarUrl} tryout={tryout.data} />
   );

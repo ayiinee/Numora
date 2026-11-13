@@ -493,7 +493,7 @@ for (const width of [390, 1280]) {
     await expect(page.getByRole('radio', { name: /^A\s*\./ })).toBeChecked();
     await expect(page.getByText('Tanpa batas waktu', { exact: true })).toBeVisible();
     await screenshot(page, `pretest-attempt-${width}`);
-    await page.getByRole('link', { name: 'Kembali ke materi' }).click();
+    await page.getByRole('link', { name: 'Kembali ke latihan' }).click();
     await expect(page).toHaveURL('/student/learn');
     await page.locator(`a[href="/student/learn/${chapter}"]`).click();
     await page.getByRole('button', { name: 'Skip untuk sekarang', exact: true }).click();

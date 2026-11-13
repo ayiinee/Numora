@@ -1,12 +1,13 @@
 'use client';
+import type { StudentTryoutSummary } from './tryout-queries';
 
 import Link from 'next/link';
 import { useNotificationSummary } from './notification-queries';
 import { Avatar, Icon, ProgressBar, Skeleton } from '@tka/ui';
-import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
+import type { StudentDashboardDto } from './generated-types';
 import { StudentIllustratedHero } from './student-illustrated-hero';
 
-const tryoutLabels: Record<CurrentTryoutDto['state'], string> = {
+const tryoutLabels: Record<StudentTryoutSummary['state'], string> = {
   unavailable: 'Belum tersedia',
   open: 'Telah dibuka',
   inProgress: 'Sedang dikerjakan',
@@ -21,7 +22,7 @@ export function StudentHomeIdentityHeader({
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: StudentTryoutSummary | undefined;
 }) {
   const notifications = useNotificationSummary();
   const xp = new Intl.NumberFormat('id-ID', { maximumFractionDigits: 6 }).format(data.totalXp ?? 0);
@@ -38,7 +39,7 @@ export function StudentHomeIdentityHeader({
         </Link>
         <div className="sh-identity__greeting">
           <h1>{data.displayName}</h1>
-          <p>{data.class?.schoolName ?? 'Belajar Mandiri'}</p>
+          <p>{data.class?.schoolName ?? 'Siswa mandiri'}</p>
         </div>
         <Link
           className="sh-identity__xp"
@@ -138,7 +139,7 @@ export function StudentIdentityHeader({
 }: {
   data: StudentDashboardDto;
   avatarUrl?: string | undefined;
-  tryout?: CurrentTryoutDto | undefined;
+  tryout?: StudentTryoutSummary | undefined;
 }) {
   const notifications = useNotificationSummary();
   return (
@@ -155,7 +156,7 @@ export function StudentIdentityHeader({
           <span className="student-identity__name">
             <strong>{data.displayName}</strong>
             <small>
-              <span>{data.affiliation === 'SCHOOL' ? 'User Sekolah' : 'User Mandiri'}</span>
+              <span>{data.affiliation === 'SCHOOL' ? 'Siswa sekolah' : 'Siswa mandiri'}</span>
               {data.class?.schoolName && (
                 <>
                   {' · '}
@@ -231,30 +232,36 @@ export function HomeTryoutSkeleton() {
   );
 }
 
-export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
+export function HomeTryoutHero({ data }: { data: StudentTryoutSummary }) {
   const action =
-    data.state === 'open' && data.eligible
-      ? { label: 'Lihat aturan', href: '/student/tryout' }
-      : data.state === 'inProgress' && data.attemptId
-        ? { label: 'Lanjutkan Tryout', href: `/student/tryout/${data.attemptId}` }
-        : data.state === 'resultReady' && data.attemptId
-          ? { label: 'Lihat hasil', href: `/student/tryout/${data.attemptId}/result` }
-          : {
-              label: data.state === 'waitingIrt' ? 'Lihat status' : 'Lihat Tryout',
-              href: '/student/tryout',
-            };
+    data.batchSubmission && data.attemptId
+      ? { label: 'Lihat status hasil', href: `/student/tryout/${data.attemptId}/result` }
+      : data.state === 'open' && data.eligible
+        ? { label: 'Lihat aturan', href: '/student/tryout' }
+        : data.state === 'inProgress' && data.attemptId
+          ? { label: 'Lanjutkan Tryout', href: `/student/tryout/${data.attemptId}` }
+          : data.state === 'resultReady' && data.attemptId
+            ? { label: 'Lihat hasil', href: `/student/tryout/${data.attemptId}/result` }
+            : {
+                label: data.state === 'waitingIrt' ? 'Lihat status' : 'Lihat Tryout',
+                href: '/student/tryout',
+              };
   const description =
-    data.state === 'unavailable'
-      ? 'Paket belum tersedia. Sambil menunggu, kamu bisa lanjut berlatih.'
-      : data.state === 'waitingIrt'
-        ? 'Jawaban sudah terkirim. Hasil dan pembahasan menunggu rilis.'
-        : data.state === 'resultReady'
-          ? 'Hasil dan pembahasan paketmu sudah tersedia.'
-          : data.state === 'inProgress'
-            ? 'Pengerjaanmu masih berlangsung. Lanjutkan dari soal terakhir.'
-            : data.eligible
-              ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
-              : 'Paket belum dapat dimulai. Ketersediaan mengikuti status server.';
+    data.batchState === 'SCHEDULED'
+      ? 'Tryout sudah terjadwal. Buka jadwal untuk melihat waktu pengerjaan.'
+      : data.batchSubmission
+        ? 'Jawaban sudah terkirim. Buka status untuk melihat ketersediaan hasil dan pembahasan.'
+        : data.state === 'unavailable'
+          ? 'Paket belum tersedia. Sambil menunggu, kamu bisa lanjut berlatih.'
+          : data.state === 'waitingIrt'
+            ? 'Jawaban sudah terkirim. Hasil dan pembahasan menunggu rilis.'
+            : data.state === 'resultReady'
+              ? 'Hasil dan pembahasan paketmu sudah tersedia.'
+              : data.state === 'inProgress'
+                ? 'Pengerjaanmu masih berlangsung. Lanjutkan dari soal terakhir.'
+                : data.eligible
+                  ? 'Uji kemampuanmu dengan paket Tryout yang tersedia.'
+                  : 'Paket belum dapat dimulai. Lihat jadwal dan status pengerjaanmu.';
   return (
     <StudentIllustratedHero
       variant="tryout"
@@ -263,7 +270,11 @@ export function HomeTryoutHero({ data }: { data: CurrentTryoutDto }) {
         <>
           <span>TRYOUT</span>
           <span>
-            {tryoutLabels[data.state]}
+            {data.batchState === 'SCHEDULED'
+              ? 'Terjadwal'
+              : data.batchSubmission
+                ? 'Jawaban terkirim'
+                : tryoutLabels[data.state]}
             {data.isDemo ? ' · Demo' : ''}
           </span>
           {(data.questionCount != null || data.durationSeconds != null) && (

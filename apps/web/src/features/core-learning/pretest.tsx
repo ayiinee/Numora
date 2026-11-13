@@ -167,8 +167,8 @@ export function PretestCard({
           <details className="pretest-intro-details">
             <summary>Cara penempatan & pilihan lewati</summary>
             <p>
-              0-7 benar membuka Level 1; 8-18 Level 2; 19-20 Level 3, sesuai blueprint bab. Progres
-              Drill yang sudah ada dipertahankan.
+              Level awal mengikuti aturan penilaian paket yang dikerjakan. Jumlah soal benar
+              seluruhnya dapat berbeda dari total poin. Progres latihanmu tetap dipertahankan.
             </p>
             <p>
               Pretest bersifat opsional. Jika memilih Skip, Level 1 pada semua subbab bab ini akan
