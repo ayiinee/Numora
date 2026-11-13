@@ -427,6 +427,18 @@ export function validateResult(output, input, expectedDispatch) {
           packageResults.get(pk(row)).measurementState === 'CALIBRATED',
         'IRT_RESULT_STATE_INVALID',
       );
+      const delivered = packs.get(pk(row)).questionVersionIds;
+      assert(
+        row.usedQuestionVersionIds.every(
+          (id) =>
+            delivered.includes(id) &&
+            results.get(id).measurementState === 'CALIBRATED' &&
+            ['RESPONDED', 'OMITTED'].includes(
+              responseByItem.get(`${row.attemptId}:${id}`)?.responseState,
+            ),
+        ),
+        'IRT_INVALID_REFERENCE',
+      );
     } else if (row.status === 'SCORED') {
       assert(
         input.policies.scoreMapping !== null &&

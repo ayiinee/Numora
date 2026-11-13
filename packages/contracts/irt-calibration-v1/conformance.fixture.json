@@ -1344,6 +1344,21 @@
       "expectedError": null
     },
     {
+      "name": "drill scored cannot use item outside respondent package",
+      "input": "examples/drill-input.json",
+      "result": "examples/drill-result.json",
+      "kind": "result",
+      "patches": [
+        {
+          "target": "result",
+          "path": ["outcome", "respondents", 0, "usedQuestionVersionIds", 0],
+          "value": "10000000-0000-4000-8000-00000000012c",
+          "op": "set"
+        }
+      ],
+      "expectedError": "IRT_INVALID_REFERENCE"
+    },
+    {
       "name": "tryout result valid",
       "input": "examples/tryout-input.json",
       "result": "examples/tryout-result.json",
