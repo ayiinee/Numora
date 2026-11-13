@@ -4,11 +4,17 @@ import Link from 'next/link';
 import { useParams, useRouter } from 'next/navigation';
 import { useRef, useState } from 'react';
 import { useInfiniteQuery, useMutation, useQuery, useQueryClient } from '@tanstack/react-query';
-import { Badge, Button, Card, Icon } from '@tka/ui';
+import { Button, Card, Icon } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
-import { releaseDate, TryoutDetail, TryoutSchedule } from './tryout-presentation';
+import {
+  releaseDate,
+  TryoutCardIcon,
+  TryoutDetail,
+  TryoutSchedule,
+  TryoutStatusBadge,
+} from './tryout-presentation';
 import { refreshTryoutStatus } from './tryout-queries';
 export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
   const token = useStudentToken();
@@ -42,11 +48,11 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
         {packages.map((pack) => (
           <Card key={pack.id} fullWidth className="tryout-past-card">
             <div className="tryout-past-card__summary">
-              <span className="tryout-past-card__icon">
-                <Icon name="lock" width={20} height={20} />
-              </span>
+              <TryoutCardIcon kind="missed" />
               <div>
-                <Badge size="sm" variant="secondary">Terkunci · Belum dikerjakan</Badge>
+                <TryoutStatusBadge variant="secondary" icon="lock">
+                  Terkunci · Belum dikerjakan
+                </TryoutStatusBadge>
                 <h3>{pack.title}</h3>
                 <p>
                   {pack.questionCount ?? '—'} soal ·{' '}
@@ -122,9 +128,7 @@ export function TryoutPackageScreen() {
       ) : (
         <>
           {query.data.periodState === 'past' && !query.data.attemptId && (
-            <Status title="Paket terlewat">
-              Paket ditutup {releaseDate(query.data.closeAt)}.
-            </Status>
+            <Status title="Paket terlewat">Paket ditutup {releaseDate(query.data.closeAt)}.</Status>
           )}
           <TryoutDetail
             current={query.data}

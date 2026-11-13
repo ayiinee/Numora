@@ -1,11 +1,11 @@
 'use client';
 
-import { StudentMascot } from '@/components/student-mascot';
+import { StudentMascot, type StudentMascotPose } from '@/components/student-mascot';
 
 import Link from 'next/link';
-import { Badge, Button, Card, Icon } from '@tka/ui';
-import type { Ref } from 'react';
-import type { TryoutPackage, TryoutResult } from './types';
+import { Badge, Button, Card, Icon, type BadgeVariant, type IconName } from '@tka/ui';
+import type { ReactNode, Ref } from 'react';
+import type { AssessmentRecord, TryoutPackage, TryoutResult } from './types';
 import { RewardSummary } from './reward-summary';
 
 const stateLabels = {
@@ -14,6 +14,13 @@ const stateLabels = {
   inProgress: 'Sedang berlangsung',
   waitingIrt: 'Menunggu hasil',
   resultReady: 'Hasil dirilis',
+};
+const stateIcons: Record<TryoutPackage['state'], IconName> = {
+  unavailable: 'lock',
+  open: 'play-circle',
+  inProgress: 'clock',
+  waitingIrt: 'clock',
+  resultReady: 'check-circle',
 };
 const tryoutDateFormat = new Intl.DateTimeFormat('id-ID', {
   dateStyle: 'medium',
@@ -24,6 +31,149 @@ const tryoutDateFormat = new Intl.DateTimeFormat('id-ID', {
 export function releaseDate(value?: string | null) {
   const time = value ? Date.parse(value) : NaN;
   return Number.isFinite(time) ? `${tryoutDateFormat.format(time)} WIB` : 'Jadwal belum tersedia';
+}
+
+export function TryoutCardIcon({ kind }: { kind: 'schedule' | 'missed' | 'history' }) {
+  return (
+    <img
+      className="tryout-card-icon"
+      src={`/illustrations/tryout-card/${kind}.webp`}
+      alt=""
+      width={48}
+      height={48}
+      decoding="async"
+    />
+  );
+}
+
+export function TryoutStatusBadge({
+  variant,
+  icon,
+  children,
+}: {
+  variant: BadgeVariant;
+  icon: IconName;
+  children: string;
+}) {
+  return (
+    <Badge
+      className="tryout-status-badge"
+      variant={variant}
+      size="sm"
+      style={{
+        borderRadius: '4px',
+        fontSize: '0.75rem',
+        lineHeight: 1.25,
+        padding: '2px 6px',
+        whiteSpace: 'normal',
+      }}
+    >
+      <Icon name={icon} width={12} height={12} />
+      <span>{children}</span>
+    </Badge>
+  );
+}
+
+export function TryoutCatalogCard({
+  title,
+  badge,
+  pose,
+  icon,
+  children,
+  actions,
+}: {
+  title: string;
+  badge: ReactNode;
+  pose: StudentMascotPose;
+  icon: React.ComponentProps<typeof TryoutCardIcon>['kind'];
+  children: ReactNode;
+  actions?: ReactNode;
+}) {
+  return (
+    <Card fullWidth className="tryout-catalog-card">
+      <div className="tryout-catalog-card__heading tryout-catalog-card__heading--mascot">
+        <div>
+          <div className="tryout-badges">{badge}</div>
+          <h2>{title}</h2>
+        </div>
+        <StudentMascot pose={pose} compact />
+      </div>
+      <div className="tryout-catalog-card__body">
+        <TryoutCardIcon kind={icon} />
+        <div>{children}</div>
+      </div>
+      {actions && <div className="tryout-catalog-card__footer">{actions}</div>}
+    </Card>
+  );
+}
+
+export function TryoutHistoryCard({
+  item,
+  resultState,
+}: {
+  item: AssessmentRecord;
+  resultState?: AssessmentRecord['tryoutResultState'] | undefined;
+}) {
+  const ready = resultState === 'ready' || (!resultState && item.resultState === 'ready');
+  const hasScore = ready && item.resultState === 'ready';
+  const action = ready ? 'Lihat hasil' : 'Lihat status hasil';
+  const status = ready
+    ? 'Hasil tersedia'
+    : resultState === 'overdue'
+      ? 'Hasil belum tersedia dan melewati tenggat'
+      : 'Jawaban terkirim · Menunggu hasil';
+  return (
+    <TryoutCatalogCard
+      title={item.title}
+      badge={
+        <TryoutStatusBadge
+          variant={ready ? 'success' : 'warning'}
+          icon={ready ? 'check-circle' : 'clock'}
+        >
+          {status}
+        </TryoutStatusBadge>
+      }
+      pose="tryout-record"
+      icon="history"
+      actions={
+        <Link
+          className="button-link"
+          href={`/student/tryout/${item.attemptId}/result`}
+          aria-label={`${item.title} — ${action}`}
+        >
+          {action}
+          <Icon name="chevron" width={16} height={16} />
+        </Link>
+      }
+    >
+      <dl className="tryout-schedule">
+        <div>
+          <dt>Dikirim</dt>
+          <dd>
+            <time dateTime={item.submittedAt}>{releaseDate(item.submittedAt)}</time>
+          </dd>
+        </div>
+        {hasScore && (
+          <div>
+            <dt>Nilai</dt>
+            <dd>
+              {item.score === null
+                ? 'Nilai tidak tersedia'
+                : item.score.toLocaleString('id-ID', { maximumFractionDigits: 20 })}
+            </dd>
+          </div>
+        )}
+        {item.xpState === 'ready' && item.xp != null && (
+          <div>
+            <dt>XP</dt>
+            <dd>{item.xp.toLocaleString('id-ID', { maximumFractionDigits: 20 })} XP</dd>
+          </div>
+        )}
+      </dl>
+      {item.xpState === 'legacy' && <p>XP tidak tercatat pada hasil versi lama</p>}
+      {item.xpState === 'pending' && <p>XP belum tersedia</p>}
+    </TryoutCatalogCard>
+  );
 }
 
 export function TryoutSchedule({
@@ -103,16 +253,17 @@ export function TryoutPackageCard({
     <Card fullWidth className="tryout-catalog-card">
       <div className="tryout-catalog-card__heading">
         <div className="tryout-badges">
-          <Badge variant="success">Gratis</Badge>
-          <Badge variant="primary">{stateLabels[current.state]}</Badge>
+          <TryoutStatusBadge variant="success" icon="check">
+            Gratis
+          </TryoutStatusBadge>
+          <TryoutStatusBadge variant="primary" icon={stateIcons[current.state]}>
+            {stateLabels[current.state]}
+          </TryoutStatusBadge>
         </div>
         <h2>{current.title}</h2>
       </div>
       <div className="tryout-catalog-card__body">
-        <span className="tryout-package-symbol">
-          <Icon name="clipboard" />
-          <small>TKA</small>
-        </span>
+        <TryoutCardIcon kind="schedule" />
         <div>
           <TryoutSchedule opensAt={current.releaseAt} closesAt={current.closeAt} />
           <span>
@@ -187,8 +338,13 @@ export function TryoutDetail({
             <span className="tryout-detail-summary__free">GRATIS SISWA</span>
             <h2>{current.title}</h2>
             <TryoutSchedule opensAt={current.releaseAt} closesAt={current.closeAt} />
-            <div className={`tryout-detail-status tryout-detail-status--${current.state}`}>
-              {stateLabels[current.state]}
+            <div className="tryout-detail-status">
+              <TryoutStatusBadge
+                variant={current.state === 'waitingIrt' ? 'primary' : 'success'}
+                icon={stateIcons[current.state]}
+              >
+                {stateLabels[current.state]}
+              </TryoutStatusBadge>
             </div>
             <div className="tryout-detail-stats">
               <div>
@@ -344,7 +500,9 @@ export function TryoutWaiting({
   return (
     <Card fullWidth className="tryout-waiting">
       <StudentMascot pose="submitted" />
-      <Badge variant="success">Jawaban terkirim</Badge>
+      <TryoutStatusBadge variant="success" icon="check-circle">
+        Jawaban terkirim
+      </TryoutStatusBadge>
       <h2>
         {waitState === 'overdue' ? 'Hasil belum tersedia dan melewati tenggat' : 'Menunggu hasil'}
       </h2>
@@ -384,7 +542,9 @@ export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
   return (
     <div className="tryout-result-layout">
       <Card fullWidth className="tryout-released-summary">
-        <Badge variant="success">Hasil dirilis</Badge>
+        <TryoutStatusBadge variant="success" icon="check-circle">
+          Hasil dirilis
+        </TryoutStatusBadge>
         <h2>{result.packageTitle}</h2>
         {result.score === null ? (
           <p className="tryout-score-unavailable">

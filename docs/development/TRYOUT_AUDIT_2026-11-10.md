@@ -66,3 +66,7 @@ Pembahasan Tryout menggunakan label Jawabanmu dan Kunci pada opsi atau pernyataa
 Regresi lokal mencakup 32 skenario Chromium dengan fixture sintetis, termasuk Tryout, Drill dan Pretest. Tampilan P2 diuji pada 320, 390, 768, 1280 dan 1440 px, serta reflow 640 CSS px yang setara dengan viewport 1280 px pada zoom 200 persen. Cakupan termasuk akses pembahasan sebelum rilis, nilai null, jadwal WIB, target sentuh, kontras peta, fokus, Escape, rumus dan gambar. Pengujian ini tidak mencakup IRT produksi.
 
 Audit ulang P2 memeriksa penyegaran pembahasan, reflow rumus panjang, tanggal yang tidak dapat dibaca, dan pemulihan status Riwayat. Gangguan koneksi sementara mempertahankan posisi pada pembahasan yang sudah dirilis. Hasil audit lokal mencakup 167 tes Core Learning, 32 skenario Chromium, lint, typecheck, dan build Web.
+
+## Penyelarasan katalog dan Riwayat Tryout
+
+Kartu batch pada Jadwal, Terlewat, dan Riwayat memakai struktur yang sama. Ilustrasi kalender, gembok, dan arsip membedakan ketiga tab. Badge status memakai latar pastel, garis tepi, serta ikon dan label ringkas. Riwayat memperbarui daftar otomatis dan menyediakan Coba lagi saat pembaruan gagal. Pemeriksaan manual per sesi tersedia di halaman status hasil.

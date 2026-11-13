@@ -21,13 +21,13 @@ import {
   waitingForTryoutResult,
 } from './tryout-queries';
 import { tryoutResumeKey, writeTryoutResume } from './tryout-resume';
-import { ActivityRow } from './cards';
 import { useLearningView } from './learning-interactions';
 import { PastTryoutPackages } from './tryout-packages';
 import { StudentSectionHeader } from './student-section-header';
 import { DataState, LearningFrame, Status, StudentGate } from './ui';
 import {
   TryoutDetail,
+  TryoutHistoryCard,
   TryoutPackageCard,
   TryoutReleasedResult,
   TryoutWaiting,
@@ -60,6 +60,7 @@ function TryoutEntry({ token, initialTab = 'current' }: { token: string; initial
       initialTab={initialTab}
       batches={query.data.routingActive ? query.data.items : undefined}
       batchError={query.error}
+      batchFetching={query.isFetching}
       checkBatches={() => void query.refetch()}
     />
   );
@@ -73,12 +74,14 @@ function CurrentTryout({
   initialTab = 'current',
   batches,
   batchError,
+  batchFetching,
   checkBatches,
 }: {
   token: string;
   initialTab?: string;
   batches?: StudentTryoutBatchesDto['items'] | undefined;
   batchError: Error | null;
+  batchFetching: boolean;
   checkBatches: () => void;
 }) {
   const router = useRouter();
@@ -115,7 +118,12 @@ function CurrentTryout({
     history.data?.pages
       .flatMap((page) => page.records)
       .filter((record) => record.activity === 'tryout') ?? [];
-  const historyRefreshFailed = !!history.data && (history.isError || !!batchError);
+  const historyRefreshFailed = !!history.data && (history.isRefetchError || !!batchError);
+  const checkingHistory = history.isFetching || batchFetching;
+  function retryHistory() {
+    if (batchError) checkBatches();
+    void history.refetch();
+  }
   return (
     <LearningFrame
       title={details ? 'Detail Tryout' : 'Tryout TKA'}
@@ -229,36 +237,31 @@ function CurrentTryout({
                         <p className="tryout-history-note">
                           Cek status hasil dan pembahasan Tryout yang sudah kamu kirim.
                         </p>
-                        {(historyRecords.some((item) => item.resultState !== 'ready') ||
-                          historyRefreshFailed) && (
-                          <Button
-                            variant="secondary"
-                            disabled={history.isFetching}
-                            onClick={() => {
-                              checkBatches();
-                              void history.refetch();
-                            }}
-                          >
-                            Periksa status hasil
-                          </Button>
-                        )}
                         {historyRefreshFailed && (
-                          <p role="status">Status hasil belum dapat diperbarui.</p>
+                          <div className="tryout-history-recovery">
+                            <p role="status">Status hasil belum dapat diperbarui.</p>
+                            <Button
+                              variant="secondary"
+                              loading={checkingHistory}
+                              onClick={retryHistory}
+                            >
+                              {checkingHistory ? 'Memuat ulang…' : 'Coba lagi'}
+                            </Button>
+                          </div>
                         )}
                         {history.isPending || (history.isError && !history.data) ? (
                           <DataState
                             pending={history.isPending}
                             error={history.error}
-                            retry={() => void history.refetch()}
+                            retry={retryHistory}
                           />
                         ) : historyRecords.length ? (
-                          <div className="activity-list">
+                          <div className="tryout-student-batch-list">
                             {historyRecords.map((item) => (
-                              <ActivityRow
+                              <TryoutHistoryCard
                                 key={item.attemptId}
                                 item={item}
-                                tryoutStatusAction
-                                tryoutStatus={
+                                resultState={
                                   (batchError ? undefined : batches?.find(
                                     (batch) => batch.attemptId === item.attemptId,
                                   )?.resultState) ?? item.tryoutResultState
@@ -269,7 +272,7 @@ function CurrentTryout({
                         ) : (
                           <Card fullWidth>
                             <EmptyState
-                              icon={<StudentMascot pose="history" />}
+                              icon={<StudentMascot pose="tryout-record" />}
                               title="Belum ada riwayat Tryout"
                               description={
                                 history.hasNextPage

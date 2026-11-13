@@ -1172,6 +1172,23 @@
   font-size: 1.75rem;
   color: var(--color-primary);
 }
+.tryout-history-recovery {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-4);
+}
+.tryout-status-badge {
+  max-width: 100%;
+}
+.tryout-status-badge > svg {
+  flex: 0 0 auto;
+}
+.tryout-status-badge > span {
+  min-width: 0;
+  overflow-wrap: anywhere;
+}
 .tryout-schedule {
   display: grid;
   gap: 6px;
@@ -1198,7 +1215,7 @@
   margin-top: 16px;
 }
 .tryout-catalog-card__body > div,
-.tryout-student-batch__heading > div,
+.tryout-catalog-card__heading--mascot > div,
 .tryout-past-card__summary > div {
   min-width: 0;
 }

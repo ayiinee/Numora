@@ -65,17 +65,12 @@ export function ProgressSummary({ progress }: { progress: StudentProgress }) {
 export function ActivityRow({
   item,
   chapterImage,
-  tryoutStatusAction = false,
-  tryoutStatus,
 }: {
   item: AssessmentRecord;
   chapterImage?: string | undefined;
-  tryoutStatusAction?: boolean;
-  tryoutStatus?: 'waiting' | 'overdue' | 'ready' | null | undefined;
 }) {
   const drill = item.activity === 'drill';
-  const tryout = tryoutStatusAction && item.activity === 'tryout';
-  const ready = item.resultState === 'ready' && (!tryoutStatus || tryoutStatus === 'ready');
+  const ready = item.resultState === 'ready';
   const content = (
     <>
       <span className={`icon-tile ${drill ? 'accent-0' : 'accent-1'}`}>
@@ -120,32 +115,19 @@ export function ActivityRow({
         )}
       </div>
       <div className="activity-score">
-        {!ready && tryoutStatus === 'ready' ? (
-          <Badge variant="success">Hasil tersedia</Badge>
-        ) : !ready ? (
-          <Badge variant="warning" style={{ whiteSpace: 'normal' }}>
-            {tryoutStatus === 'overdue'
-              ? 'Hasil belum tersedia dan melewati tenggat'
-              : tryout
-                ? 'Jawaban terkirim · Menunggu hasil'
-                : 'Menunggu hasil'}
-          </Badge>
-        ) : tryout && item.score === null ? (
-          <span>Nilai tidak tersedia</span>
-        ) : (
+        {ready ? (
           <>
-            <strong>
-              {tryout ? item.score?.toLocaleString('id-ID', { maximumFractionDigits: 20 }) : item.score ?? '—'}
-            </strong>
+            <strong>{item.score ?? '—'}</strong>
             <small>Nilai</small>
           </>
+        ) : (
+          <Badge variant="warning" style={{ whiteSpace: 'normal' }}>Menunggu hasil</Badge>
         )}
-        {tryout && <small>{ready || tryoutStatus === 'ready' ? 'Lihat hasil' : 'Lihat status hasil'}</small>}
       </div>
-      {(ready || tryout) && <Icon name="chevron" width={18} height={18} />}
+      {ready && <Icon name="chevron" width={18} height={18} />}
     </>
   );
-  return !ready && !tryout ? (
+  return !ready ? (
     <div className="activity-row">{content}</div>
   ) : (
     <Link

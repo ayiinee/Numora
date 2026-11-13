@@ -896,6 +896,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
     }
     await mandiri.goto('/student/assessment');
     await expect(mandiri.getByRole('link', { name: /Tryout Mingguan/ })).toHaveCount(0);
+    await mandiri.goto('/student/tryout/history');
+    const history = mandiri.getByRole('tabpanel', { name: 'Riwayat', exact: true });
+    await expect(history.getByRole('link', { name: /Tryout Mingguan.*Lihat status hasil/ }))
+      .toBeVisible();
+    await expect(history.getByRole('button', { name: 'Periksa status hasil' })).toHaveCount(0);
     const teacherPath = `classes/${cls.id}/students/${fixtures.actors.student!.profileId}/assessment-results`;
     const teacherHistory = await body<AssessmentHistoryDto>(request, 'teacher', teacherPath);
     expect(teacherHistory.records.find((r) => r.attemptId === affiliated.id)).toMatchObject({
@@ -937,7 +942,7 @@ test.describe.serial('JOB-06 connected release chain', () => {
     );
     expect((await request.post(`${fixtureBase}/tryout-fixture/release`)).status()).toBe(200);
     await mandiri.reload();
-    await mandiri.getByRole('link', { name: /Tryout Mingguan/ }).click();
+    await history.getByRole('link', { name: /Tryout Mingguan.*Lihat hasil/ }).click();
     await expect(mandiri).toHaveURL(new RegExp(`/student/tryout/${independent.id}/result$`));
     const result = await body<TryoutResultDto>(
       request,
