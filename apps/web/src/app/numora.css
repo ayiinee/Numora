@@ -4088,16 +4088,6 @@ a.settings-row:hover {
   padding-top: var(--space-1);
   border-top: 1px solid var(--color-border-light);
 }
-.tryout-past-card__footer > p {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  min-height: 32px;
-}
-.tryout-past-card__footer svg {
-  flex-shrink: 0;
-}
 .tryout-past-card__actions {
   row-gap: var(--space-2);
 }
@@ -4369,26 +4359,6 @@ a.settings-row:hover {
   line-height: 1.6;
   color: var(--color-text-muted);
 }
-.tryout-waiting ol {
-  text-align: left;
-  list-style: none;
-  padding: 16px;
-  background: var(--color-primary-light);
-  border-radius: 14px;
-  margin: 20px 0;
-}
-.tryout-waiting li {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-size: 12px;
-  line-height: 1.5;
-  padding: 8px 0;
-}
-.tryout-waiting li svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
 .tryout-waiting > .button-link {
   display: flex;
   width: 100%;
@@ -4409,10 +4379,6 @@ a.settings-row:hover {
   align-items: start;
   gap: 24px;
   padding-top: 16px;
-}
-.tryout-result-layout > aside {
-  display: grid;
-  gap: 20px;
 }
 .tryout-released-summary {
   text-align: center;

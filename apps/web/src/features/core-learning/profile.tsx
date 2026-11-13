@@ -261,8 +261,8 @@ function ProfileContent({ token }: { token: string }) {
             />
             <ProfileSetting
               icon="clipboard"
-              title="Tryout & Hasil IRT"
-              description="Paket dan hasil mengikuti rilis server."
+              title="Jadwal dan hasil Tryout"
+              description="Lihat jadwal pengerjaan dan hasil yang sudah dirilis."
               href="/student/tryout"
             />
             <ProfileSetting

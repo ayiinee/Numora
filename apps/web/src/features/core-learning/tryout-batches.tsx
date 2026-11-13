@@ -1,13 +1,13 @@
 'use client';
 import Link from 'next/link';
-import { useRef, useState } from 'react';
+import { Fragment, useRef, useState } from 'react';
 import { useRouter } from 'next/navigation';
 import { useMutation, useQueryClient } from '@tanstack/react-query';
 import { Badge, Button, Card, Dialog, EmptyState, Icon } from '@tka/ui';
 import { StudentMascot } from '@/components/student-mascot';
 import { request } from './api';
 import type { StudentTryoutBatchDto, TryoutAttemptDto } from './generated-types';
-import { releaseDate, TryoutStartRules } from './tryout-presentation';
+import { TryoutSchedule, TryoutStartRules } from './tryout-presentation';
 import { refreshTryoutStatus, scheduledTryouts } from './tryout-queries';
 export function TryoutBatchList({
   token,
@@ -19,21 +19,31 @@ export function TryoutBatchList({
   history?: boolean;
 }) {
   const [rulesBatchId, setRulesBatchId] = useState<string | null>(null);
-  const visible = history
+  const eligible = history
     ? batches.filter((batch) => batch.state === 'CLOSED' && !batch.attemptId)
     : scheduledTryouts(batches);
+  const visible = history
+    ? eligible
+    : [
+        ...eligible.filter((batch) => batch.state !== 'SCHEDULED'),
+        ...eligible.filter((batch) => batch.state === 'SCHEDULED'),
+      ];
   const rulesBatch = rulesBatchId && batches.find((batch) => batch.id === rulesBatchId);
-  if (rulesBatch && !visible.some((batch) => batch.id === rulesBatch.id)) visible.push(rulesBatch);
+  if (rulesBatch && !visible.some((batch) => batch.id === rulesBatch.id))
+    visible.unshift(rulesBatch);
+  const upcomingIndex = history ? -1 : visible.findIndex((batch) => batch.state === 'SCHEDULED');
   return visible.length ? (
     <div className="tryout-student-batch-list">
-      {visible.map((batch) => (
-        <StudentBatch
-          key={batch.id}
-          batch={batch}
-          token={token}
-          rulesOpen={rulesBatchId === batch.id}
-          setRulesOpen={(open) => setRulesBatchId(open ? batch.id : null)}
-        />
+      {visible.map((batch, index) => (
+        <Fragment key={batch.id}>
+          {index === upcomingIndex && <h2 className="tryout-upcoming-heading">Akan datang</h2>}
+          <StudentBatch
+            batch={batch}
+            token={token}
+            rulesOpen={rulesBatchId === batch.id}
+            setRulesOpen={(open) => setRulesBatchId(open ? batch.id : null)}
+          />
+        </Fragment>
       ))}
     </div>
   ) : (
@@ -114,32 +124,31 @@ function StudentBatch({
           <Icon name="clock" />
         </span>
         <div>
-          <strong>{b.state === 'SCHEDULED' ? 'Dibuka' : 'Ditutup'}</strong>
-          <p>{releaseDate(b.state === 'SCHEDULED' ? b.startsAt : b.closesAt)}</p>
+          <TryoutSchedule opensAt={b.startsAt} closesAt={b.closesAt} />
           <span>30 soal · 10 menit</span>
         </div>
       </div>
-      <div className="tryout-student-batch__actions">
+      <div
+        className={b.attemptId || b.state === 'OPEN' ? 'tryout-student-batch__actions' : undefined}
+      >
         {b.attemptId ? (
           <Link className="button-link" href={`/student/tryout/${b.attemptId}`}>
             {working ? 'Lanjutkan pengerjaan' : 'Periksa status sesi'}
           </Link>
-        ) : b.state === 'SCHEDULED' ? (
-          <p>Belum dimulai.</p>
-        ) : b.state === 'CLOSED' ? (
-          <p>Batch sudah ditutup.</p>
         ) : (
-          <Button
-            aria-haspopup="dialog"
-            onClick={() => {
-              setSchool(b.schools.length === 1 ? b.schools[0]!.schoolId : '');
-              setAccepted(false);
-              start.reset();
-              setRulesOpen(true);
-            }}
-          >
-            Mulai Tryout
-          </Button>
+          b.state === 'OPEN' && (
+            <Button
+              aria-haspopup="dialog"
+              onClick={() => {
+                setSchool(b.schools.length === 1 ? b.schools[0]!.schoolId : '');
+                setAccepted(false);
+                start.reset();
+                setRulesOpen(true);
+              }}
+            >
+              Mulai Tryout
+            </Button>
+          )
         )}
         <Dialog
           className="tryout-student-rules-dialog"

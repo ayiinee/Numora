@@ -887,7 +887,8 @@ test('home loading and independent Tryout errors preserve learning and pending c
   await page.goto('/student');
   await expect(page.getByText(/Catatan persisted fixture/)).toBeVisible();
   await page.getByRole('button', { name: 'Tampilkan slide Tryout' }).click();
-  await expect(page.getByRole('heading', { name: 'Tryout Matematika' })).toBeVisible();
+  await expect(page.getByRole('heading', { name: 'Tryout fixture' })).toBeVisible();
+  await expect(page.getByRole('link', { name: 'Lihat status hasil' })).toBeVisible();
   await page.evaluate(() => document.fonts.ready);
   await page.addStyleTag({ content: 'nextjs-portal { display: none !important; }' });
   await page.screenshot({ path: testInfo.outputPath('home-mandiri-390.png'), fullPage: true });
@@ -1868,7 +1869,7 @@ test('TEST ONLY TryOut with 30 PG questions preserves countdown on reload and re
   await expect(page.getByRole('radio').first()).toBeChecked();
   const after = (await page.getByRole('timer').innerText()).split(':').map(Number);
   expect(after[0]! * 60 + after[1]!).toBeLessThanOrEqual(beforeSeconds);
-  await expect(page.getByRole('heading', { name: 'Jawaban sudah dikirim' })).toBeVisible({
+  await expect(page.getByRole('heading', { name: 'Menunggu hasil' })).toBeVisible({
     timeout: 20_000,
   });
   expect(submits).toBe(1);
@@ -2643,6 +2644,7 @@ for (const width of [320, 360, 390, 393, 430, 768, 1024, 1280, 1440]) {
     await expect(page.getByText('85', { exact: true })).toBeVisible();
     await page.getByRole('link', { name: 'Lihat pembahasan', exact: true }).click();
     await expect(page).toHaveURL(`/student/tryout/${attemptId}/explanation`);
+    if (width < 960) await page.getByRole('button', { name: 'Semua Soal' }).click();
     await page.getByRole('button', { name: /^Pembahasan soal 3,/ }).click();
     await capture('result');
     await page.goto('/student/assessment');

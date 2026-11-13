@@ -110,12 +110,12 @@ function CurrentTryout({
     details && !!query.data?.id,
   );
   const current = query.data;
-  const available =
-    current && current.state !== 'unavailable' && !!current.id && !!current.releaseAt;
+  const available = current && current.state !== 'unavailable' && !!current.id;
   const historyRecords =
     history.data?.pages
       .flatMap((page) => page.records)
       .filter((record) => record.activity === 'tryout') ?? [];
+  const historyRefreshFailed = !!history.data && (history.isError || !!batchError);
   return (
     <LearningFrame
       title={details ? 'Detail Tryout' : 'Tryout TKA'}
@@ -172,7 +172,7 @@ function CurrentTryout({
                       />
                     ) : available &&
                       (current.state === 'resultReady' || current.state === 'waitingIrt') ? (
-                      <Status title="Tryout sudah dikerjakan">
+                      <Status title={current.state === 'waitingIrt' ? 'Jawaban terkirim · Menunggu hasil' : 'Hasil tersedia'}>
                         {current.attemptId && (
                           <Link
                             className="button-link"
@@ -229,9 +229,11 @@ function CurrentTryout({
                         <p className="tryout-history-note">
                           Cek status hasil dan pembahasan Tryout yang sudah kamu kirim.
                         </p>
-                        {historyRecords.some((item) => item.resultState !== 'ready') && (
+                        {(historyRecords.some((item) => item.resultState !== 'ready') ||
+                          historyRefreshFailed) && (
                           <Button
                             variant="secondary"
+                            disabled={history.isFetching}
                             onClick={() => {
                               checkBatches();
                               void history.refetch();
@@ -239,6 +241,9 @@ function CurrentTryout({
                           >
                             Periksa status hasil
                           </Button>
+                        )}
+                        {historyRefreshFailed && (
+                          <p role="status">Status hasil belum dapat diperbarui.</p>
                         )}
                         {history.isPending || (history.isError && !history.data) ? (
                           <DataState
@@ -254,8 +259,9 @@ function CurrentTryout({
                                 item={item}
                                 tryoutStatusAction
                                 tryoutStatus={
-                                  batches?.find((batch) => batch.attemptId === item.attemptId)
-                                    ?.resultState ?? item.tryoutResultState
+                                  (batchError ? undefined : batches?.find(
+                                    (batch) => batch.attemptId === item.attemptId,
+                                  )?.resultState) ?? item.tryoutResultState
                                 }
                               />
                             ))}
@@ -344,14 +350,13 @@ function AttemptData({ token, attemptId }: { token: string; attemptId: string })
     return (
       <>
         <AssessmentHeader
-          title="Tryout terkirim"
-          status="Jawaban tersimpan"
+          title="Tryout TKA"
+          status={null}
           progress={100}
           progressLabel="Tryout terkirim"
           exitHref="/student/tryout"
         />
         <TryoutWaiting
-          submitted
           xp={query.data.xp ?? null}
           closeAt={query.data.closeAt}
           resultDueAt={query.data.resultDueAt}
@@ -482,7 +487,10 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
       <>
         {attempt.isError && (
           <Status title="Status sesi belum dapat dimuat">
-            <Button variant="secondary" onClick={() => void attempt.refetch()}>
+            <Button variant="secondary" onClick={() => {
+              void attempt.refetch();
+              void query.refetch();
+            }}>
               Coba lagi
             </Button>
           </Status>
@@ -502,7 +510,7 @@ function TryoutResultData({ token, attemptId }: { token: string; attemptId: stri
             )}
           </Status>
         ) : (
-          attempt.data?.status === 'submitted' && (
+          !attempt.isError && attempt.data?.status === 'submitted' && (
             <TryoutWaiting
               xp={attempt.data?.xp ?? null}
               closeAt={attempt.data?.closeAt}

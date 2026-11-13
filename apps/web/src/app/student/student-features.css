@@ -1172,11 +1172,56 @@
   font-size: 1.75rem;
   color: var(--color-primary);
 }
-.explanation-entry {
-  display: flex;
-  flex-direction: column;
-  align-items: flex-start;
-  gap: var(--space-4, 1rem);
+.tryout-schedule {
+  display: grid;
+  gap: 6px;
+  font-size: 14px;
+  line-height: 1.45;
+  color: var(--color-text-strong);
+}
+.tryout-schedule > div {
+  display: grid;
+  grid-template-columns: 4rem minmax(0, 1fr);
+  gap: 8px;
+}
+.tryout-schedule dt {
+  font-weight: 700;
+}
+.tryout-schedule dd {
+  margin: 0;
+  overflow-wrap: anywhere;
+}
+.tryout-past-card__footer {
+  row-gap: 8px;
+}
+.tryout-check-status {
+  margin-top: 16px;
+}
+.tryout-catalog-card__body > div,
+.tryout-student-batch__heading > div,
+.tryout-past-card__summary > div {
+  min-width: 0;
+}
+.tryout-catalog-card h2,
+.tryout-past-card h3,
+.tryout-released-summary h2 {
+  overflow-wrap: anywhere;
+}
+.tryout-upcoming-heading {
+  font-size: 18px;
+  font-weight: 800;
+  margin-top: 8px;
+}
+.tryout-released-summary .button-link {
+  margin-top: 12px;
+}
+.tryout-released-summary .tryout-score-unavailable {
+  font-size: 20px;
+  margin: 8px 0;
+}
+.tryout-result-score {
+  overflow-wrap: anywhere;
+  font-variant-numeric: tabular-nums;
 }
 .question-review-details {
   display: grid;
@@ -1404,6 +1449,139 @@
 .explanation-session .practice-choices:disabled,
 .explanation-session .practice-categories:disabled {
   opacity: 1;
+}
+.tryout-review-header {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+  margin: 0 0 12px;
+  color: var(--color-text-strong);
+}
+.tryout-review-header h1 {
+  font-size: 16px;
+  font-weight: 800;
+}
+.tryout-review-notice {
+  display: flex;
+  flex-wrap: wrap;
+  align-items: center;
+  gap: 8px;
+  max-width: 980px;
+  margin: 0 auto 12px;
+}
+.tryout-review-controls {
+  display: none;
+}
+.tryout-explanation .practice-layout {
+  grid-template-columns: minmax(0, 1fr) minmax(260px, 300px);
+}
+.tryout-explanation .practice-toolbar {
+  top: 16px;
+  max-height: calc(100dvh - 32px);
+  overflow: auto;
+}
+.tryout-explanation .practice-toolbar h2 {
+  font-weight: 800;
+  margin-bottom: 12px;
+}
+.explanation-session .practice-actions {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(min(100%, 7.25rem), 1fr));
+}
+.explanation-session .practice-actions button,
+.tryout-attempt-shell .practice-actions button {
+  min-height: 44px;
+  white-space: nowrap;
+  word-break: normal;
+  overflow-wrap: normal;
+}
+.tryout-explanation .practice-stem:focus {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 4px;
+}
+.tryout-explanation .question-review-details {
+  border-top: 0;
+  padding-top: 0;
+}
+.tryout-explanation .content-rich-text {
+  display: block;
+  overflow-x: auto;
+}
+.tryout-explanation .practice-statement p .content-rich-text {
+  display: inline-block;
+  max-width: 100%;
+  vertical-align: top;
+}
+.tryout-review-options {
+  display: grid;
+  gap: 8px;
+  padding: 0;
+  list-style: none;
+}
+.tryout-review-options li {
+  display: grid;
+  grid-template-columns: auto minmax(0, 1fr);
+  align-items: start;
+  gap: 12px;
+  padding: 12px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  overflow-wrap: anywhere;
+}
+.tryout-review-option-labels {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin-top: 6px;
+}
+.tryout-question-map__grid button[data-review='correct'] {
+  background: var(--color-success-light);
+}
+.tryout-question-map__grid button[data-review='partial'] {
+  background: var(--color-warning-light);
+}
+.tryout-question-map__grid button[data-review='incorrect'] {
+  background: var(--color-danger-light);
+}
+.tryout-question-map__grid button[data-review='unavailable'] {
+  border-style: dashed;
+}
+.tryout-question-map__grid button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+@media (max-width: 959px) {
+  .tryout-explanation .practice-layout {
+    grid-template-columns: minmax(0, 1fr);
+  }
+  .tryout-explanation .practice-toolbar {
+    display: none;
+  }
+  .tryout-explanation .tryout-review-desktop-position {
+    display: none;
+  }
+  .tryout-review-controls {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 6px;
+    margin-bottom: 12px;
+    color: var(--color-text-strong);
+    font-size: 13px;
+    font-weight: 700;
+  }
+  .tryout-review-controls button {
+    min-width: 44px;
+    min-height: 44px;
+    padding-inline: 8px;
+    white-space: nowrap;
+  }
+  .tryout-review-controls .review-direction-label {
+    display: none;
+  }
+  .tryout-review-controls button:last-child {
+    margin-inline-start: auto;
+  }
 }
 
 /* Keep visually hidden statement legends from inheriting full-width positioning. */

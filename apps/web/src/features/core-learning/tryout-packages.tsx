@@ -8,7 +8,7 @@ import { Badge, Button, Card, Icon } from '@tka/ui';
 import { learningApi } from './api';
 import { useStudentToken } from './student-session';
 import { DataState, LearningFrame, Status } from './ui';
-import { releaseDate, TryoutDetail } from './tryout-presentation';
+import { releaseDate, TryoutDetail, TryoutSchedule } from './tryout-presentation';
 import { refreshTryoutStatus } from './tryout-queries';
 export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
   const token = useStudentToken();
@@ -57,10 +57,7 @@ export function PastTryoutPackages({ enabled = true }: { enabled?: boolean }) {
               </div>
             </div>
             <footer className="tryout-past-card__footer">
-              <p>
-                <Icon name="clock" width={16} height={16} />
-                <span>Ditutup {releaseDate(pack.closeAt)}</span>
-              </p>
+              <TryoutSchedule opensAt={pack.releaseAt} closesAt={pack.closeAt} />
               <div className="tryout-past-card__actions">
                 <Link className="section-link" href={`/student/tryout/packages/${pack.id}`}>
                   Lihat detail paket
@@ -124,17 +121,9 @@ export function TryoutPackageScreen() {
         />
       ) : (
         <>
-          {query.data.periodState === 'past' && (
-            <Status title={query.data.attemptId ? 'Paket sudah dikerjakan' : 'Paket terlewat'}>
+          {query.data.periodState === 'past' && !query.data.attemptId && (
+            <Status title="Paket terlewat">
               Paket ditutup {releaseDate(query.data.closeAt)}.
-              {query.data.attemptId && (
-                <Link
-                  className="button-link"
-                  href={`/student/tryout/${query.data.attemptId}/result`}
-                >
-                  Lihat status hasil
-                </Link>
-              )}
             </Status>
           )}
           <TryoutDetail

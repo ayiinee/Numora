@@ -952,7 +952,11 @@ test.describe.serial('JOB-06 connected release chain', () => {
       new RegExp('/student/tryout/' + independent.id + '/explanation$'),
     );
     await expect(mandiri.getByRole('heading', { name: 'Pembahasan Numora' })).toBeVisible();
-    await expect(option(mandiri, 'A')).toBeDisabled();
+    const reviewOptions = mandiri.getByRole('list', { name: 'Pilihan jawaban' });
+    await expect(reviewOptions.getByRole('listitem').filter({ hasText: /^B/ }))
+      .toContainText('Jawabanmu');
+    await expect(reviewOptions.getByText('Kunci', { exact: true })).toBeVisible();
+    await expect(mandiri.getByRole('radio')).toHaveCount(0);
     await mandiri.getByRole('link', { name: 'Kembali ke hasil', exact: true }).click();
     const persistence = await (
       await request.get(`${fixtureBase}/tryout-fixture/persistence`)

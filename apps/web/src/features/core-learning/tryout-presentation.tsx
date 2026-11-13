@@ -12,13 +12,48 @@ const stateLabels = {
   unavailable: 'Belum tersedia',
   open: 'Tersedia',
   inProgress: 'Sedang berlangsung',
-  waitingIrt: 'Menunggu IRT',
+  waitingIrt: 'Menunggu hasil',
   resultReady: 'Hasil dirilis',
 };
+const tryoutDateFormat = new Intl.DateTimeFormat('id-ID', {
+  dateStyle: 'medium',
+  timeStyle: 'short',
+  timeZone: 'Asia/Jakarta',
+});
+
 export function releaseDate(value?: string | null) {
-  return value
-    ? `${new Intl.DateTimeFormat('id-ID', { dateStyle: 'medium', timeStyle: 'short', timeZone: 'Asia/Jakarta' }).format(new Date(value))} WIB`
-    : 'Jadwal belum tersedia';
+  const time = value ? Date.parse(value) : NaN;
+  return Number.isFinite(time) ? `${tryoutDateFormat.format(time)} WIB` : 'Jadwal belum tersedia';
+}
+
+export function TryoutSchedule({
+  opensAt,
+  closesAt,
+}: {
+  opensAt?: string | null | undefined;
+  closesAt?: string | null | undefined;
+}) {
+  return (
+    <dl className="tryout-schedule">
+      {(
+        [
+          ['Dibuka', opensAt],
+          ['Ditutup', closesAt],
+        ] as const
+      ).map(([label, value]) => (
+        <div key={label}>
+          <dt>{label}</dt>
+          <dd>
+            {value && Number.isFinite(Date.parse(value)) ? (
+              <time dateTime={value}>{releaseDate(value)}</time>
+            ) : (
+              'Belum tersedia'
+            )}
+          </dd>
+        </div>
+      ))}
+    </dl>
+  );
 }
 
 export function TryoutStartRules({
@@ -79,8 +114,7 @@ export function TryoutPackageCard({
           <small>TKA</small>
         </span>
         <div>
-          <strong>{current.title}</strong>
-          <p>Dirilis {releaseDate(current.releaseAt)}</p>
+          <TryoutSchedule opensAt={current.releaseAt} closesAt={current.closeAt} />
           <span>
             {current.questionCount ?? '—'} soal ·{' '}
             {current.durationSeconds != null
@@ -89,11 +123,6 @@ export function TryoutPackageCard({
           </span>
         </div>
       </div>
-      {current.state === 'waitingIrt' && (
-        <p role="status" className="tryout-inline-status">
-          Jawaban terkirim. Hasil menunggu batch IRT; pembahasan belum tersedia.
-        </p>
-      )}
       {current.state === 'open' && !current.eligible && (
         <p className="tryout-inline-status">
           Paket belum dapat dimulai. Ketersediaan mengikuti status server.
@@ -110,12 +139,13 @@ export function TryoutPackageCard({
             <Icon name="arrow" width={18} height={18} />
           </Link>
         )}
-        {current.state === 'resultReady' && current.attemptId && (
-          <Link className="button-link" href={`/student/tryout/${current.attemptId}/result`}>
-            Lihat hasil simulasi
-            <Icon name="arrow" width={18} height={18} />
-          </Link>
-        )}
+        {(current.state === 'resultReady' || current.state === 'waitingIrt') &&
+          current.attemptId && (
+            <Link className="button-link" href={`/student/tryout/${current.attemptId}/result`}>
+              {current.state === 'resultReady' ? 'Lihat hasil' : 'Lihat status hasil'}
+              <Icon name="arrow" width={18} height={18} />
+            </Link>
+          )}
       </div>
     </Card>
   );
@@ -156,7 +186,7 @@ export function TryoutDetail({
           <Card fullWidth className="tryout-detail-summary">
             <span className="tryout-detail-summary__free">GRATIS SISWA</span>
             <h2>{current.title}</h2>
-            <p>Dirilis {releaseDate(current.releaseAt)}</p>
+            <TryoutSchedule opensAt={current.releaseAt} closesAt={current.closeAt} />
             <div className={`tryout-detail-status tryout-detail-status--${current.state}`}>
               {stateLabels[current.state]}
             </div>
@@ -235,7 +265,8 @@ export function TryoutDetail({
                 atau keluar dapat menghilangkan perubahan yang belum tersimpan.
               </li>
               <li>
-                <strong>Hasil simulasi:</strong> nilai dan pembahasan tersedia bersama setelah dirilis.{' '}
+                <strong>Hasil simulasi:</strong> nilai dan pembahasan tersedia bersama setelah
+                dirilis.{' '}
                 {current.resultPendingReason
                   ? 'Konten atau penilaian belum siap; jadwal hasil belum tersedia.'
                   : 'Tenggat rilis maksimal 72 jam setelah jadwal pengerjaan ditutup.'}
@@ -274,15 +305,16 @@ export function TryoutDetail({
             Lanjutkan TryOut
             <Icon name="arrow" width={18} height={18} />
           </Link>
-        ) : current.state === 'resultReady' && current.attemptId ? (
+        ) : (current.state === 'resultReady' || current.state === 'waitingIrt') &&
+          current.attemptId ? (
           <Link className="button-link" href={`/student/tryout/${current.attemptId}/result`}>
-            Lihat hasil simulasi
+            {current.state === 'resultReady' ? 'Lihat hasil' : 'Lihat status hasil'}
             <Icon name="arrow" width={18} height={18} />
           </Link>
         ) : (
           <p role="status">
             {current.state === 'waitingIrt'
-              ? 'Jawaban terkirim. Nilai dan pembahasan menunggu rilis hasil.'
+              ? 'Jawaban terkirim · Menunggu hasil'
               : 'Paket belum dapat dimulai.'}
           </p>
         )}
@@ -293,7 +325,6 @@ export function TryoutDetail({
 }
 
 export function TryoutWaiting({
-  submitted = false,
   fetching = false,
   onCheck,
   xp,
@@ -302,7 +333,6 @@ export function TryoutWaiting({
   resultPendingReason,
   waitState,
 }: {
-  submitted?: boolean;
   fetching?: boolean;
   onCheck?: () => void;
   xp?: number | null;
@@ -314,52 +344,34 @@ export function TryoutWaiting({
   return (
     <Card fullWidth className="tryout-waiting">
       <StudentMascot pose="submitted" />
-      <Badge variant="success">Jawaban tersimpan</Badge>
-      <h2>{submitted ? 'Jawaban sudah dikirim' : 'Menunggu hasil'}</h2>
+      <Badge variant="success">Jawaban terkirim</Badge>
+      <h2>
+        {waitState === 'overdue' ? 'Hasil belum tersedia dan melewati tenggat' : 'Menunggu hasil'}
+      </h2>
 
       {xp != null && (
         <p>
-          <strong>{xp} XP</strong> sudah tercatat. Tanpa bonus waktu.
+          <strong>{xp.toLocaleString('id-ID', { maximumFractionDigits: 20 })} XP</strong> sudah
+          tercatat.
         </p>
       )}
-      {waitState === 'overdue' ? (
-        <p role="status">
-          Hasil belum tersedia dan melewati tenggat
-          {resultDueAt ? ` (${releaseDate(resultDueAt)})` : ''}. Periksa kembali status hasil.
-        </p>
-      ) : resultPendingReason ? (
-        <p>
-          Jawaban tersimpan di server. Penilaian belum tersedia; hasil dan pembahasan menunggu
-          kesiapan konten serta penilaian.
-        </p>
-      ) : (
-        <p>
-          Nilai dan pembahasan tersedia bersama setelah dirilis.
-          {closeAt && <> Penutupan batch: {releaseDate(closeAt)}.</>}
-          {resultDueAt && <> Tenggat rilis {releaseDate(resultDueAt)}.</>}
-        </p>
-      )}
-      <ol>
-        <li>
-          <Icon name="check" width={18} height={18} />
-          <span>Jawaban terkirim</span>
-        </li>
-        <li aria-current="step">
-          <Icon name="clock" width={18} height={18} />
-          <span>Pemrosesan dan rilis hasil</span>
-        </li>
-        <li>
-          <Icon name="lock" width={18} height={18} />
-          <span>Hasil simulasi & pembahasan</span>
-        </li>
-      </ol>
+      <p>
+        {resultPendingReason === 'CONTENT_PENDING' && 'Konten penilaian sedang disiapkan. '}
+        {resultPendingReason === 'SCORING_PENDING' && 'Penilaian sedang disiapkan. '}
+        Nilai dan pembahasan tersedia setelah hasil dirilis.
+      </p>
+      {resultDueAt ? (
+        <p>Tenggat rilis {releaseDate(resultDueAt)}.</p>
+      ) : closeAt ? (
+        <p>Batch ditutup {releaseDate(closeAt)}.</p>
+      ) : null}
       {onCheck && (
-        <Button fullWidth disabled={fetching} onClick={onCheck}>
+        <Button className="tryout-check-status" fullWidth disabled={fetching} onClick={onCheck}>
           {fetching ? 'Memeriksa…' : 'Periksa status hasil'}
         </Button>
       )}
       <Link className="button-link button-link--secondary" href="/student/tryout">
-        Lihat status paket
+        Kembali ke Tryout
       </Link>
       <Link className="tryout-text-link" href="/student/tryout/history">
         Lihat riwayat Tryout
@@ -371,50 +383,64 @@ export function TryoutWaiting({
 export function TryoutReleasedResult({ result }: { result: TryoutResult }) {
   return (
     <div className="tryout-result-layout">
-      <aside>
-        <Card fullWidth className="tryout-released-summary">
-          <Badge variant="success">Hasil dirilis</Badge>
-          <h2>{result.packageTitle}</h2>
-          <strong className="tryout-result-score">{result.score ?? '—'}</strong>
-          {result.mode === 'UNSCORABLE' && (
-            <p>Nilai tidak tersedia karena tidak ada poin maksimum valid.</p>
-          )}
-          <p>
-            {result.correctCount} dari {result.questionCount} benar penuh
+      <Card fullWidth className="tryout-released-summary">
+        <Badge variant="success">Hasil dirilis</Badge>
+        <h2>{result.packageTitle}</h2>
+        {result.score === null ? (
+          <p className="tryout-score-unavailable">
+            <strong>Nilai tidak tersedia</strong>
           </p>
-          <small>Hasil simulasi, bukan nilai TKA resmi.</small>
-          <details className="learning-detail">
-            <summary>Info nilai</summary>
-            {result.resultMethod === 'IRT' ? (
-              <p>Metode: Skor IRT.</p>
-            ) : result.resultMethod === 'STANDARD' ? (
-              <p>
-                Metode: Skor perhitungan standar. Hasil ini menggunakan scoring biasa untuk batch
-                tersebut.
-              </p>
-            ) : result.mode === 'UNSCORABLE' ? (
-              <p>Status: tidak dapat diberi nilai.</p>
-            ) : (
-              <p>Metode penilaian tidak tercatat pada hasil versi ini.</p>
-            )}
-            {result.resultMethodReason && <p>{result.resultMethodReason}</p>}
-            <p>Metode nilai terpisah dari XP yang sudah tercatat saat submit.</p>
-          </details>
-        </Card>
-        <RewardSummary kind="tryout" xp={result.xp ?? null} detail={result.xpDetail} />
-      </aside>
-      <Card fullWidth className="explanation-entry">
-        <h2>Pembahasan soal</h2>
-        <p>Lihat jawabanmu, kunci, dan pembahasan setiap soal.</p>
-        <Link className="button-link" href={`/student/tryout/${result.attemptId}/explanation`}>
-          Lihat pembahasan
-        </Link>
+        ) : (
+          <>
+            <strong className="tryout-result-score">
+              {result.score.toLocaleString('id-ID', { maximumFractionDigits: 20 })}
+            </strong>
+            <p>Skala 0–100</p>
+          </>
+        )}
+        {result.score === null && result.resultMethodReason ? (
+          <p>{result.resultMethodReason}</p>
+        ) : (
+          result.score === null &&
+          result.mode === 'UNSCORABLE' && (
+            <p>Nilai tidak tersedia karena tidak ada poin maksimum valid.</p>
+          )
+        )}
+        <p>
+          {result.correctCount} dari {result.questionCount} benar penuh
+        </p>
+        {result.explanation.length > 0 ? (
+          <Link className="button-link" href={`/student/tryout/${result.attemptId}/explanation`}>
+            Lihat pembahasan
+          </Link>
+        ) : (
+          <p>Pembahasan belum tersedia.</p>
+        )}
+        <small>Hasil simulasi, bukan nilai TKA resmi.</small>
+        <details className="learning-detail">
+          <summary>Info nilai</summary>
+          {result.resultMethod === 'IRT' ? (
+            <p>Metode: Skor IRT.</p>
+          ) : result.resultMethod === 'STANDARD' ? (
+            <p>
+              Metode: Skor perhitungan standar. Hasil ini menggunakan scoring biasa untuk batch
+              tersebut.
+            </p>
+          ) : result.mode === 'UNSCORABLE' ? (
+            <p>Status: tidak dapat diberi nilai.</p>
+          ) : (
+            <p>Metode penilaian tidak tercatat pada hasil versi ini.</p>
+          )}
+          {result.score !== null && result.resultMethodReason && <p>{result.resultMethodReason}</p>}
+          <p>Metode nilai terpisah dari XP yang sudah tercatat saat submit.</p>
+        </details>
       </Card>
+      <RewardSummary kind="tryout" xp={result.xp ?? null} detail={result.xpDetail} />
       <Link
         className="button-link button-link--secondary tryout-result-back"
-        href="/student/tryout"
+        href="/student/tryout/history"
       >
-        Kembali ke Tryout <Icon name="back" width={18} height={18} />
+        Lihat riwayat Tryout <Icon name="back" width={18} height={18} />
       </Link>
     </div>
   );

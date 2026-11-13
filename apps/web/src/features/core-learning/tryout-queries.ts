@@ -67,7 +67,7 @@ export function scheduledTryouts(batches: StudentTryoutBatchDto[]) {
         batch.attemptStatus === 'IN_PROGRESS' ||
         (!batch.attemptId && (batch.state === 'OPEN' || batch.state === 'SCHEDULED')),
     )
-    .sort((a, b) => rank(a) - rank(b) || a.startsAt.localeCompare(b.startsAt));
+    .sort((a, b) => rank(a) - rank(b) || Date.parse(a.startsAt) - Date.parse(b.startsAt));
 }
 
 export function useTryoutSummary(token: string) {

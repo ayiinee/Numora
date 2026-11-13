@@ -897,7 +897,9 @@ describe('responsive learning composition', () => {
       });
       renderStudent(<TryoutScreen />);
       if (state === 'inProgress') await screen.findByRole('heading', { name: 'Paket Fiktif' });
-      else await screen.findByRole('heading', { name: 'Tryout sudah dikerjakan' });
+      else await screen.findByRole('heading', {
+        name: state === 'waitingIrt' ? 'Jawaban terkirim · Menunggu hasil' : 'Hasil tersedia',
+      });
       expect(screen.queryByRole('button', { name: /Mulai pengerjaan/ })).toBeNull();
       expect(screen.queryByText(/sudah bergabung ke kelas/)).toBeNull();
       if (state === 'inProgress') {
@@ -905,7 +907,10 @@ describe('responsive learning composition', () => {
           '/student/tryout/attempt-test',
         );
       } else {
-        expect(screen.queryByRole('link', { name: 'Lihat hasil simulasi' })).toBeNull();
+        expect(
+          screen.getByRole('link', { name: state === 'waitingIrt' ? 'Lihat status hasil' : 'Lihat hasil' })
+            .getAttribute('href'),
+        ).toBe('/student/tryout/attempt-test/result');
       }
     },
   );

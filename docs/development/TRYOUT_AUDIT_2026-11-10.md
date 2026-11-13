@@ -56,3 +56,13 @@ Daftar batch, Riwayat, dan halaman hasil memakai pemeriksaan publikasi yang sama
 Verifikasi lokal tindak lanjut: 103 tes frontend, 18 skenario Chromium pada build produksi lokal, dan 17 tes API pada PostgreSQL disposable. Chromium mencakup 320, 390, 768, 1280, serta 1440 px, termasuk layar pendek 320 × 640, simpan ulang, Back, PGK, dan pengiriman otomatis. Kontrak, lint, typecheck, dan build Web/API lulus. Pengujian memakai data sintetis dan tidak menguji publikasi IRT produksi.
 
 Audit ulang P1: polling setelah waktu habis mempertahankan status kedaluwarsa dan tidak memicu kirim ulang otomatis. Form ditutup jika server menyatakan sesi batal atau akses hilang, sedangkan gangguan sementara mempertahankan jawaban lokal. Daftar batch memakai koneksi transaksi yang sama untuk memeriksa publikasi. Tes delegasi batch lulus dengan pool satu koneksi, bersama 105 tes frontend, 18 skenario Chromium sintetis, dan 17 tes API pendukung.
+
+## Perbaikan P2 UI Siswa
+
+**ENGINEERING DECISION — perbaikan UX Siswa:** kartu katalog menampilkan waktu buka dan tutup dari API dalam WIB dan mengelompokkan batch terjadwal di bagian Akan datang. Halaman hasil menampilkan nilai terbit pada skala 0–100 dengan format angka Indonesia. Akses pembahasan berada di kartu nilai dan mengikuti data hasil yang diterbitkan server.
+
+Pembahasan Tryout menggunakan label Jawabanmu dan Kunci pada opsi atau pernyataan. Peta soal menampilkan status dari data penilaian server. Panel desktop dan dialog mobile menggunakan peta yang sama, dengan fokus ke judul soal setelah siswa memilih nomor. Status setelah pengiriman menampilkan aksi untuk memeriksa hasil atau membuka Riwayat.
+
+Regresi lokal mencakup 32 skenario Chromium dengan fixture sintetis, termasuk Tryout, Drill dan Pretest. Tampilan P2 diuji pada 320, 390, 768, 1280 dan 1440 px, serta reflow 640 CSS px yang setara dengan viewport 1280 px pada zoom 200 persen. Cakupan termasuk akses pembahasan sebelum rilis, nilai null, jadwal WIB, target sentuh, kontras peta, fokus, Escape, rumus dan gambar. Pengujian ini tidak mencakup IRT produksi.
+
+Audit ulang P2 memeriksa penyegaran pembahasan, reflow rumus panjang, tanggal yang tidak dapat dibaca, dan pemulihan status Riwayat. Gangguan koneksi sementara mempertahankan posisi pada pembahasan yang sudah dirilis. Hasil audit lokal mencakup 167 tes Core Learning, 32 skenario Chromium, lint, typecheck, dan build Web.

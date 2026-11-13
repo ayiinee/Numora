@@ -124,11 +124,19 @@ export function ActivityRow({
           <Badge variant="success">Hasil tersedia</Badge>
         ) : !ready ? (
           <Badge variant="warning" style={{ whiteSpace: 'normal' }}>
-            {tryoutStatus === 'overdue' ? 'Hasil belum tersedia dan melewati tenggat' : 'Menunggu hasil'}
+            {tryoutStatus === 'overdue'
+              ? 'Hasil belum tersedia dan melewati tenggat'
+              : tryout
+                ? 'Jawaban terkirim · Menunggu hasil'
+                : 'Menunggu hasil'}
           </Badge>
+        ) : tryout && item.score === null ? (
+          <span>Nilai tidak tersedia</span>
         ) : (
           <>
-            <strong>{item.score ?? '—'}</strong>
+            <strong>
+              {tryout ? item.score?.toLocaleString('id-ID', { maximumFractionDigits: 20 }) : item.score ?? '—'}
+            </strong>
             <small>Nilai</small>
           </>
         )}
