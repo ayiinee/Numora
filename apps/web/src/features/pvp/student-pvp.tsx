@@ -173,6 +173,20 @@ export function PvpScreen() {
                   },
                 ]}
               />
+              {socket.error && (
+                <p role="alert" className="pvp-command-error">
+                  {socket.error}
+                </p>
+              )}
+              {socket.uncertain && (
+                <Button
+                  variant="secondary"
+                  disabled={socket.busy || !socket.connected}
+                  onClick={socket.retry}
+                >
+                  Periksa permintaan sebelumnya
+                </Button>
+              )}
             </>
           )}
           <Link
@@ -281,20 +295,6 @@ export function PvpScreen() {
           )}
         </aside>
       </div>
-      {socket.error && (
-        <p role="alert" className="pvp-command-error">
-          {socket.error}
-        </p>
-      )}
-      {socket.uncertain && (
-        <Button
-          variant="secondary"
-          disabled={socket.busy || !socket.connected}
-          onClick={socket.retry}
-        >
-          Periksa permintaan sebelumnya
-        </Button>
-      )}
     </AppShell>
   );
 }
@@ -422,13 +422,16 @@ export function PvpMatchScreen() {
     (p) => auth.status === 'ready' && p.studentId === auth.profile.id,
   );
   const closed = snapshot.status === 'FINISHED' || snapshot.status === 'CANCELLED';
+  const left = snapshot.participantActive === false;
   const active = transportActive;
   const disabled = !active || socket.busy || socket.uncertain || !socket.connected;
   const title = closed
     ? 'Hasil Duel PvP'
-    : snapshot.status === 'RUNNING'
-      ? 'Duel Berlangsung'
-      : 'Ruang Tunggu Duel';
+    : left
+      ? 'Duel PvP'
+      : snapshot.status === 'RUNNING'
+        ? 'Duel Berlangsung'
+        : 'Ruang Tunggu Duel';
   function copy(value: string, label: string) {
     void navigator.clipboard
       .writeText(value)
@@ -489,8 +492,8 @@ export function PvpMatchScreen() {
     <LearningFrame title={title} focus className="pvp-match-shell">
       <PvpHeader
         title={title}
-        connected={!closed && active ? socket.connected : undefined}
-        onLeave={!closed ? () => setConfirmLeave(true) : undefined}
+        connected={!closed && !left && active ? socket.connected : undefined}
+        onLeave={!closed && !left ? () => setConfirmLeave(true) : undefined}
       />
       <div className="pvp-match-content">
         {availability.isError && !closed && (
@@ -503,7 +506,7 @@ export function PvpMatchScreen() {
         {availability.data?.available === false && !active && !closed && (
           <Status title="PvP belum tersedia">{availability.data.message}</Status>
         )}
-        {active && !socket.connected && !closed && (
+        {active && !socket.connected && !closed && !left && (
           <Status title="Koneksi terputus" illustration={<StudentMascot pose="offline" compact />}>
             Server memberi kesempatan reconnect selama 20 detik.
             <Button variant="secondary" onClick={socket.reconnect}>
@@ -511,9 +514,12 @@ export function PvpMatchScreen() {
             </Button>
           </Status>
         )}
-        {snapshot.participantActive === false ? (
+        {left ? (
           <Status title="Kamu sudah keluar dari room">
-            Host dapat menunggu pemain pengganti. <Link href="/student/pvp">Kembali ke PvP</Link>
+            Host dapat menunggu pemain pengganti.
+            <Link className="button-link" href="/student/pvp">
+              Kembali ke PvP
+            </Link>
           </Status>
         ) : closed ? (
           <MatchOutcome snapshot={snapshot} selfId={self?.studentId} />
@@ -555,16 +561,6 @@ export function PvpMatchScreen() {
             peers={peerPanel}
             reconnectRemaining={reconnectRemaining}
           />
-        )}
-        {!closed && (
-          <Button
-            variant="ghost"
-            className="pvp-leave-action"
-            disabled={disabled}
-            onClick={() => setConfirmLeave(true)}
-          >
-            Keluar pertandingan
-          </Button>
         )}
         {socket.error && (
           <p role="alert" className="pvp-command-error">

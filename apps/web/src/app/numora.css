@@ -5162,10 +5162,6 @@ a.settings-row:hover {
   width: 20px;
   height: 20px;
 }
-.pvp-leave-action {
-  color: var(--color-danger) !important;
-  justify-self: center;
-}
 .pvp-command-error {
   color: var(--color-danger);
   font-size: 13px;
