@@ -215,8 +215,8 @@ export type CalibrationResult = {
       attemptId: Uuid;
       packageId: Uuid;
       packageVersion: number;
-      batchId: Uuid;
-      status: 'SCORED' | 'INSUFFICIENT' | 'NOT_COMPARABLE' | 'UNSCORABLE';
+      batchId: Uuid | null;
+      status: 'SCORED' | 'INSUFFICIENT' | 'NOT_COMPARABLE' | 'UNSCORABLE' | 'NOT_EVALUATED';
       theta: number | null;
       standardError: number | null;
       score: number | null;

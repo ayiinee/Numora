@@ -33,7 +33,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-000000000065",
@@ -46,7 +48,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-000000000066",
@@ -59,7 +63,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000c8",
@@ -72,7 +78,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000c9",
@@ -85,7 +93,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000ca",
@@ -98,7 +108,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000cb",
@@ -111,7 +123,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000cc",
@@ -124,7 +138,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000cd",
@@ -137,7 +153,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-0000000000ce",
@@ -150,7 +168,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-00000000012c",
@@ -163,7 +183,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-00000000012d",
@@ -176,7 +198,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-00000000012e",
@@ -189,7 +213,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-00000000012f",
@@ -202,7 +228,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-000000000130",
@@ -215,7 +243,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-000000000131",
@@ -228,7 +258,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "questionVersionId": "10000000-0000-4000-8000-000000000132",
@@ -241,7 +273,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       }
     ],
     "packages": [
@@ -253,7 +287,9 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       },
       {
         "packageId": "10000000-0000-4000-8000-00000000000b",
@@ -263,51 +299,102 @@
           "gate": "NOT_EVALUATED",
           "checks": []
         },
-        "reasonCodes": ["MODEL_FIT_FAILED"]
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
       }
     ],
-    "respondents": [],
+    "respondents": [
+      {
+        "respondentId": "10000000-0000-4000-8000-00000000001e",
+        "attemptId": "10000000-0000-4000-8000-000000000028",
+        "packageId": "10000000-0000-4000-8000-00000000000a",
+        "packageVersion": 1,
+        "batchId": null,
+        "status": "NOT_EVALUATED",
+        "theta": null,
+        "standardError": null,
+        "score": null,
+        "scoreMapping": null,
+        "referencePackage": null,
+        "usedQuestionVersionIds": [],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
+      },
+      {
+        "respondentId": "10000000-0000-4000-8000-00000000001f",
+        "attemptId": "10000000-0000-4000-8000-000000000029",
+        "packageId": "10000000-0000-4000-8000-00000000000b",
+        "packageVersion": 2,
+        "batchId": null,
+        "status": "NOT_EVALUATED",
+        "theta": null,
+        "standardError": null,
+        "score": null,
+        "scoreMapping": null,
+        "referencePackage": null,
+        "usedQuestionVersionIds": [],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ]
+      }
+    ],
     "comparisons": [
       {
         "comparisonId": "10000000-0000-4000-8000-000000000190",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000191",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000192",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000193",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000194",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000195",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       },
       {
         "comparisonId": "10000000-0000-4000-8000-000000000196",
         "decision": "ANOMALY",
-        "reasonCodes": ["MODEL_FIT_FAILED"],
+        "reasonCodes": [
+          "MODEL_FIT_FAILED"
+        ],
         "metrics": []
       }
     ]
