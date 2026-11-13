@@ -128,6 +128,7 @@ const data = {
         status: 'OPEN' as const,
         followUp: null,
         reportedAt: '2026-10-02T08:00:00.000Z',
+        reportCount: 2,
       },
       {
         id: 'video-report-test',
@@ -138,6 +139,7 @@ const data = {
         status: 'IN_REVIEW' as const,
         followUp: 'Sedang diperiksa.',
         reportedAt: '2026-10-02T09:00:00.000Z',
+        reportCount: 1,
       },
     ],
   },
@@ -265,6 +267,22 @@ afterEach(() => {
   vi.restoreAllMocks();
 });
 describe('Admin content UI', () => {
+  it('shows the package blocking a material archive and leaves the material ready', async () => {
+    vi.mocked(apiRequest).mockRejectedValueOnce(
+      new ApiProblem(
+        409,
+        'CURRICULUM_USED_BY_ACTIVE_PACKAGES',
+        'Materi masih dipakai Paket Drill A.',
+      ),
+    );
+    render(<AdminContentScreen initialView="curriculum" />);
+    const material = (await screen.findByText('Subbab demo')).closest('li')!;
+    fireEvent.click(within(material).getByRole('button', { name: 'Arsipkan' }));
+    fireEvent.click(within(screen.getByRole('dialog')).getByRole('button', { name: 'Konfirmasi' }));
+    expect(await screen.findByText('Materi masih dipakai Paket Drill A.')).toBeTruthy();
+    expect(within(material).getByText(/SUB-TEST.*READY/)).toBeTruthy();
+  });
+
   it('assembles all thirty Tryout questions across independent selector pages without losing selection', async () => {
     const questions = Array.from({ length: 30 }, (_, i) => ({
       ...data.versions.items[0],
@@ -604,23 +622,14 @@ describe('Admin content UI', () => {
     expect(await screen.findByText('TRYOUT · SUCCEEDED')).toBeTruthy();
     expect(screen.getByText(/Rilis belum tercatat/)).toBeTruthy();
   });
-  it('resolves a question report with a required follow-up through the Admin API', async () => {
+  it('opens the grouped question case for review before permitting closure', async () => {
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
     const report = await screen.findByTestId('report-question-report-test');
-    fireEvent.change(within(report).getByLabelText('Status tindak lanjut'), {
-      target: { value: 'RESOLVED' },
-    });
-    fireEvent.change(within(report).getByLabelText('Catatan tindak lanjut'), {
-      target: { value: 'Kunci jawaban dikirim ke Curriculum untuk koreksi.' },
-    });
-    fireEvent.submit(report.querySelector('form')!);
-    await waitFor(() =>
-      expect(resolveReport).toHaveBeenCalledWith('test-token', 'QUESTION', 'question-report-test', {
-        status: 'RESOLVED',
-        followUp: 'Kunci jawaban dikirim ke Curriculum untuk koreksi.',
-      }),
+    expect(within(report).getByRole('link', { name: 'Buka kasus' }).getAttribute('href')).toBe(
+      '/admin/reports/QUESTION/question-report-test',
     );
+    expect(within(report).queryByLabelText('Status tindak lanjut')).toBeNull();
   });
   it('filters video reports on the server and links the independent target detail', async () => {
     render(<AdminContentScreen />);
@@ -705,13 +714,14 @@ describe('Admin content UI', () => {
     );
     render(<AdminContentScreen />);
     fireEvent.click(await screen.findByRole('button', { name: 'Laporan' }));
-    const report = await screen.findByTestId('report-question-report-test');
+    const report = await screen.findByTestId('report-video-report-test');
     fireEvent.change(within(report).getByLabelText('Catatan tindak lanjut'), {
       target: { value: 'Tindak lanjut DEMO' },
     });
     fireEvent.submit(report.querySelector('form')!);
     await screen.findByText('TEST session expired');
     expect(screen.queryByTestId('report-question-report-test')).toBeNull();
+    expect(screen.queryByTestId('report-video-report-test')).toBeNull();
     expect(screen.getByRole('link', { name: 'Ke halaman masuk' })).toBeTruthy();
   });
   it('changes question pages without clearing the unsaved editor', async () => {

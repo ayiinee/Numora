@@ -24,7 +24,23 @@ export async function adminMutation<T extends { id: string }>(
   } catch (error) {
     let cause: unknown = error;
     for (let depth = 0; depth < 4 && cause instanceof Object; depth++) {
-      const record = cause as { code?: string; cause?: unknown };
+      const record = cause as {
+        code?: string;
+        constraint_name?: string;
+        detail?: string;
+        cause?: unknown;
+      };
+      if (record.code === '23514' && record.constraint_name === 'curriculum_active_packages')
+        throw new ConflictException({
+          code: 'CURRICULUM_USED_BY_ACTIVE_PACKAGES',
+          detail:
+            `Materi masih dipakai paket aktif. Selesaikan ketergantungan berikut sebelum mengarsipkan materi. ${record.detail ?? ''}`.trim(),
+        });
+      if (record.code === '23514' && record.constraint_name === 'package_archived_curriculum')
+        throw new ConflictException({
+          code: 'PACKAGE_USES_ARCHIVED_CURRICULUM',
+          detail: 'Paket tidak bisa diterbitkan karena memakai materi yang sudah diarsipkan.',
+        });
       if (record.code === '23505')
         throw new ConflictException('Kode, slug, urutan, atau versi sudah digunakan.');
       if (record.code === '23503') throw new BadRequestException('Referensi tidak tersedia.');

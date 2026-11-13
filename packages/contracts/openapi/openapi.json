@@ -18722,6 +18722,9 @@
           },
           "reportedAt": {
             "type": "string"
+          },
+          "reportCount": {
+            "type": "number"
           }
         },
         "required": [
@@ -18732,7 +18735,8 @@
           "details",
           "status",
           "followUp",
-          "reportedAt"
+          "reportedAt",
+          "reportCount"
         ]
       },
       "AdminReportsDto": {
@@ -18797,6 +18801,70 @@
           "evidence"
         ]
       },
+      "AdminQuestionReportSourceDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "category": {
+            "type": "string"
+          },
+          "details": {
+            "type": "string",
+            "nullable": true
+          },
+          "reportedAt": {
+            "type": "string"
+          },
+          "legacyFollowUp": {
+            "type": "string",
+            "nullable": true
+          }
+        },
+        "required": [
+          "id",
+          "category",
+          "details",
+          "reportedAt",
+          "legacyFollowUp"
+        ]
+      },
+      "AdminQuestionReportHistoryDto": {
+        "type": "object",
+        "properties": {
+          "id": {
+            "type": "string"
+          },
+          "status": {
+            "type": "string",
+            "enum": [
+              "OPEN",
+              "IN_REVIEW",
+              "RESOLVED",
+              "REJECTED"
+            ]
+          },
+          "reason": {
+            "type": "string",
+            "nullable": true
+          },
+          "revisionQuestionVersionId": {
+            "type": "string",
+            "nullable": true
+          },
+          "recordedAt": {
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "status",
+          "reason",
+          "revisionQuestionVersionId",
+          "recordedAt"
+        ]
+      },
       "AdminReportDetailDto": {
         "type": "object",
         "properties": {
@@ -18836,6 +18904,9 @@
           "reportedAt": {
             "type": "string"
           },
+          "reportCount": {
+            "type": "number"
+          },
           "question": {
             "nullable": true,
             "type": "object",
@@ -18857,6 +18928,22 @@
           "revisionQuestionVersionId": {
             "type": "string",
             "nullable": true
+          },
+          "caseRevision": {
+            "type": "number",
+            "nullable": true
+          },
+          "sourceReports": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminQuestionReportSourceDto"
+            }
+          },
+          "history": {
+            "type": "array",
+            "items": {
+              "$ref": "#/components/schemas/AdminQuestionReportHistoryDto"
+            }
           }
         },
         "required": [
@@ -18868,14 +18955,27 @@
           "status",
           "followUp",
           "reportedAt",
+          "reportCount",
           "question",
           "video",
-          "revisionQuestionVersionId"
+          "revisionQuestionVersionId",
+          "caseRevision",
+          "sourceReports",
+          "history"
         ]
       },
       "ResolveReportDto": {
         "type": "object",
         "properties": {
+          "expectedRevision": {
+            "type": "number",
+            "minimum": 0,
+            "description": "Required when updating a question report case."
+          },
+          "contentCorrected": {
+            "type": "boolean",
+            "description": "Required when closing a question report case."
+          },
           "revisionQuestionVersionId": {
             "type": "string",
             "format": "uuid"
@@ -18894,8 +18994,7 @@
           }
         },
         "required": [
-          "status",
-          "followUp"
+          "status"
         ]
       },
       "LearningInteractionDto": {

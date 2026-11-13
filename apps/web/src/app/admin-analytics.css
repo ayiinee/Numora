@@ -226,8 +226,9 @@
 }
 .analytics-attention li > div {
   display: flex;
+  flex-wrap: wrap;
   justify-content: space-between;
-  gap: 16px;
+  gap: 4px 16px;
   align-items: flex-start;
 }
 .analytics-attention .analytics-value {

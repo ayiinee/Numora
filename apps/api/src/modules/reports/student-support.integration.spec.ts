@@ -400,26 +400,29 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
       return pages;
     }
 
+    const caseDetail = await (
+      await fixture.request(`admin/reports/QUESTION/${questionIds[0]}`)
+    ).json();
     const expectedOpen = [
-      ...questionIds.map((reportId) => ({ id: reportId, kind: 'QUESTION' as const })),
-      ...videoIds.map((reportId) => ({ id: reportId, kind: 'VIDEO' as const })),
+      { id: caseDetail.id, kind: 'QUESTION' },
+      ...videoIds.map((reportId) => ({ id: reportId, kind: 'VIDEO' })),
     ];
-    const mixedPages = await collectPages('status=OPEN', [0, 5, 10, 15, 20]);
-    expect(mixedPages[0]!.total).toBe(beforeQuestion.total + beforeVideo.total + 24);
+    const mixedPages = await collectPages('status=OPEN', [0, 5, 10]);
+    expect(mixedPages[0]!.total).toBe(beforeQuestion.total + beforeVideo.total + 13);
     const mixedItems = mixedPages.flatMap((page) => page.items);
     const beyond = await readPage(30, 'status=OPEN');
     expect(beyond.items).toEqual([]);
-    expect(beyond.total).toBe(24);
+    expect(beyond.total).toBe(13);
     expect(mixedItems.map(({ id, kind }) => ({ id, kind }))).toEqual(expectedOpen);
-    expect(new Set(mixedItems.map((report) => report.id)).size).toBe(24);
+    expect(new Set(mixedItems.map((report) => report.id)).size).toBe(13);
     expect(mixedItems.every((report) => report.status === 'OPEN')).toBe(true);
 
     for (const [kind, reportIds, initialTotal] of [
-      ['QUESTION', questionIds, beforeQuestion.total],
+      ['QUESTION', [caseDetail.id], beforeQuestion.total],
       ['VIDEO', videoIds, beforeVideo.total],
     ] as const) {
       const pages = await collectPages(`kind=${kind}&status=OPEN`, [0, 5, 10]);
-      expect(pages[0]!.total).toBe(initialTotal + 12);
+      expect(pages[0]!.total).toBe(initialTotal + reportIds.length);
       expect(pages.flatMap((page) => page.items.map((report) => report.id))).toEqual(reportIds);
       expect(pages.flatMap((page) => page.items).every((report) => report.kind === kind)).toBe(
         true,
@@ -427,13 +430,10 @@ databaseSuite('Student reports and recommendations through HTTP/PostgreSQL', () 
     }
 
     const inReviewPage = await readPage(0, 'status=IN_REVIEW');
-    expect(inReviewPage.total).toBe(beforeInReview.total + 2);
-    expect(inReviewPage.items.slice(0, 2).map(({ id, kind }) => ({ id, kind }))).toEqual([
-      { id: inReviewQuestionId, kind: 'QUESTION' },
+    expect(inReviewPage.total).toBe(beforeInReview.total + 1);
+    expect(inReviewPage.items.map(({ id, kind }) => ({ id, kind }))).toEqual([
       { id: inReviewVideoId, kind: 'VIDEO' },
     ]);
-    expect(inReviewPage.items.slice(0, 2).every((report) => report.status === 'IN_REVIEW')).toBe(
-      true,
-    );
+    expect(inReviewPage.items.every((report) => report.status === 'IN_REVIEW')).toBe(true);
   });
 });

@@ -146,7 +146,7 @@ export function Reports({
             ))}
           </select>
         </label>
-        <span role="status">{visible.length} laporan ditampilkan</span>
+        <span role="status">{visible.length} entri ditampilkan</span>
       </div>
       <ServerFilters
         filters={filters}
@@ -172,7 +172,9 @@ export function Reports({
                 data-testid={`report-${report.id}`}
               >
                 <div className="admin-report-heading">
-                  <strong>{report.kind === 'QUESTION' ? 'Laporan soal' : 'Laporan video'}</strong>
+                  <strong>
+                    {report.kind === 'QUESTION' ? 'Kasus laporan soal' : 'Laporan video'}
+                  </strong>
                   <Badge
                     className="status-badge"
                     variant={
@@ -185,13 +187,15 @@ export function Reports({
                             : 'default'
                     }
                   >
-                    {reportStatusLabel(report.status)}
+                    {reportStatusLabel(report.status, report.kind)}
                   </Badge>
                 </div>
                 <p>Kategori: {report.category}</p>
                 <p>{report.details || 'Pelapor tidak menambahkan rincian.'}</p>
-                <small>Diterima {new Date(report.reportedAt).toLocaleString('id-ID')}</small>
-                <p>Buka detail untuk melihat target historis dan bukti snapshot.</p>
+                <small>
+                  {report.kind === 'QUESTION' && `${report.reportCount} laporan · `}
+                  Diterima {new Date(report.reportedAt).toLocaleString('id-ID')}
+                </small>
                 {report.followUp && (
                   <p>
                     <strong>Tindak lanjut tersimpan:</strong> {report.followUp}
@@ -199,7 +203,7 @@ export function Reports({
                 )}
                 <div className="admin-content-actions">
                   <Link href={`/admin/reports/${report.kind}/${report.id}`}>
-                    Detail target & resolution
+                    {report.kind === 'QUESTION' ? 'Buka kasus' : 'Detail target & resolution'}
                   </Link>
                   <Button
                     type="button"
@@ -210,42 +214,44 @@ export function Reports({
                     {report.kind === 'VIDEO' ? 'Kelola metadata video' : 'Buka daftar soal'}
                   </Button>
                 </div>
-                <AdminEditorForm
-                  busy={busy}
-                  className="admin-content-form"
-                  onSubmit={(event) => {
-                    event.preventDefault();
-                    const form = new FormData(event.currentTarget);
-                    void run(() =>
-                      resolveReport(token, report.kind, report.id, {
-                        status: field(form, 'status') as Report['status'],
-                        followUp: field(form, 'followUp'),
-                      }),
-                    );
-                  }}
-                >
-                  <Field label="Status tindak lanjut" name="status">
-                    <select name="status" defaultValue={report.status}>
-                      {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
-                        <option key={value} value={value}>
-                          {reportStatusLabel(value)}
-                        </option>
-                      ))}
-                    </select>
-                  </Field>
-                  <Field label="Catatan tindak lanjut" name="followUp">
-                    <textarea
-                      name="followUp"
-                      defaultValue={report.followUp ?? ''}
-                      required
-                      maxLength={2000}
-                    />
-                  </Field>
-                  <small>{report.followUp?.length ?? 0}/2000 karakter tersimpan</small>
-                  <Button type="submit" disabled={busy}>
-                    Simpan status dan tindak lanjut
-                  </Button>
-                </AdminEditorForm>
+                {report.kind === 'VIDEO' && (
+                  <AdminEditorForm
+                    busy={busy}
+                    className="admin-content-form"
+                    onSubmit={(event) => {
+                      event.preventDefault();
+                      const form = new FormData(event.currentTarget);
+                      void run(() =>
+                        resolveReport(token, report.kind, report.id, {
+                          status: field(form, 'status') as Report['status'],
+                          followUp: field(form, 'followUp'),
+                        }),
+                      );
+                    }}
+                  >
+                    <Field label="Status tindak lanjut" name="status">
+                      <select name="status" defaultValue={report.status}>
+                        {(['OPEN', 'IN_REVIEW', 'RESOLVED', 'REJECTED'] as const).map((value) => (
+                          <option key={value} value={value}>
+                            {reportStatusLabel(value)}
+                          </option>
+                        ))}
+                      </select>
+                    </Field>
+                    <Field label="Catatan tindak lanjut" name="followUp">
+                      <textarea
+                        name="followUp"
+                        defaultValue={report.followUp ?? ''}
+                        required
+                        maxLength={2000}
+                      />
+                    </Field>
+                    <small>{report.followUp?.length ?? 0}/2000 karakter tersimpan</small>
+                    <Button type="submit" disabled={busy}>
+                      Simpan status dan tindak lanjut
+                    </Button>
+                  </AdminEditorForm>
+                )}
               </li>
             );
           })}
@@ -255,7 +261,14 @@ export function Reports({
   );
 }
 
-export function reportStatusLabel(status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED') {
+export function reportStatusLabel(
+  status: 'OPEN' | 'IN_REVIEW' | 'RESOLVED' | 'REJECTED',
+  kind?: 'QUESTION' | 'VIDEO',
+) {
+  if (kind === 'QUESTION')
+    return { OPEN: 'Baru', IN_REVIEW: 'Ditinjau', RESOLVED: 'Selesai', REJECTED: 'Ditolak' }[
+      status
+    ];
   return {
     OPEN: 'Terbuka',
     IN_REVIEW: 'Sedang ditinjau',

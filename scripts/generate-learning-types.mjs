@@ -192,6 +192,8 @@ const groups = [
       'PublishTryoutPackageDto',
       'ReviewContentDto',
       'AdminReportDetailDto',
+      'AdminQuestionReportSourceDto',
+      'AdminQuestionReportHistoryDto',
       'AdminVideoReportTargetDto',
       'ContentReadinessDto',
       'ContentReviewEventDto',

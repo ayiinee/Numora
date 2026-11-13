@@ -6,6 +6,7 @@ import { join, resolve } from 'node:path';
 import { drizzle } from 'drizzle-orm/postgres-js';
 import { migrate } from 'drizzle-orm/postgres-js/migrator';
 import postgres from 'postgres';
+import { migrateIntegratedDatabase } from './integrated-migrations.js';
 
 async function run() {
   const testUrl = process.env.TEST_DATABASE_URL;
@@ -100,7 +101,37 @@ async function run() {
     await client`
       INSERT INTO pvp_match_questions (match_id, package_id, package_item_id, display_order)
       VALUES (${match!.id}, ${pvpPackage!.id}, ${pvpItem!.id}, 1)`;
-    await migrate(drizzle(client), { migrationsFolder: folder });
+    const reportMigration = journal.entries.findIndex((entry) => entry.tag === '0072_question_report_cases');
+    assert.ok(reportMigration > prePvpEntries.length);
+    await writeFile(join(oldFolder, 'meta', '_journal.json'), JSON.stringify({ ...journal, entries: journal.entries.slice(0, reportMigration) }));
+    for (const entry of journal.entries.slice(prePvpEntries.length, reportMigration))
+      await copyFile(join(folder, `${entry.tag}.sql`), join(oldFolder, `${entry.tag}.sql`));
+    await migrate(drizzle(client), { migrationsFolder: oldFolder });
+
+    const [reported] = await client<{ id: string; version_id: string }[]>`
+      SELECT a.id, i.question_version_id AS version_id FROM attempt_answers a
+      JOIN attempt_items i ON i.id = a.attempt_item_id WHERE i.attempt_id = ${attempt!.id}`;
+    assert.ok(reported);
+    const legacyReports = await client<{ id: string }[]>`
+      INSERT INTO question_reports (reporter_student_id, attempt_answer_id, category, status, follow_up, reported_at)
+      VALUES (${student!.id}, ${reported.id}, 'ANSWER_KEY', 'RESOLVED', 'Legacy resolution', '2026-01-01'),
+             (${student!.id}, ${reported.id}, 'EXPLANATION', 'OPEN', NULL, '2026-01-02')
+      RETURNING id`;
+    await client`INSERT INTO audit_logs (action, entity_type, entity_id, metadata)
+      VALUES ('report_updated', 'question_report', ${legacyReports[0]!.id},
+        '{"status":"RESOLVED","reason":"Legacy resolution"}'::jsonb)`;
+    const sourcesBefore = await client`SELECT to_jsonb(r) AS source FROM question_reports r ORDER BY r.id`;
+    await migrateIntegratedDatabase(client, folder);
+    await migrateIntegratedDatabase(client, folder);
+    assert.deepEqual(await client`SELECT to_jsonb(r) AS source FROM question_reports r ORDER BY r.id`, sourcesBefore);
+    const [reportCase] = await client`SELECT id, question_version_id, status, revision FROM question_report_cases`;
+    assert.deepEqual(reportCase && { ...reportCase }, { id: legacyReports[0]!.id, question_version_id: reported.version_id, status: 'OPEN', revision: 0 });
+    const [access] = await client`SELECT has_table_privilege('numora_main_runtime', 'question_report_cases', 'UPDATE') AS main,
+      has_table_privilege('numora_irt_runtime', 'question_report_cases', 'SELECT') AS irt`;
+    assert.deepEqual(access && { ...access }, { main: true, irt: false });
+    const [legacyAudit] = await client`SELECT metadata->>'reason' AS reason FROM audit_logs WHERE entity_id = ${legacyReports[0]!.id}`;
+    assert.equal(legacyAudit?.reason, 'Legacy resolution');
+    console.log('Legacy question report sources and moderation audit survived case backfill and migration replay.');
     const [pvpBackfill] = await client<{ version: string; policy: string; created: Date; ended: Date }[]>`
       SELECT q.question_version_id::text AS version, m.scoring_policy_version_id::text AS policy, m.created_at AS created, m.ended_at AS ended
       FROM pvp_matches m JOIN pvp_match_questions q ON q.match_id=m.id WHERE m.id=${match!.id}`;
