@@ -17,5 +17,3 @@ def check(folder):
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('folders',nargs='+');a=ap.parse_args(); values=[check(Path(x)) for x in a.folders]; assert values[0]==check(Path(a.folders[0])); print(json.dumps({'status':'PASS','digests':values}))
 if __name__=='__main__':main()
-
-

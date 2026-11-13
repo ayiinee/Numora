@@ -35,6 +35,3 @@ def build(ai, small=False):
 def main():
  ap=argparse.ArgumentParser();ap.add_argument('--ai-repo',type=Path,required=True);ap.add_argument('--output',type=Path,required=True);ap.add_argument('--small',action='store_true');a=ap.parse_args(); payload=build(a.ai_repo.resolve(),a.small); a.output.mkdir(parents=True,exist_ok=True); (a.output/'drill-level-input.json').write_text(json.dumps(payload,ensure_ascii=False,sort_keys=True,indent=2)+'\n'); (a.output/'manifest.json').write_text(json.dumps({'version':'irt-drill-frozen-input-v1','sha256':digest(payload),'respondents':payload['manifest']['respondentCount'],'itemsPerArm':10,'anchorsPerArm':3,'focalPerArm':7,'productionApproved':False},indent=2)+'\n'); print(json.dumps({'sha256':digest(payload),'respondents':payload['manifest']['respondentCount'],'small':a.small}))
 if __name__=='__main__': main()
-
-
-
