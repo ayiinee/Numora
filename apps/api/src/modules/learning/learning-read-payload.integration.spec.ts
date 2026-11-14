@@ -588,6 +588,8 @@ describe.skipIf(!testUrl)(
     });
     it('recovers from corrupt Redis values and a disconnected cache without stale hierarchy', async () => {
       const previousRedis = process.env.REDIS_URL;
+      const previousPrefix = process.env.BULLMQ_PREFIX;
+      process.env.BULLMQ_PREFIX ??= `TEST-cache-${suffix}`;
       const cache = new CurriculumCache();
       let redis: Redis | undefined;
       try {
@@ -633,6 +635,8 @@ describe.skipIf(!testUrl)(
         redis?.disconnect();
         if (previousRedis === undefined) delete process.env.REDIS_URL;
         else process.env.REDIS_URL = previousRedis;
+        if (previousPrefix === undefined) delete process.env.BULLMQ_PREFIX;
+        else process.env.BULLMQ_PREFIX = previousPrefix;
       }
     });
     it('measures revision-row contention and preserves atomic invalidation across concurrent writers', async () => {
