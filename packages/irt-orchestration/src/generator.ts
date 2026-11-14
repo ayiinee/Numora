@@ -245,7 +245,11 @@ export async function retryGeneration(client: Sql, actor: string, key: string, i
 export async function generationDetail(client: Sql, id: string) {
   requireGeneratorEnabled();
   await requireGeneratorMain(client);
-  const [r] = await client<
+  return (await generationDetails(client, [id]))[0]!;
+}
+async function generationDetails(client: Sql, ids: string[]) {
+  if (!ids.length) return [];
+  const rows = await client<
     {
       id: string;
       status: string;
@@ -264,18 +268,24 @@ export async function generationDetail(client: Sql, id: string) {
     LEFT JOIN irt_compute.compute_executions e ON e.dispatch_id=d.id
     LEFT JOIN analytics_outbox o ON o.entity_id=r.id AND o.event_name='analysis.requested'
     LEFT JOIN outbox_deliveries delivery ON delivery.outbox_id=o.id AND delivery.consumer='irt_compute'
-    WHERE r.id=${id} AND r.request_type='GENERATE_VARIANTS'`;
-  if (!r) fail('GENERATOR_REQUEST_NOT_FOUND', 404);
-  return {
-    id: r.id,
-    label: r.label,
-    status: r.status,
-    dispatchGeneration: r.generation,
-    executionStatus: r.execution_status,
-    leaseExpired: r.lease_expired ?? false,
-    failureCode: r.failure_code && /^[A-Z0-9_]{1,80}$/.test(r.failure_code) ? r.failure_code : null,
-    accepted: !!r.accepted_execution_id,
-  };
+    WHERE r.id=ANY(${ids}::uuid[]) AND r.request_type='GENERATE_VARIANTS'`;
+  const byId = new Map<string, (typeof rows)[number]>();
+  for (const row of rows) if (!byId.has(row.id)) byId.set(row.id, row);
+  return ids.map((id) => {
+    const r = byId.get(id);
+    if (!r) fail('GENERATOR_REQUEST_NOT_FOUND', 404);
+    return {
+      id: r.id,
+      label: r.label,
+      status: r.status,
+      dispatchGeneration: r.generation,
+      executionStatus: r.execution_status,
+      leaseExpired: r.lease_expired ?? false,
+      failureCode:
+        r.failure_code && /^[A-Z0-9_]{1,80}$/.test(r.failure_code) ? r.failure_code : null,
+      accepted: !!r.accepted_execution_id,
+    };
+  });
 }
 export async function listGenerations(client: Sql, limit: number, offset: number) {
   requireGeneratorEnabled();
@@ -285,7 +295,12 @@ export async function listGenerations(client: Sql, limit: number, offset: number
   >`SELECT r.id FROM analysis_requests r WHERE r.request_type='GENERATE_VARIANTS'
     AND EXISTS(SELECT 1 FROM analysis_request_dispatches d WHERE d.request_id=r.id AND d.generation=1)
     ORDER BY r.created_at DESC,r.id DESC LIMIT ${limit} OFFSET ${offset}`;
-  return { items: await Promise.all(rows.map((r) => generationDetail(client, r.id))) };
+  return {
+    items: await generationDetails(
+      client,
+      rows.map((r) => r.id),
+    ),
+  };
 }
 
 export interface CandidatePayload {
