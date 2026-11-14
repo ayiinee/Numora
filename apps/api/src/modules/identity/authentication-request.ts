@@ -1,4 +1,5 @@
 import { AsyncLocalStorage } from 'node:async_hooks';
+import { observeRuntime } from '@tka/database';
 import type { User } from '@supabase/supabase-js';
 import type { IncomingMessage, ServerResponse } from 'node:http';
 
@@ -38,7 +39,10 @@ export function authenticateForRequest(
     state.verified.set(owner, tokens);
   }
   const previous = tokens.get(token);
-  if (previous) return previous;
+  if (previous) {
+    observeRuntime('numora_auth_request_reuse', 1);
+    return previous;
+  }
   const pending = verify();
   tokens.set(token, pending);
   // Share an in-flight failure, but allow an explicit retry to revalidate.

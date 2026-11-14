@@ -1,6 +1,7 @@
 import { expect, it, vi } from 'vitest';
 const rows = vi.hoisted(() => vi.fn());
-vi.mock('@tka/database', () => ({
+vi.mock('@tka/database', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tka/database')>()),
   getDatabase: () => ({ db: { select: () => ({ from: () => ({ where: rows }) }) } }),
   pvpMatches: { id: 'id', status: 'status' },
 }));

@@ -29,7 +29,8 @@ vi.mock('bullmq', () => ({
     return mocks.worker;
   }),
 }));
-vi.mock('@tka/database', () => ({
+vi.mock('@tka/database', async (importOriginal) => ({
+  ...(await importOriginal<typeof import('@tka/database')>()),
   checkDatabaseConnection: mocks.checkDatabase,
   closeDatabaseConnection: mocks.closeDatabase,
 }));

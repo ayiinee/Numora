@@ -9,6 +9,7 @@ import {
 } from '@nestjs/common';
 import {
   getDatabase,
+  measureRuntime,
   classMemberships,
   schools,
   teacherSchoolMemberships,
@@ -55,7 +56,9 @@ export class IdentityService {
     const token = bearerToken(authorization);
     if (!token) throw new UnauthorizedException('Bearer token is required.');
     return authenticateForRequest(this, token, async () => {
-      const { data, error } = await this.authClient().auth.getUser(token);
+      const { data, error } = await measureRuntime('numora_auth_get_user', () =>
+        this.authClient().auth.getUser(token),
+      );
       if (error || !data.user) throw new UnauthorizedException('Invalid or expired token.');
       return data.user;
     });

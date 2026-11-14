@@ -1,4 +1,11 @@
-import { getDatabase } from '@tka/database';
+import {
+  getDatabase,
+  setRuntimeService,
+  startRuntimeHeartbeat,
+  measureRuntime,
+  observeRuntime,
+  gaugeRuntime,
+} from '@tka/database';
 import { pollGenerator } from '@tka/irt-orchestration';
 import { discoverNotificationReleases, drainNotificationBatch } from './notifications.js';
 import { Worker } from 'bullmq';
@@ -35,6 +42,8 @@ async function bounded<T>(operation: Promise<T>): Promise<T> {
 
 // The injectable exit callback lets outage tests exercise shutdown without a cloud connection.
 export async function runWorker(exit: (code: number) => void = (code) => process.exit(code)) {
+  setRuntimeService('worker');
+  let stopMetrics: (() => Promise<void>) | undefined;
   let connection: Redis | undefined;
   let worker: Worker | undefined;
   let irtQueue: ReturnType<typeof createIrtQueue> | undefined;
@@ -91,6 +100,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       } catch {
         console.error('[worker] shutdown did not finish within its grace period');
       } finally {
+        await stopMetrics?.();
         // QUIT itself can be rejected by an exhausted provider. Disconnect sends no command.
         connection?.disconnect();
         try {
@@ -161,13 +171,14 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     if (stopping) return;
     void worker.run().catch(reportError);
     console.log('[worker] Redis connected; background processing enabled');
+    stopMetrics = startRuntimeHeartbeat(connection);
     if (process.env.IRT_V3_ENABLED === 'true') {
       irtQueue = createIrtQueue(connection, prefix);
       const pollIrt = async () => {
         if (stopping || irtBusy) return;
         irtBusy = true;
         try {
-          const result = await pollIrtV3(irtQueue!);
+          const result = await measureRuntime('numora_poll_irt', () => pollIrtV3(irtQueue!));
           if (result.notified || result.adopted || result.failed)
             console.log('[irt-v3] batch', result);
         } catch (error) {
@@ -186,7 +197,7 @@ export async function runWorker(exit: (code: number) => void = (code) => process
         if (stopping || generatorBusy) return;
         generatorBusy = true;
         try {
-          await pollGenerator(getDatabase().client);
+          await measureRuntime('numora_poll_generator', () => pollGenerator(getDatabase().client));
         } catch {
           reportError(new Error('GENERATOR_POLL_FAILED'));
         } finally {
@@ -198,10 +209,13 @@ export async function runWorker(exit: (code: number) => void = (code) => process
     }
 
     const poll = async () => {
-      if (stopping || outboxBusy) return;
+      if (stopping || outboxBusy) {
+        if (outboxBusy) observeRuntime('numora_poll_outbox_overlap', 1);
+        return;
+      }
       outboxBusy = true;
       try {
-        const result = await drainOutboxBatch();
+        const result = await measureRuntime('numora_poll_outbox', () => drainOutboxBatch());
         if (result.processed || result.failed) console.log('[outbox] batch', result);
         if (Date.now() - lastOutboxStatusAt >= 60_000) {
           console.log('[outbox] status', await outboxStatus());
@@ -238,7 +252,10 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       if (stopping || tryoutBusy) return;
       tryoutBusy = true;
       try {
-        const result = await recoverOverdueTryouts(100, recoveryCursor);
+        const result = await measureRuntime('numora_poll_tryout', () =>
+          recoverOverdueTryouts(100, recoveryCursor),
+        );
+        gaugeRuntime('numora_tryout_recovery_backlog', Number(result.backlog));
         recoveryCursor = result.nextCursor;
         if (
           result.finalized ||
@@ -258,8 +275,12 @@ export async function runWorker(exit: (code: number) => void = (code) => process
       if (stopping || notificationBusy) return;
       notificationBusy = true;
       try {
-        await discoverNotificationReleases();
-        const result = await drainNotificationBatch();
+        await measureRuntime('numora_poll_notification_discovery', () =>
+          discoverNotificationReleases(),
+        );
+        const result = await measureRuntime('numora_poll_notification_drain', () =>
+          drainNotificationBatch(),
+        );
         if (result.delivered || result.failed) console.log('[notifications] batch', result);
       } catch {
         reportError(new Error('NOTIFICATION_POLL_FAILED'));

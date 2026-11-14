@@ -4,6 +4,7 @@ import { getDatabase } from '@tka/database';
 import { Redis } from 'ioredis';
 import type { PvpDrillBank } from './pvp-drill-bank';
 import type { Difficulty } from './pvp.policy';
+import { cacheMetrics } from '../../observability/cache-metrics';
 
 /** Only validated content booleans are shared. A revision is checked on every request. */
 export class PvpAvailabilityCache {
@@ -11,7 +12,7 @@ export class PvpAvailabilityCache {
   private connecting: Promise<Redis | undefined> | undefined;
   private readonly pending = new Map<string, Promise<boolean>>();
   private readonly ttlSeconds = 60;
-  readonly metrics = { hits: 0, misses: 0, coalesced: 0, refreshes: 0, redisErrors: 0 };
+  readonly metrics = cacheMetrics('pvp');
 
   async revision() {
     const [row] = await getDatabase().client<{ revision: string }[]>`
