@@ -1030,7 +1030,7 @@
     },
     {
       "name": "comparison needs approval",
-      "input": "examples/drill-input.json",
+      "input": "examples/tryout-input.json",
       "result": null,
       "kind": "input",
       "patches": [
