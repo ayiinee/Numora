@@ -3547,6 +3547,97 @@ describe.skipIf(!testUrl)(
         owner`UPDATE tryout_batches SET closes_at=now()+interval '1 hour',cutoff_at=now()+interval '1 hour',result_due_at=now()+interval '73 hours' WHERE id=${terminal.id}`,
       ).rejects.toThrow();
     }, 120000);
+    it('batches import FK layers across the chunk boundary, skips unchanged content and rolls back failures', async () => {
+      const namespace = `BATCH_${suffix}`,
+        marker = `test_import_batch_${randomUUID().replaceAll('-', '')}`;
+      const relations = [
+        'questions',
+        'question_variants',
+        'content_import_identities',
+        'question_versions',
+        'content_import_versions',
+      ];
+      await owner.unsafe(`CREATE TABLE ${marker}(relation_name text)`);
+      await owner.unsafe(`GRANT INSERT,SELECT ON ${marker} TO numora_main_runtime`);
+      await owner.unsafe(
+        `CREATE FUNCTION ${marker}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN INSERT INTO public.${marker} VALUES(TG_TABLE_NAME); RETURN NULL; END $$`,
+      );
+      for (const relation of relations)
+        await owner.unsafe(
+          `CREATE TRIGGER ${marker} AFTER INSERT ON ${relation} FOR EACH STATEMENT EXECUTE FUNCTION ${marker}()`,
+        );
+      const input = {
+        sourceNamespace: namespace,
+        questions: Array.from({ length: 201 }, (_, index) => {
+          const q = structuredClone(samples[0]!);
+          q.externalId = `TEST_BATCH_${index}`;
+          q.metadata.sourceOrder = index + 1;
+          return q;
+        }),
+      };
+      try {
+        const report = await app.get(ContentImportService).import(actor, randomUUID(), input);
+        expect(report.items).toHaveLength(201);
+        expect(report.items.every((item) => item.outcome === 'CREATED')).toBe(true);
+        expect(new Set(report.items.map((item) => item.questionVersionId)).size).toBe(201);
+        const [first] = await owner`SELECT count(*)::integer AS n FROM ${owner(marker)}`;
+        const changed = structuredClone(input);
+        changed.questions[200]!.stem.text += ' TEST revision';
+        const revised = await app.get(ContentImportService).import(actor, randomUUID(), changed);
+        expect(revised.items.filter((item) => item.outcome === 'SKIPPED_UNCHANGED')).toHaveLength(
+          200,
+        );
+        expect(revised.items[200]!.outcome).toBe('CREATED_REVISION');
+        expect(revised.items.slice(0, 200).map((item) => item.questionVersionId)).toEqual(
+          report.items.slice(0, 200).map((item) => item.questionVersionId),
+        );
+        const [version] =
+          await owner`SELECT version_number,revised_from_question_version_id FROM question_versions WHERE id=${revised.items[200]!.questionVersionId!}`;
+        expect(version).toMatchObject({
+          version_number: 2,
+          revised_from_question_version_id: report.items[200]!.questionVersionId,
+        });
+        const [second] = await owner`SELECT count(*)::integer AS n FROM ${owner(marker)}`;
+        console.info(
+          JSON.stringify({
+            measurement: 'import_write_statements',
+            questions: 201,
+            freshStatements: first!.n,
+            revisionStatements: second!.n - first!.n,
+            unchanged: 200,
+          }),
+        );
+        expect(first!.n).toBe(10);
+        expect(second!.n - first!.n).toBe(2);
+        const sabotage = `${marker}_fail`;
+        const before =
+          await owner`SELECT (SELECT count(*) FROM questions) AS questions,(SELECT count(*) FROM question_versions) AS versions,(SELECT count(*) FROM content_imports) AS imports`;
+        await owner.unsafe(
+          `CREATE FUNCTION ${sabotage}() RETURNS trigger LANGUAGE plpgsql AS $$ BEGIN RAISE EXCEPTION 'TEST ONLY final FK layer failure'; END $$`,
+        );
+        await owner.unsafe(
+          `CREATE TRIGGER ${sabotage} BEFORE INSERT ON content_import_versions FOR EACH ROW EXECUTE FUNCTION ${sabotage}()`,
+        );
+        try {
+          await expect(
+            app
+              .get(ContentImportService)
+              .import(actor, randomUUID(), { ...input, sourceNamespace: namespace + '_ROLLBACK' }),
+          ).rejects.toThrow();
+        } finally {
+          await owner.unsafe(`DROP TRIGGER ${sabotage} ON content_import_versions`);
+          await owner.unsafe(`DROP FUNCTION ${sabotage}()`);
+        }
+        expect(
+          await owner`SELECT (SELECT count(*) FROM questions) AS questions,(SELECT count(*) FROM question_versions) AS versions,(SELECT count(*) FROM content_imports) AS imports`,
+        ).toEqual(before);
+      } finally {
+        for (const relation of relations)
+          await owner.unsafe(`DROP TRIGGER ${marker} ON ${relation}`);
+        await owner.unsafe(`DROP FUNCTION ${marker}()`);
+        await owner.unsafe(`DROP TABLE ${marker}`);
+      }
+    }, 120000);
     it('bounds upload list and fresh import database response bytes', async () => {
       const prefix = `TEST BYTES ${suffix}`;
       const question = structuredClone(samples[0]!);

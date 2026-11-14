@@ -575,6 +575,13 @@ export class ContentImportService {
       report: {},
     });
     const items: ImportItemDto[] = [];
+    const families: (typeof questions.$inferInsert)[] = [];
+    const variants: (typeof questionVariants.$inferInsert)[] = [];
+    const identities: (typeof contentImportIdentities.$inferInsert)[] = [];
+    const versions: (typeof questionVersions.$inferInsert)[] = [];
+    const provenance: (typeof contentImportVersions.$inferInsert)[] = [];
+    const tryoutRubrics = new Map<string, string>();
+    const pretestRubrics = new Map<string, string | undefined>();
     for (const [i, r] of records.entries()) {
       if (
         r.latest?.hash === r.hash &&
@@ -591,38 +598,33 @@ export class ContentImportService {
       let identityId = r.identity?.id;
       let variantId = r.latest?.version.variantId;
       if (!identityId) {
-        const [family] = await tx
-          .insert(questions)
-          .values({
-            primaryCompetencyId: r.level!.competencyId,
-            chapterId: r.level!.chapterId,
-            subchapterId: r.level!.subchapterId,
-            curriculumLevelNumber: r.q.metadata.sourceLevelNumber,
-            sourceRef: r.q.externalId,
-            usageType: target?.assessmentType ?? null,
-            sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
-            status: 'DRAFT',
-          })
-          .returning({ id: questions.id });
-        const [variant] = await tx
-          .insert(questionVariants)
-          .values({
-            questionId: family!.id,
-            variantCode: 'ORIGINAL',
-            kind: 'ORIGINAL',
-            origin: 'JSON_IMPORT_V2',
-          })
-          .returning({ id: questionVariants.id });
-        variantId = variant!.id;
-        const [createdIdentity] = await tx
-          .insert(contentImportIdentities)
-          .values({
-            sourceNamespace: body.sourceNamespace,
-            externalId: r.q.externalId,
-            questionId: family!.id,
-          })
-          .returning({ id: contentImportIdentities.id });
-        identityId = createdIdentity!.id;
+        const familyId = randomUUID();
+        variantId = randomUUID();
+        identityId = randomUUID();
+        families.push({
+          id: familyId,
+          primaryCompetencyId: r.level!.competencyId,
+          chapterId: r.level!.chapterId,
+          subchapterId: r.level!.subchapterId,
+          curriculumLevelNumber: r.q.metadata.sourceLevelNumber,
+          sourceRef: r.q.externalId,
+          usageType: target?.assessmentType ?? null,
+          sourceQuestionId: r.q.metadata.sourceQuestionId ?? null,
+          status: 'DRAFT',
+        });
+        variants.push({
+          id: variantId,
+          questionId: familyId,
+          variantCode: 'ORIGINAL',
+          kind: 'ORIGINAL',
+          origin: 'JSON_IMPORT_V2',
+        });
+        identities.push({
+          id: identityId,
+          sourceNamespace: body.sourceNamespace,
+          externalId: r.q.externalId,
+          questionId: familyId,
+        });
       }
       let rubricId =
         typeof r.q.metadata.scoringRubricVersionId === 'string'
@@ -642,53 +644,59 @@ export class ContentImportService {
           unanswered: 0,
           approvedDecision: 'PROJECT_OWNER_2026_10_07',
         };
-        await tx
-          .insert(scoringRubricVersions)
-          .values({
-            code,
-            version: 1,
-            questionType: r.q.type,
-            maximumScoreCategory: count,
-            definition,
-            digest: digest(definition),
-            status: 'SEALED',
-            approvedByUserId: actor,
-            approvedAt: new Date(),
-          })
-          .onConflictDoNothing();
-        const [rubric] = await tx
-          .select()
-          .from(scoringRubricVersions)
-          .where(and(eq(scoringRubricVersions.code, code), eq(scoringRubricVersions.version, 1)))
-          .for('share');
-        if (!rubric || rubric.status !== 'SEALED' || rubric.digest !== digest(definition))
-          throw new ConflictException({ code: 'SCORING_RUBRIC_NOT_READY' });
-        rubricId = rubric.id;
+        if (!tryoutRubrics.has(code)) {
+          await tx
+            .insert(scoringRubricVersions)
+            .values({
+              code,
+              version: 1,
+              questionType: r.q.type,
+              maximumScoreCategory: count,
+              definition,
+              digest: digest(definition),
+              status: 'SEALED',
+              approvedByUserId: actor,
+              approvedAt: new Date(),
+            })
+            .onConflictDoNothing();
+          const [rubric] = await tx
+            .select()
+            .from(scoringRubricVersions)
+            .where(and(eq(scoringRubricVersions.code, code), eq(scoringRubricVersions.version, 1)))
+            .for('share');
+          if (!rubric || rubric.status !== 'SEALED' || rubric.digest !== digest(definition))
+            throw new ConflictException({ code: 'SCORING_RUBRIC_NOT_READY' });
+          tryoutRubrics.set(code, rubric.id);
+        }
+        rubricId = tryoutRubrics.get(code)!;
       }
-      if (target?.assessmentType === 'PRETEST')
-        rubricId = await ensurePretestRubric(tx, actor, r.q);
+      if (target?.assessmentType === 'PRETEST') {
+        const key = `${r.q.type}:${r.q.options.length}`;
+        if (!pretestRubrics.has(key))
+          pretestRubrics.set(key, await ensurePretestRubric(tx, actor, r.q));
+        rubricId = pretestRubrics.get(key);
+      }
       const data = snapshot(r.q);
-      const [version] = await tx
-        .insert(questionVersions)
-        .values({
-          variantId: variantId!,
-          versionNumber: (r.latest?.version.versionNumber ?? 0) + 1,
-          questionType: r.q.type,
-          scoringRubricVersionId: rubricId,
-          stem: data.stem,
-          optionsOrStatements: { options: data.options, categories: data.categories },
-          answerKey: data.answerKey,
-          explanation: data.explanation,
-          media: data.assets,
-          difficulty: r.q.difficulty ?? null,
-          levelId: r.level?.id ?? null,
-          contentStatus: 'DRAFT',
-          validationState: 'DRAFT',
-          revisedFromQuestionVersionId: r.latest?.version!.id,
-        })
-        .returning({ id: questionVersions.id });
-      await tx.insert(contentImportVersions).values({
-        questionVersionId: version!.id,
+      const versionId = randomUUID();
+      versions.push({
+        id: versionId,
+        variantId: variantId!,
+        versionNumber: (r.latest?.version.versionNumber ?? 0) + 1,
+        questionType: r.q.type,
+        scoringRubricVersionId: rubricId,
+        stem: data.stem,
+        optionsOrStatements: { options: data.options, categories: data.categories },
+        answerKey: data.answerKey,
+        explanation: data.explanation,
+        media: data.assets,
+        difficulty: r.q.difficulty ?? null,
+        levelId: r.level?.id ?? null,
+        contentStatus: 'DRAFT',
+        validationState: 'DRAFT',
+        revisedFromQuestionVersionId: r.latest?.version!.id,
+      });
+      provenance.push({
+        questionVersionId: versionId,
         identityId: identityId!,
         importId: id,
         contentHash: r.hash,
@@ -707,9 +715,19 @@ export class ContentImportService {
       items.push({
         ...report.items[i]!,
         outcome: r.latest ? 'CREATED_REVISION' : 'CREATED',
-        questionVersionId: version!.id,
+        questionVersionId: versionId,
       });
     }
+    // Bound bind parameters/payload while inserting each FK layer in dependency order.
+    const batches = <T>(rows: T[]) =>
+      Array.from({ length: Math.ceil(rows.length / 200) }, (_, index) =>
+        rows.slice(index * 200, (index + 1) * 200),
+      );
+    for (const batch of batches(families)) await tx.insert(questions).values(batch);
+    for (const batch of batches(variants)) await tx.insert(questionVariants).values(batch);
+    for (const batch of batches(identities)) await tx.insert(contentImportIdentities).values(batch);
+    for (const batch of batches(versions)) await tx.insert(questionVersions).values(batch);
+    for (const batch of batches(provenance)) await tx.insert(contentImportVersions).values(batch);
     report.items = items;
     if (target) {
       const ordered = items
