@@ -113,6 +113,7 @@ export function validateInput(input) {
   unique(input.respondents, 'attemptId');
   unique(input.responses, 'attemptItemId');
   unique(input.comparisons, 'comparisonId');
+  if (drill) assert(input.comparisons.length === 0, 'IRT_INPUT_INVALID');
   assert(input.anchorQuestionVersionIds.length === (drill ? 3 : 5), 'IRT_ANCHOR_INVALID');
   assert(
     input.packages.filter((p) => p.armKind === 'ORIGINAL').length === 1 &&
