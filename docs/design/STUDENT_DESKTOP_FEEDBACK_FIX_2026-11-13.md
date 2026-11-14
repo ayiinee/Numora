@@ -73,6 +73,9 @@ berkonflik diselaraskan tanpa mengganti hasil, timer, XP, atau pemeriksaan serve
 Tes query F01 diselaraskan dengan kontrak status main dan diperluas untuk status
 publikasi, sesi kedaluwarsa, serta payload routing invalid. Assertion label pada
 E2E login mengikuti copy Siswa mandiri; pemeriksaan peran dan navigasi tetap ada.
+Selector profil dan connected Drill juga memakai label Siswa mandiri dan Kembali
+ke latihan. Pengujian tetap memeriksa afiliasi sesudah kegagalan gabung kelas,
+tujuan navigasi, konfirmasi jeda, serta persistensi jawaban dan timer.
 Verifikasi lokal: 103 tes dalam lima file lulus dan ESLint area terkait lulus.
 CI penuh pada SHA rekonsiliasi tetap menjadi gate sebelum merge; verifikasi lokal
 ini tidak dinyatakan sebagai acceptance terintegrasi atau bukti QA cloud.

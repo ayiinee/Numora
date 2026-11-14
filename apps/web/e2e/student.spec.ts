@@ -1242,9 +1242,9 @@ test('invalid class code does not change Mandiri affiliation', async ({ page }) 
   await page.getByLabel('Kode kelas').fill('BAD999');
   await page.getByRole('button', { name: 'Gabung kelas', exact: true }).click();
   await expect(page.getByText('Kode Class tidak valid.')).toBeVisible();
-  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
   await page.reload();
-  await expect(page.getByText('User Mandiri', { exact: true })).toBeVisible();
+  await expect(page.getByText('Siswa mandiri', { exact: true })).toBeVisible();
 });
 
 test('joined class affiliation persists after signing out and back in', async ({ page }) => {
