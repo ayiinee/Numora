@@ -899,6 +899,17 @@
               "format": "uuid"
             },
             "description": "Optional pinned level ID; use the same filter on every page."
+          },
+          {
+            "name": "activity",
+            "required": false,
+            "in": "query",
+            "schema": {
+              "enum": [
+                "tryout"
+              ],
+              "type": "string"
+            }
           }
         ],
         "responses": {
@@ -10050,6 +10061,14 @@
               "waitingIrt"
             ]
           },
+          "tryoutResultState": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "overdue",
+              "ready"
+            ]
+          },
           "score": {
             "type": "number",
             "nullable": true
@@ -11365,6 +11384,18 @@
           "attemptStatus": {
             "type": "string",
             "nullable": true
+          },
+          "resultState": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "overdue",
+              "ready"
+            ],
+            "nullable": true
+          },
+          "canResume": {
+            "type": "boolean"
           }
         },
         "required": [
@@ -11409,6 +11440,14 @@
       "TryoutAttemptDto": {
         "type": "object",
         "properties": {
+          "resultWaitState": {
+            "type": "string",
+            "enum": [
+              "waiting",
+              "overdue"
+            ],
+            "nullable": true
+          },
           "closeAt": {
             "type": "string",
             "format": "date-time",

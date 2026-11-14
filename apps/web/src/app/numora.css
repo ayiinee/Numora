@@ -3956,20 +3956,11 @@ a.settings-row:hover {
   padding: 16px;
   align-items: start;
 }
-.tryout-package-symbol {
-  display: flex;
-  flex-direction: column;
-  align-items: center;
-  justify-content: center;
+.tryout-card-icon {
+  display: block;
   flex: 0 0 48px;
-  min-height: 58px;
-  background: var(--color-success-light);
-  color: var(--color-success-text);
-  border-radius: 10px;
-}
-.tryout-package-symbol small {
-  font-size: 10px;
-  font-weight: 800;
+  width: 48px;
+  height: 48px;
 }
 .tryout-catalog-card__body strong {
   display: block;
@@ -4024,9 +4015,6 @@ a.settings-row:hover {
 .tryout-history-note {
   margin-bottom: 16px;
 }
-.tryout-catalog-content .activity-row {
-  background: white;
-}
 .tryout-catalog-content [aria-label='Riwayat Tryout'] > button {
   margin-top: 16px;
 }
@@ -4057,15 +4045,6 @@ a.settings-row:hover {
   align-items: start;
   gap: var(--space-3);
 }
-.tryout-past-card__icon {
-  display: grid;
-  place-items: center;
-  width: 40px;
-  height: 40px;
-  border-radius: var(--radius-md);
-  background: var(--color-primary-light);
-  color: var(--color-primary-strong);
-}
 .tryout-past-card h3 {
   margin-top: var(--space-1);
 }
@@ -4087,16 +4066,6 @@ a.settings-row:hover {
   margin-top: var(--space-3);
   padding-top: var(--space-1);
   border-top: 1px solid var(--color-border-light);
-}
-.tryout-past-card__footer > p {
-  display: flex;
-  align-items: center;
-  gap: var(--space-2);
-  margin: 0;
-  min-height: 32px;
-}
-.tryout-past-card__footer svg {
-  flex-shrink: 0;
 }
 .tryout-past-card__actions {
   row-gap: var(--space-2);
@@ -4163,18 +4132,7 @@ a.settings-row:hover {
   line-height: 1.6;
 }
 .tryout-detail-status {
-  background: var(--color-success-light);
-  color: var(--color-success-text);
-  border: 1px solid var(--color-success-light);
-  border-radius: 12px;
   margin: 16px 0 12px;
-  padding: 12px;
-  font-size: 13px;
-  font-weight: 700;
-}
-.tryout-detail-status--waitingIrt {
-  background: var(--color-primary-light);
-  color: var(--color-primary);
 }
 .tryout-detail-stats {
   display: grid;
@@ -4369,26 +4327,6 @@ a.settings-row:hover {
   line-height: 1.6;
   color: var(--color-text-muted);
 }
-.tryout-waiting ol {
-  text-align: left;
-  list-style: none;
-  padding: 16px;
-  background: var(--color-primary-light);
-  border-radius: 14px;
-  margin: 20px 0;
-}
-.tryout-waiting li {
-  display: flex;
-  gap: 10px;
-  align-items: center;
-  font-size: 12px;
-  line-height: 1.5;
-  padding: 8px 0;
-}
-.tryout-waiting li svg {
-  flex-shrink: 0;
-  color: var(--color-primary);
-}
 .tryout-waiting > .button-link {
   display: flex;
   width: 100%;
@@ -4409,10 +4347,6 @@ a.settings-row:hover {
   align-items: start;
   gap: 24px;
   padding-top: 16px;
-}
-.tryout-result-layout > aside {
-  display: grid;
-  gap: 20px;
 }
 .tryout-released-summary {
   text-align: center;
@@ -4497,13 +4431,7 @@ a.settings-row:hover {
   background: transparent;
   overflow: visible;
 }
-.tryout-catalog-content .activity-row {
-  border: 0;
-  border-radius: 20px;
-  box-shadow: var(--shadow-sm);
-}
-.assessment-history-shell a.activity-row:hover,
-.tryout-catalog-content a.activity-row:hover {
+.assessment-history-shell a.activity-row:hover {
   background: var(--color-secondary-light);
 }
 @media (min-width: 960px) {
@@ -8512,17 +8440,17 @@ a.settings-row:hover {
   display: grid;
   gap: 16px;
 }
-.tryout-student-batch__heading {
+.tryout-catalog-card__heading--mascot {
   display: flex;
   align-items: center;
   justify-content: space-between;
   gap: 12px;
 }
-.tryout-student-batch__heading img {
+.tryout-catalog-card__heading--mascot img {
   flex: 0 0 56px;
   margin-inline: 0;
 }
-.tryout-student-batch__actions {
+.tryout-catalog-card__footer {
   display: grid;
   gap: 12px;
   padding: 16px;
@@ -8559,7 +8487,7 @@ a.settings-row:hover {
   flex-shrink: 0;
   accent-color: var(--color-primary);
 }
-.tryout-student-batch__actions .button-link {
+.tryout-catalog-card__footer .button-link {
   justify-self: start;
 }
 .tryout-student-rules-dialog .numora-dialog__header > button {

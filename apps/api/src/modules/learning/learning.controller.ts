@@ -7,6 +7,7 @@ import {
   Get,
   Headers,
   Param,
+  ParseEnumPipe,
   ParseUUIDPipe,
   Patch,
   Post,
@@ -121,12 +122,14 @@ export class LearningController {
     schema: { type: 'string', format: 'uuid' },
     description: 'Optional pinned level ID; use the same filter on every page.',
   })
+  @ApiQuery({ name: 'activity', enum: ['tryout'], required: false })
   history(
     @Headers('authorization') authorization: string | undefined,
     @Query('cursor', new ParseUUIDPipe({ optional: true })) cursor?: string,
     @Query('levelId', new ParseUUIDPipe({ optional: true })) levelId?: string,
+    @Query('activity', new ParseEnumPipe({ tryout: 'tryout' }, { optional: true })) activity?: 'tryout',
   ) {
-    return this.historyService.list(authorization, cursor, levelId);
+    return this.historyService.list(authorization, cursor, levelId, activity);
   }
 
   @Post('assessments/drill/attempts')

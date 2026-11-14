@@ -18,13 +18,31 @@ it('keeps unscorable result distinct from a zero score', () => {
         mode: 'UNSCORABLE',
         correctCount: 0,
         questionCount: 30,
+        explanation: [question],
+      }}
+    />,
+  );
+  expect(view.container.querySelector('.tryout-result-score')).toBeNull();
+  expect(screen.getByText('Nilai tidak tersedia', { exact: true })).toBeTruthy();
+  expect(screen.getByText('Status: tidak dapat diberi nilai.')).toBeTruthy();
+  expect(screen.getByRole('link', { name: 'Lihat pembahasan' })).toBeTruthy();
+});
+it('shows a released zero on the numeric score scale', () => {
+  render(
+    <TryoutReleasedResult
+      result={{
+        attemptId: 'a',
+        packageTitle: 'SYNTHETIC',
+        score: 0,
+        correctCount: 0,
+        questionCount: 30,
         explanation: [],
       }}
     />,
   );
-  expect(view.container.querySelector('.tryout-result-score')?.textContent).toBe('—');
-  expect(screen.getByText('Status: tidak dapat diberi nilai.')).toBeTruthy();
-  expect(screen.getByRole('link', { name: 'Lihat pembahasan' })).toBeTruthy();
+  expect(screen.getByText('0', { exact: true })).toBeTruthy();
+  expect(screen.getByText('Skala 0–100')).toBeTruthy();
+  expect(screen.queryByText('Nilai tidak tersedia', { exact: true })).toBeNull();
 });
 const question: ReviewedQuestionDto = {
   questionInstanceId: 'TEST ONLY q',
@@ -135,7 +153,7 @@ it('uses Info nilai and an explanation link rather than exposing review on the r
       result={{
         attemptId: 'a',
         packageTitle: 'TEST',
-        score: 50,
+        score: 87.5001,
         correctCount: 1,
         questionCount: 2,
         xp: 0,
@@ -148,6 +166,8 @@ it('uses Info nilai and an explanation link rather than exposing review on the r
   expect(screen.getByText('0 XP')).toBeTruthy();
   expect(view.container.querySelector('details')?.open).toBe(false);
   expect(screen.getByText('Info nilai')).toBeTruthy();
+  expect(screen.getByText('87,5001')).toBeTruthy();
+  expect(screen.getByText('Skala 0–100')).toBeTruthy();
   expect(screen.queryByText('TEST ONLY pembahasan')).toBeNull();
   expect(screen.queryByRole('navigation', { name: 'Matriks jawaban' })).toBeNull();
   expect(screen.getByRole('link', { name: 'Lihat pembahasan' }).getAttribute('href')).toBe(

@@ -4,7 +4,8 @@ import Link from 'next/link';
 import { useId, useState, type ReactNode } from 'react';
 import { Avatar, Badge, Button, Card, Icon, ListRow, ProgressBar, type IconName } from '@tka/ui';
 import type { IdentityProfile } from '@/lib/api';
-import type { StudentDashboardDto, CurrentTryoutDto } from './generated-types';
+import type { StudentDashboardDto } from './generated-types';
+import { type TryoutSummary, tryoutSummaryHref, tryoutSummaryLabels } from './tryout-queries';
 
 export function AccountHeader({ title, backHref }: { title: string; backHref?: string }) {
   return (
@@ -175,22 +176,9 @@ export function ProfileStats({ data }: { data: StudentDashboardDto }) {
   );
 }
 
-const tryoutState: Record<CurrentTryoutDto['state'], string> = {
-  unavailable: 'Belum tersedia',
-  open: 'Telah dibuka',
-  inProgress: 'Sedang dikerjakan',
-  waitingIrt: 'Menunggu hasil IRT',
-  resultReady: 'Hasil tersedia',
-};
-export function ProfileTryout({ data }: { data: CurrentTryoutDto }) {
-  const href =
-    data.attemptId && data.state === 'resultReady'
-      ? `/student/tryout/${data.attemptId}/result`
-      : data.attemptId && data.state === 'inProgress'
-        ? `/student/tryout/${data.attemptId}`
-        : '/student/tryout';
+export function ProfileTryout({ data }: { data: TryoutSummary }) {
   return (
-    <Link className="student-profile-tryout" href={href}>
+    <Link className="student-profile-tryout" href={tryoutSummaryHref(data)}>
       <span className="student-profile-tryout__icon">
         <Icon name="clipboard" />
       </span>
@@ -203,7 +191,7 @@ export function ProfileTryout({ data }: { data: CurrentTryoutDto }) {
         </small>
       </span>
       <Badge size="sm" variant={data.state === 'resultReady' ? 'success' : 'secondary'}>
-        {tryoutState[data.state]}
+        {tryoutSummaryLabels[data.state]}
       </Badge>
     </Link>
   );
