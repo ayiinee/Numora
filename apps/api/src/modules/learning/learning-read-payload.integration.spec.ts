@@ -1,4 +1,5 @@
 import { randomUUID } from 'node:crypto';
+import { Redis } from 'ioredis';
 import { connect, createServer, type Socket } from 'node:net';
 import { resolve } from 'node:path';
 import postgres from 'postgres';
@@ -24,6 +25,7 @@ import type { IdentityService } from '../identity/identity.service';
 import { LearningCatalogService } from './learning-catalog.service';
 import { MaterialsService } from './materials.service';
 import { PretestService } from './pretest.service';
+import { CurriculumCache, sharedCurriculumCache } from './curriculum-cache';
 
 const testUrl = process.env.TEST_DATABASE_URL;
 describe.skipIf(!testUrl)(
@@ -47,7 +49,7 @@ describe.skipIf(!testUrl)(
     let initialEmpty: Awaited<ReturnType<LearningCatalogService['progress']>>;
     const actors = new Map<string, string>();
 
-    async function transfer<T>(run: () => Promise<T>) {
+    async function transfer<T>(run: () => Promise<T>, warmCurriculum = false) {
       await closeDatabaseConnection();
       const runtimeUrl = process.env.DATABASE_URL!;
       const previousPool = process.env.DB_POOL_MAX;
@@ -84,6 +86,7 @@ describe.skipIf(!testUrl)(
         url.port = String(address.port);
         process.env.DATABASE_URL = url.toString();
         await getDatabase().client`select 1`;
+        if (warmCurriculum) await sharedCurriculumCache.get();
         bytes = 0;
         const value = await run();
         return { value, responseBytes: bytes };
@@ -518,8 +521,8 @@ describe.skipIf(!testUrl)(
     it('bounds PostgreSQL responses for result, global progress, subchapter and materials reads', async () => {
       const result = await transfer(() => pretest.result('student', attemptId));
       const progress = await transfer(() => catalog.progress('student'));
-      const subchapter = await transfer(() => catalog.subchapter('student', targetSub));
-      const material = await transfer(() => materials.list('student'));
+      const subchapter = await transfer(() => catalog.subchapter('student', targetSub), true);
+      const material = await transfer(() => materials.list('student'), true);
       console.info(
         JSON.stringify({
           measurement: 'learning_read_response_bytes',
@@ -537,6 +540,150 @@ describe.skipIf(!testUrl)(
       expect(progress.responseBytes).toBeLessThan(3000);
       expect(subchapter.responseBytes).toBeLessThan(6500);
       expect(material.responseBytes).toBeLessThan(45000);
+    });
+    it('shares metadata, coalesces misses and invalidates committed hierarchy changes only', async () => {
+      const cache = new CurriculumCache();
+      try {
+        await owner`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+        const before = cache.metrics.refreshes;
+        const results = await Promise.all(Array.from({ length: 12 }, () => cache.get()));
+        expect(cache.metrics.refreshes - before).toBe(1);
+        expect(cache.metrics.coalesced).toBeGreaterThan(0);
+        results[0]!.chapterRows.length = 0;
+        expect((await cache.get()).chapterRows.length).toBeGreaterThan(0);
+        const chapter = (await cache.get()).chapterRows.find((c) => c.id === fixture.chapterId)!;
+        await expect(
+          owner.begin(async (tx) => {
+            await tx`UPDATE chapters SET name='TEST ONLY rolled back' WHERE id=${chapter.id}`;
+            throw new Error('rollback');
+          }),
+        ).rejects.toThrow('rollback');
+        expect((await cache.get()).chapterRows.find((c) => c.id === chapter.id)?.name).toBe(
+          chapter.name,
+        );
+        await owner`UPDATE chapters SET name='TEST ONLY changed' WHERE id=${chapter.id}`;
+        expect((await cache.get()).chapterRows.find((c) => c.id === chapter.id)?.name).toBe(
+          'TEST ONLY changed',
+        );
+        await owner`UPDATE subchapters SET status='ARCHIVED' WHERE id=${emptySub}`;
+        expect((await cache.get()).subRows.some((s) => s.id === emptySub)).toBe(false);
+        await owner`UPDATE subchapters SET status='READY' WHERE id=${emptySub}`;
+        expect((await cache.get()).subRows.some((s) => s.id === emptySub)).toBe(true);
+        // A second independent instance can read Redis; a Redis outage still uses live DB metadata.
+        const second = new CurriculumCache();
+        try {
+          expect(await second.get()).toEqual(await cache.get());
+          if (process.env.REDIS_URL) {
+            expect(second.metrics.hits).toBe(1);
+            expect(second.metrics.refreshes).toBe(0);
+          }
+        } finally {
+          second.onModuleDestroy();
+        }
+        console.info(JSON.stringify({ measurement: 'curriculum_cache', ...cache.metrics }));
+      } finally {
+        cache.onModuleDestroy();
+        sharedCurriculumCache.onModuleDestroy();
+      }
+    });
+    it('recovers from corrupt Redis values and a disconnected cache without stale hierarchy', async () => {
+      const previousRedis = process.env.REDIS_URL;
+      const previousPrefix = process.env.BULLMQ_PREFIX;
+      process.env.BULLMQ_PREFIX ??= `TEST-cache-${suffix}`;
+      const cache = new CurriculumCache();
+      let redis: Redis | undefined;
+      try {
+        await owner`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+        const expected = await cache.get();
+        if (previousRedis) {
+          if (!/^redis:\/\/(localhost|127\.0\.0\.1):/.test(previousRedis))
+            throw Error('localhost Redis required');
+          redis = new Redis(previousRedis, { maxRetriesPerRequest: 0, commandTimeout: 500 });
+          const [revision] = await owner`select revision from pvp_content_revision where singleton`;
+          const [, keys] = await redis.scan(
+            '0',
+            'MATCH',
+            `${process.env.BULLMQ_PREFIX}:curriculum:*:${revision!.revision}`,
+            'COUNT',
+            1000,
+          );
+          expect(keys.length).toBe(1);
+          expect(await redis.ttl(keys[0]!)).toBeGreaterThan(0);
+          expect(await redis.ttl(keys[0]!)).toBeLessThanOrEqual(60);
+          await redis.set(keys[0]!, 'invalid JSON', 'EX', 60);
+          const second = new CurriculumCache();
+          try {
+            expect(await second.get()).toEqual(expected);
+            expect(second.metrics.refreshes).toBe(1);
+          } finally {
+            second.onModuleDestroy();
+          }
+        }
+        process.env.REDIS_URL = 'redis://127.0.0.1:6396';
+        await owner`UPDATE chapters SET name='TEST ONLY outage fresh' WHERE id=${fixture.chapterId}`;
+        const offline = new CurriculumCache();
+        try {
+          expect(
+            (await offline.get()).chapterRows.find((c) => c.id === fixture.chapterId)?.name,
+          ).toBe('TEST ONLY outage fresh');
+          expect(offline.metrics.redisErrors).toBeGreaterThan(0);
+        } finally {
+          offline.onModuleDestroy();
+        }
+      } finally {
+        cache.onModuleDestroy();
+        redis?.disconnect();
+        if (previousRedis === undefined) delete process.env.REDIS_URL;
+        else process.env.REDIS_URL = previousRedis;
+        if (previousPrefix === undefined) delete process.env.BULLMQ_PREFIX;
+        else process.env.BULLMQ_PREFIX = previousPrefix;
+      }
+    });
+    it('measures revision-row contention and preserves atomic invalidation across concurrent writers', async () => {
+      const url = new URL(testUrl!);
+      url.pathname = '/' + database;
+      const concurrent = postgres(url.toString(), { max: 1, onnotice: () => {} });
+      let release!: () => void, locked!: () => void;
+      const gate = new Promise<void>((done) => {
+        release = done;
+      });
+      const acquired = new Promise<void>((done) => {
+        locked = done;
+      });
+      try {
+        const first = owner.begin(async (tx) => {
+          await tx`UPDATE chapters SET name=name WHERE id=${fixture.chapterId}`;
+          locked();
+          await gate;
+        });
+        await acquired;
+        const started = Date.now();
+        const second = concurrent`UPDATE subchapters SET name=name WHERE id=${targetSub}`.execute();
+        let blocked = false;
+        for (let i = 0; i < 40; i++) {
+          const [row] = await admin<
+            { blocked: boolean }[]
+          >`SELECT EXISTS(SELECT 1 FROM pg_stat_activity WHERE datname=${database} AND wait_event_type='Lock') AS blocked`;
+          if (row?.blocked) {
+            blocked = true;
+            break;
+          }
+          await new Promise((done) => setTimeout(done, 10));
+        }
+        release();
+        await Promise.all([first, second]);
+        expect(blocked).toBe(true);
+        console.info(
+          JSON.stringify({
+            measurement: 'content_revision_contention',
+            observedLockWait: blocked,
+            controlledWaitMs: Date.now() - started,
+          }),
+        );
+      } finally {
+        release?.();
+        await concurrent.end();
+      }
     });
   },
 );

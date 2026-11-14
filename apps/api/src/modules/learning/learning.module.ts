@@ -1,4 +1,5 @@
 import { MaterialsService } from './materials.service';
+import { CurriculumCache } from './curriculum-cache';
 import { PretestController } from './pretest.controller';
 import { PretestService } from './pretest.service';
 import { ConfigModule } from '@nestjs/config';
@@ -22,6 +23,7 @@ import { ContentModule } from '../content/content.module';
   imports: [IdentityModule, PvpModule, ConfigModule, ContentModule],
   controllers: [LearningController, TryoutController, PretestController, AssessmentMediaController],
   providers: [
+    CurriculumCache,
     MaterialsService,
     PretestService,
     R2MediaStorage,
