@@ -1132,7 +1132,7 @@ test('Workbench retry, denied access, empty panels and page boundaries retain do
   await page.goto('/admin/content');
   await page.getByRole('button', { name: 'Berikutnya', exact: true }).click();
   await expect(page.getByText('Halaman 2', { exact: true })).toBeVisible();
-  expect(state.offsets).toContain('10');
+  await expect.poll(() => state.offsets).toContain('10');
   await page.getByRole('button', { name: 'Sebelumnya', exact: true }).click();
   await expect(page.getByText('Halaman 1', { exact: true })).toBeVisible();
   for (const list of [
