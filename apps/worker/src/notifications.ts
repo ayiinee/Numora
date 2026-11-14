@@ -29,7 +29,7 @@ export async function discoverNotificationReleases() {
       enqueueNotification(tx, { kind: 'TRYOUT_OPENED', sourceId: current.id }),
     );
   const [activation] = await db
-    .select()
+    .select({ occurredAt: notificationOutbox.occurredAt })
     .from(notificationOutbox)
     .where(eq(notificationOutbox.sourceKey, 'SYSTEM_STARTED'));
   if (!activation) throw new Error('NOTIFICATION_MIGRATION_REQUIRED');
@@ -90,7 +90,10 @@ async function presentation(
 ): Promise<{ title: string; body: string; context: NotificationContext } | null> {
   if (event.kind === 'FEEDBACK_RECEIVED') {
     const [row] = await tx
-      .select({ note: feedback, teacher: users.displayName, className: classes.name })
+      .select({
+        note: { id: feedback.id, body: feedback.body, classIdAtSend: feedback.classIdAtSend },
+        teacher: users.displayName,
+      })
       .from(feedback)
       .innerJoin(users, eq(users.id, feedback.teacherId))
       .innerJoin(classes, eq(classes.id, feedback.classIdAtSend))
@@ -105,7 +108,15 @@ async function presentation(
   }
   if (event.kind === 'PVP_INVITED') {
     const [row] = await tx
-      .select({ invite: pvpInvites, sender: users.displayName, difficulty: pvpMatches.difficulty })
+      .select({
+        invite: {
+          id: pvpInvites.id,
+          matchId: pvpInvites.matchId,
+          classIdAtInvite: pvpInvites.classIdAtInvite,
+        },
+        sender: users.displayName,
+        difficulty: pvpMatches.difficulty,
+      })
       .from(pvpInvites)
       .innerJoin(users, eq(users.id, pvpInvites.senderStudentId))
       .innerJoin(pvpMatches, eq(pvpMatches.id, pvpInvites.matchId))
@@ -130,7 +141,10 @@ async function presentation(
   }
   if (event.kind === 'LEVEL_UNLOCKED') {
     const [row] = await tx
-      .select({ level: levels, sub: subchapters })
+      .select({
+        level: { levelNumber: levels.levelNumber },
+        sub: { id: subchapters.id, chapterId: subchapters.chapterId, name: subchapters.name },
+      })
       .from(levelProgress)
       .innerJoin(levels, eq(levels.id, levelProgress.levelId))
       .innerJoin(subchapters, eq(subchapters.id, levels.subchapterId))
@@ -147,7 +161,7 @@ async function presentation(
   }
   if (event.kind === 'TRYOUT_OPENED') {
     const [pack] = await tx
-      .select()
+      .select({ id: assessmentPackages.id, name: assessmentPackages.name })
       .from(assessmentPackages)
       .where(eq(assessmentPackages.id, event.sourceId));
     return pack
@@ -160,7 +174,10 @@ async function presentation(
   }
   if (event.kind === 'TRYOUT_RESULT_READY') {
     const [row] = await tx
-      .select({ attempt: assessmentAttempts, title: assessmentPackages.name })
+      .select({
+        attempt: { id: assessmentAttempts.id, packageId: assessmentAttempts.packageId },
+        title: assessmentPackages.name,
+      })
       .from(assessmentAttempts)
       .innerJoin(assessmentPackages, eq(assessmentPackages.id, assessmentAttempts.packageId))
       .where(
