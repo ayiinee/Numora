@@ -27,4 +27,3 @@ Approved worker five-second polling and the PvP one-second durable sweep remain 
 Local PostgreSQL tests cover lazy execution, parameterization, raw/value chains, transaction/savepoint rollback, repeated awaits, pool exhaustion/acquisition, errors, late reservation release and probe recovery. HTTP tests cover disabled/unauthorized/authorized requests. Real Redis tests cover cross-service records, namespace isolation, corruption, TTL and stop; stalled heartbeat shutdown is bounded. Existing Auth and worker outage suites run alongside them.
 
 No migration is required. Flags/tokens and representative production measurements require an operator rollout; implementation tests do not claim production instance counts or billed savings. Compare equal activity/time windows, especially when local Development and another deployment share one Supabase project. Keep workload, request counts, enabled features and instance counts with each measurement.
-
