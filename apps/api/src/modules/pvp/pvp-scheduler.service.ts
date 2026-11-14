@@ -7,7 +7,13 @@ import {
 } from '@nestjs/common';
 import { Queue, Worker } from 'bullmq';
 import { Redis } from 'ioredis';
-import { getDatabase, pvpMatches } from '@tka/database';
+import {
+  getDatabase,
+  pvpMatches,
+  measureRuntime,
+  observeRuntime,
+  gaugeRuntime,
+} from '@tka/database';
 import { eq, inArray } from 'drizzle-orm';
 import { PvpEngineService } from './pvp-engine.service';
 import { PVP_POLICY, type PvpPolicy } from './pvp.policy';
@@ -78,8 +84,11 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
     });
     // PostgreSQL sweep repairs missed transient jobs; Redis never owns match truth.
     this.timer = setInterval(() => {
-      if (this.busy) return;
-      this.busy = this.sweep()
+      if (this.busy) {
+        observeRuntime('numora_pvp_sweep_overlap', 1);
+        return;
+      }
+      this.busy = measureRuntime('numora_pvp_sweep', () => this.sweep())
         .catch(() => {
           this.engine.setSchedulerReady(false);
           this.logger.error('PvP PostgreSQL deadline sweep failed.');
@@ -94,6 +103,7 @@ export class PvpSchedulerService implements OnModuleInit, OnModuleDestroy {
       .db.select({ id: pvpMatches.id })
       .from(pvpMatches)
       .where(inArray(pvpMatches.status, ['WAITING', 'READY', 'RUNNING']));
+    gaugeRuntime('numora_pvp_active_matches', matches.length);
     for (const match of matches) {
       await this.engine.tick(match.id);
       await this.refresh(match.id);
