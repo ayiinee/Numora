@@ -32,4 +32,16 @@ These are isolated localhost measurements, not production SLOs or guaranteed bil
 
 Independent PRs targeting main: 175, 176, 177, 179, 182, 183, 184, 185, 186. Parent dependencies: 177 before 187; 184 before 188; 183 before 189. After a parent merges, retarget its child to main and rerun checks. Do not merge unrelated functional PRs 178/180/181 as part of this optimization batch without their own review.
 
-The final integration rehearsal merges the optimization heads locally, verifies the combined code, and leaves main and deployments untouched. See the validation record added after that run.
+## Combined validation record
+
+The local integration branch `test/db-optimization-integration-20261114` at `a1aff5eeff0fa843cea5a70845e6185a14443e6c` merges the optimization heads over main `7288b4b380ceb4c30800f670cd8e8949217a7109`. All merges are clean. Subsequent report-only changes do not change the tested application code. Main, shared cloud data and deployments remain untouched.
+
+Dedicated localhost PostgreSQL 16 and Redis 7.4, instrumentation enabled:
+
+- API main batch: 82 tests/12 files pass. Additional Tryout/cache/PvP batch: 27 tests/5 files pass (including a nine-test cache rerun).
+- Worker projections: four tests/three files pass; the corrected heartbeat-enabled outage/lifecycle fixture: seven tests/one file pass.
+- All IRT orchestration suites: 35 tests/six files pass.
+- Database instrumentation/heartbeat: three tests/two files pass, including real PostgreSQL/Drizzle rollback and bounded stalled heartbeat handling.
+- No skipped suites in these selected runs. Combined lint, database/API/worker typechecks, database/IRT/API/worker builds pass. Local Vitest aliases resolve the worktree's built packages instead of other chats' shared dependency junctions.
+
+Final-source HTTP/Redis tests also cover real lock wait age, late pool reservation release, corrupt records, TTL and protected metrics. Cache tests pass both with real Redis and without Redis configuration. CI is still a separate gate: inspect each PR's current checks and complete human review before merging. A skipped automated review is not human approval.
