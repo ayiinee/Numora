@@ -1,7 +1,14 @@
 import { afterEach, beforeEach, describe, expect, it, vi } from 'vitest';
 
 const mocks = vi.hoisted(() => ({
-  redis: { connect: vi.fn(), ping: vi.fn(), disconnect: vi.fn(), on: vi.fn() },
+  redis: {
+    connect: vi.fn(),
+    ping: vi.fn(),
+    disconnect: vi.fn(),
+    on: vi.fn(),
+    set: vi.fn(),
+    del: vi.fn(),
+  },
   worker: { close: vi.fn(), waitUntilReady: vi.fn(), run: vi.fn(), on: vi.fn() },
   redisConstructor: vi.fn(),
   workerConstructor: vi.fn(),
@@ -62,6 +69,8 @@ describe('worker Redis outage lifecycle', () => {
     );
     mocks.redis.connect.mockResolvedValue(undefined);
     mocks.redis.ping.mockResolvedValue('PONG');
+    mocks.redis.set.mockResolvedValue('OK');
+    mocks.redis.del.mockResolvedValue(1);
     mocks.worker.waitUntilReady.mockResolvedValue(undefined);
     mocks.worker.run.mockImplementation(() => new Promise(() => {}));
     mocks.worker.close.mockResolvedValue(undefined);
@@ -97,6 +106,22 @@ describe('worker Redis outage lifecycle', () => {
     expect(mocks.redis.disconnect).toHaveBeenCalledOnce();
     expect(console.error).toHaveBeenCalledOnce();
     expect(vi.mocked(console.error).mock.calls.flat().join(' ')).not.toContain('fixture-secret');
+  });
+  it('publishes optional reporting heartbeats without changing polling and removes its key on stop', async () => {
+    vi.stubEnv('NUMORA_OBSERVABILITY_ENABLED', 'true');
+    const exit = vi.fn();
+    const runtime = await runWorker(exit);
+    expect(mocks.redis.set).toHaveBeenCalledWith(
+      expect.stringMatching(/^numora:metrics:/),
+      expect.any(String),
+      'EX',
+      45,
+    );
+    await vi.advanceTimersByTimeAsync(15000);
+    expect(mocks.redis.set.mock.calls.length).toBeGreaterThan(1);
+    await runtime!.stop();
+    expect(mocks.redis.del).toHaveBeenCalledOnce();
+    expect(exit).toHaveBeenCalledExactlyOnceWith(0);
   });
 
   it('stops both job schedules on runtime quota errors and suppresses duplicate failures', async () => {
